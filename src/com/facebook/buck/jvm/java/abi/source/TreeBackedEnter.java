@@ -20,6 +20,7 @@ import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.AnnotationTree;
+import com.sun.source.tree.BlockTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.MethodTree;
@@ -28,13 +29,16 @@ import com.sun.source.tree.TypeParameterTree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.source.util.TreePath;
+import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -79,6 +83,7 @@ class TreeBackedEnter {
     private final Deque<TreeBackedElement> contextStack = new ArrayDeque<>();
     @Nullable private TreePath currentPath;
     @Nullable private Tree currentTree;
+    @Nullable private Map<Element, Tree> elementToTreeMap;
 
     private TreeBackedElement getCurrentContext() {
       return contextStack.peek();
@@ -95,6 +100,7 @@ class TreeBackedEnter {
         return;
       }
 
+      elementToTreeMap = buildElementToTreeMap(compilationUnitTree);
       currentPath = new TreePath(compilationUnitTree);
       currentTree = compilationUnitTree;
       try {
@@ -105,7 +111,47 @@ class TreeBackedEnter {
       } finally {
         currentPath = null;
         currentTree = null;
+        elementToTreeMap = null;
       }
+    }
+
+    private Map<Element, Tree> buildElementToTreeMap(CompilationUnitTree tree) {
+      Map<Element, Tree> result = new HashMap<>();
+
+      new TreePathScanner<Void, Void>() {
+        @Override
+        public Void visitClass(ClassTree node, Void aVoid) {
+          result.put(javacTrees.getElement(getCurrentPath()), node);
+          return super.visitClass(node, aVoid);
+        }
+
+        @Override
+        public Void visitMethod(MethodTree node, Void aVoid) {
+          result.put(javacTrees.getElement(getCurrentPath()), node);
+          return super.visitMethod(node, aVoid);
+        }
+
+        @Override
+        public Void visitVariable(VariableTree node, Void aVoid) {
+          result.put(javacTrees.getElement(getCurrentPath()), node);
+          // Don't recurse into variable initializers
+          return null;
+        }
+
+        @Override
+        public Void visitTypeParameter(TypeParameterTree node, Void aVoid) {
+          result.put(javacTrees.getElement(getCurrentPath()), node);
+          return super.visitTypeParameter(node, aVoid);
+        }
+
+        @Override
+        public Void visitBlock(BlockTree node, Void aVoid) {
+          // Don't recurse into method bodies
+          return null;
+        }
+      }.scan(tree, null);
+
+      return result;
     }
 
     private TreeBackedPackageElement enterPackageElement() {
@@ -176,7 +222,7 @@ class TreeBackedEnter {
         return null;
       }
 
-      Tree result = javacTrees.getTree(element);
+      Tree result = Preconditions.checkNotNull(elementToTreeMap).get(element);
       if (result == null) {
         Tree parentTree = parentPath.getLeaf();
         Name simpleName = element.getSimpleName();
