@@ -877,11 +877,13 @@ public class BuildCommand extends AbstractCommand {
           == com.facebook.buck.distributed.ExitCode.LOCAL_BUILD_FINISHED_FIRST.getCode()) {
         LOG.warn(
             "Stampede local build finished before distributed build. Attempting to kill distributed build..");
+        boolean succeededLocally = localBuildExitCode.get() == 0;
         terminateStampedeBuild(
             distBuildService,
             Preconditions.checkNotNull(stampedeIdReference.get()),
-            BuildStatus.FINISHED_SUCCESSFULLY,
-            "Local build finished first");
+            succeededLocally ? BuildStatus.FINISHED_SUCCESSFULLY : BuildStatus.FAILED,
+            (succeededLocally ? "Succeeded" : "Failed")
+                + " locally before distributed build finished.");
       }
 
       distBuildClientStats.setStampedeId(
