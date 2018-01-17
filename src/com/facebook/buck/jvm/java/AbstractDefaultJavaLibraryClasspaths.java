@@ -26,6 +26,8 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
@@ -69,23 +71,23 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
       return ImmutableSortedSet.of();
     }
 
-    return getAllFirstOrderNonProvidedDeps();
+    return ImmutableSortedSet.copyOf(getAllFirstOrderNonProvidedDeps());
   }
 
   @Value.Lazy
-  ImmutableSortedSet<BuildRule> getAllFirstOrderNonProvidedDeps() {
-    return ImmutableSortedSet.copyOf(
+  ImmutableList<BuildRule> getAllFirstOrderNonProvidedDeps() {
+    return ImmutableList.copyOf(
         Iterables.concat(
             Preconditions.checkNotNull(getDeps()).getDeps(),
             getConfiguredCompiler().getDeclaredDeps(getSourcePathRuleFinder())));
   }
 
   @Value.Lazy
-  public ImmutableSortedSet<BuildRule> getNonClasspathDeps() {
+  public ImmutableList<BuildRule> getNonClasspathDeps() {
     // TODO(jkeljo): When creating source-only ABIs, *some* non-classpath deps can be omitted
     // (basically anything that's not either source, resources, or a source-only-ABI-compatible
     // annotation processor).
-    return ImmutableSortedSet.copyOf(
+    return ImmutableList.copyOf(
         Iterables.concat(
             Sets.difference(getBuildRuleParams().getBuildDeps(), getCompileTimeClasspathFullDeps()),
             Sets.difference(
@@ -160,17 +162,17 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
   }
 
   @Value.Lazy
-  ImmutableSortedSet<BuildRule> getCompileTimeClasspathUnfilteredFullDeps() {
+  ImmutableSet<BuildRule> getCompileTimeClasspathUnfilteredFullDeps() {
     Iterable<BuildRule> firstOrderDeps =
         Iterables.concat(
             getAllFirstOrderNonProvidedDeps(),
             Preconditions.checkNotNull(getDeps()).getProvidedDeps());
 
-    ImmutableSortedSet<BuildRule> rulesExportedByDependencies =
-        BuildRules.getExportedRules(firstOrderDeps);
+    ImmutableSet<BuildRule> rulesExportedByDependencies =
+        BuildRules.getUnsortedExportedRules(firstOrderDeps);
 
     return RichStream.from(Iterables.concat(firstOrderDeps, rulesExportedByDependencies))
-        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   private Iterable<BuildRule> rulesRequiredForSourceOnlyAbi(Iterable<BuildRule> rules) {

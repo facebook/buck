@@ -20,6 +20,7 @@ import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -63,6 +64,19 @@ public class BuildRules {
   public static ImmutableSortedSet<BuildRule> getExportedRules(
       Iterable<? extends BuildRule> rules) {
     final ImmutableSortedSet.Builder<BuildRule> exportedRules = ImmutableSortedSet.naturalOrder();
+    buildExportedRules(rules, exportedRules);
+    return exportedRules.build();
+  }
+
+  public static ImmutableSet<BuildRule> getUnsortedExportedRules(
+      Iterable<? extends BuildRule> rules) {
+    final ImmutableSet.Builder<BuildRule> exportedRules = ImmutableSet.builder();
+    buildExportedRules(rules, exportedRules);
+    return exportedRules.build();
+  }
+
+  public static void buildExportedRules(
+      Iterable<? extends BuildRule> rules, ImmutableCollection.Builder<BuildRule> exportedRules) {
     AbstractBreadthFirstTraversal<ExportDependencies> visitor =
         new AbstractBreadthFirstTraversal<ExportDependencies>(
             Iterables.filter(rules, ExportDependencies.class)) {
@@ -74,7 +88,6 @@ public class BuildRules {
           }
         };
     visitor.start();
-    return exportedRules.build();
   }
 
   public static ImmutableSet<BuildTarget> getTransitiveRuntimeDeps(
