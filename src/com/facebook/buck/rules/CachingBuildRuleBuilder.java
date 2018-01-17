@@ -36,6 +36,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildInfo.MetadataKey;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.RuleKeyAndInputs;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
@@ -488,6 +489,7 @@ class CachingBuildRuleBuilder {
     // input-based rule keys.
     long outputSize =
         Long.parseLong(onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_SIZE).get());
+
     if (shouldWriteOutputHashes(outputSize)) {
       Optional<ImmutableMap<String, String>> hashes =
           onDiskBuildInfo.getMap(BuildInfo.MetadataKey.RECORDED_PATH_HASHES);
@@ -734,16 +736,17 @@ class CachingBuildRuleBuilder {
         successType = Optional.of(success);
 
         // Try get the output size.
-        if (success.shouldUploadResultingArtifact()) {
-          // All rules should have output_size/output_hash in their artifact metadata.
-          outputSize =
-              Optional.of(
-                  Long.parseLong(
-                      onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_SIZE).get()));
-          if (shouldWriteOutputHashes(outputSize.get())) {
-            String hashString = onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_HASH).get();
-            outputHash = Optional.of(HashCode.fromString(hashString));
-          }
+        Optional<String> outputSizeString = onDiskBuildInfo.getValue(MetadataKey.OUTPUT_SIZE);
+        if (outputSizeString.isPresent()) {
+          outputSize = Optional.of(Long.parseLong(outputSizeString.get()));
+        }
+
+        // All rules should have output_size/output_hash in their artifact metadata.
+        if (success.shouldUploadResultingArtifact()
+            && outputSize.isPresent()
+            && shouldWriteOutputHashes(outputSize.get())) {
+          String hashString = onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_HASH).get();
+          outputHash = Optional.of(HashCode.fromString(hashString));
         }
 
         // Determine if this is rule is cacheable.
