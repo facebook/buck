@@ -30,6 +30,7 @@ import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.BuildDeps;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -77,7 +78,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   AndroidLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      ImmutableSortedSet<BuildRule> buildDeps,
+      BuildDeps buildDeps,
       SourcePathResolver resolver,
       JarBuildStepsFactory jarBuildStepsFactory,
       Optional<SourcePath> proguardConfig,
@@ -148,7 +149,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
             public DefaultJavaLibrary newInstance(
                 BuildTarget buildTarget,
                 ProjectFilesystem projectFilesystem,
-                ImmutableSortedSet<BuildRule> buildDeps,
+                BuildDeps buildDeps,
                 SourcePathResolver resolver,
                 JarBuildStepsFactory jarBuildStepsFactory,
                 Optional<SourcePath> proguardConfig,

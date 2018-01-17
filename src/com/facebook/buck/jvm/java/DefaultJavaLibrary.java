@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildDeps;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -103,7 +104,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @AddToRuleKey private final boolean requiredForSourceOnlyAbi;
 
   // This is automatically added to the rule key by virtue of being returned from getBuildDeps.
-  private final ImmutableSortedSet<BuildRule> buildDeps;
+  private final BuildDeps buildDeps;
 
   // It's very important that these deps are non-ABI rules, even if compiling against ABIs is turned
   // on. This is because various methods in this class perform dependency traversal that rely on
@@ -147,7 +148,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   protected DefaultJavaLibrary(
       BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
-      ImmutableSortedSet<BuildRule> buildDeps,
+      BuildDeps buildDeps,
       SourcePathResolver resolver,
       JarBuildStepsFactory jarBuildStepsFactory,
       Optional<SourcePath> proguardConfig,

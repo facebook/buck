@@ -193,8 +193,8 @@ public class DiffRuleKeysScriptIntegrationTest {
     assertThat(
         runRuleKeyDiffer(workspace),
         Matchers.stringContainsInOrder(
-            "Change details for [//:java_lib_2]",
-            "  (buck.deps):",
+            "Change details for [//:java_lib_2->buck.deps]",
+            "  (additionalDeps):",
             "    -[<missing>]",
             "    +[\"//:java_lib_3\"@ruleKey(sha1=", /* some rulekey */
             ")]",
