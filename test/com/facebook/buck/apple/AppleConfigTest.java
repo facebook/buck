@@ -31,6 +31,7 @@ import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
@@ -141,5 +142,27 @@ public class AppleConfigTest {
         config.getPackageConfigForPlatform(ApplePlatform.IPHONEOS);
     assertThat(packageConfig.get().getCommand(), equalTo("echo $OUT"));
     assertThat(packageConfig.get().getExtension(), equalTo("api"));
+  }
+
+  @Test
+  public void getOverridenCompressionLevel() {
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("apple", ImmutableMap.of("ipa_compression_level", "Max")))
+            .build();
+    AppleConfig config = buckConfig.getView(AppleConfig.class);
+    ZipCompressionLevel compressionLevel = config.getZipCompressionLevel();
+    assertEquals(ZipCompressionLevel.MAX, compressionLevel);
+  }
+
+  @Test
+  public void getDefaultCompressionLevel() {
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("apple", ImmutableMap.of("ipa_compression_level", "")))
+            .build();
+    AppleConfig config = buckConfig.getView(AppleConfig.class);
+    ZipCompressionLevel compressionLevel = config.getZipCompressionLevel();
+    assertEquals(ZipCompressionLevel.DEFAULT, compressionLevel);
   }
 }

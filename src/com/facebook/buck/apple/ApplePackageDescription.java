@@ -124,7 +124,8 @@ public class ApplePackageDescription
           toolchainProvider.getByNameIfPresent(
               AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class));
     } else {
-      return new BuiltinApplePackage(buildTarget, projectFilesystem, params, bundle);
+      return new BuiltinApplePackage(
+          buildTarget, projectFilesystem, params, bundle, config.getZipCompressionLevel());
     }
   }
 

@@ -558,6 +558,31 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'ipa_compression_level' /}
+  {param example_value: 'min' /}
+  {param description}
+    Specify a compression level used when creating ipa. The possible values are:
+    <ul>
+      <li>
+        <code>none</code>: Do not compress ipa.
+      </li>
+      <li>
+        <code>min</code>: Use minimum compression level.
+      </li>
+      <li>
+        <code>default</code> (default): Use medium compression level.
+      </li>
+      <li>
+        <code>max</code>: Use maximum compression level.
+      </li>
+    </ul>
+
+    If omitted, the <code>default</code> value will be used.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'build' /}
   {param description}
