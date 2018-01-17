@@ -440,14 +440,4 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     eventBus.post(started);
     return () -> eventBus.post(ruleKeyCalculationFinished(started, ruleKeyFactory));
   }
-
-  public static Scope resumeSuspendScope(
-      BuckEventBus eventBus,
-      BuildRule rule,
-      BuildRuleDurationTracker tracker,
-      RuleKeyFactory<RuleKey> ruleKeyFactory) {
-    Resumed resumed = resumed(rule, tracker, ruleKeyFactory);
-    eventBus.post(resumed);
-    return () -> eventBus.post(suspended(resumed, ruleKeyFactory));
-  }
 }
