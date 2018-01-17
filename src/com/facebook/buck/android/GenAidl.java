@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.Javac.SRC_ZIP;
 
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -36,6 +35,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -62,7 +62,7 @@ import java.nio.file.Path;
  */
 public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
-  private final AndroidPlatformTarget androidPlatformTarget;
+  private final ToolchainProvider toolchainProvider;
 
   // TODO(#2493457): This rule uses the aidl binary (part of the Android SDK), so the RuleKey
   // should incorporate which version of aidl is used.
@@ -74,12 +74,12 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   GenAidl(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      AndroidPlatformTarget androidPlatformTarget,
+      ToolchainProvider toolchainProvider,
       BuildRuleParams params,
       SourcePath aidlFilePath,
       String importPath) {
     super(buildTarget, projectFilesystem, params);
-    this.androidPlatformTarget = androidPlatformTarget;
+    this.toolchainProvider = toolchainProvider;
     this.aidlFilePath = aidlFilePath;
     this.importPath = importPath;
     this.genPath = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s");
@@ -116,7 +116,7 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         new AidlStep(
             getProjectFilesystem(),
             target,
-            androidPlatformTarget,
+            toolchainProvider,
             context.getSourcePathResolver().getAbsolutePath(aidlFilePath),
             ImmutableSet.of(importPath),
             outputDirectory);

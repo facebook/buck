@@ -93,7 +93,15 @@ public class GenAidlTest {
                 new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     GenAidl genAidlRule =
-        new GenAidl(target, stubFilesystem, androidPlatformTarget, params, pathToAidl, importPath);
+        new GenAidl(
+            target,
+            stubFilesystem,
+            new ToolchainProviderBuilder()
+                .withToolchain(AndroidPlatformTarget.DEFAULT_NAME, androidPlatformTarget)
+                .build(),
+            params,
+            pathToAidl,
+            importPath);
 
     GenAidlDescription description = new GenAidlDescription(new ToolchainProviderBuilder().build());
     assertEquals(
