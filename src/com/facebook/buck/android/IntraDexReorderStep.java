@@ -145,7 +145,7 @@ public class IntraDexReorderStep implements Step {
               outputPath,
               /* paths */ ImmutableSet.of(),
               /* junkPaths */ false,
-              ZipCompressionLevel.MAX_COMPRESSION_LEVEL,
+              ZipCompressionLevel.MAX,
               temp));
     } else {
       // copy dex

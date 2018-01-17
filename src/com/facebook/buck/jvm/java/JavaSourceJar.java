@@ -16,8 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.util.zip.ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL;
-
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasMavenCoordinates;
@@ -37,6 +35,7 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -113,7 +112,7 @@ public class JavaSourceJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
             output,
             ImmutableSet.of(),
             /* junk paths */ false,
-            DEFAULT_COMPRESSION_LEVEL,
+            ZipCompressionLevel.DEFAULT,
             temp));
 
     buildableContext.recordArtifact(output);

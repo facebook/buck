@@ -63,7 +63,7 @@ public class RepackZipEntriesStep implements Step {
    */
   public RepackZipEntriesStep(
       ProjectFilesystem filesystem, Path inputPath, Path outputPath, ImmutableSet<String> entries) {
-    this(filesystem, inputPath, outputPath, entries, ZipCompressionLevel.MAX_COMPRESSION_LEVEL);
+    this(filesystem, inputPath, outputPath, entries, ZipCompressionLevel.MAX);
   }
 
   /**

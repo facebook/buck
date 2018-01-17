@@ -115,7 +115,7 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
             pathToOutputFile,
             ImmutableSet.of(),
             false,
-            ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
+            ZipCompressionLevel.DEFAULT,
             temp));
 
     buildableContext.recordArtifact(

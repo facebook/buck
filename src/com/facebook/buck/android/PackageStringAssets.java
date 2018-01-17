@@ -145,7 +145,7 @@ public class PackageStringAssets extends AbstractBuildRule {
             pathToAllLocalesStringAssetsZip,
             ImmutableSet.of(),
             false,
-            ZipCompressionLevel.MAX_COMPRESSION_LEVEL,
+            ZipCompressionLevel.MAX,
             pathToDirContainingAssetsDir));
     steps.add(
         new ZipStep(
@@ -153,7 +153,7 @@ public class PackageStringAssets extends AbstractBuildRule {
             pathToStringAssetsZip,
             locales.stream().map(assetPathBuilder).collect(ImmutableSet.toImmutableSet()),
             false,
-            ZipCompressionLevel.MAX_COMPRESSION_LEVEL,
+            ZipCompressionLevel.MAX,
             pathToDirContainingAssetsDir));
 
     buildableContext.recordArtifact(pathToAllLocalesStringAssetsZip);

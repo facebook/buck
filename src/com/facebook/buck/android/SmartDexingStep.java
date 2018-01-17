@@ -477,7 +477,7 @@ public class SmartDexingStep implements Step {
               tempDexJarOutput,
               repackedJar,
               ImmutableSet.of("classes.dex"),
-              ZipCompressionLevel.MIN_COMPRESSION_LEVEL));
+              ZipCompressionLevel.NONE));
       steps.add(
           RmStep.of(
               BuildCellRelativePath.fromCellRelativePath(
@@ -515,7 +515,7 @@ public class SmartDexingStep implements Step {
               tempDexJarOutput,
               outputPath,
               ImmutableSet.of("classes.dex"),
-              ZipCompressionLevel.MIN_COMPRESSION_LEVEL));
+              ZipCompressionLevel.NONE));
       steps.add(
           RmStep.of(
               BuildCellRelativePath.fromCellRelativePath(

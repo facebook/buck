@@ -109,7 +109,7 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
             outputPath,
             ImmutableSortedSet.of(),
             flatten,
-            ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
+            ZipCompressionLevel.DEFAULT,
             scratchDir));
 
     return steps.build();
