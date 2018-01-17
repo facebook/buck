@@ -320,7 +320,12 @@ public class DistBuildService implements Closeable {
   }
 
   public BuildJob createBuild(
-      BuildId buildId, BuildMode buildMode, int numberOfMinions, String repository, String tenantId)
+      BuildId buildId,
+      BuildMode buildMode,
+      int numberOfMinions,
+      String repository,
+      String tenantId,
+      List<String> buildTargets)
       throws IOException {
     Preconditions.checkArgument(
         buildMode == BuildMode.REMOTE_BUILD
@@ -340,7 +345,8 @@ public class DistBuildService implements Closeable {
         .setBuckBuildUuid(buildId.toString())
         .setBuildMode(buildMode)
         .setNumberOfMinions(numberOfMinions)
-        .setUsername(username);
+        .setUsername(username)
+        .setBuildTargets(buildTargets);
 
     if (repository != null && repository.length() > 0) {
       createBuildRequest.setRepository(repository);

@@ -53,6 +53,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /** Phase before the build. */
 public class PreBuildPhase {
@@ -102,8 +103,15 @@ public class PreBuildPhase {
     EventSender eventSender = new EventSender(eventBus);
 
     distBuildClientStats.startTimer(CREATE_DISTRIBUTED_BUILD);
+    List<String> buildTargets =
+        topLevelTargets
+            .stream()
+            .map(x -> x.getFullyQualifiedName())
+            .sorted()
+            .collect(Collectors.toList());
     BuildJob job =
-        distBuildService.createBuild(buildId, buildMode, numberOfMinions, repository, tenantId);
+        distBuildService.createBuild(
+            buildId, buildMode, numberOfMinions, repository, tenantId, buildTargets);
     distBuildClientStats.stopTimer(CREATE_DISTRIBUTED_BUILD);
 
     final StampedeId stampedeId = job.getStampedeId();

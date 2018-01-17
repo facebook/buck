@@ -71,6 +71,7 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
@@ -109,6 +110,7 @@ public class DistBuildServiceTest {
   private static final String TENANT_ID = "tenantOne";
   private static final String BUILD_LABEL = "unit_test";
   private static final String USERNAME = "unit_test_user";
+  private static final List<String> BUILD_TARGETS = Lists.newArrayList();
 
   @Before
   public void setUp() throws IOException, InterruptedException {
@@ -263,7 +265,7 @@ public class DistBuildServiceTest {
 
     BuildJob job =
         distBuildService.createBuild(
-            new BuildId("33-44"), BuildMode.REMOTE_BUILD, 1, REPOSITORY, TENANT_ID);
+            new BuildId("33-44"), BuildMode.REMOTE_BUILD, 1, REPOSITORY, TENANT_ID, BUILD_TARGETS);
 
     Assert.assertEquals(request.getValue().getType(), FrontendRequestType.CREATE_BUILD);
     Assert.assertTrue(request.getValue().isSetCreateBuildRequest());

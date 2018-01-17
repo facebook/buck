@@ -71,11 +71,13 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -89,6 +91,7 @@ public class BuildControllerTest {
   private static final String REPOSITORY = "repositoryOne";
   private static final String TENANT_ID = "tenantOne";
   private static final String BUILD_LABEL = "unit_test";
+  private static final List<String> BUILD_TARGETS = Lists.newArrayList();
 
   private DistBuildService mockDistBuildService;
   private LogStateTracker mockLogStateTracker;
@@ -248,7 +251,12 @@ public class BuildControllerTest {
     // Ensure the synchronous steps succeed
     expect(
             mockDistBuildService.createBuild(
-                invocationInfo.getBuildId(), BuildMode.REMOTE_BUILD, 1, REPOSITORY, TENANT_ID))
+                invocationInfo.getBuildId(),
+                BuildMode.REMOTE_BUILD,
+                1,
+                REPOSITORY,
+                TENANT_ID,
+                BUILD_TARGETS))
         .andReturn(job);
 
     expect(
@@ -446,7 +454,12 @@ public class BuildControllerTest {
       BuildJob job, BuildJobState buildJobState) throws IOException {
     expect(
             mockDistBuildService.createBuild(
-                invocationInfo.getBuildId(), BuildMode.REMOTE_BUILD, 1, REPOSITORY, TENANT_ID))
+                invocationInfo.getBuildId(),
+                BuildMode.REMOTE_BUILD,
+                1,
+                REPOSITORY,
+                TENANT_ID,
+                BUILD_TARGETS))
         .andReturn(job);
     expect(
             mockDistBuildService.uploadMissingFilesAsync(
