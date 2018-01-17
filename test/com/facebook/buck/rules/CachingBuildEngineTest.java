@@ -3947,7 +3947,7 @@ public class CachingBuildEngineTest {
 
     @Test(timeout = 10000)
     public void testBuildLocallyWhenRemoteBuildStartedAndAlwaysWaitSetToFalse() throws Exception {
-      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer(true);
+      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer(false);
 
       // Signal that the build has started, which should ensure build waits.
       synchronizer.signalStartedRemoteBuildingOfBuildRule(BUILD_TARGET.getFullyQualifiedName());

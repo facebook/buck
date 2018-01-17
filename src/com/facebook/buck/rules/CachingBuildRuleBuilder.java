@@ -870,7 +870,11 @@ class CachingBuildRuleBuilder {
               return getBuildResultForRuleKeyCacheResult(cacheResult);
             });
 
-    // 3. Build deps.
+    // 3. Before unlocking dependencies, ensure build rule hasn't started remotely.
+    buildResultFuture =
+        attemptDistributedBuildSynchronization(buildResultFuture, rulekeyCacheResult);
+
+    // 4. Build deps.
     buildResultFuture =
         transformBuildResultAsyncIfNotPresent(
             buildResultFuture,
@@ -888,7 +892,7 @@ class CachingBuildRuleBuilder {
                       CachingBuildEngine.SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
             });
 
-    // 4. Return to the current rule and check if it was (or is being) built in a pipeline with
+    // 5. Return to the current rule and check if it was (or is being) built in a pipeline with
     // one of its dependencies
     if (SupportsPipelining.isSupported(rule)) {
       buildResultFuture =
@@ -902,13 +906,13 @@ class CachingBuildRuleBuilder {
               });
     }
 
-    // 5. Return to the current rule and check caches to see if we can avoid building
+    // 6. Return to the current rule and check caches to see if we can avoid building
     if (SupportsInputBasedRuleKey.isSupported(rule)) {
       buildResultFuture =
           transformBuildResultAsyncIfNotPresent(buildResultFuture, this::checkInputBasedCaches);
     }
 
-    // 6. Then check if the depfile matches.
+    // 7. Then check if the depfile matches.
     if (useDependencyFileRuleKey()) {
       buildResultFuture =
           transformBuildResultIfNotPresent(
@@ -917,13 +921,13 @@ class CachingBuildRuleBuilder {
               serviceByAdjustingDefaultWeightsTo(CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS));
     }
 
-    // 7. Check for a manifest-based cache hit.
+    // 8. Check for a manifest-based cache hit.
     if (useManifestCaching()) {
       buildResultFuture =
           transformBuildResultAsyncIfNotPresent(buildResultFuture, this::checkManifestBasedCaches);
     }
 
-    // 8. Fail if populating the cache and cache lookups failed.
+    // 9. Fail if populating the cache and cache lookups failed.
     if (buildMode == CachingBuildEngine.BuildMode.POPULATE_FROM_REMOTE_CACHE) {
       buildResultFuture =
           transformBuildResultIfNotPresent(
@@ -940,33 +944,12 @@ class CachingBuildRuleBuilder {
               MoreExecutors.newDirectExecutorService());
     }
 
-    // 9. Check if rule has started being built remotely (i.e. by Stampede).
-    // If it has, then wait, otherwise go ahead and built locally.
+    // 10. Before building locally, do a final check that rule hasn't started building remotely.
+    // (as time has passed due to building of dependencies)
     buildResultFuture =
-        transformBuildResultAsyncIfNotPresent(
-            buildResultFuture,
-            () -> {
-              if (!remoteBuildRuleCompletionWaiter.shouldWaitForRemoteCompletionOfBuildRule(
-                  rule.getFullyQualifiedName())) {
-                // Start building locally right away, as remote build hasn't started yet.
-                // Note: this code path is also used for regular local Buck builds, these use
-                // NoOpRemoteBuildRuleCompletionWaiter that always returns false for above call.
-                return Futures.immediateFuture(Optional.empty());
-              }
+        attemptDistributedBuildSynchronization(buildResultFuture, rulekeyCacheResult);
 
-              // Once remote build has finished, download artifact from cache using default key
-              return Futures.transformAsync(
-                  remoteBuildRuleCompletionWaiter.waitForBuildRuleToFinishRemotely(rule),
-                  (Void v) ->
-                      Futures.transform(
-                          performRuleKeyCacheCheck(),
-                          cacheResult -> {
-                            rulekeyCacheResult.set(cacheResult);
-                            return getBuildResultForRuleKeyCacheResult(cacheResult);
-                          }));
-            });
-
-    // 10. Build the current rule locally, if we have to.
+    // 11. Build the current rule locally, if we have to.
     buildResultFuture =
         transformBuildResultAsyncIfNotPresent(
             buildResultFuture,
@@ -986,6 +969,35 @@ class CachingBuildRuleBuilder {
 
     // Unwrap the result.
     return Futures.transform(buildResultFuture, Optional::get);
+  }
+
+  private ListenableFuture<Optional<BuildResult>> attemptDistributedBuildSynchronization(
+      ListenableFuture<Optional<BuildResult>> buildResultFuture,
+      AtomicReference<CacheResult> rulekeyCacheResult) {
+    // Check if rule has started being built remotely (i.e. by Stampede). If it has, or if we are
+    // in a 'always wait mode' distributed build, then wait, otherwise proceed immediately.
+    return transformBuildResultAsyncIfNotPresent(
+        buildResultFuture,
+        () -> {
+          if (!remoteBuildRuleCompletionWaiter.shouldWaitForRemoteCompletionOfBuildRule(
+              rule.getFullyQualifiedName())) {
+            // Start building locally right away, as remote build hasn't started yet.
+            // Note: this code path is also used for regular local Buck builds, these use
+            // NoOpRemoteBuildRuleCompletionWaiter that always returns false for above call.
+            return Futures.immediateFuture(Optional.empty());
+          }
+
+          // Once remote build has finished, download artifact from cache using default key
+          return Futures.transformAsync(
+              remoteBuildRuleCompletionWaiter.waitForBuildRuleToFinishRemotely(rule),
+              (Void v) ->
+                  Futures.transform(
+                      performRuleKeyCacheCheck(),
+                      cacheResult -> {
+                        rulekeyCacheResult.set(cacheResult);
+                        return getBuildResultForRuleKeyCacheResult(cacheResult);
+                      }));
+        });
   }
 
   private <T extends RulePipelineState> void addToPipelinesRunner(
