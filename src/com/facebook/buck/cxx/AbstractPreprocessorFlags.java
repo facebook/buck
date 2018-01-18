@@ -109,7 +109,7 @@ abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
             preprocessor.prefixOrPCHArgs(
                 getPrefixHeader().map(resolver::getAbsolutePath),
                 pch.map(CxxPrecompiledHeader::getSourcePathToOutput)
-                    .map(resolver::getRelativePath))));
+                    .map(resolver::getAbsolutePath))));
     return builder.build();
   }
 
