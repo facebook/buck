@@ -17,6 +17,7 @@ from .glob_watchman import SyncCookieState, glob_watchman
 from .util import Diagnostic, cygwin_adjusted_path, get_caller_frame, is_special, is_in_dir
 from .module_whitelist import ImportWhitelistManager
 from .profiler import Profiler
+from .struct import Struct
 
 import abc
 import functools
@@ -1015,19 +1016,6 @@ class BuildFileProcessor(object):
         build_env.includes.add(path)
         build_env.merge(inner_env)
 
-    def _struct(self, **kwargs):
-        """Creates an immutable container using the keyword arguments as attributes.
-
-        It can be used to group multiple values and/or functions together. Example:
-            def _my_function():
-              return 3
-            s = struct(x = 2, foo = _my_function)
-            return s.x + s.foo()  # returns 5
-        """
-        keys = [key for key in kwargs]
-        new_type = collections.namedtuple('struct', keys)
-        return new_type(**kwargs)
-
     def _provider(self):
         """Creates a declared provider factory.
 
@@ -1039,7 +1027,7 @@ class BuildFileProcessor(object):
             info = SomeInfo(x = 2, foo = foo)
             print(info.x + info.foo())  # prints 5
         """
-        return self._struct
+        return Struct
 
 
     def _add_build_file_dep(self, name):
@@ -1189,7 +1177,7 @@ class BuildFileProcessor(object):
                 'glob': self._glob,
                 'subdir_glob': self._subdir_glob,
                 'load': functools.partial(self._load, is_implicit_include),
-                'struct': self._struct,
+                'struct': Struct,
                 'provider': self._provider,
                 'host_info': self._host_info,
                 'native': self._native_module,

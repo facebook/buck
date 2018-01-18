@@ -606,6 +606,31 @@ class BuckTest(unittest.TestCase):
                 build_file.root, build_file.prefix, build_file.path, diagnostics)
             self.assertEqual(rules[0].get('name'), 'foo')
 
+    def test_struct_to_json(self):
+        extension_file = ProjectFile(
+            self.project_root,
+            path='ext.bzl',
+            contents=(
+                's = struct(name="foo")',
+            )
+        )
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                'load("//:ext.bzl", "s")',
+                'foo_rule(',
+                '  name=s.to_json(),',
+                ')'
+            ))
+        self.write_files(extension_file, build_file)
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        diagnostics = []
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            rules = build_file_processor.process(
+                build_file.root, build_file.prefix, build_file.path, diagnostics)
+            self.assertEqual(rules[0].get('name'), '{"name":"foo"}')
+
     def test_provider_is_available(self):
         extension_file = ProjectFile(
             self.project_root,
