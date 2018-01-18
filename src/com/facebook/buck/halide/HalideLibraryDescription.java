@@ -231,6 +231,7 @@ public class HalideLibraryDescription
             buildTarget,
             platform.getFlavor(),
             PicType.PIC,
+            Optional.empty(),
             platform.getStaticLibraryExtension(),
             cxxBuckConfig.isUniqueLibraryNameEnabled()),
         ImmutableList.of(

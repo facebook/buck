@@ -45,6 +45,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -368,6 +369,35 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         Arg.stringify(rule.getArgs(), pathResolver),
         hasItems(sonameArgs.toArray(new String[sonameArgs.size()])));
+  }
+
+  @Test
+  public void overrideStaticLibraryBasename() throws Exception {
+
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    String basename = "test_static_library_basename";
+
+    // Generate the C++ library rules.
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//:rule")
+            .withFlavors(
+                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
+                CxxDescriptionEnhancer.STATIC_FLAVOR);
+    CxxLibraryBuilder ruleBuilder =
+        new CxxLibraryBuilder(target, cxxBuckConfig)
+            .setStaticLibraryBasename(basename)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.cpp"))));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(ruleBuilder.build());
+    BuildRuleResolver resolver =
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+    Archive rule = (Archive) ruleBuilder.build(resolver, filesystem, targetGraph);
+    Path path = pathResolver.getAbsolutePath(rule.getSourcePathToOutput());
+    assertEquals(
+        MorePaths.getNameWithoutExtension(path.getFileName()), "libtest_static_library_basename");
   }
 
   @Test

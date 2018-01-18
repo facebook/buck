@@ -737,6 +737,7 @@ public class CxxLibraryFactory {
             buildTarget,
             cxxPlatform.getFlavor(),
             pic,
+            args.getStaticLibraryBasename(),
             cxxPlatform.getStaticLibraryExtension(),
             cxxBuckConfig.isUniqueLibraryNameEnabled());
     return Archive.from(

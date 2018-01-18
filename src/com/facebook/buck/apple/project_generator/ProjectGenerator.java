@@ -2549,6 +2549,10 @@ public class ProjectGenerator {
         library.isPresent()
             && !AppleLibraryDescription.isNotStaticallyLinkedLibraryNode(library.get());
     if (isStaticLibrary) {
+      Optional<String> basename = library.get().getConstructorArg().getStaticLibraryBasename();
+      if (basename.isPresent()) {
+        return basename.get();
+      }
       return CxxDescriptionEnhancer.getStaticLibraryBasename(
           targetNode.getBuildTarget(), "", cxxBuckConfig.isUniqueLibraryNameEnabled());
     } else {

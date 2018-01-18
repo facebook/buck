@@ -439,6 +439,8 @@ public class CxxLibraryDescription
 
     Optional<String> getSoname();
 
+    Optional<String> getStaticLibraryBasename();
+
     Optional<Boolean> getForceStatic();
 
     Optional<Boolean> getLinkWhole();

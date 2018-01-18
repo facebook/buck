@@ -141,6 +141,11 @@ public class CxxLibraryBuilder
     return this;
   }
 
+  public CxxLibraryBuilder setStaticLibraryBasename(String staticLibraryBasename) {
+    getArgForPopulating().setStaticLibraryBasename(Optional.of(staticLibraryBasename));
+    return this;
+  }
+
   public CxxLibraryBuilder setLinkWhole(boolean linkWhole) {
     getArgForPopulating().setLinkWhole(Optional.of(linkWhole));
     return this;

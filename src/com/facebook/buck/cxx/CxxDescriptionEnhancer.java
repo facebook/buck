@@ -598,10 +598,18 @@ public class CxxDescriptionEnhancer {
       BuildTarget target,
       Flavor platform,
       PicType pic,
+      Optional<String> staticLibraryBasename,
       String extension,
       boolean uniqueLibraryNameEnabled) {
     return getStaticLibraryPath(
-        filesystem, target, platform, pic, extension, "", uniqueLibraryNameEnabled);
+        filesystem,
+        target,
+        platform,
+        pic,
+        staticLibraryBasename,
+        extension,
+        "",
+        uniqueLibraryNameEnabled);
   }
 
   public static String getStaticLibraryBasename(
@@ -627,13 +635,17 @@ public class CxxDescriptionEnhancer {
       BuildTarget target,
       Flavor platform,
       PicType pic,
+      Optional<String> staticLibraryBasename,
       String extension,
       String suffix,
       boolean uniqueLibraryNameEnabled) {
-    String name =
-        String.format(
-            "lib%s.%s",
-            getStaticLibraryBasename(target, suffix, uniqueLibraryNameEnabled), extension);
+    String basename;
+    if (staticLibraryBasename.isPresent()) {
+      basename = staticLibraryBasename.get();
+    } else {
+      basename = getStaticLibraryBasename(target, suffix, uniqueLibraryNameEnabled);
+    }
+    String name = String.format("lib%s.%s", basename, extension);
     return BuildTargets.getGenPath(
             filesystem, createStaticLibraryBuildTarget(target, platform, pic), "%s")
         .resolve(name);

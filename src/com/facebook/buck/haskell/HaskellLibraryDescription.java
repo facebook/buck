@@ -195,6 +195,7 @@ public class HaskellLibraryDescription
             target.withoutFlavors(HaskellDescriptionUtils.PROF),
             platform.getFlavor(),
             depType == Linker.LinkableDepType.STATIC ? PicType.PDC : PicType.PIC,
+            Optional.empty(),
             platform.getCxxPlatform().getStaticLibraryExtension(),
             hsProfile ? "_p" : "",
             cxxBuckConfig.isUniqueLibraryNameEnabled()),
