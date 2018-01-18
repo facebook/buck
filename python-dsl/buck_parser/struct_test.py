@@ -46,3 +46,13 @@ class StructTest(unittest.TestCase):
         x = struct.struct(foo="bar")
         y = struct.struct(foo="baz")
         self.assertNotEqual(x, y)
+
+    def testCanUseAsAHashKey(self):
+        x = struct.struct(foo="bar")
+        y = struct.struct(foo="baz")
+        dictionary = {
+            x: "x",
+            y: "y",
+        }
+        self.assertEqual(dictionary[x], "x")
+        self.assertNotEqual(dictionary[y], "x")
