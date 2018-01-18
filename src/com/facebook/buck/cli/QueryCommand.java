@@ -38,7 +38,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -63,6 +62,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.codehaus.plexus.util.StringUtils;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -359,33 +359,34 @@ public class QueryCommand extends AbstractCommand {
           OutputFormat outputFormat,
           Set<Entry<TargetNode<?, ?>, Integer>> rankEntries) {
     PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes.get());
-    ImmutableMap<String, Integer> rankIndex =
+    // since some nodes differ in their flavors but ultimately have the same attributes, immutable
+    // resulting map is created only after duplicates are merged by using regular HashMap
+    Map<String, Integer> rankIndex =
         rankEntries
             .stream()
             .collect(
-                ImmutableMap.toImmutableMap(
-                    entry -> toPresentationForm(entry.getKey()), Entry::getValue));
-    return rankEntries
-        .stream()
-        .collect(
-            ImmutableSortedMap.toImmutableSortedMap(
-                Comparator.<String>comparingInt(rankIndex::get)
-                    .thenComparing(Comparator.naturalOrder()),
-                entry -> toPresentationForm(entry.getKey()),
-                entry -> {
-                  String label = toPresentationForm(entry.getKey());
-                  // NOTE: for resiliency in case attributes cannot be resolved a map with only
-                  // minrank is returned, which means clients should be prepared to deal with
-                  // potentially missing fields. Consider not returning a node in such case, since
-                  // most likely an attempt to use that node would fail anyways.
-                  SortedMap<String, Object> attributes =
-                      getAttributes(params, env, patternsMatcher, entry.getKey())
-                          .orElseGet(TreeMap::new);
-                  return ImmutableSortedMap.<String, Object>naturalOrder()
-                      .putAll(attributes)
-                      .put(outputFormat.name().toLowerCase(), rankIndex.get(label))
-                      .build();
-                }));
+                Collectors.toMap(entry -> toPresentationForm(entry.getKey()), Entry::getValue));
+    return ImmutableSortedMap.copyOf(
+        rankEntries
+            .stream()
+            .collect(
+                Collectors.toMap(
+                    entry -> toPresentationForm(entry.getKey()),
+                    entry -> {
+                      String label = toPresentationForm(entry.getKey());
+                      // NOTE: for resiliency in case attributes cannot be resolved a map with only
+                      // minrank is returned, which means clients should be prepared to deal with
+                      // potentially missing fields. Consider not returning a node in such case,
+                      // since most likely an attempt to use that node would fail anyways.
+                      SortedMap<String, Object> attributes =
+                          getAttributes(params, env, patternsMatcher, entry.getKey())
+                              .orElseGet(TreeMap::new);
+                      return ImmutableSortedMap.<String, Object>naturalOrder()
+                          .putAll(attributes)
+                          .put(outputFormat.name().toLowerCase(), rankIndex.get(label))
+                          .build();
+                    })),
+        Comparator.<String>comparingInt(rankIndex::get).thenComparing(Comparator.naturalOrder()));
   }
 
   private Map<TargetNode<?, ?>, Integer> computeRanks(
