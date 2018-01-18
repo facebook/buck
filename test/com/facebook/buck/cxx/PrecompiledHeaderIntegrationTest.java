@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.file.ProjectFilesystemMatchers;
 import com.facebook.buck.model.BuildTarget;
@@ -28,7 +27,6 @@ import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -48,14 +46,16 @@ public class PrecompiledHeaderIntegrationTest {
 
   @Test
   public void compilesWithPrecompiledHeaders() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     workspace.runBuckBuild("//:some_library#default,static").assertSuccess();
     findPchTarget();
   }
 
   @Test
   public void pchDepFileHasReferencedHeaders() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     workspace.runBuckBuild("//:some_library#default,static").assertSuccess();
     BuildTarget target = findPchTarget();
     String depFileContents =
@@ -66,7 +66,8 @@ public class PrecompiledHeaderIntegrationTest {
 
   @Test
   public void changingPrefixHeaderCausesRecompile() throws Exception {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     workspace.resetBuildLogFile();
     workspace.writeContentsToPath(
@@ -84,7 +85,8 @@ public class PrecompiledHeaderIntegrationTest {
 
   @Test
   public void changingPchReferencedHeaderFromSameTargetCausesLibraryToRecompile() throws Exception {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     workspace.resetBuildLogFile();
     workspace.writeContentsToPath(
@@ -97,7 +99,8 @@ public class PrecompiledHeaderIntegrationTest {
 
   @Test
   public void changingPchReferencedHeaderFromDependencyCausesLibraryToRecompile() throws Exception {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     workspace.resetBuildLogFile();
     workspace.writeContentsToPath(
@@ -111,7 +114,8 @@ public class PrecompiledHeaderIntegrationTest {
 
   @Test
   public void touchingPchReferencedHeaderShouldNotCauseClangToRejectPch() throws Exception {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     workspace.resetBuildLogFile();
     // Change this file (not in the pch) to trigger recompile.
@@ -128,7 +132,8 @@ public class PrecompiledHeaderIntegrationTest {
 
   @Test
   public void changingCodeUsingPchWhenPchIsCachedButNotBuiltShouldBuildPch() throws Exception {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     workspace.enableDirCache();
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     workspace.runBuckCommand("clean");

@@ -23,7 +23,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.Compiler;
@@ -73,7 +72,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
@@ -110,7 +108,8 @@ public class CxxPrecompiledHeaderRuleTest {
 
   @Before
   public void setUp() throws InterruptedException, IOException {
-    assumeTrue(platformOkForPCHTests());
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_precompiled_header_rule", tmp);
@@ -226,10 +225,6 @@ public class CxxPrecompiledHeaderRuleTest {
       }
     }
     return list.subList(i, list.size());
-  }
-
-  private boolean platformOkForPCHTests() {
-    return Platform.detect() != Platform.WINDOWS;
   }
 
   /** @return exit code from that process */
