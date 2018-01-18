@@ -247,6 +247,10 @@ public class ActionGraphCache {
       TargetGraph targetGraph,
       ActionGraphParallelizationMode parallelizationMode,
       final boolean shouldInstrumentGraphBuilding) {
+    // Temporary for measuring impact on action graph construction. getGroupStable returns the same
+    // group.
+    CxxSymlinkTreeHeadersExperiment.startExperiment(eventBus);
+
     switch (parallelizationMode) {
       case EXPERIMENT:
         parallelizationMode =
