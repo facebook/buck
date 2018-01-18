@@ -46,6 +46,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
@@ -86,6 +87,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   private final OwnersReport.Builder ownersReportBuilder;
   private final ListeningExecutorService executor;
   private final TargetPatternEvaluator targetPatternEvaluator;
+  private final Console console;
   private final QueryEnvironment.TargetEvaluator queryTargetEvaluator;
 
   private final ImmutableMap<Cell, BuildFileTree> buildFileTrees;
@@ -101,7 +103,8 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       OwnersReport.Builder ownersReportBuilder,
       PerBuildState parserState,
       ListeningExecutorService executor,
-      TargetPatternEvaluator targetPatternEvaluator) {
+      TargetPatternEvaluator targetPatternEvaluator,
+      Console console) {
     this.parserState = parserState;
     this.rootCell = rootCell;
     this.ownersReportBuilder = ownersReportBuilder;
@@ -117,6 +120,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
                             cell.getFilesystem(), cell.getBuildFileName())));
     this.executor = executor;
     this.targetPatternEvaluator = targetPatternEvaluator;
+    this.console = console;
     this.queryTargetEvaluator = new TargetEvaluator(targetPatternEvaluator, executor);
   }
 
@@ -125,9 +129,10 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       OwnersReport.Builder ownersReportBuilder,
       PerBuildState parserState,
       ListeningExecutorService executor,
-      TargetPatternEvaluator targetPatternEvaluator) {
+      TargetPatternEvaluator targetPatternEvaluator,
+      Console console) {
     return new BuckQueryEnvironment(
-        rootCell, ownersReportBuilder, parserState, executor, targetPatternEvaluator);
+        rootCell, ownersReportBuilder, parserState, executor, targetPatternEvaluator, console);
   }
 
   public static BuckQueryEnvironment from(
@@ -145,7 +150,8 @@ public class BuckQueryEnvironment implements QueryEnvironment {
             params.getBuckConfig(),
             params.getParser(),
             params.getBuckEventBus(),
-            enableProfiling));
+            enableProfiling),
+        params.getConsole());
   }
 
   public DirectedAcyclicGraph<TargetNode<?, ?>> getTargetGraph() {
@@ -458,6 +464,15 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   public ImmutableSet<QueryTarget> getFileOwners(ImmutableList<String> files)
       throws QueryException {
     OwnersReport report = ownersReportBuilder.build(buildFileTrees, executor, files);
+    report
+        .getInputsWithNoOwners()
+        .forEach(path -> console.printErrorText(String.format("No owner was found for %s", path)));
+    report
+        .getNonExistentInputs()
+        .forEach(path -> console.printErrorText(String.format("File %s does not exist", path)));
+    report
+        .getNonFileInputs()
+        .forEach(path -> console.printErrorText(String.format("%s is not a regular file", path)));
     return getTargetsFromTargetNodes(report.owners.keySet());
   }
 

@@ -265,6 +265,24 @@ public class QueryCommandIntegrationTest {
   }
 
   @Test
+  public void testOwnersWithInvalidFilesPrintsErrors() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "owner('odd_files/unowned.cpp') + owner('odd_files/missing.cpp') + owner('odd_files/non_file') + owner('example/1.txt')");
+
+    result.assertSuccess();
+    assertThat(result.getStdout(), containsString("//example:one"));
+    assertThat(result.getStderr(), containsString("No owner was found for odd_files/unowned.cpp"));
+    assertThat(result.getStderr(), containsString("File odd_files/missing.cpp does not exist"));
+    assertThat(result.getStderr(), containsString("odd_files/non_file is not a regular file"));
+  }
+
+  @Test
   public void testFormatWithoutFormatString() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);

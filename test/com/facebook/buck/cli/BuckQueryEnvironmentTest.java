@@ -114,7 +114,12 @@ public class BuckQueryEnvironmentTest {
     executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
     buckQueryEnvironment =
         BuckQueryEnvironment.from(
-            cell, ownersReportBuilder, parserState, executor, targetPatternEvaluator);
+            cell,
+            ownersReportBuilder,
+            parserState,
+            executor,
+            targetPatternEvaluator,
+            null /* TODO */);
     cellRoot = workspace.getDestPath();
   }
 
