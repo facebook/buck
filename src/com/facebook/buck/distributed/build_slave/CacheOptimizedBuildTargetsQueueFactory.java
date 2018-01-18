@@ -61,7 +61,8 @@ public class CacheOptimizedBuildTargetsQueueFactory {
   private class GraphTraversalData {
     Map<String, Set<String>> allReverseDeps = new HashMap<>();
     Map<String, Set<String>> allForwardDeps = new HashMap<>();
-    Set<String> visitedTargets = new HashSet<>();
+    Set<BuildRule> visitedRules = new HashSet<>();
+    Set<BuildRule> prunedRules = new HashSet<>();
     Set<String> uncachableTargets = new HashSet<>();
     Set<EnqueuedTarget> unachableZeroDependencyTargets = new HashSet<>();
   }
@@ -165,11 +166,7 @@ public class CacheOptimizedBuildTargetsQueueFactory {
 
   private GraphTraversalData traverseActionGraph(Queue<BuildRule> buildRulesToProcess) {
     GraphTraversalData results = new GraphTraversalData();
-    results.visitedTargets.addAll(
-        buildRulesToProcess
-            .stream()
-            .map(CacheOptimizedBuildTargetsQueueFactory::ruleToTarget)
-            .collect(Collectors.toSet()));
+    results.visitedRules.addAll(buildRulesToProcess);
 
     while (!buildRulesToProcess.isEmpty()) {
       BuildRule rule = buildRulesToProcess.remove();
@@ -220,8 +217,8 @@ public class CacheOptimizedBuildTargetsQueueFactory {
         Preconditions.checkNotNull(results.allReverseDeps.get(dependencyTarget)).add(target);
         Preconditions.checkNotNull(results.allForwardDeps.get(target)).add(dependencyTarget);
 
-        if (!results.visitedTargets.contains(dependencyTarget)) {
-          results.visitedTargets.add(dependencyTarget);
+        if (!results.visitedRules.contains(dependencyRule)) {
+          results.visitedRules.add(dependencyRule);
           buildRulesToProcess.add(dependencyRule);
         }
       }
@@ -231,16 +228,47 @@ public class CacheOptimizedBuildTargetsQueueFactory {
   }
 
   private GraphTraversalData traverseGraphFromTopLevelUsingAvailableCaches(
-      Iterable<BuildTarget> targetsToBuild) {
+      Iterable<BuildTarget> topLevelTargets) {
+    // Start with a set of every node in the graph
+    Set<BuildRule> prunedRules = findAllRulesInGraph(topLevelTargets);
 
-    Queue<BuildRule> buildRulesToProcess = processTopLevelTargets(targetsToBuild);
+    Queue<BuildRule> buildRulesToProcess = processTopLevelTargets(topLevelTargets);
 
     if (!buildRulesToProcess.isEmpty() && !isDeepBuild) {
       // Check the cache for everything we are going to need upfront.
       artifactCache.prewarmRemoteContainsForAllKnownRules();
     }
     LOG.debug("Traversing %d top-level targets now.", buildRulesToProcess.size());
-    return traverseActionGraph(buildRulesToProcess);
+    GraphTraversalData graphTraversalData = traverseActionGraph(buildRulesToProcess);
+
+    // Now remove the nodes that will be scheduled from set of all nodes, to find the pruned ones.
+    prunedRules.removeAll(graphTraversalData.visitedRules);
+    graphTraversalData.prunedRules.addAll(prunedRules);
+
+    return graphTraversalData;
+  }
+
+  private Set<BuildRule> findAllRulesInGraph(Iterable<BuildTarget> topLevelTargets) {
+    Set<BuildRule> allRules = new HashSet<>();
+
+    Queue<BuildRule> rulesToProcess =
+        RichStream.from(topLevelTargets)
+            .map(resolver::getRule)
+            .collect(Collectors.toCollection(LinkedList::new));
+
+    while (!rulesToProcess.isEmpty()) {
+      BuildRule buildRule = rulesToProcess.remove();
+
+      if (allRules.contains(buildRule)) {
+        continue;
+      }
+      allRules.add(buildRule);
+
+      rulesToProcess.addAll(buildRule.getBuildDeps());
+      rulesToProcess.addAll(getRuntimeDeps(buildRule).collect(Collectors.toList()));
+    }
+
+    return allRules;
   }
 
   /**
@@ -274,13 +302,31 @@ public class CacheOptimizedBuildTargetsQueueFactory {
    * @param targetsToBuild top-level targets that need to be built.
    * @return an instance of {@link BuildTargetsQueue} with the top-level targets at the root.
    */
-  public BuildTargetsQueue createBuildTargetsQueue(Iterable<BuildTarget> targetsToBuild) {
+  public BuildTargetsQueue createBuildTargetsQueue(
+      Iterable<BuildTarget> targetsToBuild, BuildRuleFinishedPublisher buildRuleFinishedPublisher) {
     GraphTraversalData results = traverseGraphFromTopLevelUsingAvailableCaches(targetsToBuild);
+
+    // Notify distributed build clients that they should not wait for any of the nodes that were
+    // pruned (as they will never be built remotely)
+    ImmutableList<String> prunedTargets =
+        ImmutableList.copyOf(
+            results
+                .prunedRules
+                .stream()
+                .filter(BuildRule::isCacheable) // Client always skips uncacheables
+                .map(BuildRule::getFullyQualifiedName)
+                .collect(Collectors.toList()));
+
+    LOG.info(
+        String.format("[%d] cacheable build rules were pruned from graph.", prunedTargets.size()));
+    buildRuleFinishedPublisher.createBuildRuleStartedEvents(prunedTargets);
+    buildRuleFinishedPublisher.createBuildRuleCompletionEvents(prunedTargets);
 
     // Do the reference counting and create the EnqueuedTargets.
     List<EnqueuedTarget> zeroDependencyTargets = new ArrayList<>();
     Map<String, EnqueuedTarget> allEnqueuedTargets = new HashMap<>();
-    for (String target : results.visitedTargets) {
+    for (BuildRule buildRule : results.visitedRules) {
+      String target = buildRule.getFullyQualifiedName();
       Iterable<String> currentRevDeps;
       if (results.allReverseDeps.containsKey(target)) {
         currentRevDeps = results.allReverseDeps.get(target);

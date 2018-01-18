@@ -102,7 +102,8 @@ public class MultiSlaveBuildModeRunnerFactory {
                                     graphs.getActionGraphAndResolver().getResolver(),
                                     artifactCache,
                                     distBuildConfig.isDeepRemoteBuildEnabled())
-                                .createBuildTargetsQueue(topLevelTargetsToBuild);
+                                .createBuildTargetsQueue(
+                                    topLevelTargetsToBuild, buildRuleFinishedPublisher);
                       } catch (Exception e) {
                         LOG.error(e, "Failed to create BuildTargetsQueue.");
                         throw new RuntimeException(e);

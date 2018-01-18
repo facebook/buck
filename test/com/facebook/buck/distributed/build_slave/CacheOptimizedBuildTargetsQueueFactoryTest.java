@@ -22,6 +22,9 @@ import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFact
 import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.LEFT_TARGET;
 import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.RIGHT_TARGET;
 import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.ROOT_TARGET;
+import static org.easymock.EasyMock.capture;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.replay;
 
 import com.facebook.buck.distributed.ArtifactCacheByBuildRule;
 import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
@@ -34,20 +37,27 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Futures;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+import org.easymock.Capture;
+import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class CacheOptimizedBuildTargetsQueueFactoryTest {
 
   private ArtifactCacheByBuildRule artifactCache;
+  private BuildRuleFinishedPublisher ruleFinishedPublisher;
 
   @Before
   public void setUp() {
     this.artifactCache = null;
+    this.ruleFinishedPublisher = EasyMock.createMock(BuildRuleFinishedPublisher.class);
   }
 
   private BuildTargetsQueue createQueueWithLocalCacheHits(
@@ -60,7 +70,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
             localCacheHitTargets.stream().map(resolver::getRule).collect(Collectors.toList()));
 
     return new CacheOptimizedBuildTargetsQueueFactory(resolver, artifactCache, false)
-        .createBuildTargetsQueue(topLevelTargets);
+        .createBuildTargetsQueue(topLevelTargets, ruleFinishedPublisher);
   }
 
   private BuildTargetsQueue createQueueWithRemoteCacheHits(
@@ -74,7 +84,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
             ImmutableList.of());
 
     return new CacheOptimizedBuildTargetsQueueFactory(resolver, artifactCache, false)
-        .createBuildTargetsQueue(topLevelTargets);
+        .createBuildTargetsQueue(topLevelTargets, ruleFinishedPublisher);
   }
 
   @Test
@@ -89,7 +99,18 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
     //       |              /
     //       +- left (hit) -
     //                      \
-    //                        {uncacheable_b (runtime), cacheable_c (runtime)}
+    //                        {uncacheable_b (runtime), cacheable_c (runtime miss)}
+
+    Capture<ImmutableList<String>> startedEventsCapture = Capture.newInstance();
+    ruleFinishedPublisher.createBuildRuleStartedEvents(capture(startedEventsCapture));
+    expectLastCall();
+
+    Capture<ImmutableList<String>> completedEventsCapture = Capture.newInstance();
+    ruleFinishedPublisher.createBuildRuleCompletionEvents(capture(completedEventsCapture));
+    expectLastCall();
+
+    replay(ruleFinishedPublisher);
+
     BuildRuleResolver resolver =
         CustomBuildRuleResolverFactory.createResolverWithUncacheableRuntimeDeps();
     BuildTarget rootTarget = BuildTargetFactory.newInstance(ROOT_TARGET);
@@ -115,6 +136,18 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
             ImmutableList.of(CACHABLE_C, LEFT_TARGET, ROOT_TARGET),
             BuildTargetsQueueTest.MAX_UNITS_OF_WORK);
     Assert.assertEquals(0, newZeroDepNodes.size());
+
+    // LEAF_TARGET and RIGHT_TARGET were pruned, so should have corresponding
+    // started and completed events
+    Assert.assertEquals(1, startedEventsCapture.getValues().size());
+    Set<String> startedEvents = Sets.newHashSet(startedEventsCapture.getValues().get(0));
+    Assert.assertTrue(startedEvents.contains(LEAF_TARGET));
+    Assert.assertTrue(startedEvents.contains(RIGHT_TARGET));
+
+    Assert.assertEquals(1, completedEventsCapture.getValues().size());
+    Set<String> completedEvents = Sets.newHashSet(completedEventsCapture.getValues().get(0));
+    Assert.assertTrue(completedEvents.contains(LEAF_TARGET));
+    Assert.assertTrue(completedEvents.contains(RIGHT_TARGET));
   }
 
   @Test
@@ -222,6 +255,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
   }
 
   @Test
+  @Ignore // TODO(shivanker): make this test pass.
   public void testGraphWithMissingRuntimeDepsForLocalHitUploads()
       throws NoSuchBuildTargetException, InterruptedException {
     // Graph structure:

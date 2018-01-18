@@ -32,6 +32,7 @@ import com.facebook.buck.distributed.ArtifactCacheByBuildRule;
 import com.facebook.buck.distributed.NoopArtifactCacheByBuildRule;
 import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
 import com.facebook.buck.distributed.thrift.WorkUnit;
+import com.facebook.buck.event.listener.NoOpBuildRuleFinishedPublisher;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -57,7 +58,7 @@ public class BuildTargetsQueueTest {
       BuildRuleResolver resolver, Iterable<BuildTarget> topLevelTargets) {
     return new CacheOptimizedBuildTargetsQueueFactory(
             resolver, new NoopArtifactCacheByBuildRule(), false)
-        .createBuildTargetsQueue(topLevelTargets);
+        .createBuildTargetsQueue(topLevelTargets, new NoOpBuildRuleFinishedPublisher());
   }
 
   @Test
@@ -317,7 +318,8 @@ public class BuildTargetsQueueTest {
         new CacheOptimizedBuildTargetsQueueFactory(resolver, artifactCache, true);
 
     EasyMock.replay(artifactCache);
-    factory.createBuildTargetsQueue(ImmutableList.of(rootTarget));
+    factory.createBuildTargetsQueue(
+        ImmutableList.of(rootTarget), new NoOpBuildRuleFinishedPublisher());
     EasyMock.verify(artifactCache);
   }
 

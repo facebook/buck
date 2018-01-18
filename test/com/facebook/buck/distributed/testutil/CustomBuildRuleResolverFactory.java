@@ -32,7 +32,10 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public class CustomBuildRuleResolverFactory {
@@ -228,23 +231,27 @@ public class CustomBuildRuleResolverFactory {
     BuildTarget root = BuildTargetFactory.newInstance(ROOT_TARGET);
     BuildTarget left = BuildTargetFactory.newInstance(LEFT_TARGET);
     BuildTarget right = BuildTargetFactory.newInstance(RIGHT_TARGET);
-    BuildTarget leaf = BuildTargetFactory.newInstance(LEAF_TARGET);
 
+    BuildRule leafRule = newCacheableRule(resolver, LEAF_TARGET);
     BuildRule uncachableRuleA = newUncacheableRule(resolver, UNCACHABLE_A);
     BuildRule rightRule =
-        new FakeHasRuntimeDepsRule(right, new FakeProjectFilesystem(), uncachableRuleA);
+        new FakeHasRuntimeDepsRule(
+            right, new FakeProjectFilesystem(), ImmutableSet.of(leafRule), uncachableRuleA);
     resolver.addToIndex(rightRule);
 
     BuildRule uncachableRuleB = newUncacheableRule(resolver, UNCACHABLE_B);
     BuildRule cachableRuleC = newCacheableRule(resolver, CACHABLE_C);
     BuildRule leftRule =
         new FakeHasRuntimeDepsRule(
-            left, new FakeProjectFilesystem(), uncachableRuleB, cachableRuleC);
+            left,
+            new FakeProjectFilesystem(),
+            ImmutableSet.of(leafRule),
+            uncachableRuleB,
+            cachableRuleC);
     resolver.addToIndex(leftRule);
 
     ImmutableSortedSet<BuildRule> buildRules =
         ImmutableSortedSet.of(
-            JavaLibraryBuilder.createBuilder(leaf).build(resolver),
             JavaLibraryBuilder.createBuilder(root).addDep(left).addDep(right).build(resolver));
     buildRules.forEach(resolver::addToIndex);
     return resolver;
@@ -267,7 +274,15 @@ public class CustomBuildRuleResolverFactory {
 
     public FakeHasRuntimeDepsRule(
         BuildTarget target, ProjectFilesystem filesystem, BuildRule... runtimeDeps) {
-      super(target, filesystem);
+      this(target, filesystem, Sets.newHashSet(), runtimeDeps);
+    }
+
+    public FakeHasRuntimeDepsRule(
+        BuildTarget target,
+        ProjectFilesystem filesystem,
+        Set<BuildRule> deps,
+        BuildRule... runtimeDeps) {
+      super(target, filesystem, deps.toArray(new BuildRule[0]));
       this.runtimeDeps = ImmutableSortedSet.copyOf(runtimeDeps);
     }
 

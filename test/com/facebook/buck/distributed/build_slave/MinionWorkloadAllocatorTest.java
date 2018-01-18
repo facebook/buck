@@ -19,6 +19,7 @@ package com.facebook.buck.distributed.build_slave;
 import com.facebook.buck.distributed.NoopArtifactCacheByBuildRule;
 import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
 import com.facebook.buck.distributed.thrift.WorkUnit;
+import com.facebook.buck.event.listener.NoOpBuildRuleFinishedPublisher;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -44,7 +45,8 @@ public class MinionWorkloadAllocatorTest {
     queue =
         new CacheOptimizedBuildTargetsQueueFactory(
                 resolver, new NoopArtifactCacheByBuildRule(), false)
-            .createBuildTargetsQueue(ImmutableList.of(target));
+            .createBuildTargetsQueue(
+                ImmutableList.of(target), new NoOpBuildRuleFinishedPublisher());
   }
 
   @Test
