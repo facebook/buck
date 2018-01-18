@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.cxx.CxxHeadersExperiment;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ActionGraphPerfStatEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -250,6 +251,7 @@ public class ActionGraphCache {
     // Temporary for measuring impact on action graph construction. getGroupStable returns the same
     // group.
     CxxSymlinkTreeHeadersExperiment.startExperiment(eventBus);
+    CxxHeadersExperiment.startExperiment(eventBus);
 
     switch (parallelizationMode) {
       case EXPERIMENT:

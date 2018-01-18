@@ -2489,6 +2489,7 @@ public class CxxBinaryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "headers_conflicts", tmp);
     workspace.setUp();
+    CxxHeadersExperiment.mode = CxxHeadersExperiment.Mode.ENABLE_DEFER;
     String errorMsg = workspace.runBuckBuild(":main").assertFailure().getStderr();
     assertTrue(
         errorMsg.contains(

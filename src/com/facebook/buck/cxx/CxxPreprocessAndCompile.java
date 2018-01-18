@@ -250,14 +250,16 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    preprocessDelegate.ifPresent(
-        delegate -> {
-          try {
-            CxxHeaders.checkConflictingHeaders(delegate.getCxxIncludePaths().getIPaths());
-          } catch (CxxHeaders.ConflictingHeadersException e) {
-            throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
-          }
-        });
+    if (CxxHeadersExperiment.runExperiment()) {
+      preprocessDelegate.ifPresent(
+          delegate -> {
+            try {
+              CxxHeaders.checkConflictingHeaders(delegate.getCxxIncludePaths().getIPaths());
+            } catch (CxxHeaders.ConflictingHeadersException e) {
+              throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
+            }
+          });
+    }
 
     buildableContext.recordArtifact(output);
 
