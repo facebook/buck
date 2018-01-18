@@ -1,0 +1,5 @@
+cxx_precompiled_header(
+    name = "pch",
+    src = "precompiled_header.pch",
+    visibility = ["PUBLIC"],
+)

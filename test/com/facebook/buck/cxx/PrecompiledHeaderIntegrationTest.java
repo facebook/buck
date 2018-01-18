@@ -149,6 +149,16 @@ public class PrecompiledHeaderIntegrationTest {
     buildLog.assertTargetBuiltLocally("//:some_library#default,static");
   }
 
+  @Test
+  public void testBuildUsingPrecompiledHeaderInOtherCell() throws Exception {
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
+    BuildTarget target = workspace.newBuildTarget("//:library_multicell_pch#default");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
+  }
+
   private BuildTarget findPchTarget() throws IOException {
     for (BuildTarget target : workspace.getBuildLog().getAllTargets()) {
       for (Flavor flavor : target.getFlavors()) {

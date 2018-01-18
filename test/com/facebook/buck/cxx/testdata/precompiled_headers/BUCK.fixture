@@ -25,6 +25,15 @@ cxx_library(
     ],
 )
 
+cxx_library(
+    name = "library_multicell_pch",
+    srcs = [
+        "LibFileUsingMulticell1.c",
+        "LibFileUsingMulticell2.c",
+    ],
+    precompiled_header = "secondary//pch:pch",
+)
+
 cxx_binary(
     name = "some_binary",
     srcs = [
