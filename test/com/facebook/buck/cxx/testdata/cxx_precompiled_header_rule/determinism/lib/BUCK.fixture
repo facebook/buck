@@ -1,7 +1,7 @@
 cxx_library(
     name = "lib",
     srcs = ["lib.cpp"],
-    headers = ["lib.h"],
+    exported_headers = ["lib.h"],
     visibility = ["PUBLIC"],
 )
 

@@ -256,7 +256,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
         getProjectFilesystem().getRootPath(),
         preprocessor,
         PreprocessorFlags.of(
-            /* getPrefixHeader() */ Optional.empty(),
+            Optional.of(getHeaderSourcePath()),
             preprocessorFlags,
             getIncludes(cxxPlatform),
             getFrameworks(cxxPlatform)),
