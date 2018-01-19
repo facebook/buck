@@ -306,6 +306,8 @@ java_library_with_plugins(
         "ForkMode.java",
         "JarBuildStepsFactory.java",
         "JarFattener.java",
+        "JarGenrule.java",
+        "JarGenruleDescription.java",
         "JarShape.java",
         "JavaAnnotationProcessor.java",
         "JavaAnnotationProcessorDescription.java",

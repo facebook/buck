@@ -177,14 +177,12 @@ public class GenruleTest {
             .resolve("src/com/facebook/katana/katana_manifest/AndroidManifest.xml"),
         pathResolver.getRelativePath(genrule.getSourcePathToOutput()));
     assertEquals(
-        filesystem
-            .resolve(
-                filesystem
-                    .getBuckPaths()
-                    .getGenDir()
-                    .resolve("src/com/facebook/katana/katana_manifest/AndroidManifest.xml"))
-            .toString(),
-        genrule.getAbsoluteOutputFilePath(pathResolver));
+        filesystem.resolve(
+            filesystem
+                .getBuckPaths()
+                .getGenDir()
+                .resolve("src/com/facebook/katana/katana_manifest/AndroidManifest.xml")),
+        genrule.getAbsoluteOutputFilePath());
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(pathResolver)
             .withBuildCellRootPath(filesystem.getRootPath());

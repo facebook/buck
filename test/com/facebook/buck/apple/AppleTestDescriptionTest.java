@@ -89,8 +89,7 @@ public class AppleTestDescriptionTest {
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
         Arg.stringify(((CxxLink) binary).getArgs(), pathResolver),
-        Matchers.hasItem(
-            String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
+        Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
     assertThat(binary.getBuildDeps(), Matchers.hasItem(dep));
   }
 

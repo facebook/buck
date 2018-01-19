@@ -209,8 +209,8 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   /** @return the absolute path to the output file */
   @VisibleForTesting
-  public String getAbsoluteOutputFilePath(SourcePathResolver pathResolver) {
-    return pathResolver.getAbsolutePath(getSourcePathToOutput()).toString();
+  public Path getAbsoluteOutputFilePath() {
+    return getProjectFilesystem().resolve(pathToOutFile);
   }
 
   @VisibleForTesting
@@ -231,7 +231,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .map(pathResolver::getAbsolutePath)
             .map(Object::toString)
             .collect(Collectors.joining(this.environmentExpansionSeparator)));
-    environmentVariablesBuilder.put("OUT", getAbsoluteOutputFilePath(pathResolver));
+    environmentVariablesBuilder.put("OUT", getAbsoluteOutputFilePath().toString());
 
     environmentVariablesBuilder.put(
         "GEN_DIR",
@@ -411,9 +411,19 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  @VisibleForTesting
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
+    buildableContext.recordArtifact(pathToOutFile);
+    return getBuildStepsWithoutRecordingOutput(context);
+  }
+
+  /**
+   * Return build steps, but don't record outputs to a {@link BuildableContext}.
+   *
+   * <p>Only meant to be used by subclasses which further process the genrule's output and will
+   * record their outputs independently.
+   */
+  protected ImmutableList<Step> getBuildStepsWithoutRecordingOutput(BuildContext context) {
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
@@ -448,12 +458,9 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
 
     if (MorePaths.getFileExtension(pathToOutFile).equals("zip")) {
-      commands.add(
-          ZipScrubberStep.of(
-              context.getSourcePathResolver().getAbsolutePath(getSourcePathToOutput())));
+      commands.add(ZipScrubberStep.of(getAbsoluteOutputFilePath()));
     }
 
-    buildableContext.recordArtifact(pathToOutFile);
     return commands.build();
   }
 
