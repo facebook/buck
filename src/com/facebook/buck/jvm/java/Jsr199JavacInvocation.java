@@ -380,6 +380,10 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     @Override
     public void close() {
       if (!compilerResult.isDone()) {
+        // Make sure `.get()` won't hang forever if `compilerResult` is not initialized.
+        // Note, `set` is no-op is `.setFuture` is already called.
+        compilerResult.set(1);
+
         shouldCompileFullJar.set(false);
         try {
           compilerResult.get();
