@@ -2,6 +2,7 @@
 from __future__ import print_function
 import logging
 import os
+import signal
 import sys
 import uuid
 import zipfile
@@ -17,6 +18,26 @@ from subprocutils import propagate_failure
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
+# Kill all buck processes
+def killall_buck(reporter):
+    # Linux or macOS
+    if os.name != 'posix':
+        message = 'killall is not implemented on: ' + os.name
+        logging.error(message)
+        reporter.status_message = message
+        return 10  # FATAL_GENERIC
+
+    for line in os.popen('jps -l'):
+        split = line.split()
+        pid = int(split[0])
+        name = split[1]
+        if name != 'com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper':
+            continue
+
+        os.kill(pid, signal.SIGTERM)
+    return 0
+
+
 def main(argv, reporter):
     def get_repo(p):
         # Try to detect if we're running a PEX by checking if we were invoked
@@ -27,6 +48,10 @@ def main(argv, reporter):
         else:
             from buck_repo import BuckRepo
             return BuckRepo(THIS_DIR, p, reporter)
+
+    # If 'killall' is the second argument, shut down all the buckd processes
+    if sys.argv[1:] == ['killall']:
+        return killall_buck(reporter)
 
     install_signal_handlers()
     try:

@@ -144,6 +144,7 @@ public class MainIntegrationTest {
                 + "shows this screen (or the help page of the specified command) and exits.",
             "  install        builds and installs an application",
             "  kill           kill buckd for the current project",
+            "  killall        kill all buckd processes",
             "  machoutils     provides some utils for Mach O binary files",
             "  parser-cache   Load and save state of the parser cache",
             "  project        generates project configuration files for an IDE",
