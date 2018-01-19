@@ -169,7 +169,8 @@ public class Dot<T> {
             || str.contains("//") // May occur within string due to cross-cell.
             || str.contains(" ")
             || str.contains("\"")
-            || str.contains("/*");
+            || str.contains("/*")
+            || str.contains(".");
     if (!needEscape) {
       return str;
     }

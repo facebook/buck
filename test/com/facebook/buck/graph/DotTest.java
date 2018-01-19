@@ -149,6 +149,7 @@ public class DotTest {
     mutableGraph.addEdge("//B", "C1 C2");
     mutableGraph.addEdge("//B", "D\"");
     mutableGraph.addEdge("Z//E", "Z//F");
+    mutableGraph.addEdge("A", "A.B");
 
     StringBuilder output = new StringBuilder();
 
@@ -168,6 +169,8 @@ public class DotTest {
     assertEquals(
         ImmutableSet.of(
             "  A;",
+            "  \"A.B\";",
+            "  A -> \"A.B\";",
             "  \"//B\";",
             "  \"C1 C2\";",
             "  \"D\\\"\";",
