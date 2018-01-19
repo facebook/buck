@@ -643,6 +643,23 @@ public class QueryCommandIntegrationTest {
   }
 
   @Test
+  public void testDotOutputWithAttributes() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "query", "--dot", "deps(//example:one)", "--output-attributes", "name", "buck.type");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(
+            equalToIgnoringPlatformNewlines(
+                workspace.getFileContents("stdout-deps-one-with-attributes.dot"))));
+  }
+
+  @Test
   public void testRankOutputForDeps() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);

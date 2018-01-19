@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.Dot;
+import com.facebook.buck.graph.Dot.Builder;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -285,10 +286,10 @@ public class QueryCommand extends AbstractCommand {
     LOG.debug("Printing out the following targets: " + queryResult);
     if (getOutputFormat() == OutputFormat.MINRANK || getOutputFormat() == OutputFormat.MAXRANK) {
       printRankOutput(params, env, queryResult, getOutputFormat());
-    } else if (shouldOutputAttributes()) {
-      collectAndPrintAttributes(params, env, queryResult);
     } else if (shouldGenerateDotOutput()) {
       printDotOutput(params, env, queryResult);
+    } else if (shouldOutputAttributes()) {
+      collectAndPrintAttributes(params, env, queryResult);
     } else if (shouldGenerateJsonOutput()) {
       CommandHelper.printJSON(params, queryResult);
     } else {
@@ -300,14 +301,31 @@ public class QueryCommand extends AbstractCommand {
   private void printDotOutput(
       CommandRunnerParams params, BuckQueryEnvironment env, Set<QueryTarget> queryResult)
       throws IOException, QueryException {
-    Dot.builder(env.getTargetGraph(), "result_graph")
-        .setNodesToFilter(env.getNodesFromQueryTargets(queryResult)::contains)
-        .setNodeToName(targetNode -> targetNode.getBuildTarget().getFullyQualifiedName())
-        .setNodeToTypeName(
-            targetNode -> Description.getBuildRuleType(targetNode.getDescription()).getName())
-        .setBfsSorted(shouldGenerateBFSOutput())
-        .build()
-        .writeOutput(params.getConsole().getStdOut());
+    Builder<TargetNode<?, ?>> dotBuilder =
+        Dot.builder(env.getTargetGraph(), "result_graph")
+            .setNodesToFilter(env.getNodesFromQueryTargets(queryResult)::contains)
+            .setNodeToName(targetNode -> targetNode.getBuildTarget().getFullyQualifiedName())
+            .setNodeToTypeName(
+                targetNode -> Description.getBuildRuleType(targetNode.getDescription()).getName())
+            .setBfsSorted(shouldGenerateBFSOutput());
+    if (shouldOutputAttributes()) {
+      PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes.get());
+      dotBuilder.setNodeToAttributes(
+          node ->
+              getAttributes(params, env, patternsMatcher, node)
+                  .map(
+                      attrs ->
+                          attrs
+                              .entrySet()
+                              .stream()
+                              .collect(
+                                  ImmutableSortedMap.toImmutableSortedMap(
+                                      Comparator.naturalOrder(),
+                                      Entry::getKey,
+                                      e -> String.valueOf(e.getValue()))))
+                  .orElse(ImmutableSortedMap.of()));
+    }
+    dotBuilder.build().writeOutput(params.getConsole().getStdOut());
   }
 
   private void printRankOutput(
