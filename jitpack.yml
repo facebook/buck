@@ -1,0 +1,6 @@
+install:
+   - set -exo pipefail
+   - ant
+   - PEX=$(bin/buck build buck --show-output | awk '{print $2}')
+   - SHA=$(git rev-parse HEAD)
+   - mvn install:install-file -Dfile="$PEX" -DgroupId="$GROUP" -DartifactId="$ARTIFACT" -Dversion="$SHA" -Dpackaging="pex" -DgeneratePom=true
