@@ -289,7 +289,7 @@ public class QueryCommand extends AbstractCommand {
     } else if (shouldGenerateDotOutput()) {
       printDotOutput(params, env, queryResult);
     } else if (shouldOutputAttributes()) {
-      collectAndPrintAttributes(params, env, queryResult);
+      collectAndPrintAttributesAsJson(params, env, queryResult);
     } else if (shouldGenerateJsonOutput()) {
       CommandHelper.printJSON(params, queryResult);
     } else {
@@ -344,23 +344,27 @@ public class QueryCommand extends AbstractCommand {
     if (shouldOutputAttributes()) {
       ImmutableSortedMap<String, ImmutableSortedMap<String, Object>> attributesWithRanks =
           extendAttributesWithRankMetadata(params, env, outputFormat, ranks.entrySet());
-      printAttributes(attributesWithRanks, stdOut);
+      printAttributesAsJson(attributesWithRanks, stdOut);
     } else {
-      ranks
-          .entrySet()
-          .stream()
-          // sort by rank and target nodes to break ties in order to make output deterministic
-          .sorted(
-              Comparator.comparing(Map.Entry<TargetNode<?, ?>, Integer>::getValue)
-                  .thenComparing(
-                      Comparator.comparing(Map.Entry<TargetNode<?, ?>, Integer>::getKey)))
-          .forEach(
-              entry -> {
-                int rank = entry.getValue();
-                String name = toPresentationForm(entry.getKey());
-                stdOut.println(rank + " " + name);
-              });
+      printRankOutputAsPlainText(ranks, stdOut);
     }
+  }
+
+  private void printRankOutputAsPlainText(
+      Map<TargetNode<?, ?>, Integer> ranks, PrintStream stdOut) {
+    ranks
+        .entrySet()
+        .stream()
+        // sort by rank and target nodes to break ties in order to make output deterministic
+        .sorted(
+            Comparator.comparing(Entry<TargetNode<?, ?>, Integer>::getValue)
+                .thenComparing(Comparator.comparing(Entry<TargetNode<?, ?>, Integer>::getKey)))
+        .forEach(
+            entry -> {
+              int rank = entry.getValue();
+              String name = toPresentationForm(entry.getKey());
+              stdOut.println(rank + " " + name);
+            });
   }
 
   /**
@@ -446,15 +450,15 @@ public class QueryCommand extends AbstractCommand {
     return ranks;
   }
 
-  private void collectAndPrintAttributes(
+  private void collectAndPrintAttributesAsJson(
       CommandRunnerParams params, BuckQueryEnvironment env, Set<QueryTarget> queryResult)
       throws QueryException {
     ImmutableSortedMap<String, SortedMap<String, Object>> result =
         collectAttributes(params, env, queryResult);
-    printAttributes(result, params.getConsole().getStdOut());
+    printAttributesAsJson(result, params.getConsole().getStdOut());
   }
 
-  private <T extends SortedMap<String, Object>> void printAttributes(
+  private <T extends SortedMap<String, Object>> void printAttributesAsJson(
       ImmutableSortedMap<String, T> result, PrintStream outputStream) {
     StringWriter stringWriter = new StringWriter();
     try {
