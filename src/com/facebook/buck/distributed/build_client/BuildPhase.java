@@ -400,7 +400,7 @@ public class BuildPhase {
       }
 
       LOG.info(String.format("Pending rules count: [%d]", pendingBuildRuleFinishedEvent.size()));
-      long currentTimestampMillis = clock.currentTimeMillis();
+
       Iterator<TimestampedEvent<BuildRuleFinishedEvent>> eventsIterator =
           pendingBuildRuleFinishedEvent.iterator();
 
@@ -408,13 +408,19 @@ public class BuildPhase {
         TimestampedEvent<BuildRuleFinishedEvent> timestampedEvent = eventsIterator.next();
 
         long elapsedMillisSinceEvent =
-            currentTimestampMillis - timestampedEvent.eventTimestampMillis;
+            clock.currentTimeMillis() - timestampedEvent.eventTimestampMillis;
         if (elapsedMillisSinceEvent < CACHE_SYNCHRONIZATION_SAFETY_MARGIN_MILLIS) {
           if (allBuildRuleFinishedEventsRecieved) {
             // This is the final time publishPendingBuildRuleFinishedEvents will ever be called.
             // Wait for all events to be ready and then publish them.
             try {
-              Thread.sleep(CACHE_SYNCHRONIZATION_SAFETY_MARGIN_MILLIS - elapsedMillisSinceEvent);
+              long sleepMillis =
+                  CACHE_SYNCHRONIZATION_SAFETY_MARGIN_MILLIS - elapsedMillisSinceEvent;
+              LOG.info(
+                  String.format(
+                      "Sleeping [%d] millis for build rule finished event to become available for [%s]",
+                      sleepMillis, timestampedEvent.event.getBuildTarget()));
+              Thread.sleep(sleepMillis);
             } catch (InterruptedException e) {
               LOG.error(e);
               Thread.currentThread().interrupt();
