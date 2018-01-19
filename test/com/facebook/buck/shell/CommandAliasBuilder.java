@@ -18,7 +18,9 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
@@ -26,18 +28,21 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
-import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 public class CommandAliasBuilder
     extends AbstractNodeBuilder<
@@ -83,25 +88,33 @@ public class CommandAliasBuilder
   }
 
   public CommandAliasBuilder setStringArgs(String... stringArgs) {
-    getArgForPopulating().setArgs(StringWithMacrosUtils.fromStrings(Arrays.asList(stringArgs)));
+    return setArgs(StringWithMacrosUtils.fromStrings(Arrays.asList(stringArgs)));
+  }
+
+  public CommandAliasBuilder setArgs(StringWithMacros... args) {
+    return setArgs(Arrays.asList(args));
+  }
+
+  private CommandAliasBuilder setArgs(Collection<StringWithMacros> args) {
+    getArgForPopulating().setArgs(args);
+    addTargetsForMacros(args.stream());
     return this;
   }
 
-  public CommandAliasBuilder setMacroArg(String format, Macro... macros) {
-    StringWithMacros arg = StringWithMacrosUtils.format(format, macros);
-    getArgForPopulating().setArgs(Arrays.asList(arg));
+  public CommandAliasBuilder setEnv(Map<String, StringWithMacros> env) {
+    addTargetsForMacros(env.values().stream());
+    getArgForPopulating().setEnv(env);
     return this;
   }
 
-  public CommandAliasBuilder setStringEnv(String key, String value) {
-    getArgForPopulating().setEnv(ImmutableMap.of(key, StringWithMacrosUtils.format(value)));
-    return this;
-  }
-
-  public CommandAliasBuilder setMacroEnv(String key, String format, Macro... macros) {
-    StringWithMacros value = StringWithMacrosUtils.format(format, macros);
-    getArgForPopulating().setEnv(ImmutableMap.of(key, value));
-    return this;
+  private void addTargetsForMacros(Stream<StringWithMacros> values) {
+    RichStream.from(
+            values
+                .map(stringWithMacros -> stringWithMacros.getMacros())
+                .flatMap(Collection::stream))
+        .filter(LocationMacro.class)
+        .map(LocationMacro::getTarget)
+        .forEach(this::addTarget);
   }
 
   public CommandAliasBuilder setPlatformExe(Map<Platform, BuildTarget> platformExe) {
@@ -135,7 +148,7 @@ public class CommandAliasBuilder
         new SingleThreadedBuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
 
     return new BuildResult(
-        (CommandAlias) resolver.requireRule(getTarget()), getPopulatedArg(), resolver);
+        (CommandAlias) resolver.requireRule(getTarget()), getPopulatedArg(), resolver, cellRoots);
   }
 
   public BuildTarget addBuildRule(BuildTarget target) {
@@ -149,12 +162,17 @@ public class CommandAliasBuilder
     private final BuildRuleResolver resolver;
     private final CommandAliasDescriptionArg arg;
     private final SourcePathRuleFinder ruleFinder;
+    private final CellPathResolver cellRoots;
 
     BuildResult(
-        CommandAlias commandAlias, CommandAliasDescriptionArg arg, BuildRuleResolver resolver) {
+        CommandAlias commandAlias,
+        CommandAliasDescriptionArg arg,
+        BuildRuleResolver resolver,
+        CellPathResolver cellRoots) {
       this.commandAlias = commandAlias;
       this.arg = arg;
       ruleFinder = new SourcePathRuleFinder(resolver);
+      this.cellRoots = cellRoots;
       sourcePathResolver = DefaultSourcePathResolver.from(this.ruleFinder);
       this.resolver = resolver;
     }
@@ -167,9 +185,17 @@ public class CommandAliasBuilder
       return sourcePathResolver;
     }
 
-    public Path pathOf(BuildTarget target) {
-      return sourcePathResolver.getAbsolutePath(
-          resolver.requireRule(target).getSourcePathToOutput());
+    public String pathOf(BuildTarget target) {
+      return sourcePathResolver
+          .getAbsolutePath(resolver.requireRule(target).getSourcePathToOutput())
+          .toString();
+    }
+
+    public ImmutableList<String> exeOf(BuildTarget target) {
+      return resolver
+          .getRuleWithType(target, BinaryBuildRule.class)
+          .getExecutableCommand()
+          .getCommandPrefix(sourcePathResolver);
     }
 
     public BuildRuleResolver resolver() {
@@ -182,6 +208,22 @@ public class CommandAliasBuilder
 
     public SourcePathRuleFinder ruleFinder() {
       return ruleFinder;
+    }
+
+    public CellPathResolver cellRoots() {
+      return cellRoots;
+    }
+
+    public ImmutableList<String> getCommandPrefix() {
+      return commandAlias.getExecutableCommand().getCommandPrefix(sourcePathResolver);
+    }
+
+    public ImmutableMap<String, String> getEnvironment() {
+      return commandAlias.getExecutableCommand().getEnvironment(sourcePathResolver);
+    }
+
+    public Iterable<BuildTarget> getRuntimeDeps() {
+      return commandAlias.getRuntimeDeps(ruleFinder).collect(ImmutableList.toImmutableList());
     }
   }
 }

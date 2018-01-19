@@ -16,36 +16,51 @@
 
 package com.facebook.buck.shell;
 
-import static org.hamcrest.Matchers.in;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.BinaryBuildRule;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.FakeBuildContext;
+import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.UncachedRuleKeyBuilder;
 import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.SortedSet;
 import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -55,165 +70,191 @@ public class CommandAliasDescriptionTest {
       BuildTargetFactory.newInstance("//arbitrary:alias");
   private static final BuildTarget delegate =
       BuildTargetFactory.newInstance("//wrapped/command/to:run");
-  private static final BuildTarget argTarget = BuildTargetFactory.newInstance("//macro:dependency");
+  private static final BuildTarget macroTarget =
+      BuildTargetFactory.newInstance("//macro:dependency");
 
   @Rule public ExpectedException exception = ExpectedException.none();
 
   @Test
-  public void runsBuildTargetsAsCommand() {
+  public void hasNoBuildDeps() {
+    assertEquals(ImmutableSortedSet.of(), simpleSetup().commandAlias().getBuildDeps());
+  }
+
+  @Test
+  public void hasNoBuildSteps() {
+    CommandAliasBuilder.BuildResult setup = simpleSetup();
+    assertEquals(
+        ImmutableList.of(),
+        setup
+            .commandAlias()
+            .getBuildSteps(
+                FakeBuildContext.withSourcePathResolver(setup.sourcePathResolver()),
+                new FakeBuildableContext()));
+  }
+
+  @Test
+  public void runsBuildRulesAsCommand() {
     CommandAliasBuilder.BuildResult result = builder().setExe(delegate).buildResult();
 
-    assertEquals(
-        ImmutableList.of(result.pathOf(delegate).toString()),
-        result.commandAlias().getExecutableCommand().getCommandPrefix(result.sourcePathResolver()));
-    assertThat(
-        delegate,
-        in(result.commandAlias().getRuntimeDeps(result.ruleFinder()).collect(Collectors.toList())));
+    assertThat(result.getCommandPrefix(), equalTo(ImmutableList.of(result.pathOf(delegate))));
+    BuildTarget v = CommandAliasDescriptionTest.delegate;
+    assertThat(result.getRuntimeDeps(), hasItem(v));
   }
 
   @Test
-  public void exposesTransitiveRuntimeDeps() {
-    CommandAliasBuilder builder = builder();
-
-    BuildTarget innerTarget = BuildTargetFactory.newInstance("//inner:tool");
-    TargetNode<?, ?> innerNode =
-        new ExportFileBuilder(innerTarget).setSrc(FakeSourcePath.of("fake/path")).build();
-
-    CommandAliasBuilder.BuildResult result =
-        builder.setExe(builder.subBuilder(delegate).setExe(innerNode).build()).buildResult();
-
-    assertThat(
-        innerTarget,
-        in(result.commandAlias().getRuntimeDeps(result.ruleFinder()).collect(Collectors.toList())));
-  }
-
-  @Test
-  public void onlyExposesRuntimeDepsOfTheActualPlatform() {
-    BuildTarget genericExe = BuildTargetFactory.newInstance("//exe:generic");
-    BuildTarget linuxExe = BuildTargetFactory.newInstance("//exe:linux");
-
-    Function<Platform, Stream<BuildTarget>> runtimeDeps =
-        platform -> {
-          CommandAliasBuilder.BuildResult result =
-              builder(platform)
-                  .setExe(genericExe)
-                  .setPlatformExe(ImmutableMap.of(Platform.LINUX, linuxExe))
-                  .buildResult();
-          return result.commandAlias().getRuntimeDeps(result.ruleFinder());
-        };
-
-    List<BuildTarget> genericRuntimeDeps =
-        runtimeDeps.apply(Platform.UNKNOWN).collect(Collectors.toList());
-    assertThat(genericExe, in(genericRuntimeDeps));
-    assertThat(linuxExe, not(in(genericRuntimeDeps)));
-
-    List<BuildTarget> linuxRuntimeDeps =
-        runtimeDeps.apply(Platform.LINUX).collect(Collectors.toList());
-    assertThat(linuxExe, in(linuxRuntimeDeps));
-    assertThat(genericExe, not(in(linuxRuntimeDeps)));
-  }
-
-  @Test
-  public void supportsStringArgs() {
-    String[] args = {"a", "b c", "def"};
-    CommandAliasBuilder.BuildResult result =
-        builder().setExe(delegate).setStringArgs(args).buildResult();
-
-    ImmutableList<String> commandPrefix =
-        result.commandAlias().getExecutableCommand().getCommandPrefix(result.sourcePathResolver());
-    assertEquals(ImmutableList.copyOf(args), commandPrefix.subList(1, commandPrefix.size()));
-  }
-
-  @Test
-  public void supportsLocationMacrosInArgs() {
+  public void runsBinaryBuildRulesAsCommand() {
     CommandAliasBuilder.BuildResult result =
         builder()
-            .setExe(delegate)
-            .setMacroArg("prefix %s suffix", LocationMacro.of(argTarget))
-            .addTarget(argTarget)
+            .setExe(new ShBinaryBuilder(delegate).setMain(FakeSourcePath.of("sh/binary")).build())
             .buildResult();
 
-    ImmutableList<String> commandPrefix =
-        result.commandAlias().getExecutableCommand().getCommandPrefix(result.sourcePathResolver());
-    assertEquals(
-        ImmutableList.of(
-            String.format(
-                "prefix %s suffix",
-                result
-                    .sourcePathResolver()
-                    .getAbsolutePath(
-                        result.resolver().requireRule(argTarget).getSourcePathToOutput()))),
-        commandPrefix.subList(1, commandPrefix.size()));
     assertThat(
-        argTarget,
-        in(result.commandAlias().getRuntimeDeps(result.ruleFinder()).collect(Collectors.toList())));
+        result.getCommandPrefix(),
+        equalTo(
+            result
+                .resolver()
+                .getRuleWithType(delegate, BinaryBuildRule.class)
+                .getExecutableCommand()
+                .getCommandPrefix(result.sourcePathResolver())));
+    assertThat(result.getRuntimeDeps(), hasItem(delegate));
+  }
+
+  @Test
+  public void supportsArgsWithNonBinaryBuildRules() {
+    StringWithMacros[] args = {
+      StringWithMacrosUtils.format("apples"),
+      StringWithMacrosUtils.format("pears=%s", LocationMacro.of(macroTarget))
+    };
+    CommandAliasBuilder.BuildResult result = builder().setExe(delegate).setArgs(args).buildResult();
+
+    assertThat(
+        result.getCommandPrefix(),
+        equalTo(
+            ImmutableList.of(
+                result.pathOf(delegate),
+                "apples",
+                String.format("pears=%s", result.pathOf(macroTarget)))));
+    assertThat(result.getRuntimeDeps(), hasItem(macroTarget));
+  }
+
+  @Test
+  public void supportsArgsWithBinaryBuildRules() {
+    StringWithMacros[] args = {
+      StringWithMacrosUtils.format("apples"),
+      StringWithMacrosUtils.format("pears=%s", LocationMacro.of(macroTarget))
+    };
+
+    CommandAliasBuilder.BuildResult result =
+        builder()
+            .setExe(new ShBinaryBuilder(delegate).setMain(FakeSourcePath.of("sh/binary")).build())
+            .setArgs(args)
+            .buildResult();
+
+    assertThat(
+        result.getCommandPrefix(),
+        equalTo(
+            ImmutableList.builder()
+                .addAll(result.exeOf(delegate))
+                .add("apples", String.format("pears=%s", result.pathOf(macroTarget)))
+                .build()));
+    assertThat(result.getRuntimeDeps(), hasItem(macroTarget));
+  }
+
+  @Test
+  public void supportsEnvWithNonBinaryBuildRules() {
+    ImmutableMap<String, StringWithMacros> env =
+        ImmutableSortedMap.of(
+            "apples", StringWithMacrosUtils.format("some"),
+            "pears", StringWithMacrosUtils.format("%s", LocationMacro.of(macroTarget)));
+
+    CommandAliasBuilder.BuildResult result = builder().setExe(delegate).setEnv(env).buildResult();
+
+    assertThat(
+        result.getEnvironment(),
+        equalTo(ImmutableSortedMap.of("apples", "some", "pears", result.pathOf(macroTarget))));
+    assertThat(result.getRuntimeDeps(), hasItem(macroTarget));
+  }
+
+  @Test
+  public void supportsEnvWithBinaryBuildRules() {
+    ImmutableMap<String, StringWithMacros> env =
+        ImmutableSortedMap.of(
+            "apples", StringWithMacrosUtils.format("some"),
+            "pears", StringWithMacrosUtils.format("%s", LocationMacro.of(macroTarget)));
+
+    CommandAliasBuilder.BuildResult result =
+        builder()
+            .setExe(new ShBinaryBuilder(delegate).setMain(FakeSourcePath.of("sh/binary")).build())
+            .setEnv(env)
+            .buildResult();
+
+    assertThat(
+        result.getEnvironment(),
+        equalTo(ImmutableSortedMap.of("apples", "some", "pears", result.pathOf(macroTarget))));
+    assertThat(result.getRuntimeDeps(), hasItem(macroTarget));
   }
 
   @Test
   public void addsMacrosToParseDeps() {
+    BuildTarget envTarget = BuildTargetFactory.newInstance("//:for-env");
     TargetNode<CommandAliasDescriptionArg, CommandAliasDescription> targetNode =
         builder()
             .setExe(delegate)
-            .setMacroArg("prefix %s suffix", LocationMacro.of(argTarget))
-            .addTarget(argTarget)
+            .setArgs(
+                StringWithMacrosUtils.format("prefix %s suffix", LocationMacro.of(macroTarget)))
+            .setEnv(
+                ImmutableMap.of(
+                    "arbitrary", StringWithMacrosUtils.format("%s", LocationMacro.of(envTarget))))
             .build();
 
-    assertEquals(ImmutableSet.of(delegate, argTarget), targetNode.getParseDeps());
+    assertThat(targetNode.getParseDeps(), hasItems(delegate, macroTarget, envTarget));
   }
 
   @Test
-  public void supportsStringEnvVars() {
-    String key = "THE_KEY";
-    String value = "arbitrary value";
-    CommandAliasBuilder.BuildResult result =
-        builder().setExe(delegate).setStringEnv(key, value).buildResult();
-
-    assertEquals(
-        ImmutableMap.of(key, value),
-        result.commandAlias().getExecutableCommand().getEnvironment(result.sourcePathResolver()));
-  }
-
-  @Test
-  public void supportsLocationMacrosInEnv() {
-    String key = "THE_KEY";
-    CommandAliasBuilder.BuildResult result =
-        builder()
-            .setExe(delegate)
-            .setMacroEnv(key, "prefix %s suffix", LocationMacro.of(argTarget))
-            .addTarget(argTarget)
-            .buildResult();
-
-    ImmutableMap<String, String> env =
-        result.commandAlias().getExecutableCommand().getEnvironment(result.sourcePathResolver());
-    assertEquals(
-        ImmutableMap.of(
-            key,
-            String.format(
-                "prefix %s suffix",
-                result
-                    .sourcePathResolver()
-                    .getAbsolutePath(
-                        result.resolver().requireRule(argTarget).getSourcePathToOutput()))),
-        env);
-    assertThat(
-        argTarget,
-        in(result.commandAlias().getRuntimeDeps(result.ruleFinder()).collect(Collectors.toList())));
-  }
-
-  @Test
-  public void supportsWrappingOtherAliasBinaries() {
+  public void supportsConcatenatedArgs() {
     CommandAliasBuilder builder = builder();
 
+    StringWithMacros[] delegateArgs = {
+      StringWithMacrosUtils.format("apples"),
+      StringWithMacrosUtils.format("pears=%s", LocationMacro.of(macroTarget))
+    };
     BuildTarget innerCommand = BuildTargetFactory.newInstance("//inner:command");
-    TargetNode<?, ?> otherAlias =
-        builder.subBuilder(delegate).setExe(innerCommand).setStringArgs("ab", "cd").build();
+    TargetNode<?, ?> innerCommandAlias =
+        builder.subBuilder(delegate).setExe(innerCommand).setArgs(delegateArgs).build();
 
     CommandAliasBuilder.BuildResult result =
-        builder.setExe(otherAlias).setStringArgs("d e f").buildResult();
+        builder.setExe(innerCommandAlias).setStringArgs("bananas").buildResult();
 
-    assertEquals(
-        result.commandAlias().getExecutableCommand().getCommandPrefix(result.sourcePathResolver()),
-        ImmutableList.of(result.pathOf(innerCommand).toString(), "ab", "cd", "d e f"));
+    assertThat(
+        result.getCommandPrefix(),
+        equalTo(ImmutableList.builder().addAll(result.exeOf(delegate)).add("bananas").build()));
+    assertThat(result.getRuntimeDeps(), hasItems(delegate, macroTarget));
+  }
+
+  @Test
+  public void supportsConcatenatedEnvs() {
+    CommandAliasBuilder builder = builder();
+
+    ImmutableMap<String, StringWithMacros> delegateEnv =
+        ImmutableSortedMap.of(
+            "apples", StringWithMacrosUtils.format("some"),
+            "pears", StringWithMacrosUtils.format("%s", LocationMacro.of(macroTarget)));
+    BuildTarget innerCommand = BuildTargetFactory.newInstance("//inner:command");
+    TargetNode<?, ?> innerCommandAlias =
+        builder.subBuilder(delegate).setExe(innerCommand).setEnv(delegateEnv).build();
+
+    CommandAliasBuilder.BuildResult result =
+        builder
+            .setExe(innerCommandAlias)
+            .setEnv(ImmutableMap.of("bananas", StringWithMacrosUtils.format("none")))
+            .buildResult();
+
+    assertThat(
+        result.getEnvironment(),
+        equalTo(
+            ImmutableMap.of(
+                "apples", "some", "pears", result.pathOf(macroTarget), "bananas", "none")));
+    assertThat(result.getRuntimeDeps(), hasItems(delegate, macroTarget));
   }
 
   @Test
@@ -229,9 +270,7 @@ public class CommandAliasDescriptionTest {
             .setPlatformExe(ImmutableSortedMap.of(platform, delegate))
             .buildResult();
 
-    assertEquals(
-        ImmutableList.of(result.pathOf(delegate).toString()),
-        result.commandAlias().getExecutableCommand().getCommandPrefix(result.sourcePathResolver()));
+    assertEquals(ImmutableList.of(result.pathOf(delegate)), result.getCommandPrefix());
   }
 
   @Test
@@ -241,9 +280,7 @@ public class CommandAliasDescriptionTest {
             .setPlatformExe(ImmutableSortedMap.of(Platform.FREEBSD, delegate))
             .buildResult();
 
-    assertEquals(
-        ImmutableList.of(result.pathOf(delegate).toString()),
-        result.commandAlias().getExecutableCommand().getCommandPrefix(result.sourcePathResolver()));
+    assertEquals(ImmutableList.of(result.pathOf(delegate)), result.getCommandPrefix());
   }
 
   @Test
@@ -254,17 +291,37 @@ public class CommandAliasDescriptionTest {
             .buildResult();
 
     exception.expect(HumanReadableException.class);
-    result.commandAlias().getExecutableCommand().getCommandPrefix(result.sourcePathResolver());
+    result.getCommandPrefix();
   }
 
   @Test
   public void eitherExeOrPlatformExeMustBePresent() {
     exception.expect(HumanReadableException.class);
-    builder()
-        .buildResult()
-        .commandAlias()
-        .getExecutableCommand()
-        .getCommandPrefix(builder().buildResult().sourcePathResolver());
+    builder().buildResult().getCommandPrefix();
+  }
+
+  @Test
+  public void onlyExposesRuntimeDepsOfTheActualPlatform() {
+    BuildTarget genericExe = BuildTargetFactory.newInstance("//exe:generic");
+    BuildTarget linuxExe = BuildTargetFactory.newInstance("//exe:linux");
+
+    Function<Platform, Iterable<BuildTarget>> runtimeDeps =
+        platform -> {
+          CommandAliasBuilder.BuildResult result =
+              builder(platform)
+                  .setExe(genericExe)
+                  .setPlatformExe(ImmutableMap.of(Platform.LINUX, linuxExe))
+                  .buildResult();
+          return result.getRuntimeDeps();
+        };
+
+    Iterable<BuildTarget> genericRuntimeDeps = runtimeDeps.apply(Platform.UNKNOWN);
+    assertThat(genericRuntimeDeps, hasItem(genericExe));
+    assertThat(genericRuntimeDeps, not(hasItem(linuxExe)));
+
+    Iterable<BuildTarget> linuxRuntimeDeps = runtimeDeps.apply(Platform.LINUX);
+    assertThat(linuxRuntimeDeps, hasItem(linuxExe));
+    assertThat(linuxRuntimeDeps, not(hasItem(genericExe)));
   }
 
   @Test
@@ -278,7 +335,7 @@ public class CommandAliasDescriptionTest {
             .subBuilder(delegate)
             .setExe(innerExe)
             .setStringArgs(args)
-            .setStringEnv("EF", "gh")
+            .setEnv(ImmutableMap.of("EF", StringWithMacrosUtils.format("gh")))
             .build();
     CommandAliasBuilder.BuildResult result =
         builder.setPlatformExe(Platform.WINDOWS, subCommand).buildResult();
@@ -323,9 +380,6 @@ public class CommandAliasDescriptionTest {
   }
 
   @Test
-  @Ignore
-  // TODO(cjhopman, davidaurelio): Figure out how to make a command_alias that can correctly be used
-  // in such a way that it doesn't change rulekeys on different platforms.
   public void runtimePlatformIsIrrelevantForRuleKey() {
     BuildTarget windowsTarget = BuildTargetFactory.newInstance("//target/for:windows");
     BuildTarget macosTarget = BuildTargetFactory.newInstance("//target/for:macos");
@@ -344,6 +398,120 @@ public class CommandAliasDescriptionTest {
     assertEquals(ruleKeys.get(0), ruleKeys.get(2));
   }
 
+  @Test
+  public void ruleKeyForToolIsStableAcrossPlatforms() {
+    ImmutableMap<Platform, BuildTarget> platformExe =
+        ImmutableMap.of(
+            Platform.WINDOWS,
+            BuildTargetFactory.newInstance("//:windows"),
+            Platform.LINUX,
+            BuildTargetFactory.newInstance("//:linux"));
+    Function<Platform, RuleKey> ruleKeyForPlatform =
+        platform -> {
+          CommandAliasBuilder.BuildResult result =
+              builder(platform).setPlatformExe(platformExe).buildResult();
+          return ruleKey(result, result.commandAlias().getExecutableCommand());
+        };
+
+    RuleKey windows = ruleKeyForPlatform.apply(Platform.WINDOWS);
+    RuleKey linux = ruleKeyForPlatform.apply(Platform.LINUX);
+    RuleKey macos = ruleKeyForPlatform.apply(Platform.MACOS);
+
+    assertEquals(windows, linux);
+    assertEquals(windows, macos);
+  }
+
+  @Test
+  public void underlyingCommandPrefixAffectsToolRulekey() {
+    Function<String, RuleKey> ruleKeyForArg =
+        arg -> {
+          CommandAliasBuilder.BuildResult result =
+              builder().setExe(new TestBinaryBuilder(delegate, arg, "").build()).buildResult();
+
+          return ruleKey(result, result.commandAlias().getExecutableCommand());
+        };
+
+    assertNotEquals(ruleKeyForArg.apply("abc"), ruleKeyForArg.apply("def"));
+  }
+
+  @Test
+  public void underlyingEnvironmentAffectsToolRulekey() {
+    Function<String, RuleKey> ruleKeyForEnv =
+        env -> {
+          CommandAliasBuilder.BuildResult result =
+              builder().setExe(new TestBinaryBuilder(delegate, "", env).build()).buildResult();
+
+          return ruleKey(result, result.commandAlias().getExecutableCommand());
+        };
+
+    assertNotEquals(ruleKeyForEnv.apply("abc"), ruleKeyForEnv.apply("def"));
+  }
+
+  @Test
+  public void underlyingCommandPrefixOfOtherPlatformAffectsToolRulekey() {
+    BuildTarget unused = BuildTargetFactory.newInstance("//:unused");
+    Function<String, RuleKey> ruleKeyForArg =
+        arg -> {
+          CommandAliasBuilder.BuildResult result =
+              builder(Platform.FREEBSD)
+                  .setExe(delegate)
+                  .setPlatformExe(Platform.MACOS, new TestBinaryBuilder(unused, arg, "").build())
+                  .buildResult();
+
+          return ruleKey(result, result.commandAlias().getExecutableCommand());
+        };
+
+    assertNotEquals(ruleKeyForArg.apply("abc"), ruleKeyForArg.apply("def"));
+  }
+
+  @Test
+  public void underlyingEnvironmentOfPlatformSpecificToolAffectsToolRulekey() {
+    Function<String, RuleKey> ruleKeyForEnv =
+        env -> {
+          CommandAliasBuilder.BuildResult result =
+              builder(Platform.LINUX)
+                  .setPlatformExe(Platform.LINUX, new TestBinaryBuilder(delegate, "", env).build())
+                  .buildResult();
+
+          return ruleKey(result, result.commandAlias().getExecutableCommand());
+        };
+
+    assertNotEquals(ruleKeyForEnv.apply("abc"), ruleKeyForEnv.apply("def"));
+  }
+
+  @Test
+  public void underlyingCommandPrefixOfPlatformSpecificToolAffectsToolRulekey() {
+    Function<String, RuleKey> ruleKeyForArg =
+        arg -> {
+          CommandAliasBuilder.BuildResult result =
+              builder(Platform.UNKNOWN)
+                  .setPlatformExe(
+                      Platform.UNKNOWN, new TestBinaryBuilder(delegate, arg, "").build())
+                  .buildResult();
+
+          return ruleKey(result, result.commandAlias().getExecutableCommand());
+        };
+
+    assertNotEquals(ruleKeyForArg.apply("abc"), ruleKeyForArg.apply("def"));
+  }
+
+  @Test
+  public void underlyingEnvironmentOfOtherPlatformAffectsToolRulekey() {
+    BuildTarget unused = BuildTargetFactory.newInstance("//:unused");
+    Function<String, RuleKey> ruleKeyForEnv =
+        env -> {
+          CommandAliasBuilder.BuildResult result =
+              builder(Platform.FREEBSD)
+                  .setExe(delegate)
+                  .setPlatformExe(Platform.MACOS, new TestBinaryBuilder(unused, "", env).build())
+                  .buildResult();
+
+          return ruleKey(result, result.commandAlias().getExecutableCommand());
+        };
+
+    assertNotEquals(ruleKeyForEnv.apply("abc"), ruleKeyForEnv.apply("def"));
+  }
+
   private static CommandAliasBuilder builder() {
     return new CommandAliasBuilder(commandAliasTarget);
   }
@@ -352,7 +520,15 @@ public class CommandAliasDescriptionTest {
     return new CommandAliasBuilder(commandAliasTarget, new CommandAliasDescription(platform));
   }
 
-  private RuleKey ruleKey(CommandAliasBuilder.BuildResult result) {
+  private static CommandAliasBuilder.BuildResult simpleSetup() {
+    return builder().setExe(delegate).buildResult();
+  }
+
+  private static RuleKey ruleKey(CommandAliasBuilder.BuildResult result) {
+    return ruleKey(result, result.commandAlias());
+  }
+
+  private static RuleKey ruleKey(CommandAliasBuilder.BuildResult result, Object value) {
     SourcePathResolver pathResolver = result.sourcePathResolver();
     SourcePathRuleFinder ruleFinder = result.ruleFinder();
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of());
@@ -361,7 +537,64 @@ public class CommandAliasDescriptionTest {
             pathResolver,
             hashCache,
             new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder))
-        .setReflectively("key", result.commandAlias())
+        .setReflectively("key", value)
         .build(RuleKey::new);
+  }
+
+  private static class TestBinary extends NoopBuildRule implements BinaryBuildRule {
+    private final Tool tool;
+
+    public TestBinary(BuildTarget buildTarget, ProjectFilesystem projectFilesystem, Tool tool) {
+      super(buildTarget, projectFilesystem);
+      this.tool = tool;
+    }
+
+    @Override
+    public Tool getExecutableCommand() {
+      return tool;
+    }
+
+    @Override
+    public SortedSet<BuildRule> getBuildDeps() {
+      return ImmutableSortedSet.of();
+    }
+  }
+
+  // reuses CommandAliasDescriptionArg to avoid generating another Arg class with builder
+  private static class TestBinaryDescription implements Description<CommandAliasDescriptionArg> {
+    private final String arg;
+    private final String env;
+
+    public TestBinaryDescription(String arg, String env) {
+      this.arg = arg;
+      this.env = env;
+    }
+
+    @Override
+    public Class<CommandAliasDescriptionArg> getConstructorArgType() {
+      return CommandAliasDescriptionArg.class;
+    }
+
+    @Override
+    public BuildRule createBuildRule(
+        TargetGraph targetGraph,
+        BuildTarget target,
+        ProjectFilesystem filesystem,
+        BuildRuleParams params,
+        BuildRuleResolver resolver,
+        CellPathResolver cellRoots,
+        CommandAliasDescriptionArg args) {
+      CommandTool tool = new CommandTool.Builder().addArg(arg).addEnv("env", env).build();
+      return new TestBinary(target, filesystem, tool);
+    }
+  }
+
+  private static class TestBinaryBuilder
+      extends AbstractNodeBuilder<
+          CommandAliasDescriptionArg.Builder, CommandAliasDescriptionArg, TestBinaryDescription,
+          TestBinary> {
+    public TestBinaryBuilder(BuildTarget target, String arg, String env) {
+      super(new TestBinaryDescription(arg, env), target);
+    }
   }
 }
