@@ -103,6 +103,8 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractApkGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {
+    Optional<String> getOut();
+
     BuildTarget getApk();
 
     @Override

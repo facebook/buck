@@ -170,7 +170,6 @@ public class JsBundleGenruleDescription
   interface AbstractJsBundleGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {
     BuildTarget getJsBundle();
 
-    @Override
     default String getOut() {
       return JsBundleOutputs.JS_DIR_NAME;
     }

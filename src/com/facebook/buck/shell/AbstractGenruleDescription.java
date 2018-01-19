@@ -93,6 +93,16 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     this.enableSandbox = enableSandbox;
   }
 
+  protected abstract BuildRule createBuildRule(
+      BuildTarget buildTarget,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      T args,
+      Optional<Arg> cmd,
+      Optional<Arg> bash,
+      Optional<Arg> cmdExe);
+
   protected BuildRule createBuildRule(
       BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
@@ -101,7 +111,8 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       T args,
       Optional<Arg> cmd,
       Optional<Arg> bash,
-      Optional<Arg> cmdExe) {
+      Optional<Arg> cmdExe,
+      String outputFileName) {
     return new Genrule(
         buildTarget,
         projectFilesystem,
@@ -113,7 +124,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         bash,
         cmdExe,
         args.getType(),
-        args.getOut(),
+        outputFileName,
         args.getEnableSandbox().orElse(enableSandbox),
         true,
         args.getEnvironmentExpansionSeparator(),
@@ -285,8 +296,6 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
 
   @SuppressFieldNotInitialized
   public interface CommonArg extends CommonDescriptionArg, HasTests {
-    String getOut();
-
     Optional<String> getBash();
 
     Optional<String> getCmd();

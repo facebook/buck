@@ -297,6 +297,20 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   }
 
   @Override
+  protected BuildRule createBuildRule(
+      BuildTarget buildTarget,
+      final ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      CxxGenruleDescriptionArg args,
+      Optional<Arg> cmd,
+      Optional<Arg> bash,
+      Optional<Arg> cmdExe) {
+    return createBuildRule(
+        buildTarget, projectFilesystem, params, resolver, args, cmd, bash, cmdExe, args.getOut());
+  }
+
+  @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
@@ -405,7 +419,9 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractCxxGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {}
+  interface AbstractCxxGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {
+    String getOut();
+  }
 
   /**
    * A build target macro expander just used at parse time to extract deps from the preprocessor

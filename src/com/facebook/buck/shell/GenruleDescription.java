@@ -114,6 +114,8 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {
+    String getOut();
+
     Optional<Boolean> getExecutable();
 
     /**
