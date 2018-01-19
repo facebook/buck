@@ -40,6 +40,7 @@ import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
 import com.facebook.buck.distributed.build_client.BuildController;
+import com.facebook.buck.distributed.build_client.BuildControllerArgs;
 import com.facebook.buck.distributed.build_client.LogStateTracker;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJobState;
@@ -808,22 +809,26 @@ public class BuildCommand extends AbstractCommand {
               distBuildConfig.shouldAlwaysWaitForRemoteBuildBeforeProceedingLocally());
       BuildController build =
           new BuildController(
-              params.createBuilderArgs(),
-              buildTargets,
-              graphs,
-              Optional.of(new LocalCachingBuildEngineDelegate(params.getFileHashCache())),
-              asyncJobState,
-              distBuildCellIndexer,
-              distBuildService,
-              distBuildLogStateTracker,
-              buckVersion,
-              distBuildClientStats,
-              params.getScheduledExecutor(),
-              distBuildConfig.getMaxWaitForRemoteLogsToBeAvailableMillis(),
-              distBuildConfig.getLogMaterializationEnabled(),
-              remoteBuildSynchronizer,
-              stampedeIdReference,
-              distBuildConfig.getBuildLabel());
+              BuildControllerArgs.builder()
+                  .setBuilderExecutorArgs(params.createBuilderArgs())
+                  .setTopLevelTargets(buildTargets)
+                  .setBuildGraphs(graphs)
+                  .setCachingBuildEngineDelegate(
+                      Optional.of(new LocalCachingBuildEngineDelegate(params.getFileHashCache())))
+                  .setAsyncJobState(asyncJobState)
+                  .setDistBuildCellIndexer(distBuildCellIndexer)
+                  .setDistBuildService(distBuildService)
+                  .setDistBuildLogStateTracker(distBuildLogStateTracker)
+                  .setBuckVersion(buckVersion)
+                  .setDistBuildClientStats(distBuildClientStats)
+                  .setScheduler(params.getScheduledExecutor())
+                  .setMaxTimeoutWaitingForLogsMillis(
+                      distBuildConfig.getMaxWaitForRemoteLogsToBeAvailableMillis())
+                  .setLogMaterializationEnabled(distBuildConfig.getLogMaterializationEnabled())
+                  .setRemoteBuildRuleCompletionNotifier(remoteBuildSynchronizer)
+                  .setStampedeIdReference(stampedeIdReference)
+                  .setBuildLabel(distBuildConfig.getBuildLabel())
+                  .build());
 
       // Kick off the local build, which will initially block and then download
       // artifacts (and build uncachables) as Stampede makes them available.

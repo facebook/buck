@@ -56,8 +56,14 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
+import com.facebook.buck.rules.ActionAndTargetGraphs;
+import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildInfoStoreManager;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RemoteBuildRuleSynchronizer;
+import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -153,24 +159,33 @@ public class BuildControllerTest {
     stampedeId.setId("some_stampede_id");
     AtomicReference<StampedeId> stampedeIdRef = new AtomicReference<>(stampedeId);
 
+    ActionAndTargetGraphs graphs =
+        ActionAndTargetGraphs.builder()
+            .setActionGraphAndResolver(
+                ActionGraphAndResolver.of(
+                    createNiceMock(ActionGraph.class), createNiceMock(BuildRuleResolver.class)))
+            .setUnversionedTargetGraph(
+                TargetGraphAndBuildTargets.of(createNiceMock(TargetGraph.class), ImmutableSet.of()))
+            .build();
     return new BuildController(
-        executorArgs,
-        ImmutableSet.of(),
-        null,
-        Optional.empty(),
-        asyncBuildJobState,
-        distBuildCellIndexer,
-        mockDistBuildService,
-        mockLogStateTracker,
-        buckVersion,
-        distBuildClientStatsTracker,
-        scheduler,
-        0,
-        1,
-        true,
-        new RemoteBuildRuleSynchronizer(true),
-        stampedeIdRef,
-        BUILD_LABEL);
+        BuildControllerArgs.builder()
+            .setBuilderExecutorArgs(executorArgs)
+            .setTopLevelTargets(ImmutableSet.of())
+            .setBuildGraphs(graphs)
+            .setAsyncJobState(asyncBuildJobState)
+            .setDistBuildCellIndexer(distBuildCellIndexer)
+            .setDistBuildService(mockDistBuildService)
+            .setDistBuildLogStateTracker(mockLogStateTracker)
+            .setBuckVersion(buckVersion)
+            .setDistBuildClientStats(distBuildClientStatsTracker)
+            .setScheduler(scheduler)
+            .setMaxTimeoutWaitingForLogsMillis(0)
+            .setStatusPollIntervalMillis(1)
+            .setLogMaterializationEnabled(true)
+            .setRemoteBuildRuleCompletionNotifier(new RemoteBuildRuleSynchronizer(true))
+            .setStampedeIdReference(stampedeIdRef)
+            .setBuildLabel(BUILD_LABEL)
+            .build());
   }
 
   private BuildController.ExecutionResult runBuildWithController(BuildController buildController)

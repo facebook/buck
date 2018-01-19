@@ -16,41 +16,28 @@
 
 package com.facebook.buck.distributed.build_client;
 
-import com.facebook.buck.command.BuildExecutorArgs;
-import com.facebook.buck.distributed.ClientStatsTracker;
-import com.facebook.buck.distributed.DistBuildCellIndexer;
-import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.ExitCode;
-import com.facebook.buck.distributed.thrift.BuckVersion;
-import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.rules.ActionAndTargetGraphs;
-import com.facebook.buck.rules.CachingBuildEngineDelegate;
 import com.facebook.buck.rules.ParallelRuleKeyCalculator;
-import com.facebook.buck.rules.RemoteBuildRuleCompletionNotifier;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 
 /** High level controls the distributed build. */
 public class BuildController {
   private static final Logger LOG = Logger.get(BuildController.class);
-  private static final int DEFAULT_STATUS_POLL_INTERVAL_MILLIS = 500;
 
   private final PreBuildPhase preBuildPhase;
   private final BuildPhase buildPhase;
@@ -69,92 +56,38 @@ public class BuildController {
     }
   }
 
-  public BuildController(
-      BuildExecutorArgs builderExecutorArgs,
-      ImmutableSet<BuildTarget> topLevelTargets,
-      ActionAndTargetGraphs buildGraphs,
-      Optional<CachingBuildEngineDelegate> cachingBuildEngineDelegate,
-      ListenableFuture<BuildJobState> asyncJobState,
-      DistBuildCellIndexer distBuildCellIndexer,
-      DistBuildService distBuildService,
-      LogStateTracker distBuildLogStateTracker,
-      BuckVersion buckVersion,
-      ClientStatsTracker distBuildClientStats,
-      ScheduledExecutorService scheduler,
-      long maxTimeoutWaitingForLogsMillis,
-      int statusPollIntervalMillis,
-      boolean logMaterializationEnabled,
-      RemoteBuildRuleCompletionNotifier remoteBuildRuleCompletionNotifier,
-      AtomicReference<StampedeId> stampedeIdReference,
-      String buildLabel) {
-    this.stampedeIdReference = stampedeIdReference;
+  public BuildController(BuildControllerArgs args) {
+    this.stampedeIdReference = args.getStampedeIdReference();
     this.preBuildPhase =
         new PreBuildPhase(
-            distBuildService,
-            distBuildClientStats,
-            asyncJobState,
-            distBuildCellIndexer,
-            buckVersion,
-            builderExecutorArgs,
-            topLevelTargets,
-            buildGraphs,
-            buildLabel);
+            args.getDistBuildService(),
+            args.getDistBuildClientStats(),
+            args.getAsyncJobState(),
+            args.getDistBuildCellIndexer(),
+            args.getBuckVersion(),
+            args.getBuilderExecutorArgs(),
+            args.getTopLevelTargets(),
+            args.getBuildGraphs(),
+            args.getBuildLabel());
     this.buildPhase =
         new BuildPhase(
-            builderExecutorArgs,
-            topLevelTargets,
-            buildGraphs,
-            cachingBuildEngineDelegate,
-            distBuildService,
-            distBuildClientStats,
-            distBuildLogStateTracker,
-            scheduler,
-            statusPollIntervalMillis,
-            remoteBuildRuleCompletionNotifier);
+            args.getBuilderExecutorArgs(),
+            args.getTopLevelTargets(),
+            args.getBuildGraphs(),
+            args.getCachingBuildEngineDelegate(),
+            args.getDistBuildService(),
+            args.getDistBuildClientStats(),
+            args.getDistBuildLogStateTracker(),
+            args.getScheduler(),
+            args.getStatusPollIntervalMillis(),
+            args.getRemoteBuildRuleCompletionNotifier());
     this.postBuildPhase =
         new PostBuildPhase(
-            distBuildService,
-            distBuildClientStats,
-            distBuildLogStateTracker,
-            maxTimeoutWaitingForLogsMillis,
-            logMaterializationEnabled);
-  }
-
-  public BuildController(
-      BuildExecutorArgs buildExecutorArgs,
-      ImmutableSet<BuildTarget> topLevelTargets,
-      ActionAndTargetGraphs buildGraphs,
-      Optional<CachingBuildEngineDelegate> cachingBuildEngineDelegate,
-      ListenableFuture<BuildJobState> asyncJobState,
-      DistBuildCellIndexer distBuildCellIndexer,
-      DistBuildService distBuildService,
-      LogStateTracker distBuildLogStateTracker,
-      BuckVersion buckVersion,
-      ClientStatsTracker distBuildClientStats,
-      ScheduledExecutorService scheduler,
-      long maxTimeoutWaitingForLogsMillis,
-      boolean logMaterializationEnabled,
-      RemoteBuildRuleCompletionNotifier remoteBuildRuleCompletionNotifier,
-      AtomicReference<StampedeId> stampedeIdReference,
-      String buildLabel) {
-    this(
-        buildExecutorArgs,
-        topLevelTargets,
-        buildGraphs,
-        cachingBuildEngineDelegate,
-        asyncJobState,
-        distBuildCellIndexer,
-        distBuildService,
-        distBuildLogStateTracker,
-        buckVersion,
-        distBuildClientStats,
-        scheduler,
-        maxTimeoutWaitingForLogsMillis,
-        DEFAULT_STATUS_POLL_INTERVAL_MILLIS,
-        logMaterializationEnabled,
-        remoteBuildRuleCompletionNotifier,
-        stampedeIdReference,
-        buildLabel);
+            args.getDistBuildService(),
+            args.getDistBuildClientStats(),
+            args.getDistBuildLogStateTracker(),
+            args.getMaxTimeoutWaitingForLogsMillis(),
+            args.getLogMaterializationEnabled());
   }
 
   /** Executes the tbuild and prints failures to the event bus. */
