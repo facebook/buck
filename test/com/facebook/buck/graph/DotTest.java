@@ -21,7 +21,9 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.base.Functions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
@@ -137,6 +139,39 @@ public class DotTest {
         ImmutableSet.of(
             "  A -> B;",
             "  A [style=filled,color=springgreen3];",
+            "  B [style=filled,color=indianred1];"));
+
+    assertEquals("}", lines.get(lines.size() - 1));
+  }
+
+  @Test
+  public void testGenerateDotOutputWithCustomAttributes() throws IOException {
+    MutableDirectedGraph<String> mutableGraph = new MutableDirectedGraph<>();
+    mutableGraph.addEdge("A", "B");
+    DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<>(mutableGraph);
+
+    StringBuilder output = new StringBuilder();
+    ImmutableMap<String, ImmutableSortedMap<String, String>> nodeToAttributeProvider =
+        ImmutableMap.of("A", ImmutableSortedMap.of("x", "foo", "y", "b.r"));
+    Dot.builder(graph, "the_graph")
+        .setNodeToName(Functions.identity())
+        .setNodeToTypeName(name -> name.equals("A") ? "android_library" : "java_library")
+        .setNodeToAttributes(
+            node -> nodeToAttributeProvider.getOrDefault(node, ImmutableSortedMap.of()))
+        .build()
+        .writeOutput(output);
+
+    String dotGraph = output.toString();
+    List<String> lines = ImmutableList.copyOf(Splitter.on('\n').omitEmptyStrings().split(dotGraph));
+
+    assertEquals("digraph the_graph {", lines.get(0));
+
+    Set<String> edges = ImmutableSet.copyOf(lines.subList(1, lines.size() - 1));
+    assertEquals(
+        edges,
+        ImmutableSet.of(
+            "  A -> B;",
+            "  A [style=filled,color=springgreen3,buck_x=foo,buck_y=\"b.r\"];",
             "  B [style=filled,color=indianred1];"));
 
     assertEquals("}", lines.get(lines.size() - 1));
