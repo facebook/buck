@@ -384,6 +384,22 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testCompileAgainstSourceOnlyAbisByDefault() throws IOException {
+    compileAgainstAbisOnly();
+    setUpProjectWorkspaceForScenario("depends_only_on_abi_test");
+
+    ProcessResult result =
+        workspace.runBuckBuild("--config", "java.abi_generation_mode=source_only", "//:a");
+    result.assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:b#source-only-abi");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:c#source-only-abi");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:d#source-only-abi");
+    workspace.getBuildLog().assertTargetIsAbsent("//:b#source-abi");
+    workspace.getBuildLog().assertTargetIsAbsent("//:c#source-abi");
+    workspace.getBuildLog().assertTargetIsAbsent("//:d#source-abi");
+  }
+
+  @Test
   public void testAnnotationProcessorDepChangeThatDoesNotModifyAbiCausesRebuild()
       throws IOException {
     setUpProjectWorkspaceForScenario("annotation_processors");
