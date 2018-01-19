@@ -3,6 +3,7 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 PLATFORM_SRCS = [
     "Architecture.java",
     "Platform.java",
+    "PlatformType.java",
 ]
 
 java_library(
