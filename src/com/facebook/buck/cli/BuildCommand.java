@@ -822,7 +822,8 @@ public class BuildCommand extends AbstractCommand {
               distBuildConfig.getMaxWaitForRemoteLogsToBeAvailableMillis(),
               distBuildConfig.getLogMaterializationEnabled(),
               remoteBuildSynchronizer,
-              stampedeIdReference);
+              stampedeIdReference,
+              distBuildConfig.getBuildLabel());
 
       // Kick off the local build, which will initially block and then download
       // artifacts (and build uncachables) as Stampede makes them available.

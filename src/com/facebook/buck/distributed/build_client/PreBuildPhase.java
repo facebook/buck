@@ -67,6 +67,7 @@ public class PreBuildPhase {
   private final BuildExecutorArgs buildExecutorArgs;
   private final ImmutableSet<BuildTarget> topLevelTargets;
   private final ActionAndTargetGraphs actionAndTargetGraphs;
+  private final String buildLabel;
 
   public PreBuildPhase(
       DistBuildService distBuildService,
@@ -76,7 +77,8 @@ public class PreBuildPhase {
       BuckVersion buckVersion,
       BuildExecutorArgs buildExecutorArgs,
       ImmutableSet<BuildTarget> topLevelTargets,
-      ActionAndTargetGraphs buildGraphs) {
+      ActionAndTargetGraphs buildGraphs,
+      String buildLabel) {
     this.distBuildService = distBuildService;
     this.distBuildClientStats = distBuildClientStats;
     this.asyncJobState = asyncJobState;
@@ -85,6 +87,7 @@ public class PreBuildPhase {
     this.buildExecutorArgs = buildExecutorArgs;
     this.topLevelTargets = topLevelTargets;
     this.actionAndTargetGraphs = buildGraphs;
+    this.buildLabel = buildLabel;
   }
 
   /** Run all steps required before the build. */
@@ -111,7 +114,7 @@ public class PreBuildPhase {
             .collect(Collectors.toList());
     BuildJob job =
         distBuildService.createBuild(
-            buildId, buildMode, numberOfMinions, repository, tenantId, buildTargets);
+            buildId, buildMode, numberOfMinions, repository, tenantId, buildTargets, buildLabel);
     distBuildClientStats.stopTimer(CREATE_DISTRIBUTED_BUILD);
 
     final StampedeId stampedeId = job.getStampedeId();

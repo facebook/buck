@@ -169,7 +169,8 @@ public class BuildControllerTest {
         1,
         true,
         new RemoteBuildRuleSynchronizer(true),
-        stampedeIdRef);
+        stampedeIdRef,
+        BUILD_LABEL);
   }
 
   private BuildController.ExecutionResult runBuildWithController(BuildController buildController)
@@ -256,7 +257,8 @@ public class BuildControllerTest {
                 1,
                 REPOSITORY,
                 TENANT_ID,
-                BUILD_TARGETS))
+                BUILD_TARGETS,
+                BUILD_LABEL))
         .andReturn(job);
 
     expect(
@@ -459,7 +461,8 @@ public class BuildControllerTest {
                 1,
                 REPOSITORY,
                 TENANT_ID,
-                BUILD_TARGETS))
+                BUILD_TARGETS,
+                BUILD_LABEL))
         .andReturn(job);
     expect(
             mockDistBuildService.uploadMissingFilesAsync(

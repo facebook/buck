@@ -325,7 +325,8 @@ public class DistBuildService implements Closeable {
       int numberOfMinions,
       String repository,
       String tenantId,
-      List<String> buildTargets)
+      List<String> buildTargets,
+      String buildLabel)
       throws IOException {
     Preconditions.checkArgument(
         buildMode == BuildMode.REMOTE_BUILD
@@ -346,7 +347,8 @@ public class DistBuildService implements Closeable {
         .setBuildMode(buildMode)
         .setNumberOfMinions(numberOfMinions)
         .setUsername(username)
-        .setBuildTargets(buildTargets);
+        .setBuildTargets(buildTargets)
+        .setBuildLabel(buildLabel);
 
     if (repository != null && repository.length() > 0) {
       createBuildRequest.setRepository(repository);

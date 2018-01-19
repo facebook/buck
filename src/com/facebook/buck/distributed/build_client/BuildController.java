@@ -85,7 +85,8 @@ public class BuildController {
       int statusPollIntervalMillis,
       boolean logMaterializationEnabled,
       RemoteBuildRuleCompletionNotifier remoteBuildRuleCompletionNotifier,
-      AtomicReference<StampedeId> stampedeIdReference) {
+      AtomicReference<StampedeId> stampedeIdReference,
+      String buildLabel) {
     this.stampedeIdReference = stampedeIdReference;
     this.preBuildPhase =
         new PreBuildPhase(
@@ -96,7 +97,8 @@ public class BuildController {
             buckVersion,
             builderExecutorArgs,
             topLevelTargets,
-            buildGraphs);
+            buildGraphs,
+            buildLabel);
     this.buildPhase =
         new BuildPhase(
             builderExecutorArgs,
@@ -133,7 +135,8 @@ public class BuildController {
       long maxTimeoutWaitingForLogsMillis,
       boolean logMaterializationEnabled,
       RemoteBuildRuleCompletionNotifier remoteBuildRuleCompletionNotifier,
-      AtomicReference<StampedeId> stampedeIdReference) {
+      AtomicReference<StampedeId> stampedeIdReference,
+      String buildLabel) {
     this(
         buildExecutorArgs,
         topLevelTargets,
@@ -150,7 +153,8 @@ public class BuildController {
         DEFAULT_STATUS_POLL_INTERVAL_MILLIS,
         logMaterializationEnabled,
         remoteBuildRuleCompletionNotifier,
-        stampedeIdReference);
+        stampedeIdReference,
+        buildLabel);
   }
 
   /** Executes the tbuild and prints failures to the event bus. */

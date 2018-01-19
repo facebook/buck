@@ -265,7 +265,13 @@ public class DistBuildServiceTest {
 
     BuildJob job =
         distBuildService.createBuild(
-            new BuildId("33-44"), BuildMode.REMOTE_BUILD, 1, REPOSITORY, TENANT_ID, BUILD_TARGETS);
+            new BuildId("33-44"),
+            BuildMode.REMOTE_BUILD,
+            1,
+            REPOSITORY,
+            TENANT_ID,
+            BUILD_TARGETS,
+            BUILD_LABEL);
 
     Assert.assertEquals(request.getValue().getType(), FrontendRequestType.CREATE_BUILD);
     Assert.assertTrue(request.getValue().isSetCreateBuildRequest());
