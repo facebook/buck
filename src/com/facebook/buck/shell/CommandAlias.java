@@ -52,9 +52,27 @@ import org.immutables.value.Value;
  * environment variables, or run different tools per host {@link Platform}.
  */
 public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasRuntimeDeps {
+  /**
+   * A {@link BuildRule} that is run as command on all platforms unless overridden in {@link
+   * #platformDelegates}.
+   *
+   * <p>If this is a {@link BinaryBuildRule}, the implementation uses {@link
+   * BinaryBuildRule#getExecutableCommand()}. For other build rule types, the output returned by
+   * {@link BuildRule#getSourcePathToOutput()} is run (and has to be executable).
+   *
+   * <p>If empty, {@link #getExecutableCommand()} will return a {@link Tool} that throws {@link
+   * UnsupportedPlatformException} when attempting to call any method on it, unless the command is
+   * overridden for the current host {@link Platform}.
+   */
   @AddToRuleKey private final Optional<BuildRule> genericDelegate;
+
+  /** Overrides for {@link #genericDelegate} specific to different host {@link Platform}s. */
   @AddToRuleKey private final ImmutableSortedMap<Platform, BuildRule> platformDelegates;
+
+  /** Additional arguments to pass to the command when running it. */
   @AddToRuleKey private final ImmutableList<Arg> args;
+
+  /** Additional environment variables to set when running the command. */
   @AddToRuleKey private final ImmutableSortedMap<String, Arg> env;
 
   @Nullable private final BuildRule exe;
