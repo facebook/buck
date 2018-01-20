@@ -78,6 +78,7 @@ class ProguardTextOutput extends AbstractBuildRule {
           CopyStep.forFile(
               getProjectFilesystem(), configPath.resolve(file), getOutputPath().resolve(file)));
     }
+    buildableContext.recordArtifact(getOutputPath());
     return builder.build();
   }
 
