@@ -584,6 +584,7 @@ abstract class AbstractCxxSourceRuleFactory {
                   getCxxPlatform(),
                   preprocessorDelegate,
                   preprocessorDelegateValue::getHash,
+                  getPrefixHeader().isPresent(),
                   source.getType(),
                   preprocessorDelegate.getNonIncludePathFlags(/* no pch */ Optional.empty()),
                   computeCompilerFlags(source.getType(), source.getFlags())));

@@ -291,11 +291,6 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
    * is using the PCH. This is so we can obtain certain flags (language options and such) so the PCH
    * is compatible with the rule requesting it.
    *
-   * <p>This method will first try to determine whether a matching PCH was already created; if so,
-   * it will be reused. This is done by searching the cache in the {@link BuildRuleResolver} owned
-   * by this class. If this ends up building a new instance of {@link CxxPrecompiledHeader}, it will
-   * be added to the resolver cache.
-   *
    * @param preprocessorDelegateCacheValue
    * @param sourceType
    * @param sourceFlags
@@ -307,6 +302,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxPlatform cxxPlatform,
       PreprocessorDelegate preprocessorDelegateForCxxRule,
       Function<CxxToolFlags, String> pchBaseFunc,
+      boolean isPrefixHeader,
       CxxSource.Type sourceType,
       CxxToolFlags basePPFlagsNoIncludePaths,
       CxxToolFlags baseCompilerFlags) {
@@ -321,43 +317,112 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
     BuildTarget pchTarget =
         BuildTarget.of(pchBaseTarget, ImmutableList.of(cxxPlatform.getFlavor(), pchFlavor));
 
-    return (CxxPrecompiledHeader)
-        ruleResolver.computeIfAbsent(
+    DepsBuilder depsBuilder = new DepsBuilder(ruleFinder);
+
+    return isPrefixHeader
+        ? buildPrecompiledHeaderFromPrefixHeader(
+            depsBuilder,
+            ruleResolver,
+            cxxPlatform,
             pchTarget,
-            target -> {
-              DepsBuilder depsBuilder = new DepsBuilder(ruleFinder);
-              return buildPrecompiledHeaderFromPreInclude(
-                  depsBuilder,
-                  ruleResolver,
-                  pathResolver,
-                  cxxPlatform,
-                  pchTarget,
-                  sourceType,
-                  baseCompilerFlags,
-                  // specific to prefix-header PCH building
-                  preprocessorDelegateForCxxRule,
-                  // specific to template-to-PCH building
-                  ruleFinder,
-                  basePPFlagsNoIncludePaths);
-            });
+            sourceType,
+            baseCompilerFlags,
+            // specific to prefix-header PCH building
+            preprocessorDelegateForCxxRule)
+        : buildPrecompiledHeaderFromTemplateRule(
+            depsBuilder,
+            ruleResolver,
+            pathResolver,
+            cxxPlatform,
+            pchTarget,
+            sourceType,
+            baseCompilerFlags,
+            // specific to template-to-PCH building
+            ruleFinder,
+            basePPFlagsNoIncludePaths);
   }
 
-  protected abstract CxxPrecompiledHeader buildPrecompiledHeaderFromPreInclude(
+  private CxxPrecompiledHeader buildPrecompiledHeaderFromPrefixHeader(
+      DepsBuilder depsBuilder,
+      BuildRuleResolver ruleResolver,
+      CxxPlatform cxxPlatform,
+      BuildTarget pchTarget,
+      CxxSource.Type sourceType,
+      CxxToolFlags compilerFlags,
+      // specific to prefix-header PCH building
+      PreprocessorDelegate preprocessorDelegateForCxxRule) {
+
+    // We need the preprocessor deps for this rule, for its prefix header.
+    depsBuilder.add(preprocessorDelegateForCxxRule);
+
+    return requirePrecompiledHeader(
+        depsBuilder,
+        ruleResolver,
+        cxxPlatform,
+        pchTarget,
+        sourceType,
+        compilerFlags,
+        preprocessorDelegateForCxxRule);
+  }
+
+  /**
+   * Build a PCH rule, given a {@code cxx_precompiled_header} rule.
+   *
+   * <p>We'll "instantiate" this PCH from this template, using the parameters (src, dependencies)
+   * from the template itself, plus the build flags that are used in the current build rule (so that
+   * this instantiated version uses compatible build flags and thus the PCH is guaranteed usable
+   * with this rule).
+   */
+  private CxxPrecompiledHeader buildPrecompiledHeaderFromTemplateRule(
       DepsBuilder depsBuilder,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       BuildTarget pchTarget,
       CxxSource.Type sourceType,
-      CxxToolFlags compilerFlags,
-      // specific to prefix-header PCH building
-      PreprocessorDelegate preprocessorDelegateForCxxRule,
+      CxxToolFlags baseCompilerFlags,
       // specific to template-to-PCH building
       SourcePathRuleFinder ruleFinder,
-      CxxToolFlags basePPFlagsNoIncludePaths);
+      CxxToolFlags basePPFlagsNoIncludePaths) {
 
-  /** Look up or build a precompiled header build rule which this build rule is requesting. */
-  protected CxxPrecompiledHeader buildPrecompiledHeader(
+    Preprocessor preprocessor =
+        CxxSourceTypes.getPreprocessor(cxxPlatform, sourceType).resolve(ruleResolver);
+
+    // Build compiler flags, taking from the source rule, but leaving out its deps.
+    // We just need the flags pertaining to PCH compatibility: language, PIC, macros, etc.
+    // and nothing related to the deps of this particular rule (hence 'getNonIncludePathFlags').
+    CxxToolFlags compilerFlags = CxxToolFlags.concat(basePPFlagsNoIncludePaths, baseCompilerFlags);
+
+    // Now build a new pp-delegate specially for this PCH rule.
+    PreprocessorDelegate preprocessorDelegate =
+        buildPreprocessorDelegate(pathResolver, cxxPlatform, preprocessor, compilerFlags);
+
+    for (BuildRule rule : getBuildDeps()) {
+      depsBuilder.add(rule);
+    }
+
+    depsBuilder.add(requireAggregatedDepsRule(ruleResolver, ruleFinder, cxxPlatform));
+    depsBuilder.add(preprocessorDelegate);
+
+    return requirePrecompiledHeader(
+        depsBuilder,
+        ruleResolver,
+        cxxPlatform,
+        pchTarget,
+        sourceType,
+        compilerFlags,
+        preprocessorDelegate);
+  }
+
+  /**
+   * Look up or build a precompiled header build rule which this build rule is requesting.
+   *
+   * <p>This method will first try to determine whether a matching PCH was already created; if so,
+   * it will be reused. This is done by searching the cache in the {@link BuildRuleResolver} owned
+   * by this class. If this ends up building a new instance of {@link CxxPrecompiledHeader}, it will
+   * be added to the resolver cache.
+   */
+  private CxxPrecompiledHeader requirePrecompiledHeader(
       DepsBuilder depsBuilder,
       BuildRuleResolver ruleResolver,
       CxxPlatform cxxPlatform,
@@ -365,37 +430,42 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxSource.Type sourceType,
       CxxToolFlags compilerFlags,
       PreprocessorDelegate preprocessorDelegate) {
-    // Give the PCH a filename that looks like a header file with .gch appended to it,
-    // GCC-style.
-    // GCC accepts an "-include" flag with the .h file as its arg, and auto-appends
-    // ".gch" to
-    // automagically use the precompiled header in place of the original header.  Of
-    // course in
-    // our case we'll only have the ".gch" file, which is alright; the ".h" isn't
-    // truly needed.
-    Path output = BuildTargets.getGenPath(getProjectFilesystem(), pchTarget, "%s.h.gch");
+    return (CxxPrecompiledHeader)
+        ruleResolver.computeIfAbsent(
+            pchTarget,
+            target -> {
+              // Give the PCH a filename that looks like a header file with .gch appended to it,
+              // GCC-style.
+              // GCC accepts an "-include" flag with the .h file as its arg, and auto-appends
+              // ".gch" to
+              // automagically use the precompiled header in place of the original header.  Of
+              // course in
+              // our case we'll only have the ".gch" file, which is alright; the ".h" isn't
+              // truly needed.
+              Path output = BuildTargets.getGenPath(getProjectFilesystem(), target, "%s.h.gch");
 
-    CompilerDelegate compilerDelegate =
-        new CompilerDelegate(
-            cxxPlatform.getCompilerDebugPathSanitizer(),
-            CxxSourceTypes.getCompiler(
-                    cxxPlatform, CxxSourceTypes.getPreprocessorOutputType(sourceType))
-                .resolve(ruleResolver),
-            compilerFlags);
-    depsBuilder.add(compilerDelegate);
+              CompilerDelegate compilerDelegate =
+                  new CompilerDelegate(
+                      cxxPlatform.getCompilerDebugPathSanitizer(),
+                      CxxSourceTypes.getCompiler(
+                              cxxPlatform, CxxSourceTypes.getPreprocessorOutputType(sourceType))
+                          .resolve(ruleResolver),
+                      compilerFlags);
+              depsBuilder.add(compilerDelegate);
 
-    depsBuilder.add(getHeaderSourcePath());
+              depsBuilder.add(getHeaderSourcePath());
 
-    return new CxxPrecompiledHeader(
-        pchTarget,
-        getProjectFilesystem(),
-        depsBuilder.build(),
-        output,
-        preprocessorDelegate,
-        compilerDelegate,
-        compilerFlags,
-        getHeaderSourcePath(),
-        sourceType,
-        cxxPlatform.getCompilerDebugPathSanitizer());
+              return new CxxPrecompiledHeader(
+                  target,
+                  getProjectFilesystem(),
+                  depsBuilder.build(),
+                  output,
+                  preprocessorDelegate,
+                  compilerDelegate,
+                  compilerFlags,
+                  getHeaderSourcePath(),
+                  sourceType,
+                  cxxPlatform.getCompilerDebugPathSanitizer());
+            });
   }
 }

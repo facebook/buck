@@ -16,17 +16,14 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableSortedSet;
 
 /** Represents a header file mentioned in a `prefix_header` param in a cxx library/binary rule. */
@@ -50,33 +47,5 @@ public class CxxPrefixHeader extends PreInclude {
       SourcePathResolver pathResolver,
       SourcePath sourcePath) {
     super(buildTarget, projectFilesystem, buildRuleParams, pathResolver, sourcePath);
-  }
-
-  @Override
-  protected CxxPrecompiledHeader buildPrecompiledHeaderFromPreInclude(
-      DepsBuilder depsBuilder,
-      BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
-      CxxPlatform cxxPlatform,
-      BuildTarget pchTarget,
-      CxxSource.Type sourceType,
-      CxxToolFlags compilerFlags,
-      // specific to prefix-header PCH building
-      PreprocessorDelegate preprocessorDelegateForCxxRule,
-      // specific to template-to-PCH building
-      SourcePathRuleFinder ruleFinder,
-      CxxToolFlags basePPFlagsNoIncludePaths) {
-
-    // We need the preprocessor deps for this rule, for its prefix header.
-    depsBuilder.add(preprocessorDelegateForCxxRule);
-
-    return buildPrecompiledHeader(
-        depsBuilder,
-        ruleResolver,
-        cxxPlatform,
-        pchTarget,
-        sourceType,
-        compilerFlags,
-        preprocessorDelegateForCxxRule);
   }
 }
