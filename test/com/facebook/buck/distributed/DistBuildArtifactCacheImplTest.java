@@ -79,9 +79,7 @@ public class DistBuildArtifactCacheImplTest {
         MoreExecutors.newDirectExecutorService(),
         remoteCache,
         eventBus,
-        null,
-        null,
-        Optional.of(mockRuleKeyCalculator),
+        mockRuleKeyCalculator,
         localCache);
   }
 

@@ -101,7 +101,7 @@ public class PreBuildPhase {
       int numberOfMinions,
       String repository,
       String tenantId,
-      ListenableFuture<Optional<ParallelRuleKeyCalculator<RuleKey>>> localRuleKeyCalculatorFuture)
+      ListenableFuture<ParallelRuleKeyCalculator<RuleKey>> localRuleKeyCalculatorFuture)
       throws IOException {
     EventSender eventSender = new EventSender(eventBus);
 
@@ -186,8 +186,6 @@ public class PreBuildPhase {
                         networkExecutorService,
                         buildExecutorArgs.getArtifactCacheFactory().remoteOnlyInstance(true),
                         eventBus,
-                        fileHashCache,
-                        buildExecutorArgs.getRuleKeyConfiguration(),
                         localRuleKeyCalculator,
                         Optional.of(
                             buildExecutorArgs.getArtifactCacheFactory().localOnlyInstance(true)))) {

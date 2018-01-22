@@ -64,17 +64,26 @@ import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngineDelegate;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionNotifier;
+import com.facebook.buck.rules.ParallelRuleKeyCalculator;
+import com.facebook.buck.rules.RuleDepsCache;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystemFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.FakeInvocationInfoFactory;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.FakeWeightedListeningExecutorService;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
@@ -204,13 +213,13 @@ public class BuildPhaseTest {
             .setUnversionedTargetGraph(TargetGraphAndBuildTargets.of(TargetGraph.EMPTY, targets))
             .build();
 
+    FileHashCache fileHashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of());
+
     createBuildPhase(
         executorArgs,
         targets,
         graphs,
-        Optional.of(
-            new LocalCachingBuildEngineDelegate(
-                FakeFileHashCache.createFromStrings(ImmutableMap.of()))));
+        Optional.of(new LocalCachingBuildEngineDelegate(fileHashCache)));
 
     // Set expectations.
     mockDistBuildService.reportCoordinatorIsAlive(stampedeId);
@@ -256,13 +265,27 @@ public class BuildPhaseTest {
     replay(mockDistBuildService);
     replay(mockEventBus);
 
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(graphs.getActionGraphAndResolver().getResolver());
+
     buildPhase.runDistBuildAndUpdateConsoleStatus(
         directExecutor,
         new EventSender(mockEventBus),
         stampedeId,
         BuildMode.DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR,
         FakeInvocationInfoFactory.create(),
-        Futures.immediateFuture(Optional.empty()));
+        Futures.immediateFuture(
+            new ParallelRuleKeyCalculator<RuleKey>(
+                directExecutor,
+                new DefaultRuleKeyFactory(
+                    new RuleKeyFieldLoader(executorArgs.getRuleKeyConfiguration()),
+                    fileHashCache,
+                    DefaultSourcePathResolver.from(ruleFinder),
+                    ruleFinder,
+                    new DefaultRuleKeyCache<RuleKey>(),
+                    Optional.empty()),
+                new RuleDepsCache(graphs.getActionGraphAndResolver().getResolver()),
+                (buckEventBus, rule) -> () -> {})));
 
     verify(mockDistBuildService);
     verify(mockEventBus);

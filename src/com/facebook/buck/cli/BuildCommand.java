@@ -111,10 +111,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -1037,8 +1035,7 @@ public class BuildCommand extends AbstractCommand {
               distBuildConfig.getNumberOfMinions(),
               distBuildConfig.getRepository(),
               distBuildConfig.getTenantId(),
-              Futures.transform(
-                  localRuleKeyCalculator, Optional::of, MoreExecutors.directExecutor()));
+              localRuleKeyCalculator);
       exitCode = distBuildResult.exitCode;
 
       if (exitCode
@@ -1333,7 +1330,7 @@ public class BuildCommand extends AbstractCommand {
             executor,
             isKeepGoing(),
             useDistributedBuild,
-            Optional.of(ruleKeyCacheScope),
+            ruleKeyCacheScope,
             getBuildEngineMode(),
             ruleKeyLogger,
             remoteBuildRuleCompletionWaiter);

@@ -33,6 +33,8 @@ import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.Console;
@@ -94,6 +96,8 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
   public abstract BuildInfoStoreManager getBuildInfoStoreManager();
 
   public abstract DistBuildService getDistBuildService();
+
+  public abstract RuleKeyCacheScope<RuleKey> getRuleKeyCacheScope();
 
   public DistBuildConfig getDistBuildConfig() {
     return new DistBuildConfig(getState().getRemoteRootCellConfig());

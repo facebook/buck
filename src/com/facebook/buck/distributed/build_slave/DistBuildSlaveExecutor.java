@@ -28,7 +28,14 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionWaiter;
+import com.facebook.buck.rules.ParallelRuleKeyCalculator;
+import com.facebook.buck.rules.RuleDepsCache;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.util.concurrent.Futures;
@@ -93,8 +100,23 @@ public class DistBuildSlaveExecutor {
               args.getBuckEventBus(),
               args.getExecutorService(),
               args.getArtifactCacheFactory().remoteOnlyInstance(true),
-              args.getRuleKeyConfiguration(),
-              /* ruleKeyCalculator */ Futures.immediateFuture(Optional.empty()),
+              Futures.transform(
+                  initializer.getDelegateAndGraphs(),
+                  graphs -> {
+                    SourcePathRuleFinder ruleFinder =
+                        new SourcePathRuleFinder(graphs.getActionGraphAndResolver().getResolver());
+                    return new ParallelRuleKeyCalculator<RuleKey>(
+                        args.getExecutorService(),
+                        new DefaultRuleKeyFactory(
+                            new RuleKeyFieldLoader(args.getRuleKeyConfiguration()),
+                            graphs.getCachingBuildEngineDelegate().getFileHashCache(),
+                            DefaultSourcePathResolver.from(ruleFinder),
+                            ruleFinder,
+                            args.getRuleKeyCacheScope().getCache(),
+                            Optional.empty()),
+                        new RuleDepsCache(graphs.getActionGraphAndResolver().getResolver()),
+                        (buckEventBus, rule) -> () -> {});
+                  }),
               args.getHealthCheckStatsTracker(),
               Optional.of(args.getTimingStatsTracker()));
       return setPreparationCallbackAndRun(runner);
@@ -148,7 +170,6 @@ public class DistBuildSlaveExecutor {
                   args.getBuckEventBus(),
                   args.getExecutorService(),
                   args.getArtifactCacheFactory().remoteOnlyInstance(true),
-                  args.getRuleKeyConfiguration(),
                   args.getTimingStatsTracker(),
                   args.getHealthCheckStatsTracker(),
                   args.getDistBuildConfig().getCoordinatorBuildCapacityRatio());
@@ -228,7 +249,7 @@ public class DistBuildSlaveExecutor {
                 args.getExecutorService(),
                 KEEP_GOING,
                 true,
-                Optional.empty(),
+                args.getRuleKeyCacheScope(),
                 Optional.empty(),
                 Optional.empty(),
                 // Only the client side build needs to synchronize, not the slave.

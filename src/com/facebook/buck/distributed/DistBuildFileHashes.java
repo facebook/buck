@@ -126,6 +126,8 @@ public class DistBuildFileHashes {
             new CacheLoader<ProjectFilesystem, DefaultRuleKeyFactory>() {
               @Override
               public DefaultRuleKeyFactory load(ProjectFilesystem key) throws Exception {
+                // Create a new RuleKeyCache to make computation visit the
+                // RecordingProjectFileHashCache
                 return new DefaultRuleKeyFactory(
                     new RuleKeyFieldLoader(ruleKeyConfiguration),
                     fileHashCache,

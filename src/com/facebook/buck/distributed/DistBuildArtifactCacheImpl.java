@@ -26,17 +26,10 @@ import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.ParallelRuleKeyCalculator;
-import com.facebook.buck.rules.RuleDepsCache;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
-import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
-import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.CloseableHolder;
 import com.facebook.buck.util.NamedTemporaryFile;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
@@ -71,7 +64,6 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
   private final ListeningExecutorService executorService;
   private final ArtifactCache remoteCache;
   private final Optional<ArtifactCache> localCache;
-  private final SourcePathRuleFinder ruleFinder;
   private final ParallelRuleKeyCalculator<RuleKey> ruleKeyCalculator;
   private final Map<BuildRule, ListenableFuture<Boolean>> remoteCacheContainsFutures;
   private final Map<BuildRule, ListenableFuture<BuildRule>> localUploadFutures;
@@ -81,9 +73,7 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
       ListeningExecutorService executorService,
       ArtifactCache remoteCache,
       BuckEventBus eventBus,
-      FileHashCache fileHashCache,
-      RuleKeyConfiguration rkConfigForCache,
-      Optional<ParallelRuleKeyCalculator<RuleKey>> optionalRuleKeyCalculator,
+      ParallelRuleKeyCalculator<RuleKey> ruleKeyCalculator,
       Optional<ArtifactCache> localCacheToUploadFrom) {
     this.resolver = resolver;
     this.eventBus = eventBus;
@@ -94,19 +84,7 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
     this.remoteCacheContainsFutures = new ConcurrentHashMap<>();
     this.localUploadFutures = new HashMap<>();
 
-    this.ruleFinder = new SourcePathRuleFinder(resolver);
-    this.ruleKeyCalculator =
-        optionalRuleKeyCalculator.orElseGet(
-            () ->
-                new ParallelRuleKeyCalculator<>(
-                    this.executorService,
-                    new DefaultRuleKeyFactory(
-                        new RuleKeyFieldLoader(rkConfigForCache),
-                        fileHashCache,
-                        DefaultSourcePathResolver.from(ruleFinder),
-                        ruleFinder),
-                    new RuleDepsCache(this.resolver),
-                    (buckEventBus, rule) -> () -> {}));
+    this.ruleKeyCalculator = ruleKeyCalculator;
   }
 
   private ListenableFuture<Map<RuleKey, CacheResult>> multiContainsAsync(List<RuleKey> ruleKeys) {

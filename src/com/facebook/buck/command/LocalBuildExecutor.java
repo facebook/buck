@@ -36,7 +36,6 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.MetadataChecker;
 import com.facebook.buck.rules.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
@@ -68,7 +67,7 @@ public class LocalBuildExecutor implements BuildExecutor {
   private final WeightedListeningExecutorService executorService;
   private final CachingBuildEngineDelegate cachingBuildEngineDelegate;
   private final BuildExecutorArgs args;
-  private final Optional<RuleKeyCacheScope<RuleKey>> ruleKeyCacheScope;
+  private final RuleKeyCacheScope<RuleKey> ruleKeyCacheScope;
   private final RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter;
   private final Optional<CachingBuildEngine.BuildMode> buildEngineMode;
   private final Optional<ThriftRuleKeyLogger> ruleKeyLogger;
@@ -86,7 +85,7 @@ public class LocalBuildExecutor implements BuildExecutor {
       WeightedListeningExecutorService executorService,
       boolean keepGoing,
       boolean useDistributedBuildCache,
-      Optional<RuleKeyCacheScope<RuleKey>> ruleKeyRuleKeyCacheScope,
+      RuleKeyCacheScope<RuleKey> ruleKeyRuleKeyCacheScope,
       Optional<BuildMode> buildEngineMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
@@ -212,7 +211,7 @@ public class LocalBuildExecutor implements BuildExecutor {
             cachingBuildEngineDelegate.getFileHashCache(),
             actionGraphAndResolver.getResolver(),
             args.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
-            ruleKeyCacheScope.map(RuleKeyCacheScope::getCache).orElse(new DefaultRuleKeyCache<>()),
+            ruleKeyCacheScope.getCache(),
             ruleKeyLogger),
         remoteBuildRuleCompletionWaiter);
   }

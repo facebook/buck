@@ -37,6 +37,8 @@ import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.LoadBalancedService;
@@ -122,7 +124,8 @@ public abstract class DistBuildFactory {
       HealthCheckStatsTracker healthCheckStatsTracker,
       BuildSlaveTimingStatsTracker timingStatsTracker,
       BuildRuleFinishedPublisher buildRuleFinishedPublisher,
-      UnexpectedSlaveCacheMissTracker unexpectedSlaveCacheMissTracker) {
+      UnexpectedSlaveCacheMissTracker unexpectedSlaveCacheMissTracker,
+      RuleKeyCacheScope<RuleKey> ruleKeyCacheScope) {
     Preconditions.checkArgument(state.getCells().size() > 0);
 
     // Create a cache factory which uses a combination of the distributed build config,
@@ -162,6 +165,7 @@ public abstract class DistBuildFactory {
                 .setBuildRuleFinishedPublisher(buildRuleFinishedPublisher)
                 .setUnexpectedSlaveCacheMissTracker(unexpectedSlaveCacheMissTracker)
                 .setHealthCheckStatsTracker(healthCheckStatsTracker)
+                .setRuleKeyCacheScope(ruleKeyCacheScope)
                 .build());
     return executor;
   }

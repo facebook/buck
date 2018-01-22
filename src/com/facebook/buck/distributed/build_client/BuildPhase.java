@@ -183,7 +183,7 @@ public class BuildPhase {
       WeightedListeningExecutorService executorService,
       StampedeId stampedeId,
       InvocationInfo invocationInfo,
-      ListenableFuture<Optional<ParallelRuleKeyCalculator<RuleKey>>> localRuleKeyCalculator) {
+      ListenableFuture<ParallelRuleKeyCalculator<RuleKey>> localRuleKeyCalculator) {
     Preconditions.checkState(cachingBuildEngineDelegate.isPresent());
     DistBuildConfig distBuildConfig = new DistBuildConfig(buildExecutorArgs.getBuckConfig());
 
@@ -227,7 +227,6 @@ public class BuildPhase {
             buildExecutorArgs.getBuckEventBus(),
             executorService,
             buildExecutorArgs.getArtifactCacheFactory().remoteOnlyInstance(true),
-            buildExecutorArgs.getRuleKeyConfiguration(),
             localRuleKeyCalculator,
             // TODO(shivanker): Make health-check stats work.
             new HealthCheckStatsTracker(),
@@ -252,7 +251,7 @@ public class BuildPhase {
       StampedeId stampedeId,
       BuildMode buildMode,
       InvocationInfo invocationInfo,
-      ListenableFuture<Optional<ParallelRuleKeyCalculator<RuleKey>>> localRuleKeyCalculator)
+      ListenableFuture<ParallelRuleKeyCalculator<RuleKey>> localRuleKeyCalculator)
       throws IOException, InterruptedException {
     distBuildClientStats.startTimer(PERFORM_DISTRIBUTED_BUILD);
     final BuildJob job =

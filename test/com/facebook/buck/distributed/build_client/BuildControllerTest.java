@@ -81,6 +81,7 @@ import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -203,7 +204,7 @@ public class BuildControllerTest {
         1,
         REPOSITORY,
         TENANT_ID,
-        Futures.immediateFuture(Optional.empty()));
+        SettableFuture.create());
   }
 
   @After

@@ -31,7 +31,6 @@ import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -101,7 +100,7 @@ public class BuildController {
       int numberOfMinions,
       String repository,
       String tenantId,
-      ListenableFuture<Optional<ParallelRuleKeyCalculator<RuleKey>>> ruleKeyCalculatorFuture)
+      ListenableFuture<ParallelRuleKeyCalculator<RuleKey>> ruleKeyCalculatorFuture)
       throws IOException, InterruptedException {
     Pair<StampedeId, ListenableFuture<Void>> stampedeIdAndPendingPrepFuture = null;
     try {
