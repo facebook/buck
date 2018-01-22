@@ -93,4 +93,25 @@ public class SwiftTestIOSIntegrationTest {
         workspace.runCommand("otool", "-l", binaryOutput.toString()).getStdout().get(),
         containsString("@loader_path/Frameworks"));
   }
+
+  @Test
+  public void testSwiftInHostAndTestBundle() throws Exception {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "swift_test_with_host", tmp);
+    workspace.setUp();
+    workspace.copyRecursively(
+        TestDataHelper.getTestDataDirectory(AppleTestBuilder.class).resolve("fbxctest"),
+        Paths.get("fbxctest"));
+    workspace.addBuckConfigLocalOption("apple", "xctool_path", "fbxctest/bin/fbxctest");
+
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    BuildTarget target = workspace.newBuildTarget("//:swifttest#iphonesimulator-x86_64");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("test", target.getFullyQualifiedName());
+    result.assertSuccess();
+  }
 }
