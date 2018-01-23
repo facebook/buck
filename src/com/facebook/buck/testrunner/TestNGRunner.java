@@ -65,7 +65,7 @@ public final class TestNGRunner extends BaseRunner {
         TestNG testng = new TestNG();
         testng.setUseDefaultListeners(false);
         testng.setAnnotationTransformer(new FilteringAnnotationTransformer(results));
-        testng.setTestClasses(new Class<?>[]{testClass});
+        testng.setTestClasses(new Class<?>[] {testClass});
         testng.addListener(new TestListener(results));
         // use default TestNG reporters ...
         testng.addListener(new SuiteHTMLReporter());
@@ -140,13 +140,17 @@ public final class TestNGRunner extends BaseRunner {
     }
 
     StringBuilder builder = new StringBuilder(name).append(" (");
-    builder.append(Arrays.stream(parameters).map(parameter -> {
-      try {
-        return parameter == null ? "null" : parameter.toString();
-      } catch (Exception e) {
-        return "Unstringable object";
-      }
-    }).collect(Collectors.joining(", ")));
+    builder.append(
+        Arrays.stream(parameters)
+            .map(
+                parameter -> {
+                  try {
+                    return parameter == null ? "null" : parameter.toString();
+                  } catch (Exception e) {
+                    return "Unstringable object";
+                  }
+                })
+            .collect(Collectors.joining(", ")));
     builder.append(")");
     return builder.toString();
   }
