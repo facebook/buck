@@ -16,25 +16,33 @@
 
 package com.facebook.buck.skylark.function;
 
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
+import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
+import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventCollector;
 import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.packages.Info;
-import com.google.devtools.build.lib.syntax.BazelLibrary;
-import com.google.devtools.build.lib.syntax.BuildFileAST;
-import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.ParserInputSource;
 import com.google.devtools.build.lib.vfs.Path;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.EnumSet;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import org.junit.Assert;
 import org.junit.Before;
@@ -146,29 +154,30 @@ public class HostInfoTest {
   }
 
   @Test
-  public void isUseableInBuildFile() throws EvalException, InterruptedException {
+  public void isUseableInBuildFile() throws EvalException, InterruptedException, IOException {
     String expectedOutput = "";
-    String buildFile = "";
+    String macroFile = "";
     Info realHostInfo = HostInfo.createHostInfoStruct(Platform::detect, Architecture::detect);
 
-    buildFile =
-        "print(\"os.is_linux: {}\".format(host_info().os.is_linux))\n"
-            + "print(\"os.is_macos: {}\".format(host_info().os.is_macos))\n"
-            + "print(\"os.is_windows: {}\".format(host_info().os.is_windows))\n"
-            + "print(\"os.is_freebsd: {}\".format(host_info().os.is_freebsd))\n"
-            + "print(\"os.is_unknown: {}\".format(host_info().os.is_unknown))\n"
-            + "print(\"arch.is_aarch64: {}\".format(host_info().arch.is_aarch64))\n"
-            + "print(\"arch.is_arm: {}\".format(host_info().arch.is_arm))\n"
-            + "print(\"arch.is_armeb: {}\".format(host_info().arch.is_armeb))\n"
-            + "print(\"arch.is_i386: {}\".format(host_info().arch.is_i386))\n"
-            + "print(\"arch.is_mips: {}\".format(host_info().arch.is_mips))\n"
-            + "print(\"arch.is_mips64: {}\".format(host_info().arch.is_mips64))\n"
-            + "print(\"arch.is_mipsel: {}\".format(host_info().arch.is_mipsel))\n"
-            + "print(\"arch.is_mipsel64: {}\".format(host_info().arch.is_mipsel64))\n"
-            + "print(\"arch.is_powerpc: {}\".format(host_info().arch.is_powerpc))\n"
-            + "print(\"arch.is_ppc64: {}\".format(host_info().arch.is_ppc64))\n"
-            + "print(\"arch.is_unknown: {}\".format(host_info().arch.is_unknown))\n"
-            + "print(\"arch.is_x86_64: {}\".format(host_info().arch.is_x86_64))\n";
+    macroFile =
+        "def printer():\n"
+            + "    print(\"os.is_linux: {}\".format(native.host_info().os.is_linux))\n"
+            + "    print(\"os.is_macos: {}\".format(native.host_info().os.is_macos))\n"
+            + "    print(\"os.is_windows: {}\".format(native.host_info().os.is_windows))\n"
+            + "    print(\"os.is_freebsd: {}\".format(native.host_info().os.is_freebsd))\n"
+            + "    print(\"os.is_unknown: {}\".format(native.host_info().os.is_unknown))\n"
+            + "    print(\"arch.is_aarch64: {}\".format(native.host_info().arch.is_aarch64))\n"
+            + "    print(\"arch.is_arm: {}\".format(native.host_info().arch.is_arm))\n"
+            + "    print(\"arch.is_armeb: {}\".format(native.host_info().arch.is_armeb))\n"
+            + "    print(\"arch.is_i386: {}\".format(native.host_info().arch.is_i386))\n"
+            + "    print(\"arch.is_mips: {}\".format(native.host_info().arch.is_mips))\n"
+            + "    print(\"arch.is_mips64: {}\".format(native.host_info().arch.is_mips64))\n"
+            + "    print(\"arch.is_mipsel: {}\".format(native.host_info().arch.is_mipsel))\n"
+            + "    print(\"arch.is_mipsel64: {}\".format(native.host_info().arch.is_mipsel64))\n"
+            + "    print(\"arch.is_powerpc: {}\".format(native.host_info().arch.is_powerpc))\n"
+            + "    print(\"arch.is_ppc64: {}\".format(native.host_info().arch.is_ppc64))\n"
+            + "    print(\"arch.is_unknown: {}\".format(native.host_info().arch.is_unknown))\n"
+            + "    print(\"arch.is_x86_64: {}\".format(native.host_info().arch.is_x86_64))\n";
 
     expectedOutput =
         "os.is_linux: False\n"
@@ -226,9 +235,11 @@ public class HostInfoTest {
             .replace("arch." + trueArchKey + ": False", "arch." + trueArchKey + ": True");
 
     EventCollector eventHandler = new EventCollector(EnumSet.of(EventKind.DEBUG));
-    boolean execSuccess = evaluateFile(buildFile, eventHandler);
+    String buildFile = "load(\"//:file.bzl\", \"printer\")\n";
+    buildFile += "printer()\n";
 
-    Assert.assertTrue(execSuccess);
+    evaluateProject(macroFile, buildFile, eventHandler);
+
     Assert.assertEquals(
         expectedOutput.trim(),
         Streams.stream(eventHandler.iterator())
@@ -236,20 +247,31 @@ public class HostInfoTest {
             .collect(Collectors.joining("\n")));
   }
 
-  private boolean evaluateFile(String buildFile, EventHandler eventHandler)
-      throws InterruptedException {
-    BuildFileAST buildFileAst =
-        BuildFileAST.parseBuildFile(
-            ParserInputSource.create(buildFile, root.asFragment()), eventHandler);
-    try (Mutability mutability = Mutability.create("BUCK")) {
-      Environment env =
-          Environment.builder(mutability)
-              .setGlobals(BazelLibrary.GLOBALS)
-              .useDefaultSemantics()
-              .setEventHandler(eventHandler)
-              .build();
-      env.setup("host_info", HostInfo.create());
-      return buildFileAst.exec(env, eventHandler);
-    }
+  private void evaluateProject(String macroFile, String buildFile, EventHandler eventHandler)
+      throws IOException, InterruptedException {
+    ProjectFilesystem fs = FakeProjectFilesystem.createRealTempFilesystem();
+    Cell cell = new TestCellBuilder().setFilesystem(fs).build();
+    Files.write(fs.resolve("BUCK"), buildFile.getBytes(Charsets.UTF_8));
+    Files.write(fs.resolve("file.bzl"), macroFile.getBytes(Charsets.UTF_8));
+
+    SkylarkProjectBuildFileParser parser = createParser(cell.getFilesystem(), eventHandler);
+    parser.getAll(fs.resolve("BUCK"), new AtomicLong());
+  }
+
+  private SkylarkProjectBuildFileParser createParser(
+      ProjectFilesystem filesystem, EventHandler eventHandler) {
+    return SkylarkProjectBuildFileParser.using(
+        ProjectBuildFileParserOptions.builder()
+            .setProjectRoot(filesystem.getRootPath())
+            .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
+            .setIgnorePaths(ImmutableSet.of())
+            .setBuildFileName("BUCK")
+            .setBuildFileImportWhitelist(ImmutableList.of())
+            .setPythonInterpreter("skylark")
+            .build(),
+        BuckEventBusForTests.newInstance(),
+        SkylarkFilesystem.using(filesystem),
+        new DefaultTypeCoercerFactory(),
+        eventHandler);
   }
 }

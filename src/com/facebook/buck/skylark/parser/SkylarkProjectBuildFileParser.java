@@ -266,7 +266,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     env.setupDynamic(PARSE_CONTEXT, parseContext);
     env.setup("glob", Glob.create());
     env.setup("package_name", SkylarkNativeModule.packageName);
-    env.setup("host_info", HostInfo.create());
     PackageContext packageContext =
         PackageContext.builder()
             .setGlobber(SimpleGlobber.create(fileSystem.getPath(buildFile.getParent().toString())))
@@ -569,6 +568,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     for (BuiltinFunction ruleFunction : buckRuleFunctionsSupplier.get()) {
       builder.put(ruleFunction.getName(), ruleFunction);
     }
+    builder.put("host_info", HostInfo.create());
     return NativeProvider.STRUCT.create(builder.build(), "no native function or rule '%s'");
   }
 

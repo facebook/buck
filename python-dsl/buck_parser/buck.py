@@ -689,7 +689,9 @@ class BuildFileProcessor(object):
             f.__name__: f for f in build_functions
         }
         assert 'glob' not in native_globals
+        assert 'host_info' not in native_globals
         native_globals['glob'] = self._glob
+        native_globals['host_info'] = self._host_info
         native_module_type = collections.namedtuple('native', native_globals.keys())
         return native_module_type(**native_globals)
 
