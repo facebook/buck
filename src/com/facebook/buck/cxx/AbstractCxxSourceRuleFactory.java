@@ -37,7 +37,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DependencyAggregation;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -641,21 +640,31 @@ abstract class AbstractCxxSourceRuleFactory {
       CxxSource.Type sourceType,
       ImmutableList<String> sourceFlags) {
 
-    // This method is called only if one of these is present; guarantee that for the if/else below.
-    Preconditions.checkState(getPrefixHeader().isPresent() ^ getPrecompiledHeader().isPresent());
+    // This method should be called only if prefix/precompiled header param present.
+    Preconditions.checkState(getPreInclude().isPresent());
+    PreInclude pre = getPreInclude().get();
 
-    return getPrefixHeader().isPresent()
-        ? buildPrecompiledHeaderFromPrefixHeader(
-            preprocessorDelegateCacheValue, sourceType, sourceFlags, getPrefixHeader().get())
-        : buildPrecompiledHeaderFromTemplateRule(
-            preprocessorDelegateCacheValue, sourceType, sourceFlags, getPrecompiledHeader().get());
+    if (pre instanceof CxxPrefixHeader) {
+      return buildPrecompiledHeaderFromPrefixHeader(
+          preprocessorDelegateCacheValue, sourceType, sourceFlags, (CxxPrefixHeader) pre);
+    }
+
+    if (pre instanceof CxxPrecompiledHeaderTemplate) {
+      return buildPrecompiledHeaderFromTemplateRule(
+          preprocessorDelegateCacheValue,
+          sourceType,
+          sourceFlags,
+          (CxxPrecompiledHeaderTemplate) pre);
+    }
+
+    throw new IllegalStateException("unhandled pre-include type: " + pre.getClass().getName());
   }
 
   private CxxPrecompiledHeader buildPrecompiledHeaderFromPrefixHeader(
       PreprocessorDelegateCacheValue preprocessorDelegateCacheValue,
       CxxSource.Type sourceType,
       ImmutableList<String> sourceFlags,
-      SourcePath headerPath) {
+      CxxPrefixHeader pre) {
 
     DepsBuilder depsBuilder = new DepsBuilder(getRuleFinder());
 
@@ -676,7 +685,7 @@ abstract class AbstractCxxSourceRuleFactory {
         preprocessorDelegateCacheValue.getPreprocessorDelegate(),
         sourceType,
         compilerFlags,
-        headerPath,
+        pre,
         depsBuilder,
         getBaseBuildTarget().getUnflavoredBuildTarget(),
         ImmutableSortedSet.of(
@@ -696,7 +705,7 @@ abstract class AbstractCxxSourceRuleFactory {
       PreprocessorDelegateCacheValue preprocessorDelegateCacheValue,
       CxxSource.Type sourceType,
       ImmutableList<String> sourceFlags,
-      SourcePath headerTargetPath) {
+      CxxPrecompiledHeaderTemplate pchTemplate) {
 
     DepsBuilder depsBuilder = new DepsBuilder(getRuleFinder());
 
@@ -704,13 +713,6 @@ abstract class AbstractCxxSourceRuleFactory {
         preprocessorDelegateCacheValue.getPreprocessorDelegate();
 
     Preprocessor preprocessor = preprocessorDelegateForCxxRule.getPreprocessor();
-
-    BuildTarget pchTemplateTarget = ((BuildTargetSourcePath) headerTargetPath).getTarget();
-    Optional<CxxPrecompiledHeaderTemplate> pchTemplateRuleOpt =
-        getResolver()
-            .getRuleOptionalWithType(pchTemplateTarget, CxxPrecompiledHeaderTemplate.class);
-    Preconditions.checkState(pchTemplateRuleOpt.isPresent());
-    CxxPrecompiledHeaderTemplate pchTemplate = pchTemplateRuleOpt.get();
 
     // Build compiler flags, taking from the source rule, but leaving out its deps.
     // We just need the flags pertaining to PCH compatibility: language, PIC, macros, etc.
@@ -741,9 +743,9 @@ abstract class AbstractCxxSourceRuleFactory {
         preprocessorDelegate,
         sourceType,
         compilerFlags,
-        pchTemplate.getHeaderSourcePath(),
+        pchTemplate,
         depsBuilder,
-        pchTemplateTarget.getUnflavoredBuildTarget(),
+        pchTemplate.getBuildTarget().getUnflavoredBuildTarget(),
         ImmutableSortedSet.of(
             getCxxPlatform().getFlavor(),
             InternalFlavor.of(Flavor.replaceInvalidCharacters(pchBaseID))));
@@ -761,7 +763,7 @@ abstract class AbstractCxxSourceRuleFactory {
       PreprocessorDelegate preprocessorDelegate,
       CxxSource.Type sourceType,
       CxxToolFlags compilerFlags,
-      SourcePath headerPath,
+      PreInclude pre,
       DepsBuilder depsBuilder,
       UnflavoredBuildTarget templateTarget,
       ImmutableSortedSet<Flavor> flavors) {
@@ -790,7 +792,7 @@ abstract class AbstractCxxSourceRuleFactory {
                           compilerFlags);
                   depsBuilder.add(compilerDelegate);
 
-                  depsBuilder.add(headerPath);
+                  depsBuilder.add(pre.getHeaderSourcePath());
 
                   return new CxxPrecompiledHeader(
                       target,
@@ -800,7 +802,7 @@ abstract class AbstractCxxSourceRuleFactory {
                       preprocessorDelegate,
                       compilerDelegate,
                       compilerFlags,
-                      headerPath,
+                      pre.getHeaderSourcePath(),
                       sourceType,
                       getCxxPlatform().getCompilerDebugPathSanitizer());
                 });
