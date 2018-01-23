@@ -299,6 +299,10 @@ public class CxxBuckConfig {
     return delegate.getBooleanValue(cxxSection, "unique_library_name_enabled", false);
   }
 
+  public boolean getDefaultReexportAllHeaderDependencies() {
+    return delegate.getBooleanValue(cxxSection, "default_reexport_all_header_dependencies", true);
+  }
+
   /** @return whether to enable shared library interfaces. */
   public SharedLibraryInterfaceParams.Type getSharedLibraryInterfaces() {
 

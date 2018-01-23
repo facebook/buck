@@ -318,7 +318,8 @@ public class CxxLibraryFactory {
         !buildTarget
             .getFlavors()
             .contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
-        args.isReexportAllHeaderDependencies(),
+        args.isReexportAllHeaderDependencies()
+            .orElse(cxxBuckConfig.getDefaultReexportAllHeaderDependencies()),
         delegate);
   }
 
@@ -433,6 +434,7 @@ public class CxxLibraryFactory {
             cxxBuckConfig,
             cxxPlatform,
             CxxLibraryDescription.getPreprocessorInputsForBuildingLibrarySources(
+                cxxBuckConfig,
                 ruleResolver,
                 cellRoots,
                 buildTarget,

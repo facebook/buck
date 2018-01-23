@@ -1766,6 +1766,16 @@ cxx_library(
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'default_reexport_all_header_dependencies' /}
+  {param example_value: 'true' /}
+  {param description}
+    Default value used for {call buck.reexport_all_header_dependencies /}, when
+    it's undefined on the build rule.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'doctor' /}
   {param description}

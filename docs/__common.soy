@@ -868,9 +868,16 @@ docsearch({
 {/template}
 
 
-/** @param name */
+/**
+ * @param name
+ * @param? section
+ */
 {template .ruleLink}
-<a href="{ROOT}rule/{$name}.html"><code>{$name}</code></a>
+  {if not $section}
+    <a href="{ROOT}rule/{$name}.html"><code>{$name}</code></a>
+  {else}
+    <a href="{ROOT}rule/{$name}.html#{$section}"><code>{$section}</code></a>
+  {/if}
 {/template}
 
 /***/
@@ -1056,6 +1063,14 @@ docsearch({
 /***/
 {template .cxx_library}
 {call .ruleLink}{param name : 'cxx_library' /}{/call}
+{/template}
+
+/***/
+{template .reexport_all_header_dependencies}
+{call .ruleLink}
+  {param name : 'cxx_library' /}
+  {param section : 'reexport_all_header_dependencies' /}
+{/call}
 {/template}
 
 /***/
