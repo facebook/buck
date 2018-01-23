@@ -23,8 +23,10 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -44,6 +46,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * Represents a precompilable header file, along with dependencies.
@@ -273,5 +276,70 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
         CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver),
         /* getSandboxTree() */ Optional.empty(),
         /* leadingIncludePaths */ Optional.empty());
+  }
+
+  public abstract CxxPrecompiledHeader getPrecompiledHeader(
+      PreprocessorDelegate preprocessorDelegateForCxxRule,
+      DependencyAggregation aggregatedPreprocessDepsRule,
+      CxxToolFlags computedCompilerFlags,
+      Function<CxxToolFlags, String> getHash,
+      Function<CxxToolFlags, String> getBaseHash,
+      CxxPlatform cxxPlatform,
+      CxxSource.Type sourceType,
+      ImmutableList<String> sourceFlags);
+
+  /**
+   * Look up or build a precompiled header build rule which this build rule is requesting.
+   *
+   * <p>This method will first try to determine whether a matching PCH was already created; if so,
+   * it will be reused. This is done by searching the cache in the {@link BuildRuleResolver} owned
+   * by this class. If this ends up building a new instance of {@link CxxPrecompiledHeader}, it will
+   * be added to the resolver cache.
+   */
+  protected CxxPrecompiledHeader requirePrecompiledHeader(
+      PreprocessorDelegate preprocessorDelegate,
+      CxxPlatform cxxPlatform,
+      CxxSource.Type sourceType,
+      CxxToolFlags compilerFlags,
+      DepsBuilder depsBuilder,
+      UnflavoredBuildTarget templateTarget,
+      ImmutableSortedSet<Flavor> flavors) {
+    return (CxxPrecompiledHeader)
+        ruleResolver.computeIfAbsent(
+            BuildTarget.of(templateTarget, flavors),
+            target -> {
+              // Give the PCH a filename that looks like a header file with .gch appended to it,
+              // GCC-style.
+              // GCC accepts an "-include" flag with the .h file as its arg, and auto-appends
+              // ".gch" to
+              // automagically use the precompiled header in place of the original header.  Of
+              // course in
+              // our case we'll only have the ".gch" file, which is alright; the ".h" isn't
+              // truly needed.
+              Path output = BuildTargets.getGenPath(getProjectFilesystem(), target, "%s.h.gch");
+
+              CompilerDelegate compilerDelegate =
+                  new CompilerDelegate(
+                      cxxPlatform.getCompilerDebugPathSanitizer(),
+                      CxxSourceTypes.getCompiler(
+                              cxxPlatform, CxxSourceTypes.getPreprocessorOutputType(sourceType))
+                          .resolve(ruleResolver),
+                      compilerFlags);
+              depsBuilder.add(compilerDelegate);
+
+              depsBuilder.add(getHeaderSourcePath());
+
+              return new CxxPrecompiledHeader(
+                  target,
+                  getProjectFilesystem(),
+                  depsBuilder.build(),
+                  output,
+                  preprocessorDelegate,
+                  compilerDelegate,
+                  compilerFlags,
+                  getHeaderSourcePath(),
+                  sourceType,
+                  cxxPlatform.getCompilerDebugPathSanitizer());
+            });
   }
 }

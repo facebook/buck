@@ -32,7 +32,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
@@ -644,168 +643,15 @@ abstract class AbstractCxxSourceRuleFactory {
     Preconditions.checkState(getPreInclude().isPresent());
     PreInclude pre = getPreInclude().get();
 
-    if (pre instanceof CxxPrefixHeader) {
-      return buildPrecompiledHeaderFromPrefixHeader(
-          preprocessorDelegateCacheValue, sourceType, sourceFlags, (CxxPrefixHeader) pre);
-    }
-
-    if (pre instanceof CxxPrecompiledHeaderTemplate) {
-      return buildPrecompiledHeaderFromTemplateRule(
-          preprocessorDelegateCacheValue,
-          sourceType,
-          sourceFlags,
-          (CxxPrecompiledHeaderTemplate) pre);
-    }
-
-    throw new IllegalStateException("unhandled pre-include type: " + pre.getClass().getName());
-  }
-
-  private CxxPrecompiledHeader buildPrecompiledHeaderFromPrefixHeader(
-      PreprocessorDelegateCacheValue preprocessorDelegateCacheValue,
-      CxxSource.Type sourceType,
-      ImmutableList<String> sourceFlags,
-      CxxPrefixHeader pre) {
-
-    DepsBuilder depsBuilder = new DepsBuilder(getRuleFinder());
-
-    // We need the preprocessor deps for this rule, for its prefix header.
-    depsBuilder.add(preprocessorDelegateCacheValue.getPreprocessorDelegate());
-    depsBuilder.add(requireAggregatedPreprocessDepsRule());
-
-    CxxToolFlags compilerFlags = computeCompilerFlags(sourceType, sourceFlags);
-
-    // Language needs to be part of the key, PCHs built under a different language are incompatible.
-    // (Replace `c++` with `cxx`; avoid default scrubbing which would make it the cryptic `c__`.)
-    final String langCode = sourceType.getLanguage().replaceAll("c\\+\\+", "cxx");
-
-    final String pchFullID =
-        String.format("pch-%s-%s", langCode, preprocessorDelegateCacheValue.getHash(compilerFlags));
-
-    return requirePrecompiledHeader(
+    return pre.getPrecompiledHeader(
         preprocessorDelegateCacheValue.getPreprocessorDelegate(),
+        (DependencyAggregation) requireAggregatedPreprocessDepsRule(),
+        computeCompilerFlags(sourceType, sourceFlags),
+        preprocessorDelegateCacheValue::getHash,
+        preprocessorDelegateCacheValue::getBaseHash,
+        getCxxPlatform(),
         sourceType,
-        compilerFlags,
-        pre,
-        depsBuilder,
-        getBaseBuildTarget().getUnflavoredBuildTarget(),
-        ImmutableSortedSet.of(
-            getCxxPlatform().getFlavor(),
-            InternalFlavor.of(Flavor.replaceInvalidCharacters(pchFullID))));
-  }
-
-  /**
-   * Build a PCH rule, given a {@code cxx_precompiled_header} rule.
-   *
-   * <p>We'll "instantiate" this PCH from this template, using the parameters (src, dependencies)
-   * from the template itself, plus the build flags that are used in the current build rule (so that
-   * this instantiated version uses compatible build flags and thus the PCH is guaranteed usable
-   * with this rule).
-   */
-  private CxxPrecompiledHeader buildPrecompiledHeaderFromTemplateRule(
-      PreprocessorDelegateCacheValue preprocessorDelegateCacheValue,
-      CxxSource.Type sourceType,
-      ImmutableList<String> sourceFlags,
-      CxxPrecompiledHeaderTemplate pchTemplate) {
-
-    DepsBuilder depsBuilder = new DepsBuilder(getRuleFinder());
-
-    PreprocessorDelegate preprocessorDelegateForCxxRule =
-        preprocessorDelegateCacheValue.getPreprocessorDelegate();
-
-    Preprocessor preprocessor = preprocessorDelegateForCxxRule.getPreprocessor();
-
-    // Build compiler flags, taking from the source rule, but leaving out its deps.
-    // We just need the flags pertaining to PCH compatibility: language, PIC, macros, etc.
-    // and nothing related to the deps of this particular rule (hence 'getNonIncludePathFlags').
-    CxxToolFlags compilerFlags =
-        CxxToolFlags.concat(
-            preprocessorDelegateForCxxRule.getNonIncludePathFlags(/* no pch */ Optional.empty()),
-            computeCompilerFlags(sourceType, sourceFlags));
-
-    // Now build a new pp-delegate specially for this PCH rule.
-    PreprocessorDelegate preprocessorDelegate =
-        pchTemplate.buildPreprocessorDelegate(getCxxPlatform(), preprocessor, compilerFlags);
-
-    // Language needs to be part of the key, PCHs built under a different language are incompatible.
-    // (Replace `c++` with `cxx`; avoid default scrubbing which would make it the cryptic `c__`.)
-    final String langCode = sourceType.getLanguage().replaceAll("c\\+\\+", "cxx");
-    final String pchBaseID =
-        "pch-" + langCode + "-" + preprocessorDelegateCacheValue.getBaseHash(compilerFlags);
-
-    for (BuildRule rule : pchTemplate.getBuildDeps()) {
-      depsBuilder.add(rule);
-    }
-
-    depsBuilder.add(pchTemplate.requireAggregatedDepsRule(getCxxPlatform()));
-    depsBuilder.add(preprocessorDelegate);
-
-    return requirePrecompiledHeader(
-        preprocessorDelegate,
-        sourceType,
-        compilerFlags,
-        pchTemplate,
-        depsBuilder,
-        pchTemplate.getBuildTarget().getUnflavoredBuildTarget(),
-        ImmutableSortedSet.of(
-            getCxxPlatform().getFlavor(),
-            InternalFlavor.of(Flavor.replaceInvalidCharacters(pchBaseID))));
-  }
-
-  /**
-   * Look up or build a precompiled header build rule which this build rule is requesting.
-   *
-   * <p>This method will first try to determine whether a matching PCH was already created; if so,
-   * it will be reused. This is done by searching the cache in the {@link BuildRuleResolver} owned
-   * by this class. If this ends up building a new instance of {@link CxxPrecompiledHeader}, it will
-   * be added to the resolver cache.
-   */
-  private CxxPrecompiledHeader requirePrecompiledHeader(
-      PreprocessorDelegate preprocessorDelegate,
-      CxxSource.Type sourceType,
-      CxxToolFlags compilerFlags,
-      PreInclude pre,
-      DepsBuilder depsBuilder,
-      UnflavoredBuildTarget templateTarget,
-      ImmutableSortedSet<Flavor> flavors) {
-    return (CxxPrecompiledHeader)
-        getResolver()
-            .computeIfAbsent(
-                BuildTarget.of(templateTarget, flavors),
-                target -> {
-                  // Give the PCH a filename that looks like a header file with .gch appended to it,
-                  // GCC-style.
-                  // GCC accepts an "-include" flag with the .h file as its arg, and auto-appends
-                  // ".gch" to
-                  // automagically use the precompiled header in place of the original header.  Of
-                  // course in
-                  // our case we'll only have the ".gch" file, which is alright; the ".h" isn't
-                  // truly needed.
-                  Path output = BuildTargets.getGenPath(getProjectFilesystem(), target, "%s.h.gch");
-
-                  CompilerDelegate compilerDelegate =
-                      new CompilerDelegate(
-                          getCxxPlatform().getCompilerDebugPathSanitizer(),
-                          CxxSourceTypes.getCompiler(
-                                  getCxxPlatform(),
-                                  CxxSourceTypes.getPreprocessorOutputType(sourceType))
-                              .resolve(getResolver()),
-                          compilerFlags);
-                  depsBuilder.add(compilerDelegate);
-
-                  depsBuilder.add(pre.getHeaderSourcePath());
-
-                  return new CxxPrecompiledHeader(
-                      target,
-                      getProjectFilesystem(),
-                      depsBuilder.build(),
-                      output,
-                      preprocessorDelegate,
-                      compilerDelegate,
-                      compilerFlags,
-                      pre.getHeaderSourcePath(),
-                      sourceType,
-                      getCxxPlatform().getCompilerDebugPathSanitizer());
-                });
+        sourceFlags);
   }
 
   public ImmutableSet<CxxInferCapture> requireInferCaptureBuildRules(
