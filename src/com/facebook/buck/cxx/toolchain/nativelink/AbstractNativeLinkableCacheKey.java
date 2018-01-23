@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain.nativelink;
 
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
@@ -29,4 +30,8 @@ abstract class AbstractNativeLinkableCacheKey {
   public abstract Linker.LinkableDepType getType();
 
   public abstract boolean getForceLinkWhole();
+
+  @Value.Auxiliary
+  // used only when loading from cache
+  public abstract CxxPlatform getCxxPlatform();
 }

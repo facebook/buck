@@ -24,15 +24,14 @@ import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableCacheKey;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasOutputName;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -56,8 +55,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -77,8 +74,8 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
   private final Optional<Pattern> supportedPlatformsRegex;
   private final FlavorDomain<AppleCxxPlatform> applePlatformFlavorDomain;
 
-  private final Map<Pair<Flavor, Linker.LinkableDepType>, NativeLinkableInput> nativeLinkableCache =
-      new HashMap<>();
+  private final LoadingCache<NativeLinkableCacheKey, NativeLinkableInput> nativeLinkableCache =
+      NativeLinkable.getNativeLinkableInputCache(this::getNativeLinkableInputUncached);
 
   private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
       transitiveCxxPreprocessorInputCache =
@@ -202,11 +199,15 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
     return ImmutableList.of();
   }
 
-  private NativeLinkableInput getNativeLinkableInputUncached(
-      CxxPlatform cxxPlatform, Linker.LinkableDepType type) {
+  private NativeLinkableInput getNativeLinkableInputUncached(NativeLinkableCacheKey key) {
+    CxxPlatform cxxPlatform = key.getCxxPlatform();
+
     if (!isPlatformSupported(cxxPlatform)) {
       return NativeLinkableInput.of();
     }
+
+    Linker.LinkableDepType type = key.getType();
+
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
     linkerArgsBuilder.addAll(
         StringArg.from(Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform))));
@@ -239,13 +240,9 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
       ImmutableSet<LanguageExtensions> languageExtensions) {
-    Pair<Flavor, Linker.LinkableDepType> key = new Pair<>(cxxPlatform.getFlavor(), type);
-    NativeLinkableInput input = nativeLinkableCache.get(key);
-    if (input == null) {
-      input = getNativeLinkableInputUncached(cxxPlatform, type);
-      nativeLinkableCache.put(key, input);
-    }
-    return input;
+    // forceLinkWhole is not needed for PrebuiltAppleFramework so we provide constant value
+    return nativeLinkableCache.getUnchecked(
+        NativeLinkableCacheKey.of(cxxPlatform.getFlavor(), type, false, cxxPlatform));
   }
 
   @Override
