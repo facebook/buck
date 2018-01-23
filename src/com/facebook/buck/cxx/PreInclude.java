@@ -58,6 +58,10 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
   private static final Flavor AGGREGATED_PREPROCESS_DEPS_FLAVOR =
       InternalFlavor.of("preprocessor-deps");
 
+  protected final BuildRuleResolver ruleResolver;
+  protected final SourcePathResolver pathResolver;
+  protected final SourcePathRuleFinder ruleFinder;
+
   /**
    * The source path which was expressed as either: (1) the `prefix_header` attribute in a
    * `cxx_binary` or `cxx_library` (or similar) rule, or (2) the `src` in a `cxx_precompiled_header`
@@ -77,10 +81,15 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
   PreInclude(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
+      ImmutableSortedSet<BuildRule> deps,
+      BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       SourcePath sourcePath) {
-    super(buildTarget, projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, makeBuildRuleParams(deps));
+    this.ruleResolver = ruleResolver;
+    this.pathResolver = pathResolver;
+    this.ruleFinder = ruleFinder;
     this.sourcePath = sourcePath;
     this.absoluteHeaderPath = pathResolver.getAbsolutePath(sourcePath);
   }
@@ -103,7 +112,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
     return relativizedTo.relativize(getAbsoluteHeaderPath());
   }
 
-  protected static BuildRuleParams makeBuildRuleParams(ImmutableSortedSet<BuildRule> deps) {
+  private static BuildRuleParams makeBuildRuleParams(ImmutableSortedSet<BuildRule> deps) {
     return new BuildRuleParams(() -> deps, () -> ImmutableSortedSet.of(), ImmutableSortedSet.of());
   }
 
@@ -203,8 +212,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
         .collect(ImmutableSet.toImmutableSet());
   }
 
-  private ImmutableSortedSet<BuildRule> getPreprocessDeps(
-      BuildRuleResolver ruleResolver, SourcePathRuleFinder ruleFinder, CxxPlatform cxxPlatform) {
+  private ImmutableSortedSet<BuildRule> getPreprocessDeps(CxxPlatform cxxPlatform) {
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
     for (CxxPreprocessorInput input : getCxxPreprocessorInputs(cxxPlatform)) {
       builder.addAll(input.getDeps(ruleResolver, ruleFinder));
@@ -231,24 +239,18 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
    * Find or create a {@link DependencyAggregation} rule, representing a grouping of dependencies:
    * generally, those deps from the current {@link CxxPlatform}.
    */
-  protected DependencyAggregation requireAggregatedDepsRule(
-      BuildRuleResolver ruleResolver, SourcePathRuleFinder ruleFinder, CxxPlatform cxxPlatform) {
+  protected DependencyAggregation requireAggregatedDepsRule(CxxPlatform cxxPlatform) {
     return (DependencyAggregation)
         ruleResolver.computeIfAbsent(
             createAggregatedDepsTarget(cxxPlatform),
             depAggTarget ->
                 new DependencyAggregation(
-                    depAggTarget,
-                    getProjectFilesystem(),
-                    getPreprocessDeps(ruleResolver, ruleFinder, cxxPlatform)));
+                    depAggTarget, getProjectFilesystem(), getPreprocessDeps(cxxPlatform)));
   }
 
   /** @return newly-built delegate for this PCH build (if precompiling enabled) */
   protected PreprocessorDelegate buildPreprocessorDelegate(
-      SourcePathResolver pathResolver,
-      CxxPlatform cxxPlatform,
-      Preprocessor preprocessor,
-      CxxToolFlags preprocessorFlags) {
+      CxxPlatform cxxPlatform, Preprocessor preprocessor, CxxToolFlags preprocessorFlags) {
     if (!CxxHeadersExperiment.runExperiment()) {
       ImmutableList<CxxHeaders> includes = getIncludes(cxxPlatform);
       try {

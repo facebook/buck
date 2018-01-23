@@ -21,9 +21,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableSortedSet;
 
 /** Represents a header file mentioned in a `prefix_header` param in a cxx library/binary rule. */
@@ -35,17 +36,10 @@ public class CxxPrefixHeader extends PreInclude {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ImmutableSortedSet<BuildRule> deps,
+      BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       SourcePath sourcePath) {
-    this(buildTarget, projectFilesystem, makeBuildRuleParams(deps), pathResolver, sourcePath);
-  }
-
-  CxxPrefixHeader(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
-      SourcePathResolver pathResolver,
-      SourcePath sourcePath) {
-    super(buildTarget, projectFilesystem, buildRuleParams, pathResolver, sourcePath);
+    super(buildTarget, projectFilesystem, deps, ruleResolver, pathResolver, ruleFinder, sourcePath);
   }
 }

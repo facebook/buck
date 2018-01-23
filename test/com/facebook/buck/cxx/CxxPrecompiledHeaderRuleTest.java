@@ -168,8 +168,10 @@ public class CxxPrecompiledHeaderRuleTest {
     return new CxxPrecompiledHeaderTemplate(
         target,
         new FakeProjectFilesystem(),
-        newParams().copyAppendingExtraDeps(deps),
+        deps,
+        ruleResolver,
         pathResolver,
+        ruleFinder,
         headerSourcePath);
   }
 

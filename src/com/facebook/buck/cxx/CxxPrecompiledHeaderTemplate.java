@@ -19,9 +19,10 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableSortedSet;
 
 /**
@@ -32,22 +33,14 @@ import com.google.common.collect.ImmutableSortedSet;
  * {@code deps} list.
  */
 public class CxxPrecompiledHeaderTemplate extends PreInclude {
-
   CxxPrecompiledHeaderTemplate(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ImmutableSortedSet<BuildRule> deps,
+      BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       SourcePath sourcePath) {
-    this(buildTarget, projectFilesystem, makeBuildRuleParams(deps), pathResolver, sourcePath);
-  }
-
-  CxxPrecompiledHeaderTemplate(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
-      SourcePathResolver pathResolver,
-      SourcePath sourcePath) {
-    super(buildTarget, projectFilesystem, buildRuleParams, pathResolver, sourcePath);
+    super(buildTarget, projectFilesystem, deps, ruleResolver, pathResolver, ruleFinder, sourcePath);
   }
 }
