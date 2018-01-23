@@ -184,9 +184,12 @@ public class CxxLinkableEnhancer {
 
     // Collect and topologically sort our deps that contribute to the link.
     Stream<NativeLinkableInput> nativeLinkableInputs =
-        NativeLinkables.getNativeLinkables(cxxPlatform, nativeLinkableDeps, depType)
-            .entrySet()
-            .stream()
+        ruleResolver
+            .getParallelizer()
+            .maybeParallelize(
+                NativeLinkables.getNativeLinkables(cxxPlatform, nativeLinkableDeps, depType)
+                    .entrySet()
+                    .stream())
             .filter(entry -> !blacklist.contains(entry.getKey()))
             .map(entry -> entry.getValue())
             .map(
@@ -201,7 +204,6 @@ public class CxxLinkableEnhancer {
                   LOG.verbose("Native linkable %s returned input %s", nativeLinkable, input);
                   return input;
                 });
-    nativeLinkableInputs = ruleResolver.maybeParallelize(nativeLinkableInputs);
     nativeLinkableInputs = Stream.concat(Stream.of(immediateLinkableInput), nativeLinkableInputs);
     // Construct a list out of the stream rather than passing in an iterable via ::iterator as
     // the latter will never evaluate stream elements in parallel.
