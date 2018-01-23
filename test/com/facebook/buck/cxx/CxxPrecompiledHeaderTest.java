@@ -65,6 +65,7 @@ public class CxxPrecompiledHeaderTest {
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     CxxPrecompiledHeader precompiledHeader =
         new CxxPrecompiledHeader(
+            /* canPrecompile */ true,
             target,
             new FakeProjectFilesystem(),
             ImmutableSortedSet.of(),

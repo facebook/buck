@@ -19,6 +19,7 @@ package com.facebook.buck.cxx.toolchain;
 import com.facebook.buck.rules.DelegatingTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.MoreIterables;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
@@ -57,11 +58,17 @@ public class ClangPreprocessor extends DelegatingTool implements Preprocessor {
 
   @Override
   public final Iterable<String> prefixHeaderArgs(Path prefixHeader) {
+    Preconditions.checkArgument(
+        !prefixHeader.toString().endsWith(".gch"),
+        "Expected non-precompiled file, got a '.gch': " + prefixHeader);
     return ImmutableList.of("-include", prefixHeader.toString());
   }
 
   @Override
   public Iterable<String> precompiledHeaderArgs(Path pchOutputPath) {
+    Preconditions.checkArgument(
+        pchOutputPath.toString().endsWith(".h.gch"),
+        "Expected a precompiled '.gch' file, got: " + pchOutputPath);
     return ImmutableList.of(
         "-include-pch",
         pchOutputPath.toString(),

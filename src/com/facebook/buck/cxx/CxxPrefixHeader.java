@@ -49,6 +49,7 @@ public class CxxPrefixHeader extends PreInclude {
 
   @Override
   public CxxPrecompiledHeader getPrecompiledHeader(
+      boolean canPrecompile,
       PreprocessorDelegate preprocessorDelegateForCxxRule,
       DependencyAggregation aggregatedPreprocessDepsRule,
       CxxToolFlags computedCompilerFlags,
@@ -72,6 +73,7 @@ public class CxxPrefixHeader extends PreInclude {
         String.format("pch-%s-%s", langCode, getHash.apply(computedCompilerFlags));
 
     return requirePrecompiledHeader(
+        canPrecompile,
         preprocessorDelegateForCxxRule,
         cxxPlatform,
         sourceType,

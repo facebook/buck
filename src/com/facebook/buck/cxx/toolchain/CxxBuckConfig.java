@@ -260,12 +260,6 @@ public class CxxBuckConfig {
     return delegate.getBooleanValue(cxxSection, "pch_enabled", true);
   }
 
-  public PchUnavailableMode getPchUnavailableMode() {
-    return delegate
-        .getEnum(cxxSection, "pch_unavailable", PchUnavailableMode.class)
-        .orElse(PchUnavailableMode.ERROR);
-  }
-
   public boolean sandboxSources() {
     return delegate.getBooleanValue(cxxSection, "sandbox_sources", false);
   }
