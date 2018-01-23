@@ -24,6 +24,7 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformCompiler;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformTargetConfiguration;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
+import com.facebook.buck.android.toolchain.ndk.NdkTargetArchAbi;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.cxx.toolchain.ArchiverProvider;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
@@ -535,6 +536,9 @@ public class NdkCxxPlatforms {
       if (getNdkMajorVersion(ndkVersion) >= 12 && cxxRuntime == NdkCxxRuntime.LIBCXX) {
         cxxPlatformBuilder.putRuntimeLdflags(
           Linker.LinkableDepType.STATIC, "-lc++abi");
+        if (targetConfiguration.getTargetArchAbi() == NdkTargetArchAbi.ARMEABI) {
+          cxxPlatformBuilder.putRuntimeLdflags(Linker.LinkableDepType.STATIC, "-latomic");
+        }
       }
     }
 
