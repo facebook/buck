@@ -106,6 +106,10 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
         }
       }
 
+      if (status.getFilesMaterializedCount() > 0) {
+        columns.add(String.format("%d files materialized", status.getFilesMaterializedCount()));
+      }
+
       lineBuilder.append(String.format("%s... %s", prefix, Joiner.on(", ").join(columns.build())));
     }
 

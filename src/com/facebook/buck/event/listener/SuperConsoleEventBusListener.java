@@ -607,13 +607,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         columns.add("status: " + distBuildStatus.get().getStatus().toLowerCase());
 
         int totalUploadErrorsCount = 0;
-        int totalFilesMaterialized = 0;
         ImmutableList.Builder<CacheRateStatsKeeper.CacheRateStatsUpdateEvent> slaveCacheStats =
             new ImmutableList.Builder<>();
 
         for (BuildSlaveStatus slaveStatus : distBuildStatus.get().getSlaveStatuses()) {
           totalUploadErrorsCount += slaveStatus.getHttpArtifactUploadsFailureCount();
-          totalFilesMaterialized += slaveStatus.getFilesMaterializedCount();
 
           if (slaveStatus.isSetCacheRateStats()) {
             slaveCacheStats.add(
@@ -643,10 +641,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
         if (totalUploadErrorsCount > 0) {
           columns.add(String.format("%d upload errors", totalUploadErrorsCount));
-        }
-
-        if (totalFilesMaterialized > 0) {
-          columns.add(String.format("%d files materialized", totalFilesMaterialized));
         }
       }
     }
