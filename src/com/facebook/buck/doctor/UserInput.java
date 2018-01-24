@@ -55,6 +55,8 @@ public class UserInput {
         ImmutableMap.of(
             "", true,
             "y", true,
+            "yes", true,
+            "no", false,
             "n", false);
     for (; ; ) {
       output.println();
