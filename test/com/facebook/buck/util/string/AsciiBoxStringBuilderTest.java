@@ -70,4 +70,26 @@ public class AsciiBoxStringBuilderTest {
                 ""),
         builder.writeLine("Hello world, how you?").toString());
   }
+
+  @Test
+  public void testHandlesZeroLength() {
+    builder = new AsciiBoxStringBuilder(0);
+    assertEquals(
+        Joiner.on('\n')
+            .join(
+                "+---+", "|   |", "| H |", "| e |", "| l |", "| l |", "| o |", "|   |", "+---+",
+                ""),
+        builder.writeLine("Hello").toString());
+  }
+
+  @Test
+  public void testSplitsWordsThatAreTooLong() {
+    builder = new AsciiBoxStringBuilder(1);
+    assertEquals(
+        Joiner.on('\n')
+            .join(
+                "+---+", "|   |", "| H |", "| e |", "| l |", "| l |", "| o |", "|   |", "| w |",
+                "| o |", "| r |", "| l |", "| d |", "|   |", "+---+", ""),
+        builder.writeLine("Hello world").toString());
+  }
 }
