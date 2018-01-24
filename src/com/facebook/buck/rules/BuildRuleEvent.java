@@ -378,7 +378,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
    * Marks the start of processing a rule to calculate its rule key. We overload this as both a rule
    * start and rule key calc start event to generate less events and be more efficient.
    */
-  private static class StartedRuleKeyCalc extends Started
+  public static class StartedRuleKeyCalc extends Started
       implements RuleKeyCalculationEvent.Started {
 
     private StartedRuleKeyCalc(
@@ -396,7 +396,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
    * Marks the completion of processing a rule to calculate its rule key. We overload this as both a
    * rule suspend and rule key calc finish event to generate less events and be more efficient.
    */
-  private static class FinishedRuleKeyCalc extends Suspended
+  public static class FinishedRuleKeyCalc extends Suspended
       implements RuleKeyCalculationEvent.Finished {
 
     private FinishedRuleKeyCalc(
