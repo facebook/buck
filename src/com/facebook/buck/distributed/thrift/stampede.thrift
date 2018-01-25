@@ -66,7 +66,6 @@ enum BuildStatus {
 struct BuildSlaveInfo {
   1: optional BuildSlaveRunId buildSlaveRunId;
   2: optional string hostname;
-  3: optional string command;
 
   // TODO(ruibm): Fields [4-7] have fallen out of sync and should not be used anymore however
   //              the buck client code otherwise we get compile errors.
@@ -76,7 +75,6 @@ struct BuildSlaveInfo {
   7: optional i32 stdErrCurrentBatchLineCount;
 
   8: optional bool logDirZipWritten;
-  9: optional i32 exitCode;
   10: optional BuildStatus status = BuildStatus.UNKNOWN;
 }
 
