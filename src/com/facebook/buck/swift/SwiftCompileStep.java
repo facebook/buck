@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 
 /** A step that compiles Swift sources to a single module. */
 class SwiftCompileStep implements Step {
@@ -73,7 +74,7 @@ class SwiftCompileStep implements Step {
     if (result != 0) {
       LOG.error("Error running %s: %s", getDescription(context), listener.getStderr());
     }
-    return StepExecutionResult.of(result);
+    return StepExecutionResult.of(result, Optional.of(listener.getStderr()));
   }
 
   @Override
