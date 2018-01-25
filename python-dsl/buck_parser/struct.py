@@ -33,7 +33,10 @@ class Struct(object):
 
     def __getattr__(self, item):
         """Handles retrieval of attributes not explicitly defined in this instance."""
-        return dict.__getitem__(self._get_kwargs(), item)
+        try:
+            return dict.__getitem__(self._get_kwargs(), item)
+        except KeyError as e:
+            raise AttributeError(e)
 
     def __setattr__(self, key, value):
         """Handles attribute writes on this instance.

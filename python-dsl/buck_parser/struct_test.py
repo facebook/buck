@@ -56,3 +56,17 @@ class StructTest(unittest.TestCase):
         }
         self.assertEqual(dictionary[x], "x")
         self.assertNotEqual(dictionary[y], "x")
+
+    def testHasAttrForExistingAttribute(self):
+        self.assertTrue(hasattr(struct.struct(foo="bar"), "foo"))
+
+    def testHasAttrForNonExistingAttribute(self):
+        self.assertFalse(hasattr(struct.struct(foo="bar"), "does_not_exist"))
+
+    def testGetAttrForExistingAttribute(self):
+        x = struct.struct(foo="bar")
+        self.assertEqual("bar", getattr(x, "foo"))
+
+    def testGetAttrForNonExistingAttribute(self):
+        x = struct.struct(foo="bar")
+        self.assertEqual("default", getattr(x, "does_not_exist", "default"))
