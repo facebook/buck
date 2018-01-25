@@ -1107,6 +1107,7 @@ public final class Main {
         flushAndCloseEventListeners(console, buildId, eventListeners);
         throw t;
       } finally {
+        context.ifPresent(c -> c.removeAllClientListeners());
         if (commandSemaphoreAcquired) {
           commandSemaphoreNgClient = Optional.empty();
           BgProcessKiller.disarm();
@@ -1237,18 +1238,21 @@ public final class Main {
   }
 
   private static void registerClientDisconnectedListener(NGContext context, Daemon daemon)
-      throws IOException, InterruptedException {
+      throws IOException {
+    Thread mainThread = Thread.currentThread();
     context.addClientListener(
         () -> {
           if (Main.isSessionLeader && Main.commandSemaphoreNgClient.orElse(null) == context) {
             LOG.info(
-                "BuckIsDyingException: killing background processes on client disconnection"
+                "Killing background processes on nailgun client disconnection"
                     + Throwables.getStackTraceAsString(new Throwable()));
             // Process no longer wants work done on its behalf.
             BgProcessKiller.killBgProcesses();
           }
 
-          daemon.interruptOnClientExit(context.err);
+          // signal daemon to complete required tasks and interrupt main thread
+          // this will hopefully trigger InterruptedException and program shutdown
+          daemon.interruptOnClientExit(mainThread);
         });
   }
 

@@ -5,22 +5,7 @@ python_library(
     licenses = [
         "LICENSE",
     ],
-    tests = [
-        ":test",
-    ],
     visibility = [
         "PUBLIC",
-    ],
-)
-
-python_test(
-    name = "test",
-    srcs = glob(["pynailgun/test_*.py"]),
-    base_module = "",
-    resources = {
-        "pynailgun/nailgun-uber.jar": "//third-party/java/nailgun:nailgun-uber",
-    },
-    deps = [
-        ":ng",
     ],
 )

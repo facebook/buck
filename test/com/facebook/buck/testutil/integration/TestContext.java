@@ -38,7 +38,6 @@ public class TestContext extends NGContext implements Closeable {
 
   private Properties properties;
   private Set<NGClientListener> listeners;
-  private CapturingPrintStream serverLog;
   private boolean addListeners;
 
   /** Simulates client that never disconnects, with normal system environment. */
@@ -60,12 +59,10 @@ public class TestContext extends NGContext implements Closeable {
    */
   public TestContext(
       ImmutableMap<String, String> environment, InputStream clientStream, long timeoutMillis) {
-    serverLog = new CapturingPrintStream();
     in =
         new NGInputStream(
             new DataInputStream(Preconditions.checkNotNull(clientStream)),
             new DataOutputStream(new ByteArrayOutputStream(0)),
-            serverLog,
             (int) timeoutMillis);
     out = new CapturingPrintStream();
     err = new CapturingPrintStream();
