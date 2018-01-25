@@ -301,6 +301,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     return new ClaimedFetchRequest(request);
   }
 
+  @SuppressWarnings("CheckReturnValue")
   private void addFetchRequest(FetchRequest fetchRequest) {
     pendingFetchRequests.add(fetchRequest);
     fetchExecutorService.submit(this::processFetch);

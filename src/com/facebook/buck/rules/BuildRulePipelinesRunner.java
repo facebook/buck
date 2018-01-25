@@ -192,6 +192,7 @@ class BuildRulePipelinesRunner {
     @Nullable private BuildRulePipeline<T> pipeline;
     @Nullable private RunnableWithFuture<Optional<BuildResult>> runner;
 
+    @SuppressWarnings("CheckReturnValue")
     private BuildRulePipelineStage() {
       Futures.catching(future, Throwable.class, throwable -> error = throwable);
     }

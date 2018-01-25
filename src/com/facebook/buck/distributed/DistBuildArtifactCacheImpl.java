@@ -261,6 +261,7 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
   }
 
   @Override
+  @SuppressWarnings("CheckReturnValue")
   public void close() {
     Futures.transform(
         Futures.allAsList(remoteCacheContainsFutures.values()),
