@@ -377,7 +377,7 @@ public class BuildControllerTest {
     job = job.deepCopy(); // new copy
     BuildSlaveInfo slaveInfo1 = new BuildSlaveInfo();
     slaveInfo1.setBuildSlaveRunId(buildSlaveRunId);
-    job.putToSlaveInfoByRunId(buildSlaveRunId.getId(), slaveInfo1);
+    job.addToBuildSlaves(slaveInfo1);
 
     BuildSlaveEventsQuery query = new BuildSlaveEventsQuery();
     query.setBuildSlaveRunId(buildSlaveRunId);
@@ -390,7 +390,7 @@ public class BuildControllerTest {
 
     expect(mockDistBuildService.getCurrentBuildJobState(stampedeId)).andReturn(job);
 
-    expect(mockLogStateTracker.createRealtimeLogRequests(job.getSlaveInfoByRunId().values()))
+    expect(mockLogStateTracker.createRealtimeLogRequests(job.getBuildSlaves()))
         .andReturn(ImmutableList.of());
     expect(mockDistBuildService.createBuildSlaveEventsQuery(stampedeId, buildSlaveRunId, 0))
         .andReturn(query);
@@ -408,7 +408,7 @@ public class BuildControllerTest {
     job.setStatus(BuildStatus.FAILED);
     expect(mockDistBuildService.getCurrentBuildJobState(stampedeId)).andReturn(job);
 
-    expect(mockLogStateTracker.createRealtimeLogRequests(job.getSlaveInfoByRunId().values()))
+    expect(mockLogStateTracker.createRealtimeLogRequests(job.getBuildSlaves()))
         .andReturn(ImmutableList.of());
     expect(mockLogStateTracker.getBuildSlaveLogsMaterializer())
         .andReturn(createNiceMock(BuildSlaveLogsMaterializer.class))
@@ -437,10 +437,11 @@ public class BuildControllerTest {
     // This will complete the build.
     job = job.deepCopy(); // new copy
     slaveInfo1.setStatus(BuildStatus.FINISHED_SUCCESSFULLY);
-    job.putToSlaveInfoByRunId(buildSlaveRunId.getId(), slaveInfo1);
+    assertEquals(slaveInfo1.getBuildSlaveRunId(), job.getBuildSlaves().get(0).getBuildSlaveRunId());
+    job.getBuildSlaves().set(0, slaveInfo1);
     expect(mockDistBuildService.getCurrentBuildJobState(stampedeId)).andReturn(job);
 
-    expect(mockLogStateTracker.createRealtimeLogRequests(job.getSlaveInfoByRunId().values()))
+    expect(mockLogStateTracker.createRealtimeLogRequests(job.getBuildSlaves()))
         .andReturn(ImmutableList.of());
 
     query.setFirstEventNumber(1);

@@ -102,8 +102,8 @@ public class PostBuildPhaseTest {
 
     BuildJob job = new BuildJob();
     job.setStampedeId(stampedeId);
-    job.putToSlaveInfoByRunId(buildSlaveRunId1.getId(), slaveInfo1);
-    job.putToSlaveInfoByRunId(buildSlaveRunId2.getId(), slaveInfo2);
+    job.addToBuildSlaves(slaveInfo1);
+    job.addToBuildSlaves(slaveInfo2);
 
     return job;
   }
@@ -112,8 +112,7 @@ public class PostBuildPhaseTest {
   public void testPublishingBuildSlaveFinishedStats() throws IOException {
     final BuildJob job = PostBuildPhaseTest.createBuildJobWithSlaves(stampedeId);
     List<BuildSlaveRunId> buildSlaveRunIds =
-        job.getSlaveInfoByRunId()
-            .values()
+        job.getBuildSlaves()
             .stream()
             .map(BuildSlaveInfo::getBuildSlaveRunId)
             .collect(Collectors.toList());
@@ -168,7 +167,7 @@ public class PostBuildPhaseTest {
             .sorted(Comparator.comparing(Entry::getKey))
             .map(x -> x.getValue())
             .collect(Collectors.toList());
-    assertEquals(finishedStatsList.get(1), actualFinishedStats.get(0).get());
-    assertEquals(Optional.empty(), actualFinishedStats.get(1));
+    assertEquals(Optional.empty(), actualFinishedStats.get(0));
+    assertEquals(finishedStatsList.get(1), actualFinishedStats.get(1).get());
   }
 }

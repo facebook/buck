@@ -297,8 +297,7 @@ public class BuildPhaseTest {
     createBuildPhase();
     final BuildJob job = PostBuildPhaseTest.createBuildJobWithSlaves(stampedeId);
     List<BuildSlaveRunId> buildSlaveRunIds =
-        job.getSlaveInfoByRunId()
-            .values()
+        job.getBuildSlaves()
             .stream()
             .map(BuildSlaveInfo::getBuildSlaveRunId)
             .collect(Collectors.toList());
@@ -376,7 +375,7 @@ public class BuildPhaseTest {
     final BuildJob job = PostBuildPhaseTest.createBuildJobWithSlaves(stampedeId);
 
     // Test that we don't fetch logs if the tracker says we don't need to.
-    expect(mockLogStateTracker.createRealtimeLogRequests(job.getSlaveInfoByRunId().values()))
+    expect(mockLogStateTracker.createRealtimeLogRequests(job.getBuildSlaves()))
         .andReturn(ImmutableList.of());
 
     // Test that we fetch logs properly if everything looks good.
@@ -384,7 +383,7 @@ public class BuildPhaseTest {
     logRequest1.setBatchNumber(5);
     LogLineBatchRequest logRequest2 = new LogLineBatchRequest();
     logRequest2.setBatchNumber(10);
-    expect(mockLogStateTracker.createRealtimeLogRequests(job.getSlaveInfoByRunId().values()))
+    expect(mockLogStateTracker.createRealtimeLogRequests(job.getBuildSlaves()))
         .andReturn(ImmutableList.of(logRequest1, logRequest2));
 
     MultiGetBuildSlaveRealTimeLogsResponse logsResponse =
@@ -417,8 +416,7 @@ public class BuildPhaseTest {
     createBuildPhase();
     final BuildJob job = PostBuildPhaseTest.createBuildJobWithSlaves(stampedeId);
     List<BuildSlaveRunId> buildSlaveRunIds =
-        job.getSlaveInfoByRunId()
-            .values()
+        job.getBuildSlaves()
             .stream()
             .map(BuildSlaveInfo::getBuildSlaveRunId)
             .collect(Collectors.toList());

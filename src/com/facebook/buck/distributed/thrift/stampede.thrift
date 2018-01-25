@@ -156,8 +156,6 @@ struct BuildJob {
   1: optional StampedeId stampedeId;
   3: optional BuildStatus status = BuildStatus.UNKNOWN;
   4: optional BuckVersion buckVersion;
-  # TODO(alisdair): split BuildSlaveInfo out from the main BuildJob
-  5: optional map<string, BuildSlaveInfo> slaveInfoByRunId;
   6: optional list<PathInfo> dotFiles;
   7: optional BuildModeInfo buildModeInfo;
   8: optional string repository;
@@ -168,6 +166,7 @@ struct BuildJob {
   11: optional string buckBuildUuid;
   // The user that created the build.
   12: optional string username;
+  13: optional list<BuildSlaveInfo> buildSlaves;
 }
 
 struct Announcement {

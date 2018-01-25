@@ -324,18 +324,19 @@ public class BuildPhase {
     }
     LOG.info("Got build status: " + job.getStatus().toString());
 
-    if (!job.isSetSlaveInfoByRunId()) {
+    if (!job.isSetBuildSlaves()) {
       eventSender.postDistBuildStatusEvent(job, ImmutableList.of());
       checkTerminateScheduledUpdates(job, Optional.empty());
       return job;
     }
 
-    for (Map.Entry<String, BuildSlaveInfo> slave : job.getSlaveInfoByRunId().entrySet()) {
-      if (!seenSlaveRunIds.contains(slave.getKey())) {
-        seenSlaveRunIds.add(slave.getKey());
+    for (BuildSlaveInfo slave : job.getBuildSlaves()) {
+      String runIdString = slave.getBuildSlaveRunId().getId();
+      if (!seenSlaveRunIds.contains(slave.getBuildSlaveRunId().getId())) {
+        seenSlaveRunIds.add(runIdString);
         LOG.info(
             "New slave server attached to build. (RunId: [%s], Hostname: [%s])",
-            slave.getKey(), slave.getValue().getHostname());
+            runIdString, slave.getHostname());
       }
     }
 
@@ -374,16 +375,15 @@ public class BuildPhase {
   @VisibleForTesting
   ListenableFuture<?> fetchAndPostBuildSlaveEventsAsync(
       BuildJob job, EventSender eventSender, ListeningExecutorService networkExecutorService) {
-    if (!job.isSetSlaveInfoByRunId()) {
+    if (!job.isSetBuildSlaves()) {
       return Futures.immediateFuture(null);
     }
 
     StampedeId stampedeId = job.getStampedeId();
     List<BuildSlaveEventsQuery> fetchEventQueries = new LinkedList<>();
 
-    for (String id : job.getSlaveInfoByRunId().keySet()) {
-      BuildSlaveRunId runId = new BuildSlaveRunId();
-      runId.setId(id);
+    for (BuildSlaveInfo slave : job.getBuildSlaves()) {
+      BuildSlaveRunId runId = slave.getBuildSlaveRunId();
       fetchEventQueries.add(
           distBuildService.createBuildSlaveEventsQuery(
               stampedeId, runId, nextEventIdBySlaveRunId.getOrDefault(runId, 0)));
@@ -471,12 +471,12 @@ public class BuildPhase {
   @VisibleForTesting
   ListenableFuture<?> fetchAndProcessRealTimeSlaveLogsAsync(
       BuildJob job, ListeningExecutorService networkExecutorService) {
-    if (!job.isSetSlaveInfoByRunId()) {
+    if (!job.isSetBuildSlaves()) {
       return Futures.immediateFuture(null);
     }
 
     List<LogLineBatchRequest> newLogLineRequests =
-        distBuildLogStateTracker.createRealtimeLogRequests(job.getSlaveInfoByRunId().values());
+        distBuildLogStateTracker.createRealtimeLogRequests(job.getBuildSlaves());
     if (newLogLineRequests.size() == 0) {
       return Futures.immediateFuture(null);
     }
@@ -552,11 +552,11 @@ public class BuildPhase {
 
   private boolean allSlavesFinished(BuildJob job) {
     // In case no slaves ever joined the build.
-    if (!job.isSetSlaveInfoByRunId()) {
+    if (!job.isSetBuildSlaves()) {
       return true;
     }
 
-    for (BuildSlaveInfo slaveInfo : job.getSlaveInfoByRunId().values()) {
+    for (BuildSlaveInfo slaveInfo : job.getBuildSlaves()) {
       if (!BuildStatusUtil.isTerminalBuildStatus(slaveInfo.getStatus())) {
         return false;
       }
@@ -589,7 +589,7 @@ public class BuildPhase {
   @VisibleForTesting
   ListenableFuture<List<BuildSlaveStatus>> fetchBuildSlaveStatusesAsync(
       BuildJob job, ListeningExecutorService networkExecutorService) {
-    if (!job.isSetSlaveInfoByRunId()) {
+    if (!job.isSetBuildSlaves()) {
       return Futures.immediateFuture(ImmutableList.of());
     }
 
@@ -597,9 +597,8 @@ public class BuildPhase {
     List<ListenableFuture<Optional<BuildSlaveStatus>>> slaveStatusFutures = new LinkedList<>();
 
     // TODO(shivanker, alisdair): Replace this with a multiFetch request.
-    for (String id : job.getSlaveInfoByRunId().keySet()) {
-      BuildSlaveRunId runId = new BuildSlaveRunId();
-      runId.setId(id);
+    for (BuildSlaveInfo info : job.getBuildSlaves()) {
+      BuildSlaveRunId runId = info.getBuildSlaveRunId();
       slaveStatusFutures.add(
           networkExecutorService.submit(
               () -> distBuildService.fetchBuildSlaveStatus(stampedeId, runId)));
