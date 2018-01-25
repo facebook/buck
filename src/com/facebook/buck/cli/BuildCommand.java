@@ -708,18 +708,27 @@ public class BuildCommand extends AbstractCommand {
                 .collect(Collectors.toSet()));
 
     return new AsyncJobStateAndCells(
+        distributedBuildFileHashes,
         executorService.submit(
             () -> {
-              BuildJobState state =
-                  DistBuildState.dump(
-                      cellIndexer,
-                      distributedBuildFileHashes,
-                      targetGraphCodec,
-                      targetGraphAndBuildTargets.getTargetGraph(),
-                      buildTargets,
-                      clientStatsTracker);
-              LOG.info("Finished computing serializable distributed build state.");
-              return state;
+              try {
+                BuildJobState state =
+                    DistBuildState.dump(
+                        cellIndexer,
+                        distributedBuildFileHashes,
+                        targetGraphCodec,
+                        targetGraphAndBuildTargets.getTargetGraph(),
+                        buildTargets,
+                        clientStatsTracker);
+                LOG.info("Finished computing serializable distributed build state.");
+                return state;
+              } catch (InterruptedException ex) {
+                LOG.warn(
+                    ex,
+                    "Failed computing serializable distributed build state as interrupted. Local build probably finished first.");
+                Thread.currentThread().interrupt();
+                throw ex;
+              }
             }),
         cellIndexer);
   }
@@ -898,6 +907,10 @@ public class BuildCommand extends AbstractCommand {
       // distributed build progress
       // TODO(alisdair): send a request to Frontend to terminate this build too.
       distributedBuildFuture.cancel(true);
+
+      // If local build finished before hashing was complete, it's important to cancel
+      // related Futures to avoid this operation blocking forever.
+      stateAndCells.cancel();
 
       // Publish details about all default rule keys that were cache misses.
       // A non-zero value suggests a problem that needs investigating.
@@ -1414,13 +1427,23 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private static class AsyncJobStateAndCells {
+    final DistBuildFileHashes distributedBuildFileHashes;
     final ListenableFuture<BuildJobState> asyncJobState;
     final DistBuildCellIndexer distBuildCellIndexer;
 
     AsyncJobStateAndCells(
-        ListenableFuture<BuildJobState> asyncJobState, DistBuildCellIndexer cellIndexer) {
+        DistBuildFileHashes distributedBuildFileHashes,
+        ListenableFuture<BuildJobState> asyncJobState,
+        DistBuildCellIndexer cellIndexer) {
+      this.distributedBuildFileHashes = distributedBuildFileHashes;
       this.asyncJobState = asyncJobState;
       this.distBuildCellIndexer = cellIndexer;
+    }
+
+    // Cancels any ongoing Future operations
+    protected void cancel() {
+      distributedBuildFileHashes.cancel();
+      asyncJobState.cancel(true);
     }
   }
 

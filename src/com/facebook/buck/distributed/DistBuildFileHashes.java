@@ -228,4 +228,9 @@ public class DistBuildFileHashes {
                         MorePaths.pathWithPlatformSeparators(input.getPath().getPath())),
                     Paths.get(input.getArchiveMemberPath())));
   }
+
+  public void cancel() {
+    this.fileHashes.cancel(true);
+    this.ruleKeys.cancel(true);
+  }
 }
