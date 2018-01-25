@@ -88,16 +88,24 @@ public class JsBundleGenruleDescription
       // via export_file in reference mode
       // DEPENDENCY_FILE is a special flavor that triggers building a single file (format defined by
       // the worker)
-      // MISC_DIR allows accessing the "misc" directory that can contains diverse assets not meant
+      // MISC_DIR allows accessing the "misc" directory that can contain diverse assets not meant
       // to be part of the app being shipped.
 
-      SourcePath output =
-          args.getRewriteSourcemap() && flavors.contains(JsFlavors.SOURCE_MAP)
-              ? ((JsBundleOutputs)
-                      resolver.requireRule(buildTarget.withoutFlavors(JsFlavors.SOURCE_MAP)))
-                  .getSourcePathToSourceMap()
-              : Preconditions.checkNotNull(
-                  jsBundle.getSourcePathToOutput(), "%s has no output", jsBundle.getBuildTarget());
+      SourcePath output;
+      if (args.getRewriteSourcemap() && flavors.contains(JsFlavors.SOURCE_MAP)) {
+        output =
+            ((JsBundleOutputs)
+                    resolver.requireRule(buildTarget.withoutFlavors(JsFlavors.SOURCE_MAP)))
+                .getSourcePathToSourceMap();
+      } else if (args.getRewriteMisc() && flavors.contains(JsFlavors.MISC)) {
+        output =
+            ((JsBundleOutputs) resolver.requireRule(buildTarget.withoutFlavors(JsFlavors.MISC)))
+                .getSourcePathToMisc();
+      } else {
+        output =
+            Preconditions.checkNotNull(
+                jsBundle.getSourcePathToOutput(), "%s has no output", jsBundle.getBuildTarget());
+      }
 
       Path fileName =
           DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver))
@@ -176,6 +184,11 @@ public class JsBundleGenruleDescription
 
     @Value.Default
     default boolean getRewriteSourcemap() {
+      return false;
+    }
+
+    @Value.Default
+    default boolean getRewriteMisc() {
       return false;
     }
 

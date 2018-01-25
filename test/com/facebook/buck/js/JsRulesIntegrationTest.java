@@ -264,4 +264,10 @@ public class JsRulesIntegrationTest {
   public void genruleSourcemapCanBeAccessedWithoutDependingOnBundle() throws IOException {
     workspace.runBuckBuild("//js:genrule-using-only-sourcemap-of-bundle-genrule").assertSuccess();
   }
+
+  @Test
+  public void genruleAllowsToRewriteMiscDir() throws IOException {
+    workspace.runBuckBuild("//js:misc-genrule").assertSuccess();
+    workspace.verify(Paths.get("misc_genrule.expected"), genPath);
+  }
 }

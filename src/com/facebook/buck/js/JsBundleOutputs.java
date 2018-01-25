@@ -21,7 +21,8 @@ import com.facebook.buck.rules.SourcePath;
 
 /**
  * Represents output paths of JS builds, consisting of JavaScript build output, a corresponding
- * source map, and assets/resources used from within the packaged JS source code.
+ * source map, "misc" directory that can contain diverse assets not meant to be part of the app
+ * being shipped and assets/resources used from within the packaged JS source code.
  */
 public interface JsBundleOutputs extends BuildRule {
   String JS_DIR_NAME = "js";

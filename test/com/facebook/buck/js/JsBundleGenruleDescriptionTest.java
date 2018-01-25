@@ -84,6 +84,10 @@ public class JsBundleGenruleDescriptionTest {
     setUpWithOptions(builderOptions().rewriteSourcemap(), extraFlavors);
   }
 
+  private void setUpWithRewriteMiscDir(Flavor... extraFlavors) {
+    setUpWithOptions(builderOptions().rewriteMisc(), extraFlavors);
+  }
+
   private void setUpWithOptions(JsBundleGenruleBuilder.Options options, Flavor... extraFlavors) {
     JsTestScenario scenario =
         JsTestScenario.builder().bundleWithDeps(options.jsBundle).bundleGenrule(options).build();
@@ -438,6 +442,102 @@ public class JsBundleGenruleDescriptionTest {
                 .getRelativePath(setup.genrule().getSourcePathToSourceMap())));
   }
 
+  @Test
+  public void exposesRewrittenMiscDir() {
+    setUpWithRewriteMiscDir();
+
+    JsBundleGenrule genrule = setup.genrule();
+    assertEquals(
+        JsUtil.relativeToOutputRoot(
+            genrule.getBuildTarget(), genrule.getProjectFilesystem(), "misc"),
+        genrule.getSourcePathToMisc());
+  }
+
+  @Test
+  public void addsMiscAsEnvironmentVariable() {
+    SourcePathResolver pathResolver = sourcePathResolver();
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, builder);
+    ImmutableMap<String, String> env = builder.build();
+
+    assertThat(
+        env,
+        hasEntry(
+            "MISC_DIR",
+            pathResolver.getAbsolutePath(setup.genrule().getSourcePathToMisc()).toString()));
+  }
+
+  @Test
+  public void addsMiscAndMiscOutAsEnvironmentVariableOnRewrite() {
+    setUpWithRewriteMiscDir();
+
+    SourcePathResolver pathResolver = sourcePathResolver();
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, builder);
+    ImmutableMap<String, String> env = builder.build();
+
+    assertThat(
+        env,
+        hasEntry(
+            "MISC_DIR",
+            pathResolver.getAbsolutePath(setup.jsBundle().getSourcePathToMisc()).toString()));
+    assertThat(
+        env,
+        hasEntry(
+            "MISC_OUT",
+            pathResolver.getAbsolutePath(setup.genrule().getSourcePathToMisc()).toString()));
+  }
+
+  @Test
+  public void specialMiscTargetPointsToOwnMiscDir() {
+    setUpWithRewriteMiscDir(JsFlavors.MISC);
+
+    DefaultSourcePathResolver pathResolver = sourcePathResolver();
+
+    assertEquals(
+        pathResolver.getRelativePath(setup.genrule().getSourcePathToMisc()),
+        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
+  }
+
+  @Test
+  public void createsMiscDir() {
+    setUpWithRewriteMiscDir();
+
+    JsBundleGenrule genrule = setup.genrule();
+    BuildContext context = FakeBuildContext.withSourcePathResolver(sourcePathResolver());
+    FakeBuildableContext buildableContext = new FakeBuildableContext();
+    ImmutableList<Step> buildSteps =
+        ImmutableList.copyOf(genrule.getBuildSteps(context, buildableContext));
+
+    MkdirStep expectedStep =
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                genrule.getProjectFilesystem(),
+                context.getSourcePathResolver().getRelativePath(genrule.getSourcePathToMisc())));
+    assertThat(buildSteps, hasItem(expectedStep));
+
+    int mkMiscDirIdx = buildSteps.indexOf(expectedStep);
+    assertThat(
+        buildSteps.subList(mkMiscDirIdx, buildSteps.size()), not(hasItem(any(RmStep.class))));
+  }
+
+  @Test
+  public void recordsMiscDir() {
+    setUpWithRewriteMiscDir();
+
+    BuildContext context = FakeBuildContext.withSourcePathResolver(sourcePathResolver());
+    FakeBuildableContext buildableContext = new FakeBuildableContext();
+    setup.genrule().getBuildSteps(context, buildableContext);
+
+    assertThat(
+        buildableContext.getRecordedArtifacts(),
+        hasItem(
+            context
+                .getSourcePathResolver()
+                .getRelativePath(setup.genrule().getSourcePathToMisc())));
+  }
+
   private JsBundleGenruleBuilder.Options builderOptions(BuildTarget bundleTarget, String cmd) {
     return JsBundleGenruleBuilder.Options.of(genruleTarget, bundleTarget).setCmd(cmd);
   }
@@ -459,13 +559,13 @@ public class JsBundleGenruleDescriptionTest {
   }
 
   private static class TestSetup {
-    private final BuildTarget target;
     private final JsTestScenario scenario;
+    private final BuildTarget target;
     private final BuildTarget bundleTarget;
 
     TestSetup(JsTestScenario scenario, BuildTarget target, BuildTarget bundleTarget) {
-      this.target = target;
       this.scenario = scenario;
+      this.target = target;
       this.bundleTarget = bundleTarget;
     }
 
@@ -476,7 +576,8 @@ public class JsBundleGenruleDescriptionTest {
     JsBundleGenrule genrule() {
       return (JsBundleGenrule)
           scenario.resolver.requireRule(
-              target.withoutFlavors(JsFlavors.DEPENDENCY_FILE, JsFlavors.SOURCE_MAP));
+              target.withoutFlavors(
+                  JsFlavors.DEPENDENCY_FILE, JsFlavors.SOURCE_MAP, JsFlavors.MISC));
     }
 
     @SuppressWarnings("unchecked")

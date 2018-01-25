@@ -46,6 +46,9 @@ public class JsBundleGenruleBuilder
     if (options.rewriteSourcemap) {
       getArgForPopulating().setRewriteSourcemap(true);
     }
+    if (options.rewriteMisc) {
+      getArgForPopulating().setRewriteMisc(true);
+    }
     if (options.cmd != null) {
       getArgForPopulating().setCmd(options.cmd);
     }
@@ -55,6 +58,7 @@ public class JsBundleGenruleBuilder
     BuildTarget genruleTarget;
     BuildTarget jsBundle;
     boolean rewriteSourcemap = false;
+    boolean rewriteMisc = false;
     public String cmd = null;
 
     public static Options of(BuildTarget genruleTarget, BuildTarget jsBundle) {
@@ -63,6 +67,11 @@ public class JsBundleGenruleBuilder
 
     public Options rewriteSourcemap() {
       rewriteSourcemap = true;
+      return this;
+    }
+
+    public Options rewriteMisc() {
+      rewriteMisc = true;
       return this;
     }
 

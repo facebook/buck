@@ -52,6 +52,7 @@ public class JsBundleGenrule extends Genrule
 
   @AddToRuleKey final SourcePath jsBundleSourcePath;
   @AddToRuleKey final boolean rewriteSourcemap;
+  @AddToRuleKey final boolean rewriteMisc;
   private final JsBundleOutputs jsBundle;
 
   public JsBundleGenrule(
@@ -90,6 +91,7 @@ public class JsBundleGenrule extends Genrule
     this.jsBundle = jsBundle;
     jsBundleSourcePath = jsBundle.getSourcePathToOutput();
     this.rewriteSourcemap = args.getRewriteSourcemap();
+    this.rewriteMisc = args.getRewriteMisc();
   }
 
   @Override
@@ -119,11 +121,16 @@ public class JsBundleGenrule extends Genrule
       environmentVariablesBuilder.put(
           "SOURCEMAP_OUT", pathResolver.getAbsolutePath(getSourcePathToSourceMap()).toString());
     }
+    if (rewriteMisc) {
+      environmentVariablesBuilder.put(
+          "MISC_OUT", pathResolver.getAbsolutePath(getSourcePathToMisc()).toString());
+    }
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
+    SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
     ImmutableList<Step> buildSteps = super.getBuildSteps(context, buildableContext);
     OptionalInt lastRmStep =
         IntStream.range(0, buildSteps.size())
@@ -146,24 +153,34 @@ public class JsBundleGenrule extends Genrule
                     BuildCellRelativePath.fromCellRelativePath(
                         context.getBuildCellRootPath(),
                         getProjectFilesystem(),
-                        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()))));
+                        sourcePathResolver.getRelativePath(getSourcePathToOutput()))));
 
     if (rewriteSourcemap) {
-      // If the genrule rewrites the source map, too, we have to create the parent dir, and record
+      // If the genrule rewrites the source map, we have to create the parent dir, and record
       // the build artifact
 
       SourcePath sourcePathToSourceMap = getSourcePathToSourceMap();
-      buildableContext.recordArtifact(
-          context.getSourcePathResolver().getRelativePath(sourcePathToSourceMap));
+      buildableContext.recordArtifact(sourcePathResolver.getRelativePath(sourcePathToSourceMap));
       builder.add(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
                   context.getBuildCellRootPath(),
                   getProjectFilesystem(),
-                  context
-                      .getSourcePathResolver()
-                      .getRelativePath(sourcePathToSourceMap)
-                      .getParent())));
+                  sourcePathResolver.getRelativePath(sourcePathToSourceMap).getParent())));
+    }
+
+    if (rewriteMisc) {
+      // If the genrule rewrites the misc folder, we have to create the corresponding dir, and
+      // record its contents
+
+      SourcePath miscDirPath = getSourcePathToMisc();
+      buildableContext.recordArtifact(sourcePathResolver.getRelativePath(miscDirPath));
+      builder.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  sourcePathResolver.getRelativePath(miscDirPath))));
     }
 
     // Last, we add all remaining genrule commands after the last RmStep
@@ -184,7 +201,9 @@ public class JsBundleGenrule extends Genrule
 
   @Override
   public SourcePath getSourcePathToMisc() {
-    return jsBundle.getSourcePathToMisc();
+    return rewriteMisc
+        ? JsBundleOutputs.super.getSourcePathToMisc()
+        : jsBundle.getSourcePathToMisc();
   }
 
   @Override
