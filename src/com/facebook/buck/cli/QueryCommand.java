@@ -304,7 +304,7 @@ public class QueryCommand extends AbstractCommand {
     Builder<TargetNode<?, ?>> dotBuilder =
         Dot.builder(env.getTargetGraph(), "result_graph")
             .setNodesToFilter(env.getNodesFromQueryTargets(queryResult)::contains)
-            .setNodeToName(targetNode -> targetNode.getBuildTarget().getFullyQualifiedName())
+            .setNodeToName(this::toPresentationForm)
             .setNodeToTypeName(
                 targetNode -> Description.getBuildRuleType(targetNode.getDescription()).getName())
             .setBfsSorted(shouldGenerateBFSOutput());
@@ -381,8 +381,6 @@ public class QueryCommand extends AbstractCommand {
           OutputFormat outputFormat,
           Set<Entry<TargetNode<?, ?>, Integer>> rankEntries) {
     PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes.get());
-    // since some nodes differ in their flavors but ultimately have the same attributes, immutable
-    // resulting map is created only after duplicates are merged by using regular HashMap
     Map<String, Integer> rankIndex =
         rankEntries
             .stream()
@@ -496,8 +494,7 @@ public class QueryCommand extends AbstractCommand {
       } catch (BuildFileParseException e) {
         params
             .getConsole()
-            .printErrorText(
-                "unable to find rule for target " + node.getBuildTarget().getFullyQualifiedName());
+            .printErrorText("unable to find rule for target " + toPresentationForm(node));
         continue;
       }
     }
@@ -516,8 +513,7 @@ public class QueryCommand extends AbstractCommand {
     if (sortedTargetRule == null) {
       params
           .getConsole()
-          .printErrorText(
-              "unable to find rule for target " + node.getBuildTarget().getFullyQualifiedName());
+          .printErrorText("unable to find rule for target " + toPresentationForm(node));
       return Optional.empty();
     }
     SortedMap<String, Object> attributes = new TreeMap<>();
@@ -533,7 +529,7 @@ public class QueryCommand extends AbstractCommand {
   }
 
   private String toPresentationForm(TargetNode<?, ?> node) {
-    return node.getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName();
+    return node.getBuildTarget().getFullyQualifiedName();
   }
 
   @Override
