@@ -60,6 +60,11 @@ class Struct(object):
     def __eq__(self, other):
         return isinstance(other, Struct) and self._get_kwargs() == other._get_kwargs()
 
+    def __repr__(self):
+        return "struct(" + ".".join(
+            [str(key) + "=" + repr(value) for key, value in self._get_kwargs().iteritems()]
+        ) + ")"
+
 
 def struct(**kwargs):
     """Creates an immutable container using the keyword arguments as attributes.

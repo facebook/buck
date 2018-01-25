@@ -75,3 +75,12 @@ class StructTest(unittest.TestCase):
     def testGetAttrForNonExistingAttribute(self):
         x = struct.struct(foo="bar")
         self.assertEqual("default", getattr(x, "does_not_exist", "default"))
+
+    def testRepr(self):
+        x = struct.struct(foo="bar")
+        self.assertEqual("struct(foo='bar')", repr(x))
+
+    def testNestedRepr(self):
+        x = struct.struct(foo="bar")
+        y = struct.struct(x=x)
+        self.assertEqual("struct(x=struct(foo='bar'))", repr(y))
