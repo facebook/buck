@@ -47,7 +47,7 @@ class Struct(object):
 
     def to_json(self):
         """Creates a JSON string representation of this struct instance."""
-        return json.dumps(self, cls=StructEncoder, separators=(",", ":"))
+        return json.dumps(self, cls=StructEncoder, separators=(",", ":"), sort_keys=True)
 
     def _asdict(self):
         """Converts this struct into dict."""

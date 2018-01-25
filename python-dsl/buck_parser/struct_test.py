@@ -19,6 +19,11 @@ class StructTest(unittest.TestCase):
             struct.struct(foo="bar").to_json(),
             "{\"foo\":\"bar\"}")
 
+    def testJsonKeysAreSorted(self):
+        self.assertEqual(
+            struct.struct(c="c", b="b", a="a").to_json(),
+            "{\"a\":\"a\",\"b\":\"b\",\"c\":\"c\"}")
+
     def testNestedJsonSerialization(self):
         self.assertEqual(
             struct.struct(foo=struct.struct(bar="baz")).to_json(),
