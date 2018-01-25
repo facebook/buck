@@ -73,7 +73,7 @@ public class ExternalJavacEscaperTest {
     workspace.replaceFileContents(".buckconfig", "@JAVAC@", javac.toString());
 
     workspace.move("java", badDir);
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace
         .runBuckCommand("build", String.format("//%s/com/example:example", badDir))
         .assertSuccess();

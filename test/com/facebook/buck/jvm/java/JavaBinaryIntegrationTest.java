@@ -69,7 +69,7 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
     setUpProjectWorkspaceForScenario("fat_jar");
     workspace.enableDirCache();
     workspace.runBuckCommand("build", "//:bin-fat").assertSuccess();
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
     Path path = workspace.buildAndReturnOutput("//:bin-fat");
     workspace.getBuildLog().assertTargetWasFetchedFromCache("//:bin-fat");
     assertTrue(workspace.asCell().getFilesystem().exists(path));
@@ -91,7 +91,7 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
     workspace
         .runBuckBuild("-c", "java.cache_binaries=false", "//:bin-no-blacklist")
         .assertSuccess();
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace
         .runBuckBuild("-c", "java.cache_binaries=false", "//:bin-no-blacklist")
         .assertSuccess();

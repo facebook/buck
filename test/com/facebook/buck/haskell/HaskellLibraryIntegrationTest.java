@@ -106,7 +106,7 @@ public class HaskellLibraryIntegrationTest {
   public void order() throws IOException {
     workspace.writeContentsToPath("module OrderA where\nimport OrderB\n", "OrderA.hs");
     workspace.runBuckBuild("//:order#default," + getLinkFlavor()).assertSuccess();
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
     workspace.writeContentsToPath("module OrderA where\n", "OrderA.hs");
     workspace.writeContentsToPath("module OrderB where\nimport OrderA\n", "OrderB.hs");
     workspace.runBuckBuild("//:order#default," + getLinkFlavor()).assertSuccess();

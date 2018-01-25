@@ -814,7 +814,7 @@ public class InterCellIntegrationTest {
       assertTrue(Files.exists(dir));
     }
 
-    primary.runBuckCommand("clean").assertSuccess();
+    primary.runBuckCommand("clean", "--keep-cache").assertSuccess();
 
     for (Path dir : primaryDirs) {
       assertFalse(Files.exists(dir));

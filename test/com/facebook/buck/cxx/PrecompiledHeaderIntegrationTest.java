@@ -136,7 +136,7 @@ public class PrecompiledHeaderIntegrationTest {
 
     workspace.enableDirCache();
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
     workspace.writeContentsToPath("int lib_func() { return 0; }", "lib.c");
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();

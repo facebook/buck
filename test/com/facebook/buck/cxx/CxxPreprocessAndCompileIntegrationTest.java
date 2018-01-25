@@ -442,7 +442,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
     workspace.writeContentsToPath("static inline int newFunction() { return 20; }", usedHeaderName);
 
     // Clean the build directory, so that we need to go to cache.
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
 
     // Run the build again and verify that we recompiled as the header caused the depfile rule key
     // to change.
@@ -480,7 +480,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
     workspace.writeContentsToPath("static inline int newFunction() { return 20; }", usedHeaderName);
 
     // Clean the build directory, so that we need to go to cache.
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
 
     // Run the build again and verify that we recompiled as the header caused the depfile rule key
     // to change.
@@ -514,7 +514,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
         firstRunEntry.getSuccessType(), equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
 
     // Clean the build directory, so that we need to go to cache.
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
 
     // Now modify the unused header.
     workspace.writeContentsToPath(

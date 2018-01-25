@@ -285,7 +285,7 @@ public class AndroidResourceFilterIntegrationTest {
             cache, new RuleKey(androidBinaryRuleKey.getHash()), Optional.empty());
     Files.delete(workspace.resolve(cachedFile));
 
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckBuild("//apps/sample:app_comp_str").assertSuccess();
   }
 

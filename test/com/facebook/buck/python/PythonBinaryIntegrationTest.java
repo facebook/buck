@@ -268,7 +268,7 @@ public class PythonBinaryIntegrationTest {
     workspace.writeContentsToPath("print('hello world')", "main.py");
     workspace.enableDirCache();
     workspace.runBuckBuild(":bin").assertSuccess();
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     String stdout = workspace.runBuckCommand("run", ":bin").assertSuccess().getStdout().trim();
     assertThat(stdout, equalTo("hello world"));
   }
@@ -317,7 +317,7 @@ public class PythonBinaryIntegrationTest {
     assumeThat(packageStyle, Matchers.is(PythonBuckConfig.PackageStyle.STANDALONE));
     workspace.enableDirCache();
     workspace.runBuckBuild("-c", "python.cache_binaries=false", ":bin").assertSuccess();
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckBuild("-c", "python.cache_binaries=false", ":bin").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:bin");
   }

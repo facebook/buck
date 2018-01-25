@@ -42,7 +42,7 @@ public class CompareAbisIntegrationTest {
     ProjectWorkspace.ProcessResult processResult = workspace.runBuckBuild("//:consumer");
     processResult.assertSuccess();
 
-    processResult = workspace.runBuckCommand("clean");
+    processResult = workspace.runBuckCommand("clean", "--keep-cache");
     processResult.assertSuccess();
 
     workspace.replaceFileContents("Consumer.java", "public Producer", "protected Producer");

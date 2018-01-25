@@ -16,13 +16,21 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
+import com.facebook.buck.artifact_cache.config.DirCacheEntry;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.ExitCode;
 import java.io.IOException;
+import org.kohsuke.args4j.Option;
 
 public class CleanCommand extends AbstractCommand {
+
+  private static final String KEEP_CACHE_ARG = "--keep-cache";
+
+  @Option(name = KEEP_CACHE_ARG, usage = "Keep the local cache.")
+  private boolean keepCache = false;
 
   private void cleanCell(Cell cell) throws IOException {
     // Ideally, we would like the implementation of this method to be as simple as:
@@ -48,6 +56,17 @@ public class CleanCommand extends AbstractCommand {
     projectFilesystem.deleteRecursivelyIfExists(projectFilesystem.getBuckPaths().getScratchDir());
     projectFilesystem.deleteRecursivelyIfExists(projectFilesystem.getBuckPaths().getGenDir());
     projectFilesystem.deleteRecursivelyIfExists(projectFilesystem.getBuckPaths().getTrashDir());
+
+    // Remove dir caches.
+    if (!keepCache) {
+      ArtifactCacheBuckConfig artifactCacheBuckConfig =
+          ArtifactCacheBuckConfig.of(cell.getBuckConfig());
+      projectFilesystem.deleteRecursivelyIfExists(projectFilesystem.getBuckPaths().getCacheDir());
+      for (DirCacheEntry dirCacheEntry :
+          artifactCacheBuckConfig.getCacheEntries().getDirCacheEntries()) {
+        projectFilesystem.deleteRecursivelyIfExists(dirCacheEntry.getCacheDir());
+      }
+    }
 
     // Clean out any additional directories specified via config setting.
     for (String subPath : cell.getBuckConfig().getCleanAdditionalPaths()) {

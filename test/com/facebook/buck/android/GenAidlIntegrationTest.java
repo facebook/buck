@@ -51,7 +51,7 @@ public class GenAidlIntegrationTest {
     // Populate the cache
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:android-lib");
     result.assertSuccess();
-    result = workspace.runBuckCommand("clean");
+    result = workspace.runBuckCommand("clean", "--keep-cache");
     result.assertSuccess();
 
     // Now the cache is clean, do the build where we expect the results to come from the cache

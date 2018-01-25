@@ -188,7 +188,7 @@ public class GoBinaryIntegrationTest {
     workspace.runBuckBuild("//:main").assertSuccess();
 
     // Clean the build products, as we're going to test that pulling from cache works.
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
 
     // Make a white-space only change -- enough to force a relink of the binary.
     workspace.replaceFileContents("main.go", "a.A()", " a.A()");

@@ -56,7 +56,7 @@ public class JarBackedJavacIntegrationTest {
     buildLog.assertTargetBuiltLocally("//:javac_jar");
     buildLog.assertTargetBuiltLocally("//:javac_jar_impl");
 
-    buildResult = workspace.runBuckCommand("clean");
+    buildResult = workspace.runBuckCommand("clean", "--keep-cache");
     buildResult.assertSuccess();
 
     workspace.replaceFileContents("Test.java", "foo", "bar");

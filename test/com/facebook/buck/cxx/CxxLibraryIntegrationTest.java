@@ -281,7 +281,7 @@ public class CxxLibraryIntegrationTest {
     workspace.setUp();
     workspace.enableDirCache();
     workspace.runBuckBuild("//:binary").assertSuccess();
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
     workspace.copyFile("lib1.c.new", "lib1.c");
     workspace.runBuckBuild("//:binary").assertSuccess();
     BuckBuildLog log = workspace.getBuildLog();

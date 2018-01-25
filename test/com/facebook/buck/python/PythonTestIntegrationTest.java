@@ -190,7 +190,7 @@ public class PythonTestIntegrationTest {
     workspace.runBuckBuild("//:test-success").assertSuccess();
 
     // Clean buck-out.
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
 
     // Run the tests, which should get cache hits for everything.
     workspace.runBuckCommand("test", "//:test-success").assertSuccess();

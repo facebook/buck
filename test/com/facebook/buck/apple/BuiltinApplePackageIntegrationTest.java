@@ -86,7 +86,7 @@ public class BuiltinApplePackageIntegrationTest {
 
     workspace.getBuildLog().assertTargetBuiltLocally(appTarget.getFullyQualifiedName());
 
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
 
     BuildTarget packageTarget = BuildTargetFactory.newInstance("//:DemoAppPackage");
     workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
@@ -275,7 +275,7 @@ public class BuiltinApplePackageIntegrationTest {
     workspace
         .runBuckBuild("-c", "apple.cache_bundles_and_packages=false", "//:DemoAppPackage")
         .assertSuccess();
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
     workspace
         .runBuckBuild("-c", "apple.cache_bundles_and_packages=false", "//:DemoAppPackage")
         .assertSuccess();

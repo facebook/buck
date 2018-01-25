@@ -497,7 +497,7 @@ public class CxxCompilationDatabaseIntegrationTest {
         BuildTargetFactory.newInstance("//:binary_with_dep#default,compilation-database");
 
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -524,7 +524,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//dep1:dep1#default,compilation-database");
 
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();

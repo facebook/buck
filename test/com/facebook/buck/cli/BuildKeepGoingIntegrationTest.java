@@ -98,7 +98,7 @@ public class BuildKeepGoingIntegrationTest {
             + "OK   //:rule_without_output MATCHING_RULE_KEY\n";
     assertThat(result2.getStderr(), containsString(expectedReport2));
 
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
 
     ProcessResult result3 = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport3 =

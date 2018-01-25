@@ -136,7 +136,7 @@ public class InstallCommandIntegrationTest {
                 + "locations = 1, resolved = 1, hit count = 0"));
 
     // clean buck out
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
     // build again - get everything from cache now
     result =
         workspace.runBuckCommand(

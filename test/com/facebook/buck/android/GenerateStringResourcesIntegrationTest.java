@@ -65,7 +65,7 @@ public class GenerateStringResourcesIntegrationTest {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace.enableDirCache();
     workspace.runBuckBuild(buildTarget).assertSuccess();
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     Path output = workspace.buildAndReturnOutput(buildTarget);
     workspace.getBuildLog().assertTargetWasFetchedFromCache(buildTarget);
     verifyOutput(

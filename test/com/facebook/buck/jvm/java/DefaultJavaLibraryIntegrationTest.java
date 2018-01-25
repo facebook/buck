@@ -152,7 +152,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     Sha1HashCode ruleKey = workspace.getBuildLog().getRuleKey(target.getFullyQualifiedName());
 
     // Run `buck clean`.
-    ProcessResult cleanResult = workspace.runBuckCommand("clean");
+    ProcessResult cleanResult = workspace.runBuckCommand("clean", "--keep-cache");
     cleanResult.assertSuccess("Successful clean should exit with 0.");
 
     totalArtifactsCount = getAllFilesInPath(buildCache).size();
@@ -181,7 +181,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     outputZipFile.close();
 
     // Run `buck clean` followed by `buck build` yet again, but this time, specify `--no-cache`.
-    ProcessResult cleanResult2 = workspace.runBuckCommand("clean");
+    ProcessResult cleanResult2 = workspace.runBuckCommand("clean", "--keep-cache");
     cleanResult2.assertSuccess("Successful clean should exit with 0.");
     ProcessResult buildResult3 =
         workspace.runBuckCommand("build", "--no-cache", target.getFullyQualifiedName());
@@ -349,7 +349,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     firstBuildResult.assertSuccess("Successful build should exit with 0.");
 
     // Perform clean
-    ProcessResult cleanResult = workspace.runBuckCommand("clean");
+    ProcessResult cleanResult = workspace.runBuckCommand("clean", "--keep-cache");
     cleanResult.assertSuccess("Successful clean should exit with 0.");
 
     // Edit A
@@ -567,7 +567,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     workspace.getBuildLog().assertTargetBuiltLocally("//:util");
 
     // Run `buck clean` so that we're forced to fetch the dep file from the cache.
-    ProcessResult cleanResult = workspace.runBuckCommand("clean");
+    ProcessResult cleanResult = workspace.runBuckCommand("clean", "--keep-cache");
     cleanResult.assertSuccess("Successful clean should exit with 0.");
 
     // Edit MoreUtil.java in a way that changes its ABI
@@ -599,7 +599,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     workspace.getBuildLog().assertTargetBuiltLocally("//:main");
 
     // Run `buck clean` so that we're forced to fetch the dep file from the cache.
-    ProcessResult cleanResult = workspace.runBuckCommand("clean");
+    ProcessResult cleanResult = workspace.runBuckCommand("clean", "--keep-cache");
     cleanResult.assertSuccess("Successful clean should exit with 0.");
 
     // Add a new source file

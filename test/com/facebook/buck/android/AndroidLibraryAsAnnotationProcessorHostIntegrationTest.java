@@ -56,7 +56,7 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
     expectGenruleOutputContains("//:extract_resulting_config", "res1");
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
 
     // Now, add a new config and assert we get a cache miss and the new file is read
     workspace.replaceFileContents("BUCK", "#add_res", "");
@@ -73,7 +73,7 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
     expectGenruleOutputContains("//:extract_resulting_config", "res1");
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
 
     // Now, add a new config via a dep and assert we get a cache miss and the new file is read
     workspace.replaceFileContents("BUCK", "#add_dep", "");
@@ -91,7 +91,7 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
     expectGenruleOutputContains("//:extract_resulting_config", "res1");
 
-    //Now, edit a config and assert we rebuild
+    // Now, edit a config and assert we rebuild
     workspace.replaceFileContents("res/META-INF/res1.json", "res1", "replaced");
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:lib");
@@ -105,7 +105,7 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
     expectGenruleOutputContains("//:extract_resulting_config", "res2");
 
-    //Now, add an unrelated file and assert dep files are working
+    // Now, add an unrelated file and assert dep files are working
     workspace.replaceFileContents("BUCK", "#add_file", "");
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:lib");
@@ -120,7 +120,7 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
     expectGenruleOutputContains("//:extract_resulting_config", "res1");
 
-    //Now, edit a used config and assert we rebuild
+    // Now, edit a used config and assert we rebuild
     workspace.replaceFileContents("res/META-INF/res1.json", "res1", "replaced");
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:lib");
@@ -142,7 +142,7 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
 
-    //Now, add an unrelated file and assert dep files are working
+    // Now, add an unrelated file and assert dep files are working
     workspace.replaceFileContents("BUCK", "#add_file", "");
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:lib");
@@ -169,7 +169,7 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
     // Build once to warm cache
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
 
     // Edit the unread metadata file and assert we can get a manifest hit
     workspace.replaceFileContents("res/META-INF/unread.json", "replace_me", "foobar");

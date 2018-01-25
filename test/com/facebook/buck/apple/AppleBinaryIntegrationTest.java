@@ -792,7 +792,7 @@ public class AppleBinaryIntegrationTest {
         BuildTargetFactory.newInstance("//:DemoAppBinary")
             .withAppendedFlavors(platformFlavor, AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
     BuildTarget appTarget =
@@ -849,7 +849,7 @@ public class AppleBinaryIntegrationTest {
         BuildTargetFactory.newInstance("//:DemoAppBinary")
             .withAppendedFlavors(platformFlavor, AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
     BuildTarget appTarget =
@@ -909,7 +909,7 @@ public class AppleBinaryIntegrationTest {
         BuildTargetFactory.newInstance("//:DemoAppBinary")
             .withAppendedFlavors(platformFlavor, AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
     BuildTarget appTarget =
@@ -1137,7 +1137,7 @@ public class AppleBinaryIntegrationTest {
     cachePopulatingResult.assertSuccess();
 
     // Reset us back to a clean state
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
 
     // Now do the actual test - modify a file, do a build again, and confirm it rebuilt our swift
     workspace.copyFile("producer.h.new", "producer.h");

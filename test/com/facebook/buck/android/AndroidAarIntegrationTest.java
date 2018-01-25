@@ -270,7 +270,7 @@ public class AndroidAarIntegrationTest {
     workspace.setUp();
     workspace.enableDirCache();
     workspace.runBuckBuild("//apps/sample:nearly_empty_aar").assertSuccess();
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
     Path result = workspace.buildAndReturnOutput("//apps/sample:nearly_empty_aar");
     assertThat(workspace.asCell().getFilesystem().exists(result), Matchers.is(true));
   }

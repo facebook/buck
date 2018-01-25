@@ -134,7 +134,7 @@ public class AppleBundleIntegrationTest {
 
     workspace.enableDirCache();
     workspace.runBuckBuild("-c", "apple.cache_bundles_and_packages=false", target).assertSuccess();
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
     workspace.runBuckBuild("-c", "apple.cache_bundles_and_packages=false", target).assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally(target);
   }
@@ -625,7 +625,8 @@ public class AppleBundleIntegrationTest {
   @Test
   public void appBundleWithConflictingFileAndFolderResources() throws Exception {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "app_bundle_with_conflicting_resources", tmp);
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_conflicting_resources", tmp);
     workspace.setUp();
 
     BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
@@ -635,7 +636,8 @@ public class AppleBundleIntegrationTest {
   @Test
   public void appBundleWithConflictingNestedFolderResources() throws Exception {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "app_bundle_with_conflicting_nested_resources", tmp);
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_conflicting_nested_resources", tmp);
     workspace.setUp();
 
     BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
@@ -645,7 +647,8 @@ public class AppleBundleIntegrationTest {
   @Test
   public void appBundleWithConflictingFilenamesInNestedFolders() throws Exception {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "app_bundle_with_conflicting_filenames_in_nested_folders", tmp);
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_conflicting_filenames_in_nested_folders", tmp);
     workspace.setUp();
 
     BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");

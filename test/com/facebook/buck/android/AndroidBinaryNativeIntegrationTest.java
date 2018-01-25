@@ -342,7 +342,7 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
         syms.getNormalSymbols(outputs.get(app), "lib/x86/libnative_cxx_symbols.so");
     assertThat(strippedSyms.all, Matchers.empty());
 
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckBuild(usnl);
 
     String unstrippedPath = null;
