@@ -47,6 +47,7 @@ java_immutables_library(
         "AbstractCell.java",
         "AbstractCellConfig.java",
         "AbstractDefaultKnownBuildRuleTypesFactory.java",
+        "AbstractDistBuildCellParams.java",
         "AbstractKnownBuildRuleTypes.java",
         "AbstractKnownBuildRuleTypesProvider.java",
         "CellProvider.java",

@@ -15,12 +15,7 @@
  */
 package com.facebook.buck.rules;
 
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -29,12 +24,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
-import org.pf4j.PluginManager;
 
 public final class CellProvider {
   private final LoadingCache<Path, Cell> cells;
@@ -76,23 +68,5 @@ public final class CellProvider {
 
   public ImmutableMap<Path, Cell> getLoadedCells() {
     return ImmutableMap.copyOf(cells.asMap());
-  }
-
-  @Value.Immutable(builder = false, copy = false)
-  @BuckStyleTuple
-  interface AbstractDistBuildCellParams {
-    BuckConfig getConfig();
-
-    ProjectFilesystem getFilesystem();
-
-    Optional<String> getCanonicalName();
-
-    ImmutableMap<String, String> getEnvironment();
-
-    ProcessExecutor getProcessExecutor();
-
-    ExecutableFinder getExecutableFinder();
-
-    PluginManager getPluginManager();
   }
 }
