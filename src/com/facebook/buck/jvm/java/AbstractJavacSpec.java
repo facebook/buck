@@ -16,12 +16,12 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.types.Either;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;

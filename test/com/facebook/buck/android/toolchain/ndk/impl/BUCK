@@ -19,7 +19,6 @@ java_test(
         "//src/com/facebook/buck/cxx/toolchain/impl:impl",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io/file:file",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/plugin/impl:impl",
         "//src/com/facebook/buck/rules:cli",

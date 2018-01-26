@@ -16,13 +16,13 @@
 
 package com.facebook.buck.rules.modern.impl;
 
-import com.facebook.buck.model.Either;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.InputData;
 import com.facebook.buck.rules.modern.InputPath;
 import com.facebook.buck.rules.modern.OutputData;
 import com.facebook.buck.rules.modern.OutputPath;
+import com.facebook.buck.util.types.Either;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

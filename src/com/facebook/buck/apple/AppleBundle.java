@@ -39,7 +39,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
@@ -66,6 +65,7 @@ import com.facebook.buck.step.fs.MoveStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.types.Either;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -681,14 +681,13 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return stepsBuilder.build();
   }
 
-  private void verifyResourceConflicts(AppleBundleResources resources,
-                                       SourcePathResolver resolver) {
+  private void verifyResourceConflicts(
+      AppleBundleResources resources, SourcePathResolver resolver) {
     // Ensure there are no resources that will overwrite each other
     // TODO: handle ResourceDirsContainingResourceDirs
     Set<Path> resourcePaths = new HashSet<>();
-    for (SourcePath path : Iterables.concat(
-        resources.getResourceDirs(),
-        resources.getResourceFiles())) {
+    for (SourcePath path :
+        Iterables.concat(resources.getResourceDirs(), resources.getResourceFiles())) {
       Path pathInBundle = resolver.getRelativePath(path).getFileName();
       if (resourcePaths.contains(pathInBundle)) {
         throw new HumanReadableException(

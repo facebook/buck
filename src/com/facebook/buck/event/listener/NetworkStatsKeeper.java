@@ -17,7 +17,7 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.event.NetworkEvent.BytesReceivedEvent;
-import com.facebook.buck.model.Pair;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.unit.SizeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 

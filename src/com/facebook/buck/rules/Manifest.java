@@ -17,9 +17,9 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

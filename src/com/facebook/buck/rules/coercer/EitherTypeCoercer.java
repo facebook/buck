@@ -17,8 +17,8 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.util.types.Either;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;

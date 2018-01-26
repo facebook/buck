@@ -18,9 +18,9 @@ package com.facebook.buck.rules.keys;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
+import com.facebook.buck.util.types.Pair;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;

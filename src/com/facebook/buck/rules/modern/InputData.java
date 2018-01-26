@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.modern;
 
-import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.util.types.Either;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.Optional;
 

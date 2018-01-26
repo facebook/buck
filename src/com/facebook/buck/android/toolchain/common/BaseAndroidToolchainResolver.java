@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android.toolchain.common;
 
-import com.facebook.buck.model.Pair;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

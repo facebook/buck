@@ -16,8 +16,8 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 

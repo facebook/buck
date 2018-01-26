@@ -9,7 +9,6 @@ standard_java_test(
         "//src/com/facebook/buck/io:transport",
         "//src/com/facebook/buck/io/filesystem/impl:impl",
         "//src/com/facebook/buck/model:build_id",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/util/immutables:immutables",
         "//src/com/facebook/buck/util/sha1:sha1",

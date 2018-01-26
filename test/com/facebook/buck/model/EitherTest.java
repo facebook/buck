@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.util.types.Either;
 import java.util.function.Function;
 import org.junit.Test;
 

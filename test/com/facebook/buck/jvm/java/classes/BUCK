@@ -13,7 +13,6 @@ standard_java_test(
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/jvm/java/classes:classes",
         "//src/com/facebook/buck/model:build_id",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/rules:relative_cell_name",
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/util:process_executor",

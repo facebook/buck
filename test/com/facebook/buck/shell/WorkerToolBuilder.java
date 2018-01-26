@@ -18,8 +18,8 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 

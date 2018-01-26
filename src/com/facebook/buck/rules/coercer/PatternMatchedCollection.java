@@ -17,10 +17,10 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.TargetTranslatable;
 import com.google.common.collect.ImmutableList;

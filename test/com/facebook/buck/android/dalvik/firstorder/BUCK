@@ -5,7 +5,6 @@ standard_java_test(
     required_for_source_only_abi = True,
     deps = [
         "//src/com/facebook/buck/android/dalvik/firstorder:firstorder",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/immutables:immutables",
         "//third-party/java/asm:asm",

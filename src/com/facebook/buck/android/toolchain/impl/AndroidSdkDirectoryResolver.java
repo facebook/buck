@@ -17,8 +17,8 @@ package com.facebook.buck.android.toolchain.impl;
 
 import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.toolchain.common.BaseAndroidToolchainResolver;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

@@ -17,14 +17,14 @@
 package com.facebook.buck.js;
 
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.model.UserFlavor;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.types.Either;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;

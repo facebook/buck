@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.model;
+package com.facebook.buck.util.types;
 
 import java.lang.ref.WeakReference;
 import java.util.Objects;

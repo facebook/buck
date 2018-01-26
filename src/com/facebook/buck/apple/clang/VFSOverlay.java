@@ -16,8 +16,8 @@
 
 package com.facebook.buck.apple.clang;
 
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.types.Pair;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Preconditions;

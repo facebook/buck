@@ -18,7 +18,6 @@ java_immutables_library(
         "//src/com/facebook/buck/android/agent/util:util",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/immutables:immutables",

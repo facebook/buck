@@ -17,7 +17,7 @@
 package com.facebook.buck.util.concurrent;
 
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.Either;
+import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;

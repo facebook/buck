@@ -17,12 +17,12 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.model.macros.MacroFinderAutomaton;
 import com.facebook.buck.model.macros.MacroMatchResult;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

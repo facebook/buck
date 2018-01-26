@@ -19,8 +19,8 @@ package com.facebook.buck.cli;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.SampleRate;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.List;

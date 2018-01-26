@@ -12,7 +12,6 @@ java_library(
     visibility = ["//test/..."],
     deps = [
         "//src/com/facebook/buck/io:executable-finder",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/util/immutables:immutables",
         "//third-party/java/guava:guava",
         "//third-party/java/immutables:immutables",
@@ -72,7 +71,6 @@ standard_java_test(
         "//src/com/facebook/buck/message_ipc:message_ipc",
         "//src/com/facebook/buck/model:build_id",
         "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/parser:config",
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/parser:rule_pattern",
