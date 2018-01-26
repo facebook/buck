@@ -33,7 +33,6 @@ IO_SRCS = [
     "AbstractCharsetProcessListener.java",
     "AbstractDirectoryCleanerArgs.java",
     "AnsiEnvironmentChecking.java",
-    "BestCompressionGZIPOutputStream.java",
     "DefaultFilteredDirectoryCopier.java",
     "DirectoryCleaner.java",
     "FilteredDirectoryCopier.java",

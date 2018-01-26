@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.util.zip;
 
 import java.io.IOException;
 import java.io.OutputStream;

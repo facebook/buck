@@ -79,6 +79,7 @@ java_immutables_library(
         "//src/com/facebook/buck/util/network/hostname:hostname",
         "//src/com/facebook/buck/util/sha1:sha1",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
+        "//src/com/facebook/buck/util/zip:zip",
         "//third-party/java/guava:guava",
         "//third-party/java/immutables:immutables",
         "//third-party/java/jackson:jackson-annotations",

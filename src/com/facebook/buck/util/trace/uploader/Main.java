@@ -16,8 +16,8 @@
 
 package com.facebook.buck.util.trace.uploader;
 
-import com.facebook.buck.util.BestCompressionGZIPOutputStream;
 import com.facebook.buck.util.network.MacIpv6BugWorkaround;
+import com.facebook.buck.util.zip.BestCompressionGZIPOutputStream;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Stopwatch;

@@ -15,6 +15,7 @@ java_library(
     deps = [
         "//src/com/facebook/buck/util:io",
         "//src/com/facebook/buck/util/network:network",
+        "//src/com/facebook/buck/util/zip:zip",
         "//third-party/java/args4j:args4j",
         "//third-party/java/guava:guava",
         "//third-party/java/jackson:jackson-annotations",
