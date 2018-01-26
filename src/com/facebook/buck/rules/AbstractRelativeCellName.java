@@ -46,11 +46,6 @@ abstract class AbstractRelativeCellName {
     return Optional.of(Joiner.on(CELL_NAME_COMPONENT_SEPARATOR).join(getComponents()));
   }
 
-  public RelativeCellName withAppendedComponent(String componentToAppend) {
-    return RelativeCellName.of(
-        ImmutableList.<String>builder().addAll(getComponents()).add(componentToAppend).build());
-  }
-
   public static RelativeCellName fromComponents(String... strings) {
     return RelativeCellName.of(FluentIterable.from(strings));
   }
