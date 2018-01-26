@@ -717,8 +717,7 @@ public class QueryCommandIntegrationTest {
         result.getStdout(),
         is(
             equalToIgnoringPlatformNewlines(
-                workspace.getFileContents(
-                    "stdout-minrank-flavored-deps-one-with-attributes.json"))));
+                workspace.getFileContents("stdout-minrank-deps-one-with-attributes.json"))));
 
     result =
         workspace.runBuckCommand(
@@ -733,8 +732,7 @@ public class QueryCommandIntegrationTest {
         result.getStdout(),
         is(
             equalToIgnoringPlatformNewlines(
-                workspace.getFileContents(
-                    "stdout-maxrank-flavored-deps-one-with-attributes.json"))));
+                workspace.getFileContents("stdout-maxrank-deps-one-with-attributes.json"))));
   }
 
   class ParserProfileFinder extends SimpleFileVisitor<Path> {
