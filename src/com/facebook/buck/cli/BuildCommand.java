@@ -812,9 +812,7 @@ public class BuildCommand extends AbstractCommand {
     AtomicInteger distributedBuildExitCode =
         new AtomicInteger(
             com.facebook.buck.distributed.ExitCode.DISTRIBUTED_PENDING_EXIT_CODE.getCode());
-    CountDownLatch localBuildInitializationLatch =
-        new CountDownLatch(
-            com.facebook.buck.distributed.ExitCode.DISTRIBUTED_PENDING_EXIT_CODE.getCode());
+    CountDownLatch localBuildInitializationLatch = new CountDownLatch(1);
     AtomicInteger localBuildExitCode =
         new AtomicInteger(com.facebook.buck.distributed.ExitCode.LOCAL_PENDING_EXIT_CODE.getCode());
     try (DistBuildService distBuildService = DistBuildFactory.newDistBuildService(params)) {
@@ -1096,37 +1094,31 @@ public class BuildCommand extends AbstractCommand {
         params.getConsole().printErrorText(finishedMessage);
       }
 
-      if (exitCode != 0
-          && !distBuildConfig.isSlowLocalBuildFallbackModeEnabled()
-          && !distBuildConfig.shouldAlwaysWaitForRemoteBuildBeforeProceedingLocally()) {
-        // Ensure that lastBuild was initialized in local build thread.
-        localBuildInitializationLatch.await();
+      if (exitCode != 0) {
+        if (!distBuildConfig.isSlowLocalBuildFallbackModeEnabled()) {
+          // Ensure that lastBuild was initialized in local build thread.
+          localBuildInitializationLatch.await();
 
-        // Attempt to terminate the local build early.
-        String message =
-            "Distributed build finished with non-zero exit code. Terminating local build.";
-        LOG.warn(message);
-        Preconditions.checkNotNull(lastBuild).terminateBuildWithFailure(new Exception(message));
-      }
-
-      if (exitCode != 0
-          && (distBuildConfig.isSlowLocalBuildFallbackModeEnabled()
-              || distBuildConfig.shouldAlwaysWaitForRemoteBuildBeforeProceedingLocally())) {
-        String errorMessage =
-            String.format(
-                "The remote/distributed build with Stampede ID [%s] "
-                    + "failed with exit code [%d] trying to build "
-                    + "targets [%s]. This program will continue now by falling back to a "
-                    + "local build because config "
-                    + "[stampede.enable_slow_local_build_fallback=%s]. "
-                    + "[stampede.always_wait_for_remote_build_before_proceeding_locally=%s]. ",
-                distBuildResult.stampedeId,
-                exitCode,
-                Joiner.on(" ").join(arguments),
-                distBuildConfig.isSlowLocalBuildFallbackModeEnabled(),
-                distBuildConfig.shouldAlwaysWaitForRemoteBuildBeforeProceedingLocally());
-        params.getConsole().printErrorText(errorMessage);
-        LOG.error(errorMessage);
+          // Attempt to terminate the local build early.
+          String message =
+              "Distributed build finished with non-zero exit code. Terminating local build.";
+          LOG.warn(message);
+          Preconditions.checkNotNull(lastBuild).terminateBuildWithFailure(new Exception(message));
+        } else {
+          String errorMessage =
+              String.format(
+                  "The remote/distributed build with Stampede ID [%s] "
+                      + "failed with exit code [%d] trying to build "
+                      + "targets [%s]. This program will continue now by falling back to a "
+                      + "local build because config "
+                      + "[stampede.enable_slow_local_build_fallback=%s]. ",
+                  distBuildResult.stampedeId,
+                  exitCode,
+                  Joiner.on(" ").join(arguments),
+                  distBuildConfig.isSlowLocalBuildFallbackModeEnabled());
+          params.getConsole().printErrorText(errorMessage);
+          LOG.error(errorMessage);
+        }
       }
     } catch (IOException e) {
       LOG.error(e, "Stampede distributed build failed with exception");
