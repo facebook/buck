@@ -18,22 +18,14 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.tool.config.ToolConfig;
-import com.facebook.buck.util.PackagedResource;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import java.util.Optional;
 import java.util.stream.Stream;
-import javax.annotation.Nonnull;
 
 public class PythonBuckConfig {
 
@@ -41,19 +33,6 @@ public class PythonBuckConfig {
 
   private static final String SECTION = "python";
   private static final String PYTHON_PLATFORM_SECTION_PREFIX = "python#";
-
-  private static final LoadingCache<ProjectFilesystem, PathSourcePath> PATH_TO_TEST_MAIN =
-      CacheBuilder.newBuilder()
-          .build(
-              new CacheLoader<ProjectFilesystem, PathSourcePath>() {
-                @Override
-                public PathSourcePath load(@Nonnull ProjectFilesystem filesystem) {
-                  return PathSourcePath.of(
-                      filesystem,
-                      PythonBuckConfig.class + "/__test_main__.py",
-                      new PackagedResource(filesystem, PythonBuckConfig.class, "__test_main__.py"));
-                }
-              });
 
   private final BuckConfig delegate;
 
@@ -67,10 +46,6 @@ public class PythonBuckConfig {
 
   public Optional<String> getInterpreter(String section) {
     return delegate.getValue(section, "interpreter");
-  }
-
-  public SourcePath getPathToTestMain(ProjectFilesystem filesystem) {
-    return PATH_TO_TEST_MAIN.getUnchecked(filesystem);
   }
 
   public Optional<BuildTarget> getPexTarget() {

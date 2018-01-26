@@ -20,6 +20,7 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.file.WriteFile;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -29,12 +30,16 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
+import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasContacts;
 import com.facebook.buck.rules.HasTestTimeout;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -46,6 +51,9 @@ import com.facebook.buck.rules.coercer.NeededCoverageSpec;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroArg;
 import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
@@ -55,15 +63,18 @@ import com.facebook.buck.versions.HasVersionUniverse;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
+import com.google.common.io.Resources;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.SortedSet;
 import java.util.function.Supplier;
 import org.immutables.value.Value;
 
@@ -162,6 +173,50 @@ public class PythonTestDescription
                 .orElse(cxxPlatformsProvider.getDefaultCxxPlatform()));
   }
 
+  private SourcePath requireTestMain(
+      BuildTarget baseTarget, ProjectFilesystem filesystem, BuildRuleResolver ruleResolver) {
+    BuildRule testMainRule =
+        ruleResolver.computeIfAbsent(
+            baseTarget.withFlavors(InternalFlavor.of("python-test-main")),
+            target ->
+                new AbstractBuildRule(target, filesystem) {
+
+                  private final Path output =
+                      BuildTargets.getGenPath(
+                          getProjectFilesystem(), getBuildTarget(), "%s/__test_main__.py");
+
+                  @Override
+                  public SortedSet<BuildRule> getBuildDeps() {
+                    return ImmutableSortedSet.of();
+                  }
+
+                  @Override
+                  public ImmutableList<? extends Step> getBuildSteps(
+                      BuildContext context, BuildableContext buildableContext) {
+                    buildableContext.recordArtifact(output);
+                    return ImmutableList.of(
+                        MkdirStep.of(
+                            BuildCellRelativePath.fromCellRelativePath(
+                                context.getBuildCellRootPath(),
+                                getProjectFilesystem(),
+                                output.getParent())),
+                        new WriteFileStep(
+                            getProjectFilesystem(),
+                            Resources.asByteSource(
+                                Resources.getResource(
+                                    PythonTestDescription.class, "__test_main__.py")),
+                            output,
+                            /* executable */ false));
+                  }
+
+                  @Override
+                  public SourcePath getSourcePathToOutput() {
+                    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
+                  }
+                });
+    return Preconditions.checkNotNull(testMainRule.getSourcePathToOutput());
+  }
+
   @Override
   public PythonTest createBuildRule(
       TargetGraph targetGraph,
@@ -251,7 +306,7 @@ public class PythonTestDescription
         PythonPackageComponents.of(
             ImmutableMap.<Path, SourcePath>builder()
                 .put(getTestModulesListName(), testModulesBuildRule.getSourcePathToOutput())
-                .put(getTestMainName(), pythonBuckConfig.getPathToTestMain(projectFilesystem))
+                .put(getTestMainName(), requireTestMain(buildTarget, projectFilesystem, resolver))
                 .putAll(srcs)
                 .build(),
             resources,
