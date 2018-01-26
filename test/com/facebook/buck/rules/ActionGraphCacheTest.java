@@ -313,9 +313,6 @@ public class ActionGraphCacheTest {
       experimentEvents =
           RichStream.from(trackedEvents.stream())
               .filter(ExperimentEvent.class)
-              .filter(
-                  event ->
-                      !event.getEventName().equals(CxxSymlinkTreeHeadersExperiment.EXPERIMENT_NAME))
               .collect(Collectors.toList());
       assertThat(
           "No experiment event is logged if not in experiment mode", experimentEvents, empty());
@@ -334,9 +331,6 @@ public class ActionGraphCacheTest {
     experimentEvents =
         RichStream.from(trackedEvents.stream())
             .filter(ExperimentEvent.class)
-            .filter(
-                event ->
-                    !event.getEventName().equals(CxxSymlinkTreeHeadersExperiment.EXPERIMENT_NAME))
             .collect(Collectors.toList());
     assertThat(
         "EXPERIMENT mode should log either enabled or disabled.",
@@ -359,9 +353,6 @@ public class ActionGraphCacheTest {
     experimentEvents =
         RichStream.from(trackedEvents.stream())
             .filter(ExperimentEvent.class)
-            .filter(
-                event ->
-                    !event.getEventName().equals(CxxSymlinkTreeHeadersExperiment.EXPERIMENT_NAME))
             .collect(Collectors.toList());
     assertThat(
         "EXPERIMENT mode should log either enabled or disabled.",

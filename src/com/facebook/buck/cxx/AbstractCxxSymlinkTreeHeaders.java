@@ -20,7 +20,6 @@ import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.CxxSymlinkTreeHeadersExperiment;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
@@ -84,45 +83,34 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleK
   // rulekey is really slow to compute.
   public Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     Stream.Builder<BuildRule> builder = Stream.builder();
-    if (CxxSymlinkTreeHeadersExperiment.runExperiment()) {
-      ruleFinder.getRule(getRoot()).ifPresent(builder);
-      if (getIncludeRoot().isRight()) {
-        ruleFinder.getRule(getIncludeRoot().getRight()).ifPresent(builder);
-      }
-      getHeaderMap().flatMap(ruleFinder::getRule).ifPresent(builder);
-
-      // return a stream of the cached dependencies, or compute and store it
-      return Stream.concat(
-              computedDeps
-                  .get()
-                  .orElseGet(
-                      () -> {
-                        // We can cache the list here because getNameToPathMap() is an ImmutableMap,
-                        // and if a value in the map is not in ruleFinder, an exception will be
-                        // thrown. Since ruleFinder rules only increase, the output of this will
-                        // never
-                        // change if we do not get an exception.
-                        ImmutableList.Builder<BuildRule> cachedBuilder = ImmutableList.builder();
-                        getNameToPathMap()
-                            .values()
-                            .forEach(
-                                value -> ruleFinder.getRule(value).ifPresent(cachedBuilder::add));
-                        ImmutableList<BuildRule> rules = cachedBuilder.build();
-                        computedDeps.set(Optional.of(rules));
-                        return rules;
-                      })
-                  .stream(),
-              builder.build())
-          .distinct();
-    } else {
-      getNameToPathMap().values().forEach(value -> ruleFinder.getRule(value).ifPresent(builder));
-      ruleFinder.getRule(getRoot()).ifPresent(builder);
-      if (getIncludeRoot().isRight()) {
-        ruleFinder.getRule(getIncludeRoot().getRight()).ifPresent(builder);
-      }
-      getHeaderMap().flatMap(ruleFinder::getRule).ifPresent(builder);
-      return builder.build().distinct();
+    ruleFinder.getRule(getRoot()).ifPresent(builder);
+    if (getIncludeRoot().isRight()) {
+      ruleFinder.getRule(getIncludeRoot().getRight()).ifPresent(builder);
     }
+    getHeaderMap().flatMap(ruleFinder::getRule).ifPresent(builder);
+
+    // return a stream of the cached dependencies, or compute and store it
+    return Stream.concat(
+            computedDeps
+                .get()
+                .orElseGet(
+                    () -> {
+                      // We can cache the list here because getNameToPathMap() is an ImmutableMap,
+                      // and if a value in the map is not in ruleFinder, an exception will be
+                      // thrown. Since ruleFinder rules only increase, the output of this will never
+                      // change if we do not get an exception.
+                      ImmutableList.Builder<BuildRule> cachedBuilder = ImmutableList.builder();
+                      getNameToPathMap()
+                          .values()
+                          .forEach(
+                              value -> ruleFinder.getRule(value).ifPresent(cachedBuilder::add));
+                      ImmutableList<BuildRule> rules = cachedBuilder.build();
+                      computedDeps.set(Optional.of(rules));
+                      return rules;
+                    })
+                .stream(),
+            builder.build())
+        .distinct();
   }
 
   @Override
