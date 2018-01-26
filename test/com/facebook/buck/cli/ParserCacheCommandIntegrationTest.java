@@ -22,6 +22,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.query.QueryException;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestContext;
@@ -50,7 +51,7 @@ public class ParserCacheCommandIntegrationTest {
 
     // Warm the parser cache.
     TestContext context = new TestContext();
-    ProjectWorkspace.ProcessResult runBuckResult =
+    ProcessResult runBuckResult =
         workspace.runBuckdCommand(context, "query", "deps(//Apps:TestAppsLibrary)");
     runBuckResult.assertSuccess();
     assertThat(
@@ -99,7 +100,7 @@ public class ParserCacheCommandIntegrationTest {
 
     // Warm the parser cache.
     TestContext context = new TestContext();
-    ProjectWorkspace.ProcessResult runBuckResult =
+    ProcessResult runBuckResult =
         workspace.runBuckdCommand(context, "query", "deps(//Apps:TestAppsLibrary)");
     runBuckResult.assertSuccess();
     assertThat(

@@ -31,6 +31,7 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -64,8 +65,7 @@ public class PrebuiltAppleFrameworkIntegrationTest {
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = BuildTargetFactory.newInstance("//prebuilt:BuckTest");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))));
@@ -81,8 +81,7 @@ public class PrebuiltAppleFrameworkIntegrationTest {
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = BuildTargetFactory.newInstance("//app:TestApp");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     Path testBinaryPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
@@ -107,8 +106,7 @@ public class PrebuiltAppleFrameworkIntegrationTest {
 
     BuildTarget target =
         BuildTargetFactory.newInstance("//app:TestAppBundle#dwarf-and-dsym,include-frameworks");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     Path includedFramework =
@@ -130,8 +128,7 @@ public class PrebuiltAppleFrameworkIntegrationTest {
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = BuildTargetFactory.newInstance("//app:TestApp#static,macosx-x86_64");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     Path testBinaryPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
@@ -173,7 +170,7 @@ public class PrebuiltAppleFrameworkIntegrationTest {
 
     String resultBefore;
     {
-      ProjectWorkspace.ProcessResult result =
+      ProcessResult result =
           workspace.runBuckCommand(
               "targets", "--show-rulekey", "//app:TestApp#iphonesimulator-x86_64");
       resultBefore = result.assertSuccess().getStdout();
@@ -183,7 +180,7 @@ public class PrebuiltAppleFrameworkIntegrationTest {
 
     String resultAfter;
     {
-      ProjectWorkspace.ProcessResult result =
+      ProcessResult result =
           workspace.runBuckCommand(
               "targets", "--show-rulekey", "//app:TestApp#iphonesimulator-x86_64");
       resultAfter = result.assertSuccess().getStdout();

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -180,7 +181,7 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
 
   private void expectGenruleOutputContains(String genrule, String expectedOutputFragment)
       throws Exception {
-    ProjectWorkspace.ProcessResult buildResult = workspace.runBuckCommand("build", genrule);
+    ProcessResult buildResult = workspace.runBuckCommand("build", genrule);
     buildResult.assertSuccess();
 
     String outputFileContents = workspace.getFileContents(getOutputFile(genrule));
@@ -189,7 +190,7 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
 
   private Path getOutputFile(String targetName) {
     try {
-      ProjectWorkspace.ProcessResult buildResult =
+      ProcessResult buildResult =
           workspace.runBuckCommand("targets", targetName, "--show-full-output", "--json");
       buildResult.assertSuccess();
       JsonNode jsonNode = ObjectMappers.READER.readTree(buildResult.getStdout()).get(0);

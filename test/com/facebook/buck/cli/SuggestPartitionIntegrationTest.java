@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -40,7 +41,7 @@ public class SuggestPartitionIntegrationTest {
 
     workspace.runBuckBuild("//app:app").assertSuccess();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("suggest", "//lib:lib");
+    ProcessResult result = workspace.runBuckCommand("suggest", "//lib:lib");
     result.assertSuccess();
 
     // Overwrite lib/BUCK with output of `buck suggest`.

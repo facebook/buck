@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.jvm.java.Javac;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.ZipArchive;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -73,7 +74,7 @@ public class FlavoredTargetsParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "unflavored_build", tempFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:example", "//:example#src");
+    ProcessResult result = workspace.runBuckBuild("//:example", "//:example#src");
     result.assertSuccess();
 
     // Verify that both the src zip and the jar were created.

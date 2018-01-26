@@ -19,6 +19,7 @@ package com.facebook.buck.go;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -48,12 +49,12 @@ public class GoTestIntegrationTest {
   @Test
   public void testGoTest() throws IOException {
     // This test should pass.
-    ProjectWorkspace.ProcessResult result1 = workspace.runBuckCommand("test", "//:test-success");
+    ProcessResult result1 = workspace.runBuckCommand("test", "//:test-success");
     result1.assertSuccess();
     workspace.resetBuildLogFile();
 
     // This test should fail.
-    ProjectWorkspace.ProcessResult result2 = workspace.runBuckCommand("test", "//:test-failure");
+    ProcessResult result2 = workspace.runBuckCommand("test", "//:test-failure");
     result2.assertTestFailure();
     assertThat(
         "`buck test` should fail because TestAdd2() failed.",
@@ -76,15 +77,13 @@ public class GoTestIntegrationTest {
   @Ignore
   @Test
   public void testGoInternalTest() throws IOException {
-    ProjectWorkspace.ProcessResult result1 =
-        workspace.runBuckCommand("test", "//:test-success-internal");
+    ProcessResult result1 = workspace.runBuckCommand("test", "//:test-success-internal");
     result1.assertSuccess();
   }
 
   @Test
   public void testWithResources() throws IOException {
-    ProjectWorkspace.ProcessResult result1 =
-        workspace.runBuckCommand("test", "//:test-with-resources");
+    ProcessResult result1 = workspace.runBuckCommand("test", "//:test-with-resources");
     result1.assertSuccess();
   }
 
@@ -95,13 +94,13 @@ public class GoTestIntegrationTest {
 
   @Test
   public void testGoTestTimeout() throws IOException {
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:test-spinning");
+    ProcessResult result = workspace.runBuckCommand("test", "//:test-spinning");
     result.assertTestFailure("test timed out after 500ms");
   }
 
   @Test
   public void testGoPanic() throws IOException {
-    ProjectWorkspace.ProcessResult result2 = workspace.runBuckCommand("test", "//:test-panic");
+    ProcessResult result2 = workspace.runBuckCommand("test", "//:test-panic");
     result2.assertTestFailure();
     assertThat(
         "`buck test` should fail because TestPanic() failed.",

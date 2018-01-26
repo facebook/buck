@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.file.ProjectFilesystemMatchers;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -154,8 +155,7 @@ public class PrecompiledHeaderIntegrationTest {
     CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
 
     BuildTarget target = workspace.newBuildTarget("//:library_multicell_pch#default");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
   }
 

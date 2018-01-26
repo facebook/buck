@@ -37,6 +37,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.FakeAppleDeveloperEnvironment;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -117,7 +118,7 @@ public class ObjectPathsAbsolutifierIntegrationTest {
     BuildTarget target =
         BuildTargetFactory.newInstance("//Apps/TestApp:TestApp")
             .withAppendedFlavors(platformFlavor);
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "build", "--config", "cxx.cflags=-g", target.getFullyQualifiedName());
     result.assertSuccess();
@@ -309,7 +310,7 @@ public class ObjectPathsAbsolutifierIntegrationTest {
     String oldCompDirValue = sanitizer.getCompilationDirectory();
     String newCompDirValue = workspace.getDestPath().toString();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "machoutils",
             "absolutify_object_paths",

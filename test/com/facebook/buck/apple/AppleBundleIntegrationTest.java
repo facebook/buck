@@ -42,6 +42,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.FakeAppleDeveloperEnvironment;
@@ -189,8 +190,7 @@ public class AppleBundleIntegrationTest {
 
     // Do not match iOS profiles on tvOS targets.
     target = workspace.newBuildTarget("//:DemoApp#appletvos-arm64,no-debug");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertFailure();
     assertTrue(result.getStderr().contains("No valid non-expired provisioning profiles match"));
 
@@ -219,8 +219,7 @@ public class AppleBundleIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = workspace.newBuildTarget(fullyQualifiedName);
-    ProjectWorkspace.ProcessResult buildResult =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult buildResult = workspace.runBuckCommand("build", target.getFullyQualifiedName());
 
     // custom codesign tool exits with non-zero error code and prints a message to the stderr, so
     // that its use can be detected
@@ -394,7 +393,7 @@ public class AppleBundleIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp#no-debug");
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("targets", "--show-output", target.getFullyQualifiedName());
     result.assertSuccess();
     Path appPath =
@@ -414,7 +413,7 @@ public class AppleBundleIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = BuildTargetFactory.newInstance("//:DemoExtension#no-debug");
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("targets", "--show-output", target.getFullyQualifiedName());
     result.assertSuccess();
     Path extensionPath =
@@ -443,7 +442,7 @@ public class AppleBundleIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = BuildTargetFactory.newInstance("//:DemoAppWithExtension#no-debug");
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("targets", "--show-output", target.getFullyQualifiedName());
     result.assertSuccess();
     Path appPath =
@@ -669,7 +668,7 @@ public class AppleBundleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "app_bundle_with_invalid_variant", tmp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult processResult =
+    ProcessResult processResult =
         workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64,no-debug");
     processResult.assertFailure();
     assertThat(
@@ -810,7 +809,7 @@ public class AppleBundleIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = BuildTargetFactory.newInstance("//:DemoAppWithExtension#no-debug");
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("build", "--show-output", target.getFullyQualifiedName());
     result.assertSuccess();
     BuckBuildLog buckBuildLog = workspace.getBuildLog();
@@ -1108,7 +1107,7 @@ public class AppleBundleIntegrationTest {
             this, "simple_application_bundle_no_debug", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result;
+    ProcessResult result;
     // test no-debug output
     BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp#no-debug");
     result = workspace.runBuckCommand("targets", "--show-output", target.getFullyQualifiedName());
@@ -1148,7 +1147,7 @@ public class AppleBundleIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = BuildTargetFactory.newInstance("//:App#no-debug");
-    ProjectWorkspace.ProcessResult buildResult =
+    ProcessResult buildResult =
         workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
     buildResult.assertSuccess();
 
@@ -1177,7 +1176,7 @@ public class AppleBundleIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = BuildTargetFactory.newInstance("//:App#no-debug");
-    ProjectWorkspace.ProcessResult buildResult =
+    ProcessResult buildResult =
         workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
     buildResult.assertSuccess();
 

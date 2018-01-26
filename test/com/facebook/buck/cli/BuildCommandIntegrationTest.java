@@ -26,6 +26,7 @@ import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -63,8 +64,7 @@ public class BuildCommandIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult runBuckResult =
-        workspace.runBuckBuild("--show-output", "//:bar");
+    ProcessResult runBuckResult = workspace.runBuckBuild("--show-output", "//:bar");
     runBuckResult.assertSuccess();
     assertThat(runBuckResult.getStdout(), Matchers.containsString("//:bar buck-out"));
   }
@@ -74,8 +74,7 @@ public class BuildCommandIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult runBuckResult =
-        workspace.runBuckBuild("--show-full-output", "//:bar");
+    ProcessResult runBuckResult = workspace.runBuckBuild("--show-full-output", "//:bar");
     runBuckResult.assertSuccess();
     Path expectedRootDirectory = tmp.getRoot();
     String expectedOutputDirectory = expectedRootDirectory.resolve("buck-out/").toString();
@@ -90,7 +89,7 @@ public class BuildCommandIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult runBuckResult =
+    ProcessResult runBuckResult =
         workspace.runBuckBuild("--show-json-output", "//:foo", "//:bar", "//:ex ample");
     runBuckResult.assertSuccess();
     assertThat(
@@ -105,7 +104,7 @@ public class BuildCommandIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "just_build/sub folder", tmp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult runBuckResult =
+    ProcessResult runBuckResult =
         workspace.runBuckBuild("--show-full-json-output", "//:bar", "//:foo", "//:ex ample");
     runBuckResult.assertSuccess();
     Path expectedRootDirectory = tmp.getRoot();
@@ -127,8 +126,7 @@ public class BuildCommandIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult runBuckResult =
-        workspace.runBuckBuild("--show-rulekey", "//:bar");
+    ProcessResult runBuckResult = workspace.runBuckBuild("--show-rulekey", "//:bar");
     runBuckResult.assertSuccess();
 
     Pattern pattern = Pattern.compile("\\b[0-9a-f]{5,40}\\b"); // sha
@@ -144,7 +142,7 @@ public class BuildCommandIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult runBuckResult =
+    ProcessResult runBuckResult =
         workspace.runBuckBuild("--show-output", "--show-rulekey", "//:bar");
     runBuckResult.assertSuccess();
 
@@ -182,8 +180,7 @@ public class BuildCommandIntegrationTest {
     Path externalOutputs = tmp.newFolder("into-output");
     Path output = externalOutputs.resolve("pylib.zip");
     assertFalse(output.toFile().exists());
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckBuild("//:example_py", "--out", output.toString());
+    ProcessResult result = workspace.runBuckBuild("//:example_py", "--out", output.toString());
     result.assertFailure();
     assertThat(
         result.getStderr(),
@@ -196,7 +193,7 @@ public class BuildCommandIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult runBuckResult =
+    ProcessResult runBuckResult =
         workspace.runBuckBuild("-c", "build.create_build_output_symlinks_enabled=true", "//:bar");
     runBuckResult.assertSuccess();
     assertTrue(
@@ -209,7 +206,7 @@ public class BuildCommandIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult runBuckResult =
+    ProcessResult runBuckResult =
         workspace.runBuckBuild(
             "--show-rulekey", "--rulekeys-log-path", logFile.toAbsolutePath().toString(), "//:bar");
     runBuckResult.assertSuccess();
@@ -225,7 +222,7 @@ public class BuildCommandIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckBuild("//:bar", "-c", "build.prehook_script=prehook.sh").assertSuccess();
     assertThat(result.getStderr(), Matchers.containsString("The prehook script ran."));
     assertThat(result.getStderr(), Matchers.containsString("\"prehook_script\" : \"prehook.sh\""));

@@ -37,6 +37,7 @@ import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -157,8 +158,7 @@ public class PythonBinaryIntegrationTest {
 
   @Test
   public void commandLineArgs() throws IOException {
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("run", ":bin", "HELLO WORLD").assertSuccess();
+    ProcessResult result = workspace.runBuckCommand("run", ":bin", "HELLO WORLD").assertSuccess();
     assertThat(result.getStdout(), containsString("HELLO WORLD"));
   }
 
@@ -181,8 +181,7 @@ public class PythonBinaryIntegrationTest {
         "TODO(8667197): Native libs currently don't work on El Capitan",
         Platform.detect(),
         not(equalTo(Platform.MACOS)));
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("run", ":bin-with-native-libs").assertSuccess();
+    ProcessResult result = workspace.runBuckCommand("run", ":bin-with-native-libs").assertSuccess();
     assertThat(result.getStdout(), containsString("HELLO WORLD"));
   }
 
@@ -277,14 +276,14 @@ public class PythonBinaryIntegrationTest {
   public void externalPexToolAffectsRuleKey() throws IOException {
     assumeThat(packageStyle, equalTo(PythonBuckConfig.PackageStyle.STANDALONE));
 
-    ProjectWorkspace.ProcessResult firstResult =
+    ProcessResult firstResult =
         workspace.runBuckCommand(
             "targets", "-c", "python.path_to_pex=//:pex_tool", "--show-rulekey", "//:bin");
     String firstRuleKey = firstResult.assertSuccess().getStdout().trim();
 
     workspace.writeContentsToPath("changes", "pex_tool.sh");
 
-    ProjectWorkspace.ProcessResult secondResult =
+    ProcessResult secondResult =
         workspace.runBuckCommand(
             "targets", "-c", "python.path_to_pex=//:pex_tool", "--show-rulekey", "//:bin");
     String secondRuleKey = secondResult.assertSuccess().getStdout().trim();
@@ -295,7 +294,7 @@ public class PythonBinaryIntegrationTest {
   @Test
   public void multiplePythonHomes() throws Exception {
     assumeThat(Platform.detect(), not(Matchers.is(Platform.WINDOWS)));
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckBuild(
             "-c",
             "python#a.library=//:platform_a",

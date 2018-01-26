@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -187,7 +188,7 @@ public class AndroidLibraryDescriptionIntegrationTest extends AbiCompilationMode
 
   private Path getOutputFile(String targetName) {
     try {
-      ProjectWorkspace.ProcessResult buildResult =
+      ProcessResult buildResult =
           workspace.runBuckCommand("targets", targetName, "--show-output", "--json");
       buildResult.assertSuccess();
       JsonNode jsonNode = ObjectMappers.READER.readTree(buildResult.getStdout()).get(0);

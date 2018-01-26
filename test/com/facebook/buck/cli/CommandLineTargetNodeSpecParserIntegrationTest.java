@@ -22,6 +22,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -62,8 +63,7 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
     workspace.setUp();
 
     // First check for a correct usage.
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("targets", "//simple/...").assertSuccess();
+    ProcessResult result = workspace.runBuckCommand("targets", "//simple/...").assertSuccess();
     assertEquals(
         ImmutableSet.of("//simple:simple", "//simple/foo:foo", "//simple/bar:bar"),
         ImmutableSet.copyOf(Splitter.on('\n').omitEmptyStrings().split(result.getStdout())));
@@ -106,8 +106,7 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
     workspace.setUp();
 
     // First check for correct usage.
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("targets", "//simple:").assertSuccess();
+    ProcessResult result = workspace.runBuckCommand("targets", "//simple:").assertSuccess();
     assertEquals(
         ImmutableSet.of("//simple:simple"),
         ImmutableSet.copyOf(Splitter.on('\n').omitEmptyStrings().split(result.getStdout())));
@@ -124,8 +123,7 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "command_line_parser", tmp);
     workspace.setUp();
     workspace.writeContentsToPath("[project]\n  ignore = ignored", ".buckconfig");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("targets", "...").assertSuccess();
+    ProcessResult result = workspace.runBuckCommand("targets", "...").assertSuccess();
     assertEquals(
         ImmutableSet.of("//simple:simple", "//simple/foo:foo", "//simple/bar:bar"),
         ImmutableSet.copyOf(Splitter.on('\n').omitEmptyStrings().split(result.getStdout())));

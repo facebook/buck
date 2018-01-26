@@ -48,6 +48,7 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellConfig;
 import com.facebook.buck.rules.CellProviderFactory;
 import com.facebook.buck.rules.DefaultCellPathResolver;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
@@ -356,8 +357,7 @@ public class ProjectWorkspace {
     // Add in `--show-output` to the build, so we can parse the output paths after the fact.
     ImmutableList<String> buildArgs =
         ImmutableList.<String>builder().add("--show-output").add(args).build();
-    ProjectWorkspace.ProcessResult buildResult =
-        runBuckBuild(buildArgs.toArray(new String[buildArgs.size()]));
+    ProcessResult buildResult = runBuckBuild(buildArgs.toArray(new String[buildArgs.size()]));
     buildResult.assertSuccess();
 
     // Grab the stdout lines, which have the build outputs.
@@ -792,86 +792,6 @@ public class ProjectWorkspace {
       throws IOException, InterruptedException {
     return BuildTargetFactory.newInstance(
         asCell().getFilesystem().getRootPath(), fullyQualifiedName);
-  }
-
-  /** The result of running {@code buck} from the command line. */
-  public static class ProcessResult {
-    private final ExitCode exitCode;
-    private final String stdout;
-    private final String stderr;
-
-    private ProcessResult(ExitCode exitCode, String stdout, String stderr) {
-      this.exitCode = exitCode;
-      this.stdout = Preconditions.checkNotNull(stdout);
-      this.stderr = Preconditions.checkNotNull(stderr);
-    }
-
-    /**
-     * Returns the exit code from the process.
-     *
-     * <p>Currently, in practice, any time a client might want to use it, it is more appropriate to
-     * use {@link #assertSuccess()} or {@link #assertFailure()} instead.
-     */
-    public ExitCode getExitCode() {
-      return exitCode;
-    }
-
-    public String getStdout() {
-      return stdout;
-    }
-
-    public String getStderr() {
-      return stderr;
-    }
-
-    public ProcessResult assertSuccess() {
-      return assertExitCode(null, ExitCode.SUCCESS);
-    }
-
-    public ProcessResult assertSuccess(String message) {
-      return assertExitCode(message, ExitCode.SUCCESS);
-    }
-
-    public ProcessResult assertFailure() {
-      return assertExitCode(null, ExitCode.BUILD_ERROR);
-    }
-
-    public ProcessResult assertTestFailure() {
-      return assertExitCode(null, ExitCode.TEST_ERROR);
-    }
-
-    public ProcessResult assertTestFailure(String message) {
-      return assertExitCode(message, ExitCode.TEST_ERROR);
-    }
-
-    public ProcessResult assertFailure(String message) {
-      return assertExitCode(message, ExitCode.BUILD_ERROR);
-    }
-
-    public ProcessResult assertExitCode(@Nullable String message, ExitCode exitCode) {
-      if (exitCode == getExitCode()) {
-        return this;
-      }
-
-      String failureMessage =
-          String.format(
-              "Expected exit code %d but was %d.", exitCode.getCode(), getExitCode().getCode());
-      if (message != null) {
-        failureMessage = message + " " + failureMessage;
-      }
-
-      System.err.println("=== " + failureMessage + " ===");
-      System.err.println("=== STDERR ===");
-      System.err.println(getStderr());
-      System.err.println("=== STDOUT ===");
-      System.err.println(getStdout());
-      fail(failureMessage);
-      return this;
-    }
-
-    public ProcessResult assertSpecialExitCode(String message, ExitCode exitCode) {
-      return assertExitCode(message, exitCode);
-    }
   }
 
   public void assertFilesEqual(Path expected, Path actual) throws IOException {

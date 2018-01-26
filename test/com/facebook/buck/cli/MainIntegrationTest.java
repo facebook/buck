@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -42,7 +43,7 @@ public class MainIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "empty_project", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand();
+    ProcessResult result = workspace.runBuckCommand();
 
     result.assertExitCode("nothing specified", ExitCode.COMMANDLINE_ERROR);
     assertThat(
@@ -57,7 +58,7 @@ public class MainIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "empty_project", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand();
+    ProcessResult result = workspace.runBuckCommand();
 
     result.assertExitCode("nothing specified", ExitCode.COMMANDLINE_ERROR);
     assertThat(

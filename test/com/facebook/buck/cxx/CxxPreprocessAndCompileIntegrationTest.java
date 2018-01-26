@@ -38,6 +38,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -124,8 +125,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   public void sanitizeWorkingDirectoryWhenBuildingAssembly() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//:simple_assembly#default,static");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    ProjectWorkspace.ProcessResult processResult =
-        workspace.runBuckBuild(target.getFullyQualifiedName());
+    ProcessResult processResult = workspace.runBuckBuild(target.getFullyQualifiedName());
     processResult.assertSuccess();
     Path lib =
         workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s/libsimple_assembly.a"));
@@ -577,7 +577,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void ignoreVerifyHeaders() throws IOException {
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckBuild("-c", "cxx.untracked_headers=ignore", "//:untracked_header");
     if (sandboxSource) {
       result.assertFailure();
@@ -588,7 +588,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void errorVerifyHeaders() throws IOException {
-    ProjectWorkspace.ProcessResult result;
+    ProcessResult result;
     result =
         workspace.runBuckBuild(
             "-c",
@@ -615,7 +615,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void whitelistVerifyHeaders() throws IOException {
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckBuild(
             "-c",
             "cxx.untracked_headers=error",
@@ -639,7 +639,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void errorVerifyHeadersWithPrefixHeader() throws Exception {
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckBuild(
             "-c",
             "cxx.untracked_headers=error",
@@ -655,7 +655,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
     assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckBuild(
             "-c",
             "cxx.untracked_headers=error",

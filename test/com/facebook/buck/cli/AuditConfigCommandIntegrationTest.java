@@ -19,6 +19,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -37,7 +38,7 @@ public class AuditConfigCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "audit",
             "config",
@@ -56,7 +57,7 @@ public class AuditConfigCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "audit",
             "config",
@@ -75,7 +76,7 @@ public class AuditConfigCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "audit", "config", "--json", "missing_section.badvalue", "ignored_section");
     result.assertSuccess();
@@ -88,7 +89,7 @@ public class AuditConfigCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "audit",
             "config",
@@ -108,7 +109,7 @@ public class AuditConfigCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("audit", "config", "secondary//second_section.some_property");
     result.assertSuccess();
     assertEquals(workspace.getFileContents("stdout-cell-buckconfig"), result.getStdout());
@@ -120,7 +121,7 @@ public class AuditConfigCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "audit",
             "config",

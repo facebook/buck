@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -54,7 +55,7 @@ public class BadAndroidConfigIntegrationTest {
         ImmutableMap.of("ANDROID_SDK", "/this/directory/does/not/exist");
     workspace.runBuckCommand(badEnvironment, "build", "//:hello_java").assertSuccess();
 
-    ProjectWorkspace.ProcessResult processResult =
+    ProcessResult processResult =
         workspace.runBuckCommand(badEnvironment, "build", "//:hello_android");
     processResult.assertFailure();
     assertThat(

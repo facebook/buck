@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -41,7 +42,7 @@ public class PrebuiltCxxLibraryIntegrationTest {
     workspace.enableDirCache();
     final String binaryTargetString = "//core:binary";
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("run", binaryTargetString);
+    ProcessResult result = workspace.runBuckCommand("run", binaryTargetString);
     result.assertSuccess();
     assertThat(result.getStdout(), Matchers.equalTo("5\n"));
   }
@@ -55,7 +56,7 @@ public class PrebuiltCxxLibraryIntegrationTest {
     workspace.enableDirCache();
     final String binaryTargetString = "//core:binary";
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("run", binaryTargetString);
+    ProcessResult result = workspace.runBuckCommand("run", binaryTargetString);
     result.assertSuccess();
     assertThat(result.getStdout(), Matchers.equalTo("5\n"));
 

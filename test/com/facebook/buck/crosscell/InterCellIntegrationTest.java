@@ -59,6 +59,7 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -107,7 +108,7 @@ public class InterCellIntegrationTest {
             this, "inter-cell/export-file/secondary", tmp);
     secondary.setUp();
 
-    ProjectWorkspace.ProcessResult result = secondary.runBuckBuild("//:hello");
+    ProcessResult result = secondary.runBuckBuild("//:hello");
 
     result.assertSuccess();
   }
@@ -138,12 +139,10 @@ public class InterCellIntegrationTest {
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
         prepare("inter-cell/export-file/primary", "inter-cell/export-file/secondary");
     ProjectWorkspace primary = cells.getFirst();
-    ProjectWorkspace.ProcessResult result =
-        primary.runBuckCommand("targets", "--show-target-hash", "//:cxxbinary");
+    ProcessResult result = primary.runBuckCommand("targets", "--show-target-hash", "//:cxxbinary");
     result.assertSuccess();
 
-    ProjectWorkspace.ProcessResult result2 =
-        primary.runBuckCommand("targets", "secondary//:cxxlib");
+    ProcessResult result2 = primary.runBuckCommand("targets", "secondary//:cxxlib");
     result2.assertSuccess();
   }
 
@@ -162,8 +161,7 @@ public class InterCellIntegrationTest {
     secondary.runBuckCommand("targets", "--show-target-hash", "//:cxxlib");
     ternary.runBuckCommand("targets", "--show-target-hash", "//:cxxlib2");
 
-    ProjectWorkspace.ProcessResult result =
-        primary.runBuckCommand("query", "deps(%s)", "//:cxxbinary");
+    ProcessResult result = primary.runBuckCommand("query", "deps(%s)", "//:cxxbinary");
     result.assertSuccess();
     assertThat(result.getStdout(), is(primary.getFileContents("stdout-cross-cell-dep")));
   }
@@ -176,7 +174,7 @@ public class InterCellIntegrationTest {
         prepare("inter-cell/export-file/primary", "inter-cell/export-file/secondary");
     ProjectWorkspace primary = cells.getFirst();
 
-    ProjectWorkspace.ProcessResult result = primary.runBuckCommand("project", "//:cxxbinary");
+    ProcessResult result = primary.runBuckCommand("project", "//:cxxbinary");
 
     result.assertSuccess();
   }
@@ -189,7 +187,7 @@ public class InterCellIntegrationTest {
         prepare("inter-cell/export-file/primary", "inter-cell/export-file/secondary");
     ProjectWorkspace primary = cells.getFirst();
 
-    ProjectWorkspace.ProcessResult result = primary.runBuckBuild("//:cxxbinary");
+    ProcessResult result = primary.runBuckBuild("//:cxxbinary");
 
     result.assertSuccess();
   }
@@ -209,7 +207,7 @@ public class InterCellIntegrationTest {
     secondary.runBuckCommand("targets", "--show-target-hash", "//:cxxlib");
     ternary.runBuckCommand("targets", "--show-target-hash", "//:cxxlib2");
 
-    ProjectWorkspace.ProcessResult result = primary.runBuckBuild("//:cxxbinary");
+    ProcessResult result = primary.runBuckBuild("//:cxxbinary");
     result.assertSuccess();
   }
 
@@ -286,7 +284,7 @@ public class InterCellIntegrationTest {
     ProjectWorkspace primary = cells.getFirst();
 
     String systemBootclasspath = System.getProperty("sun.boot.class.path");
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         primary.runBuckBuild(
             "//:java-binary",
             "--config",
@@ -429,7 +427,7 @@ public class InterCellIntegrationTest {
     mainRepo.setUp();
     Path primary = mainRepo.getPath("primary");
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         mainRepo.runBuckCommandWithEnvironmentOverridesAndContext(
             primary, Optional.empty(), ImmutableMap.of(), "build", "//:bin");
 
@@ -458,8 +456,7 @@ public class InterCellIntegrationTest {
               + "This error happened while trying to get dependency 'secondary//:cxxlib' of target '//:cxxbinary'");
     }
 
-    ProjectWorkspace.ProcessResult result =
-        primary.runBuckBuild("--config", "secondary//cxx.cc=", "//:cxxbinary");
+    ProcessResult result = primary.runBuckBuild("--config", "secondary//cxx.cc=", "//:cxxbinary");
 
     result.assertSuccess();
   }
@@ -484,8 +481,7 @@ public class InterCellIntegrationTest {
       assertEquals(expected.getMessage(), "Overridden cxx:cc path not found: /does/not/exist");
     }
 
-    ProjectWorkspace.ProcessResult result =
-        primary.runBuckBuild("--config", "cxx.cc=", "//:cxxbinary");
+    ProcessResult result = primary.runBuckBuild("--config", "cxx.cc=", "//:cxxbinary");
 
     result.assertSuccess();
   }
@@ -525,7 +521,7 @@ public class InterCellIntegrationTest {
     TestDataHelper.overrideBuckconfig(
         workspace, ImmutableMap.of("cxx", ImmutableMap.of("gtest_dep", "//gtest:gtest")));
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//test:cxxtest");
+    ProcessResult result = workspace.runBuckBuild("//test:cxxtest");
     result.assertSuccess();
 
     result = workspace.runBuckCommand("test", "//test:cxxtest");
@@ -543,7 +539,7 @@ public class InterCellIntegrationTest {
     TestDataHelper.overrideBuckconfig(
         secondary, ImmutableMap.of("cxx", ImmutableMap.of("gtest_dep", "//gtest:gtest")));
 
-    ProjectWorkspace.ProcessResult result = primary.runBuckBuild("secondary//test:cxxtest");
+    ProcessResult result = primary.runBuckBuild("secondary//test:cxxtest");
     result.assertSuccess();
 
     result = primary.runBuckCommand("test", "secondary//test:cxxtest");
@@ -571,7 +567,7 @@ public class InterCellIntegrationTest {
 
     // TODO(mzlee,dwh): //test:cxxtest should be able to safely depend on
     // secondary//lib:cxxlib instead of having its own copy
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         primary.runBuckCommand("test", "//test:cxxtest", "secondary//test:cxxtest");
     result.assertSuccess();
   }
@@ -596,7 +592,7 @@ public class InterCellIntegrationTest {
 
     // and succeeds when it is
     registerCell(root, "third", third);
-    ProjectWorkspace.ProcessResult result = root.runBuckBuild("//:dummy");
+    ProcessResult result = root.runBuckBuild("//:dummy");
     result.assertSuccess();
   }
 
@@ -623,7 +619,7 @@ public class InterCellIntegrationTest {
 
     // and succeeds when it is
     registerCell(root, "third", third);
-    ProjectWorkspace.ProcessResult result = root.runBuckBuild("//:dummy");
+    ProcessResult result = root.runBuckBuild("//:dummy");
     result.assertSuccess();
   }
 
@@ -636,7 +632,7 @@ public class InterCellIntegrationTest {
     ProjectWorkspace primary = cells.getFirst();
 
     String target = "//apps/sample:app_with_cross_cell_android_lib";
-    ProjectWorkspace.ProcessResult result = primary.runBuckCommand("build", target);
+    ProcessResult result = primary.runBuckCommand("build", target);
     result.assertSuccess();
   }
 

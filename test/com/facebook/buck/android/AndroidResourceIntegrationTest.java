@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -46,7 +47,7 @@ public class AndroidResourceIntegrationTest {
 
   @Test
   public void testOnlyUsesFirstOrderResources() throws IOException {
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//res1:res");
+    ProcessResult result = workspace.runBuckBuild("//res1:res");
     result.assertFailure();
     assertTrue(result.getStderr().contains("The following resources were not found"));
     assertTrue(result.getStderr().contains("another_name"));

@@ -27,6 +27,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -56,7 +57,7 @@ public class ParserIntegrationTest {
     BuildTarget target = workspace.newBuildTarget("//:base_genrule");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
-    ProjectWorkspace.ProcessResult buildResult = workspace.runBuckCommand("build", "", "-v", "2");
+    ProcessResult buildResult = workspace.runBuckCommand("build", "", "-v", "2");
     buildResult.assertSuccess();
 
     workspace.verify(
@@ -142,7 +143,7 @@ public class ParserIntegrationTest {
             this, "not_allow_empty_glob", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//:root_module");
+    ProcessResult result = workspace.runBuckCommand("build", "//:root_module");
     result.assertExitCode(
         "buck build should fail on empty glob results when set in config", ExitCode.PARSE_ERROR);
     assertThat(
@@ -160,7 +161,7 @@ public class ParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "allow_empty_glob", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//:root_module");
+    ProcessResult result = workspace.runBuckCommand("build", "//:root_module");
     result.assertSuccess("buck build should ignore empty glob results by default");
   }
 
@@ -170,7 +171,7 @@ public class ParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "glob_ignores", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//:root_module");
+    ProcessResult result = workspace.runBuckCommand("build", "//:root_module");
     result.assertExitCode("glob should be empty because of ignores", ExitCode.PARSE_ERROR);
     assertThat(
         "error message for failure to return results from glob is incorrect",
@@ -186,7 +187,7 @@ public class ParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "build_file_name", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("targets", "//:root");
+    ProcessResult result = workspace.runBuckCommand("targets", "//:root");
     result.assertSuccess("buck should parse build files with a different name");
     assertEquals("//:root\n", result.getStdout());
   }
@@ -197,7 +198,7 @@ public class ParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "missing_name", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("targets", "//...");
+    ProcessResult result = workspace.runBuckCommand("targets", "//...");
     result.assertExitCode("missing attribute should error", ExitCode.PARSE_ERROR);
     assertThat(result.getStderr(), containsString("genrule"));
     assertThat(result.getStderr(), containsString("name"));
@@ -209,7 +210,7 @@ public class ParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "missing_attr", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("targets", "//:gr");
+    ProcessResult result = workspace.runBuckCommand("targets", "//:gr");
     result.assertExitCode("missing name should error", ExitCode.PARSE_ERROR);
     assertThat(result.getStderr(), containsString("genrule"));
     assertThat(result.getStderr(), containsString("gr"));
@@ -222,7 +223,7 @@ public class ParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "extra_attr", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("targets", "//:gr");
+    ProcessResult result = workspace.runBuckCommand("targets", "//:gr");
     result.assertExitCode("extra attr should error", ExitCode.PARSE_ERROR);
     assertThat(result.getStderr(), containsString("genrule"));
     assertThat(result.getStderr(), containsString("gr"));

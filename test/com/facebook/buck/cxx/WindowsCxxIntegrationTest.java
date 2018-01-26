@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -52,8 +53,7 @@ public class WindowsCxxIntegrationTest {
 
   @Test
   public void simpleBinary64() throws IOException {
-    ProjectWorkspace.ProcessResult runResult =
-        workspace.runBuckCommand("run", "//app:hello#windows-x86_64");
+    ProcessResult runResult = workspace.runBuckCommand("run", "//app:hello#windows-x86_64");
     runResult.assertSuccess();
     assertThat(runResult.getStdout(), Matchers.containsString("The process is 64bits"));
     assertThat(
@@ -62,15 +62,14 @@ public class WindowsCxxIntegrationTest {
 
   @Test
   public void simpleBinaryWithLib() throws IOException {
-    ProjectWorkspace.ProcessResult runResult =
-        workspace.runBuckCommand("run", "//app_lib:app_lib#windows-x86_64");
+    ProcessResult runResult = workspace.runBuckCommand("run", "//app_lib:app_lib#windows-x86_64");
     runResult.assertSuccess();
     assertThat(runResult.getStdout(), Matchers.containsString("BUCK ON WINDOWS"));
   }
 
   @Test
   public void simpleBinaryIsExecutableByCmd() throws IOException {
-    ProjectWorkspace.ProcessResult runResult = workspace.runBuckCommand("build", "//app:log");
+    ProcessResult runResult = workspace.runBuckCommand("build", "//app:log");
     runResult.assertSuccess();
     Path outputPath = workspace.resolve("buck-out/gen/app/log/log.txt");
     assertThat(
@@ -80,14 +79,14 @@ public class WindowsCxxIntegrationTest {
 
   @Test
   public void simpleBinaryInDevConsole() throws IOException, InterruptedException {
-    ProjectWorkspace.ProcessResult amd64RunResult =
+    ProcessResult amd64RunResult =
         workspace.runBuckCommand(getDevConsoleEnv("amd64"), "run", "d//app:hello#windows-x86_64");
     amd64RunResult.assertSuccess();
     assertThat(amd64RunResult.getStdout(), Matchers.containsString("The process is 64bits"));
     assertThat(
         amd64RunResult.getStdout(), Matchers.not(Matchers.containsString("The process is WOW64")));
 
-    ProjectWorkspace.ProcessResult x86RunResult =
+    ProcessResult x86RunResult =
         workspace.runBuckCommand(getDevConsoleEnv("x86"), "run", "d//app:hello#windows-x86_64");
     x86RunResult.assertSuccess();
     assertThat(x86RunResult.getStdout(), Matchers.containsString("The process is 64bits"));
@@ -96,12 +95,12 @@ public class WindowsCxxIntegrationTest {
 
   @Test
   public void librariesInDevConsole() throws IOException, InterruptedException {
-    ProjectWorkspace.ProcessResult staticLibResult =
+    ProcessResult staticLibResult =
         workspace.runBuckCommand(
             getDevConsoleEnv("amd64"), "build", "d//lib:lib#windows-x86_64,static");
     staticLibResult.assertSuccess();
 
-    ProjectWorkspace.ProcessResult sharedLibResult =
+    ProcessResult sharedLibResult =
         workspace.runBuckCommand(
             getDevConsoleEnv("amd64"), "build", "d//lib:lib#windows-x86_64,shared");
     sharedLibResult.assertSuccess();
@@ -109,20 +108,18 @@ public class WindowsCxxIntegrationTest {
 
   @Test
   public void simpleBinaryWithDll() throws IOException {
-    ProjectWorkspace.ProcessResult libResult =
+    ProcessResult libResult =
         workspace.runBuckCommand("build", "//implib:implib#windows-x86_64,shared");
     libResult.assertSuccess();
 
-    ProjectWorkspace.ProcessResult appResult =
+    ProcessResult appResult =
         workspace.runBuckCommand("build", "//implib_usage:app#windows-x86_64");
     appResult.assertSuccess();
 
-    ProjectWorkspace.ProcessResult runResult =
-        workspace.runBuckCommand("run", "//implib_usage:app#windows-x86_64");
+    ProcessResult runResult = workspace.runBuckCommand("run", "//implib_usage:app#windows-x86_64");
     runResult.assertSuccess();
 
-    ProjectWorkspace.ProcessResult logResult =
-        workspace.runBuckCommand("build", "//implib_usage:log");
+    ProcessResult logResult = workspace.runBuckCommand("build", "//implib_usage:log");
     logResult.assertSuccess();
     Path outputPath = workspace.resolve("buck-out/gen/implib_usage/log/log.txt");
     assertThat(workspace.getFileContents(outputPath), Matchers.containsString("a + (a * b)"));

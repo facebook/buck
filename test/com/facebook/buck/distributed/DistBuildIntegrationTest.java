@@ -24,6 +24,7 @@ import com.facebook.buck.distributed.thrift.FrontendResponse;
 import com.facebook.buck.distributed.thrift.ReportCoordinatorAliveResponse;
 import com.facebook.buck.distributed.thrift.SetFinalBuildStatusResponse;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.FakeFrontendHttpServer;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -139,7 +140,7 @@ public class DistBuildIntegrationTest {
     return sourceWorkspace;
   }
 
-  private static ProjectWorkspace.ProcessResult runDistBuildWithFakeFrontend(
+  private static ProcessResult runDistBuildWithFakeFrontend(
       ProjectWorkspace workspace, String... args) throws IOException {
     List<String> argsList = Lists.newArrayList(args);
     try (Server frontendServer = new Server()) {

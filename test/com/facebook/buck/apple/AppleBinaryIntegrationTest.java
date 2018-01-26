@@ -40,6 +40,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -463,8 +464,7 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_binary_with_library_dependency_builds_something", tmp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult buildResult =
-        workspace.runBuckCommand("build", "//Apps/TestApp:BadTestApp");
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//Apps/TestApp:BadTestApp");
     buildResult.assertFailure();
     String stderr = buildResult.getStderr();
     assertTrue(stderr.contains("bad-flag"));
@@ -483,8 +483,7 @@ public class AppleBinaryIntegrationTest {
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance(
             "//Apps/TestApp:TestApp#default," + CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", buildTarget.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", buildTarget.getFullyQualifiedName());
     result.assertSuccess();
 
     Path projectRoot = tmp.getRoot().toRealPath();
@@ -533,8 +532,7 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_xcode_error", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult buildResult =
-        workspace.runBuckCommand("build", "//Apps/TestApp:TestApp");
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//Apps/TestApp:TestApp");
     buildResult.assertFailure();
     String stderr = buildResult.getStderr();
 
@@ -556,12 +554,12 @@ public class AppleBinaryIntegrationTest {
     BuildTarget target =
         BuildTargetFactory.newInstance("//Apps/TestApp:TestApp")
             .withAppendedFlavors(InternalFlavor.of("iphonesimulator-x86_64"));
-    ProjectWorkspace.ProcessResult first =
+    ProcessResult first =
         workspace.runBuckCommand(
             workspace.getPath("first"), "build", target.getFullyQualifiedName());
     first.assertSuccess();
 
-    ProjectWorkspace.ProcessResult second =
+    ProcessResult second =
         workspace.runBuckCommand(
             workspace.getPath("second"), "build", target.getFullyQualifiedName());
     second.assertSuccess();
@@ -594,12 +592,12 @@ public class AppleBinaryIntegrationTest {
     BuildTarget target =
         BuildTargetFactory.newInstance(
             "//Apps/TestApp:TestApp#iphonesimulator-x86_64," + debugFormat.getFlavor().getName());
-    ProjectWorkspace.ProcessResult first =
+    ProcessResult first =
         workspace.runBuckCommand(
             workspace.getPath("first"), "build", target.getFullyQualifiedName());
     first.assertSuccess();
 
-    ProjectWorkspace.ProcessResult second =
+    ProcessResult second =
         workspace.runBuckCommand(
             workspace.getPath("second"), "build", target.getFullyQualifiedName());
     second.assertSuccess();
@@ -1112,8 +1110,7 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "empty_source_targets", tmp);
     workspace.setUp();
     BuildTarget target = workspace.newBuildTarget("//:real-none2#macosx-x86_64");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("run", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("run", target.getFullyQualifiedName());
     result.assertSuccess();
     Assert.assertThat(result.getStdout(), equalTo("Hello"));
   }
@@ -1132,7 +1129,7 @@ public class AppleBinaryIntegrationTest {
     BuildTarget target = workspace.newBuildTarget("//:binary");
 
     // Populate the cache and then reset the build log
-    ProjectWorkspace.ProcessResult cachePopulatingResult =
+    ProcessResult cachePopulatingResult =
         workspace.runBuckCommand("build", target.getFullyQualifiedName());
     cachePopulatingResult.assertSuccess();
 
@@ -1141,8 +1138,7 @@ public class AppleBinaryIntegrationTest {
 
     // Now do the actual test - modify a file, do a build again, and confirm it rebuilt our swift
     workspace.copyFile("producer.h.new", "producer.h");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     workspace

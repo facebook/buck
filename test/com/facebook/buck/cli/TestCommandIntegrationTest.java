@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.PropertySaver;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -71,7 +72,7 @@ public class TestCommandIntegrationTest {
     workspace.setUp();
 
     try (PropertySaver saver = new PropertySaver(getCodeCoverageProperties())) {
-      ProjectWorkspace.ProcessResult result =
+      ProcessResult result =
           workspace.runBuckCommand(
               "test", "--code-coverage", "--code-coverage-format", "CSV", "//test:simple_test");
       result.assertSuccess();
@@ -87,7 +88,7 @@ public class TestCommandIntegrationTest {
     workspace.setUp();
 
     try (PropertySaver saver = new PropertySaver(getCodeCoverageProperties())) {
-      ProjectWorkspace.ProcessResult result =
+      ProcessResult result =
           workspace.runBuckCommand(
               "test", "--code-coverage", "--code-coverage-format", "HTML", "//test:simple_test");
 
@@ -106,7 +107,7 @@ public class TestCommandIntegrationTest {
     workspace.setUp();
 
     try (PropertySaver saver = new PropertySaver(getCodeCoverageProperties())) {
-      ProjectWorkspace.ProcessResult result =
+      ProcessResult result =
           workspace.runBuckCommand(
               "test", "--code-coverage", "--code-coverage-format", "XML", "//test:simple_test");
 

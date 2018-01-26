@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -49,7 +50,7 @@ public class GenAidlIntegrationTest {
     workspace.enableDirCache();
 
     // Populate the cache
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:android-lib");
+    ProcessResult result = workspace.runBuckBuild("//:android-lib");
     result.assertSuccess();
     result = workspace.runBuckCommand("clean", "--keep-cache");
     result.assertSuccess();

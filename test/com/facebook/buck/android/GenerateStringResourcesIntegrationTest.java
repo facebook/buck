@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -79,8 +80,7 @@ public class GenerateStringResourcesIntegrationTest {
       throws InterruptedException, IOException {
     // TODO(dreiss): Remove this when aapt2 is everywhere.
     AssumeAndroidPlatform.assumeSdkIsAvailable();
-    ProjectWorkspace.ProcessResult foundAapt2 =
-        workspace.runBuckBuild("//apps/sample:check_for_aapt2");
+    ProcessResult foundAapt2 = workspace.runBuckBuild("//apps/sample:check_for_aapt2");
     Assume.assumeTrue(foundAapt2.getExitCode().getCode() == 0);
     String buildTarget =
         String.format(

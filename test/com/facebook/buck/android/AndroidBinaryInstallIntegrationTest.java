@@ -26,6 +26,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -637,8 +638,7 @@ public class AndroidBinaryInstallIntegrationTest {
                     .setDirectory(filesystem.getRootPath())
                     .build());
     assertEquals(result.getMessageForUnexpectedResult("File generation"), result.getExitCode(), 0);
-    ProjectWorkspace.ProcessResult installResult =
-        projectWorkspace.runBuckCommand("install", BINARY_TARGET);
+    ProcessResult installResult = projectWorkspace.runBuckCommand("install", BINARY_TARGET);
     installResult.assertSuccess();
     installLimiter.assertExpectedInstallsAreConsumed();
   }

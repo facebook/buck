@@ -32,6 +32,7 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -61,8 +62,7 @@ public class SwiftTestIOSIntegrationTest {
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = workspace.newBuildTarget("//:MixedTest#iphonesimulator-x86_64");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("test", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("test", target.getFullyQualifiedName());
     result.assertSuccess();
 
     Path binaryOutput =

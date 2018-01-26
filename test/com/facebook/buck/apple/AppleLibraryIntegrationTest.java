@@ -36,6 +36,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -66,8 +67,7 @@ public class AppleLibraryIntegrationTest {
 
     BuildTarget target =
         BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary#static,default");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))));
@@ -87,8 +87,7 @@ public class AppleLibraryIntegrationTest {
 
     BuildTarget target =
         BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary#static,default");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))));
@@ -108,8 +107,7 @@ public class AppleLibraryIntegrationTest {
 
     BuildTarget target =
         BuildTargetFactory.newInstance("//Libraries/TestLibrary2:TestLibrary2#static,default");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))));
@@ -132,8 +130,7 @@ public class AppleLibraryIntegrationTest {
     workspace.addBuckConfigLocalOption("defaults.apple_library", "type", "shared");
 
     BuildTarget target = BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     BuildTarget implicitTarget =
@@ -157,8 +154,7 @@ public class AppleLibraryIntegrationTest {
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     BuildTarget implicitTarget =
@@ -181,8 +177,7 @@ public class AppleLibraryIntegrationTest {
 
     BuildTarget target =
         BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary#watchos-armv7k,static");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))));
@@ -203,8 +198,7 @@ public class AppleLibraryIntegrationTest {
     BuildTarget target =
         BuildTargetFactory.newInstance(
             "//Libraries/TestLibrary:TestLibrary#watchsimulator-i386,static");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))));
@@ -224,8 +218,7 @@ public class AppleLibraryIntegrationTest {
     BuildTarget target =
         BuildTargetFactory.newInstance(
             "//Libraries/TestLibrary:TestLibrary#appletvos-arm64,static");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))));
@@ -246,8 +239,7 @@ public class AppleLibraryIntegrationTest {
     BuildTarget target =
         BuildTargetFactory.newInstance(
             "//Libraries/TestLibrary:TestLibrary#appletvsimulator-x86_64,static");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))));
@@ -268,8 +260,7 @@ public class AppleLibraryIntegrationTest {
 
     BuildTarget target =
         BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary#static,macosx-x86_64");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))));
@@ -292,8 +283,7 @@ public class AppleLibraryIntegrationTest {
             "//Libraries/TestLibrary:TestLibrary#"
                 + "default,"
                 + CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", buildTarget.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", buildTarget.getFullyQualifiedName());
     result.assertSuccess();
 
     Path inputPath = workspace.getPath(buildTarget.getBasePath()).toRealPath();
@@ -322,8 +312,7 @@ public class AppleLibraryIntegrationTest {
     BuildTarget target =
         BuildTargetFactory.newInstance(
             "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64,no-debug");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     Path frameworkPath =
@@ -358,8 +347,7 @@ public class AppleLibraryIntegrationTest {
     BuildTarget target =
         BuildTargetFactory.newInstance(
             "//Libraries/TestLibrary:TestLibrary#framework,iphonesimulator-x86_64,no-debug");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     Path frameworkPath =
@@ -395,8 +383,7 @@ public class AppleLibraryIntegrationTest {
                 "//Libraries/TestLibrary:TestLibrary#macosx-x86_64,macosx-i386")
             .withAppendedFlavors(
                 AppleDescriptions.FRAMEWORK_FLAVOR, AppleDebugFormat.NONE.getFlavor());
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     Path frameworkPath =
@@ -428,7 +415,7 @@ public class AppleLibraryIntegrationTest {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "build",
             "//Libraries/TestLibrary:TestLibrary#dwarf-and-dsym,framework,macosx-x86_64",
@@ -463,7 +450,7 @@ public class AppleLibraryIntegrationTest {
             .withAppendedFlavors(
                 InternalFlavor.of("macosx-x86_64"), CxxDescriptionEnhancer.SHARED_FLAVOR);
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "build", target.getFullyQualifiedName(), "--config", "cxx.cflags=-g");
     result.assertSuccess();
@@ -490,7 +477,7 @@ public class AppleLibraryIntegrationTest {
                 AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
                 InternalFlavor.of("macosx-x86_64"));
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "build", target.getFullyQualifiedName(), "--config", "cxx.cflags=-g");
     result.assertSuccess();
@@ -524,8 +511,7 @@ public class AppleLibraryIntegrationTest {
     BuildTarget target =
         BuildTargetFactory.newInstance(
             "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     Path frameworkPath =
@@ -568,8 +554,7 @@ public class AppleLibraryIntegrationTest {
     BuildTarget target =
         BuildTargetFactory.newInstance(
             "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     Path frameworkPath =
@@ -604,8 +589,7 @@ public class AppleLibraryIntegrationTest {
         BuildTargetFactory.newInstance(
             "//Libraries/TestLibrary:TestLibrary#"
                 + "dwarf-and-dsym,framework,macosx-x86_64,no-include-frameworks");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     Path frameworkPath =
@@ -639,8 +623,7 @@ public class AppleLibraryIntegrationTest {
             .withAppendedFlavors(
                 CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
                 HeaderMode.SYMLINK_TREE_ONLY.getFlavor());
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", buildTarget.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", buildTarget.getFullyQualifiedName());
     result.assertSuccess();
 
     Path inputPath = workspace.getPath(buildTarget.getBasePath()).toRealPath();
@@ -665,12 +648,12 @@ public class AppleLibraryIntegrationTest {
     BuildTarget target =
         BuildTargetFactory.newInstance(
             "//Libraries/TestLibrary:TestLibrary#static,iphonesimulator-x86_64");
-    ProjectWorkspace.ProcessResult first =
+    ProcessResult first =
         workspace.runBuckCommand(
             workspace.getPath("first"), "build", target.getFullyQualifiedName());
     first.assertSuccess();
 
-    ProjectWorkspace.ProcessResult second =
+    ProcessResult second =
         workspace.runBuckCommand(
             workspace.getPath("second"), "build", target.getFullyQualifiedName());
     second.assertSuccess();
@@ -705,8 +688,7 @@ public class AppleLibraryIntegrationTest {
         workspace
             .newBuildTarget("//:real-none#iphonesimulator-x86_64")
             .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR);
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     ProjectFilesystem filesystem =
@@ -725,8 +707,7 @@ public class AppleLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "precompiled_header", tmp);
     workspace.setUp();
     BuildTarget target = workspace.newBuildTarget("//:library#iphonesimulator-x86_64,static");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
   }
 
@@ -739,8 +720,7 @@ public class AppleLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "multicell_precompiled_header", tmp);
     workspace.setUp();
     BuildTarget target = workspace.newBuildTarget("//:library#iphonesimulator-x86_64,static");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
   }
 
@@ -756,8 +736,7 @@ public class AppleLibraryIntegrationTest {
         workspace
             .newBuildTarget("//:none-swift#iphonesimulator-x86_64")
             .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR);
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
     ProjectFilesystem filesystem =
@@ -826,8 +805,7 @@ public class AppleLibraryIntegrationTest {
         workspace
             .newBuildTarget(String.format("//:%s#macosx-x86_64", dylibTargetName))
             .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR);
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", dylibTarget.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", dylibTarget.getFullyQualifiedName());
     result.assertSuccess();
 
     ProjectFilesystem filesystem =
@@ -861,8 +839,7 @@ public class AppleLibraryIntegrationTest {
             this, "import_current_module_via_bridging_header", tmp);
     workspace.setUp();
     BuildTarget target = workspace.newBuildTarget("//:Greeter");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
   }
 

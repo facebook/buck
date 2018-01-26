@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.log.LogFormatter;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -299,7 +300,7 @@ public class DiffRuleKeysScriptIntegrationTest {
   private void invokeBuckCommand(
       ProjectWorkspace workspace, ImmutableList<String> targets, String logOut) throws IOException {
     ImmutableList<String> args = ImmutableList.of("targets", "--show-rulekey");
-    ProjectWorkspace.ProcessResult buckCommandResult =
+    ProcessResult buckCommandResult =
         workspace.runBuckCommand(
             Stream.concat(args.stream(), targets.stream()).toArray(String[]::new));
 

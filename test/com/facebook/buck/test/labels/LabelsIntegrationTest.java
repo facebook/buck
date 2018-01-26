@@ -19,6 +19,7 @@ package com.facebook.buck.test.labels;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -98,14 +99,14 @@ public class LabelsIntegrationTest {
   }
 
   private void assertTestsFail(String... args) throws IOException {
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(args);
+    ProcessResult result = workspace.runBuckCommand(args);
     result.assertTestFailure();
     assertThat(result.getStderr(), containsString("Earth should be flat!"));
     assertThat(result.getStderr(), containsString("TESTS FAILED: 1 FAILURE"));
   }
 
   private void assertTestsPass(String... args) throws IOException {
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(args);
+    ProcessResult result = workspace.runBuckCommand(args);
     result.assertSuccess();
     assertThat(result.getStderr(), containsString("TESTS PASSED"));
   }
