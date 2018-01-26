@@ -36,7 +36,6 @@ IO_SRCS = [
     "DefaultFilteredDirectoryCopier.java",
     "DirectoryCleaner.java",
     "FilteredDirectoryCopier.java",
-    "LineIterating.java",
     "ListeningCharsetDecoder.java",
     "ListeningCharsetEncoder.java",
     "PkillProcessManager.java",
