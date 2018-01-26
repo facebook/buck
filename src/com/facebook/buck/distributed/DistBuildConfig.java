@@ -105,6 +105,10 @@ public class DistBuildConfig {
       "slow_heartbeat_warning_threshold_millis";
   private static final long DEFAULT_SLOW_HEARTBEAT_WARNING_THRESHOLD_MILLIS = 15000;
 
+  // Max number of threads used for fetching build statuses, sending requests to frontend etc.
+  private static final String CONTROLLER_MAX_THREAD_COUNT = "controller_max_thread_count";
+  private static final int DEFAULT_CONTROLLER_MAX_THREAD_COUNT = 20;
+
   private static final String MAX_MINION_SILENCE_MILLIS = "max_minion_silence_millis";
   private static final long DEFAULT_MAX_MINION_SILENCE_MILLIS = TimeUnit.SECONDS.toMillis(30);
 
@@ -301,6 +305,12 @@ public class DistBuildConfig {
     return buckConfig
         .getLong(STAMPEDE_SECTION, FRONTEND_REQUEST_RETRY_INTERVAL_MILLIS)
         .orElse(DEFAULT_FRONTEND_REQUEST_RETRY_INTERVAL_MILLIS);
+  }
+
+  public int getControllerMaxThreadCount() {
+    return buckConfig
+        .getInteger(STAMPEDE_SECTION, CONTROLLER_MAX_THREAD_COUNT)
+        .orElse(DEFAULT_CONTROLLER_MAX_THREAD_COUNT);
   }
 
   /** @return Ratio of available build capacity that should be used by coordinator */

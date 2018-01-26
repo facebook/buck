@@ -50,7 +50,6 @@ import com.facebook.buck.rules.ParallelRuleKeyCalculator;
 import com.facebook.buck.rules.RemoteBuildRuleCompletionNotifier;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.types.Pair;
@@ -180,7 +179,7 @@ public class BuildPhase {
   }
 
   private void runLocalCoordinatorAsync(
-      WeightedListeningExecutorService executorService,
+      ListeningExecutorService executorService,
       StampedeId stampedeId,
       InvocationInfo invocationInfo,
       ListenableFuture<ParallelRuleKeyCalculator<RuleKey>> localRuleKeyCalculator) {
@@ -246,7 +245,7 @@ public class BuildPhase {
 
   /** Run the build while updating the console messages. */
   public BuildResult runDistBuildAndUpdateConsoleStatus(
-      WeightedListeningExecutorService executorService,
+      ListeningExecutorService executorService,
       EventSender eventSender,
       StampedeId stampedeId,
       BuildMode buildMode,

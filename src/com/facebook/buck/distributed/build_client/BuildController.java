@@ -26,10 +26,10 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.ParallelRuleKeyCalculator;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -91,7 +91,7 @@ public class BuildController {
 
   /** Executes the tbuild and prints failures to the event bus. */
   public ExecutionResult executeAndPrintFailuresToEventBus(
-      WeightedListeningExecutorService executorService,
+      ListeningExecutorService executorService,
       ProjectFilesystem projectFilesystem,
       FileHashCache fileHashCache,
       BuckEventBus eventBus,
