@@ -158,9 +158,11 @@ public class JsBundleGenruleDescription
       TargetNode<JsBundleGenruleDescriptionArg, ?> targetNode,
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver) {
-    JsBundleGenrule genrule =
-        resolver.getRuleWithType(targetNode.getBuildTarget(), JsBundleGenrule.class);
-    JsBundleDescription.addAppleBundleResources(builder, genrule);
+    if (!targetNode.getConstructorArg().getSkipResources()) {
+      JsBundleGenrule genrule =
+          resolver.getRuleWithType(targetNode.getBuildTarget(), JsBundleGenrule.class);
+      JsBundleDescription.addAppleBundleResources(builder, genrule);
+    }
   }
 
   @Override
@@ -189,6 +191,11 @@ public class JsBundleGenruleDescription
 
     @Value.Default
     default boolean getRewriteMisc() {
+      return false;
+    }
+
+    @Value.Default
+    default boolean getSkipResources() {
       return false;
     }
 

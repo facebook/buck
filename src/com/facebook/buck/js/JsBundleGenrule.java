@@ -53,6 +53,7 @@ public class JsBundleGenrule extends Genrule
   @AddToRuleKey final SourcePath jsBundleSourcePath;
   @AddToRuleKey final boolean rewriteSourcemap;
   @AddToRuleKey final boolean rewriteMisc;
+  @AddToRuleKey final boolean skipResources;
   private final JsBundleOutputs jsBundle;
 
   public JsBundleGenrule(
@@ -89,9 +90,10 @@ public class JsBundleGenrule extends Genrule
         androidNdk,
         androidSdkLocation);
     this.jsBundle = jsBundle;
-    jsBundleSourcePath = jsBundle.getSourcePathToOutput();
+    this.jsBundleSourcePath = jsBundle.getSourcePathToOutput();
     this.rewriteSourcemap = args.getRewriteSourcemap();
     this.rewriteMisc = args.getRewriteMisc();
+    this.skipResources = args.getSkipResources();
   }
 
   @Override
@@ -208,14 +210,16 @@ public class JsBundleGenrule extends Genrule
 
   @Override
   public Iterable<AndroidPackageable> getRequiredPackageables() {
-    return jsBundle instanceof AndroidPackageable
+    return !this.skipResources && jsBundle instanceof AndroidPackageable
         ? ((AndroidPackageable) jsBundle).getRequiredPackageables()
         : ImmutableList.of();
   }
 
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
-    collector.addAssetsDirectory(getBuildTarget(), getSourcePathToOutput());
+    if (!this.skipResources) {
+      collector.addAssetsDirectory(getBuildTarget(), getSourcePathToOutput());
+    }
   }
 
   @Override

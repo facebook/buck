@@ -88,6 +88,10 @@ public class JsBundleGenruleDescriptionTest {
     setUpWithOptions(builderOptions().rewriteMisc(), extraFlavors);
   }
 
+  private void setupWithSkipResources(Flavor... extraFlavors) {
+    setUpWithOptions(builderOptions().skipResources(), extraFlavors);
+  }
+
   private void setUpWithOptions(JsBundleGenruleBuilder.Options options, Flavor... extraFlavors) {
     JsTestScenario scenario =
         JsTestScenario.builder().bundleWithDeps(options.jsBundle).bundleGenrule(options).build();
@@ -243,8 +247,19 @@ public class JsBundleGenruleDescriptionTest {
     AndroidPackageableCollector collector = EasyMock.createMock(AndroidPackageableCollector.class);
     expect(
             collector.addAssetsDirectory(
-                setup.rule().getBuildTarget(), setup.rule().getSourcePathToOutput()))
+                setup.rule().getBuildTarget(), setup.genrule().getSourcePathToOutput()))
         .andReturn(collector);
+    replay(collector);
+    setup.genrule().addToCollector(collector);
+    verify(collector);
+  }
+
+  @Test
+  public void doesNotExposePackageablesWithSkipResources() {
+    setupWithSkipResources(JsFlavors.ANDROID);
+
+    assertEquals(ImmutableList.of(), setup.genrule().getRequiredPackageables());
+    AndroidPackageableCollector collector = EasyMock.createMock(AndroidPackageableCollector.class);
     replay(collector);
     setup.genrule().addToCollector(collector);
     verify(collector);
@@ -272,6 +287,23 @@ public class JsBundleGenruleDescriptionTest {
                 setup.genrule().getSourcePathToOutput(),
                 setup.jsBundle().getSourcePathToResources())
             .build();
+    assertEquals(expected, genruleBuilder.build());
+  }
+
+  @Test
+  public void addAppleBundleResourcesExposesNothingWithSkipResources() {
+    setupWithSkipResources();
+
+    AppleBundleResources.Builder genruleBuilder = AppleBundleResources.builder();
+    new JsBundleGenruleDescription(
+            new ToolchainProviderBuilder().build(), new NoSandboxExecutionStrategy())
+        .addAppleBundleResources(
+            genruleBuilder,
+            setup.targetNode(),
+            setup.rule().getProjectFilesystem(),
+            setup.resolver());
+
+    AppleBundleResources expected = AppleBundleResources.builder().build();
     assertEquals(expected, genruleBuilder.build());
   }
 
