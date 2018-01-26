@@ -204,13 +204,6 @@ abstract class AbstractCxxSourceRuleFactory {
             .stream()
             .flatMap(input -> input.getIncludes().stream())
             .collect(ImmutableList.toImmutableList());
-    if (!CxxHeadersExperiment.runExperiment()) {
-      try {
-        CxxHeaders.checkConflictingHeaders(result);
-      } catch (CxxHeaders.ConflictingHeadersException e) {
-        throw e.getHumanReadableExceptionForBuildTarget(getBaseBuildTarget());
-      }
-    }
     return result;
   }
 

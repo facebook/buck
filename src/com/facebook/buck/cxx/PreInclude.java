@@ -254,14 +254,6 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
   /** @return newly-built delegate for this PCH build (if precompiling enabled) */
   protected PreprocessorDelegate buildPreprocessorDelegate(
       CxxPlatform cxxPlatform, Preprocessor preprocessor, CxxToolFlags preprocessorFlags) {
-    if (!CxxHeadersExperiment.runExperiment()) {
-      ImmutableList<CxxHeaders> includes = getIncludes(cxxPlatform);
-      try {
-        CxxHeaders.checkConflictingHeaders(includes);
-      } catch (CxxHeaders.ConflictingHeadersException e) {
-        throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
-      }
-    }
     return new PreprocessorDelegate(
         pathResolver,
         cxxPlatform.getCompilerDebugPathSanitizer(),

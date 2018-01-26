@@ -26,7 +26,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.ActionGraphParallelizationMode;
-import com.facebook.buck.cxx.CxxHeadersExperiment;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -316,8 +315,7 @@ public class ActionGraphCacheTest {
               .filter(ExperimentEvent.class)
               .filter(
                   event ->
-                      !(event.getEventName().equals(CxxSymlinkTreeHeadersExperiment.EXPERIMENT_NAME)
-                          || event.getEventName().equals(CxxHeadersExperiment.EXPERIMENT_NAME)))
+                      !event.getEventName().equals(CxxSymlinkTreeHeadersExperiment.EXPERIMENT_NAME))
               .collect(Collectors.toList());
       assertThat(
           "No experiment event is logged if not in experiment mode", experimentEvents, empty());
@@ -338,8 +336,7 @@ public class ActionGraphCacheTest {
             .filter(ExperimentEvent.class)
             .filter(
                 event ->
-                    !(event.getEventName().equals(CxxSymlinkTreeHeadersExperiment.EXPERIMENT_NAME)
-                        || event.getEventName().equals(CxxHeadersExperiment.EXPERIMENT_NAME)))
+                    !event.getEventName().equals(CxxSymlinkTreeHeadersExperiment.EXPERIMENT_NAME))
             .collect(Collectors.toList());
     assertThat(
         "EXPERIMENT mode should log either enabled or disabled.",
@@ -364,8 +361,7 @@ public class ActionGraphCacheTest {
             .filter(ExperimentEvent.class)
             .filter(
                 event ->
-                    !(event.getEventName().equals(CxxSymlinkTreeHeadersExperiment.EXPERIMENT_NAME)
-                        || event.getEventName().equals(CxxHeadersExperiment.EXPERIMENT_NAME)))
+                    !event.getEventName().equals(CxxSymlinkTreeHeadersExperiment.EXPERIMENT_NAME))
             .collect(Collectors.toList());
     assertThat(
         "EXPERIMENT mode should log either enabled or disabled.",

@@ -155,12 +155,10 @@ class CxxPrecompiledHeader extends AbstractBuildRule
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    if (CxxHeadersExperiment.runExperiment()) {
-      try {
-        CxxHeaders.checkConflictingHeaders(preprocessorDelegate.getCxxIncludePaths().getIPaths());
-      } catch (CxxHeaders.ConflictingHeadersException e) {
-        throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
-      }
+    try {
+      CxxHeaders.checkConflictingHeaders(preprocessorDelegate.getCxxIncludePaths().getIPaths());
+    } catch (CxxHeaders.ConflictingHeadersException e) {
+      throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
     }
 
     Path scratchDir =

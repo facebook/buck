@@ -118,12 +118,10 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    if (CxxHeadersExperiment.runExperiment()) {
-      try {
-        CxxHeaders.checkConflictingHeaders(preprocessorDelegate.getCxxIncludePaths().getIPaths());
-      } catch (CxxHeaders.ConflictingHeadersException e) {
-        throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
-      }
+    try {
+      CxxHeaders.checkConflictingHeaders(preprocessorDelegate.getCxxIncludePaths().getIPaths());
+    } catch (CxxHeaders.ConflictingHeadersException e) {
+      throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
     }
 
     ImmutableList<String> frontendCommand = getFrontendCommand();
