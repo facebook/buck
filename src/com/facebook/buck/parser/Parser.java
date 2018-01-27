@@ -59,6 +59,7 @@ import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.AbstractMap;
@@ -501,7 +502,8 @@ public class Parser {
                         spec,
                         node.getBuildTarget());
                     return new AbstractMap.SimpleEntry<>(index, buildTargets);
-                  }));
+                  },
+                  MoreExecutors.directExecutor()));
         } else {
           // Build up a list of all target nodes from the build file.
           targetFutures.add(
@@ -509,7 +511,8 @@ public class Parser {
                   state.getAllTargetNodesJob(cell, buildFile),
                   nodes ->
                       new AbstractMap.SimpleEntry<>(
-                          index, applySpecFilter(spec, nodes, applyDefaultFlavorsMode))));
+                          index, applySpecFilter(spec, nodes, applyDefaultFlavorsMode)),
+                  MoreExecutors.directExecutor()));
         }
       }
     }

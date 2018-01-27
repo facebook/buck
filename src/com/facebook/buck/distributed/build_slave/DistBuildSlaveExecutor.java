@@ -40,6 +40,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -116,7 +117,8 @@ public class DistBuildSlaveExecutor {
                             Optional.empty()),
                         new RuleDepsCache(graphs.getActionGraphAndResolver().getResolver()),
                         (buckEventBus, rule) -> () -> {});
-                  }),
+                  },
+                  MoreExecutors.directExecutor()),
               args.getHealthCheckStatsTracker(),
               Optional.of(args.getTimingStatsTracker()));
       return setPreparationCallbackAndRun(runner);

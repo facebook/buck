@@ -46,6 +46,7 @@ import com.google.common.collect.ObjectArrays;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -303,7 +304,8 @@ public class OfflineScribeLoggerTest {
                 storedCategoriesWithLines.incrementAndGet();
               }
             }
-          });
+          },
+          MoreExecutors.directExecutor());
       return upload;
     }
 

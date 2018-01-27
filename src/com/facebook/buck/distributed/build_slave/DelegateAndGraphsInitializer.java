@@ -49,6 +49,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -83,7 +84,8 @@ public class DelegateAndGraphsInitializer {
   }
 
   public ListenableFuture<ActionGraphAndResolver> getActionGraphAndResolver() {
-    return Futures.transform(delegateAndGraphs, x -> x.getActionGraphAndResolver());
+    return Futures.transform(
+        delegateAndGraphs, x -> x.getActionGraphAndResolver(), MoreExecutors.directExecutor());
   }
 
   private DelegateAndGraphs createDelegateAndGraphs() throws IOException, InterruptedException {
