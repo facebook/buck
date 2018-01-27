@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
@@ -185,6 +186,7 @@ public class DotTest {
     mutableGraph.addEdge("//B", "D\"");
     mutableGraph.addEdge("Z//E", "Z//F");
     mutableGraph.addEdge("A", "A.B");
+    mutableGraph.addEdge("A", "A,B");
 
     StringBuilder output = new StringBuilder();
 
@@ -200,21 +202,23 @@ public class DotTest {
     // remove attributes because we are not interested what styles and colors are default
     lines = lines.stream().map(p -> p.replaceAll(" \\[.*\\]", "")).collect(Collectors.toList());
 
-    Set<String> edges = ImmutableSet.copyOf(lines.subList(1, lines.size() - 1));
+    ImmutableSet<String> edges = ImmutableSortedSet.copyOf(lines.subList(1, lines.size() - 1));
     assertEquals(
-        ImmutableSet.of(
-            "  A;",
-            "  \"A.B\";",
-            "  A -> \"A.B\";",
+        ImmutableSortedSet.of(
+            "  \"//B\" -> \"C1 C2\";",
+            "  \"//B\" -> \"D\\\"\";",
             "  \"//B\";",
+            "  \"A,B\";",
+            "  \"A.B\";",
             "  \"C1 C2\";",
             "  \"D\\\"\";",
+            "  \"Z//E\" -> \"Z//F\";",
             "  \"Z//E\";",
             "  \"Z//F\";",
             "  A -> \"//B\";",
-            "  \"//B\" -> \"C1 C2\";",
-            "  \"//B\" -> \"D\\\"\";",
-            "  \"Z//E\" -> \"Z//F\";"),
+            "  A -> \"A,B\";",
+            "  A -> \"A.B\";",
+            "  A;"),
         edges);
   }
 }

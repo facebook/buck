@@ -189,7 +189,8 @@ public class Dot<T> {
             || str.contains(" ")
             || str.contains("\"")
             || str.contains("/*")
-            || str.contains(".");
+            || str.contains(".")
+            || str.contains(",");
     if (!needEscape) {
       return str;
     }
