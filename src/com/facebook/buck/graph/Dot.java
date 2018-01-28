@@ -16,6 +16,7 @@
 
 package com.facebook.buck.graph;
 
+import com.facebook.buck.util.Escaper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -194,7 +195,7 @@ public class Dot<T> {
     if (!needEscape) {
       return str;
     }
-    return "\"" + str.replace("\"", "\\\"") + "\"";
+    return Escaper.Quoter.DOUBLE.quote(str);
   }
 
   public static String colorFromType(String type) {
