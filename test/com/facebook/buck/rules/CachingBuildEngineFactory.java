@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
+import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.step.DefaultStepRunner;
@@ -126,6 +127,7 @@ public class CachingBuildEngineFactory {
           ruleKeyFactories.get(),
           remoteBuildRuleCompletionWaiter,
           resourceAwareSchedulingInfo,
+          RuleKeyDiagnostics.nop(),
           logBuildRuleFailuresInline);
     }
 

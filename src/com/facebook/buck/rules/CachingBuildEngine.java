@@ -228,6 +228,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       RuleKeyFactories ruleKeyFactories,
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
+      RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics,
       boolean consoleLogBuildFailuresInline) {
     this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
 
@@ -250,7 +251,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
     this.ruleDeps = new RuleDepsCache(resolver);
     this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, resolver);
-    this.defaultRuleKeyDiagnostics = RuleKeyDiagnostics.nop();
+    this.defaultRuleKeyDiagnostics = defaultRuleKeyDiagnostics;
     this.consoleLogBuildFailuresInline = consoleLogBuildFailuresInline;
     this.asyncCallbacks = new ConcurrentLinkedQueue<>();
     this.ruleKeyCalculator =
