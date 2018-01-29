@@ -23,7 +23,7 @@ import static org.easymock.EasyMock.verify;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.testutil.FakeExecutor;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.MoreExecutors;

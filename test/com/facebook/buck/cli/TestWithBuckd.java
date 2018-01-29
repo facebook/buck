@@ -20,8 +20,8 @@ import static org.junit.Assume.assumeFalse;
 
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.WatchmanFactory;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

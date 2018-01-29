@@ -23,7 +23,7 @@ import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.FakeAndroidBuckConfig;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import java.io.File;

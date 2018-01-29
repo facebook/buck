@@ -18,6 +18,7 @@ package com.facebook.buck.testutil.integration;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.base.Splitter;
 import java.io.File;
 import java.io.IOException;

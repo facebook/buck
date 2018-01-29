@@ -19,9 +19,9 @@ package com.facebook.buck.cli;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.PropertySaver;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Files;

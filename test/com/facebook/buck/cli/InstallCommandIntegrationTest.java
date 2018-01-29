@@ -25,10 +25,10 @@ import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.FakeAppleDeveloperEnvironment;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;

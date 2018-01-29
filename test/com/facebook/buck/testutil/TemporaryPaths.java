@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.testutil.integration;
+package com.facebook.buck.testutil;
 
 import com.facebook.buck.io.file.MoreFiles;
 import java.io.IOException;

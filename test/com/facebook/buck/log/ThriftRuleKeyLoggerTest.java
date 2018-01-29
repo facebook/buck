@@ -19,7 +19,7 @@ package com.facebook.buck.log;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.log.thrift.rulekeys.Value;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableMap;
 import java.io.FileInputStream;
 import java.io.IOException;

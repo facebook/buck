@@ -24,7 +24,7 @@ import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.android.FakeAndroidBuckConfig;
 import com.facebook.buck.io.file.MoreFiles;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

@@ -18,8 +18,8 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertFalse;
 
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import org.junit.Before;
 import org.junit.Rule;

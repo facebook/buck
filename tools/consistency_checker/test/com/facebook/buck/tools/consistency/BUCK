@@ -9,6 +9,7 @@ java_test(
         ":testutil",
         "//src-gen:thrift",
         "//src/com/facebook/buck/log/thrift:thrift",
+        "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",

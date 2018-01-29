@@ -19,8 +19,8 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.TestWithBuckd;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.trace.ChromeTraceParser;

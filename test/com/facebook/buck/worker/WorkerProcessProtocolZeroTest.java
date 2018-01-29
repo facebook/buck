@@ -19,7 +19,7 @@ package com.facebook.buck.worker;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

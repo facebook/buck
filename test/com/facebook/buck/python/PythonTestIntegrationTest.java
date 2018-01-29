@@ -31,9 +31,9 @@ import com.facebook.buck.python.toolchain.impl.PythonPlatformsProviderFactoryUti
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.ParameterizedTests;
 import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;

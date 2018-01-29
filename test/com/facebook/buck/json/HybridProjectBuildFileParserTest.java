@@ -22,7 +22,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Files;

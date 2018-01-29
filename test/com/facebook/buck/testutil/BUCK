@@ -14,7 +14,10 @@ java_library(
         "//src/com/facebook/buck/util/cache:cache",
         "//src/com/facebook/buck/util/hashing:hashing",
     ],
-    visibility = ["//test/..."],
+    visibility = [
+        "//test/...",
+        "//tools/...",
+    ],
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:utils",

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.tools.consistency;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.tools.consistency.BuckStressRunner.StressorException;
 import com.facebook.buck.tools.consistency.DifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;

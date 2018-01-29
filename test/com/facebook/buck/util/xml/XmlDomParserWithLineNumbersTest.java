@@ -18,8 +18,8 @@ package com.facebook.buck.util.xml;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

@@ -20,7 +20,7 @@ import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.log.thrift.rulekeys.RuleKeyHash;
 import com.facebook.buck.log.thrift.rulekeys.Value;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.tools.consistency.DifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyDiffer.GraphTraversalException;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;

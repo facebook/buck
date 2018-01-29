@@ -18,9 +18,9 @@ package com.facebook.buck.rust;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import org.hamcrest.Matchers;

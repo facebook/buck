@@ -18,7 +18,7 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuckVersionType;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

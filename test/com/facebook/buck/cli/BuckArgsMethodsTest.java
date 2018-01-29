@@ -19,7 +19,7 @@ package com.facebook.buck.cli;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.rules.RelativeCellName;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.BuckArgsMethods;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;

@@ -37,7 +37,7 @@ import com.facebook.buck.rules.macros.QueryOutputsMacroExpander;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.HashMapWithStats;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;

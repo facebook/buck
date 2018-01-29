@@ -19,7 +19,7 @@ package com.facebook.buck.event.chrome_trace;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;

@@ -25,7 +25,7 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.python.toolchain.PythonInterpreter;
 import com.facebook.buck.python.toolchain.impl.PythonInterpreterFromConfig;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
