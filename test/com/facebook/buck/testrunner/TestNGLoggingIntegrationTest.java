@@ -36,8 +36,8 @@ public class TestNGLoggingIntegrationTest {
 
   @Before
   public void setupWorkspace() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(this,
-            "testng_logging", temp, true);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "testng_logging", temp, true);
     workspace.setUp();
   }
 
@@ -62,8 +62,8 @@ public class TestNGLoggingIntegrationTest {
 
   @Test
   public void logParametersForFailingTest() throws IOException {
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test",
-        "//:testng-test-output-parameters");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("test", "//:testng-test-output-parameters");
     result.assertTestFailure();
 
     String testOutput = result.getStderr();

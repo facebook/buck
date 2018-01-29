@@ -17,7 +17,6 @@
 package com.example;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.fail;
 
 import java.util.logging.Logger;
 import org.testng.annotations.DataProvider;
@@ -30,30 +29,30 @@ public class TestNGParametersTest {
   @DataProvider
   public Object[][] passingParams() {
     return new Object[][] {
-        {0, 0},
-        {1, 1},
-        {2, 4},
-        {3, 9},
+      {0, 0},
+      {1, 1},
+      {2, 4},
+      {3, 9},
     };
   }
 
   @DataProvider
   public Object[][] failingParams() {
     return new Object[][] {
-        {0, 0},
-        {1, 2},
-        {2, 3},
-        {3, 4},
+      {0, 0},
+      {1, 2},
+      {2, 3},
+      {3, 4},
     };
   }
 
   @Test(dataProvider = "passingParams")
   public void passingTestWithParams(int n, int nsquared) {
-    assertEquals(n*n, nsquared, "nsquared = n*n");
+    assertEquals(n * n, nsquared, "nsquared = n*n");
   }
 
   @Test(dataProvider = "failingParams")
   public void failingTestWithParams(int n, int nsquared) {
-    assertEquals(n*n, nsquared, "nsquared = n*n");
+    assertEquals(n * n, nsquared, "nsquared = n*n");
   }
 }
