@@ -36,7 +36,6 @@ import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -116,9 +115,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
    * target.
    */
   private final ConcurrentMap<BuildTarget, ListenableFuture<BuildResult>> results =
-      Maps.newConcurrentMap();
-
-  private final ConcurrentMap<BuildTarget, ListenableFuture<RuleKey>> ruleKeys =
       Maps.newConcurrentMap();
 
   @Nullable private volatile Throwable firstFailure = null;
@@ -327,11 +323,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   public boolean isRuleBuilt(BuildTarget buildTarget) throws InterruptedException {
     ListenableFuture<BuildResult> resultFuture = results.get(buildTarget);
     return resultFuture != null && MoreFutures.isSuccess(resultFuture);
-  }
-
-  @Override
-  public RuleKey getRuleKey(BuildTarget buildTarget) {
-    return Preconditions.checkNotNull(Futures.getUnchecked(ruleKeys.get(buildTarget)));
   }
 
   @Override
