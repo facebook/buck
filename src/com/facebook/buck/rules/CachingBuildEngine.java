@@ -158,6 +158,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       long maxDepFileCacheEntries,
       Optional<Long> artifactCacheSizeLimit,
       final BuildRuleResolver resolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver,
       BuildInfoStoreManager buildInfoStoreManager,
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
       boolean consoleLogBuildFailuresInline,
@@ -173,8 +175,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
     this.resolver = resolver;
-    this.ruleFinder = new SourcePathRuleFinder(resolver);
-    this.pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    this.ruleFinder = ruleFinder;
+    this.pathResolver = pathResolver;
     this.buildInfoStoreManager = buildInfoStoreManager;
 
     this.fileHashCache = cachingBuildEngineDelegate.getFileHashCache();

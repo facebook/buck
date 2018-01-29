@@ -572,6 +572,8 @@ public class TestCommand extends BuildCommand {
                   params.getBuckConfig().getKeySeed(), actionGraphAndResolver.getActionGraph()))) {
         LocalCachingBuildEngineDelegate localCachingBuildEngineDelegate =
             new LocalCachingBuildEngineDelegate(params.getFileHashCache());
+        SourcePathRuleFinder sourcePathRuleFinder =
+            new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
         try (CachingBuildEngine cachingBuildEngine =
                 new CachingBuildEngine(
                     localCachingBuildEngineDelegate,
@@ -583,6 +585,8 @@ public class TestCommand extends BuildCommand {
                     cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
                     cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
                     actionGraphAndResolver.getResolver(),
+                    sourcePathRuleFinder,
+                    DefaultSourcePathResolver.from(sourcePathRuleFinder),
                     params.getBuildInfoStoreManager(),
                     cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
                     cachingBuildEngineBuckConfig.getConsoleLogBuildRuleFailuresInline(),

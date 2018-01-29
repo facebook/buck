@@ -30,11 +30,13 @@ import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.MetadataChecker;
 import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
@@ -108,6 +110,8 @@ public class FetchCommand extends BuildCommand {
           params.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
       LocalCachingBuildEngineDelegate localCachingBuildEngineDelegate =
           new LocalCachingBuildEngineDelegate(params.getFileHashCache());
+      SourcePathRuleFinder sourcePathRuleFinder =
+          new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
       try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
               getDefaultRuleKeyCacheScope(
                   params,
@@ -125,6 +129,8 @@ public class FetchCommand extends BuildCommand {
                   cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
                   cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
                   actionGraphAndResolver.getResolver(),
+                  sourcePathRuleFinder,
+                  DefaultSourcePathResolver.from(sourcePathRuleFinder),
                   params.getBuildInfoStoreManager(),
                   cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
                   cachingBuildEngineBuckConfig.getConsoleLogBuildRuleFailuresInline(),

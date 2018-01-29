@@ -121,6 +121,7 @@ final class JavaBuildGraphProcessor {
       BuildRuleResolver buildRuleResolver =
           new SingleThreadedBuildRuleResolver(
               graph, new DefaultTargetNodeToBuildRuleTransformer(), params.getBuckEventBus());
+      SourcePathRuleFinder sourcePathRuleFinder = new SourcePathRuleFinder(buildRuleResolver);
       CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
           params.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
       LocalCachingBuildEngineDelegate cachingBuildEngineDelegate =
@@ -139,6 +140,8 @@ final class JavaBuildGraphProcessor {
                   cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
                   cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
                   buildRuleResolver,
+                  sourcePathRuleFinder,
+                  DefaultSourcePathResolver.from(sourcePathRuleFinder),
                   params.getBuildInfoStoreManager(),
                   cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
                   cachingBuildEngineBuckConfig.getConsoleLogBuildRuleFailuresInline(),
