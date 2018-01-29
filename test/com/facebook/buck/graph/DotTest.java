@@ -187,6 +187,8 @@ public class DotTest {
     mutableGraph.addEdge("Z//E", "Z//F");
     mutableGraph.addEdge("A", "A.B");
     mutableGraph.addEdge("A", "A,B");
+    mutableGraph.addEdge("A", "[A]");
+    mutableGraph.addEdge("A", "");
 
     StringBuilder output = new StringBuilder();
 
@@ -205,6 +207,7 @@ public class DotTest {
     ImmutableSet<String> edges = ImmutableSortedSet.copyOf(lines.subList(1, lines.size() - 1));
     assertEquals(
         ImmutableSortedSet.of(
+            "  \"\";",
             "  \"//B\" -> \"C1 C2\";",
             "  \"//B\" -> \"D\\\"\";",
             "  \"//B\";",
@@ -215,9 +218,12 @@ public class DotTest {
             "  \"Z//E\" -> \"Z//F\";",
             "  \"Z//E\";",
             "  \"Z//F\";",
+            "  \"[A]\";",
+            "  A -> \"\";",
             "  A -> \"//B\";",
             "  A -> \"A,B\";",
             "  A -> \"A.B\";",
+            "  A -> \"[A]\";",
             "  A;"),
         edges);
   }

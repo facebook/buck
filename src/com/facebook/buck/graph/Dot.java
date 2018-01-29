@@ -26,9 +26,12 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Dot<T> {
+
+  private static Pattern VALID_ID_PATTERN = Pattern.compile("[a-zA-Z\200-\377_0-9]+");
 
   private final DirectedAcyclicGraph<T> graph;
   private final String graphName;
@@ -185,13 +188,9 @@ public class Dot<T> {
     // decide if node name should be escaped according to DOT specification
     // https://en.wikipedia.org/wiki/DOT_(graph_description_language)
     boolean needEscape =
-        str.startsWith("#")
-            || str.contains("//") // May occur within string due to cross-cell.
-            || str.contains(" ")
-            || str.contains("\"")
-            || str.contains("/*")
-            || str.contains(".")
-            || str.contains(",");
+        !VALID_ID_PATTERN.matcher(str).matches()
+            || str.isEmpty()
+            || Character.isDigit(str.charAt(0));
     if (!needEscape) {
       return str;
     }
