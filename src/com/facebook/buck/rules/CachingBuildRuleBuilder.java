@@ -228,15 +228,7 @@ class CachingBuildRuleBuilder {
 
   // Return a `BuildResult.Builder` with rule-specific state pre-filled.
   private BuildResult.Builder buildResultBuilder() {
-    BuildResult.Builder builder = BuildResult.builder().setRule(rule);
-    if (manifestFetchResult != null) {
-      builder.setManifestFetchResult(manifestFetchResult);
-    }
-    if (manifestStoreResult != null) {
-      builder.setManifestStoreResult(manifestStoreResult);
-    }
-    builder.setDepsWithCacheMisses(depsWithCacheMiss);
-    return builder;
+    return BuildResult.builder().setRule(rule).setDepsWithCacheMisses(depsWithCacheMiss);
   }
 
   private BuildResult success(BuildRuleSuccessType successType, CacheResult cacheResult) {
