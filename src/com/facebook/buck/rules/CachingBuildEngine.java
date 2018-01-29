@@ -273,17 +273,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
    */
   private WeightedListeningExecutorService serviceByAdjustingDefaultWeightsTo(
       ResourceAmounts defaultAmounts) {
-    return serviceByAdjustingDefaultWeightsTo(defaultAmounts, resourceAwareSchedulingInfo, service);
-  }
-
-  static WeightedListeningExecutorService serviceByAdjustingDefaultWeightsTo(
-      ResourceAmounts defaultAmounts,
-      ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
-      WeightedListeningExecutorService service) {
-    if (resourceAwareSchedulingInfo.isResourceAwareSchedulingEnabled()) {
-      return service.withDefaultAmounts(defaultAmounts);
-    }
-    return service;
+    return resourceAwareSchedulingInfo.adjustServiceDefaultWeightsTo(defaultAmounts, service);
   }
 
   private static Optional<UnskippedRulesTracker> createUnskippedRulesTracker(

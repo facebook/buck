@@ -266,8 +266,7 @@ class CachingBuildRuleBuilder {
    */
   private WeightedListeningExecutorService serviceByAdjustingDefaultWeightsTo(
       ResourceAmounts defaultAmounts) {
-    return CachingBuildEngine.serviceByAdjustingDefaultWeightsTo(
-        defaultAmounts, resourceAwareSchedulingInfo, service);
+    return resourceAwareSchedulingInfo.adjustServiceDefaultWeightsTo(defaultAmounts, service);
   }
 
   ListenableFuture<BuildResult> build() {
