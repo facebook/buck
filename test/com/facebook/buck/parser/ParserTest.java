@@ -454,6 +454,16 @@ public class ParserTest {
   }
 
   @Test
+  public void shouldAllowAccessingBuiltInRulesViaNative() throws Exception {
+    Files.write(
+        includedByBuildFile,
+        "def foo(name): native.export_file(name=name)\n".getBytes(UTF_8),
+        StandardOpenOption.APPEND);
+    Files.write(testBuildFile, "foo(name='BUCK')\n".getBytes(UTF_8), StandardOpenOption.APPEND);
+    parser.getAllTargetNodes(eventBus, cell, false, executorService, testBuildFile);
+  }
+
+  @Test
   public void shouldThrowAnExceptionIfFrozenVariableIsModified()
       throws IOException, BuildFileParseException, InterruptedException {
     thrown.expect(BuildFileParseException.class);
