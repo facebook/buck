@@ -165,30 +165,22 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       boolean consoleLogBuildFailuresInline,
       RuleKeyFactories ruleKeyFactories,
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
-    this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
-
-    this.service = service;
-    this.stepRunner = stepRunner;
-    this.buildMode = buildMode;
-    this.metadataStorage = metadataStorage;
-    this.depFiles = depFiles;
-    this.maxDepFileCacheEntries = maxDepFileCacheEntries;
-    this.artifactCacheSizeLimit = artifactCacheSizeLimit;
-    this.resolver = resolver;
-    this.ruleFinder = ruleFinder;
-    this.pathResolver = pathResolver;
-    this.buildInfoStoreManager = buildInfoStoreManager;
-
-    this.fileHashCache = cachingBuildEngineDelegate.getFileHashCache();
-    this.ruleKeyFactories = ruleKeyFactories;
-    this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
-    this.remoteBuildRuleCompletionWaiter = remoteBuildRuleCompletionWaiter;
-
-    this.consoleLogBuildFailuresInline = consoleLogBuildFailuresInline;
-
-    this.ruleDeps = new RuleDepsCache(resolver);
-    this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, resolver);
-    this.defaultRuleKeyDiagnostics =
+    this(
+        cachingBuildEngineDelegate,
+        service,
+        stepRunner,
+        buildMode,
+        metadataStorage,
+        depFiles,
+        maxDepFileCacheEntries,
+        artifactCacheSizeLimit,
+        resolver,
+        buildInfoStoreManager,
+        ruleFinder,
+        pathResolver,
+        ruleKeyFactories,
+        remoteBuildRuleCompletionWaiter,
+        resourceAwareSchedulingInfo,
         new RuleKeyDiagnostics<>(
             rule ->
                 ruleKeyFactories
@@ -197,19 +189,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             appendable ->
                 ruleKeyFactories
                     .getDefaultRuleKeyFactory()
-                    .buildForDiagnostics(appendable, new StringRuleKeyHasher()));
-    this.asyncCallbacks = new ConcurrentLinkedQueue<>();
-    this.ruleKeyCalculator =
-        new ParallelRuleKeyCalculator<>(
-            serviceByAdjustingDefaultWeightsTo(RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS),
-            ruleKeyFactories.getDefaultRuleKeyFactory(),
-            ruleDeps,
-            (eventBus, rule) ->
-                BuildRuleEvent.ruleKeyCalculationScope(
-                    eventBus,
-                    rule,
-                    buildRuleDurationTracker,
-                    ruleKeyFactories.getDefaultRuleKeyFactory()));
+                    .buildForDiagnostics(appendable, new StringRuleKeyHasher())),
+        consoleLogBuildFailuresInline);
   }
 
   /** This constructor MUST ONLY BE USED FOR TESTS. */
