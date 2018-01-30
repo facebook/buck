@@ -115,36 +115,51 @@ abstract class AbstractCacheStats {
   }
 
   /**
-   * Aggregates two CacheStats by summing their field values if a field is specified by both
-   * CacheStats, keeping the specified field value if only one CacheStats specified the field, or
-   * keeping the field empty if none of the CacheStats specify it.
+   * Adds or subtract two CacheStats if a field is specified by both CacheStats, with a minimum
+   * value of 0. If only one CacheStats specifies the field, the unspecified value is treated as 0.
+   * If non of the CacheStats specifies the field, the field will be empty.
    *
-   * @param stats1
-   * @param stats2
-   * @return
+   * @param stats1 the stats before the arithmetic operator
+   * @param stats2 the stats after the arithmetic operator
+   * @return stats1 +/- stats2
    */
-  public static CacheStats aggregate(AbstractCacheStats stats1, AbstractCacheStats stats2) {
+  public CacheStats subtract(CacheStats stats) {
+    return aggregate(this, stats, false);
+  }
+
+  public CacheStats add(CacheStats stats) {
+    return aggregate(this, stats, true);
+  }
+
+  private static CacheStats aggregate(
+      AbstractCacheStats stats1, AbstractCacheStats stats2, boolean addOrMinus) {
     return CacheStats.builder()
-        .setHitCount(aggregateFields(stats1.getHitCount(), stats2.getHitCount()))
-        .setMissCount(aggregateFields(stats1.getMissCount(), stats2.getMissCount()))
-        .setEvictionCount(aggregateFields(stats1.getEvictionCount(), stats2.getEvictionCount()))
+        .setHitCount(aggregateFields(stats1.getHitCount(), stats2.getHitCount(), addOrMinus))
+        .setMissCount(aggregateFields(stats1.getMissCount(), stats2.getMissCount(), addOrMinus))
+        .setEvictionCount(
+            aggregateFields(stats1.getEvictionCount(), stats2.getEvictionCount(), addOrMinus))
         .setInvalidationCount(
-            aggregateFields(stats1.getInvalidationCount(), stats2.getInvalidationCount()))
+            aggregateFields(
+                stats1.getInvalidationCount(), stats2.getInvalidationCount(), addOrMinus))
         .setLoadSuccessCount(
-            aggregateFields(stats1.getLoadSuccessCount(), stats2.getLoadSuccessCount()))
+            aggregateFields(stats1.getLoadSuccessCount(), stats2.getLoadSuccessCount(), addOrMinus))
         .setLoadExceptionCount(
-            aggregateFields(stats1.getLoadExceptionCount(), stats2.getLoadExceptionCount()))
-        .setTotalLoadTime(aggregateFields(stats1.getTotalLoadTime(), stats2.getTotalLoadTime()))
-        .setNumberEntries(aggregateFields(stats1.getNumberEntries(), stats2.getNumberEntries()))
+            aggregateFields(
+                stats1.getLoadExceptionCount(), stats2.getLoadExceptionCount(), addOrMinus))
+        .setTotalLoadTime(
+            aggregateFields(stats1.getTotalLoadTime(), stats2.getTotalLoadTime(), addOrMinus))
+        .setNumberEntries(
+            aggregateFields(stats1.getNumberEntries(), stats2.getNumberEntries(), addOrMinus))
         .build();
   }
 
-  private static Optional<Long> aggregateFields(Optional<Long> field1, Optional<Long> field2) {
+  private static Optional<Long> aggregateFields(
+      Optional<Long> field1, Optional<Long> field2, boolean addOrMinus) {
     if (field1.isPresent() || field2.isPresent()) {
       long val1 = field1.orElse(0L);
-      long val2 = field2.orElse(0L);
+      long val2 = field2.orElse(0L) * (addOrMinus ? 1 : -1);
 
-      return Optional.of(val1 + val2);
+      return Optional.of(Math.max(0, val1 + val2));
     }
     return Optional.empty();
   }
