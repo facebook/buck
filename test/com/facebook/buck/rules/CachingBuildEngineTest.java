@@ -3089,7 +3089,7 @@ public class CachingBuildEngineTest {
           pathResolver,
           ImmutableSet.of(input),
           ImmutableSet.of(input));
-      Path manifestPath = CachingBuildRuleBuilder.getManifestPath(rule);
+      Path manifestPath = ManifestRuleKeyManager.getManifestPath(rule);
       filesystem.mkdirs(manifestPath.getParent());
       try (OutputStream outputStream = filesystem.newFileOutputStream(manifestPath)) {
         manifest.serialize(outputStream);

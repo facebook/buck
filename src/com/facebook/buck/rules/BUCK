@@ -409,6 +409,7 @@ java_immutables_library(
         "InputBasedRuleKeyManager.java",
         "InstallTrigger.java",
         "Manifest.java",
+        "ManifestRuleKeyManager.java",
         "MetadataProvidingDescription.java",
         "MultiThreadedBuildRuleResolver.java",
         "NoOpRemoteBuildRuleCompletionNotifier.java",
