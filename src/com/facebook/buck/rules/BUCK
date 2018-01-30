@@ -389,6 +389,7 @@ java_immutables_library(
         "DefaultBuildableContext.java",
         "DefaultOnDiskBuildInfo.java",
         "DelegatingTool.java",
+        "DependencyFileRuleKeyManager.java",
         "DescriptionProvider.java",
         "ErrorToolProvider.java",
         "ExportDependencies.java",

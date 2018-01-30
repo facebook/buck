@@ -85,7 +85,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashSet;
@@ -139,6 +138,8 @@ class CachingBuildRuleBuilder {
   private final RuleKey defaultKey;
 
   private final Supplier<Optional<RuleKey>> inputBasedKey;
+
+  private final DependencyFileRuleKeyManager dependencyFileRuleKeyManager;
 
   /**
    * This is used to weakly cache the manifest RuleKeyAndInputs. I
@@ -224,6 +225,9 @@ class CachingBuildRuleBuilder {
                 throw new RuntimeException(e);
               }
             });
+    this.dependencyFileRuleKeyManager =
+        new DependencyFileRuleKeyManager(
+            depFiles, rule, this.buildInfoRecorder, onDiskBuildInfo, ruleKeyFactories, eventBus);
   }
 
   // Return a `BuildResult.Builder` with rule-specific state pre-filled.
@@ -571,7 +575,7 @@ class CachingBuildRuleBuilder {
 
     // If this rule uses dep files, make sure we store the new dep file
     // list and re-calculate the dep file rule key.
-    if (useDependencyFileRuleKey()) {
+    if (dependencyFileRuleKeyManager.useDependencyFileRuleKey()) {
 
       // Query the rule for the actual inputs it used.
       ImmutableList<SourcePath> inputs =
@@ -592,7 +596,8 @@ class CachingBuildRuleBuilder {
 
       // Re-calculate and store the depfile rule key for next time.
       Optional<RuleKeyAndInputs> depFileRuleKeyAndInputs =
-          calculateDepFileRuleKey(Optional.of(inputStrings), /* allowMissingInputs */ false);
+          dependencyFileRuleKeyManager.calculateDepFileRuleKey(
+              Optional.of(inputStrings), /* allowMissingInputs */ false);
       if (depFileRuleKeyAndInputs.isPresent()) {
         RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getRuleKey();
         getBuildInfoRecorder()
@@ -796,27 +801,12 @@ class CachingBuildRuleBuilder {
   }
 
   private Optional<BuildResult> checkMatchingDepfile() throws IOException {
-    // Try to get the current dep-file rule key.
-    Optional<RuleKeyAndInputs> depFileRuleKeyAndInputs =
-        calculateDepFileRuleKey(
-            onDiskBuildInfo.getValues(BuildInfo.MetadataKey.DEP_FILE),
-            /* allowMissingInputs */ true);
-    if (depFileRuleKeyAndInputs.isPresent()) {
-      RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getRuleKey();
-      getBuildInfoRecorder()
-          .addBuildMetadata(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY, depFileRuleKey.toString());
-
-      // Check the input-based rule key says we're already built.
-      Optional<RuleKey> lastDepFileRuleKey =
-          onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
-      if (lastDepFileRuleKey.isPresent() && depFileRuleKey.equals(lastDepFileRuleKey.get())) {
-        return Optional.of(
+    return dependencyFileRuleKeyManager.checkMatchingDepfile()
+        ? Optional.of(
             success(
                 BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY,
-                CacheResult.localKeyUnchangedHit()));
-      }
-    }
-    return Optional.empty();
+                CacheResult.localKeyUnchangedHit()))
+        : Optional.empty();
   }
 
   private ListenableFuture<Optional<BuildResult>> checkInputBasedCaches() throws IOException {
@@ -904,7 +894,7 @@ class CachingBuildRuleBuilder {
     }
 
     // 7. Then check if the depfile matches.
-    if (useDependencyFileRuleKey()) {
+    if (dependencyFileRuleKeyManager.useDependencyFileRuleKey()) {
       buildResultFuture =
           transformBuildResultIfNotPresent(
               buildResultFuture,
@@ -1339,53 +1329,11 @@ class CachingBuildRuleBuilder {
     return true;
   }
 
-  private boolean useDependencyFileRuleKey() {
-    return depFiles != CachingBuildEngine.DepFiles.DISABLED
-        && rule instanceof SupportsDependencyFileRuleKey
-        && ((SupportsDependencyFileRuleKey) rule).useDependencyFileRuleKeys();
-  }
-
   private boolean useManifestCaching() {
     return depFiles == CachingBuildEngine.DepFiles.CACHE
         && rule instanceof SupportsDependencyFileRuleKey
         && rule.isCacheable()
         && ((SupportsDependencyFileRuleKey) rule).useDependencyFileRuleKeys();
-  }
-
-  private Optional<RuleKeyAndInputs> calculateDepFileRuleKey(
-      Optional<ImmutableList<String>> depFile, boolean allowMissingInputs) throws IOException {
-
-    Preconditions.checkState(useDependencyFileRuleKey());
-
-    // Extract the dep file from the last build.  If we don't find one, abort.
-    if (!depFile.isPresent()) {
-      return Optional.empty();
-    }
-
-    // Build the dep-file rule key.  If any inputs are no longer on disk, this means something
-    // changed and a dep-file based rule key can't be calculated.
-    ImmutableList<DependencyFileEntry> inputs =
-        depFile
-            .get()
-            .stream()
-            .map(ObjectMappers.fromJsonFunction(DependencyFileEntry.class))
-            .collect(ImmutableList.toImmutableList());
-
-    try (Scope ignored =
-        RuleKeyCalculationEvent.scope(eventBus, RuleKeyCalculationEvent.Type.DEP_FILE)) {
-      return Optional.of(
-          ruleKeyFactories
-              .getDepFileRuleKeyFactory()
-              .build(((SupportsDependencyFileRuleKey) rule), inputs));
-    } catch (SizeLimiter.SizeLimitException ex) {
-      return Optional.empty();
-    } catch (Exception e) {
-      // TODO(plamenko): fix exception propagation in RuleKeyBuilder
-      if (allowMissingInputs && Throwables.getRootCause(e) instanceof NoSuchFileException) {
-        return Optional.empty();
-      }
-      throw e;
-    }
   }
 
   @VisibleForTesting
