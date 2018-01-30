@@ -223,8 +223,7 @@ public class DoctorReportHelper {
           console
               .getStdOut()
               .printf(
-                  "=> Report was uploaded to %s.\n\n",
-                  submitResult.getReportSubmitLocation().get());
+                  "=> Report was uploaded to %s\n\n", submitResult.getReportSubmitLocation().get());
         } else {
           console.getStdOut().printf("%s", submitResult.getReportSubmitLocation().get());
         }
