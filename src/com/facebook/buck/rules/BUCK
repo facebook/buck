@@ -368,6 +368,7 @@ java_immutables_library(
         "BinaryWrapperRule.java",
         "BuckPyFunction.java",
         "BuildCacheArtifactFetcher.java",
+        "BuildCacheArtifactUploader.java",
         "BuildEngine.java",
         "BuildInfo.java",
         "BuildInfoRecorder.java",

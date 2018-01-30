@@ -17,7 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.artifact_cache.ArtifactUploader;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.RuleKeyCacheResult;
@@ -58,7 +57,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Atomics;
@@ -85,7 +83,6 @@ import javax.annotation.Nullable;
 class CachingBuildRuleBuilder {
   private static final Logger LOG = Logger.get(CachingBuildRuleBuilder.class);
   private final BuildRuleBuilderDelegate buildRuleBuilderDelegate;
-  private final Optional<Long> artifactCacheSizeLimit;
   private final CachingBuildEngine.BuildMode buildMode;
   private final BuildRuleDurationTracker buildRuleDurationTracker;
   private final boolean consoleLogBuildFailuresInline;
@@ -120,6 +117,7 @@ class CachingBuildRuleBuilder {
   private final BuildCacheArtifactFetcher buildCacheArtifactFetcher;
   private final InputBasedRuleKeyManager inputBasedRuleKeyManager;
   private final ManifestRuleKeyManager manifestRuleKeyManager;
+  private final BuildCacheArtifactUploader buildCacheArtifactUploader;
 
   /**
    * This is used to weakly cache the manifest RuleKeyAndInputs. I
@@ -165,7 +163,6 @@ class CachingBuildRuleBuilder {
       BuildRulePipelinesRunner pipelinesRunner,
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
     this.buildRuleBuilderDelegate = buildRuleBuilderDelegate;
-    this.artifactCacheSizeLimit = artifactCacheSizeLimit;
     this.buildMode = buildMode;
     this.buildRuleDurationTracker = buildRuleDurationTracker;
     this.consoleLogBuildFailuresInline = consoleLogBuildFailuresInline;
@@ -236,6 +233,16 @@ class CachingBuildRuleBuilder {
             buildCacheArtifactFetcher,
             artifactCache,
             manifestBasedKeySupplier);
+    buildCacheArtifactUploader =
+        new BuildCacheArtifactUploader(
+            defaultKey,
+            inputBasedKey,
+            onDiskBuildInfo,
+            rule,
+            manifestRuleKeyManager,
+            eventBus,
+            artifactCache,
+            artifactCacheSizeLimit);
   }
 
   // Return a `BuildResult.Builder` with rule-specific state pre-filled.
@@ -673,56 +680,9 @@ class CachingBuildRuleBuilder {
   }
 
   private void uploadToCache(BuildRuleSuccessType success) {
-    // Collect up all the rule keys we have index the artifact in the cache with.
-    Set<RuleKey> ruleKeys = new HashSet<>();
-
-    // If the rule key has changed (and is not already in the cache), we need to push
-    // the artifact to cache using the new key.
-    ruleKeys.add(defaultKey);
-
-    // If the input-based rule key has changed, we need to push the artifact to cache
-    // using the new key.
-    if (SupportsInputBasedRuleKey.isSupported(rule)) {
-      Preconditions.checkNotNull(
-          inputBasedKey, "input-based key should have been computed already.");
-      Optional<RuleKey> calculatedRuleKey = inputBasedKey.get();
-      Optional<RuleKey> onDiskRuleKey =
-          onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY);
-      Preconditions.checkState(
-          calculatedRuleKey.equals(onDiskRuleKey),
-          "%s (%s): %s: invalid on-disk input-based rule key: %s != %s",
-          rule.getBuildTarget(),
-          rule.getType(),
-          success,
-          calculatedRuleKey,
-          onDiskRuleKey);
-      if (calculatedRuleKey.isPresent()) {
-        ruleKeys.add(calculatedRuleKey.get());
-      }
-    }
-
-    // If the manifest-based rule key has changed, we need to push the artifact to cache
-    // using the new key.
-    if (manifestRuleKeyManager.useManifestCaching()) {
-      Optional<RuleKey> onDiskRuleKey =
-          onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
-      if (onDiskRuleKey.isPresent()) {
-        ruleKeys.add(onDiskRuleKey.get());
-      }
-    }
-
-    // Do the actual upload.
     try {
       // Push to cache.
-      uploadCompleteFuture =
-          ArtifactUploader.performUploadToArtifactCache(
-              ImmutableSet.copyOf(ruleKeys),
-              artifactCache,
-              eventBus,
-              onDiskBuildInfo.getMetadataForArtifact(),
-              onDiskBuildInfo.getPathsForArtifact(),
-              rule.getBuildTarget(),
-              rule.getProjectFilesystem());
+      uploadCompleteFuture = buildCacheArtifactUploader.uploadToCache(success);
     } catch (Throwable t) {
       eventBus.post(ThrowableConsoleEvent.create(t, "Error uploading to cache for %s.", rule));
     }
@@ -755,7 +715,8 @@ class CachingBuildRuleBuilder {
 
         // Determine if this is rule is cacheable.
         shouldUploadToCache =
-            outputSize.isPresent() && shouldUploadToCache(success, outputSize.get());
+            outputSize.isPresent()
+                && buildCacheArtifactUploader.shouldUploadToCache(success, outputSize.get());
 
         // Upload it to the cache.
         if (shouldUploadToCache) {
@@ -1145,32 +1106,6 @@ class CachingBuildRuleBuilder {
       BuildOutputInitializer<T> buildOutputInitializer = initializable.getBuildOutputInitializer();
       buildOutputInitializer.initializeFromDisk();
     }
-  }
-
-  /** @return whether we should upload the given rules artifacts to cache. */
-  private boolean shouldUploadToCache(BuildRuleSuccessType successType, long outputSize) {
-
-    // The success type must allow cache uploading.
-    if (!successType.shouldUploadResultingArtifact()) {
-      return false;
-    }
-
-    // The cache must be writable.
-    if (!artifactCache.getCacheReadMode().isWritable()) {
-      return false;
-    }
-
-    // If the rule is explicitly marked uncacheable, don't cache it.
-    if (!rule.isCacheable()) {
-      return false;
-    }
-
-    // If the rule's outputs are bigger than the preset size limit, don't cache it.
-    if (artifactCacheSizeLimit.isPresent() && outputSize > artifactCacheSizeLimit.get()) {
-      return false;
-    }
-
-    return true;
   }
 
   private Optional<RuleKeyAndInputs> calculateManifestKey(BuckEventBus eventBus)
