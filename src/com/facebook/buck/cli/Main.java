@@ -157,7 +157,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
-import com.google.common.io.Closer;
 import com.google.common.reflect.ClassPath;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -543,7 +542,9 @@ public final class Main {
       ImmutableList<String> unexpandedCommandLineArgs)
       throws IOException, InterruptedException {
 
-    ExitCode exitCode = ExitCode.SUCCESS;
+    // Set initial exitCode value to FATAL. This will eventually get reassigned unless an exception
+    // happens
+    ExitCode exitCode = ExitCode.FATAL_GENERIC;
 
     // Setup filesystem and buck config.
     Path canonicalRootPath = projectRoot.toRealPath().normalize();
@@ -606,26 +607,18 @@ public final class Main {
 
     // No more early outs: if this command is not read only, acquire the command semaphore to
     // become the only executing read/write command.
-    // This must happen immediately before the try block to ensure that the semaphore is released.
-    boolean commandSemaphoreAcquired = false;
     boolean shouldCleanUpTrash = false;
-    if (!command.isReadOnly()) {
-      commandSemaphoreAcquired = commandSemaphore.tryAcquire();
-      if (!commandSemaphoreAcquired) {
+    try (CloseableWrapper<Semaphore, InterruptedException> semaphore =
+        getSemaphoreWrapper(command)) {
+      if (!command.isReadOnly() && semaphore == null) {
         LOG.warn("Buck server was busy executing a command. Maybe retrying later will help.");
         return ExitCode.BUSY;
       }
-    }
 
-    RuleKeyConfiguration ruleKeyConfiguration =
-        ConfigRuleKeyConfigurationFactory.create(buckConfig, pluginManager);
+      RuleKeyConfiguration ruleKeyConfiguration =
+          ConfigRuleKeyConfigurationFactory.create(buckConfig, pluginManager);
 
-    String previousBuckCoreKey;
-    try (Closer closer = Closer.create()) {
-      if (commandSemaphoreAcquired) {
-        commandSemaphoreNgClient = context;
-      }
-
+      String previousBuckCoreKey;
       if (!command.isReadOnly()) {
         Optional<String> currentBuckCoreKey =
             filesystem.readFileIfItExists(filesystem.getBuckPaths().getCurrentVersionFile());
@@ -797,11 +790,6 @@ public final class Main {
               unexpandedCommandLineArgs,
               filesystem.getBuckPaths().getLogDir());
 
-      GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
-          closer.register(
-              GlobalStateManager.singleton()
-                  .setupLoggers(invocationInfo, console.getStdErr(), stdErr, verbosity));
-
       // Create and register the event buses that should listen to broadcast events.
       // If the build doesn't have a daemon create a new instance.
       BroadcastEventListener broadcastEventListener =
@@ -810,7 +798,10 @@ public final class Main {
       // The order of resources in the try-with-resources block is important: the BuckEventBus
       // must be the last resource, so that it is closed first and can deliver its queued events
       // to the other resources before they are closed.
-      try (CloseableWrapper<ExecutorService, InterruptedException> diskIoExecutorService =
+      try (GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
+              GlobalStateManager.singleton()
+                  .setupLoggers(invocationInfo, console.getStdErr(), stdErr, verbosity);
+          CloseableWrapper<ExecutorService, InterruptedException> diskIoExecutorService =
               getExecutorWrapper(
                   MostExecutors.newSingleThreadExecutor("Disk I/O"),
                   "Disk IO",
@@ -876,7 +867,6 @@ public final class Main {
           DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
           BroadcastEventListener.BroadcastEventBusClosable broadcastEventBusClosable =
               broadcastEventListener.addEventBus(buildEventBus);
-
           // This makes calls to LOG.error(...) post to the EventBus, instead of writing to
           // stderr.
           Closeable logErrorToEventBus =
@@ -1125,18 +1115,9 @@ public final class Main {
                 "versioned_target_graph_cache",
                 parserAndCaches.getVersionedTargetGraphCache().getCacheStats()));
         buildEventBus.post(CommandEvent.finished(startedEvent, exitCode));
-      } catch (Throwable t) {
-        LOG.debug(t, "Failing build on exception.");
-        flushAndCloseEventListeners(console, buildId, eventListeners);
-        throw t;
       } finally {
         context.ifPresent(c -> c.removeAllClientListeners());
-        if (commandSemaphoreAcquired) {
-          commandSemaphoreNgClient = Optional.empty();
-          BgProcessKiller.disarm();
-          commandSemaphore.release(); // Allow another command to execute while outputting traces.
-          commandSemaphoreAcquired = false;
-        }
+
         if (daemon.isPresent() && shouldCleanUpTrash) {
           // Clean up the trash in the background if this was a buckd
           // read-write command. (We don't bother waiting for it to
@@ -1144,23 +1125,24 @@ public final class Main {
           // serialized with this one.)
           TRASH_CLEANER.startCleaningDirectory(filesystem.getBuckPaths().getTrashDir());
         }
-      }
-      if (context.isPresent() && !rootCell.getBuckConfig().getFlushEventsBeforeExit()) {
-        context.get().in.close(); // Avoid client exit triggering client disconnection handling.
-        context
-            .get()
-            .exit(exitCode.getCode()); // Allow nailgun client to exit while outputting traces.
-      }
 
-      flushAndCloseEventListeners(console, buildId, eventListeners);
-      return exitCode;
-    } finally {
-      if (commandSemaphoreAcquired) {
-        commandSemaphoreNgClient = Optional.empty();
-        BgProcessKiller.disarm();
-        commandSemaphore.release();
+        // Exit Nailgun earlier if command succeeded to now block the client while performing
+        // telemetry upload in background
+        // For failures, always do it synchronously because exitCode in fact may be overridden up
+        // the stack
+        // TODO(buck_team): refactor this as in case of exception exitCode is reported incorrectly
+        // to the CommandEvent listener
+        if (exitCode == ExitCode.SUCCESS
+            && context.isPresent()
+            && !rootCell.getBuckConfig().getFlushEventsBeforeExit()) {
+          context.get().in.close(); // Avoid client exit triggering client disconnection handling.
+          context.get().exit(exitCode.getCode());
+        }
+
+        flushAndCloseEventListeners(console, buildId, eventListeners);
       }
     }
+    return exitCode;
   }
 
   /** Struct for the multiple values returned by {@link #getParserAndCaches}. */
@@ -1499,6 +1481,39 @@ public final class Main {
     }
   }
 
+  /**
+   * Try to acquire global semaphore if needed to do so. Attach closer to acquired semaphore in a
+   * form of a wrapper object so it can be used with try-with-resources. Wrapper is specialized with
+   * InterruptedException but in fact closer is exception-free; we have to do it to follow
+   * specification of CloseableWrapper
+   *
+   * @return Semaphore wrapper object if semaphore is acquired, null otherwise
+   */
+  private @Nullable CloseableWrapper<Semaphore, InterruptedException> getSemaphoreWrapper(
+      BuckCommand command) {
+    // we can execute read-only commands (query, targets, etc) in parallel
+    if (command.isReadOnly()) {
+      // using nullable instead of Optional<> to use the object with try-with-resources
+      return null;
+    }
+
+    if (!commandSemaphore.tryAcquire()) {
+      return null;
+    }
+
+    commandSemaphoreNgClient = context;
+
+    return CloseableWrapper.of(
+        commandSemaphore,
+        commandSemaphore -> {
+          commandSemaphoreNgClient = Optional.empty();
+          // TODO(buck_team): have background process killer have its own lifetime management
+          BgProcessKiller.disarm();
+          commandSemaphore.release();
+        });
+  }
+
+
   @SuppressWarnings("PMD.PrematureDeclaration")
   private ImmutableList<BuckEventListener> addEventListeners(
       BuckEventBus buckEventBus,
@@ -1582,7 +1597,6 @@ public final class Main {
 
     ImmutableList<BuckEventListener> eventListeners = eventListenersBuilder.build();
     eventListeners.forEach(buckEventBus::register);
-
 
     return eventListeners;
   }
