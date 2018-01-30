@@ -623,7 +623,7 @@ public final class Main {
         ConfigRuleKeyConfigurationFactory.create(buckConfig, pluginManager);
 
     String previousBuckCoreKey;
-    try (Closer closeables = Closer.create()) {
+    try (Closer closer = Closer.create()) {
       if (commandSemaphoreAcquired) {
         commandSemaphoreNgClient = context;
       }
@@ -800,9 +800,9 @@ public final class Main {
               filesystem.getBuckPaths().getLogDir());
 
       GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
-          GlobalStateManager.singleton()
-              .setupLoggers(invocationInfo, console.getStdErr(), stdErr, verbosity);
-      closeables.register(loggerThreadMappingScope);
+          closer.register(
+              GlobalStateManager.singleton()
+                  .setupLoggers(invocationInfo, console.getStdErr(), stdErr, verbosity));
 
       ExecutorService diskIoExecutorService = MostExecutors.newSingleThreadExecutor("Disk I/O");
       ListeningExecutorService httpWriteExecutorService =
