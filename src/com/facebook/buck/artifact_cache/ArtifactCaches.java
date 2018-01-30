@@ -69,7 +69,7 @@ import okio.Okio;
 import okio.Source;
 
 /** Creates instances of the {@link ArtifactCache}. */
-public class ArtifactCaches implements ArtifactCacheFactory {
+public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
 
   private static final Logger LOG = Logger.get(ArtifactCaches.class);
 
@@ -80,6 +80,11 @@ public class ArtifactCaches implements ArtifactCacheFactory {
   private final ListeningExecutorService httpWriteExecutorService;
   private final ListeningExecutorService httpFetchExecutorService;
   private final Optional<AsyncCloseable> asyncCloseable;
+
+  @Override
+  public void close() {
+    buckEventBus.post(HttpArtifactCacheEvent.newShutdownEvent());
+  }
 
   private interface NetworkCacheFactory {
     ArtifactCache newInstance(NetworkCacheArgs args);

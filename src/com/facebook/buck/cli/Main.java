@@ -21,7 +21,6 @@ import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator
 import static com.google.common.util.concurrent.MoreExecutors.newDirectExecutorService;
 
 import com.facebook.buck.artifact_cache.ArtifactCaches;
-import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.counters.CounterRegistry;
@@ -107,6 +106,7 @@ import com.facebook.buck.util.AsyncCloseable;
 import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.BuckArgsMethods;
 import com.facebook.buck.util.BuckIsDyingException;
+import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -193,7 +193,6 @@ import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -804,30 +803,6 @@ public final class Main {
               GlobalStateManager.singleton()
                   .setupLoggers(invocationInfo, console.getStdErr(), stdErr, verbosity));
 
-      ExecutorService diskIoExecutorService = MostExecutors.newSingleThreadExecutor("Disk I/O");
-      ListeningExecutorService httpWriteExecutorService =
-          getHttpWriteExecutorService(cacheBuckConfig, isDistributedBuild);
-      ListeningExecutorService httpFetchExecutorService =
-          getHttpFetchExecutorService(cacheBuckConfig);
-      ScheduledExecutorService counterAggregatorExecutor =
-          Executors.newSingleThreadScheduledExecutor(
-              new CommandThreadFactory("CounterAggregatorThread"));
-
-      // Create a cached thread pool for cpu intensive tasks
-      Map<ExecutorPool, ListeningExecutorService> executors = new HashMap<>();
-      executors.put(ExecutorPool.CPU, listeningDecorator(Executors.newCachedThreadPool()));
-      // Create a thread pool for network I/O tasks
-      executors.put(ExecutorPool.NETWORK, newDirectExecutorService());
-      executors.put(
-          ExecutorPool.PROJECT,
-          listeningDecorator(
-              MostExecutors.newMultiThreadExecutor("Project", buckConfig.getNumThreads())));
-
-      ScheduledExecutorService scheduledExecutorPool =
-          Executors.newScheduledThreadPool(
-              buckConfig.getNumThreadsForSchedulerPool(),
-              new CommandThreadFactory(getClass().getName() + "SchedulerThreadPool"));
-
       // Create and register the event buses that should listen to broadcast events.
       // If the build doesn't have a daemon create a new instance.
       BroadcastEventListener broadcastEventListener =
@@ -836,7 +811,56 @@ public final class Main {
       // The order of resources in the try-with-resources block is important: the BuckEventBus
       // must be the last resource, so that it is closed first and can deliver its queued events
       // to the other resources before they are closed.
-      try (BuildInfoStoreManager storeManager = new BuildInfoStoreManager();
+      try (CloseableWrapper<ExecutorService, InterruptedException> diskIoExecutorService =
+              getExecutorWrapper(
+                  MostExecutors.newSingleThreadExecutor("Disk I/O"),
+                  "Disk IO",
+                  DISK_IO_STATS_TIMEOUT_SECONDS);
+          CloseableWrapper<ListeningExecutorService, InterruptedException>
+              httpWriteExecutorService =
+                  getExecutorWrapper(
+                      getHttpWriteExecutorService(cacheBuckConfig, isDistributedBuild),
+                      "HTTP Write",
+                      cacheBuckConfig.getHttpWriterShutdownTimeout());
+          CloseableWrapper<ListeningExecutorService, InterruptedException>
+              httpFetchExecutorService =
+                  getExecutorWrapper(
+                      getHttpFetchExecutorService(cacheBuckConfig),
+                      "HTTP Read",
+                      cacheBuckConfig.getHttpWriterShutdownTimeout());
+          CloseableWrapper<ScheduledExecutorService, InterruptedException>
+              counterAggregatorExecutor =
+                  getExecutorWrapper(
+                      Executors.newSingleThreadScheduledExecutor(
+                          new CommandThreadFactory("CounterAggregatorThread")),
+                      "CounterAggregatorExecutor",
+                      COUNTER_AGGREGATOR_SERVICE_TIMEOUT_SECONDS);
+          CloseableWrapper<ScheduledExecutorService, InterruptedException> scheduledExecutorPool =
+              getExecutorWrapper(
+                  Executors.newScheduledThreadPool(
+                      buckConfig.getNumThreadsForSchedulerPool(),
+                      new CommandThreadFactory(getClass().getName() + "SchedulerThreadPool")),
+                  "ScheduledExecutorService",
+                  EXECUTOR_SERVICES_TIMEOUT_SECONDS);
+          // Create a cached thread pool for cpu intensive tasks
+          CloseableWrapper<ListeningExecutorService, InterruptedException> cpuExecutorService =
+              getExecutorWrapper(
+                  listeningDecorator(Executors.newCachedThreadPool()),
+                  ExecutorPool.CPU.toString(),
+                  EXECUTOR_SERVICES_TIMEOUT_SECONDS);
+          // Create a thread pool for network I/O tasks
+          CloseableWrapper<ListeningExecutorService, InterruptedException> networkExecutorService =
+              getExecutorWrapper(
+                  newDirectExecutorService(),
+                  ExecutorPool.NETWORK.toString(),
+                  EXECUTOR_SERVICES_TIMEOUT_SECONDS);
+          CloseableWrapper<ListeningExecutorService, InterruptedException> projectExecutorService =
+              getExecutorWrapper(
+                  listeningDecorator(
+                      MostExecutors.newMultiThreadExecutor("Project", buckConfig.getNumThreads())),
+                  ExecutorPool.PROJECT.toString(),
+                  EXECUTOR_SERVICES_TIMEOUT_SECONDS);
+          BuildInfoStoreManager storeManager = new BuildInfoStoreManager();
           AbstractConsoleEventBusListener consoleListener =
               createConsoleEventListener(
                   clock,
@@ -850,7 +874,7 @@ public final class Main {
                   buckConfig.isLogBuildIdToConsoleEnabled()
                       ? Optional.of(buildId)
                       : Optional.empty());
-          AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService);
+          AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService.get());
           DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
           BroadcastEventListener.BroadcastEventBusClosable broadcastEventBusClosable =
               broadcastEventListener.addEventBus(buildEventBus);
@@ -864,7 +888,7 @@ public final class Main {
           // NOTE: This will only run during the lifetime of the process and will flush on close.
           CounterRegistry counterRegistry =
               new CounterRegistryImpl(
-                  counterAggregatorExecutor,
+                  counterAggregatorExecutor.get(),
                   buildEventBus,
                   buckConfig.getCountersFirstFlushIntervalMillis(),
                   buckConfig.getCountersFlushIntervalMillis());
@@ -877,21 +901,29 @@ public final class Main {
                       invocationInfo,
                       daemon.isPresent(),
                       buckConfig.isProcessTrackerDeepEnabled())
-                  : null; ) {
+                  : null;
+          ArtifactCaches artifactCacheFactory =
+              new ArtifactCaches(
+                  cacheBuckConfig,
+                  buildEventBus,
+                  filesystem,
+                  executionEnvironment.getWifiSsid(),
+                  httpWriteExecutorService.get(),
+                  httpFetchExecutorService.get(),
+                  Optional.of(asyncCloseable)); ) {
 
         LOG.debug(invocationInfo.toLogLine());
 
         buildEventBus.register(HANG_MONITOR.getHangMonitor());
 
-        ArtifactCaches artifactCacheFactory =
-            new ArtifactCaches(
-                cacheBuckConfig,
-                buildEventBus,
-                filesystem,
-                executionEnvironment.getWifiSsid(),
-                httpWriteExecutorService,
-                httpFetchExecutorService,
-                Optional.of(asyncCloseable));
+        ImmutableMap<ExecutorPool, ListeningExecutorService> executors =
+            ImmutableMap.of(
+                ExecutorPool.CPU,
+                cpuExecutorService.get(),
+                ExecutorPool.NETWORK,
+                networkExecutorService.get(),
+                ExecutorPool.PROJECT,
+                projectExecutorService.get());
 
         ProgressEstimator progressEstimator =
             new ProgressEstimator(
@@ -908,7 +940,10 @@ public final class Main {
 
         Iterable<BuckEventListener> commandEventListeners =
             command.getSubcommand().isPresent()
-                ? command.getSubcommand().get().getEventListeners(executors, scheduledExecutorPool)
+                ? command
+                    .getSubcommand()
+                    .get()
+                    .getEventListeners(executors, scheduledExecutorPool.get())
                 : ImmutableList.of();
 
         eventListeners =
@@ -982,11 +1017,11 @@ public final class Main {
             vcStatsGenerator.generateStatsAsync(
                 subcommand.isSourceControlStatsGatheringEnabled()
                     || vcBuckConfig.shouldGenerateStatistics(),
-                diskIoExecutorService,
+                diskIoExecutorService.get(),
                 buildEventBus);
           }
         }
-        NetworkInfo.generateActiveNetworkAsync(diskIoExecutorService, buildEventBus);
+        NetworkInfo.generateActiveNetworkAsync(diskIoExecutorService.get(), buildEventBus);
 
         ImmutableList<String> remainingArgs =
             args.isEmpty() ? ImmutableList.of() : args.subList(1, args.size());
@@ -1071,7 +1106,7 @@ public final class Main {
                       buckConfig,
                       fileHashCache,
                       executors,
-                      scheduledExecutorPool,
+                      scheduledExecutorPool.get(),
                       buildEnvironmentDescription,
                       parserAndCaches.getActionGraphCache(),
                       knownBuildRuleTypesProvider,
@@ -1091,19 +1126,9 @@ public final class Main {
             new CacheStatsEvent(
                 "versioned_target_graph_cache",
                 parserAndCaches.getVersionedTargetGraphCache().getCacheStats()));
-
-        // Wait for HTTP writes to complete.
-        closeHttpExecutorService(
-            cacheBuckConfig, Optional.of(buildEventBus), httpWriteExecutorService);
-        closeExecutorService(
-            "CounterAggregatorExecutor",
-            counterAggregatorExecutor,
-            COUNTER_AGGREGATOR_SERVICE_TIMEOUT_SECONDS);
         buildEventBus.post(CommandEvent.finished(startedEvent, exitCode));
       } catch (Throwable t) {
         LOG.debug(t, "Failing build on exception.");
-        closeHttpExecutorService(cacheBuckConfig, Optional.empty(), httpWriteExecutorService);
-        closeDiskIoExecutorService(diskIoExecutorService);
         flushAndCloseEventListeners(console, buildId, eventListeners);
         throw t;
       } finally {
@@ -1121,12 +1146,6 @@ public final class Main {
           // serialized with this one.)
           TRASH_CLEANER.startCleaningDirectory(filesystem.getBuckPaths().getTrashDir());
         }
-        // shut down the cached thread pools
-        for (ExecutorPool p : executors.keySet()) {
-          closeExecutorService(p.toString(), executors.get(p), EXECUTOR_SERVICES_TIMEOUT_SECONDS);
-        }
-        closeExecutorService(
-            "ScheduledExecutorService", scheduledExecutorPool, EXECUTOR_SERVICES_TIMEOUT_SECONDS);
       }
       if (context.isPresent() && !rootCell.getBuckConfig().getFlushEventsBeforeExit()) {
         context.get().in.close(); // Avoid client exit triggering client disconnection handling.
@@ -1135,7 +1154,6 @@ public final class Main {
             .exit(exitCode.getCode()); // Allow nailgun client to exit while outputting traces.
       }
 
-      closeDiskIoExecutorService(diskIoExecutorService);
       flushAndCloseEventListeners(console, buildId, eventListeners);
       return exitCode;
     } finally {
@@ -1349,40 +1367,26 @@ public final class Main {
     return watchman;
   }
 
-  private static void closeExecutorService(
-      String executorName, ExecutorService executorService, long timeoutSeconds)
-      throws InterruptedException {
-    executorService.shutdown();
-    LOG.info(
-        "Awaiting termination of %s executor service. Waiting for all jobs to complete, "
-            + "or up to maximum of %s seconds...",
-        executorName, timeoutSeconds);
-    executorService.awaitTermination(timeoutSeconds, TimeUnit.SECONDS);
-    if (!executorService.isTerminated()) {
-      LOG.warn(
-          "%s executor service is still running after shutdown request and "
-              + "%s second timeout. Shutting down forcefully..",
-          executorName, timeoutSeconds);
-      executorService.shutdownNow();
-    }
-  }
-
-  private static void closeDiskIoExecutorService(ExecutorService diskIoExecutorService)
-      throws InterruptedException {
-    closeExecutorService("Disk IO", diskIoExecutorService, DISK_IO_STATS_TIMEOUT_SECONDS);
-  }
-
-  private static void closeHttpExecutorService(
-      ArtifactCacheBuckConfig buckConfig,
-      Optional<BuckEventBus> eventBus,
-      ListeningExecutorService httpWriteExecutorService)
-      throws InterruptedException {
-    closeExecutorService(
-        "HTTP Write", httpWriteExecutorService, buckConfig.getHttpWriterShutdownTimeout());
-
-    if (eventBus.isPresent()) {
-      eventBus.get().post(HttpArtifactCacheEvent.newShutdownEvent());
-    }
+  private static <T extends ExecutorService>
+      CloseableWrapper<T, InterruptedException> getExecutorWrapper(
+          T executor, String executorName, long closeTimeoutSeconds) {
+    return CloseableWrapper.of(
+        executor,
+        service -> {
+          executor.shutdown();
+          LOG.info(
+              "Awaiting termination of %s executor service. Waiting for all jobs to complete, "
+                  + "or up to maximum of %s seconds...",
+              executorName, closeTimeoutSeconds);
+          executor.awaitTermination(closeTimeoutSeconds, TimeUnit.SECONDS);
+          if (!executor.isTerminated()) {
+            LOG.warn(
+                "%s executor service is still running after shutdown request and "
+                    + "%s second timeout. Shutting down forcefully..",
+                executorName, closeTimeoutSeconds);
+            executor.shutdownNow();
+          }
+        });
   }
 
   private static ListeningExecutorService getHttpWriteExecutorService(
