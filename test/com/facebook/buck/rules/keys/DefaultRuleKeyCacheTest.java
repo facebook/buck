@@ -129,8 +129,8 @@ public class DefaultRuleKeyCacheTest {
     cache.get(rule, r -> new RuleKeyResult<>("result", ImmutableList.of(), ImmutableList.of()));
     cache.get(rule, r -> new RuleKeyResult<>("result", ImmutableList.of(), ImmutableList.of()));
     cache.get(rule, r -> new RuleKeyResult<>("result", ImmutableList.of(), ImmutableList.of()));
-    assertThat(cache.getStats().missCount(), Matchers.equalTo(1L));
-    assertThat(cache.getStats().hitCount(), Matchers.equalTo(2L));
+    assertThat(cache.getStats().getMissCount().get(), Matchers.equalTo(1L));
+    assertThat(cache.getStats().getHitCount().get(), Matchers.equalTo(2L));
   }
 
   @Test
@@ -140,7 +140,7 @@ public class DefaultRuleKeyCacheTest {
     RuleKeyInput input = RuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input"));
     cache.get(rule, r -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of(input)));
     cache.invalidateInputs(ImmutableList.of(input));
-    assertThat(cache.getStats().evictionCount(), Matchers.equalTo(1L));
+    assertThat(cache.getStats().getEvictionCount().get(), Matchers.equalTo(1L));
   }
 
   @Test
@@ -151,7 +151,7 @@ public class DefaultRuleKeyCacheTest {
     RuleKeyInput input = RuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input"));
     cache.get(rule, r -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of(input)));
     cache.invalidateInputs(ImmutableList.of(input));
-    assertThat(cache.getStats().totalLoadTime(), Matchers.equalTo(1L));
+    assertThat(cache.getStats().getTotalLoadTime().get(), Matchers.equalTo(1L));
   }
 
   private static class TestRule extends NoopBuildRuleWithDeclaredAndExtraDeps {

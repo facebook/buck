@@ -21,11 +21,11 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.util.MoreSuppliers;
+import com.facebook.buck.util.cache.CacheStats;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.cache.CacheStats;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.AbstractMap;
@@ -251,13 +251,12 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
   @Override
   public CacheStats getStats() {
     long missCount = this.missCount.longValue();
-    return new CacheStats(
-        lookupCount.longValue() - missCount,
-        missCount,
-        missCount,
-        0L,
-        totalLoadTime.longValue(),
-        evictionCount.longValue());
+    return CacheStats.builder()
+        .setHitCount(lookupCount.longValue() - missCount)
+        .setMissCount(missCount)
+        .setTotalLoadTime(totalLoadTime.longValue())
+        .setEvictionCount(evictionCount.longValue())
+        .build();
   }
 
   @Override
