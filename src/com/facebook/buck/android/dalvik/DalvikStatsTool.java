@@ -305,9 +305,10 @@ public class DalvikStatsTool {
        *
        * <p>Stateless (no arguments) - Adds 1 class, 1 field (for instance var) and 2 methods (1
        * constructor + 1 accessor) Stateful (has arguments) - Adds 1 class, 1 field per argument and
-       * 3 methods ( 1 constructor + 1 accessor + 1 bridge)
+       * 3 methods (1 constructor + 1 accessor + 1 bridge)
+       * + (Optional) 1 forwarding method for static interface method desugaring
        *
-       * <p>we always assume the worst case and for every invoke dynamic in the bytecode, augmenting
+       * <p>we always assume the worst case and for every invoke dynamic in the bytecode, augment
        * the dex references by the max possible fields/methods. At worst, we will end up over
        * estimating slightly, but real world test has shown that the difference is very small to
        * notice.
@@ -432,6 +433,15 @@ public class DalvikStatsTool {
             "lambda$bridge$" + handle.getName(),
             handle.getDesc(),
             false);
+        if (!(handle.getTag() == Opcodes.H_INVOKEVIRTUAL ||
+          handle.getTag() == Opcodes.H_INVOKEINTERFACE)) {
+          visitMethodInsn(
+              Opcodes.INVOKESTATIC,
+              "-$$Lambda$" + handle.getOwner(),
+              "lambda$forwarding$" + handle.getName(),
+              handle.getDesc(),
+              false);
+        }
       }
 
       private void createAdditionalFieldsForDesugar(String uid) {
