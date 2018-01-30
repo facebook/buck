@@ -43,10 +43,12 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.EventPostingRuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
+import com.facebook.buck.rules.keys.TrackedRuleKeyCache;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.types.Pair;
@@ -180,7 +182,9 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                 new CommandThreadManager(getClass().getName(), concurrencyLimit);
             RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
                 new EventPostingRuleKeyCacheScope<>(
-                    params.getBuckEventBus(), new DefaultRuleKeyCache<>())) {
+                    params.getBuckEventBus(),
+                    new TrackedRuleKeyCache<>(
+                        new DefaultRuleKeyCache<>(), new InstrumentingCacheStatsTracker()))) {
           // Note that we cannot use the same pool of build threads for file materialization
           // because usually all build threads are waiting for files to be materialized, and
           // there is no thread left for the FileContentsProvider(s) to use.

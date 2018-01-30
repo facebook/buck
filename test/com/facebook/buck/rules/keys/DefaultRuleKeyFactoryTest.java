@@ -50,7 +50,6 @@ import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.cache.CacheStats;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
@@ -803,11 +802,6 @@ public class DefaultRuleKeyFactoryTest {
 
     @Override
     public void invalidateAll() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public CacheStats getStats() {
       throw new UnsupportedOperationException();
     }
   }

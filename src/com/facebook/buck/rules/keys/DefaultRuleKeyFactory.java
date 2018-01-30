@@ -27,6 +27,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
+import com.facebook.buck.util.cache.NoOpCacheStatsTracker;
 import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -71,7 +72,7 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
         hashLoader,
         pathResolver,
         ruleFinder,
-        new DefaultRuleKeyCache<>(),
+        new TrackedRuleKeyCache<>(new DefaultRuleKeyCache<>(), new NoOpCacheStatsTracker()),
         Optional.empty());
   }
 
@@ -86,7 +87,7 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
         hashLoader,
         pathResolver,
         ruleFinder,
-        new DefaultRuleKeyCache<>(),
+        new TrackedRuleKeyCache<>(new DefaultRuleKeyCache<>(), new NoOpCacheStatsTracker()),
         ruleKeyLogger);
   }
 

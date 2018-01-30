@@ -49,7 +49,7 @@ abstract class AbstractRuleKeyFactories {
       FileHashCache fileHashCache,
       BuildRuleResolver resolver,
       long inputRuleKeyFileSizeLimit,
-      RuleKeyCache<RuleKey> defaultRuleKeyFactoryCache) {
+      TrackedRuleKeyCache<RuleKey> defaultRuleKeyFactoryCache) {
     return of(
         ruleKeyConfiguration,
         fileHashCache,
@@ -64,7 +64,7 @@ abstract class AbstractRuleKeyFactories {
       FileHashCache fileHashCache,
       BuildRuleResolver resolver,
       long inputRuleKeyFileSizeLimit,
-      RuleKeyCache<RuleKey> defaultRuleKeyFactoryCache,
+      TrackedRuleKeyCache<RuleKey> defaultRuleKeyFactoryCache,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(ruleKeyConfiguration);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);

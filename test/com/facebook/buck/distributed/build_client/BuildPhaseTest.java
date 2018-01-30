@@ -76,6 +76,7 @@ import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
+import com.facebook.buck.rules.keys.TrackedRuleKeyCache;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -83,6 +84,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystemFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.FakeInvocationInfoFactory;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.NoOpCacheStatsTracker;
 import com.facebook.buck.util.concurrent.FakeWeightedListeningExecutorService;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
@@ -282,7 +284,8 @@ public class BuildPhaseTest {
                     fileHashCache,
                     DefaultSourcePathResolver.from(ruleFinder),
                     ruleFinder,
-                    new DefaultRuleKeyCache<RuleKey>(),
+                    new TrackedRuleKeyCache<RuleKey>(
+                        new DefaultRuleKeyCache<>(), new NoOpCacheStatsTracker()),
                     Optional.empty()),
                 new RuleDepsCache(graphs.getActionGraphAndResolver().getResolver()),
                 (buckEventBus, rule) -> () -> {})));

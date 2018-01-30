@@ -19,7 +19,6 @@ package com.facebook.buck.rules.keys;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.util.cache.CacheStats;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
@@ -66,7 +65,4 @@ public interface RuleKeyCache<V> {
 
   /** Invalidate everything in the cache. */
   void invalidateAll();
-
-  /** @return a snapshot of the current cache statistics. */
-  CacheStats getStats();
 }

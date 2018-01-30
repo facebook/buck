@@ -24,6 +24,8 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
+import com.facebook.buck.util.cache.NoOpCacheStatsTracker;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
@@ -39,13 +41,13 @@ public class RuleKeyCacheRecycler<V> {
 
   private static final Logger LOG = Logger.get(RuleKeyCacheRecycler.class);
 
-  private final RuleKeyCache<V> cache;
+  private final TrackableRuleKeyCache<V> cache;
   private final ImmutableSet<ProjectFilesystem> watchedFilesystems;
 
   @Nullable private SettingsAffectingCache previousSettings = null;
 
   private RuleKeyCacheRecycler(
-      RuleKeyCache<V> cache, ImmutableSet<ProjectFilesystem> watchedFilesystems) {
+      TrackableRuleKeyCache<V> cache, ImmutableSet<ProjectFilesystem> watchedFilesystems) {
     this.cache = cache;
     this.watchedFilesystems = watchedFilesystems;
   }
@@ -58,7 +60,7 @@ public class RuleKeyCacheRecycler<V> {
    */
   public static <V> RuleKeyCacheRecycler<V> createAndRegister(
       EventBus eventBus,
-      RuleKeyCache<V> ruleKeyCache,
+      TrackableRuleKeyCache<V> ruleKeyCache,
       ImmutableSet<ProjectFilesystem> watchedFilesystems) {
 
     RuleKeyCacheRecycler<V> recycler = new RuleKeyCacheRecycler<>(ruleKeyCache, watchedFilesystems);
@@ -69,7 +71,7 @@ public class RuleKeyCacheRecycler<V> {
     return recycler;
   }
 
-  public static <V> RuleKeyCacheRecycler<V> create(RuleKeyCache<V> ruleKeyCache) {
+  public static <V> RuleKeyCacheRecycler<V> create(TrackableRuleKeyCache<V> ruleKeyCache) {
     return new RuleKeyCacheRecycler<>(ruleKeyCache, ImmutableSet.of());
   }
 
@@ -93,7 +95,8 @@ public class RuleKeyCacheRecycler<V> {
         // directories containing this path.
         IntStream.range(1, path.getNameCount() + 1)
             .mapToObj(end -> RuleKeyInput.of(filesystem, path.subpath(0, end)))
-            .collect(ImmutableList.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()),
+        new NoOpCacheStatsTracker());
   }
 
   @Subscribe
@@ -101,7 +104,8 @@ public class RuleKeyCacheRecycler<V> {
     for (ProjectFilesystem filesystem : watchedFilesystems) {
       LOG.verbose(
           "invalidating filesystem at \"%s\" due to event (%s)", filesystem.getRootPath(), event);
-      cache.invalidateFilesystem(filesystem);
+      // Do not track stats from Daemon watchman events.
+      cache.invalidateFilesystem(filesystem, new NoOpCacheStatsTracker());
     }
   }
 
@@ -114,7 +118,8 @@ public class RuleKeyCacheRecycler<V> {
    */
   public RuleKeyCacheScope<V> withRecycledCache(
       BuckEventBus buckEventBus, SettingsAffectingCache currentSettings) {
-    return new EventPostingRuleKeyCacheScope<V>(buckEventBus, cache) {
+    return new EventPostingRuleKeyCacheScope<V>(
+        buckEventBus, new TrackedRuleKeyCache<>(cache, new InstrumentingCacheStatsTracker())) {
 
       // Cache setup which is run before the caller gets access to the cache, at the time the scope
       // is allocated.
@@ -125,7 +130,7 @@ public class RuleKeyCacheRecycler<V> {
         // We invalidate everything if any of the settings we care about change.
         if (!SettingsAffectingCache.areIdentical(previousSettings, currentSettings)) {
           LOG.debug("invalidating entire cache due to settings change");
-          cache.invalidateAll();
+          getCache().invalidateAll();
           scope.update("settings_change", true);
         } else {
           scope.update("settings_change", false);
@@ -145,7 +150,7 @@ public class RuleKeyCacheRecycler<V> {
         // way of knowing which, if any, of its files have been modified/removed.
         LOG.verbose(
             "invalidating unwatched filesystems (everything except %s)", watchedFilesystems);
-        cache.invalidateAllExceptFilesystems(watchedFilesystems);
+        getCache().invalidateAllExceptFilesystems(watchedFilesystems);
       }
     };
   }
@@ -158,7 +163,7 @@ public class RuleKeyCacheRecycler<V> {
   void withRecycledCache(
       BuckEventBus buckEventBus,
       SettingsAffectingCache currentSettings,
-      Consumer<RuleKeyCache<V>> func) {
+      Consumer<TrackedRuleKeyCache<V>> func) {
     try (RuleKeyCacheScope<V> scope = withRecycledCache(buckEventBus, currentSettings)) {
       func.accept(scope.getCache());
     }
