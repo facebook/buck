@@ -136,7 +136,7 @@ public class MainIntegrationTest {
             "  build          builds the specified target",
             "  cache          makes calls to the artifact cache",
             "  cachedelete    Delete artifacts from the local and remote cache",
-            "  clean          deletes any generated files",
+            "  clean          deletes any generated files and caches",
             "  distbuild      attaches to a distributed build (experimental)",
             "  doctor         debug and fix issues of Buck commands",
             "  fetch          downloads remote resources to your local machine",

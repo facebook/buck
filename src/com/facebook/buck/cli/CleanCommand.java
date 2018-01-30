@@ -23,16 +23,26 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.ExitCode;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
 import org.kohsuke.args4j.Option;
 
 public class CleanCommand extends AbstractCommand {
 
   private static final String KEEP_CACHE_ARG = "--keep-cache";
+  private static final String DRY_RUN_ARG = "--dry-run";
 
-  @Option(name = KEEP_CACHE_ARG, usage = "Keep the local cache.")
+  @Option(name = KEEP_CACHE_ARG, usage = "Keeps the local cache.")
   private boolean keepCache = false;
 
-  private void cleanCell(Cell cell) throws IOException {
+  @Option(
+    name = DRY_RUN_ARG,
+    usage = "Performs a dry-run and prints the paths that would be removed."
+  )
+  private boolean dryRun = false;
+
+  private void cleanCell(CommandRunnerParams params, Cell cell) throws IOException {
     // Ideally, we would like the implementation of this method to be as simple as:
     //
     // getProjectFilesystem().deleteRecursivelyIfExists(BuckConstant.BUCK_OUTPUT_DIRECTORY);
@@ -50,34 +60,52 @@ public class CleanCommand extends AbstractCommand {
     //
 
     ProjectFilesystem projectFilesystem = cell.getFilesystem();
+
     // On Windows, you have to close all files that will be deleted.
     // Because buck clean will delete build.log, you must close it first.
     JavaUtilsLoggingBuildListener.closeLogFile();
-    projectFilesystem.deleteRecursivelyIfExists(projectFilesystem.getBuckPaths().getScratchDir());
-    projectFilesystem.deleteRecursivelyIfExists(projectFilesystem.getBuckPaths().getGenDir());
-    projectFilesystem.deleteRecursivelyIfExists(projectFilesystem.getBuckPaths().getTrashDir());
 
-    // Remove dir caches.
+    Set<Path> pathsToDelete = new HashSet<>();
+    pathsToDelete.add(projectFilesystem.getBuckPaths().getScratchDir());
+    pathsToDelete.add(projectFilesystem.getBuckPaths().getGenDir());
+    pathsToDelete.add(projectFilesystem.getBuckPaths().getTrashDir());
+
+    // Remove dir cache.
     if (!keepCache) {
-      ArtifactCacheBuckConfig artifactCacheBuckConfig =
-          ArtifactCacheBuckConfig.of(cell.getBuckConfig());
-      projectFilesystem.deleteRecursivelyIfExists(projectFilesystem.getBuckPaths().getCacheDir());
+      pathsToDelete.add(projectFilesystem.getBuckPaths().getCacheDir());
       for (DirCacheEntry dirCacheEntry :
-          artifactCacheBuckConfig.getCacheEntries().getDirCacheEntries()) {
-        projectFilesystem.deleteRecursivelyIfExists(dirCacheEntry.getCacheDir());
+          ArtifactCacheBuckConfig.of(cell.getBuckConfig()).getCacheEntries().getDirCacheEntries()) {
+        pathsToDelete.add(dirCacheEntry.getCacheDir());
       }
     }
 
     // Clean out any additional directories specified via config setting.
     for (String subPath : cell.getBuckConfig().getCleanAdditionalPaths()) {
-      projectFilesystem.deleteRecursivelyIfExists(projectFilesystem.getPath(subPath));
+      pathsToDelete.add(projectFilesystem.getPath(subPath));
+    }
+
+    if (dryRun) {
+      params
+          .getConsole()
+          .getStdOut()
+          .println("The following directories and files would be removed:");
+      for (Path path : pathsToDelete) {
+        if (projectFilesystem.exists(path)) {
+          params.getConsole().getStdOut().println(path.toAbsolutePath());
+        }
+      }
+    } else {
+      // Remove all the paths.
+      for (Path path : pathsToDelete) {
+        projectFilesystem.deleteRecursivelyIfExists(path);
+      }
     }
   }
 
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws IOException {
     for (Cell cell : params.getCell().getLoadedCells().values()) {
-      cleanCell(cell);
+      cleanCell(params, cell);
     }
     return ExitCode.SUCCESS;
   }
@@ -89,6 +117,6 @@ public class CleanCommand extends AbstractCommand {
 
   @Override
   public String getShortDescription() {
-    return "deletes any generated files";
+    return "deletes any generated files and caches";
   }
 }
