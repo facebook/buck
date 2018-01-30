@@ -49,7 +49,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.cache.CacheStatsTracker;
+import com.facebook.buck.util.cache.NoOpCacheStatsTracker;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.Platform;
@@ -108,7 +108,7 @@ public class CommandRunnerParamsForTesting {
         new ByteArrayInputStream("".getBytes("UTF-8")),
         cell,
         new InstrumentedVersionedTargetGraphCache(
-            new VersionedTargetGraphCache(), new CacheStatsTracker()),
+            new VersionedTargetGraphCache(), new NoOpCacheStatsTracker()),
         new SingletonArtifactCacheFactory(artifactCache),
         typeCoercerFactory,
         new Parser(

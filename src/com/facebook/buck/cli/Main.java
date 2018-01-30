@@ -119,7 +119,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.Verbosity;
-import com.facebook.buck.util.cache.CacheStatsTracker;
+import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
@@ -1221,7 +1221,7 @@ public final class Main {
               daemon.getParser(),
               daemon.getTypeCoercerFactory(),
               new InstrumentedVersionedTargetGraphCache(
-                  daemon.getVersionedTargetGraphCache(), new CacheStatsTracker()),
+                  daemon.getVersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),
               daemon.getActionGraphCache(),
               defaultRuleKeyFactoryCacheRecycler);
     } else {
@@ -1236,7 +1236,7 @@ public final class Main {
                   knownBuildRuleTypesProvider),
               typeCoercerFactory,
               new InstrumentedVersionedTargetGraphCache(
-                  new VersionedTargetGraphCache(), new CacheStatsTracker()),
+                  new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),
               new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries()),
               /* defaultRuleKeyFactoryCacheRecycler */ Optional.empty());
     }

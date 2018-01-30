@@ -49,7 +49,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.cache.CacheStatsTracker;
+import com.facebook.buck.util.cache.NoOpCacheStatsTracker;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.DefaultClock;
@@ -239,7 +239,7 @@ public class CleanCommandTest extends EasyMockSupport {
         new ByteArrayInputStream("".getBytes("UTF-8")),
         cell,
         new InstrumentedVersionedTargetGraphCache(
-            new VersionedTargetGraphCache(), new CacheStatsTracker()),
+            new VersionedTargetGraphCache(), new NoOpCacheStatsTracker()),
         new SingletonArtifactCacheFactory(new NoopArtifactCache()),
         createMock(TypeCoercerFactory.class),
         createMock(Parser.class),

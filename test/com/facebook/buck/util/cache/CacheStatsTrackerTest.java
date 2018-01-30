@@ -18,7 +18,6 @@ package com.facebook.buck.util.cache;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.util.cache.CacheStatsTracker.CacheRequest;
 import com.facebook.buck.util.timing.SettableFakeClock;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,12 +30,12 @@ public class CacheStatsTrackerTest {
   @Before
   public void setUp() {
     clock = new SettableFakeClock(0, 999999999);
-    tracker = new CacheStatsTracker(clock);
+    tracker = new InstrumentingCacheStatsTracker(clock);
   }
 
   @Test
   public void testRecordHit() {
-    CacheRequest request = tracker.startRequest();
+    CacheStatsTracker.CacheRequest request = tracker.startRequest();
     clock.setCurrentTimeMillis(2);
     request.recordHit();
     assertEquals((Long) 1L, tracker.getTotalHitCount());
@@ -73,7 +72,7 @@ public class CacheStatsTrackerTest {
 
   @Test
   public void testRecordMiss() {
-    CacheRequest request = tracker.startRequest();
+    CacheStatsTracker.CacheRequest request = tracker.startRequest();
     clock.setCurrentTimeMillis(5);
     request.recordMiss();
     assertEquals((Long) 0L, tracker.getTotalHitCount());
@@ -111,7 +110,7 @@ public class CacheStatsTrackerTest {
   @Test
   public void testRecordMissMatch() {
     clock.setCurrentTimeMillis(2);
-    CacheRequest request = tracker.startRequest();
+    CacheStatsTracker.CacheRequest request = tracker.startRequest();
     clock.setCurrentTimeMillis(5);
     request.recordMissMatch();
     assertEquals((Long) 0L, tracker.getTotalHitCount());
@@ -149,7 +148,7 @@ public class CacheStatsTrackerTest {
   @Test
   public void testRecordLoadSuccess() {
     clock.setCurrentTimeMillis(2);
-    CacheRequest request = tracker.startRequest();
+    CacheStatsTracker.CacheRequest request = tracker.startRequest();
     clock.setCurrentTimeMillis(5);
     request.recordMiss();
     clock.setCurrentTimeMillis(6);
@@ -191,7 +190,7 @@ public class CacheStatsTrackerTest {
   @Test
   public void testRecordLoadFail() {
     clock.setCurrentTimeMillis(2);
-    CacheRequest request = tracker.startRequest();
+    CacheStatsTracker.CacheRequest request = tracker.startRequest();
     clock.setCurrentTimeMillis(5);
     request.recordMiss();
     clock.setCurrentTimeMillis(6);
@@ -233,8 +232,8 @@ public class CacheStatsTrackerTest {
   @Test
   public void testNewInstanceReset() {
     tracker.startRequest().recordHit();
-    CacheRequest request = tracker.startRequest();
-    tracker = new CacheStatsTracker(clock);
+    CacheStatsTracker.CacheRequest request = tracker.startRequest();
+    tracker = new InstrumentingCacheStatsTracker(clock);
 
     // the old request should have no effect on new tracker
     request.recordMiss();
@@ -269,35 +268,35 @@ public class CacheStatsTrackerTest {
 
   @Test(expected = IllegalStateException.class)
   public void testDuplicateHitOnRequestThrows() {
-    CacheRequest request = tracker.startRequest();
+    CacheStatsTracker.CacheRequest request = tracker.startRequest();
     request.recordHit();
     request.recordHit();
   }
 
   @Test(expected = IllegalStateException.class)
   public void testDuplicateMissOnRequestThrows() {
-    CacheRequest request = tracker.startRequest();
+    CacheStatsTracker.CacheRequest request = tracker.startRequest();
     request.recordMiss();
     request.recordMiss();
   }
 
   @Test(expected = IllegalStateException.class)
   public void testDuplicateMissMatchOnRequestThrows() {
-    CacheRequest request = tracker.startRequest();
+    CacheStatsTracker.CacheRequest request = tracker.startRequest();
     request.recordMissMatch();
     request.recordMissMatch();
   }
 
   @Test(expected = IllegalStateException.class)
   public void testMissAndMissMatchOnRequestThrows() {
-    CacheRequest request = tracker.startRequest();
+    CacheStatsTracker.CacheRequest request = tracker.startRequest();
     request.recordMiss();
     request.recordMissMatch();
   }
 
   @Test(expected = IllegalStateException.class)
   public void testDuplicateLoadSuccessOnRequestThrows() {
-    CacheRequest request = tracker.startRequest();
+    CacheStatsTracker.CacheRequest request = tracker.startRequest();
     request.recordMiss();
     request.recordLoadSuccess();
     request.recordLoadSuccess();
@@ -305,7 +304,7 @@ public class CacheStatsTrackerTest {
 
   @Test(expected = IllegalStateException.class)
   public void testDuplicateLoadFailOnRequestThrows() {
-    CacheRequest request = tracker.startRequest();
+    CacheStatsTracker.CacheRequest request = tracker.startRequest();
     request.recordMiss();
     request.recordLoadFail();
     request.recordLoadFail();
@@ -313,21 +312,21 @@ public class CacheStatsTrackerTest {
 
   @Test(expected = IllegalStateException.class)
   public void testMissThenHitOnRequestThrows() {
-    CacheRequest request = tracker.startRequest();
+    CacheStatsTracker.CacheRequest request = tracker.startRequest();
     request.recordMiss();
     request.recordHit();
   }
 
   @Test(expected = IllegalStateException.class)
   public void testHitThenMissOnRequestThrows() {
-    CacheRequest request = tracker.startRequest();
+    CacheStatsTracker.CacheRequest request = tracker.startRequest();
     request.recordHit();
     request.recordMiss();
   }
 
   @Test(expected = IllegalStateException.class)
   public void testLoadWithoutMissOnRequestThrows() {
-    CacheRequest request = tracker.startRequest();
+    CacheStatsTracker.CacheRequest request = tracker.startRequest();
     request.recordLoadFail();
   }
 }
