@@ -375,24 +375,27 @@ public final class Main {
 
   /* Define all error handling surrounding main command */
   private void runMainThenExit(String[] args, final long initTimestamp) {
-    installUncaughtExceptionHandler(context);
-
-    Path projectRoot = Paths.get(".");
-    BuildId buildId = getBuildId(context);
-
-    // Only post an overflow event if Watchman indicates a fresh instance event
-    // after our initial query.
-    WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction =
-        daemonLifecycleManager.hasDaemon()
-            ? WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT
-            : WatchmanWatcher.FreshInstanceAction.NONE;
-
-    // Get the client environment, either from this process or from the Nailgun context.
-    ImmutableMap<String, String> clientEnvironment = getClientEnvironment(context);
 
     ExitCode exitCode = ExitCode.SUCCESS;
+
     try {
+      installUncaughtExceptionHandler(context);
+
+      Path projectRoot = Paths.get(".");
+      BuildId buildId = getBuildId(context);
+
+      // Only post an overflow event if Watchman indicates a fresh instance event
+      // after our initial query.
+      WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction =
+          daemonLifecycleManager.hasDaemon()
+              ? WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT
+              : WatchmanWatcher.FreshInstanceAction.NONE;
+
+      // Get the client environment, either from this process or from the Nailgun context.
+      ImmutableMap<String, String> clientEnvironment = getClientEnvironment(context);
+
       CommandMode commandMode = CommandMode.RELEASE;
+
       exitCode =
           runMainWithExitCode(
               buildId,
