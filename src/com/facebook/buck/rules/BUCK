@@ -406,6 +406,7 @@ java_immutables_library(
         "ImplicitInputsInferringDescription.java",
         "IndividualTestEvent.java",
         "InitializableFromDisk.java",
+        "InputBasedRuleKeyManager.java",
         "InstallTrigger.java",
         "Manifest.java",
         "MetadataProvidingDescription.java",

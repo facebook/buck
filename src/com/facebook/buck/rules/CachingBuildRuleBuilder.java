@@ -26,7 +26,6 @@ import com.facebook.buck.artifact_cache.RuleKeyCacheResultEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.LeafEvents;
-import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
@@ -40,7 +39,6 @@ import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.RuleKeyFactoryWithDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyType;
-import com.facebook.buck.rules.keys.SizeLimiter;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.ExecutionContext;
@@ -133,6 +131,7 @@ class CachingBuildRuleBuilder {
 
   private final DependencyFileRuleKeyManager dependencyFileRuleKeyManager;
   private final BuildCacheArtifactFetcher buildCacheArtifactFetcher;
+  private final InputBasedRuleKeyManager inputBasedRuleKeyManager;
 
   /**
    * This is used to weakly cache the manifest RuleKeyAndInputs. I
@@ -229,6 +228,17 @@ class CachingBuildRuleBuilder {
             buildInfoStoreManager,
             metadataStorage,
             onDiskBuildInfo);
+    inputBasedRuleKeyManager =
+        new InputBasedRuleKeyManager(
+            eventBus,
+            ruleKeyFactories,
+            this.buildInfoRecorder,
+            buildCacheArtifactFetcher,
+            artifactCache,
+            onDiskBuildInfo,
+            rule,
+            buildRuleScopeManager,
+            inputBasedKey);
   }
 
   // Return a `BuildResult.Builder` with rule-specific state pre-filled.
@@ -811,15 +821,10 @@ class CachingBuildRuleBuilder {
   }
 
   private ListenableFuture<Optional<BuildResult>> checkInputBasedCaches() throws IOException {
-    Optional<RuleKey> ruleKey;
-    try (Scope ignored = buildRuleScope()) {
-      // Calculate input-based rule key.
-      ruleKey = inputBasedKey.get();
-    }
-    if (ruleKey.isPresent()) {
-      return performInputBasedCacheFetch(ruleKey.get());
-    }
-    return Futures.immediateFuture(Optional.empty());
+    return Futures.transform(
+        inputBasedRuleKeyManager.checkInputBasedCaches(),
+        optionalResult ->
+            optionalResult.map(result -> success(result.getFirst(), result.getSecond())));
   }
 
   private ListenableFuture<BuildResult> buildOrFetchFromCache() throws IOException {
@@ -1395,53 +1400,7 @@ class CachingBuildRuleBuilder {
 
   private Optional<RuleKey> calculateInputBasedRuleKey() {
     Preconditions.checkState(depsAreAvailable);
-    try (Scope ignored =
-        RuleKeyCalculationEvent.scope(eventBus, RuleKeyCalculationEvent.Type.INPUT)) {
-      return Optional.of(ruleKeyFactories.getInputBasedRuleKeyFactory().build(rule));
-    } catch (SizeLimiter.SizeLimitException ex) {
-      return Optional.empty();
-    }
-  }
-
-  private ListenableFuture<Optional<BuildResult>> performInputBasedCacheFetch(RuleKey inputRuleKey)
-      throws IOException {
-    Preconditions.checkArgument(SupportsInputBasedRuleKey.isSupported(rule));
-
-    getBuildInfoRecorder()
-        .addBuildMetadata(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY, inputRuleKey.toString());
-
-    // Check the input-based rule key says we're already built.
-    if (checkMatchingInputBasedKey(inputRuleKey)) {
-      return Futures.immediateFuture(
-          Optional.of(
-              success(
-                  BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY,
-                  CacheResult.localKeyUnchangedHit())));
-    }
-
-    // Try to fetch the artifact using the input-based rule key.
-    return Futures.transform(
-        buildCacheArtifactFetcher
-            .tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-                inputRuleKey,
-                artifactCache,
-                // TODO(simons): Share this between all tests, not one per cell.
-                rule.getProjectFilesystem()),
-        cacheResult -> {
-          if (cacheResult.getType().isSuccess()) {
-            try (Scope ignored = LeafEvents.scope(eventBus, "handling_cache_result")) {
-              return Optional.of(
-                  success(BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED, cacheResult));
-            }
-          }
-          return Optional.empty();
-        });
-  }
-
-  private boolean checkMatchingInputBasedKey(RuleKey inputRuleKey) {
-    Optional<RuleKey> lastInputRuleKey =
-        onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY);
-    return inputRuleKey.equals(lastInputRuleKey.orElse(null));
+    return inputBasedRuleKeyManager.calculateInputBasedRuleKey();
   }
 
   private ResourceAmounts getRuleResourceAmounts() {
