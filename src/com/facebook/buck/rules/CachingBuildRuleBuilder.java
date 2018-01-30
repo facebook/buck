@@ -23,7 +23,6 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.RuleKeyCacheResult;
 import com.facebook.buck.artifact_cache.RuleKeyCacheResultEvent;
-import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.LeafEvents;
@@ -31,8 +30,6 @@ import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
-import com.facebook.buck.io.file.MoreFiles;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
@@ -55,7 +52,6 @@ import com.facebook.buck.util.Discardable;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -63,7 +59,6 @@ import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
-import com.facebook.buck.util.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -97,7 +92,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-import java.util.zip.ZipFile;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -105,7 +99,6 @@ class CachingBuildRuleBuilder {
   private static final Logger LOG = Logger.get(CachingBuildRuleBuilder.class);
   private final BuildRuleBuilderDelegate buildRuleBuilderDelegate;
   private final Optional<Long> artifactCacheSizeLimit;
-  private final BuildInfoStoreManager buildInfoStoreManager;
   private final CachingBuildEngine.BuildMode buildMode;
   private final BuildRuleDurationTracker buildRuleDurationTracker;
   private final boolean consoleLogBuildFailuresInline;
@@ -113,7 +106,6 @@ class CachingBuildRuleBuilder {
   private final CachingBuildEngine.DepFiles depFiles;
   private final FileHashCache fileHashCache;
   private final long maxDepFileCacheEntries;
-  private final CachingBuildEngine.MetadataStorage metadataStorage;
   private final SourcePathResolver pathResolver;
   private final ResourceAwareSchedulingInfo resourceAwareSchedulingInfo;
   private final RuleKeyFactories ruleKeyFactories;
@@ -140,6 +132,7 @@ class CachingBuildRuleBuilder {
   private final Supplier<Optional<RuleKey>> inputBasedKey;
 
   private final DependencyFileRuleKeyManager dependencyFileRuleKeyManager;
+  private final BuildCacheArtifactFetcher buildCacheArtifactFetcher;
 
   /**
    * This is used to weakly cache the manifest RuleKeyAndInputs. I
@@ -186,7 +179,6 @@ class CachingBuildRuleBuilder {
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
     this.buildRuleBuilderDelegate = buildRuleBuilderDelegate;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
-    this.buildInfoStoreManager = buildInfoStoreManager;
     this.buildMode = buildMode;
     this.buildRuleDurationTracker = buildRuleDurationTracker;
     this.consoleLogBuildFailuresInline = consoleLogBuildFailuresInline;
@@ -194,7 +186,6 @@ class CachingBuildRuleBuilder {
     this.depFiles = depFiles;
     this.fileHashCache = fileHashCache;
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
-    this.metadataStorage = metadataStorage;
     this.pathResolver = pathResolver;
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
     this.ruleKeyFactories = ruleKeyFactories;
@@ -228,6 +219,16 @@ class CachingBuildRuleBuilder {
     this.dependencyFileRuleKeyManager =
         new DependencyFileRuleKeyManager(
             depFiles, rule, this.buildInfoRecorder, onDiskBuildInfo, ruleKeyFactories, eventBus);
+    this.buildCacheArtifactFetcher =
+        new BuildCacheArtifactFetcher(
+            rule,
+            buildRuleScopeManager,
+            serviceByAdjustingDefaultWeightsTo(CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS),
+            this::onOutputsWillChange,
+            eventBus,
+            buildInfoStoreManager,
+            metadataStorage,
+            onDiskBuildInfo);
   }
 
   // Return a `BuildResult.Builder` with rule-specific state pre-filled.
@@ -998,11 +999,12 @@ class CachingBuildRuleBuilder {
   private ListenableFuture<CacheResult> performRuleKeyCacheCheck() throws IOException {
     long cacheRequestTimestampMillis = System.currentTimeMillis();
     return Futures.transform(
-        tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-            defaultKey,
-            artifactCache,
-            // TODO(simons): This should be a shared between all tests, not one per cell
-            rule.getProjectFilesystem()),
+        buildCacheArtifactFetcher
+            .tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+                defaultKey,
+                artifactCache,
+                // TODO(simons): This should be a shared between all tests, not one per cell
+                rule.getProjectFilesystem()),
         cacheResult -> {
           RuleKeyCacheResult ruleKeyCacheResult =
               RuleKeyCacheResult.builder()
@@ -1094,56 +1096,6 @@ class CachingBuildRuleBuilder {
     return String.format("When building rule %s.", rule.getBuildTarget());
   }
 
-  private ListenableFuture<CacheResult>
-      tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-          final RuleKey ruleKey,
-          final ArtifactCache artifactCache,
-          final ProjectFilesystem filesystem) {
-    if (!rule.isCacheable()) {
-      return Futures.immediateFuture(CacheResult.ignored());
-    }
-
-    // Create a temp file whose extension must be ".zip" for Filesystems.newFileSystem() to infer
-    // that we are creating a zip-based FileSystem.
-    final LazyPath lazyZipPath =
-        new LazyPath() {
-          @Override
-          protected Path create() throws IOException {
-            return Files.createTempFile(
-                "buck_artifact_" + MoreFiles.sanitize(rule.getBuildTarget().getShortName()),
-                ".zip");
-          }
-        };
-
-    // TODO(mbolin): Change ArtifactCache.fetch() so that it returns a File instead of takes one.
-    // Then we could download directly from the remote cache into the on-disk cache and unzip it
-    // from there.
-    return Futures.transformAsync(
-        fetch(artifactCache, ruleKey, lazyZipPath),
-        cacheResult -> {
-          try (Scope ignored = buildRuleScope()) {
-            // Verify that the rule key we used to fetch the artifact is one of the rule keys
-            // reported in it's metadata.
-            if (cacheResult.getType().isSuccess()) {
-              ImmutableSet<RuleKey> ruleKeys =
-                  RichStream.from(cacheResult.getMetadata().entrySet())
-                      .filter(e -> BuildInfo.RULE_KEY_NAMES.contains(e.getKey()))
-                      .map(Map.Entry::getValue)
-                      .map(RuleKey::new)
-                      .toImmutableSet();
-              if (!ruleKeys.contains(ruleKey)) {
-                LOG.warn(
-                    "%s: rule keys in artifact don't match rule key used to fetch it: %s not in %s",
-                    rule.getBuildTarget(), ruleKey, ruleKeys);
-              }
-            }
-
-            return Futures.immediateFuture(
-                unzipArtifactFromCacheResult(ruleKey, lazyZipPath, filesystem, cacheResult));
-          }
-        });
-  }
-
   /**
    * onOutputsWillChange() should be called once we've determined that the outputs are going to
    * change from their previous state (e.g. because we're about to build locally or unzip an
@@ -1155,116 +1107,6 @@ class CachingBuildRuleBuilder {
     }
     onDiskBuildInfo.deleteExistingMetadata();
     // TODO(cjhopman): Delete old outputs.
-  }
-
-  private ListenableFuture<CacheResult> fetch(
-      ArtifactCache artifactCache, RuleKey ruleKey, LazyPath outputPath) {
-    return Futures.transform(
-        artifactCache.fetchAsync(ruleKey, outputPath),
-        (CacheResult cacheResult) -> {
-          try (Scope ignored = buildRuleScope()) {
-            if (cacheResult.getType() != CacheResultType.HIT) {
-              return cacheResult;
-            }
-            for (String ruleKeyName : BuildInfo.RULE_KEY_NAMES) {
-              if (!cacheResult.getMetadata().containsKey(ruleKeyName)) {
-                continue;
-              }
-              String ruleKeyValue = cacheResult.getMetadata().get(ruleKeyName);
-              try {
-                verify(ruleKeyValue);
-              } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException(
-                    String.format(
-                        "Invalid '%s' rule key in metadata for artifact '%s' returned by cache '%s': '%s'",
-                        ruleKeyName, ruleKey, artifactCache.getClass(), ruleKeyValue),
-                    e);
-              }
-            }
-            return cacheResult;
-          }
-        },
-        serviceByAdjustingDefaultWeightsTo(CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS));
-  }
-
-  /**
-   * Checks that passed rule key value is valid and throws an {@link IllegalArgumentException} if it
-   * is not.
-   *
-   * @param ruleKeyValue rule key to verify.
-   */
-  @SuppressWarnings("CheckReturnValue")
-  private void verify(String ruleKeyValue) {
-    HashCode.fromString(ruleKeyValue);
-  }
-
-  private CacheResult unzipArtifactFromCacheResult(
-      RuleKey ruleKey, LazyPath lazyZipPath, ProjectFilesystem filesystem, CacheResult cacheResult)
-      throws IOException {
-
-    // We only unpack artifacts from hits.
-    if (!cacheResult.getType().isSuccess()) {
-      LOG.debug("Cache miss for '%s' with rulekey '%s'", rule, ruleKey);
-      return cacheResult;
-    }
-    onOutputsWillChange();
-
-    Preconditions.checkState(cacheResult.metadata().isPresent());
-    Preconditions.checkArgument(cacheResult.getType() == CacheResultType.HIT);
-    LOG.debug("Fetched '%s' from cache with rulekey '%s'", rule, ruleKey);
-
-    // It should be fine to get the path straight away, since cache already did it's job.
-    Path zipPath = lazyZipPath.getUnchecked();
-
-    // We unzip the file in the root of the project directory.
-    // Ideally, the following would work:
-    //
-    // Path pathToZip = Paths.get(zipPath.getAbsolutePath());
-    // FileSystem fs = FileSystems.newFileSystem(pathToZip, /* loader */ null);
-    // Path root = Iterables.getOnlyElement(fs.getRootDirectories());
-    // MoreFiles.copyRecursively(root, projectRoot);
-    //
-    // Unfortunately, this does not appear to work, in practice, because MoreFiles fails when trying
-    // to resolve a Path for a zip entry against a file Path on disk.
-    ArtifactCompressionEvent.Started started =
-        ArtifactCompressionEvent.started(
-            ArtifactCompressionEvent.Operation.DECOMPRESS, ImmutableSet.of(ruleKey));
-    eventBus.post(started);
-    try {
-      // First, clear out the pre-existing metadata directory.  We have to do this *before*
-      // unpacking the zipped artifact, as it includes files that will be stored in the metadata
-      // directory.
-      BuildInfoStore buildInfoStore =
-          buildInfoStoreManager.get(rule.getProjectFilesystem(), metadataStorage);
-
-      try (ZipFile artifact = new ZipFile(zipPath.toFile())) {
-        onDiskBuildInfo.validateArtifact(artifact);
-      }
-
-      Preconditions.checkState(
-          cacheResult.getMetadata().containsKey(BuildInfo.MetadataKey.ORIGIN_BUILD_ID),
-          "Cache artifact for rulekey %s is missing metadata %s.",
-          ruleKey,
-          BuildInfo.MetadataKey.ORIGIN_BUILD_ID);
-
-      Unzip.extractZipFile(
-          zipPath.toAbsolutePath(),
-          filesystem,
-          Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
-
-      // We only delete the ZIP file when it has been unzipped successfully. Otherwise, we leave it
-      // around for debugging purposes.
-      Files.delete(zipPath);
-
-      // TODO(cjhopman): This should probably record metadata with the buildInfoRecorder, not
-      // directly into the buildInfoStore.
-      // Also write out the build metadata.
-      buildInfoStore.updateMetadata(rule.getBuildTarget(), cacheResult.getMetadata());
-    } finally {
-      eventBus.post(ArtifactCompressionEvent.finished(started));
-    }
-
-    return cacheResult;
   }
 
   private void executePostBuildSteps(Iterable<Step> postBuildSteps)
@@ -1448,7 +1290,7 @@ class CachingBuildRuleBuilder {
         };
 
     return Futures.transformAsync(
-        fetch(artifactCache, key, tempPath),
+        buildCacheArtifactFetcher.fetch(artifactCache, key, tempPath),
         (@Nonnull CacheResult cacheResult) -> {
           if (!cacheResult.getType().isSuccess()) {
             LOG.verbose("%s: cache miss on manifest %s", rule.getBuildTarget(), key);
@@ -1541,8 +1383,9 @@ class CachingBuildRuleBuilder {
 
           // Fetch the rule outputs from cache using the found dep file rule key.
           return Futures.transform(
-              tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-                  depFileRuleKey.get(), artifactCache, rule.getProjectFilesystem()),
+              buildCacheArtifactFetcher
+                  .tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+                      depFileRuleKey.get(), artifactCache, rule.getProjectFilesystem()),
               (@Nonnull CacheResult ruleCacheResult) -> {
                 manifestFetchResult.setRuleCacheResult(ruleCacheResult);
                 return manifestFetchResult.build();
@@ -1578,11 +1421,12 @@ class CachingBuildRuleBuilder {
 
     // Try to fetch the artifact using the input-based rule key.
     return Futures.transform(
-        tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-            inputRuleKey,
-            artifactCache,
-            // TODO(simons): Share this between all tests, not one per cell.
-            rule.getProjectFilesystem()),
+        buildCacheArtifactFetcher
+            .tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+                inputRuleKey,
+                artifactCache,
+                // TODO(simons): Share this between all tests, not one per cell.
+                rule.getProjectFilesystem()),
         cacheResult -> {
           if (cacheResult.getType().isSuccess()) {
             try (Scope ignored = LeafEvents.scope(eventBus, "handling_cache_result")) {
@@ -1795,7 +1639,7 @@ class CachingBuildRuleBuilder {
    *
    * <p>Once the rule has been marked as finished, any further scope() calls will fail.
    */
-  private class BuildRuleScopeManager {
+  class BuildRuleScopeManager {
     private final RuleKeyFactoryWithDiagnostics<RuleKey> ruleKeyFactory;
 
     private volatile @Nullable Thread currentBuildRuleScopeThread = null;
@@ -1805,7 +1649,7 @@ class CachingBuildRuleBuilder {
       ruleKeyFactory = ruleKeyFactories.getDefaultRuleKeyFactory();
     }
 
-    private Scope scope() {
+    Scope scope() {
       synchronized (this) {
         Preconditions.checkState(
             finishedData == null, "RuleScope started after rule marked as finished.");
