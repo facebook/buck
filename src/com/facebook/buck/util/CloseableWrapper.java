@@ -47,6 +47,7 @@ public class CloseableWrapper<T, E extends Exception> implements AutoCloseable {
 
   private final T obj;
   private final ThrowingConsumer<T, E> closer;
+  private boolean closed = false;
 
   private CloseableWrapper(T obj, ThrowingConsumer<T, E> closer) {
     this.obj = obj;
@@ -55,7 +56,8 @@ public class CloseableWrapper<T, E extends Exception> implements AutoCloseable {
 
   /**
    * Wrap an object with {@code AutoCloseable} interface and provide a function to replace a {@code
-   * close} method
+   * close} method The wrapper is idempotent, i.e. it will call closer function exactly once, even
+   * if user calls {@code close} multiple times.
    *
    * @param obj Any class that does not implement AutoCloseable interface which is hard to extend
    * @param closer A function to call on close
@@ -72,6 +74,10 @@ public class CloseableWrapper<T, E extends Exception> implements AutoCloseable {
 
   @Override
   public void close() throws E {
+    if (closed) {
+      return;
+    }
+    closed = true;
     closer.accept(obj);
   }
 

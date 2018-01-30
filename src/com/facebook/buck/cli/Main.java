@@ -1120,6 +1120,11 @@ public final class Main {
         buildEventBus.post(CommandEvent.finished(startedEvent, exitCode));
       } finally {
         context.ifPresent(c -> c.removeAllClientListeners());
+        // release global command semaphore earlier to allow other waiting command to execute
+        // close() is idempotent so it is ok to call it now
+        if (semaphore != null) {
+          semaphore.close();
+        }
 
         if (daemon.isPresent() && shouldCleanUpTrash) {
           // Clean up the trash in the background if this was a buckd
