@@ -97,6 +97,10 @@ public class AndroidBuckConfig {
     return delegate.getListWithoutComments("ndk", "extra_ldflags", ' ');
   }
 
+  public boolean getNdkUnifiedHeaders() {
+    return delegate.getBooleanValue("ndk", "unified_headers", false);
+  }
+
   public boolean isGrayscaleImageProcessingEnabled() {
     return delegate.getBooleanValue("resources", "resource_grayscale_enabled", false);
   }

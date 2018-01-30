@@ -60,6 +60,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -415,7 +416,8 @@ public class NdkCxxPlatforms {
             targetConfiguration,
             host.toString(),
             cxxRuntime,
-            strictToolchainPaths);
+            strictToolchainPaths,
+            androidConfig.getNdkUnifiedHeaders());
     // Sanitized paths will have magic placeholders for parts of the paths that
     // are machine/host-specific. See comments on ANDROID_NDK_ROOT and
     // BUILD_HOST_SUBST above.
@@ -680,7 +682,7 @@ public class NdkCxxPlatforms {
     }
 
     // Set the sysroot to the platform-specific path.
-    flags.add("--sysroot=" + toolchainPaths.getSysroot());
+    flags.add("--sysroot=" + toolchainPaths.getPlatformSysroot());
 
     // TODO(#7264008): This was added for windows support but it's not clear why it's needed.
     if (targetConfiguration.getCompiler().getType() == NdkCompilerType.GCC) {
@@ -740,19 +742,23 @@ public class NdkCxxPlatforms {
     // NDK builds enable stack protector and debug symbols by default.
     flags.add("-fstack-protector", "-g3");
 
+    flags.add("-D__ANDROID_API__=" + targetConfiguration.getTargetAppPlatformLevel());
+
     return flags.build();
   }
 
   private static ImmutableList<String> getCommonIncludes(NdkCxxToolchainPaths toolchainPaths) {
-    return ImmutableList.of(
+    ImmutableList.Builder<String> flags = new Builder<String>().add(
+        "-isystem", toolchainPaths.getNdkToolRoot().resolve("include").toString(),
+        "-isystem", toolchainPaths.getLibPath().resolve("include").toString(),
+        "-isystem", toolchainPaths.getIncludeSysroot().resolve("usr").resolve("include").toString(),
         "-isystem",
-        toolchainPaths.getNdkToolRoot().resolve("include").toString(),
-        "-isystem",
-        toolchainPaths.getLibPath().resolve("include").toString(),
-        "-isystem",
-        toolchainPaths.getSysroot().resolve("usr").resolve("include").toString(),
-        "-isystem",
-        toolchainPaths.getSysroot().resolve("usr").resolve("include").resolve("linux").toString());
+        toolchainPaths.getIncludeSysroot().resolve("usr").resolve("include").resolve("linux")
+            .toString());
+    if (toolchainPaths.isUnifiedHeaders()) {
+      flags.add("-isystem", toolchainPaths.getArchSpecificIncludes().toString());
+    }
+    return flags.build();
   }
 
   private static ImmutableList<String> getAsflags(
@@ -878,6 +884,7 @@ public class NdkCxxPlatforms {
     private NdkCxxRuntime cxxRuntime;
     private Map<String, Path> cachedPaths;
     private boolean strict;
+    private boolean unifiedHeaders;
     private int ndkMajorVersion;
     private ProjectFilesystem filesystem;
 
@@ -887,7 +894,8 @@ public class NdkCxxPlatforms {
         NdkCxxPlatformTargetConfiguration targetConfiguration,
         String hostName,
         NdkCxxRuntime cxxRuntime,
-        boolean strict) {
+        boolean strict,
+        boolean unifiedHeaders) {
       this(
           filesystem,
           ndkRoot,
@@ -895,7 +903,8 @@ public class NdkCxxPlatforms {
           targetConfiguration,
           hostName,
           cxxRuntime,
-          strict);
+          strict,
+          unifiedHeaders);
     }
 
     private NdkCxxToolchainPaths(
@@ -905,10 +914,12 @@ public class NdkCxxPlatforms {
         NdkCxxPlatformTargetConfiguration targetConfiguration,
         String hostName,
         NdkCxxRuntime cxxRuntime,
-        boolean strict) {
+        boolean strict,
+        boolean unifiedHeaders) {
       this.filesystem = filesystem;
       this.cachedPaths = new HashMap<>();
       this.strict = strict;
+      this.unifiedHeaders = unifiedHeaders;
 
       this.targetConfiguration = targetConfiguration;
       this.hostName = hostName;
@@ -928,7 +939,8 @@ public class NdkCxxPlatforms {
           targetConfiguration,
           BUILD_HOST_SUBST,
           cxxRuntime,
-          false);
+          false,
+          unifiedHeaders);
     }
 
     Path processPathPattern(Path root, String pattern) {
@@ -984,11 +996,29 @@ public class NdkCxxPlatforms {
       }
     }
 
+    boolean isUnifiedHeaders() {
+      return unifiedHeaders || ndkMajorVersion >= 16;
+    }
+
+    /**
+     * @return the path to arch-specific include files; only use with unified headers
+     */
+    Path getArchSpecificIncludes() {
+      return processPathPattern("sysroot/usr/include/{toolchain_target}");
+    }
+
     /**
      * @return the path to use as the system root, targeted to the given target platform and
      *     architecture.
      */
-    Path getSysroot() {
+    Path getIncludeSysroot() {
+      if (isUnifiedHeaders()) {
+        return processPathPattern("sysroot");
+      }
+      return getPlatformSysroot();
+    }
+
+    Path getPlatformSysroot() {
       return processPathPattern("platforms/{target_platform}/arch-{target_arch}");
     }
 
