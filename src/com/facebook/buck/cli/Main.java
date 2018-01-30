@@ -102,7 +102,6 @@ import com.facebook.buck.test.TestConfig;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
-import com.facebook.buck.util.AsyncCloseable;
 import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.BuckArgsMethods;
 import com.facebook.buck.util.BuckIsDyingException;
@@ -874,7 +873,6 @@ public final class Main {
                   buckConfig.isLogBuildIdToConsoleEnabled()
                       ? Optional.of(buildId)
                       : Optional.empty());
-          AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService.get());
           DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
           BroadcastEventListener.BroadcastEventBusClosable broadcastEventBusClosable =
               broadcastEventListener.addEventBus(buildEventBus);
@@ -910,7 +908,7 @@ public final class Main {
                   executionEnvironment.getWifiSsid(),
                   httpWriteExecutorService.get(),
                   httpFetchExecutorService.get(),
-                  Optional.of(asyncCloseable)); ) {
+                  diskIoExecutorService.get()); ) {
 
         LOG.debug(invocationInfo.toLogLine());
 

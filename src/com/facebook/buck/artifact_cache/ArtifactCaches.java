@@ -38,7 +38,6 @@ import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.LoadBalancedService;
 import com.facebook.buck.slb.RetryingHttpService;
 import com.facebook.buck.slb.SingleUriService;
-import com.facebook.buck.util.AsyncCloseable;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.randomizedtrial.RandomizedTrial;
 import com.facebook.buck.util.timing.DefaultClock;
@@ -52,8 +51,11 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
@@ -79,10 +81,23 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private final Optional<String> wifiSsid;
   private final ListeningExecutorService httpWriteExecutorService;
   private final ListeningExecutorService httpFetchExecutorService;
-  private final Optional<AsyncCloseable> asyncCloseable;
+  private final ExecutorService artifactCacheCloseExecutorService;
+  private List<ArtifactCache> artifactCaches = new ArrayList<>();
 
   @Override
   public void close() {
+    // close all artifact caches asynchronously using a separate executor
+    for (ArtifactCache artifactCache : artifactCaches) {
+      artifactCacheCloseExecutorService.submit(
+          () -> {
+            try {
+              artifactCache.close();
+            } catch (Exception e) {
+              LOG.warn(e, "Exception when performing async close of %s.", artifactCache);
+            }
+          });
+    }
+
     buckEventBus.post(HttpArtifactCacheEvent.newShutdownEvent());
   }
 
@@ -97,7 +112,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
    * @param buckEventBus event bus
    * @param projectFilesystem filesystem to store files on
    * @param wifiSsid current WiFi ssid to decide if we want the http cache or not
-   * @param asyncCloseable
+   * @param artifactCacheCloseExecutorService executor (like thread pool) that will process closing
+   *     tasks of all artifact caches created by this factory
    */
   public ArtifactCaches(
       ArtifactCacheBuckConfig buckConfig,
@@ -106,14 +122,14 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       Optional<String> wifiSsid,
       ListeningExecutorService httpWriteExecutorService,
       ListeningExecutorService httpFetchExecutorService,
-      Optional<AsyncCloseable> asyncCloseable) {
+      ExecutorService artifactCacheCloseExecutorService) {
     this.buckConfig = buckConfig;
     this.buckEventBus = buckEventBus;
     this.projectFilesystem = projectFilesystem;
     this.wifiSsid = wifiSsid;
     this.httpWriteExecutorService = httpWriteExecutorService;
     this.httpFetchExecutorService = httpFetchExecutorService;
-    this.asyncCloseable = asyncCloseable;
+    this.artifactCacheCloseExecutorService = artifactCacheCloseExecutorService;
   }
 
   private static Request.Builder addHeadersToBuilder(
@@ -167,9 +183,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
             cacheTypeBlacklist,
             distributedBuildModeEnabled);
 
-    if (asyncCloseable.isPresent()) {
-      artifactCache = asyncCloseable.get().closeAsync(artifactCache);
-    }
+    artifactCaches.add(artifactCache);
 
     buckEventBus.post(ArtifactCacheConnectEvent.finished(started));
     return artifactCache;
@@ -184,7 +198,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
         wifiSsid,
         httpWriteExecutorService,
         httpFetchExecutorService,
-        asyncCloseable);
+        artifactCacheCloseExecutorService);
   }
 
   /**
