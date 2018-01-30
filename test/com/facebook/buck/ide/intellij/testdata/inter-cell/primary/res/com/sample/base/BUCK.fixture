@@ -1,0 +1,10 @@
+android_resource(
+    name = "base",
+    package = "com.sample",
+    res = "res",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+    ],
+)

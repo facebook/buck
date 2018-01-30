@@ -162,22 +162,12 @@ public final class IjModuleGraphFactory {
   }
 
   private static ImmutableSet<IjProjectElement> getProjectElementFromBuildTargets(
-      final ProjectFilesystem projectFilesystem,
       final TargetGraph targetGraph,
       final IjLibraryFactory libraryFactory,
       final ImmutableMap<BuildTarget, IjModule> rulesToModules,
       final IjModule module,
       final Stream<BuildTarget> buildTargetStream) {
     return buildTargetStream
-        .filter(
-            input -> {
-              TargetNode<?, ?> targetNode = targetGraph.get(input);
-              // IntelliJ doesn't support referring to source files which aren't below the root of
-              // the project. Filter out those cases proactively, so that we don't try to resolve
-              // files relative to the wrong ProjectFilesystem.
-              // Maybe one day someone will fix this.
-              return isInRootCell(projectFilesystem, targetNode);
-            })
         .filter(
             input -> {
               // The exported deps closure can contain references back to targets contained
@@ -266,7 +256,6 @@ public final class IjModuleGraphFactory {
         } else {
           depElements =
               getProjectElementFromBuildTargets(
-                  projectFilesystem,
                   targetGraph,
                   libraryFactory,
                   rulesToModules,
@@ -277,7 +266,6 @@ public final class IjModuleGraphFactory {
           if (projectConfig.isIncludeTransitiveDependency()) {
             transitiveDepElements =
                 getProjectElementFromBuildTargets(
-                    projectFilesystem,
                     targetGraph,
                     libraryFactory,
                     rulesToModules,
