@@ -26,4 +26,7 @@ public class NoOpBuildRuleFinishedPublisher implements BuildRuleFinishedPublishe
 
   @Override
   public void createBuildRuleCompletionEvents(ImmutableList<String> finishedTargets) {}
+
+  @Override
+  public void createMostBuildRulesCompletedEvent() {}
 }

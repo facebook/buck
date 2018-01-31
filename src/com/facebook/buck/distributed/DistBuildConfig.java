@@ -123,6 +123,10 @@ public class DistBuildConfig {
   private static final boolean DEFAULT_ALWAYS_WAIT_FOR_REMOTE_BUILD_BEFORE_PROCEEDING_LOCALLY =
       true;
 
+  private static final String MOST_BUILD_RULES_FINISHED_PERCENTAGE_THRESHOLD =
+      "most_build_rules_finished_percentage_threshold";
+  private static final int DEFAULT_MOST_BUILD_RULES_FINISHED_PERCENTAGE_THRESHOLD = 80;
+
   private static final String ENABLE_UPLOADS_FROM_LOCAL_CACHE = "enable_uploads_from_local_cache";
   private static final boolean DEFAULT_ENABLE_UPLOADS_FROM_LOCAL_CACHE = false;
 
@@ -311,6 +315,12 @@ public class DistBuildConfig {
     return buckConfig
         .getInteger(STAMPEDE_SECTION, CONTROLLER_MAX_THREAD_COUNT)
         .orElse(DEFAULT_CONTROLLER_MAX_THREAD_COUNT);
+  }
+
+  public int getMostBuildRulesFinishedPercentageThreshold() {
+    return buckConfig
+        .getInteger(STAMPEDE_SECTION, MOST_BUILD_RULES_FINISHED_PERCENTAGE_THRESHOLD)
+        .orElse(DEFAULT_MOST_BUILD_RULES_FINISHED_PERCENTAGE_THRESHOLD);
   }
 
   /** @return Ratio of available build capacity that should be used by coordinator */

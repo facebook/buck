@@ -96,6 +96,10 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
     }
     buildRuleFinishedPublisher.createBuildRuleStartedEvents(startedTargetsBuilder.build());
 
+    if (allocator.haveMostBuildRulesCompleted()) {
+      buildRuleFinishedPublisher.createMostBuildRulesCompletedEvent();
+    }
+
     chromeTraceTracker.updateWork(
         request.getMinionId(), request.getFinishedTargets(), newWorkUnitsForMinion);
 

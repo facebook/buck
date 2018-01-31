@@ -25,4 +25,10 @@ public interface BuildRuleFinishedPublisher {
   void createBuildRuleStartedEvents(ImmutableList<String> startedTargets);
 
   void createBuildRuleCompletionEvents(ImmutableList<String> finishedTargets);
+
+  /**
+   * If not previously created, schedules an event to be sent to distributed build client to inform
+   * it that most build rules have finished remotely.
+   */
+  void createMostBuildRulesCompletedEvent();
 }

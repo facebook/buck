@@ -39,11 +39,15 @@ public class BuildTargetsQueue {
   private final Set<String> seenFinishedNodes = new HashSet<>();
   private final Set<EnqueuedTarget> uncachableZeroDependencyTargets = new HashSet<>();
   private int totalBuilt = 0;
+  private final int totalCacheableNodes;
+  private int finishedCacheableNodes = 0;
+  private final int mostBuildRulesFinishedPercentageThreshold;
 
   BuildTargetsQueue(
       List<EnqueuedTarget> zeroDependencyTargets,
       Map<String, EnqueuedTarget> allEnqueuedTargets,
-      Set<EnqueuedTarget> uncachableZeroDependencyTargets) {
+      Set<EnqueuedTarget> uncachableZeroDependencyTargets,
+      int mostBuildRulesFinishedPercentageThreshold) {
     LOG.verbose(
         String.format(
             "Constructing queue with [%d] zero dependency targets and [%d] total targets.",
@@ -51,11 +55,30 @@ public class BuildTargetsQueue {
     this.zeroDependencyTargets = zeroDependencyTargets;
     this.allEnqueuedTargets = allEnqueuedTargets;
     this.uncachableZeroDependencyTargets.addAll(uncachableZeroDependencyTargets);
+    this.mostBuildRulesFinishedPercentageThreshold = mostBuildRulesFinishedPercentageThreshold;
     completeUncachableZeroDependencyNodes();
+
+    totalCacheableNodes =
+        (int) allEnqueuedTargets.values().stream().filter(t -> !t.uncachable).count();
+  }
+
+  /** @return True if configured percentage of builds rules have finished. */
+  public boolean haveMostBuildRulesFinished() {
+    if (totalCacheableNodes == 0) {
+      return true;
+    }
+
+    int percentageOfRulesFinished =
+        (int) ((double) finishedCacheableNodes / totalCacheableNodes * 100);
+
+    // Uncomment for debugging:
+    //    LOG.info("Percentage of finished rules: " + percentageOfRulesFinished);
+
+    return percentageOfRulesFinished >= mostBuildRulesFinishedPercentageThreshold;
   }
 
   public static BuildTargetsQueue newEmptyQueue() {
-    return new BuildTargetsQueue(new ArrayList<>(), new HashMap<>(), new HashSet<>());
+    return new BuildTargetsQueue(new ArrayList<>(), new HashMap<>(), new HashSet<>(), 0);
   }
 
   public boolean hasReadyZeroDependencyNodes() {
@@ -124,6 +147,7 @@ public class BuildTargetsQueue {
       throw new RuntimeException(errorMessage);
     }
     seenFinishedNodes.add(target.buildTarget);
+    finishedCacheableNodes += (target.uncachable ? 0 : 1);
 
     ImmutableList<String> dependents = target.getDependentTargets();
     LOG.debug(

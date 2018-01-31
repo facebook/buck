@@ -36,4 +36,7 @@ public interface RemoteBuildRuleCompletionNotifier {
 
   /** Signals that the entire remote build has finished (and in turn all rules within it) */
   void signalCompletionOfRemoteBuild();
+
+  /** Configured threshold percentage of build rules has finished building remotely * */
+  void signalMostBuildRulesFinished();
 }

@@ -303,7 +303,9 @@ public class CacheOptimizedBuildTargetsQueueFactory {
    * @return an instance of {@link BuildTargetsQueue} with the top-level targets at the root.
    */
   public BuildTargetsQueue createBuildTargetsQueue(
-      Iterable<BuildTarget> targetsToBuild, BuildRuleFinishedPublisher buildRuleFinishedPublisher) {
+      Iterable<BuildTarget> targetsToBuild,
+      BuildRuleFinishedPublisher buildRuleFinishedPublisher,
+      int mostBuildRulesFinishedPercentageThreshold) {
     GraphTraversalData results = traverseGraphFromTopLevelUsingAvailableCaches(targetsToBuild);
 
     // Notify distributed build clients that they should not wait for any of the nodes that were
@@ -359,7 +361,10 @@ public class CacheOptimizedBuildTargetsQueueFactory {
     }
 
     return new BuildTargetsQueue(
-        zeroDependencyTargets, allEnqueuedTargets, results.unachableZeroDependencyTargets);
+        zeroDependencyTargets,
+        allEnqueuedTargets,
+        results.unachableZeroDependencyTargets,
+        mostBuildRulesFinishedPercentageThreshold);
   }
 
   private static String ruleToTarget(BuildRule rule) {

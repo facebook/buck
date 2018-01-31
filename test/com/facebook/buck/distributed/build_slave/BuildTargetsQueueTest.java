@@ -52,13 +52,17 @@ import org.junit.Test;
 public class BuildTargetsQueueTest {
 
   public static final int MAX_UNITS_OF_WORK = 10;
+  public static final int MOST_BUILD_RULES_FINISHED_PERCENTAGE = 50;
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private static BuildTargetsQueue createQueueWithoutRemoteCache(
       BuildRuleResolver resolver, Iterable<BuildTarget> topLevelTargets) {
     return new CacheOptimizedBuildTargetsQueueFactory(
             resolver, new NoopArtifactCacheByBuildRule(), false)
-        .createBuildTargetsQueue(topLevelTargets, new NoOpBuildRuleFinishedPublisher());
+        .createBuildTargetsQueue(
+            topLevelTargets,
+            new NoOpBuildRuleFinishedPublisher(),
+            MOST_BUILD_RULES_FINISHED_PERCENTAGE);
   }
 
   @Test
@@ -81,6 +85,7 @@ public class BuildTargetsQueueTest {
     BuildTargetsQueue queue = createQueueWithoutRemoteCache(resolver, ImmutableList.of());
     List<WorkUnit> zeroDepTargets = dequeueNoFinishedTargets(queue);
     Assert.assertEquals(0, zeroDepTargets.size());
+    Assert.assertTrue(queue.haveMostBuildRulesFinished());
   }
 
   @Test
@@ -94,12 +99,14 @@ public class BuildTargetsQueueTest {
     Assert.assertEquals("//foo:one", zeroDepTargets.get(0).getBuildTargets().get(0));
 
     Assert.assertEquals(0, dequeueNoFinishedTargets(queue).size());
+    Assert.assertFalse(queue.haveMostBuildRulesFinished());
     Assert.assertEquals(
         0,
         queue
             .dequeueZeroDependencyNodes(
                 ImmutableList.of(target.getFullyQualifiedName()), MAX_UNITS_OF_WORK)
             .size());
+    Assert.assertTrue(queue.haveMostBuildRulesFinished());
   }
 
   @Test
@@ -214,6 +221,7 @@ public class BuildTargetsQueueTest {
     // - uncacheable_e will be build implicitly when building cacheable_b
     // - uncacheable_d will be built implicitly when building cacheable_a
     // - the other uncacheables never need to be built remotely => quicker remote step
+    // - there are only 3 cacheables, so 'most build rules finished' after 2/3 done, with 50% limit
 
     BuildRuleResolver resolver = createBuildGraphWithInterleavedUncacheables();
     BuildTarget target = BuildTargetFactory.newInstance(UNCACHABLE_ROOT);
@@ -227,16 +235,25 @@ public class BuildTargetsQueueTest {
     Assert.assertEquals(CACHABLE_C, workUnitTargets.get(0));
     Assert.assertEquals(CACHABLE_B, workUnitTargets.get(1));
 
+    // 0/3 cacheables finished
+    Assert.assertFalse(queue.haveMostBuildRulesFinished());
+
     // Mark CACHABLE_C as completed. Nothing else should become available yet.
     zeroDepWorkUnits =
         queue.dequeueZeroDependencyNodes(ImmutableList.of(CACHABLE_C), MAX_UNITS_OF_WORK);
     Assert.assertEquals(0, zeroDepWorkUnits.size());
+
+    // 1/3 cacheables finished
+    Assert.assertFalse(queue.haveMostBuildRulesFinished());
 
     // Mark CACHABLE_B as completed. UNCACHEABLE_D should auto complete,
     // and CACHAEABLE_A should become ready.
     zeroDepWorkUnits =
         queue.dequeueZeroDependencyNodes(ImmutableList.of(CACHABLE_B), MAX_UNITS_OF_WORK);
     Assert.assertEquals(1, zeroDepWorkUnits.size());
+
+    // 2/3 (i.e 66%) cacheables finished
+    Assert.assertTrue(queue.haveMostBuildRulesFinished());
 
     workUnit = zeroDepWorkUnits.get(0);
     workUnitTargets = workUnit.getBuildTargets();
@@ -319,7 +336,9 @@ public class BuildTargetsQueueTest {
 
     EasyMock.replay(artifactCache);
     factory.createBuildTargetsQueue(
-        ImmutableList.of(rootTarget), new NoOpBuildRuleFinishedPublisher());
+        ImmutableList.of(rootTarget),
+        new NoOpBuildRuleFinishedPublisher(),
+        MOST_BUILD_RULES_FINISHED_PERCENTAGE);
     EasyMock.verify(artifactCache);
   }
 

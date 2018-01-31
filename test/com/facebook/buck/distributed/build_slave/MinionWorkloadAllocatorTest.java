@@ -34,6 +34,7 @@ public class MinionWorkloadAllocatorTest {
 
   private static final String MINION_ONE = "Super minion 1";
   private static final int MAX_WORK_UNITS = 10;
+  public static final int MOST_BUILD_RULES_FINISHED_PERCENTAGE = 100;
 
   private BuildTargetsQueue queue;
   private BuildTarget target;
@@ -46,7 +47,9 @@ public class MinionWorkloadAllocatorTest {
         new CacheOptimizedBuildTargetsQueueFactory(
                 resolver, new NoopArtifactCacheByBuildRule(), false)
             .createBuildTargetsQueue(
-                ImmutableList.of(target), new NoOpBuildRuleFinishedPublisher());
+                ImmutableList.of(target),
+                new NoOpBuildRuleFinishedPublisher(),
+                MOST_BUILD_RULES_FINISHED_PERCENTAGE);
   }
 
   @Test

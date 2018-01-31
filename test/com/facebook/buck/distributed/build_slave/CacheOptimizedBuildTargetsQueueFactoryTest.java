@@ -50,6 +50,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 public class CacheOptimizedBuildTargetsQueueFactoryTest {
+  public static final int MOST_BUILD_RULES_FINISHED_PERCENTAGE = 100;
 
   private ArtifactCacheByBuildRule artifactCache;
   private BuildRuleFinishedPublisher ruleFinishedPublisher;
@@ -70,7 +71,8 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
             localCacheHitTargets.stream().map(resolver::getRule).collect(Collectors.toList()));
 
     return new CacheOptimizedBuildTargetsQueueFactory(resolver, artifactCache, false)
-        .createBuildTargetsQueue(topLevelTargets, ruleFinishedPublisher);
+        .createBuildTargetsQueue(
+            topLevelTargets, ruleFinishedPublisher, MOST_BUILD_RULES_FINISHED_PERCENTAGE);
   }
 
   private BuildTargetsQueue createQueueWithRemoteCacheHits(
@@ -84,7 +86,8 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
             ImmutableList.of());
 
     return new CacheOptimizedBuildTargetsQueueFactory(resolver, artifactCache, false)
-        .createBuildTargetsQueue(topLevelTargets, ruleFinishedPublisher);
+        .createBuildTargetsQueue(
+            topLevelTargets, ruleFinishedPublisher, MOST_BUILD_RULES_FINISHED_PERCENTAGE);
   }
 
   @Test

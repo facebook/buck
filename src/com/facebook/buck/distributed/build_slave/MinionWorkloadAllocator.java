@@ -64,4 +64,8 @@ public class MinionWorkloadAllocator {
 
     return workUnits;
   }
+
+  public boolean haveMostBuildRulesCompleted() {
+    return queue.haveMostBuildRulesFinished();
+  }
 }

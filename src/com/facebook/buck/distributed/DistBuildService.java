@@ -682,6 +682,32 @@ public class DistBuildService implements Closeable {
     makeRequestChecked(frontendRequest);
   }
 
+  /**
+   * Let the client know that most build rules have completed.
+   *
+   * @param stampedeId
+   * @param runId
+   * @throws IOException
+   */
+  public void sendMostBuildRulesCompletedEvent(StampedeId stampedeId, BuildSlaveRunId runId)
+      throws IOException {
+    LOG.info("Sending most build rules finished event");
+    AppendBuildSlaveEventsRequest request = new AppendBuildSlaveEventsRequest();
+    request.setStampedeId(stampedeId);
+    request.setBuildSlaveRunId(runId);
+
+    BuildSlaveEvent buildSlaveEvent =
+        createBuildSlaveEvent(
+            stampedeId, runId, BuildSlaveEventType.MOST_BUILD_RULES_FINISHED_EVENT);
+    request.addToEvents(
+        ThriftUtil.serializeToByteBuffer(PROTOCOL_FOR_CLIENT_ONLY_STRUCTS, buildSlaveEvent));
+
+    FrontendRequest frontendRequest = new FrontendRequest();
+    frontendRequest.setType(FrontendRequestType.APPEND_BUILD_SLAVE_EVENTS);
+    frontendRequest.setAppendBuildSlaveEventsRequest(request);
+    makeRequestChecked(frontendRequest);
+  }
+
   public void updateBuildSlaveStatus(
       StampedeId stampedeId, BuildSlaveRunId runId, BuildSlaveStatus status) throws IOException {
     UpdateBuildSlaveStatusRequest request = new UpdateBuildSlaveStatusRequest();

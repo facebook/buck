@@ -18,6 +18,7 @@ enum BuildSlaveEventType {
     BUILD_RULE_STARTED_EVENT = 2,
     BUILD_RULE_FINISHED_EVENT = 3,
     ALL_BUILD_RULES_FINISHED_EVENT = 4,
+    MOST_BUILD_RULES_FINISHED_EVENT = 5,
 }
 
 struct BuildSlaveEvent {

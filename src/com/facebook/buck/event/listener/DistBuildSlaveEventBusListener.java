@@ -52,6 +52,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import javax.annotation.Nullable;
@@ -109,6 +110,8 @@ public class DistBuildSlaveEventBusListener
   private volatile @Nullable DistBuildService distBuildService;
   private volatile Optional<Integer> exitCode = Optional.empty();
   private volatile boolean sentFinishedStatsToServer;
+  private volatile boolean mostBuildRulesCompleted = false;
+  private AtomicBoolean mostBuildRulesCompletedEventSent = new AtomicBoolean(false);
 
   public DistBuildSlaveEventBusListener(
       StampedeId stampedeId,
@@ -363,9 +366,28 @@ public class DistBuildSlaveEventBusListener
         sendConsoleEventsToFrontend();
         sendBuildRuleStartedEvents();
         sendBuildRuleCompletedEvents();
+        sendMostBuildRulesCompletedEvent();
       } catch (RuntimeException ex) {
         LOG.error(ex, "Failed to send slave server updates.");
       }
+    }
+  }
+
+  private void sendMostBuildRulesCompletedEvent() {
+    if (!mostBuildRulesCompleted || distBuildService == null) {
+      return;
+    }
+
+    boolean eventAlreadySent = mostBuildRulesCompletedEventSent.getAndSet(true);
+    if (eventAlreadySent) {
+      return;
+    }
+
+    try {
+      distBuildService.sendMostBuildRulesCompletedEvent(stampedeId, buildSlaveRunId);
+    } catch (IOException e) {
+      LOG.error(e, "Failed to send most build rules completed event.");
+      mostBuildRulesCompletedEventSent.set(false); // Try again later
     }
   }
 
@@ -499,5 +521,10 @@ public class DistBuildSlaveEventBusListener
     synchronized (finishedTargetsToSignal) {
       finishedTargetsToSignal.addAll(finishedTargets);
     }
+  }
+
+  @Override
+  public void createMostBuildRulesCompletedEvent() {
+    mostBuildRulesCompleted = true;
   }
 }

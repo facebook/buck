@@ -210,6 +210,11 @@ public class BuildPhase {
               buildRuleEventManager.recordBuildRuleFinishedEvent(currentTimeMillis, target);
             }
           }
+
+          @Override
+          public void createMostBuildRulesCompletedEvent() {
+            buildRuleEventManager.mostBuildRulesFinishedEventReceived();
+          }
         };
 
     CoordinatorModeRunner coordinator =
@@ -450,6 +455,9 @@ public class BuildPhase {
                     break;
                   case ALL_BUILD_RULES_FINISHED_EVENT:
                     buildRuleEventManager.recordAllBuildRulesFinishedEvent();
+                    break;
+                  case MOST_BUILD_RULES_FINISHED_EVENT:
+                    buildRuleEventManager.mostBuildRulesFinishedEventReceived();
                     break;
                   case UNKNOWN:
                   default:
