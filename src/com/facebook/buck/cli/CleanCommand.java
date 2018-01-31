@@ -20,6 +20,7 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.config.DirCacheEntry;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.ExitCode;
 import java.io.IOException;
@@ -29,6 +30,8 @@ import java.util.Set;
 import org.kohsuke.args4j.Option;
 
 public class CleanCommand extends AbstractCommand {
+
+  private static final Logger LOG = Logger.get(CleanCommand.class);
 
   private static final String KEEP_CACHE_ARG = "--keep-cache";
   private static final String DRY_RUN_ARG = "--dry-run";
@@ -98,6 +101,7 @@ public class CleanCommand extends AbstractCommand {
       // Remove all the paths.
       for (Path path : pathsToDelete) {
         projectFilesystem.deleteRecursivelyIfExists(path);
+        LOG.debug("Removed path: " + path);
       }
     }
   }
