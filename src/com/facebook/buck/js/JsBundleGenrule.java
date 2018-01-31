@@ -217,9 +217,7 @@ public class JsBundleGenrule extends Genrule
 
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
-    if (!this.skipResources) {
-      collector.addAssetsDirectory(getBuildTarget(), getSourcePathToOutput());
-    }
+    collector.addAssetsDirectory(getBuildTarget(), getSourcePathToOutput());
   }
 
   @Override

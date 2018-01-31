@@ -244,12 +244,7 @@ public class JsBundleGenruleDescriptionTest {
     assertEquals(
         jsBundleAndroid.getRequiredPackageables(), setup.genrule().getRequiredPackageables());
 
-    AndroidPackageableCollector collector = EasyMock.createMock(AndroidPackageableCollector.class);
-    expect(
-            collector.addAssetsDirectory(
-                setup.rule().getBuildTarget(), setup.genrule().getSourcePathToOutput()))
-        .andReturn(collector);
-    replay(collector);
+    AndroidPackageableCollector collector = packageableCollectorMock(setup);
     setup.genrule().addToCollector(collector);
     verify(collector);
   }
@@ -259,8 +254,7 @@ public class JsBundleGenruleDescriptionTest {
     setupWithSkipResources(JsFlavors.ANDROID);
 
     assertEquals(ImmutableList.of(), setup.genrule().getRequiredPackageables());
-    AndroidPackageableCollector collector = EasyMock.createMock(AndroidPackageableCollector.class);
-    replay(collector);
+    AndroidPackageableCollector collector = packageableCollectorMock(setup);
     setup.genrule().addToCollector(collector);
     verify(collector);
   }
@@ -634,5 +628,15 @@ public class JsBundleGenruleDescriptionTest {
     BuildRuleResolver resolver() {
       return scenario.resolver;
     }
+  }
+
+  private static AndroidPackageableCollector packageableCollectorMock(TestSetup setup) {
+    AndroidPackageableCollector collector = EasyMock.createMock(AndroidPackageableCollector.class);
+    expect(
+            collector.addAssetsDirectory(
+                setup.rule().getBuildTarget(), setup.genrule().getSourcePathToOutput()))
+        .andReturn(collector);
+    replay(collector);
+    return collector;
   }
 }
