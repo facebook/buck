@@ -345,7 +345,8 @@ public class AppleTestDescription
             .map(Optional::of)
             .orElse(appleConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
         args.getIsUiTest(),
-        args.getSnapshotReferenceImagesPath());
+        args.getSnapshotReferenceImagesPath(),
+        args.getEnvironment());
   }
 
   private Optional<SourcePath> getXctool(
@@ -655,6 +656,9 @@ public class AppleTestDescription
 
     // Bundle related fields.
     ImmutableMap<String, String> getDestinationSpecifier();
+
+    // Bundle related fields.
+    Optional<ImmutableMap<String, String>> getEnvironment();
 
     @Override
     default Either<AppleBundleExtension, String> getExtension() {
