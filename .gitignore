@@ -38,6 +38,7 @@
 /.idea/uiDesigner.xml
 /.idea/workspace.xml
 /.idea/misc.xml
+/.idea/markdown*
 /.idea/copyright/profiles_settings.xml
 
 # From building Emma with Ant.

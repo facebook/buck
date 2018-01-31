@@ -116,7 +116,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
               .from(parameters)
               .setClasspathEntries(
                   ImmutableSortedSet.<Path>naturalOrder()
-                      .add(outputDirectory)
+                      .add(projectFilesystem.resolve(outputDirectory))
                       .addAll(
                           Optional.ofNullable(extraClassPath.getExtraClasspath())
                               .orElse(ImmutableList.of()))
