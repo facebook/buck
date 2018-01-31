@@ -73,7 +73,7 @@ public final class TestNGRunner extends BaseRunner {
         testng.addListener(new XMLReporter());
         testng.addListener(new EmailableReporter());
         // ... except this replaces JUnitReportReporter ...
-        testng.addListener(new JUnitReportReporterImproved());
+        testng.addListener(new JUnitReportReporterWithMethodParameters());
         // ... and we can't access TestNG verbosity, so we remove VerboseReporter
         testng.run();
       }
@@ -131,7 +131,8 @@ public final class TestNGRunner extends BaseRunner {
     return testSelectorList.isIncluded(testDescription);
   }
 
-  private static String calculateTestMethodName(ITestResult iTestResult) {
+  /** Compute the "full name" of a test method, including its parameters, if any. */
+  private static String getTestMethodNameWithParameters(ITestResult iTestResult) {
     Object[] parameters = iTestResult.getParameters();
     String name = iTestResult.getName();
 
@@ -145,7 +146,7 @@ public final class TestNGRunner extends BaseRunner {
             .map(
                 parameter -> {
                   try {
-                    return parameter == null ? "null" : parameter.toString();
+                    return String.valueOf(parameter);
                   } catch (Exception e) {
                     return "Unstringable object";
                   }
@@ -266,7 +267,7 @@ public final class TestNGRunner extends BaseRunner {
       String stdErr = streamToString(rawStdErrBytes);
 
       String className = result.getTestClass().getName();
-      String methodName = calculateTestMethodName(result);
+      String methodName = getTestMethodNameWithParameters(result);
 
       long runTimeMillis = result.getEndMillis() - result.getStartMillis();
       results.add(
@@ -290,10 +291,10 @@ public final class TestNGRunner extends BaseRunner {
     }
   }
 
-  private static class JUnitReportReporterImproved extends JUnitReportReporter {
+  private static class JUnitReportReporterWithMethodParameters extends JUnitReportReporter {
     @Override
     public String getTestName(ITestResult result) {
-      return calculateTestMethodName(result);
+      return getTestMethodNameWithParameters(result);
     }
   }
 }
