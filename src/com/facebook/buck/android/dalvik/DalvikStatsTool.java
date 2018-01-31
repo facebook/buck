@@ -305,8 +305,8 @@ public class DalvikStatsTool {
        *
        * <p>Stateless (no arguments) - Adds 1 class, 1 field (for instance var) and 2 methods (1
        * constructor + 1 accessor) Stateful (has arguments) - Adds 1 class, 1 field per argument and
-       * 3 methods (1 constructor + 1 accessor + 1 bridge)
-       * + (Optional) 1 forwarding method for static interface method desugaring
+       * 3 methods (1 constructor + 1 accessor + 1 bridge) + (Optional) 1 forwarding method for
+       * static interface method desugaring
        *
        * <p>we always assume the worst case and for every invoke dynamic in the bytecode, augment
        * the dex references by the max possible fields/methods. At worst, we will end up over
@@ -433,8 +433,8 @@ public class DalvikStatsTool {
             "lambda$bridge$" + handle.getName(),
             handle.getDesc(),
             false);
-        if (!(handle.getTag() == Opcodes.H_INVOKEVIRTUAL ||
-          handle.getTag() == Opcodes.H_INVOKEINTERFACE)) {
+        if (!(handle.getTag() == Opcodes.H_INVOKEVIRTUAL
+            || handle.getTag() == Opcodes.H_INVOKEINTERFACE)) {
           visitMethodInsn(
               Opcodes.INVOKESTATIC,
               "-$$Lambda$" + handle.getOwner(),
