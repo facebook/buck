@@ -19,6 +19,7 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.distributed.DistBuildCreatedEvent;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
+import com.facebook.buck.distributed.StampedeLocalBuildStatusEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.event.ActionGraphEvent;
@@ -154,6 +155,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   @GuardedBy("distBuildSlaveTrackerLock")
   private final Map<BuildSlaveRunId, BuildSlaveStatus> distBuildSlaveTracker;
+
+  @GuardedBy("distBuildStatusLock")
+  private String stampedeLocalBuildStatus = "init";
 
   private Optional<String> stampedeIdLogLine = Optional.empty();
 
@@ -601,10 +605,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     List<String> columns = new ArrayList<>();
 
     synchronized (distBuildStatusLock) {
+      columns.add("local status: " + stampedeLocalBuildStatus);
       if (!distBuildStatus.isPresent()) {
-        columns.add("status: init");
+        columns.add("dist status: init");
       } else {
-        columns.add("status: " + distBuildStatus.get().getStatus().toLowerCase());
+        columns.add("dist status: " + distBuildStatus.get().getStatus().toLowerCase());
 
         int totalUploadErrorsCount = 0;
         ImmutableList.Builder<CacheRateStatsKeeper.CacheRateStatsUpdateEvent> slaveCacheStats =
@@ -784,6 +789,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       for (BuildSlaveStatus status : event.getStatus().getSlaveStatuses()) {
         distBuildSlaveTracker.put(status.buildSlaveRunId, status);
       }
+    }
+  }
+
+  @Subscribe
+  public void onStampedeLocalBuildStatusEvent(StampedeLocalBuildStatusEvent event) {
+    synchronized (distBuildStatusLock) {
+      this.stampedeLocalBuildStatus = event.getStatus();
     }
   }
 

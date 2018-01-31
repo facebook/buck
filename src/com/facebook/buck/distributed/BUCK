@@ -31,6 +31,7 @@ COMMON_FILES = (
     "RecordingProjectFileHashCache.java",
     "RemoteStateBasedFileHashCache.java",
     "NoopArtifactCacheByBuildRule.java",
+    "StampedeLocalBuildStatusEvent.java",
 )
 
 java_immutables_library(

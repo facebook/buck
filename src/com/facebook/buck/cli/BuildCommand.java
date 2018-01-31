@@ -40,6 +40,7 @@ import com.facebook.buck.distributed.DistBuildPostBuildAnalysis;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
+import com.facebook.buck.distributed.StampedeLocalBuildStatusEvent;
 import com.facebook.buck.distributed.build_client.BuildController;
 import com.facebook.buck.distributed.build_client.BuildControllerArgs;
 import com.facebook.buck.distributed.build_client.LogStateTracker;
@@ -886,7 +887,6 @@ public class BuildCommand extends AbstractCommand {
                         stampedeIdReference,
                         distributedBuildExitCode,
                         localBuildInitializationLatch,
-                        localBuildExitCode,
                         remoteBuildSynchronizer,
                         build);
                   });
@@ -1055,7 +1055,6 @@ public class BuildCommand extends AbstractCommand {
       AtomicReference<StampedeId> stampedeIdReference,
       AtomicInteger distributedBuildExitCode,
       CountDownLatch localBuildInitializationLatch,
-      AtomicInteger localBuildExitCode,
       RemoteBuildRuleSynchronizer remoteBuildSynchronizer,
       BuildController build) {
     int exitCode = com.facebook.buck.distributed.ExitCode.DISTRIBUTED_PENDING_EXIT_CODE.getCode();
@@ -1088,11 +1087,7 @@ public class BuildCommand extends AbstractCommand {
 
       String finishedMessage =
           String.format("Stampede distributed build has finished with exit code [%d]", exitCode);
-      if (exitCode == 0 || localBuildExitCode.get() == 0) {
-        params.getConsole().printSuccess(finishedMessage);
-      } else {
-        params.getConsole().printErrorText(finishedMessage);
-      }
+      LOG.info(finishedMessage);
 
       if (exitCode != 0) {
         if (!distBuildConfig.isSlowLocalBuildFallbackModeEnabled()) {
@@ -1155,6 +1150,7 @@ public class BuildCommand extends AbstractCommand {
       CountDownLatch localBuildInitializationLatch,
       AtomicInteger localBuildExitCode,
       RemoteBuildRuleSynchronizer remoteBuildSynchronizer) {
+    params.getBuckEventBus().post(new StampedeLocalBuildStatusEvent("waiting"));
     distBuildClientStats.startTimer(PERFORM_LOCAL_BUILD);
     try {
       localBuildExitCode.set(
@@ -1181,13 +1177,7 @@ public class BuildCommand extends AbstractCommand {
       String finishedMessage =
           String.format(
               "Stampede local build has finished with exit code [%d]", localBuildExitCode.get());
-
-      if (localBuildExitCode.get() == 0) {
-        params.getConsole().printSuccess(finishedMessage);
-      } else {
-        params.getConsole().printErrorText(finishedMessage);
-      }
-
+      LOG.info(finishedMessage);
     } catch (IOException e) {
       LOG.error(e, "Stampede local build failed with exception");
       throw new RuntimeException(e);
@@ -1198,6 +1188,11 @@ public class BuildCommand extends AbstractCommand {
     } finally {
       distBuildClientStats.stopTimer(PERFORM_LOCAL_BUILD);
       distBuildClientStats.setLocalBuildExitCode(localBuildExitCode.get());
+      params
+          .getBuckEventBus()
+          .post(
+              new StampedeLocalBuildStatusEvent(
+                  String.format("finished [%d] ", localBuildExitCode.get())));
     }
   }
 

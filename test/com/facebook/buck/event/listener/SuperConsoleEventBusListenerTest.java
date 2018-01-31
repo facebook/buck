@@ -30,6 +30,7 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.distributed.DistBuildStatus;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
+import com.facebook.buck.distributed.StampedeLocalBuildStatusEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatus;
@@ -799,7 +800,9 @@ public class SuperConsoleEventBusListenerTest {
         listener,
         timeMillis,
         ImmutableList.of(
-            parsingLine, actionGraphLine, "Distributed Build... 0.3 sec status: init"));
+            parsingLine,
+            actionGraphLine,
+            "Distributed Build... 0.3 sec local status: init, dist status: init"));
 
     timeMillis += 250;
     eventBus.postWithoutConfiguring(
@@ -815,7 +818,9 @@ public class SuperConsoleEventBusListenerTest {
         listener,
         timeMillis,
         ImmutableList.of(
-            parsingLine, actionGraphLine, "Distributed Build... 0.7 sec status: queued"));
+            parsingLine,
+            actionGraphLine,
+            "Distributed Build... 0.7 sec local status: init, dist status: queued"));
 
     timeMillis += 100;
     eventBus.postWithoutConfiguring(
@@ -831,7 +836,9 @@ public class SuperConsoleEventBusListenerTest {
         listener,
         timeMillis,
         ImmutableList.of(
-            parsingLine, actionGraphLine, "Distributed Build... 0.9 sec status: building"));
+            parsingLine,
+            actionGraphLine,
+            "Distributed Build... 0.9 sec local status: init, dist status: building"));
 
     BuildSlaveRunId buildSlaveRunId1 = new BuildSlaveRunId();
     buildSlaveRunId1.setId("slave1");
@@ -862,7 +869,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 1.1 sec status: building",
+            "Distributed Build... 1.1 sec local status: init, dist status: building",
             " Server 0: Creating action graph...",
             " Server 1: Creating action graph..."));
 
@@ -907,7 +914,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 1.3 sec (33%) status: building, 1 [3.3%] cache miss",
+            "Distributed Build... 1.3 sec (33%) local status: init, dist status: building, 1 [3.3%] cache miss",
             " Server 0: Idle... built 5/10 jobs, 1 [10.0%] cache miss",
             " Server 1: Working on 5 jobs... built 5/20 jobs, 1 jobs failed, 0 [0.0%] cache miss"));
 
@@ -942,6 +949,13 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            new StampedeLocalBuildStatusEvent("building"),
+            timeMillis,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
     timeMillis += 100;
     validateConsole(
         listener,
@@ -949,7 +963,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 1.5 sec (96%) status: custom,"
+            "Distributed Build... 1.5 sec (96%) local status: building, dist status: custom,"
                 + " 1 [3.3%] cache miss, 1 [3.4%] cache errors, 1 upload errors",
             " Server 0: Working on 1 jobs... built 9/10 jobs, 1 [10.0%] cache miss",
             " Server 1: Idle... built 20/20 jobs, 1 jobs failed, 0 [0.0%] cache miss, "
@@ -982,7 +996,7 @@ public class SuperConsoleEventBusListenerTest {
 
     timeMillis += 100;
     final String distbuildLine =
-        "Distributed Build: finished in 1.6 sec (100%) status: finished_successfully,"
+        "Distributed Build: finished in 1.6 sec (100%) local status: building, dist status: finished_successfully,"
             + " 1 [3.3%] cache miss, 1 [3.3%] cache errors, 1 upload errors";
     validateConsole(
         listener,
