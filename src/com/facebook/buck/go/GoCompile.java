@@ -38,7 +38,10 @@ import com.facebook.buck.step.fs.TouchStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -110,13 +113,32 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     ImmutableList.Builder<Path> asmSrcListBuilder = ImmutableList.builder();
     for (SourcePath path : srcs) {
       Path srcPath = context.getSourcePathResolver().getAbsolutePath(path);
-      String extension = MorePaths.getFileExtension(srcPath).toLowerCase();
-      if (extension.equals("s")) {
-        asmSrcListBuilder.add(srcPath);
-      } else if (extension.equals("go")) {
-        compileSrcListBuilder.add(srcPath);
+      ArrayList<Path> srcFiles = new ArrayList<>();
+      if (Files.isDirectory(srcPath)) {
+        try {
+          Files.list(srcPath).forEach(
+              (f) -> {
+                if (Files.isRegularFile(f)) {
+                  srcFiles.add(f);
+                }
+              }
+          );
+        } catch (IOException e) {
+          e.printStackTrace();
+          throw new RuntimeException("An error occur when listing the files under " + srcPath);
+        }
       } else {
-        headerSrcListBuilder.add(srcPath);
+        srcFiles.add(srcPath);
+      }
+      for (Path f : srcFiles) {
+        String extension = MorePaths.getFileExtension(f).toLowerCase();
+        if (extension.equals("s")) {
+          asmSrcListBuilder.add(f);
+        } else if (extension.equals("go")) {
+          compileSrcListBuilder.add(f);
+        } else {
+          headerSrcListBuilder.add(f);
+        }
       }
     }
 
