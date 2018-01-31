@@ -27,7 +27,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import java.io.IOException;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -85,7 +84,6 @@ public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  @Ignore("https://github.com/facebook/buck/issues/1371")
   public void testAndroidKotlinLibraryMixedSourcesCompilation() throws Exception {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     KotlinTestAssumptions.assumeCompilerAvailable(workspace.asCell().getBuckConfig());

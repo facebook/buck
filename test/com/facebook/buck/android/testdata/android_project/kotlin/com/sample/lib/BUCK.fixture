@@ -76,6 +76,10 @@ android_library(
     visibility = [
         "PUBLIC",
     ],
+    deps = [
+        "//res/com/sample/title:title",
+        "//res/com/sample/top:top",
+    ],
 )
 
 robolectric_test(
