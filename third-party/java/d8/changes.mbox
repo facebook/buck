@@ -1,24 +1,24 @@
-From 0758ad0794e755b1d2baf754178fb3e48aaee19b Mon Sep 17 00:00:00 2001
+From ec9e575a21d4051afcec76358ec617c79c5ffe9b Mon Sep 17 00:00:00 2001
 From: Gautam Korlam <gkorlam@uber.com>
 Date: Tue, 21 Nov 2017 22:52:39 -0800
-Subject: [PATCH] Compute referenced resources in D8 and disable
- interface/trywithresources desugaring
+Subject: [PATCH] Compute referenced resources in D8 and bypass default
+ interface method desugaring
 
-Computing referenced resources is used to trim the Uber R.java.
-Interface desugaring requires classpaths available during dexing.
-trywithresources can be disabled if targeting ICS+
+- Computing referenced resources is used to trim the Uber R.java.
+- Default interface method desugaring requires classpaths available during dexing which is not possible with buck currently.
+- Set default min sdk for D8 to Api level J
 ---
- src/main/java/com/android/tools/r8/D8Command.java         |  8 +++++++-
- src/main/java/com/android/tools/r8/dex/FileWriter.java    |  6 ++++--
- .../java/com/android/tools/r8/graph/DexItemFactory.java   | 15 +++++++++++++++
- .../java/com/android/tools/r8/utils/InternalOptions.java  |  7 +++++--
- 4 files changed, 31 insertions(+), 5 deletions(-)
+ src/main/java/com/android/tools/r8/D8Command.java        |  8 +++++++-
+ .../java/com/android/tools/r8/graph/DexItemFactory.java  | 15 +++++++++++++++
+ .../com/android/tools/r8/ir/desugar/ClassProcessor.java  | 16 ++++------------
+ .../java/com/android/tools/r8/utils/AndroidApiLevel.java |  3 ++-
+ 4 files changed, 28 insertions(+), 14 deletions(-)
 
 diff --git a/src/main/java/com/android/tools/r8/D8Command.java b/src/main/java/com/android/tools/r8/D8Command.java
-index fece59d1..aecb6afe 100644
+index 0e39dae4..4e1214bc 100644
 --- a/src/main/java/com/android/tools/r8/D8Command.java
 +++ b/src/main/java/com/android/tools/r8/D8Command.java
-@@ -184,6 +184,11 @@ public class D8Command extends BaseCompilerCommand {
+@@ -179,6 +179,11 @@ public class D8Command extends BaseCompilerCommand {
        "  --help                  # Print this message."));
  
    private boolean intermediate = false;
@@ -30,7 +30,7 @@ index fece59d1..aecb6afe 100644
  
    public static Builder builder() {
      return new Builder();
-@@ -309,7 +314,8 @@ public class D8Command extends BaseCompilerCommand {
+@@ -321,7 +326,8 @@ public class D8Command extends BaseCompilerCommand {
  
    @Override
    InternalOptions getInternalOptions() {
@@ -40,42 +40,11 @@ index fece59d1..aecb6afe 100644
      assert !internal.debug;
      internal.debug = getMode() == CompilationMode.DEBUG;
      internal.programConsumer = getProgramConsumer();
-diff --git a/src/main/java/com/android/tools/r8/dex/FileWriter.java b/src/main/java/com/android/tools/r8/dex/FileWriter.java
-index ced33f61..51814a68 100644
---- a/src/main/java/com/android/tools/r8/dex/FileWriter.java
-+++ b/src/main/java/com/android/tools/r8/dex/FileWriter.java
-@@ -51,6 +51,7 @@ import com.android.tools.r8.utils.AndroidApiLevel;
- import com.android.tools.r8.utils.DexVersion;
- import com.android.tools.r8.utils.InternalOptions;
- import com.android.tools.r8.utils.LebUtils;
-+import com.android.tools.r8.utils.OffOrAuto;
- import com.android.tools.r8.utils.ThrowingConsumer;
- import com.google.common.collect.Sets;
- import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
-@@ -226,7 +227,7 @@ public class FileWriter {
-     if (application.dexItemFactory.isClassConstructor(method.method)) {
-       return; // Class constructor is always OK.
-     }
--    if (method.accessFlags.isStatic()) {
-+    if (options.interfaceMethodDesugaring.equals(OffOrAuto.Auto) && method.accessFlags.isStatic()) {
-       if (!options.canUseDefaultAndStaticInterfaceMethods()) {
-         throw new ApiLevelException(
-             AndroidApiLevel.N,
-@@ -239,7 +240,8 @@ public class FileWriter {
-         throw new CompilationError(
-             "Interface must not have constructors: " + method.method.toSourceString());
-       }
--      if (!method.accessFlags.isAbstract() && !method.accessFlags.isPrivate() &&
-+      if (options.interfaceMethodDesugaring.equals(OffOrAuto.Auto) &&
-+          !method.accessFlags.isAbstract() && !method.accessFlags.isPrivate() &&
-           !options.canUseDefaultAndStaticInterfaceMethods()) {
-         throw new ApiLevelException(
-             AndroidApiLevel.N,
 diff --git a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
-index e9207519..0589c1c0 100644
+index d674ccb5..f0a277e5 100644
 --- a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
 +++ b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
-@@ -23,9 +23,11 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+@@ -24,9 +24,11 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
  import java.util.ArrayList;
  import java.util.Collection;
  import java.util.HashMap;
@@ -87,7 +56,7 @@ index e9207519..0589c1c0 100644
  import java.util.concurrent.ConcurrentHashMap;
  import java.util.function.Consumer;
  
-@@ -560,4 +562,17 @@ public class DexItemFactory {
+@@ -571,4 +573,17 @@ public class DexItemFactory {
    synchronized public void forAllTypes(Consumer<DexType> f) {
      new ArrayList<>(types.values()).forEach(f);
    }
@@ -105,25 +74,47 @@ index e9207519..0589c1c0 100644
 +    return resourceNames;
 +  }
  }
-diff --git a/src/main/java/com/android/tools/r8/utils/InternalOptions.java b/src/main/java/com/android/tools/r8/utils/InternalOptions.java
-index 2eba6c13..5e8ef8d8 100644
---- a/src/main/java/com/android/tools/r8/utils/InternalOptions.java
-+++ b/src/main/java/com/android/tools/r8/utils/InternalOptions.java
-@@ -146,9 +146,12 @@ public class InternalOptions {
-   // Flag to turn on/off desugaring in D8/R8.
-   public boolean enableDesugaring = true;
-   // Defines interface method rewriter behavior.
--  public OffOrAuto interfaceMethodDesugaring = OffOrAuto.Auto;
-+  // Facebook: Disabled by default as it kills incremental builds
-+  public OffOrAuto interfaceMethodDesugaring = OffOrAuto.Off;
-   // Defines try-with-resources rewriter behavior.
--  public OffOrAuto tryWithResourcesDesugaring = OffOrAuto.Auto;
-+  // Facebook: Disabled by default as it is not necessary if targeting ICS+
-+  // despite the official policy being that KK is required
-+  public OffOrAuto tryWithResourcesDesugaring = OffOrAuto.Off;
+diff --git a/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java b/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java
+index fa0958bf..45113b21 100644
+--- a/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java
++++ b/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java
+@@ -165,18 +165,10 @@ final class ClassProcessor {
+         if (superClass != null) {
+           current = superClass;
+         } else {
+-          String message = "Default method desugaring of `" + clazz.toSourceString() + "` failed";
+-          if (current == clazz) {
+-            message += " because its super class `" + clazz.superType.toSourceString()
+-            + "` is missing";
+-          } else {
+-            message +=
+-                " because it's hierarchy is incomplete. The class `"
+-                    + current.superType.toSourceString()
+-                    + "` is missing and it is the declared super class of `"
+-                    + current.toSourceString() + "`";
+-          }
+-          throw new CompilationError(message);
++          // If we cannot find the superClass, just break since we dont want to actually desugar
++          // default interface methods as it requires classpath to be passed in to D8 and hurts
++          // build performance
++          break;
+         }
+       }
+     }
+diff --git a/src/main/java/com/android/tools/r8/utils/AndroidApiLevel.java b/src/main/java/com/android/tools/r8/utils/AndroidApiLevel.java
+index 127debef..45793dad 100644
+--- a/src/main/java/com/android/tools/r8/utils/AndroidApiLevel.java
++++ b/src/main/java/com/android/tools/r8/utils/AndroidApiLevel.java
+@@ -55,7 +55,8 @@ public enum AndroidApiLevel {
+   }
  
-   // Whether or not to check for valid multi-dex builds.
-   //
+   public static AndroidApiLevel getDefault() {
+-    return AndroidApiLevel.B;
++    // Setting to a sane min api level
++    return AndroidApiLevel.J;
+   }
+ 
+   public DexVersion getDexVersion() {
 -- 
-2.14.1
+2.16.1
 
