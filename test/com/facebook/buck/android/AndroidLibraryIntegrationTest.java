@@ -33,8 +33,7 @@ import org.junit.Test;
 
 public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
 
-  @Rule
-  public TemporaryPaths tmpFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
