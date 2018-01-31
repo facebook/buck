@@ -33,7 +33,8 @@ import org.junit.Test;
 
 public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
 
-  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
+  @Rule
+  public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
@@ -85,7 +86,7 @@ public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testAndroidKotlinLibraryMixedSourcesCompilation() throws Exception {  
+  public void testAndroidKotlinLibraryMixedSourcesCompilation() throws Exception {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     KotlinTestAssumptions.assumeCompilerAvailable(workspace.asCell().getBuckConfig());
     ProcessResult result = workspace.runBuckBuild("//kotlin/com/sample/lib:lib_mixed_sources");
