@@ -97,6 +97,7 @@ import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.util.CleanBuildShutdownException;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
@@ -1098,7 +1099,8 @@ public class BuildCommand extends AbstractCommand {
           String message =
               "Distributed build finished with non-zero exit code. Terminating local build.";
           LOG.warn(message);
-          Preconditions.checkNotNull(lastBuild).terminateBuildWithFailure(new Exception(message));
+          Preconditions.checkNotNull(lastBuild)
+              .terminateBuildWithFailure(new CleanBuildShutdownException(message));
         } else {
           String errorMessage =
               String.format(

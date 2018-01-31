@@ -41,6 +41,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepFailedException;
+import com.facebook.buck.util.CleanBuildShutdownException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
@@ -301,7 +302,7 @@ public class Build implements Closeable {
 
   private BuildExecutionResult waitForBuildToFinish(
       ImmutableList<BuildRule> rulesToBuild, List<BuildEngineResult> resultFutures)
-      throws ExecutionException, InterruptedException {
+      throws ExecutionException, InterruptedException, CleanBuildShutdownException {
     // Get the Future representing the build and then block until everything is built.
     ListenableFuture<List<BuildResult>> buildFuture =
         Futures.allAsList(
@@ -312,7 +313,11 @@ public class Build implements Closeable {
       if (!buildContext.isKeepGoing()) {
         for (BuildResult result : results) {
           if (!result.isSuccess()) {
-            throw new BuildExecutionException(result.getFailure(), rulesToBuild, results);
+            if (result.getFailure() instanceof CleanBuildShutdownException) {
+              throw (CleanBuildShutdownException) result.getFailure();
+            } else {
+              throw new BuildExecutionException(result.getFailure(), rulesToBuild, results);
+            }
           }
         }
       }
@@ -406,6 +411,9 @@ public class Build implements Closeable {
       exitCode =
           processBuildReportAndGenerateExitCode(
               buildExecutionResult, eventBus, console, pathToBuildReport);
+    } catch (CleanBuildShutdownException e) {
+      LOG.warn(e, "Build shutdown cleanly.");
+      exitCode = 1;
     } catch (Exception e) {
       if (e instanceof BuildExecutionException) {
         pathToBuildReport.ifPresent(
