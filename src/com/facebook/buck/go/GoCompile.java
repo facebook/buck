@@ -124,8 +124,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
               }
           );
         } catch (IOException e) {
-          e.printStackTrace();
-          throw new RuntimeException("An error occur when listing the files under " + srcPath);
+          throw new RuntimeException("An error occur when listing the files under " + srcPath, e);
         }
       } else {
         srcFiles.add(srcPath);
