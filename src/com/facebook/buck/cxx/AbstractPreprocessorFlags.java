@@ -104,12 +104,12 @@ abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
       SourcePathResolver resolver, Optional<CxxPrecompiledHeader> pch, Preprocessor preprocessor) {
     ExplicitCxxToolFlags.Builder builder = CxxToolFlags.explicitBuilder();
     ExplicitCxxToolFlags.addCxxToolFlags(builder, getOtherFlags());
-    if (pch.isPresent()) {
-      boolean precompiled = pch.get().canPrecompile();
-      builder.addAllRuleFlags(
-          StringArg.from(
-              preprocessor.prefixOrPCHArgs(precompiled, pch.get().getIncludeFilePath(resolver))));
-    }
+    builder.addAllRuleFlags(
+        StringArg.from(
+            preprocessor.prefixOrPCHArgs(
+                getPrefixHeader().map(resolver::getAbsolutePath),
+                pch.map(CxxPrecompiledHeader::getSourcePathToOutput)
+                    .map(resolver::getAbsolutePath))));
     return builder.build();
   }
 

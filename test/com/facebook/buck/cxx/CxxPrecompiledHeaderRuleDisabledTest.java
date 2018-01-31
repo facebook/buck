@@ -22,9 +22,11 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
+@Ignore
 public class CxxPrecompiledHeaderRuleDisabledTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();

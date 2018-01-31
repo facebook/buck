@@ -1,8 +1,0 @@
-[cxx]
-  pch_enabled = false
-  pch_unavailable = failover
-  untracked_headers = error
-  untracked_headers_whitelist=/usr/include/.*
-
-[build]
-  depfiles = enabled

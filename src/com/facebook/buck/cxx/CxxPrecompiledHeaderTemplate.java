@@ -62,7 +62,6 @@ public class CxxPrecompiledHeaderTemplate extends PreInclude {
    */
   @Override
   public CxxPrecompiledHeader getPrecompiledHeader(
-      boolean canPrecompile,
       PreprocessorDelegate preprocessorDelegateForCxxRule,
       DependencyAggregation aggregatedPreprocessDepsRule,
       CxxToolFlags computedCompilerFlags,
@@ -101,7 +100,6 @@ public class CxxPrecompiledHeaderTemplate extends PreInclude {
     depsBuilder.add(preprocessorDelegate);
 
     return requirePrecompiledHeader(
-        canPrecompile,
         preprocessorDelegate,
         cxxPlatform,
         sourceType,
