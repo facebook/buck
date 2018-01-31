@@ -64,7 +64,6 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
-  @Ignore("https://github.com/facebook/buck/issues/1371")
   public void shouldCompileMixedJavaAndKotlinSources() throws Exception {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/mixed:example");
     buildResult.assertSuccess("Build should have succeeded.");
