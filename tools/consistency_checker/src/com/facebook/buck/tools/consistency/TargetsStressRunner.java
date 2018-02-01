@@ -16,15 +16,11 @@
 
 package com.facebook.buck.tools.consistency;
 
-import com.facebook.buck.tools.consistency.BuckStressRunner.StressorException;
 import com.facebook.buck.tools.consistency.DifferState.DiffResult;
 import com.facebook.buck.tools.consistency.DifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
 import com.facebook.buck.tools.consistency.TargetHashFileParser.ParsedTargetsFile;
 import com.google.common.collect.ImmutableList;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -85,50 +81,16 @@ public class TargetsStressRunner {
   }
 
   /**
-   * Writes the list of dependencies of {@link targets} to the given path.
-   *
-   * @param temporaryFile The path to open and write target lists to
-   * @throws StressorException If the file could not be written to, or if a non zero result comes
-   *     back from buck
-   */
-  public void writeTargetsListToFile(Path temporaryFile) throws StressorException {
-    try (OutputStream writer = Files.newOutputStream(temporaryFile)) {
-      BuckRunner runner =
-          new BuckRunner(
-              interpreter,
-              buckBinPath,
-              "query",
-              buckArgs,
-              ImmutableList.of("deps(%s)"),
-              targets,
-              Optional.empty(),
-              true);
-      int returnCode = runner.run(writer);
-      if (returnCode != 0) {
-        throw new StressorException("Got a non-zero return code: %s", returnCode);
-      }
-    } catch (IOException | InterruptedException e) {
-      throw new StressorException(
-          e, "Could not write query results to %s: %s", temporaryFile, e.getMessage());
-    }
-  }
-
-  /**
    * Get a list of command runners that can be fed into {@link BuckStressRunner} that will run `buck
    * targets` to get target hashes
    *
    * @param numRuns The number of runs to do
-   * @param targetsListFile The file containing a list of targets to get the hashes for. This is
-   *     generated usually by {@link TargetsStressRunner#writeTargetsListToFile}
    * @param repositoryPath The path to run all commands from, or pwd if not provided
    * @return A list of command runners
    */
-  public List<BuckRunner> getBuckRunners(
-      int numRuns, Path targetsListFile, Optional<Path> repositoryPath) {
+  public List<BuckRunner> getBuckRunners(int numRuns, Optional<Path> repositoryPath) {
     List<String> targetArgs =
-        ImmutableList.of(
-            "--show-target-hash",
-            String.format("@%s", targetsListFile.toAbsolutePath().toString()));
+        ImmutableList.of("--show-target-hash", "--show-transitive-target-hashes");
     return IntStream.range(0, numRuns)
         .mapToObj(
             i ->
@@ -138,7 +100,7 @@ public class TargetsStressRunner {
                     "targets",
                     buckArgs,
                     targetArgs,
-                    ImmutableList.of(),
+                    targets,
                     repositoryPath,
                     true))
         .collect(Collectors.toList());

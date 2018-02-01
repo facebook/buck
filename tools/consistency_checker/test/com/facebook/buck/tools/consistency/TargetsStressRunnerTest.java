@@ -17,7 +17,6 @@
 package com.facebook.buck.tools.consistency;
 
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.tools.consistency.BuckStressRunner.StressorException;
 import com.facebook.buck.tools.consistency.DifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
 import com.facebook.buck.tools.consistency.TargetsStressRunner.TargetsStressRunException;
@@ -60,81 +59,7 @@ public class TargetsStressRunnerTest {
   }
 
   @Test
-  public void returnsErrorIfWritingTargetsFails() throws IOException, StressorException {
-    expectedException.expect(StressorException.class);
-    expectedException.expectMessage("Got a non-zero return code: 1");
-    binWriter.writeArgEchoer(1);
-
-    List<String> expectedCommand =
-        ImmutableList.of(
-            System.getProperty("user.dir"),
-            tempBinPath.toAbsolutePath().toString(),
-            "query",
-            "deps(%s)",
-            "@",
-            "Random hashes configured",
-            "Reading arguments from @",
-            "//:target1",
-            "//:target2");
-
-    Path targetsFile = temporaryPaths.newFile("targets_list");
-    try {
-      TargetsStressRunner runner =
-          new TargetsStressRunner(
-              differFactory,
-              Optional.of("python"),
-              tempBinPath.toAbsolutePath().toString(),
-              ImmutableList.of(),
-              ImmutableList.of("//:target1", "//:target2"));
-      runner.writeTargetsListToFile(targetsFile);
-    } catch (Exception e) {
-      assertAllStartWithPrefix(Files.readAllLines(targetsFile), expectedCommand);
-      throw e;
-    }
-  }
-
-  @Test
-  public void returnsErrorIfFileCouldNotBeWritten() throws IOException, StressorException {
-    expectedException.expect(StressorException.class);
-    expectedException.expectMessage("Could not write query results");
-    binWriter.writeArgEchoer(0);
-
-    Path targetsFile = temporaryPaths.getRoot().resolve("nonexistent").resolve("path");
-    binWriter.writeLineEchoer(new String[] {"//:target1", "//:target2", "//:target3"}, 0);
-    TargetsStressRunner runner =
-        new TargetsStressRunner(
-            differFactory,
-            Optional.of("python"),
-            tempBinPath.toAbsolutePath().toString(),
-            ImmutableList.of(),
-            ImmutableList.of("//:target1", "//:target2"));
-    runner.writeTargetsListToFile(targetsFile);
-  }
-
-  @Test
-  public void writesTargetListsToFile() throws IOException, StressorException {
-    Path targetsFile = temporaryPaths.newFile("targets_list");
-    binWriter.writeLineEchoer(new String[] {"//:target1", "//:target2", "//:target3"}, 0);
-    TargetsStressRunner runner =
-        new TargetsStressRunner(
-            differFactory,
-            Optional.of("python"),
-            tempBinPath.toAbsolutePath().toString(),
-            ImmutableList.of(),
-            ImmutableList.of("//:target1", "//:target2"));
-
-    runner.writeTargetsListToFile(targetsFile);
-
-    List<String> lines = Files.readAllLines(targetsFile);
-    Assert.assertEquals(3, lines.size());
-    Assert.assertEquals("//:target1", lines.get(0));
-    Assert.assertEquals("//:target2", lines.get(1));
-    Assert.assertEquals("//:target3", lines.get(2));
-  }
-
-  @Test
   public void getsCorrectBuckRunners() throws IOException, InterruptedException {
-    Path targetsFile = temporaryPaths.newFile("targets_list");
     TestPrintStream testStream1 = TestPrintStream.create();
     TestPrintStream testStream2 = TestPrintStream.create();
     binWriter.writeArgEchoer(0);
@@ -154,11 +79,14 @@ public class TargetsStressRunnerTest {
             "-c",
             "config=value",
             "--show-target-hash",
-            String.format("@%s", targetsFile.toAbsolutePath().toString()),
+            "--show-transitive-target-hashes",
+            "@",
             "Random hashes configured",
-            "Reading arguments from @");
+            "Reading arguments from @",
+            "//:target1",
+            "//:target2");
 
-    List<BuckRunner> runners = runner.getBuckRunners(2, targetsFile, Optional.empty());
+    List<BuckRunner> runners = runner.getBuckRunners(2, Optional.empty());
 
     Assert.assertEquals(2, runners.size());
     runners.get(0).run(testStream1);
