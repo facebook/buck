@@ -63,8 +63,8 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
       lineBuilder.append("Creating action graph...");
     } else {
       String prefix = "Idle";
-      if (status.getRulesStartedCount() != 0) {
-        prefix = String.format("Working on %d jobs", status.getRulesStartedCount());
+      if (status.getRulesBuildingCount() != 0) {
+        prefix = String.format("Working on %d jobs", status.getRulesBuildingCount());
       }
 
       ImmutableList.Builder<String> columns = new ImmutableList.Builder<>();
@@ -115,8 +115,7 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
 
     if (status.getRulesFailureCount() != 0) {
       return ansi.asErrorText(lineBuilder.toString());
-    } else if (status.getTotalRulesCount() != 0
-        && status.getRulesSuccessCount() == status.getTotalRulesCount()) {
+    } else if (status.getTotalRulesCount() > 0 && status.getRulesBuildingCount() == 0) {
       return ansi.asSuccessText(lineBuilder.toString());
     } else {
       return lineBuilder.toString();
@@ -132,7 +131,7 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
     int offset = (int) ((currentTimeMs / 400) % animationFrames.length());
     String glyph = "[" + animationFrames.charAt(offset) + "]";
 
-    if (status.getRulesStartedCount() == 0) {
+    if (status.getRulesBuildingCount() == 0) {
       if (status.getRulesFailureCount() != 0) {
         glyph = "[X]";
       } else {
@@ -143,7 +142,7 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
     if (status.getRulesFailureCount() != 0) {
       return ansi.asErrorText(glyph);
     } else if (status.getTotalRulesCount() != 0
-        && status.getRulesSuccessCount() == status.getTotalRulesCount()) {
+        && status.getRulesFinishedCount() == status.getTotalRulesCount()) {
       return ansi.asSuccessText(glyph);
     } else {
       return glyph;

@@ -151,7 +151,7 @@ public class DistBuildSlaveExecutor {
                   args.getRemoteCoordinatorAddress(),
                   OptionalInt.of(args.getRemoteCoordinatorPort()),
                   args.getDistBuildConfig(),
-                  args.getUnexpectedSlaveCacheMissTracker(),
+                  args.getMinionBuildProgressTracker(),
                   args.getDistBuildConfig().getMinionBuildCapacityRatio());
           break;
 
@@ -168,7 +168,7 @@ public class DistBuildSlaveExecutor {
                   localBuildExecutor,
                   args.getLogDirectoryPath(),
                   args.getBuildRuleFinishedPublisher(),
-                  args.getUnexpectedSlaveCacheMissTracker(),
+                  args.getMinionBuildProgressTracker(),
                   args.getBuckEventBus(),
                   args.getExecutorService(),
                   args.getArtifactCacheFactory().remoteOnlyInstance(true),

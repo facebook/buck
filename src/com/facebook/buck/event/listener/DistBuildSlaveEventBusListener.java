@@ -23,7 +23,7 @@ import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.build_slave.BuildRuleFinishedPublisher;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.build_slave.HealthCheckStatsTracker;
-import com.facebook.buck.distributed.build_slave.UnexpectedSlaveCacheMissTracker;
+import com.facebook.buck.distributed.build_slave.MinionBuildProgressTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
@@ -34,7 +34,6 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.log.TimedLogger;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.facebook.buck.util.timing.Clock;
@@ -65,7 +64,7 @@ import javax.annotation.concurrent.GuardedBy;
  */
 public class DistBuildSlaveEventBusListener
     implements BuildRuleFinishedPublisher,
-        UnexpectedSlaveCacheMissTracker,
+        MinionBuildProgressTracker,
         BuckEventListener,
         Closeable {
 
@@ -93,12 +92,12 @@ public class DistBuildSlaveEventBusListener
 
   private final CacheRateStatsKeeper cacheRateStatsKeeper = new CacheRateStatsKeeper();
 
-  private volatile int ruleCount = 0;
-  private final AtomicInteger buildRulesStartedCount = new AtomicInteger(0);
-  private final AtomicInteger buildRulesFinishedCount = new AtomicInteger(0);
-  private final AtomicInteger buildRulesSuccessCount = new AtomicInteger(0);
-  private final AtomicInteger buildRulesFailureCount = new AtomicInteger(0);
   private final AtomicInteger totalBuildRuleFinishedEventsSent = new AtomicInteger(0);
+  private final AtomicInteger buildRulesTotalCount = new AtomicInteger(0);
+  private final AtomicInteger buildRulesFinishedCount = new AtomicInteger(0);
+
+  private final AtomicInteger buildRulesBuildingCount = new AtomicInteger(0);
+  private final AtomicInteger buildRulesFailureCount = new AtomicInteger(0);
 
   private final HttpCacheUploadStats httpCacheUploadStats = new HttpCacheUploadStats();
 
@@ -203,10 +202,9 @@ public class DistBuildSlaveEventBusListener
     return new BuildSlaveStatus()
         .setStampedeId(stampedeId)
         .setBuildSlaveRunId(buildSlaveRunId)
-        .setTotalRulesCount(ruleCount)
-        .setRulesStartedCount(buildRulesStartedCount.get())
+        .setTotalRulesCount(buildRulesTotalCount.get())
         .setRulesFinishedCount(buildRulesFinishedCount.get())
-        .setRulesSuccessCount(buildRulesSuccessCount.get())
+        .setRulesBuildingCount(buildRulesBuildingCount.get())
         .setRulesFailureCount(buildRulesFailureCount.get())
         .setCacheRateStats(cacheRateStatsKeeper.getSerializableStats())
         .setHttpArtifactTotalBytesUploaded(httpCacheUploadStats.getHttpArtifactTotalBytesUploaded())
@@ -424,6 +422,16 @@ public class DistBuildSlaveEventBusListener
     cacheRateStatsKeeper.recordUnexpectedCacheMisses(numUnexpectedMisses);
   }
 
+  @Override
+  public void updateTotalRuleCount(int totalRuleCount) {
+    buildRulesTotalCount.set(totalRuleCount);
+  }
+
+  @Override
+  public void updateFinishedRuleCount(int finishedRuleCount) {
+    buildRulesFinishedCount.set(finishedRuleCount);
+  }
+
   @Subscribe
   public void logEvent(ConsoleEvent event) {
     if (!event.getLevel().equals(Level.WARNING) && !event.getLevel().equals(Level.SEVERE)) {
@@ -436,33 +444,23 @@ public class DistBuildSlaveEventBusListener
     }
   }
 
-  @Subscribe
-  public void ruleCountCalculated(BuildEvent.RuleCountCalculated calculated) {
-    cacheRateStatsKeeper.ruleCountCalculated(calculated);
-    ruleCount = calculated.getNumRules();
-  }
-
-  @Subscribe
-  public void ruleCountUpdated(BuildEvent.UnskippedRuleCountUpdated updated) {
-    cacheRateStatsKeeper.ruleCountUpdated(updated);
-    ruleCount = updated.getNumRules();
-  }
-
   @SuppressWarnings("unused")
   @Subscribe
   public void buildRuleStarted(BuildRuleEvent.Started started) {
-    buildRulesStartedCount.incrementAndGet();
+    buildRulesBuildingCount.incrementAndGet();
+    // For calculating the cache rate, total rule count = rules that were processed. So we increment
+    // for started and resumed events, and decrement for suspended event. We do not decrement for a
+    // finished event.
+    cacheRateStatsKeeper.ruleCount.incrementAndGet();
   }
 
   @Subscribe
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
     cacheRateStatsKeeper.buildRuleFinished(finished);
-    buildRulesStartedCount.decrementAndGet();
-    buildRulesFinishedCount.incrementAndGet();
+    buildRulesBuildingCount.decrementAndGet();
 
     switch (finished.getStatus()) {
       case SUCCESS:
-        buildRulesSuccessCount.incrementAndGet();
         break;
       case FAIL:
         buildRulesFailureCount.incrementAndGet();
@@ -475,13 +473,15 @@ public class DistBuildSlaveEventBusListener
   @SuppressWarnings("unused")
   @Subscribe
   public void buildRuleResumed(BuildRuleEvent.Resumed resumed) {
-    buildRulesStartedCount.incrementAndGet();
+    buildRulesBuildingCount.incrementAndGet();
+    cacheRateStatsKeeper.ruleCount.incrementAndGet();
   }
 
   @SuppressWarnings("unused")
   @Subscribe
   public void buildRuleSuspended(BuildRuleEvent.Suspended suspended) {
-    buildRulesStartedCount.decrementAndGet();
+    buildRulesBuildingCount.decrementAndGet();
+    cacheRateStatsKeeper.ruleCount.decrementAndGet();
   }
 
   @Subscribe

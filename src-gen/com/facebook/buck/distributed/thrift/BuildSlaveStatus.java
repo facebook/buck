@@ -14,9 +14,8 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
   private static final org.apache.thrift.protocol.TField STAMPEDE_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("stampedeId", org.apache.thrift.protocol.TType.STRUCT, (short)1);
   private static final org.apache.thrift.protocol.TField BUILD_SLAVE_RUN_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("buildSlaveRunId", org.apache.thrift.protocol.TType.STRUCT, (short)2);
   private static final org.apache.thrift.protocol.TField TOTAL_RULES_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("totalRulesCount", org.apache.thrift.protocol.TType.I32, (short)10);
-  private static final org.apache.thrift.protocol.TField RULES_STARTED_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("rulesStartedCount", org.apache.thrift.protocol.TType.I32, (short)11);
+  private static final org.apache.thrift.protocol.TField RULES_BUILDING_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("rulesBuildingCount", org.apache.thrift.protocol.TType.I32, (short)11);
   private static final org.apache.thrift.protocol.TField RULES_FINISHED_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("rulesFinishedCount", org.apache.thrift.protocol.TType.I32, (short)12);
-  private static final org.apache.thrift.protocol.TField RULES_SUCCESS_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("rulesSuccessCount", org.apache.thrift.protocol.TType.I32, (short)13);
   private static final org.apache.thrift.protocol.TField RULES_FAILURE_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("rulesFailureCount", org.apache.thrift.protocol.TType.I32, (short)14);
   private static final org.apache.thrift.protocol.TField CACHE_RATE_STATS_FIELD_DESC = new org.apache.thrift.protocol.TField("cacheRateStats", org.apache.thrift.protocol.TType.STRUCT, (short)20);
   private static final org.apache.thrift.protocol.TField HTTP_ARTIFACT_TOTAL_BYTES_UPLOADED_FIELD_DESC = new org.apache.thrift.protocol.TField("httpArtifactTotalBytesUploaded", org.apache.thrift.protocol.TType.I64, (short)21);
@@ -32,9 +31,8 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
   public com.facebook.buck.distributed.thrift.StampedeId stampedeId; // optional
   public com.facebook.buck.distributed.thrift.BuildSlaveRunId buildSlaveRunId; // optional
   public int totalRulesCount; // optional
-  public int rulesStartedCount; // optional
+  public int rulesBuildingCount; // optional
   public int rulesFinishedCount; // optional
-  public int rulesSuccessCount; // optional
   public int rulesFailureCount; // optional
   public CacheRateStats cacheRateStats; // optional
   public long httpArtifactTotalBytesUploaded; // optional
@@ -49,9 +47,8 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
     STAMPEDE_ID((short)1, "stampedeId"),
     BUILD_SLAVE_RUN_ID((short)2, "buildSlaveRunId"),
     TOTAL_RULES_COUNT((short)10, "totalRulesCount"),
-    RULES_STARTED_COUNT((short)11, "rulesStartedCount"),
+    RULES_BUILDING_COUNT((short)11, "rulesBuildingCount"),
     RULES_FINISHED_COUNT((short)12, "rulesFinishedCount"),
-    RULES_SUCCESS_COUNT((short)13, "rulesSuccessCount"),
     RULES_FAILURE_COUNT((short)14, "rulesFailureCount"),
     CACHE_RATE_STATS((short)20, "cacheRateStats"),
     HTTP_ARTIFACT_TOTAL_BYTES_UPLOADED((short)21, "httpArtifactTotalBytesUploaded"),
@@ -80,12 +77,10 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
           return BUILD_SLAVE_RUN_ID;
         case 10: // TOTAL_RULES_COUNT
           return TOTAL_RULES_COUNT;
-        case 11: // RULES_STARTED_COUNT
-          return RULES_STARTED_COUNT;
+        case 11: // RULES_BUILDING_COUNT
+          return RULES_BUILDING_COUNT;
         case 12: // RULES_FINISHED_COUNT
           return RULES_FINISHED_COUNT;
-        case 13: // RULES_SUCCESS_COUNT
-          return RULES_SUCCESS_COUNT;
         case 14: // RULES_FAILURE_COUNT
           return RULES_FAILURE_COUNT;
         case 20: // CACHE_RATE_STATS
@@ -143,18 +138,17 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
 
   // isset id assignments
   private static final int __TOTALRULESCOUNT_ISSET_ID = 0;
-  private static final int __RULESSTARTEDCOUNT_ISSET_ID = 1;
+  private static final int __RULESBUILDINGCOUNT_ISSET_ID = 1;
   private static final int __RULESFINISHEDCOUNT_ISSET_ID = 2;
-  private static final int __RULESSUCCESSCOUNT_ISSET_ID = 3;
-  private static final int __RULESFAILURECOUNT_ISSET_ID = 4;
-  private static final int __HTTPARTIFACTTOTALBYTESUPLOADED_ISSET_ID = 5;
-  private static final int __HTTPARTIFACTUPLOADSSCHEDULEDCOUNT_ISSET_ID = 6;
-  private static final int __HTTPARTIFACTUPLOADSONGOINGCOUNT_ISSET_ID = 7;
-  private static final int __HTTPARTIFACTUPLOADSSUCCESSCOUNT_ISSET_ID = 8;
-  private static final int __HTTPARTIFACTUPLOADSFAILURECOUNT_ISSET_ID = 9;
-  private static final int __FILESMATERIALIZEDCOUNT_ISSET_ID = 10;
+  private static final int __RULESFAILURECOUNT_ISSET_ID = 3;
+  private static final int __HTTPARTIFACTTOTALBYTESUPLOADED_ISSET_ID = 4;
+  private static final int __HTTPARTIFACTUPLOADSSCHEDULEDCOUNT_ISSET_ID = 5;
+  private static final int __HTTPARTIFACTUPLOADSONGOINGCOUNT_ISSET_ID = 6;
+  private static final int __HTTPARTIFACTUPLOADSSUCCESSCOUNT_ISSET_ID = 7;
+  private static final int __HTTPARTIFACTUPLOADSFAILURECOUNT_ISSET_ID = 8;
+  private static final int __FILESMATERIALIZEDCOUNT_ISSET_ID = 9;
   private short __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.STAMPEDE_ID,_Fields.BUILD_SLAVE_RUN_ID,_Fields.TOTAL_RULES_COUNT,_Fields.RULES_STARTED_COUNT,_Fields.RULES_FINISHED_COUNT,_Fields.RULES_SUCCESS_COUNT,_Fields.RULES_FAILURE_COUNT,_Fields.CACHE_RATE_STATS,_Fields.HTTP_ARTIFACT_TOTAL_BYTES_UPLOADED,_Fields.HTTP_ARTIFACT_UPLOADS_SCHEDULED_COUNT,_Fields.HTTP_ARTIFACT_UPLOADS_ONGOING_COUNT,_Fields.HTTP_ARTIFACT_UPLOADS_SUCCESS_COUNT,_Fields.HTTP_ARTIFACT_UPLOADS_FAILURE_COUNT,_Fields.FILES_MATERIALIZED_COUNT};
+  private static final _Fields optionals[] = {_Fields.STAMPEDE_ID,_Fields.BUILD_SLAVE_RUN_ID,_Fields.TOTAL_RULES_COUNT,_Fields.RULES_BUILDING_COUNT,_Fields.RULES_FINISHED_COUNT,_Fields.RULES_FAILURE_COUNT,_Fields.CACHE_RATE_STATS,_Fields.HTTP_ARTIFACT_TOTAL_BYTES_UPLOADED,_Fields.HTTP_ARTIFACT_UPLOADS_SCHEDULED_COUNT,_Fields.HTTP_ARTIFACT_UPLOADS_ONGOING_COUNT,_Fields.HTTP_ARTIFACT_UPLOADS_SUCCESS_COUNT,_Fields.HTTP_ARTIFACT_UPLOADS_FAILURE_COUNT,_Fields.FILES_MATERIALIZED_COUNT};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -164,11 +158,9 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, com.facebook.buck.distributed.thrift.BuildSlaveRunId.class)));
     tmpMap.put(_Fields.TOTAL_RULES_COUNT, new org.apache.thrift.meta_data.FieldMetaData("totalRulesCount", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
-    tmpMap.put(_Fields.RULES_STARTED_COUNT, new org.apache.thrift.meta_data.FieldMetaData("rulesStartedCount", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+    tmpMap.put(_Fields.RULES_BUILDING_COUNT, new org.apache.thrift.meta_data.FieldMetaData("rulesBuildingCount", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     tmpMap.put(_Fields.RULES_FINISHED_COUNT, new org.apache.thrift.meta_data.FieldMetaData("rulesFinishedCount", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
-    tmpMap.put(_Fields.RULES_SUCCESS_COUNT, new org.apache.thrift.meta_data.FieldMetaData("rulesSuccessCount", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     tmpMap.put(_Fields.RULES_FAILURE_COUNT, new org.apache.thrift.meta_data.FieldMetaData("rulesFailureCount", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
@@ -205,9 +197,8 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
       this.buildSlaveRunId = new com.facebook.buck.distributed.thrift.BuildSlaveRunId(other.buildSlaveRunId);
     }
     this.totalRulesCount = other.totalRulesCount;
-    this.rulesStartedCount = other.rulesStartedCount;
+    this.rulesBuildingCount = other.rulesBuildingCount;
     this.rulesFinishedCount = other.rulesFinishedCount;
-    this.rulesSuccessCount = other.rulesSuccessCount;
     this.rulesFailureCount = other.rulesFailureCount;
     if (other.isSetCacheRateStats()) {
       this.cacheRateStats = new CacheRateStats(other.cacheRateStats);
@@ -230,12 +221,10 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
     this.buildSlaveRunId = null;
     setTotalRulesCountIsSet(false);
     this.totalRulesCount = 0;
-    setRulesStartedCountIsSet(false);
-    this.rulesStartedCount = 0;
+    setRulesBuildingCountIsSet(false);
+    this.rulesBuildingCount = 0;
     setRulesFinishedCountIsSet(false);
     this.rulesFinishedCount = 0;
-    setRulesSuccessCountIsSet(false);
-    this.rulesSuccessCount = 0;
     setRulesFailureCountIsSet(false);
     this.rulesFailureCount = 0;
     this.cacheRateStats = null;
@@ -324,27 +313,27 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
     __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __TOTALRULESCOUNT_ISSET_ID, value);
   }
 
-  public int getRulesStartedCount() {
-    return this.rulesStartedCount;
+  public int getRulesBuildingCount() {
+    return this.rulesBuildingCount;
   }
 
-  public BuildSlaveStatus setRulesStartedCount(int rulesStartedCount) {
-    this.rulesStartedCount = rulesStartedCount;
-    setRulesStartedCountIsSet(true);
+  public BuildSlaveStatus setRulesBuildingCount(int rulesBuildingCount) {
+    this.rulesBuildingCount = rulesBuildingCount;
+    setRulesBuildingCountIsSet(true);
     return this;
   }
 
-  public void unsetRulesStartedCount() {
-    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __RULESSTARTEDCOUNT_ISSET_ID);
+  public void unsetRulesBuildingCount() {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __RULESBUILDINGCOUNT_ISSET_ID);
   }
 
-  /** Returns true if field rulesStartedCount is set (has been assigned a value) and false otherwise */
-  public boolean isSetRulesStartedCount() {
-    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __RULESSTARTEDCOUNT_ISSET_ID);
+  /** Returns true if field rulesBuildingCount is set (has been assigned a value) and false otherwise */
+  public boolean isSetRulesBuildingCount() {
+    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __RULESBUILDINGCOUNT_ISSET_ID);
   }
 
-  public void setRulesStartedCountIsSet(boolean value) {
-    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __RULESSTARTEDCOUNT_ISSET_ID, value);
+  public void setRulesBuildingCountIsSet(boolean value) {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __RULESBUILDINGCOUNT_ISSET_ID, value);
   }
 
   public int getRulesFinishedCount() {
@@ -368,29 +357,6 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
 
   public void setRulesFinishedCountIsSet(boolean value) {
     __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __RULESFINISHEDCOUNT_ISSET_ID, value);
-  }
-
-  public int getRulesSuccessCount() {
-    return this.rulesSuccessCount;
-  }
-
-  public BuildSlaveStatus setRulesSuccessCount(int rulesSuccessCount) {
-    this.rulesSuccessCount = rulesSuccessCount;
-    setRulesSuccessCountIsSet(true);
-    return this;
-  }
-
-  public void unsetRulesSuccessCount() {
-    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __RULESSUCCESSCOUNT_ISSET_ID);
-  }
-
-  /** Returns true if field rulesSuccessCount is set (has been assigned a value) and false otherwise */
-  public boolean isSetRulesSuccessCount() {
-    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __RULESSUCCESSCOUNT_ISSET_ID);
-  }
-
-  public void setRulesSuccessCountIsSet(boolean value) {
-    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __RULESSUCCESSCOUNT_ISSET_ID, value);
   }
 
   public int getRulesFailureCount() {
@@ -604,11 +570,11 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
       }
       break;
 
-    case RULES_STARTED_COUNT:
+    case RULES_BUILDING_COUNT:
       if (value == null) {
-        unsetRulesStartedCount();
+        unsetRulesBuildingCount();
       } else {
-        setRulesStartedCount((java.lang.Integer)value);
+        setRulesBuildingCount((java.lang.Integer)value);
       }
       break;
 
@@ -617,14 +583,6 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
         unsetRulesFinishedCount();
       } else {
         setRulesFinishedCount((java.lang.Integer)value);
-      }
-      break;
-
-    case RULES_SUCCESS_COUNT:
-      if (value == null) {
-        unsetRulesSuccessCount();
-      } else {
-        setRulesSuccessCount((java.lang.Integer)value);
       }
       break;
 
@@ -706,14 +664,11 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
     case TOTAL_RULES_COUNT:
       return getTotalRulesCount();
 
-    case RULES_STARTED_COUNT:
-      return getRulesStartedCount();
+    case RULES_BUILDING_COUNT:
+      return getRulesBuildingCount();
 
     case RULES_FINISHED_COUNT:
       return getRulesFinishedCount();
-
-    case RULES_SUCCESS_COUNT:
-      return getRulesSuccessCount();
 
     case RULES_FAILURE_COUNT:
       return getRulesFailureCount();
@@ -756,12 +711,10 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
       return isSetBuildSlaveRunId();
     case TOTAL_RULES_COUNT:
       return isSetTotalRulesCount();
-    case RULES_STARTED_COUNT:
-      return isSetRulesStartedCount();
+    case RULES_BUILDING_COUNT:
+      return isSetRulesBuildingCount();
     case RULES_FINISHED_COUNT:
       return isSetRulesFinishedCount();
-    case RULES_SUCCESS_COUNT:
-      return isSetRulesSuccessCount();
     case RULES_FAILURE_COUNT:
       return isSetRulesFailureCount();
     case CACHE_RATE_STATS:
@@ -824,12 +777,12 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
         return false;
     }
 
-    boolean this_present_rulesStartedCount = true && this.isSetRulesStartedCount();
-    boolean that_present_rulesStartedCount = true && that.isSetRulesStartedCount();
-    if (this_present_rulesStartedCount || that_present_rulesStartedCount) {
-      if (!(this_present_rulesStartedCount && that_present_rulesStartedCount))
+    boolean this_present_rulesBuildingCount = true && this.isSetRulesBuildingCount();
+    boolean that_present_rulesBuildingCount = true && that.isSetRulesBuildingCount();
+    if (this_present_rulesBuildingCount || that_present_rulesBuildingCount) {
+      if (!(this_present_rulesBuildingCount && that_present_rulesBuildingCount))
         return false;
-      if (this.rulesStartedCount != that.rulesStartedCount)
+      if (this.rulesBuildingCount != that.rulesBuildingCount)
         return false;
     }
 
@@ -839,15 +792,6 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
       if (!(this_present_rulesFinishedCount && that_present_rulesFinishedCount))
         return false;
       if (this.rulesFinishedCount != that.rulesFinishedCount)
-        return false;
-    }
-
-    boolean this_present_rulesSuccessCount = true && this.isSetRulesSuccessCount();
-    boolean that_present_rulesSuccessCount = true && that.isSetRulesSuccessCount();
-    if (this_present_rulesSuccessCount || that_present_rulesSuccessCount) {
-      if (!(this_present_rulesSuccessCount && that_present_rulesSuccessCount))
-        return false;
-      if (this.rulesSuccessCount != that.rulesSuccessCount)
         return false;
     }
 
@@ -942,17 +886,13 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
     if (isSetTotalRulesCount())
       hashCode = hashCode * 8191 + totalRulesCount;
 
-    hashCode = hashCode * 8191 + ((isSetRulesStartedCount()) ? 131071 : 524287);
-    if (isSetRulesStartedCount())
-      hashCode = hashCode * 8191 + rulesStartedCount;
+    hashCode = hashCode * 8191 + ((isSetRulesBuildingCount()) ? 131071 : 524287);
+    if (isSetRulesBuildingCount())
+      hashCode = hashCode * 8191 + rulesBuildingCount;
 
     hashCode = hashCode * 8191 + ((isSetRulesFinishedCount()) ? 131071 : 524287);
     if (isSetRulesFinishedCount())
       hashCode = hashCode * 8191 + rulesFinishedCount;
-
-    hashCode = hashCode * 8191 + ((isSetRulesSuccessCount()) ? 131071 : 524287);
-    if (isSetRulesSuccessCount())
-      hashCode = hashCode * 8191 + rulesSuccessCount;
 
     hashCode = hashCode * 8191 + ((isSetRulesFailureCount()) ? 131071 : 524287);
     if (isSetRulesFailureCount())
@@ -1027,12 +967,12 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
         return lastComparison;
       }
     }
-    lastComparison = java.lang.Boolean.valueOf(isSetRulesStartedCount()).compareTo(other.isSetRulesStartedCount());
+    lastComparison = java.lang.Boolean.valueOf(isSetRulesBuildingCount()).compareTo(other.isSetRulesBuildingCount());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    if (isSetRulesStartedCount()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.rulesStartedCount, other.rulesStartedCount);
+    if (isSetRulesBuildingCount()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.rulesBuildingCount, other.rulesBuildingCount);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -1043,16 +983,6 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
     }
     if (isSetRulesFinishedCount()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.rulesFinishedCount, other.rulesFinishedCount);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetRulesSuccessCount()).compareTo(other.isSetRulesSuccessCount());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetRulesSuccessCount()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.rulesSuccessCount, other.rulesSuccessCount);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -1182,22 +1112,16 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
       sb.append(this.totalRulesCount);
       first = false;
     }
-    if (isSetRulesStartedCount()) {
+    if (isSetRulesBuildingCount()) {
       if (!first) sb.append(", ");
-      sb.append("rulesStartedCount:");
-      sb.append(this.rulesStartedCount);
+      sb.append("rulesBuildingCount:");
+      sb.append(this.rulesBuildingCount);
       first = false;
     }
     if (isSetRulesFinishedCount()) {
       if (!first) sb.append(", ");
       sb.append("rulesFinishedCount:");
       sb.append(this.rulesFinishedCount);
-      first = false;
-    }
-    if (isSetRulesSuccessCount()) {
-      if (!first) sb.append(", ");
-      sb.append("rulesSuccessCount:");
-      sb.append(this.rulesSuccessCount);
       first = false;
     }
     if (isSetRulesFailureCount()) {
@@ -1332,10 +1256,10 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 11: // RULES_STARTED_COUNT
+          case 11: // RULES_BUILDING_COUNT
             if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-              struct.rulesStartedCount = iprot.readI32();
-              struct.setRulesStartedCountIsSet(true);
+              struct.rulesBuildingCount = iprot.readI32();
+              struct.setRulesBuildingCountIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -1344,14 +1268,6 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
             if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
               struct.rulesFinishedCount = iprot.readI32();
               struct.setRulesFinishedCountIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 13: // RULES_SUCCESS_COUNT
-            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-              struct.rulesSuccessCount = iprot.readI32();
-              struct.setRulesSuccessCountIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -1455,19 +1371,14 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
         oprot.writeI32(struct.totalRulesCount);
         oprot.writeFieldEnd();
       }
-      if (struct.isSetRulesStartedCount()) {
-        oprot.writeFieldBegin(RULES_STARTED_COUNT_FIELD_DESC);
-        oprot.writeI32(struct.rulesStartedCount);
+      if (struct.isSetRulesBuildingCount()) {
+        oprot.writeFieldBegin(RULES_BUILDING_COUNT_FIELD_DESC);
+        oprot.writeI32(struct.rulesBuildingCount);
         oprot.writeFieldEnd();
       }
       if (struct.isSetRulesFinishedCount()) {
         oprot.writeFieldBegin(RULES_FINISHED_COUNT_FIELD_DESC);
         oprot.writeI32(struct.rulesFinishedCount);
-        oprot.writeFieldEnd();
-      }
-      if (struct.isSetRulesSuccessCount()) {
-        oprot.writeFieldBegin(RULES_SUCCESS_COUNT_FIELD_DESC);
-        oprot.writeI32(struct.rulesSuccessCount);
         oprot.writeFieldEnd();
       }
       if (struct.isSetRulesFailureCount()) {
@@ -1539,40 +1450,37 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
       if (struct.isSetTotalRulesCount()) {
         optionals.set(2);
       }
-      if (struct.isSetRulesStartedCount()) {
+      if (struct.isSetRulesBuildingCount()) {
         optionals.set(3);
       }
       if (struct.isSetRulesFinishedCount()) {
         optionals.set(4);
       }
-      if (struct.isSetRulesSuccessCount()) {
+      if (struct.isSetRulesFailureCount()) {
         optionals.set(5);
       }
-      if (struct.isSetRulesFailureCount()) {
+      if (struct.isSetCacheRateStats()) {
         optionals.set(6);
       }
-      if (struct.isSetCacheRateStats()) {
+      if (struct.isSetHttpArtifactTotalBytesUploaded()) {
         optionals.set(7);
       }
-      if (struct.isSetHttpArtifactTotalBytesUploaded()) {
+      if (struct.isSetHttpArtifactUploadsScheduledCount()) {
         optionals.set(8);
       }
-      if (struct.isSetHttpArtifactUploadsScheduledCount()) {
+      if (struct.isSetHttpArtifactUploadsOngoingCount()) {
         optionals.set(9);
       }
-      if (struct.isSetHttpArtifactUploadsOngoingCount()) {
+      if (struct.isSetHttpArtifactUploadsSuccessCount()) {
         optionals.set(10);
       }
-      if (struct.isSetHttpArtifactUploadsSuccessCount()) {
+      if (struct.isSetHttpArtifactUploadsFailureCount()) {
         optionals.set(11);
       }
-      if (struct.isSetHttpArtifactUploadsFailureCount()) {
+      if (struct.isSetFilesMaterializedCount()) {
         optionals.set(12);
       }
-      if (struct.isSetFilesMaterializedCount()) {
-        optionals.set(13);
-      }
-      oprot.writeBitSet(optionals, 14);
+      oprot.writeBitSet(optionals, 13);
       if (struct.isSetStampedeId()) {
         struct.stampedeId.write(oprot);
       }
@@ -1582,14 +1490,11 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
       if (struct.isSetTotalRulesCount()) {
         oprot.writeI32(struct.totalRulesCount);
       }
-      if (struct.isSetRulesStartedCount()) {
-        oprot.writeI32(struct.rulesStartedCount);
+      if (struct.isSetRulesBuildingCount()) {
+        oprot.writeI32(struct.rulesBuildingCount);
       }
       if (struct.isSetRulesFinishedCount()) {
         oprot.writeI32(struct.rulesFinishedCount);
-      }
-      if (struct.isSetRulesSuccessCount()) {
-        oprot.writeI32(struct.rulesSuccessCount);
       }
       if (struct.isSetRulesFailureCount()) {
         oprot.writeI32(struct.rulesFailureCount);
@@ -1620,7 +1525,7 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, BuildSlaveStatus struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(14);
+      java.util.BitSet incoming = iprot.readBitSet(13);
       if (incoming.get(0)) {
         struct.stampedeId = new com.facebook.buck.distributed.thrift.StampedeId();
         struct.stampedeId.read(iprot);
@@ -1636,47 +1541,43 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
         struct.setTotalRulesCountIsSet(true);
       }
       if (incoming.get(3)) {
-        struct.rulesStartedCount = iprot.readI32();
-        struct.setRulesStartedCountIsSet(true);
+        struct.rulesBuildingCount = iprot.readI32();
+        struct.setRulesBuildingCountIsSet(true);
       }
       if (incoming.get(4)) {
         struct.rulesFinishedCount = iprot.readI32();
         struct.setRulesFinishedCountIsSet(true);
       }
       if (incoming.get(5)) {
-        struct.rulesSuccessCount = iprot.readI32();
-        struct.setRulesSuccessCountIsSet(true);
-      }
-      if (incoming.get(6)) {
         struct.rulesFailureCount = iprot.readI32();
         struct.setRulesFailureCountIsSet(true);
       }
-      if (incoming.get(7)) {
+      if (incoming.get(6)) {
         struct.cacheRateStats = new CacheRateStats();
         struct.cacheRateStats.read(iprot);
         struct.setCacheRateStatsIsSet(true);
       }
-      if (incoming.get(8)) {
+      if (incoming.get(7)) {
         struct.httpArtifactTotalBytesUploaded = iprot.readI64();
         struct.setHttpArtifactTotalBytesUploadedIsSet(true);
       }
-      if (incoming.get(9)) {
+      if (incoming.get(8)) {
         struct.httpArtifactUploadsScheduledCount = iprot.readI32();
         struct.setHttpArtifactUploadsScheduledCountIsSet(true);
       }
-      if (incoming.get(10)) {
+      if (incoming.get(9)) {
         struct.httpArtifactUploadsOngoingCount = iprot.readI32();
         struct.setHttpArtifactUploadsOngoingCountIsSet(true);
       }
-      if (incoming.get(11)) {
+      if (incoming.get(10)) {
         struct.httpArtifactUploadsSuccessCount = iprot.readI32();
         struct.setHttpArtifactUploadsSuccessCountIsSet(true);
       }
-      if (incoming.get(12)) {
+      if (incoming.get(11)) {
         struct.httpArtifactUploadsFailureCount = iprot.readI32();
         struct.setHttpArtifactUploadsFailureCountIsSet(true);
       }
-      if (incoming.get(13)) {
+      if (incoming.get(12)) {
         struct.filesMaterializedCount = iprot.readI32();
         struct.setFilesMaterializedCountIsSet(true);
       }

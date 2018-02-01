@@ -29,8 +29,8 @@ import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.distributed.build_slave.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.build_slave.HealthCheckStatsTracker;
-import com.facebook.buck.distributed.build_slave.NoOpUnexpectedSlaveCacheMissTracker;
-import com.facebook.buck.distributed.build_slave.UnexpectedSlaveCacheMissTracker;
+import com.facebook.buck.distributed.build_slave.MinionBuildProgressTracker;
+import com.facebook.buck.distributed.build_slave.NoOpMinionBuildProgressTracker;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
@@ -108,8 +108,8 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
   private BuildRuleFinishedPublisher buildRuleFinishedPublisher =
       new NoOpBuildRuleFinishedPublisher();
 
-  private UnexpectedSlaveCacheMissTracker unexpectedSlaveCacheMissTracker =
-      new NoOpUnexpectedSlaveCacheMissTracker();
+  private MinionBuildProgressTracker minionBuildProgressTracker =
+      new NoOpMinionBuildProgressTracker();
 
   private final FileMaterializationStatsTracker fileMaterializationStatsTracker =
       new FileMaterializationStatsTracker();
@@ -213,7 +213,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   healthCheckStatsTracker,
                   timeStatsTracker,
                   getBuildRuleFinishedPublisher(),
-                  getUnexpectedSlaveCacheMissTracker(),
+                  getMinionBuildProgressTracker(),
                   ruleKeyCacheScope);
 
           distBuildExecutor.onBuildSlavePreparationCompleted(
@@ -336,7 +336,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
               scheduledExecutorService);
 
       buildRuleFinishedPublisher = slaveEventListener;
-      unexpectedSlaveCacheMissTracker = slaveEventListener;
+      minionBuildProgressTracker = slaveEventListener;
     }
   }
 
@@ -344,8 +344,8 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
     return Preconditions.checkNotNull(buildRuleFinishedPublisher);
   }
 
-  private UnexpectedSlaveCacheMissTracker getUnexpectedSlaveCacheMissTracker() {
-    return Preconditions.checkNotNull(unexpectedSlaveCacheMissTracker);
+  private MinionBuildProgressTracker getMinionBuildProgressTracker() {
+    return Preconditions.checkNotNull(minionBuildProgressTracker);
   }
 
   @Override

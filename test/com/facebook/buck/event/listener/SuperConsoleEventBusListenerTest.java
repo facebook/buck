@@ -918,7 +918,6 @@ public class SuperConsoleEventBusListenerTest {
     timeMillis += 100;
     slave1.setTotalRulesCount(10);
     slave1.setRulesFinishedCount(5);
-    slave1.setRulesSuccessCount(5);
     CacheRateStats cacheRateStatsForSlave1 = new CacheRateStats();
     slave1.setCacheRateStats(cacheRateStatsForSlave1);
     cacheRateStatsForSlave1.setTotalRulesCount(10);
@@ -927,9 +926,8 @@ public class SuperConsoleEventBusListenerTest {
     cacheRateStatsForSlave1.setCacheMissesCount(1);
 
     slave2.setTotalRulesCount(20);
-    slave2.setRulesStartedCount(5);
+    slave2.setRulesBuildingCount(5);
     slave2.setRulesFinishedCount(5);
-    slave2.setRulesSuccessCount(4);
     slave2.setRulesFailureCount(1);
     CacheRateStats cacheRateStatsForSlave2 = new CacheRateStats();
     slave2.setCacheRateStats(cacheRateStatsForSlave2);
@@ -961,16 +959,14 @@ public class SuperConsoleEventBusListenerTest {
             " Server 1: Working on 5 jobs... built 5/20 jobs, 1 jobs failed, 0 [0.0%] cache miss"));
 
     timeMillis += 100;
-    slave1.setRulesStartedCount(1);
+    slave1.setRulesBuildingCount(1);
     slave1.setRulesFinishedCount(9);
-    slave1.setRulesSuccessCount(9);
     cacheRateStatsForSlave1.setUpdatedRulesCount(9);
     cacheRateStatsForSlave1.setCacheHitsCount(8);
     cacheRateStatsForSlave1.setCacheMissesCount(1);
 
-    slave2.setRulesStartedCount(0);
+    slave2.setRulesBuildingCount(0);
     slave2.setRulesFinishedCount(20);
-    slave2.setRulesSuccessCount(19);
     slave2.setHttpArtifactUploadsScheduledCount(3);
     slave2.setHttpArtifactUploadsOngoingCount(1);
     slave2.setHttpArtifactUploadsSuccessCount(1);
@@ -1012,9 +1008,8 @@ public class SuperConsoleEventBusListenerTest {
                 + "1 [5.0%] cache errors, 1/3 uploaded, 1 upload errors"));
 
     timeMillis += 100;
-    slave1.setRulesStartedCount(0);
+    slave1.setRulesBuildingCount(0);
     slave1.setRulesFinishedCount(10);
-    slave1.setRulesSuccessCount(10);
     cacheRateStatsForSlave1.setUpdatedRulesCount(10);
     cacheRateStatsForSlave1.setCacheHitsCount(9);
 

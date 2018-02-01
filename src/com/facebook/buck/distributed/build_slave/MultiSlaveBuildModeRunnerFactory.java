@@ -158,7 +158,7 @@ public class MultiSlaveBuildModeRunnerFactory {
       String coordinatorAddress,
       OptionalInt coordinatorPort,
       DistBuildConfig distBuildConfig,
-      UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker,
+      MinionBuildProgressTracker minionBuildProgressTracker,
       double availableBuildCapacityRatio) {
     Preconditions.checkArgument(
         availableBuildCapacityRatio > 0, availableBuildCapacityRatio + " is not > 0");
@@ -199,7 +199,7 @@ public class MultiSlaveBuildModeRunnerFactory {
             .threadLimit,
         checker,
         distBuildConfig.getMinionPollLoopIntervalMillis(),
-        unexpectedCacheMissTracker,
+        minionBuildProgressTracker,
         distBuildConfig.getCoordinatorConnectionTimeoutMillis());
   }
 
@@ -220,7 +220,7 @@ public class MultiSlaveBuildModeRunnerFactory {
       ListenableFuture<BuildExecutor> localBuildExecutor,
       Path logDirectoryPath,
       BuildRuleFinishedPublisher buildRuleFinishedPublisher,
-      UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker,
+      MinionBuildProgressTracker minionBuildProgressTracker,
       BuckEventBus eventBus,
       ListeningExecutorService executorService,
       ArtifactCache remoteCache,
@@ -255,7 +255,7 @@ public class MultiSlaveBuildModeRunnerFactory {
             LOCALHOST_ADDRESS,
             OptionalInt.empty(),
             distBuildConfig,
-            unexpectedCacheMissTracker,
+            minionBuildProgressTracker,
             coordinatorBuildCapacityRatio));
   }
 }

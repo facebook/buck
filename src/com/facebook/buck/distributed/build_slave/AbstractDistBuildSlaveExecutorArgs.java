@@ -109,7 +109,7 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
 
   public abstract BuildRuleFinishedPublisher getBuildRuleFinishedPublisher();
 
-  public abstract UnexpectedSlaveCacheMissTracker getUnexpectedSlaveCacheMissTracker();
+  public abstract MinionBuildProgressTracker getMinionBuildProgressTracker();
 
   public abstract HealthCheckStatsTracker getHealthCheckStatsTracker();
 

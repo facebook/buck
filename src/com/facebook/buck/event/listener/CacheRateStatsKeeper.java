@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableCollection;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -50,7 +49,7 @@ public class CacheRateStatsKeeper {
   private final AtomicInteger cacheLocalKeyUnchangedHits = new AtomicInteger(0);
   private final AtomicInteger unexpectedCacheMissesInStampedeBuildSlave = new AtomicInteger(0);
 
-  protected volatile Optional<Integer> ruleCount = Optional.empty();
+  protected final AtomicInteger ruleCount = new AtomicInteger(0);
 
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
     if (finished.getStatus() == BuildRuleStatus.CANCELED) {
@@ -90,16 +89,16 @@ public class CacheRateStatsKeeper {
   }
 
   public void ruleCountCalculated(BuildEvent.RuleCountCalculated calculated) {
-    ruleCount = Optional.of(calculated.getNumRules());
+    ruleCount.set(calculated.getNumRules());
   }
 
   public void ruleCountUpdated(BuildEvent.UnskippedRuleCountUpdated updated) {
-    ruleCount = Optional.of(updated.getNumRules());
+    ruleCount.set(updated.getNumRules());
   }
 
   public CacheRateStats getSerializableStats() {
     CacheRateStats serializableStats = new CacheRateStats();
-    serializableStats.setTotalRulesCount(ruleCount.orElse(0));
+    serializableStats.setTotalRulesCount(ruleCount.get());
     serializableStats.setUpdatedRulesCount(updated.get());
     serializableStats.setCacheHitsCount(cacheHits.get());
     serializableStats.setCacheMissesCount(cacheMisses.get());
@@ -145,7 +144,7 @@ public class CacheRateStatsKeeper {
 
   public CacheRateStatsUpdateEvent getStats() {
     return new CacheRateStatsUpdateEvent(
-        cacheMisses.get(), cacheErrors.get(), cacheHits.get(), ruleCount.orElse(0), updated.get());
+        cacheMisses.get(), cacheErrors.get(), cacheHits.get(), ruleCount.get(), updated.get());
   }
 
   public static class CacheRateStatsUpdateEvent extends AbstractBuckEvent

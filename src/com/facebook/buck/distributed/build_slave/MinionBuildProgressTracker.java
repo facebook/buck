@@ -15,9 +15,15 @@
  */
 package com.facebook.buck.distributed.build_slave;
 
-/** NoOp implementation of {@link UnexpectedSlaveCacheMissTracker}. */
-public class NoOpUnexpectedSlaveCacheMissTracker implements UnexpectedSlaveCacheMissTracker {
+/**
+ * Interface to track unexpected cache misses encountered on stampede build slaves. An unexpected
+ * cache miss would be something which we were not asked to build, but we got a cache miss, and had
+ * to build it locally.
+ */
+public interface MinionBuildProgressTracker {
+  void onUnexpectedCacheMiss(int numUnexpectedMisses);
 
-  @Override
-  public void onUnexpectedCacheMiss(int numUnexpectedMisses) {}
+  void updateTotalRuleCount(int totalRuleCount);
+
+  void updateFinishedRuleCount(int finishedRuleCount);
 }

@@ -77,7 +77,7 @@ public class MinionModeRunnerIntegrationTest {
             MAX_PARALLEL_WORK_UNITS,
             checker,
             POLL_LOOP_INTERVAL_MILLIS,
-            new NoOpUnexpectedSlaveCacheMissTracker(),
+            new NoOpMinionBuildProgressTracker(),
             CONNECTION_TIMEOUT_MILLIS);
 
     minion.runAndReturnExitCode(createFakeHeartbeatService());
@@ -113,7 +113,7 @@ public class MinionModeRunnerIntegrationTest {
             MAX_PARALLEL_WORK_UNITS,
             checker,
             POLL_LOOP_INTERVAL_MILLIS,
-            new NoOpUnexpectedSlaveCacheMissTracker(),
+            new NoOpMinionBuildProgressTracker(),
             CONNECTION_TIMEOUT_MILLIS);
 
     int exitCode = minion.runAndReturnExitCode(createFakeHeartbeatService());
@@ -168,8 +168,8 @@ public class MinionModeRunnerIntegrationTest {
     final String MISS_TARGET_2 = ROOT_TARGET + "_miss2";
     final String MISS_TARGET_3 = ROOT_TARGET + "_miss3";
 
-    UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker =
-        EasyMock.createMock(UnexpectedSlaveCacheMissTracker.class);
+    MinionBuildProgressTracker unexpectedCacheMissTracker =
+        EasyMock.createMock(MinionBuildProgressTracker.class);
     BuildExecutor buildExecutor = EasyMock.createMock(BuildExecutor.class);
 
     EasyMock.expect(
@@ -222,6 +222,12 @@ public class MinionModeRunnerIntegrationTest {
     unexpectedCacheMissTracker.onUnexpectedCacheMiss(EasyMock.captureInt(cacheMissCounts));
     EasyMock.expectLastCall().atLeastOnce();
 
+    unexpectedCacheMissTracker.updateTotalRuleCount(EasyMock.anyInt());
+    EasyMock.expectLastCall().anyTimes();
+
+    unexpectedCacheMissTracker.updateFinishedRuleCount(EasyMock.anyInt());
+    EasyMock.expectLastCall().anyTimes();
+
     EasyMock.replay(buildExecutor);
     EasyMock.replay(unexpectedCacheMissTracker);
 
@@ -237,7 +243,7 @@ public class MinionModeRunnerIntegrationTest {
   private void runDiamondGraphWithChain(
       HeartbeatService service,
       BuildExecutor buildExecutor,
-      UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker)
+      MinionBuildProgressTracker unexpectedCacheMissTracker)
       throws IOException, NoSuchBuildTargetException, InterruptedException {
     MinionModeRunner.BuildCompletionChecker checker = () -> false;
     try (ThriftCoordinatorServer server = createServer()) {
@@ -262,7 +268,7 @@ public class MinionModeRunnerIntegrationTest {
   private void runDiamondGraphWithChain(HeartbeatService service)
       throws IOException, NoSuchBuildTargetException, InterruptedException {
     FakeBuildExecutorImpl buildExecutor = new FakeBuildExecutorImpl();
-    runDiamondGraphWithChain(service, buildExecutor, new NoOpUnexpectedSlaveCacheMissTracker());
+    runDiamondGraphWithChain(service, buildExecutor, new NoOpMinionBuildProgressTracker());
     Assert.assertEquals(5, buildExecutor.getBuildTargets().size());
     Assert.assertEquals(ROOT_TARGET, buildExecutor.getBuildTargets().get(4));
   }

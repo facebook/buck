@@ -89,7 +89,7 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
             MAX_PARALLEL_WORK_UNITS,
             EasyMock.createNiceMock(MinionModeRunner.BuildCompletionChecker.class),
             POLL_LOOP_INTERVAL_MILLIS,
-            new NoOpUnexpectedSlaveCacheMissTracker(),
+            new NoOpMinionBuildProgressTracker(),
             CONNECTION_TIMEOUT_MILLIS);
     CoordinatorAndMinionModeRunner jointRunner =
         new CoordinatorAndMinionModeRunner(coordinator, minion);
