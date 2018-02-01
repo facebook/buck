@@ -263,7 +263,7 @@ public class DxStep extends ShellStep {
             D8Command.builder(diagnosticsHandler)
                 .addProgramFiles(inputs)
                 .setIntermediate(intermediate)
-                .addClasspathFiles(androidPlatformTarget.getAndroidJar())
+                .addLibraryFiles(androidPlatformTarget.getAndroidJar())
                 .setMode(
                     options.contains(Option.NO_OPTIMIZE)
                         ? CompilationMode.DEBUG
