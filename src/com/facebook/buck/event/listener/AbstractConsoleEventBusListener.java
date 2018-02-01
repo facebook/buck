@@ -19,7 +19,8 @@ import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.distributed.DistBuildStatus;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
-import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
+import com.facebook.buck.distributed.build_client.DistBuildRemoteProgressEvent;
+import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -158,7 +159,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   protected final NetworkStatsKeeper networkStatsKeeper;
 
-  private volatile Optional<Double> approximateDistBuildProgress = Optional.empty();
+  protected volatile int distBuildTotalRulesCount = 0;
+  protected volatile int distBuildFinishedRulesCount = 0;
 
   protected BuildRuleThreadTracker buildRuleThreadTracker;
 
@@ -230,7 +232,12 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   protected Optional<Double> getApproximateDistBuildProgress() {
-    return approximateDistBuildProgress;
+    if (distBuildTotalRulesCount == 0) {
+      return Optional.of(0.0);
+    }
+
+    double buildRatio = (double) distBuildFinishedRulesCount / distBuildTotalRulesCount;
+    return Optional.of(Math.floor(100 * buildRatio) / 100.0);
   }
 
   protected Optional<Double> getApproximateBuildProgress() {
@@ -836,23 +843,18 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   @Subscribe
   public void onDistBuildStatusEvent(DistBuildStatusEvent event) {
-    int totalRuleCount = 0;
-    int finishedRuleCount = 0;
     synchronized (distBuildStatusLock) {
       distBuildStatus = Optional.of(event.getStatus());
     }
+  }
 
-    for (BuildSlaveStatus status : event.getStatus().getSlaveStatuses()) {
-      totalRuleCount += status.getTotalRulesCount();
-      finishedRuleCount += status.getRulesFinishedCount();
-    }
-
-    if (totalRuleCount != 0) {
-      double buildProgress = (double) finishedRuleCount / totalRuleCount;
-      approximateDistBuildProgress = Optional.of(Math.floor(100 * buildProgress) / 100.0);
-    } else {
-      approximateDistBuildProgress = Optional.empty();
-    }
+  /** Update distributed build progress. */
+  @Subscribe
+  public void onDistBuildProgressEvent(DistBuildRemoteProgressEvent event) {
+    CoordinatorBuildProgress buildProgress = event.getBuildProgress();
+    distBuildTotalRulesCount =
+        buildProgress.getTotalRulesCount() - buildProgress.getSkippedRulesCount();
+    distBuildFinishedRulesCount = buildProgress.getBuiltRulesCount();
   }
 
   protected String renderHttpUploads() {

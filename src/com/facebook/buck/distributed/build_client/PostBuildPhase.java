@@ -74,15 +74,16 @@ public class PostBuildPhase {
       ListeningExecutorService networkExecutorService,
       List<BuildSlaveStatus> buildSlaveStatusList,
       BuildJob finalJob,
-      EventSender eventSender)
+      ConsoleEventsDispatcher consoleEventsDispatcher)
       throws InterruptedException {
     distBuildClientStats.startTimer(POST_DISTRIBUTED_BUILD_LOCAL_STEPS);
 
-    eventSender.postDistBuildStatusEvent(
+    consoleEventsDispatcher.postDistBuildStatusEvent(
         finalJob, buildSlaveStatusList, "FETCHING DIST BUILD STATS");
     distBuildClientStats.startTimer(PUBLISH_BUILD_SLAVE_FINISHED_STATS);
     ListenableFuture<?> slaveFinishedStatsFuture =
-        publishBuildSlaveFinishedStatsEvent(finalJob, networkExecutorService, eventSender);
+        publishBuildSlaveFinishedStatsEvent(
+            finalJob, networkExecutorService, consoleEventsDispatcher);
     slaveFinishedStatsFuture =
         Futures.transform(
             slaveFinishedStatsFuture,
@@ -92,7 +93,8 @@ public class PostBuildPhase {
             },
             MoreExecutors.directExecutor());
 
-    eventSender.postDistBuildStatusEvent(finalJob, buildSlaveStatusList, "FETCHING LOG DIRS");
+    consoleEventsDispatcher.postDistBuildStatusEvent(
+        finalJob, buildSlaveStatusList, "FETCHING LOG DIRS");
 
     if (logMaterializationEnabled) {
       materializeSlaveLogDirs(finalJob);
@@ -106,10 +108,10 @@ public class PostBuildPhase {
 
     if (finalJob.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY)) {
       LOG.info("DistBuild was successful!");
-      eventSender.postDistBuildStatusEvent(finalJob, buildSlaveStatusList, "FINISHED");
+      consoleEventsDispatcher.postDistBuildStatusEvent(finalJob, buildSlaveStatusList, "FINISHED");
     } else {
       LOG.info("DistBuild was not successful!");
-      eventSender.postDistBuildStatusEvent(finalJob, buildSlaveStatusList, "FAILED");
+      consoleEventsDispatcher.postDistBuildStatusEvent(finalJob, buildSlaveStatusList, "FAILED");
     }
 
     return new DistBuildController.ExecutionResult(
@@ -145,7 +147,9 @@ public class PostBuildPhase {
 
   @VisibleForTesting
   ListenableFuture<BuildSlaveStats> publishBuildSlaveFinishedStatsEvent(
-      BuildJob job, ListeningExecutorService executor, EventSender eventSender) {
+      BuildJob job,
+      ListeningExecutorService executor,
+      ConsoleEventsDispatcher consoleEventsDispatcher) {
     if (!job.isSetBuildSlaves()) {
       return Futures.immediateFuture(null);
     }
@@ -165,20 +169,20 @@ public class PostBuildPhase {
     final Builder builder = BuildSlaveStats.builder().setStampedeId(job.getStampedeId());
     return Futures.transform(
         Futures.allAsList(slaveFinishedStatsFutures),
-        statsList -> createAndPublishBuildSlaveStats(builder, statsList, eventSender),
+        statsList -> createAndPublishBuildSlaveStats(builder, statsList, consoleEventsDispatcher),
         MoreExecutors.directExecutor());
   }
 
   private BuildSlaveStats createAndPublishBuildSlaveStats(
       Builder builder,
       List<Pair<BuildSlaveRunId, Optional<BuildSlaveFinishedStats>>> statsList,
-      EventSender eventSender) {
+      ConsoleEventsDispatcher consoleEventsDispatcher) {
     for (Pair<BuildSlaveRunId, Optional<BuildSlaveFinishedStats>> entry : statsList) {
       builder.putBuildSlaveStats(entry.getFirst(), entry.getSecond());
     }
 
     BuildSlaveStats stats = builder.build();
-    eventSender.sendBuildFinishedEvent(stats);
+    consoleEventsDispatcher.sendBuildFinishedEvent(stats);
     return stats;
   }
 

@@ -28,6 +28,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
+import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
@@ -106,6 +107,7 @@ public class DistBuildSlaveEventBusListener
   private final BuildSlaveTimingStatsTracker slaveStatsTracker;
   private final DistBuildMode distBuildMode;
 
+  private volatile @Nullable CoordinatorBuildProgress coordinatorBuildProgress = null;
   private volatile @Nullable DistBuildService distBuildService;
   private volatile Optional<Integer> exitCode = Optional.empty();
   private volatile boolean sentFinishedStatsToServer;
@@ -356,6 +358,19 @@ public class DistBuildSlaveEventBusListener
     }
   }
 
+  private void sendCoordinatorBuildProgressEvent() {
+    if (distBuildService == null || coordinatorBuildProgress == null) {
+      return;
+    }
+
+    try {
+      distBuildService.sendBuildProgressEvent(
+          stampedeId, buildSlaveRunId, coordinatorBuildProgress, clock.currentTimeMillis());
+    } catch (IOException e) {
+      LOG.error(e, "Could not send build progress event to frontend.");
+    }
+  }
+
   private void sendServerUpdates() {
     synchronized (sendServerUpdatesLock) {
       try {
@@ -365,6 +380,7 @@ public class DistBuildSlaveEventBusListener
         sendBuildRuleStartedEvents();
         sendBuildRuleCompletedEvents();
         sendMostBuildRulesCompletedEvent();
+        sendCoordinatorBuildProgressEvent();
       } catch (RuntimeException ex) {
         LOG.error(ex, "Failed to send slave server updates.");
       }
@@ -497,6 +513,11 @@ public class DistBuildSlaveEventBusListener
   @Subscribe
   public void onHttpArtifactCacheFinishedEvent(HttpArtifactCacheEvent.Finished event) {
     httpCacheUploadStats.processHttpArtifactCacheFinishedEvent(event);
+  }
+
+  @Override
+  public void updateCoordinatorBuildProgress(CoordinatorBuildProgress progress) {
+    coordinatorBuildProgress = progress;
   }
 
   @Override

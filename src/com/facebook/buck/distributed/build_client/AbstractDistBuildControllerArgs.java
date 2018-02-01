@@ -23,6 +23,7 @@ import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.StampedeId;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ActionAndTargetGraphs;
 import com.facebook.buck.rules.CachingBuildEngineDelegate;
@@ -72,6 +73,8 @@ abstract class AbstractDistBuildControllerArgs {
   public abstract AtomicReference<StampedeId> getStampedeIdReference();
 
   public abstract String getBuildLabel();
+
+  public abstract BuckEventBus getBuckEventBus();
 
   @Value.Default
   public int getStatusPollIntervalMillis() {

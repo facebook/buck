@@ -171,6 +171,7 @@ public class DistBuildControllerTest {
     return new DistBuildController(
         DistBuildControllerArgs.builder()
             .setBuilderExecutorArgs(executorArgs)
+            .setBuckEventBus(mockEventBus)
             .setTopLevelTargets(ImmutableSet.of())
             .setBuildGraphs(graphs)
             .setAsyncJobState(asyncBuildJobState)
@@ -198,7 +199,6 @@ public class DistBuildControllerTest {
         directExecutor,
         fakeProjectFilesystem,
         fakeFileHashCache,
-        mockEventBus,
         invocationInfo,
         BuildMode.REMOTE_BUILD,
         1,

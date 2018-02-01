@@ -19,6 +19,7 @@ enum BuildSlaveEventType {
     BUILD_RULE_FINISHED_EVENT = 3,
     ALL_BUILD_RULES_FINISHED_EVENT = 4,
     MOST_BUILD_RULES_FINISHED_EVENT = 5,
+    COORDINATOR_BUILD_PROGRESS_EVENT = 6,
 }
 
 struct BuildSlaveEvent {
@@ -26,9 +27,9 @@ struct BuildSlaveEvent {
     4: optional i64 timestampMillis;
 
     10: optional BuildSlaveConsoleEvent consoleEvent;
-
     11: optional BuildRuleStartedEvent buildRuleStartedEvent;
     12: optional BuildRuleFinishedEvent buildRuleFinishedEvent;
+    13: optional CoordinatorBuildProgressEvent coordinatorBuildProgressEvent;
 }
 
 enum ConsoleEventSeverity {
@@ -48,6 +49,10 @@ struct BuildRuleStartedEvent {
 
 struct BuildRuleFinishedEvent {
     1: optional string buildTarget;
+}
+
+struct CoordinatorBuildProgressEvent {
+    1: optional CoordinatorBuildProgress buildProgress;
 }
 
 ##############################################################################
@@ -83,6 +88,12 @@ struct BuildSlaveStatus {
     25: optional i32 httpArtifactUploadsFailureCount;
 
     30: optional i32 filesMaterializedCount;
+}
+
+struct CoordinatorBuildProgress {
+    1: optional i32 totalRulesCount;
+    2: optional i32 builtRulesCount;
+    3: optional i32 skippedRulesCount;
 }
 
 struct HealthCheckStats {

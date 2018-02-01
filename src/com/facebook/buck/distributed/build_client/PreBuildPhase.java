@@ -103,7 +103,7 @@ public class PreBuildPhase {
       String tenantId,
       ListenableFuture<ParallelRuleKeyCalculator<RuleKey>> localRuleKeyCalculatorFuture)
       throws IOException {
-    EventSender eventSender = new EventSender(eventBus);
+    ConsoleEventsDispatcher consoleEventsDispatcher = new ConsoleEventsDispatcher(eventBus);
 
     distBuildClientStats.startTimer(CREATE_DISTRIBUTED_BUILD);
     List<String> buildTargets =
@@ -122,7 +122,8 @@ public class PreBuildPhase {
 
     LOG.info("Created job. Build id = " + stampedeId.getId());
 
-    eventSender.postDistBuildStatusEvent(job, ImmutableList.of(), "SERIALIZING AND UPLOADING DATA");
+    consoleEventsDispatcher.postDistBuildStatusEvent(
+        job, ImmutableList.of(), "SERIALIZING AND UPLOADING DATA");
 
     List<ListenableFuture<?>> asyncJobs = new LinkedList<>();
 
@@ -209,7 +210,7 @@ public class PreBuildPhase {
             Futures.allAsList(asyncJobs),
             results -> {
               LOG.info("Finished async preparation of stampede job.");
-              eventSender.postDistBuildStatusEvent(
+              consoleEventsDispatcher.postDistBuildStatusEvent(
                   job, ImmutableList.of(), "STARTING REMOTE BUILD");
 
               // Everything is now setup remotely to run the distributed build. No more local prep.

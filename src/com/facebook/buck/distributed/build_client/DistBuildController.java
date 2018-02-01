@@ -38,6 +38,8 @@ import java.util.concurrent.atomic.AtomicReference;
 public class DistBuildController {
   private static final Logger LOG = Logger.get(DistBuildController.class);
 
+  private final BuckEventBus eventBus;
+  private final ConsoleEventsDispatcher consoleEventsDispatcher;
   private final PreBuildPhase preBuildPhase;
   private final BuildPhase buildPhase;
   private final PostBuildPhase postBuildPhase;
@@ -57,6 +59,8 @@ public class DistBuildController {
 
   public DistBuildController(DistBuildControllerArgs args) {
     this.stampedeIdReference = args.getStampedeIdReference();
+    this.eventBus = args.getBuckEventBus();
+    this.consoleEventsDispatcher = new ConsoleEventsDispatcher(eventBus);
     this.preBuildPhase =
         new PreBuildPhase(
             args.getDistBuildService(),
@@ -79,7 +83,8 @@ public class DistBuildController {
             args.getDistBuildLogStateTracker(),
             args.getScheduler(),
             args.getStatusPollIntervalMillis(),
-            args.getRemoteBuildRuleCompletionNotifier());
+            args.getRemoteBuildRuleCompletionNotifier(),
+            consoleEventsDispatcher);
     this.postBuildPhase =
         new PostBuildPhase(
             args.getDistBuildService(),
@@ -94,7 +99,6 @@ public class DistBuildController {
       ListeningExecutorService executorService,
       ProjectFilesystem projectFilesystem,
       FileHashCache fileHashCache,
-      BuckEventBus eventBus,
       InvocationInfo invocationInfo,
       BuildMode buildMode,
       int numberOfMinions,
@@ -142,12 +146,10 @@ public class DistBuildController {
 
     BuildPhase.BuildResult buildResult = null;
 
-    EventSender eventSender = new EventSender(eventBus);
     try {
       buildResult =
           buildPhase.runDistBuildAndUpdateConsoleStatus(
               executorService,
-              eventSender,
               Preconditions.checkNotNull(stampedeIdReference.get()),
               buildMode,
               invocationInfo,
@@ -165,7 +167,7 @@ public class DistBuildController {
         executorService,
         buildResult.getBuildSlaveStatusList(),
         buildResult.getFinalBuildJob(),
-        eventSender);
+        consoleEventsDispatcher);
   }
 
   private static ExecutionResult createFailedExecutionResult(

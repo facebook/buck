@@ -19,14 +19,51 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import org.junit.Test;
 
 /** Test static helper functions in {@link AbstractConsoleEventBusListener} */
 public class AbstractConsoleEventBusListenerTest {
+
+  private static AbstractConsoleEventBusListener createAbstractConsoleInstance() {
+    return new AbstractConsoleEventBusListener(
+        Console.createNullConsole(),
+        FakeClock.doNotCare(),
+        Locale.US,
+        new DefaultExecutionEnvironment(
+            ImmutableMap.copyOf(System.getenv()), System.getProperties()),
+        false,
+        1,
+        false) {
+      @Override
+      public void printSevereWarningDirectly(String line) {}
+    };
+  }
+
+  @Test
+  public void testApproximateDistBuildProgressDoesNotLosePrecision() {
+    AbstractConsoleEventBusListener listener = createAbstractConsoleInstance();
+
+    listener.distBuildTotalRulesCount = 0;
+    listener.distBuildFinishedRulesCount = 0;
+    assertEquals(Optional.of(0.0), listener.getApproximateDistBuildProgress());
+
+    listener.distBuildTotalRulesCount = 100;
+    listener.distBuildFinishedRulesCount = 50;
+    assertEquals(Optional.of(0.5), listener.getApproximateDistBuildProgress());
+
+    listener.distBuildTotalRulesCount = 17;
+    listener.distBuildFinishedRulesCount = 4;
+    assertEquals(Optional.of(0.23), listener.getApproximateDistBuildProgress());
+  }
 
   @Test
   public void testGetEventsBetween() throws Exception {

@@ -123,7 +123,7 @@ public class BuildPhaseTest {
   private BuckEventBus mockEventBus;
   private StampedeId stampedeId;
   private ClientStatsTracker distBuildClientStatsTracker;
-  private EventSender eventSender;
+  private ConsoleEventsDispatcher consoleEventsDispatcher;
   private BuildPhase buildPhase;
 
   @Before
@@ -139,7 +139,7 @@ public class BuildPhaseTest {
     mockEventBus = EasyMock.createMock(BuckEventBus.class);
     stampedeId = new StampedeId();
     stampedeId.setId("uber-cool-stampede-id");
-    eventSender = new EventSender(mockEventBus);
+    consoleEventsDispatcher = new ConsoleEventsDispatcher(mockEventBus);
   }
 
   private void createBuildPhase(
@@ -158,7 +158,8 @@ public class BuildPhaseTest {
             mockLogStateTracker,
             scheduler,
             POLL_MILLIS,
-            new NoOpRemoteBuildRuleCompletionNotifier());
+            new NoOpRemoteBuildRuleCompletionNotifier(),
+            consoleEventsDispatcher);
   }
 
   private void createBuildPhase() {
@@ -272,7 +273,6 @@ public class BuildPhaseTest {
 
     buildPhase.runDistBuildAndUpdateConsoleStatus(
         directExecutor,
-        new EventSender(mockEventBus),
         stampedeId,
         BuildMode.DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR,
         FakeInvocationInfoFactory.create(),
@@ -361,9 +361,9 @@ public class BuildPhaseTest {
     replay(mockEventBus);
 
     // Test that the events are properly fetched and posted onto the Bus.
-    buildPhase.fetchAndPostBuildSlaveEventsAsync(job, eventSender, directExecutor).get();
+    buildPhase.fetchAndPostBuildSlaveEventsAsync(job, directExecutor).get();
     // Also test that sequence ids are being maintained properly.
-    buildPhase.fetchAndPostBuildSlaveEventsAsync(job, eventSender, directExecutor).get();
+    buildPhase.fetchAndPostBuildSlaveEventsAsync(job, directExecutor).get();
 
     verify(mockDistBuildService);
     verify(mockEventBus);

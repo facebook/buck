@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -22,6 +23,8 @@ import com.google.common.collect.ImmutableList;
  * building remotely.
  */
 public interface CoordinatorBuildRuleEventsPublisher {
+  void updateCoordinatorBuildProgress(CoordinatorBuildProgress progress);
+
   void createBuildRuleStartedEvents(ImmutableList<String> startedTargets);
 
   void createBuildRuleCompletionEvents(ImmutableList<String> finishedTargets);

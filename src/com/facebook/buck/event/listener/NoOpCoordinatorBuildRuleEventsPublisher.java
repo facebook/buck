@@ -16,11 +16,15 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.distributed.build_slave.CoordinatorBuildRuleEventsPublisher;
+import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.google.common.collect.ImmutableList;
 
 /** No-op implementation of CoordinatorBuildRuleEventsPublisher */
 public class NoOpCoordinatorBuildRuleEventsPublisher
     implements CoordinatorBuildRuleEventsPublisher {
+
+  @Override
+  public void updateCoordinatorBuildProgress(CoordinatorBuildProgress progress) {}
 
   @Override
   public void createBuildRuleStartedEvents(ImmutableList<String> startedTargets) {}

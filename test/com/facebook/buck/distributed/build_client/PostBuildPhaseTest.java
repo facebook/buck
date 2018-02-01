@@ -62,7 +62,7 @@ public class PostBuildPhaseTest {
   private StampedeId stampedeId;
   private ClientStatsTracker distBuildClientStatsTracker;
   private PostBuildPhase postBuildPhase;
-  private EventSender eventSender;
+  private ConsoleEventsDispatcher consoleEventsDispatcher;
 
   @Before
   public void setUp() throws IOException, InterruptedException {
@@ -78,7 +78,7 @@ public class PostBuildPhaseTest {
 
     directExecutor = MoreExecutors.listeningDecorator(MoreExecutors.newDirectExecutorService());
     mockEventBus = EasyMock.createMock(BuckEventBus.class);
-    eventSender = new EventSender(mockEventBus);
+    consoleEventsDispatcher = new ConsoleEventsDispatcher(mockEventBus);
     stampedeId = new StampedeId();
     stampedeId.setId("uber-cool-stampede-id");
   }
@@ -151,7 +151,8 @@ public class PostBuildPhaseTest {
     replay(mockDistBuildService);
     replay(mockEventBus);
 
-    postBuildPhase.publishBuildSlaveFinishedStatsEvent(job, directExecutor, eventSender);
+    postBuildPhase.publishBuildSlaveFinishedStatsEvent(
+        job, directExecutor, consoleEventsDispatcher);
 
     verify(mockDistBuildService);
     verify(mockEventBus);

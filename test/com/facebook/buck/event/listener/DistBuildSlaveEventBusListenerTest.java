@@ -16,6 +16,7 @@
 
 package com.facebook.buck.event.listener;
 
+import static org.easymock.EasyMock.anyLong;
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.eq;
@@ -41,6 +42,7 @@ import com.facebook.buck.distributed.thrift.BuildSlavePerStageTimingStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.CacheRateStats;
+import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.facebook.buck.distributed.thrift.FileMaterializationStats;
 import com.facebook.buck.distributed.thrift.HealthCheckStats;
 import com.facebook.buck.distributed.thrift.StampedeId;
@@ -290,6 +292,40 @@ public class DistBuildSlaveEventBusListenerTest {
     listener.close();
     verify(distBuildServiceMock);
     Assert.assertEquals(capturedStatus.getValue(), expectedStatus);
+  }
+
+  @Test
+  public void testCoordinatorBuildProgressUpdatesAreSent() throws IOException {
+    Capture<CoordinatorBuildProgress> capturedBuildProgress = Capture.newInstance(CaptureType.LAST);
+    distBuildServiceMock.sendBuildProgressEvent(
+        eq(stampedeId), eq(buildSlaveRunId), capture(capturedBuildProgress), anyLong());
+    expectLastCall().atLeastOnce();
+
+    distBuildServiceMock.uploadBuildSlaveConsoleEvents(
+        eq(stampedeId), eq(buildSlaveRunId), anyObject());
+    expectLastCall().anyTimes();
+
+    distBuildServiceMock.updateBuildSlaveStatus(eq(stampedeId), eq(buildSlaveRunId), anyObject());
+    expectLastCall().anyTimes();
+
+    distBuildServiceMock.storeBuildSlaveFinishedStats(
+        eq(stampedeId), eq(buildSlaveRunId), anyObject());
+    expectLastCall().anyTimes();
+
+    CoordinatorBuildProgress expectedProgress =
+        new CoordinatorBuildProgress()
+            .setBuiltRulesCount(10)
+            .setTotalRulesCount(30)
+            .setSkippedRulesCount(20);
+
+    replay(distBuildServiceMock);
+    setUpDistBuildSlaveEventBusListener();
+
+    listener.updateCoordinatorBuildProgress(expectedProgress);
+
+    listener.close();
+    verify(distBuildServiceMock);
+    Assert.assertEquals(expectedProgress, capturedBuildProgress.getValue());
   }
 
   @Test

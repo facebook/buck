@@ -16,6 +16,7 @@ public class BuildSlaveEvent implements org.apache.thrift.TBase<BuildSlaveEvent,
   private static final org.apache.thrift.protocol.TField CONSOLE_EVENT_FIELD_DESC = new org.apache.thrift.protocol.TField("consoleEvent", org.apache.thrift.protocol.TType.STRUCT, (short)10);
   private static final org.apache.thrift.protocol.TField BUILD_RULE_STARTED_EVENT_FIELD_DESC = new org.apache.thrift.protocol.TField("buildRuleStartedEvent", org.apache.thrift.protocol.TType.STRUCT, (short)11);
   private static final org.apache.thrift.protocol.TField BUILD_RULE_FINISHED_EVENT_FIELD_DESC = new org.apache.thrift.protocol.TField("buildRuleFinishedEvent", org.apache.thrift.protocol.TType.STRUCT, (short)12);
+  private static final org.apache.thrift.protocol.TField COORDINATOR_BUILD_PROGRESS_EVENT_FIELD_DESC = new org.apache.thrift.protocol.TField("coordinatorBuildProgressEvent", org.apache.thrift.protocol.TType.STRUCT, (short)13);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new BuildSlaveEventStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new BuildSlaveEventTupleSchemeFactory();
@@ -29,6 +30,7 @@ public class BuildSlaveEvent implements org.apache.thrift.TBase<BuildSlaveEvent,
   public BuildSlaveConsoleEvent consoleEvent; // optional
   public BuildRuleStartedEvent buildRuleStartedEvent; // optional
   public BuildRuleFinishedEvent buildRuleFinishedEvent; // optional
+  public CoordinatorBuildProgressEvent coordinatorBuildProgressEvent; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -40,7 +42,8 @@ public class BuildSlaveEvent implements org.apache.thrift.TBase<BuildSlaveEvent,
     TIMESTAMP_MILLIS((short)4, "timestampMillis"),
     CONSOLE_EVENT((short)10, "consoleEvent"),
     BUILD_RULE_STARTED_EVENT((short)11, "buildRuleStartedEvent"),
-    BUILD_RULE_FINISHED_EVENT((short)12, "buildRuleFinishedEvent");
+    BUILD_RULE_FINISHED_EVENT((short)12, "buildRuleFinishedEvent"),
+    COORDINATOR_BUILD_PROGRESS_EVENT((short)13, "coordinatorBuildProgressEvent");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -65,6 +68,8 @@ public class BuildSlaveEvent implements org.apache.thrift.TBase<BuildSlaveEvent,
           return BUILD_RULE_STARTED_EVENT;
         case 12: // BUILD_RULE_FINISHED_EVENT
           return BUILD_RULE_FINISHED_EVENT;
+        case 13: // COORDINATOR_BUILD_PROGRESS_EVENT
+          return COORDINATOR_BUILD_PROGRESS_EVENT;
         default:
           return null;
       }
@@ -107,7 +112,7 @@ public class BuildSlaveEvent implements org.apache.thrift.TBase<BuildSlaveEvent,
   // isset id assignments
   private static final int __TIMESTAMPMILLIS_ISSET_ID = 0;
   private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.EVENT_TYPE,_Fields.TIMESTAMP_MILLIS,_Fields.CONSOLE_EVENT,_Fields.BUILD_RULE_STARTED_EVENT,_Fields.BUILD_RULE_FINISHED_EVENT};
+  private static final _Fields optionals[] = {_Fields.EVENT_TYPE,_Fields.TIMESTAMP_MILLIS,_Fields.CONSOLE_EVENT,_Fields.BUILD_RULE_STARTED_EVENT,_Fields.BUILD_RULE_FINISHED_EVENT,_Fields.COORDINATOR_BUILD_PROGRESS_EVENT};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -121,6 +126,8 @@ public class BuildSlaveEvent implements org.apache.thrift.TBase<BuildSlaveEvent,
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRUCT        , "BuildRuleStartedEvent")));
     tmpMap.put(_Fields.BUILD_RULE_FINISHED_EVENT, new org.apache.thrift.meta_data.FieldMetaData("buildRuleFinishedEvent", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRUCT        , "BuildRuleFinishedEvent")));
+    tmpMap.put(_Fields.COORDINATOR_BUILD_PROGRESS_EVENT, new org.apache.thrift.meta_data.FieldMetaData("coordinatorBuildProgressEvent", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRUCT        , "CoordinatorBuildProgressEvent")));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(BuildSlaveEvent.class, metaDataMap);
   }
@@ -148,6 +155,9 @@ public class BuildSlaveEvent implements org.apache.thrift.TBase<BuildSlaveEvent,
     if (other.isSetBuildRuleFinishedEvent()) {
       this.buildRuleFinishedEvent = new BuildRuleFinishedEvent(other.buildRuleFinishedEvent);
     }
+    if (other.isSetCoordinatorBuildProgressEvent()) {
+      this.coordinatorBuildProgressEvent = new CoordinatorBuildProgressEvent(other.coordinatorBuildProgressEvent);
+    }
   }
 
   public BuildSlaveEvent deepCopy() {
@@ -163,6 +173,7 @@ public class BuildSlaveEvent implements org.apache.thrift.TBase<BuildSlaveEvent,
     this.consoleEvent = null;
     this.buildRuleStartedEvent = null;
     this.buildRuleFinishedEvent = null;
+    this.coordinatorBuildProgressEvent = null;
   }
 
   /**
@@ -292,6 +303,30 @@ public class BuildSlaveEvent implements org.apache.thrift.TBase<BuildSlaveEvent,
     }
   }
 
+  public CoordinatorBuildProgressEvent getCoordinatorBuildProgressEvent() {
+    return this.coordinatorBuildProgressEvent;
+  }
+
+  public BuildSlaveEvent setCoordinatorBuildProgressEvent(CoordinatorBuildProgressEvent coordinatorBuildProgressEvent) {
+    this.coordinatorBuildProgressEvent = coordinatorBuildProgressEvent;
+    return this;
+  }
+
+  public void unsetCoordinatorBuildProgressEvent() {
+    this.coordinatorBuildProgressEvent = null;
+  }
+
+  /** Returns true if field coordinatorBuildProgressEvent is set (has been assigned a value) and false otherwise */
+  public boolean isSetCoordinatorBuildProgressEvent() {
+    return this.coordinatorBuildProgressEvent != null;
+  }
+
+  public void setCoordinatorBuildProgressEventIsSet(boolean value) {
+    if (!value) {
+      this.coordinatorBuildProgressEvent = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, java.lang.Object value) {
     switch (field) {
     case EVENT_TYPE:
@@ -334,6 +369,14 @@ public class BuildSlaveEvent implements org.apache.thrift.TBase<BuildSlaveEvent,
       }
       break;
 
+    case COORDINATOR_BUILD_PROGRESS_EVENT:
+      if (value == null) {
+        unsetCoordinatorBuildProgressEvent();
+      } else {
+        setCoordinatorBuildProgressEvent((CoordinatorBuildProgressEvent)value);
+      }
+      break;
+
     }
   }
 
@@ -353,6 +396,9 @@ public class BuildSlaveEvent implements org.apache.thrift.TBase<BuildSlaveEvent,
 
     case BUILD_RULE_FINISHED_EVENT:
       return getBuildRuleFinishedEvent();
+
+    case COORDINATOR_BUILD_PROGRESS_EVENT:
+      return getCoordinatorBuildProgressEvent();
 
     }
     throw new java.lang.IllegalStateException();
@@ -375,6 +421,8 @@ public class BuildSlaveEvent implements org.apache.thrift.TBase<BuildSlaveEvent,
       return isSetBuildRuleStartedEvent();
     case BUILD_RULE_FINISHED_EVENT:
       return isSetBuildRuleFinishedEvent();
+    case COORDINATOR_BUILD_PROGRESS_EVENT:
+      return isSetCoordinatorBuildProgressEvent();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -439,6 +487,15 @@ public class BuildSlaveEvent implements org.apache.thrift.TBase<BuildSlaveEvent,
         return false;
     }
 
+    boolean this_present_coordinatorBuildProgressEvent = true && this.isSetCoordinatorBuildProgressEvent();
+    boolean that_present_coordinatorBuildProgressEvent = true && that.isSetCoordinatorBuildProgressEvent();
+    if (this_present_coordinatorBuildProgressEvent || that_present_coordinatorBuildProgressEvent) {
+      if (!(this_present_coordinatorBuildProgressEvent && that_present_coordinatorBuildProgressEvent))
+        return false;
+      if (!this.coordinatorBuildProgressEvent.equals(that.coordinatorBuildProgressEvent))
+        return false;
+    }
+
     return true;
   }
 
@@ -465,6 +522,10 @@ public class BuildSlaveEvent implements org.apache.thrift.TBase<BuildSlaveEvent,
     hashCode = hashCode * 8191 + ((isSetBuildRuleFinishedEvent()) ? 131071 : 524287);
     if (isSetBuildRuleFinishedEvent())
       hashCode = hashCode * 8191 + buildRuleFinishedEvent.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetCoordinatorBuildProgressEvent()) ? 131071 : 524287);
+    if (isSetCoordinatorBuildProgressEvent())
+      hashCode = hashCode * 8191 + coordinatorBuildProgressEvent.hashCode();
 
     return hashCode;
   }
@@ -523,6 +584,16 @@ public class BuildSlaveEvent implements org.apache.thrift.TBase<BuildSlaveEvent,
     }
     if (isSetBuildRuleFinishedEvent()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.buildRuleFinishedEvent, other.buildRuleFinishedEvent);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetCoordinatorBuildProgressEvent()).compareTo(other.isSetCoordinatorBuildProgressEvent());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetCoordinatorBuildProgressEvent()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.coordinatorBuildProgressEvent, other.coordinatorBuildProgressEvent);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -589,6 +660,16 @@ public class BuildSlaveEvent implements org.apache.thrift.TBase<BuildSlaveEvent,
         sb.append("null");
       } else {
         sb.append(this.buildRuleFinishedEvent);
+      }
+      first = false;
+    }
+    if (isSetCoordinatorBuildProgressEvent()) {
+      if (!first) sb.append(", ");
+      sb.append("coordinatorBuildProgressEvent:");
+      if (this.coordinatorBuildProgressEvent == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.coordinatorBuildProgressEvent);
       }
       first = false;
     }
@@ -680,6 +761,15 @@ public class BuildSlaveEvent implements org.apache.thrift.TBase<BuildSlaveEvent,
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 13: // COORDINATOR_BUILD_PROGRESS_EVENT
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+              struct.coordinatorBuildProgressEvent = new CoordinatorBuildProgressEvent();
+              struct.coordinatorBuildProgressEvent.read(iprot);
+              struct.setCoordinatorBuildProgressEventIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -728,6 +818,13 @@ public class BuildSlaveEvent implements org.apache.thrift.TBase<BuildSlaveEvent,
           oprot.writeFieldEnd();
         }
       }
+      if (struct.coordinatorBuildProgressEvent != null) {
+        if (struct.isSetCoordinatorBuildProgressEvent()) {
+          oprot.writeFieldBegin(COORDINATOR_BUILD_PROGRESS_EVENT_FIELD_DESC);
+          struct.coordinatorBuildProgressEvent.write(oprot);
+          oprot.writeFieldEnd();
+        }
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -761,7 +858,10 @@ public class BuildSlaveEvent implements org.apache.thrift.TBase<BuildSlaveEvent,
       if (struct.isSetBuildRuleFinishedEvent()) {
         optionals.set(4);
       }
-      oprot.writeBitSet(optionals, 5);
+      if (struct.isSetCoordinatorBuildProgressEvent()) {
+        optionals.set(5);
+      }
+      oprot.writeBitSet(optionals, 6);
       if (struct.isSetEventType()) {
         oprot.writeI32(struct.eventType.getValue());
       }
@@ -777,12 +877,15 @@ public class BuildSlaveEvent implements org.apache.thrift.TBase<BuildSlaveEvent,
       if (struct.isSetBuildRuleFinishedEvent()) {
         struct.buildRuleFinishedEvent.write(oprot);
       }
+      if (struct.isSetCoordinatorBuildProgressEvent()) {
+        struct.coordinatorBuildProgressEvent.write(oprot);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, BuildSlaveEvent struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(5);
+      java.util.BitSet incoming = iprot.readBitSet(6);
       if (incoming.get(0)) {
         struct.eventType = com.facebook.buck.distributed.thrift.BuildSlaveEventType.findByValue(iprot.readI32());
         struct.setEventTypeIsSet(true);
@@ -805,6 +908,11 @@ public class BuildSlaveEvent implements org.apache.thrift.TBase<BuildSlaveEvent,
         struct.buildRuleFinishedEvent = new BuildRuleFinishedEvent();
         struct.buildRuleFinishedEvent.read(iprot);
         struct.setBuildRuleFinishedEventIsSet(true);
+      }
+      if (incoming.get(5)) {
+        struct.coordinatorBuildProgressEvent = new CoordinatorBuildProgressEvent();
+        struct.coordinatorBuildProgressEvent.read(iprot);
+        struct.setCoordinatorBuildProgressEventIsSet(true);
       }
     }
   }

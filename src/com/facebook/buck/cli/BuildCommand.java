@@ -833,6 +833,7 @@ public class BuildCommand extends AbstractCommand {
           new DistBuildController(
               DistBuildControllerArgs.builder()
                   .setBuilderExecutorArgs(params.createBuilderArgs())
+                  .setBuckEventBus(params.getBuckEventBus())
                   .setTopLevelTargets(buildTargets)
                   .setBuildGraphs(graphs)
                   .setCachingBuildEngineDelegate(
@@ -1065,7 +1066,6 @@ public class BuildCommand extends AbstractCommand {
               executorService,
               filesystem,
               fileHashCache,
-              params.getBuckEventBus(),
               params.getInvocationInfo().get(),
               distBuildConfig.getBuildMode(),
               distBuildConfig.getNumberOfMinions(),

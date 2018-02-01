@@ -117,6 +117,8 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
       response.setWorkUnits(newWorkUnitsForMinion);
     }
 
+    coordinatorBuildRuleEventsPublisher.updateCoordinatorBuildProgress(
+        allocator.getBuildProgress());
     return response;
   }
 

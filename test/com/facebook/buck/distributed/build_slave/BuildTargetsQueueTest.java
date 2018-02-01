@@ -31,6 +31,7 @@ import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFact
 import com.facebook.buck.distributed.ArtifactCacheByBuildRule;
 import com.facebook.buck.distributed.NoopArtifactCacheByBuildRule;
 import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
+import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.event.listener.NoOpCoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.model.BuildTarget;
@@ -71,6 +72,12 @@ public class BuildTargetsQueueTest {
     List<WorkUnit> zeroDepTargets =
         queue.dequeueZeroDependencyNodes(ImmutableList.of(), MAX_UNITS_OF_WORK);
     Assert.assertEquals(0, zeroDepTargets.size());
+    Assert.assertEquals(
+        new CoordinatorBuildProgress()
+            .setTotalRulesCount(0)
+            .setBuiltRulesCount(0)
+            .setSkippedRulesCount(0),
+        queue.getBuildProgress());
   }
 
   public static List<WorkUnit> dequeueNoFinishedTargets(BuildTargetsQueue queue) {
@@ -101,12 +108,25 @@ public class BuildTargetsQueueTest {
     Assert.assertEquals(0, dequeueNoFinishedTargets(queue).size());
     Assert.assertFalse(queue.haveMostBuildRulesFinished());
     Assert.assertEquals(
+        new CoordinatorBuildProgress()
+            .setTotalRulesCount(1)
+            .setBuiltRulesCount(0)
+            .setSkippedRulesCount(0),
+        queue.getBuildProgress());
+
+    Assert.assertEquals(
         0,
         queue
             .dequeueZeroDependencyNodes(
                 ImmutableList.of(target.getFullyQualifiedName()), MAX_UNITS_OF_WORK)
             .size());
     Assert.assertTrue(queue.haveMostBuildRulesFinished());
+    Assert.assertEquals(
+        new CoordinatorBuildProgress()
+            .setTotalRulesCount(1)
+            .setBuiltRulesCount(1)
+            .setSkippedRulesCount(0),
+        queue.getBuildProgress());
   }
 
   @Test
@@ -237,16 +257,28 @@ public class BuildTargetsQueueTest {
 
     // 0/3 cacheables finished
     Assert.assertFalse(queue.haveMostBuildRulesFinished());
+    Assert.assertEquals(
+        new CoordinatorBuildProgress()
+            .setTotalRulesCount(9)
+            .setBuiltRulesCount(0)
+            .setSkippedRulesCount(0),
+        queue.getBuildProgress());
 
     // Mark CACHABLE_C as completed. Nothing else should become available yet.
     zeroDepWorkUnits =
         queue.dequeueZeroDependencyNodes(ImmutableList.of(CACHABLE_C), MAX_UNITS_OF_WORK);
     Assert.assertEquals(0, zeroDepWorkUnits.size());
 
-    // 1/3 cacheables finished
+    // 1/3 cacheables finished. UNCACHEABLE_E should auto complete.
     Assert.assertFalse(queue.haveMostBuildRulesFinished());
+    Assert.assertEquals(
+        new CoordinatorBuildProgress()
+            .setTotalRulesCount(9)
+            .setBuiltRulesCount(1)
+            .setSkippedRulesCount(1),
+        queue.getBuildProgress());
 
-    // Mark CACHABLE_B as completed. UNCACHEABLE_D should auto complete,
+    // Mark CACHABLE_B as completed. UNCACHEABLE_D,B,A should auto complete,
     // and CACHAEABLE_A should become ready.
     zeroDepWorkUnits =
         queue.dequeueZeroDependencyNodes(ImmutableList.of(CACHABLE_B), MAX_UNITS_OF_WORK);
@@ -254,6 +286,12 @@ public class BuildTargetsQueueTest {
 
     // 2/3 (i.e 66%) cacheables finished
     Assert.assertTrue(queue.haveMostBuildRulesFinished());
+    Assert.assertEquals(
+        new CoordinatorBuildProgress()
+            .setTotalRulesCount(9)
+            .setBuiltRulesCount(2)
+            .setSkippedRulesCount(4),
+        queue.getBuildProgress());
 
     workUnit = zeroDepWorkUnits.get(0);
     workUnitTargets = workUnit.getBuildTargets();
@@ -266,6 +304,12 @@ public class BuildTargetsQueueTest {
     zeroDepWorkUnits =
         queue.dequeueZeroDependencyNodes(ImmutableList.of(CACHABLE_A), MAX_UNITS_OF_WORK);
     Assert.assertEquals(0, zeroDepWorkUnits.size());
+    Assert.assertEquals(
+        new CoordinatorBuildProgress()
+            .setTotalRulesCount(9)
+            .setBuiltRulesCount(3)
+            .setSkippedRulesCount(6),
+        queue.getBuildProgress());
   }
 
   @Test

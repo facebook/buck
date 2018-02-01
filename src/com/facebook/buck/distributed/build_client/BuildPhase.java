@@ -38,6 +38,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveEventsQuery;
 import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
+import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.facebook.buck.distributed.thrift.LogLineBatchRequest;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveRealTimeLogsResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
@@ -119,6 +120,7 @@ public class BuildPhase {
   private final Map<BuildSlaveRunId, Integer> nextEventIdBySlaveRunId;
   private final Clock clock;
   private final BuildRuleEventManager buildRuleEventManager;
+  private final ConsoleEventsDispatcher consoleEventsDispatcher;
 
   private volatile long firstFinishedBuildStatusReceviedTs = -1;
 
@@ -134,6 +136,7 @@ public class BuildPhase {
       ScheduledExecutorService scheduler,
       int statusPollIntervalMillis,
       RemoteBuildRuleCompletionNotifier remoteBuildRuleCompletionNotifier,
+      ConsoleEventsDispatcher consoleEventsDispatcher,
       Clock clock) {
     this.buildExecutorArgs = buildExecutorArgs;
     this.topLevelTargets = topLevelTargets;
@@ -148,6 +151,7 @@ public class BuildPhase {
     this.seenSlaveRunIds = new HashSet<>();
     this.nextEventIdBySlaveRunId = new HashMap<>();
     this.clock = clock;
+    this.consoleEventsDispatcher = consoleEventsDispatcher;
     this.buildRuleEventManager =
         new BuildRuleEventManager(
             remoteBuildRuleCompletionNotifier, clock, CACHE_SYNCHRONIZATION_SAFETY_MARGIN_MILLIS);
@@ -163,7 +167,8 @@ public class BuildPhase {
       LogStateTracker distBuildLogStateTracker,
       ScheduledExecutorService scheduler,
       int statusPollIntervalMillis,
-      RemoteBuildRuleCompletionNotifier remoteBuildRuleCompletionNotifier) {
+      RemoteBuildRuleCompletionNotifier remoteBuildRuleCompletionNotifier,
+      ConsoleEventsDispatcher consoleEventsDispatcher) {
     this(
         buildExecutorArgs,
         topLevelTargets,
@@ -175,6 +180,7 @@ public class BuildPhase {
         scheduler,
         statusPollIntervalMillis,
         remoteBuildRuleCompletionNotifier,
+        consoleEventsDispatcher,
         new DefaultClock());
   }
 
@@ -196,6 +202,11 @@ public class BuildPhase {
 
     CoordinatorBuildRuleEventsPublisher finishedRulePublisher =
         new CoordinatorBuildRuleEventsPublisher() {
+          @Override
+          public void updateCoordinatorBuildProgress(CoordinatorBuildProgress progress) {
+            consoleEventsDispatcher.postDistBuildProgressEvent(progress);
+          }
+
           @Override
           public void createBuildRuleStartedEvents(ImmutableList<String> startedTargets) {
             for (String target : startedTargets) {
@@ -251,7 +262,6 @@ public class BuildPhase {
   /** Run the build while updating the console messages. */
   public BuildResult runDistBuildAndUpdateConsoleStatus(
       ListeningExecutorService executorService,
-      EventSender eventSender,
       StampedeId stampedeId,
       BuildMode buildMode,
       InvocationInfo invocationInfo,
@@ -268,8 +278,7 @@ public class BuildPhase {
         scheduler.scheduleWithFixedDelay(
             () -> {
               try {
-                fetchBuildInformationFromServerAndPublishPendingEvents(
-                    job, eventSender, executorService);
+                fetchBuildInformationFromServerAndPublishPendingEvents(job, executorService);
               } catch (InterruptedException e) {
                 LOG.warn(
                     e, "fetchBuildInformationFromServerAndPublishPendingEvents was interrupted");
@@ -317,8 +326,7 @@ public class BuildPhase {
   }
 
   private BuildJob fetchBuildInformationFromServerAndPublishPendingEvents(
-      BuildJob job, EventSender eventSender, ListeningExecutorService networkExecutorService)
-      throws InterruptedException {
+      BuildJob job, ListeningExecutorService networkExecutorService) throws InterruptedException {
     final StampedeId stampedeId = job.getStampedeId();
 
     try {
@@ -329,7 +337,7 @@ public class BuildPhase {
     LOG.info("Got build status: " + job.getStatus().toString());
 
     if (!job.isSetBuildSlaves()) {
-      eventSender.postDistBuildStatusEvent(job, ImmutableList.of());
+      consoleEventsDispatcher.postDistBuildStatusEvent(job, ImmutableList.of());
       checkTerminateScheduledUpdates(job, Optional.empty());
       return job;
     }
@@ -347,7 +355,7 @@ public class BuildPhase {
     // TODO(alisdair,shivanker): if job just completed (checkTerminateScheduledUpdates),
     // we could have missed the final few events.
     ListenableFuture<?> slaveEventsFuture =
-        fetchAndPostBuildSlaveEventsAsync(job, eventSender, networkExecutorService);
+        fetchAndPostBuildSlaveEventsAsync(job, networkExecutorService);
     ListenableFuture<List<BuildSlaveStatus>> slaveStatusesFuture =
         fetchBuildSlaveStatusesAsync(job, networkExecutorService);
     ListenableFuture<?> logStreamingFuture =
@@ -356,7 +364,7 @@ public class BuildPhase {
     List<BuildSlaveStatus> slaveStatuses = ImmutableList.of();
     try {
       slaveStatuses = slaveStatusesFuture.get();
-      eventSender.postDistBuildStatusEvent(job, slaveStatuses);
+      consoleEventsDispatcher.postDistBuildStatusEvent(job, slaveStatuses);
       slaveEventsFuture.get();
       logStreamingFuture.get();
     } catch (InterruptedException ex) {
@@ -378,7 +386,7 @@ public class BuildPhase {
 
   @VisibleForTesting
   ListenableFuture<?> fetchAndPostBuildSlaveEventsAsync(
-      BuildJob job, EventSender eventSender, ListeningExecutorService networkExecutorService) {
+      BuildJob job, ListeningExecutorService networkExecutorService) {
     if (!job.isSetBuildSlaves()) {
       return Futures.immediateFuture(null);
     }
@@ -442,7 +450,7 @@ public class BuildPhase {
                 switch (slaveEvent.getEventType()) {
                   case CONSOLE_EVENT:
                     ConsoleEvent consoleEvent = DistBuildUtil.createConsoleEvent(slaveEvent);
-                    eventSender.postConsoleEvent(consoleEvent);
+                    consoleEventsDispatcher.postConsoleEvent(consoleEvent);
                     break;
                   case BUILD_RULE_STARTED_EVENT:
                     buildRuleEventManager.recordBuildRuleStartedEvent(
@@ -458,8 +466,11 @@ public class BuildPhase {
                   case MOST_BUILD_RULES_FINISHED_EVENT:
                     buildRuleEventManager.mostBuildRulesFinishedEventReceived();
                     break;
+                  case COORDINATOR_BUILD_PROGRESS_EVENT:
+                    consoleEventsDispatcher.postDistBuildProgressEvent(
+                        slaveEvent.getCoordinatorBuildProgressEvent().getBuildProgress());
+                    break;
                   case UNKNOWN:
-                  default:
                     LOG.error(
                         String.format(
                             "Unknown type of BuildSlaveEvent received: [%d]",

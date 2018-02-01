@@ -19,18 +19,24 @@ import com.facebook.buck.distributed.DistBuildStatus;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
+import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.google.common.base.Preconditions;
 import java.util.List;
 import javax.annotation.Nullable;
 
-/** Sends events about the distributed build. */
-public class EventSender {
+/** Helper class for dispatching remote events (related to console updates) locally. */
+public class ConsoleEventsDispatcher {
 
   private final BuckEventBus buckEventBus;
 
-  public EventSender(BuckEventBus buckEventBus) {
+  public ConsoleEventsDispatcher(BuckEventBus buckEventBus) {
     this.buckEventBus = buckEventBus;
+  }
+
+  public void postDistBuildProgressEvent(CoordinatorBuildProgress buildProgress) {
+    buckEventBus.post(new DistBuildRemoteProgressEvent(Preconditions.checkNotNull(buildProgress)));
   }
 
   public void postDistBuildStatusEvent(BuildJob job, List<BuildSlaveStatus> slaveStatuses) {
