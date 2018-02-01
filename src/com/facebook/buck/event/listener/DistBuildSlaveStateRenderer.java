@@ -88,10 +88,7 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
         CacheRateStatsKeeper.CacheRateStatsUpdateEvent cacheStats =
             CacheRateStatsKeeper.getCacheRateStatsUpdateEventFromSerializedStats(
                 status.getCacheRateStats());
-        columns.add(
-            String.format(
-                "%d [%.1f%%] cache miss",
-                cacheStats.getCacheMissCount(), cacheStats.getCacheMissRate()));
+        columns.add(String.format("%.1f%% cache miss", cacheStats.getCacheMissRate()));
 
         if (cacheStats.getCacheErrorCount() != 0) {
           columns.add(

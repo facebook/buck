@@ -602,11 +602,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     List<String> columns = new ArrayList<>();
 
     synchronized (distBuildStatusLock) {
-      columns.add("local status: " + stampedeLocalBuildStatus);
       if (!distBuildStatus.isPresent()) {
-        columns.add("dist status: init");
+        columns.add("remote status: init");
       } else {
-        columns.add("dist status: " + distBuildStatus.get().getStatus().toLowerCase());
+        columns.add("remote status: " + distBuildStatus.get().getStatus().toLowerCase());
 
         int totalUploadErrorsCount = 0;
         ImmutableList.Builder<CacheRateStatsKeeper.CacheRateStatsUpdateEvent> slaveCacheStats =
@@ -622,15 +621,16 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           }
         }
 
+        if (distBuildTotalRulesCount > 0) {
+          columns.add(
+              String.format("%d/%d jobs", distBuildFinishedRulesCount, distBuildTotalRulesCount));
+        }
+
         CacheRateStatsKeeper.CacheRateStatsUpdateEvent aggregatedCacheStats =
             CacheRateStatsKeeper.getAggregatedCacheRateStats(slaveCacheStats.build());
 
         if (aggregatedCacheStats.getTotalRulesCount() != 0) {
-          columns.add(
-              String.format(
-                  "%d [%.1f%%] cache miss",
-                  aggregatedCacheStats.getCacheMissCount(),
-                  aggregatedCacheStats.getCacheMissRate()));
+          columns.add(String.format("%.1f%% cache miss", aggregatedCacheStats.getCacheMissRate()));
 
           if (aggregatedCacheStats.getCacheErrorCount() != 0) {
             columns.add(
@@ -647,7 +647,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       }
     }
 
-    parseLine = Joiner.on(", ").join(columns);
+    String localStatus = String.format("local status: %s", stampedeLocalBuildStatus);
+    parseLine = localStatus + "; " + Joiner.on(", ").join(columns);
     return Strings.isNullOrEmpty(parseLine) ? Optional.empty() : Optional.of(parseLine);
   }
 

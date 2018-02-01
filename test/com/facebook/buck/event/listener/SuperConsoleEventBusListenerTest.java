@@ -846,7 +846,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 0.3 sec (0%) local status: init, dist status: init"));
+            "Distributed Build... 0.3 sec (0%) local status: init; remote status: init"));
 
     timeMillis += 250;
     eventBus.postWithoutConfiguring(
@@ -864,7 +864,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 0.7 sec (0%) local status: init, dist status: queued"));
+            "Distributed Build... 0.7 sec (0%) local status: init; remote status: queued"));
 
     timeMillis += 100;
     eventBus.postWithoutConfiguring(
@@ -882,7 +882,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 0.9 sec (0%) local status: init, dist status: building"));
+            "Distributed Build... 0.9 sec (0%) local status: init; remote status: building"));
 
     BuildSlaveRunId buildSlaveRunId1 = new BuildSlaveRunId();
     buildSlaveRunId1.setId("slave1");
@@ -914,7 +914,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 1.1 sec (0%) local status: init, dist status: building",
+            "Distributed Build... 1.1 sec (0%) local status: init; remote status: building",
             " Server 0: Preparing: creating action graph ...",
             " Server 1: Preparing: creating action graph, materializing source files [128] ..."));
 
@@ -967,9 +967,10 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 1.3 sec (12%) local status: init, dist status: building, 1 [3.3%] cache miss",
-            " Server 0: Idle... built 5/10 jobs, 1 [10.0%] cache miss",
-            " Server 1: Working on 5 jobs... built 5/20 jobs, 1 jobs failed, 0 [0.0%] cache miss"));
+            "Distributed Build... 1.3 sec (12%) local status: init; "
+                + "remote status: building, 10/80 jobs, 3.3% cache miss",
+            " Server 0: Idle... built 5/10 jobs, 10.0% cache miss",
+            " Server 1: Working on 5 jobs... built 5/20 jobs, 1 jobs failed, 0.0% cache miss"));
 
     timeMillis += 100;
     slave1.setRulesBuildingCount(1);
@@ -1024,10 +1025,11 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 1.5 sec (62%) local status: building, dist status: custom,"
-                + " 1 [3.3%] cache miss, 1 [3.4%] cache errors, 1 upload errors",
-            " Server 0: Working on 1 jobs... built 9/10 jobs, 1 [10.0%] cache miss",
-            " Server 1: Idle... built 20/20 jobs, 1 jobs failed, 0 [0.0%] cache miss, "
+            "Distributed Build... 1.5 sec (62%) local status: building;"
+                + " remote status: custom, 50/80 jobs,"
+                + " 3.3% cache miss, 1 [3.4%] cache errors, 1 upload errors",
+            " Server 0: Working on 1 jobs... built 9/10 jobs, 10.0% cache miss",
+            " Server 1: Idle... built 20/20 jobs, 1 jobs failed, 0.0% cache miss, "
                 + "1 [5.0%] cache errors, 1/3 uploaded, 1 upload errors"));
 
     timeMillis += 100;
@@ -1066,8 +1068,9 @@ public class SuperConsoleEventBusListenerTest {
 
     timeMillis += 100;
     final String distbuildLine =
-        "Distributed Build: finished in 1.6 sec (100%) local status: building, dist status: finished_successfully,"
-            + " 1 [3.3%] cache miss, 1 [3.3%] cache errors, 1 upload errors";
+        "Distributed Build: finished in 1.6 sec (100%) local status: building;"
+            + " remote status: finished_successfully, 80/80 jobs,"
+            + " 3.3% cache miss, 1 [3.3%] cache errors, 1 upload errors";
     validateConsole(
         listener,
         timeMillis,
