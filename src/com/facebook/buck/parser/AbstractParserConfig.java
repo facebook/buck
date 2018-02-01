@@ -206,18 +206,6 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   }
 
   /**
-   * Indicates whether globals imported by {@code include_defs} should be "frozen", which means they
-   * will be converted into their read-only counterparts. This can be used to detect accidental
-   * attempts to modify global variables causing non-determinism and hard to debug bugs.
-   *
-   * @return boolean flag indicating whether globals must be "frozen".
-   */
-  @Value.Lazy
-  public boolean getFreezeGlobals() {
-    return getDelegate().getBooleanValue("parser", "freeze_globals", false);
-  }
-
-  /**
    * @return boolean flag indicating whether support for parsing build files using non default
    *     syntax (currently Python DSL).
    *     <p>For a list of supported syntax see {@link Syntax}.

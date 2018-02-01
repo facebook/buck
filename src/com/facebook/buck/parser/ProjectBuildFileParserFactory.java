@@ -86,7 +86,6 @@ public class ProjectBuildFileParserFactory {
             .setProjectRoot(cell.getFilesystem().getRootPath())
             .setCellRoots(cell.getCellPathResolver().getCellPaths())
             .setCellName(cell.getCanonicalName().orElse(""))
-            .setFreezeGlobals(parserConfig.getFreezeGlobals())
             .setPythonInterpreter(pythonInterpreterPath)
             .setPythonModuleSearchPath(pythonModuleSearchPath)
             .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())

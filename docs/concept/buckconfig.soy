@@ -2841,19 +2841,6 @@ your <code>.buckjavaargs</code> file</a>:
 
 {call buckconfig.entry}
   {param section: 'parser' /}
-  {param name: 'freeze_globals' /}
-  {param example_value: 'false' /}
-  {param description}
-    Indicates whether globals imported by {call buck.fn_load /} and{sp}
-    {call buck.fn_include_defs /} should be "frozen", which means they will be converted into
-    their read-only counterparts. This can be used to detect
-    accidental attempts to modify global variables causing non-determinism and hard to debug bugs.
-    By default, this is not enabled (<code>false</code>).
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'parser' /}
   {param name: 'polyglot_parsing_enabled' /}
   {param example_value: 'true' /}
   {param description}

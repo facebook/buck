@@ -343,44 +343,6 @@ class BuckTest(unittest.TestCase):
                 build_file_processor.process,
                 build_file.root, build_file.prefix, build_file.path, [])
 
-    def test_global_list_cannot_be_mutated(self):
-        """
-        Verify that global list variables from 'include_defs' cannot be mutated.
-        """
-
-        include_def = ProjectFile(
-            self.project_root, path='inc_def1', contents=('FOO = [1, 2]', ))
-        self.write_file(include_def)
-
-        build_file = ProjectFile(
-            self.project_root, path='BUCK', contents=('FOO.append(3)', ))
-        self.write_file(build_file)
-        build_file_processor = self.create_build_file_processor(
-            includes=[include_def.name], freeze_globals=True)
-        self.assertRaises(
-            AttributeError,
-            build_file_processor.process,
-            build_file.root, build_file.prefix, build_file.path, [])
-
-    def test_global_set_cannot_be_mutated(self):
-        """
-        Verify that global set variables from 'include_defs' cannot be mutated.
-        """
-
-        include_def = ProjectFile(
-            self.project_root, path='inc_def1', contents=('FOO = {1, 2}', ))
-        self.write_file(include_def)
-
-        build_file = ProjectFile(
-            self.project_root, path='BUCK', contents=('FOO.add(3)', ))
-        self.write_file(build_file)
-        build_file_processor = self.create_build_file_processor(
-            includes=[include_def.name], freeze_globals=True)
-        self.assertRaises(
-            AttributeError,
-            build_file_processor.process,
-            build_file.root, build_file.prefix, build_file.path, [])
-
     def test_watchman_glob_failure_raises_diagnostic_with_stack(self):
         class FakeWatchmanClient:
             def __init__(self):

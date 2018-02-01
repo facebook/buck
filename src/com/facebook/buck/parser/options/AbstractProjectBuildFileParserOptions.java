@@ -77,11 +77,6 @@ abstract class AbstractProjectBuildFileParserOptions {
   }
 
   @Value.Default
-  public boolean getFreezeGlobals() {
-    return false;
-  }
-
-  @Value.Default
   public boolean getEnableProfiling() {
     return false;
   }

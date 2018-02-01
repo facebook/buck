@@ -271,10 +271,6 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       argBuilder.add("--allow_empty_globs");
     }
 
-    if (options.getFreezeGlobals()) {
-      argBuilder.add("--freeze_globals");
-    }
-
     if (options.getUseWatchmanGlob()) {
       argBuilder.add("--use_watchman_glob");
     }
