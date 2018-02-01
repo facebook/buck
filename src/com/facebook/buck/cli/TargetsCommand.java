@@ -208,6 +208,13 @@ public class TargetsCommand extends AbstractCommand {
   )
   private boolean isShowTargetHash;
 
+  @Option(
+    name = "--show-transitive-target-hashes",
+    aliases = {"--show-transitive-target-hashes"},
+    usage = "Show target hashes of transitive deps as well."
+  )
+  private boolean isShowTransitiveTargetHashes;
+
   private enum TargetHashFileMode {
     PATHS_AND_CONTENTS,
     PATHS_ONLY,
@@ -849,7 +856,18 @@ public class TargetsCommand extends AbstractCommand {
 
     TargetResultBuilders targetResultBuilders = new TargetResultBuilders();
     if (isShowTargetHash) {
-      computeShowTargetHash(params, executor, targetGraphAndTargetNodes, targetResultBuilders);
+      // If we need to get transitive dependencies, then make sure we populate targetResultBuilders
+      // with /all/ recursive parse time dependencies
+      Pair<TargetGraph, Iterable<TargetNode<?, ?>>> targetGraphAndMaybeRecursiveTargetNodes =
+          targetGraphAndTargetNodes;
+      if (isShowTransitiveTargetHashes) {
+        targetGraphAndMaybeRecursiveTargetNodes =
+            new Pair<>(
+                targetGraphAndTargetNodes.getFirst(),
+                getTransitiveParseTimeDeps(targetGraphAndTargetNodes));
+      }
+      computeShowTargetHash(
+          params, executor, targetGraphAndMaybeRecursiveTargetNodes, targetResultBuilders);
     }
 
     // We only need the action graph if we're showing the output or the keys, and the
@@ -901,8 +919,8 @@ public class TargetsCommand extends AbstractCommand {
       }
 
       // Start rule calculations in parallel.
-      for (TargetNode<?, ?> targetNode : targetGraphAndTargetNodes.getSecond()) {
-        if (actionGraph.isPresent() && isShowRuleKey) {
+      if (actionGraph.isPresent() && isShowRuleKey) {
+        for (TargetNode<?, ?> targetNode : targetGraphAndTargetNodes.getSecond()) {
           BuildRule rule = buildRuleResolver.get().requireRule(targetNode.getBuildTarget());
           ruleKeyCalculator.get().calculate(params.getBuckEventBus(), rule);
         }
@@ -1052,6 +1070,24 @@ public class TargetsCommand extends AbstractCommand {
       targetsBuilder.add(node.getBuildTarget());
     }
     return targetsBuilder.build();
+  }
+
+  /**
+   * Get the set of TargetNodes and their parse time dependencies
+   *
+   * @param targetGraphAndTargetNodes The target graph, and the leaf nodes where the traversal will
+   *     start
+   * @return An iterable of the original leaf nodes and all of their recursive parse time
+   *     dependencies
+   * @throws CycleException There's a cycle in the graph
+   */
+  private Iterable<TargetNode<?, ?>> getTransitiveParseTimeDeps(
+      Pair<TargetGraph, Iterable<TargetNode<?, ?>>> targetGraphAndTargetNodes)
+      throws CycleException {
+    AcyclicDepthFirstPostOrderTraversal<TargetNode<?, ?>> traversal =
+        new AcyclicDepthFirstPostOrderTraversal<>(
+            node -> targetGraphAndTargetNodes.getFirst().getAll(node.getParseDeps()).iterator());
+    return traversal.traverse(targetGraphAndTargetNodes.getSecond());
   }
 
   private FileHashLoader createOrGetFileHashLoader(CommandRunnerParams params) throws IOException {
