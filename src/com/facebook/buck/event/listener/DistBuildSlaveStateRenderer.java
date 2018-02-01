@@ -120,7 +120,7 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
     if (status.getRulesFailureCount() != 0) {
       return ansi.asErrorText(lineBuilder.toString());
     } else if (status.getTotalRulesCount() > 0 && status.getRulesBuildingCount() == 0) {
-      return ansi.asSuccessText(lineBuilder.toString());
+      return ansi.asWarningText(lineBuilder.toString());
     } else {
       return lineBuilder.toString();
     }
