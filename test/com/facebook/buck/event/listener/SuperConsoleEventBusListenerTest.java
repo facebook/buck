@@ -891,6 +891,7 @@ public class SuperConsoleEventBusListenerTest {
     buildSlaveRunId2.setId("slave2");
     BuildSlaveStatus slave2 = new BuildSlaveStatus();
     slave2.setBuildSlaveRunId(buildSlaveRunId2);
+    slave2.setFilesMaterializedCount(128);
 
     timeMillis += 100;
     eventBus.postWithoutConfiguring(
@@ -912,8 +913,8 @@ public class SuperConsoleEventBusListenerTest {
             parsingLine,
             actionGraphLine,
             "Distributed Build... 1.1 sec local status: init, dist status: building",
-            " Server 0: Creating action graph...",
-            " Server 1: Creating action graph..."));
+            " Server 0: Preparing: creating action graph ...",
+            " Server 1: Preparing: creating action graph, materializing source files [128] ..."));
 
     timeMillis += 100;
     slave1.setTotalRulesCount(10);

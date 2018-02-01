@@ -60,7 +60,15 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
     lineBuilder.append(String.format(" Server %d: ", slaveID));
 
     if (status.getTotalRulesCount() == 0) {
-      lineBuilder.append("Creating action graph...");
+      ImmutableList.Builder<String> columns = new ImmutableList.Builder<>();
+      columns.add("creating action graph");
+
+      if (status.getFilesMaterializedCount() > 0) {
+        columns.add(
+            String.format("materializing source files [%d]", status.getFilesMaterializedCount()));
+      }
+
+      lineBuilder.append(String.format("Preparing: %s ...", Joiner.on(", ").join(columns.build())));
     } else {
       String prefix = "Idle";
       if (status.getRulesBuildingCount() != 0) {
@@ -104,10 +112,6 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
           columns.add(
               String.format("%d upload errors", status.getHttpArtifactUploadsFailureCount()));
         }
-      }
-
-      if (status.getFilesMaterializedCount() > 0) {
-        columns.add(String.format("%d files materialized", status.getFilesMaterializedCount()));
       }
 
       lineBuilder.append(String.format("%s... %s", prefix, Joiner.on(", ").join(columns.build())));
