@@ -1,5 +1,0 @@
-java_library(
-    name = "foo",
-    srcs = ["Foo.java"],
-    visibility = ["//java/bar:bar"],
-)
