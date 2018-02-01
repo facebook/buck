@@ -41,8 +41,8 @@ import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
 import com.facebook.buck.distributed.StampedeLocalBuildStatusEvent;
-import com.facebook.buck.distributed.build_client.BuildController;
-import com.facebook.buck.distributed.build_client.BuildControllerArgs;
+import com.facebook.buck.distributed.build_client.DistBuildController;
+import com.facebook.buck.distributed.build_client.DistBuildControllerArgs;
 import com.facebook.buck.distributed.build_client.LogStateTracker;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJobState;
@@ -829,9 +829,9 @@ public class BuildCommand extends AbstractCommand {
       final RemoteBuildRuleSynchronizer remoteBuildSynchronizer =
           new RemoteBuildRuleSynchronizer(
               distBuildConfig.shouldAlwaysWaitForRemoteBuildBeforeProceedingLocally());
-      BuildController build =
-          new BuildController(
-              BuildControllerArgs.builder()
+      DistBuildController build =
+          new DistBuildController(
+              DistBuildControllerArgs.builder()
                   .setBuilderExecutorArgs(params.createBuilderArgs())
                   .setTopLevelTargets(buildTargets)
                   .setBuildGraphs(graphs)
@@ -1057,11 +1057,11 @@ public class BuildCommand extends AbstractCommand {
       AtomicInteger distributedBuildExitCode,
       CountDownLatch localBuildInitializationLatch,
       RemoteBuildRuleSynchronizer remoteBuildSynchronizer,
-      BuildController build) {
+      DistBuildController distBuildController) {
     int exitCode = com.facebook.buck.distributed.ExitCode.DISTRIBUTED_PENDING_EXIT_CODE.getCode();
     try {
-      BuildController.ExecutionResult distBuildResult =
-          build.executeAndPrintFailuresToEventBus(
+      DistBuildController.ExecutionResult distBuildResult =
+          distBuildController.executeAndPrintFailuresToEventBus(
               executorService,
               filesystem,
               fileHashCache,

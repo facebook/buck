@@ -38,7 +38,7 @@ import org.immutables.value.Value;
 /** Constructor arguments for DelegateAndGraphsInitializer. */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractBuildControllerArgs {
+abstract class AbstractDistBuildControllerArgs {
   private static final int DEFAULT_STATUS_POLL_INTERVAL_MILLIS = 500;
 
   public abstract BuildExecutorArgs getBuilderExecutorArgs();

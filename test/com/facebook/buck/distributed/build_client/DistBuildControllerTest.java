@@ -94,7 +94,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class BuildControllerTest {
+public class DistBuildControllerTest {
   private static final String REPOSITORY = "repositoryOne";
   private static final String TENANT_ID = "tenantOne";
   private static final String BUILD_LABEL = "unit_test";
@@ -132,7 +132,7 @@ public class BuildControllerTest {
     invocationInfo = FakeInvocationInfoFactory.create();
   }
 
-  private BuildController createController(ListenableFuture<BuildJobState> asyncBuildJobState)
+  private DistBuildController createController(ListenableFuture<BuildJobState> asyncBuildJobState)
       throws IOException, InterruptedException {
 
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
@@ -168,8 +168,8 @@ public class BuildControllerTest {
             .setUnversionedTargetGraph(
                 TargetGraphAndBuildTargets.of(createNiceMock(TargetGraph.class), ImmutableSet.of()))
             .build();
-    return new BuildController(
-        BuildControllerArgs.builder()
+    return new DistBuildController(
+        DistBuildControllerArgs.builder()
             .setBuilderExecutorArgs(executorArgs)
             .setTopLevelTargets(ImmutableSet.of())
             .setBuildGraphs(graphs)
@@ -189,12 +189,12 @@ public class BuildControllerTest {
             .build());
   }
 
-  private BuildController.ExecutionResult runBuildWithController(BuildController buildController)
-      throws IOException, InterruptedException {
+  private DistBuildController.ExecutionResult runBuildWithController(
+      DistBuildController distBuildController) throws IOException, InterruptedException {
     // Normally LOCAL_PREPARATION get started in BuildCommand, so simulate that here,
     // otherwise when we stop the timer it will fail with an exception about not being started.
     distBuildClientStatsTracker.startTimer(LOCAL_PREPARATION);
-    return buildController.executeAndPrintFailuresToEventBus(
+    return distBuildController.executeAndPrintFailuresToEventBus(
         directExecutor,
         fakeProjectFilesystem,
         fakeFileHashCache,
@@ -249,12 +249,12 @@ public class BuildControllerTest {
       throws IOException, InterruptedException {
     final BuildJobState buildJobState = createMinimalFakeBuildJobState();
 
-    BuildController controller = createController(Futures.immediateFuture(buildJobState));
+    DistBuildController controller = createController(Futures.immediateFuture(buildJobState));
 
     BuildJob job = new BuildJob();
     job.setStampedeId(stampedeId);
 
-    BuildController.ExecutionResult executionResult = runBuildWithController(controller);
+    DistBuildController.ExecutionResult executionResult = runBuildWithController(controller);
     assertEquals(ExitCode.PREPARATION_STEP_FAILED.getCode(), executionResult.exitCode);
   }
 
@@ -289,10 +289,10 @@ public class BuildControllerTest {
     replay(mockDistBuildService);
 
     // Controller where async step fails
-    BuildController controller =
+    DistBuildController controller =
         createController(Futures.immediateFailedFuture(new Exception("Async preparation failed")));
 
-    BuildController.ExecutionResult executionResult = runBuildWithController(controller);
+    DistBuildController.ExecutionResult executionResult = runBuildWithController(controller);
     assertEquals(ExitCode.PREPARATION_ASYNC_STEP_FAILED.getCode(), executionResult.exitCode);
     assertEquals(stampedeId, executionResult.stampedeId);
   }
@@ -315,7 +315,7 @@ public class BuildControllerTest {
 
     replay(mockDistBuildService);
 
-    BuildController.ExecutionResult executionResult =
+    DistBuildController.ExecutionResult executionResult =
         runBuildWithController(createController(Futures.immediateFuture(buildJobState)));
 
     assertEquals(
@@ -457,7 +457,7 @@ public class BuildControllerTest {
     replay(mockEventBus);
     replay(mockLogStateTracker);
 
-    BuildController.ExecutionResult executionResult =
+    DistBuildController.ExecutionResult executionResult =
         runBuildWithController(createController(Futures.immediateFuture(buildJobState)));
 
     assertEquals(

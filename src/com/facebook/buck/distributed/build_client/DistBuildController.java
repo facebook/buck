@@ -35,8 +35,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 
 /** High level controls the distributed build. */
-public class BuildController {
-  private static final Logger LOG = Logger.get(BuildController.class);
+public class DistBuildController {
+  private static final Logger LOG = Logger.get(DistBuildController.class);
 
   private final PreBuildPhase preBuildPhase;
   private final BuildPhase buildPhase;
@@ -55,7 +55,7 @@ public class BuildController {
     }
   }
 
-  public BuildController(BuildControllerArgs args) {
+  public DistBuildController(DistBuildControllerArgs args) {
     this.stampedeIdReference = args.getStampedeIdReference();
     this.preBuildPhase =
         new PreBuildPhase(

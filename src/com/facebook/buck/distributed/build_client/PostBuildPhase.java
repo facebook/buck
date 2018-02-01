@@ -70,7 +70,7 @@ public class PostBuildPhase {
   }
 
   /** Run all the local steps required after the build. */
-  public BuildController.ExecutionResult runPostDistBuildLocalSteps(
+  public DistBuildController.ExecutionResult runPostDistBuildLocalSteps(
       ListeningExecutorService networkExecutorService,
       List<BuildSlaveStatus> buildSlaveStatusList,
       BuildJob finalJob,
@@ -112,7 +112,7 @@ public class PostBuildPhase {
       eventSender.postDistBuildStatusEvent(finalJob, buildSlaveStatusList, "FAILED");
     }
 
-    return new BuildController.ExecutionResult(
+    return new DistBuildController.ExecutionResult(
         finalJob.getStampedeId(),
         finalJob.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY)
             ? 0
