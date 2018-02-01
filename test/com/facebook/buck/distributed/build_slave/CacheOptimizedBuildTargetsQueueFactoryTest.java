@@ -53,12 +53,12 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
   public static final int MOST_BUILD_RULES_FINISHED_PERCENTAGE = 100;
 
   private ArtifactCacheByBuildRule artifactCache;
-  private BuildRuleFinishedPublisher ruleFinishedPublisher;
+  private CoordinatorBuildRuleEventsPublisher ruleFinishedPublisher;
 
   @Before
   public void setUp() {
     this.artifactCache = null;
-    this.ruleFinishedPublisher = EasyMock.createMock(BuildRuleFinishedPublisher.class);
+    this.ruleFinishedPublisher = EasyMock.createMock(CoordinatorBuildRuleEventsPublisher.class);
   }
 
   private BuildTargetsQueue createQueueWithLocalCacheHits(

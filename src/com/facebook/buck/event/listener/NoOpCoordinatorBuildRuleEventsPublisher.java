@@ -15,11 +15,12 @@
  */
 package com.facebook.buck.event.listener;
 
-import com.facebook.buck.distributed.build_slave.BuildRuleFinishedPublisher;
+import com.facebook.buck.distributed.build_slave.CoordinatorBuildRuleEventsPublisher;
 import com.google.common.collect.ImmutableList;
 
-/** No-op implementation of BuildRuleFinishedPublisher */
-public class NoOpBuildRuleFinishedPublisher implements BuildRuleFinishedPublisher {
+/** No-op implementation of CoordinatorBuildRuleEventsPublisher */
+public class NoOpCoordinatorBuildRuleEventsPublisher
+    implements CoordinatorBuildRuleEventsPublisher {
 
   @Override
   public void createBuildRuleStartedEvents(ImmutableList<String> startedTargets) {}

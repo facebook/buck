@@ -304,7 +304,7 @@ public class CacheOptimizedBuildTargetsQueueFactory {
    */
   public BuildTargetsQueue createBuildTargetsQueue(
       Iterable<BuildTarget> targetsToBuild,
-      BuildRuleFinishedPublisher buildRuleFinishedPublisher,
+      CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher,
       int mostBuildRulesFinishedPercentageThreshold) {
     GraphTraversalData results = traverseGraphFromTopLevelUsingAvailableCaches(targetsToBuild);
 
@@ -321,8 +321,8 @@ public class CacheOptimizedBuildTargetsQueueFactory {
 
     LOG.info(
         String.format("[%d] cacheable build rules were pruned from graph.", prunedTargets.size()));
-    buildRuleFinishedPublisher.createBuildRuleStartedEvents(prunedTargets);
-    buildRuleFinishedPublisher.createBuildRuleCompletionEvents(prunedTargets);
+    coordinatorBuildRuleEventsPublisher.createBuildRuleStartedEvents(prunedTargets);
+    coordinatorBuildRuleEventsPublisher.createBuildRuleCompletionEvents(prunedTargets);
 
     // Do the reference counting and create the EnqueuedTargets.
     List<EnqueuedTarget> zeroDependencyTargets = new ArrayList<>();

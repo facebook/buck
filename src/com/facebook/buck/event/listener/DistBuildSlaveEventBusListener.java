@@ -20,8 +20,8 @@ import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
-import com.facebook.buck.distributed.build_slave.BuildRuleFinishedPublisher;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
+import com.facebook.buck.distributed.build_slave.CoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.distributed.build_slave.HealthCheckStatsTracker;
 import com.facebook.buck.distributed.build_slave.MinionBuildProgressTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
@@ -63,7 +63,7 @@ import javax.annotation.concurrent.GuardedBy;
  * BuildSlaveStatus with the latest updates.
  */
 public class DistBuildSlaveEventBusListener
-    implements BuildRuleFinishedPublisher,
+    implements CoordinatorBuildRuleEventsPublisher,
         MinionBuildProgressTracker,
         BuckEventListener,
         Closeable {

@@ -51,7 +51,7 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
   private final Optional<BuildId> clientBuildId;
   private final Path logDirectoryPath;
   private final ThriftCoordinatorServer.EventListener eventListener;
-  private final BuildRuleFinishedPublisher buildRuleFinishedPublisher;
+  private final CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher;
   private final DistBuildService distBuildService;
   private final MinionHealthTracker minionHealthTracker;
   private final Optional<URI> traceUploadUri;
@@ -65,7 +65,7 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
       Path logDirectoryPath,
       Optional<BuildId> clientBuildId,
       Optional<URI> traceUploadUri,
-      BuildRuleFinishedPublisher buildRuleFinishedPublisher,
+      CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher,
       DistBuildService distBuildService,
       MinionHealthTracker minionHealthTracker) {
     this.stampedeId = stampedeId;
@@ -77,7 +77,7 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
     this.queue = queue;
     this.coordinatorPort = coordinatorPort;
     this.eventListener = eventListener;
-    this.buildRuleFinishedPublisher = buildRuleFinishedPublisher;
+    this.coordinatorBuildRuleEventsPublisher = coordinatorBuildRuleEventsPublisher;
     this.distBuildService = distBuildService;
   }
 
@@ -86,7 +86,7 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
       StampedeId stampedeId,
       EventListener eventListener,
       Path logDirectoryPath,
-      BuildRuleFinishedPublisher buildRuleFinishedPublisher,
+      CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher,
       DistBuildService distBuildService,
       Optional<BuildId> clientBuildId,
       Optional<URI> traceUploadUri,
@@ -99,7 +99,7 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
         logDirectoryPath,
         clientBuildId,
         traceUploadUri,
-        buildRuleFinishedPublisher,
+        coordinatorBuildRuleEventsPublisher,
         distBuildService,
         minionHealthTracker);
   }
@@ -165,7 +165,7 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
                   queue,
                   stampedeId,
                   eventListener,
-                  buildRuleFinishedPublisher,
+                  coordinatorBuildRuleEventsPublisher,
                   minionHealthTracker,
                   distBuildService));
       this.server.start();

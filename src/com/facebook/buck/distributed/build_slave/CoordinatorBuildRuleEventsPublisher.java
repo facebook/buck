@@ -19,9 +19,9 @@ import com.google.common.collect.ImmutableList;
 
 /**
  * Used by Coordinator service to signal to local client that a rule has started or finished
- * building remotely. TODO(alisdair): rename this class as now handles both started/finished
+ * building remotely.
  */
-public interface BuildRuleFinishedPublisher {
+public interface CoordinatorBuildRuleEventsPublisher {
   void createBuildRuleStartedEvents(ImmutableList<String> startedTargets);
 
   void createBuildRuleCompletionEvents(ImmutableList<String> finishedTargets);

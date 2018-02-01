@@ -119,7 +119,7 @@ public class ThriftCoordinatorServer implements Closeable {
   private final CompletableFuture<ExitState> exitCodeFuture;
   private final StampedeId stampedeId;
   private final ThriftCoordinatorServer.EventListener eventListener;
-  private final BuildRuleFinishedPublisher buildRuleFinishedPublisher;
+  private final CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher;
   private final MinionHealthTracker minionHealthTracker;
   private final DistBuildService distBuildService;
 
@@ -135,12 +135,12 @@ public class ThriftCoordinatorServer implements Closeable {
       ListenableFuture<BuildTargetsQueue> queue,
       StampedeId stampedeId,
       EventListener eventListener,
-      BuildRuleFinishedPublisher buildRuleFinishedPublisher,
+      CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher,
       MinionHealthTracker minionHealthTracker,
       DistBuildService distBuildService) {
     this.eventListener = eventListener;
     this.stampedeId = stampedeId;
-    this.buildRuleFinishedPublisher = buildRuleFinishedPublisher;
+    this.coordinatorBuildRuleEventsPublisher = coordinatorBuildRuleEventsPublisher;
     this.minionHealthTracker = minionHealthTracker;
     this.distBuildService = distBuildService;
     this.lock = new Object();
@@ -275,7 +275,7 @@ public class ThriftCoordinatorServer implements Closeable {
               allocator,
               exitCodeFuture,
               chromeTraceTracker,
-              buildRuleFinishedPublisher,
+              coordinatorBuildRuleEventsPublisher,
               minionHealthTracker);
     } catch (InterruptedException | ExecutionException e) {
       String msg = "Failed to create the BuildTargetsQueue.";

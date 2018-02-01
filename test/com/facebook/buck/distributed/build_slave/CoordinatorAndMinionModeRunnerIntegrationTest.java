@@ -21,7 +21,7 @@ import com.facebook.buck.distributed.build_slave.MinionModeRunnerIntegrationTest
 import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
-import com.facebook.buck.event.listener.NoOpBuildRuleFinishedPublisher;
+import com.facebook.buck.event.listener.NoOpCoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.util.BuckConstant;
@@ -73,7 +73,7 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
             STAMPEDE_ID,
             eventListener,
             logDirectoryPath,
-            new NoOpBuildRuleFinishedPublisher(),
+            new NoOpCoordinatorBuildRuleEventsPublisher(),
             MOCK_SERVICE,
             Optional.of(new BuildId("10-20")),
             Optional.empty(),

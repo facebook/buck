@@ -38,19 +38,19 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
   private final MinionWorkloadAllocator allocator;
   private final CompletableFuture<ExitState> exitCodeFuture;
   private final DistBuildTraceTracker chromeTraceTracker;
-  private final BuildRuleFinishedPublisher buildRuleFinishedPublisher;
+  private final CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher;
   private final MinionHealthTracker minionHealthTracker;
 
   public ActiveCoordinatorService(
       MinionWorkloadAllocator allocator,
       CompletableFuture<ExitState> exitCodeFuture,
       DistBuildTraceTracker chromeTraceTracker,
-      BuildRuleFinishedPublisher buildRuleFinishedPublisher,
+      CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher,
       MinionHealthTracker minionHealthTracker) {
     this.allocator = allocator;
     this.exitCodeFuture = exitCodeFuture;
     this.chromeTraceTracker = chromeTraceTracker;
-    this.buildRuleFinishedPublisher = buildRuleFinishedPublisher;
+    this.coordinatorBuildRuleEventsPublisher = coordinatorBuildRuleEventsPublisher;
     this.minionHealthTracker = minionHealthTracker;
   }
 
@@ -61,7 +61,7 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
     response.setContinueBuilding(true);
     response.setWorkUnits(new ArrayList<>());
 
-    buildRuleFinishedPublisher.createBuildRuleCompletionEvents(
+    coordinatorBuildRuleEventsPublisher.createBuildRuleCompletionEvents(
         ImmutableList.copyOf(request.getFinishedTargets()));
 
     if (exitCodeFuture.isDone()) {
@@ -94,10 +94,10 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
     for (WorkUnit workUnit : newWorkUnitsForMinion) {
       startedTargetsBuilder.addAll(workUnit.getBuildTargets());
     }
-    buildRuleFinishedPublisher.createBuildRuleStartedEvents(startedTargetsBuilder.build());
+    coordinatorBuildRuleEventsPublisher.createBuildRuleStartedEvents(startedTargetsBuilder.build());
 
     if (allocator.haveMostBuildRulesCompleted()) {
-      buildRuleFinishedPublisher.createMostBuildRulesCompletedEvent();
+      coordinatorBuildRuleEventsPublisher.createMostBuildRulesCompletedEvent();
     }
 
     chromeTraceTracker.updateWork(

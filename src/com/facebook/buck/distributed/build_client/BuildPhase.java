@@ -26,7 +26,7 @@ import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
-import com.facebook.buck.distributed.build_slave.BuildRuleFinishedPublisher;
+import com.facebook.buck.distributed.build_slave.CoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.distributed.build_slave.CoordinatorModeRunner;
 import com.facebook.buck.distributed.build_slave.DelegateAndGraphs;
 import com.facebook.buck.distributed.build_slave.HealthCheckStatsTracker;
@@ -194,8 +194,8 @@ public class BuildPhase {
                 .setTargetGraph(buildGraphs.getTargetGraphForDistributedBuild().getTargetGraph())
                 .build());
 
-    BuildRuleFinishedPublisher finishedRulePublisher =
-        new BuildRuleFinishedPublisher() {
+    CoordinatorBuildRuleEventsPublisher finishedRulePublisher =
+        new CoordinatorBuildRuleEventsPublisher() {
           @Override
           public void createBuildRuleStartedEvents(ImmutableList<String> startedTargets) {
             for (String target : startedTargets) {

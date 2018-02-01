@@ -67,7 +67,7 @@ public class MultiSlaveBuildModeRunnerFactory {
       Optional<BuildId> clientBuildId,
       boolean isLocalMinionAlsoRunning,
       Path logDirectoryPath,
-      BuildRuleFinishedPublisher buildRuleFinishedPublisher,
+      CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher,
       BuckEventBus eventBus,
       ListeningExecutorService executorService,
       ArtifactCache remoteCache,
@@ -100,7 +100,7 @@ public class MultiSlaveBuildModeRunnerFactory {
                                     distBuildConfig.isDeepRemoteBuildEnabled())
                                 .createBuildTargetsQueue(
                                     topLevelTargetsToBuild,
-                                    buildRuleFinishedPublisher,
+                                    coordinatorBuildRuleEventsPublisher,
                                     distBuildConfig.getMostBuildRulesFinishedPercentageThreshold());
                       } catch (Exception e) {
                         LOG.error(e, "Failed to create BuildTargetsQueue.");
@@ -137,7 +137,7 @@ public class MultiSlaveBuildModeRunnerFactory {
         stampedeId,
         listener,
         logDirectoryPath,
-        buildRuleFinishedPublisher,
+        coordinatorBuildRuleEventsPublisher,
         distBuildService,
         clientBuildId,
         traceUploadUri,
@@ -219,7 +219,7 @@ public class MultiSlaveBuildModeRunnerFactory {
       BuildSlaveRunId buildSlaveRunId,
       ListenableFuture<BuildExecutor> localBuildExecutor,
       Path logDirectoryPath,
-      BuildRuleFinishedPublisher buildRuleFinishedPublisher,
+      CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher,
       MinionBuildProgressTracker minionBuildProgressTracker,
       BuckEventBus eventBus,
       ListeningExecutorService executorService,
@@ -237,7 +237,7 @@ public class MultiSlaveBuildModeRunnerFactory {
             clientBuildId,
             true,
             logDirectoryPath,
-            buildRuleFinishedPublisher,
+            coordinatorBuildRuleEventsPublisher,
             eventBus,
             executorService,
             remoteCache,
