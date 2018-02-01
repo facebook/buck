@@ -35,7 +35,7 @@ import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.distributed.build_slave.HealthCheckStatsTracker;
 import com.facebook.buck.distributed.testutil.FakeDistBuildSlaveTimingStatsTracker;
-import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
+import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlavePerStageTimingStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
@@ -176,7 +176,7 @@ public class DistBuildSlaveEventBusListenerTest {
         eq(stampedeId), eq(buildSlaveRunId), anyObject());
     expectLastCall().anyTimes();
 
-    Capture<List<BuildSlaveConsoleEvent>> capturedEventLists = Capture.newInstance(CaptureType.ALL);
+    Capture<List<BuildSlaveEvent>> capturedEventLists = Capture.newInstance(CaptureType.ALL);
 
     distBuildServiceMock.uploadBuildSlaveConsoleEvents(
         eq(stampedeId), eq(buildSlaveRunId), capture(capturedEventLists));
@@ -195,7 +195,7 @@ public class DistBuildSlaveEventBusListenerTest {
     // have stopped.
     verify(distBuildServiceMock);
 
-    List<BuildSlaveConsoleEvent> capturedEvents =
+    List<BuildSlaveEvent> capturedEvents =
         capturedEventLists.getValues().stream().flatMap(List::stream).collect(Collectors.toList());
     Assert.assertEquals(capturedEvents.size(), 3);
     Assert.assertTrue(

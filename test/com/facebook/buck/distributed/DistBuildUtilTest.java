@@ -16,7 +16,7 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
+import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.ConsoleEventSeverity;
 import com.facebook.buck.event.ConsoleEvent;
 import java.util.logging.Level;
@@ -31,50 +31,53 @@ public class DistBuildUtilTest {
     ConsoleEvent warningEvent = ConsoleEvent.warning("warning message");
     ConsoleEvent severeEvent = ConsoleEvent.severe("severe message");
 
-    BuildSlaveConsoleEvent fineSlaveEvent =
-        DistBuildUtil.createBuildSlaveConsoleEvent(fineEvent, 42);
-    Assert.assertEquals(fineSlaveEvent.getMessage(), fineEvent.getMessage());
-    Assert.assertEquals(fineSlaveEvent.getSeverity(), ConsoleEventSeverity.INFO);
+    BuildSlaveEvent fineSlaveEvent = DistBuildUtil.createBuildSlaveConsoleEvent(fineEvent, 42);
+    Assert.assertEquals(fineSlaveEvent.getConsoleEvent().getMessage(), fineEvent.getMessage());
+    Assert.assertEquals(fineSlaveEvent.getConsoleEvent().getSeverity(), ConsoleEventSeverity.INFO);
     Assert.assertEquals(fineSlaveEvent.getTimestampMillis(), 42);
 
-    BuildSlaveConsoleEvent infoSlaveEvent =
-        DistBuildUtil.createBuildSlaveConsoleEvent(infoEvent, 42);
-    Assert.assertEquals(infoSlaveEvent.getMessage(), infoEvent.getMessage());
-    Assert.assertEquals(infoSlaveEvent.getSeverity(), ConsoleEventSeverity.INFO);
+    BuildSlaveEvent infoSlaveEvent = DistBuildUtil.createBuildSlaveConsoleEvent(infoEvent, 42);
+    Assert.assertEquals(infoSlaveEvent.getConsoleEvent().getMessage(), infoEvent.getMessage());
+    Assert.assertEquals(infoSlaveEvent.getConsoleEvent().getSeverity(), ConsoleEventSeverity.INFO);
     Assert.assertEquals(infoSlaveEvent.getTimestampMillis(), 42);
 
-    BuildSlaveConsoleEvent warningSlaveEvent =
+    BuildSlaveEvent warningSlaveEvent =
         DistBuildUtil.createBuildSlaveConsoleEvent(warningEvent, 42);
-    Assert.assertEquals(warningSlaveEvent.getMessage(), warningEvent.getMessage());
-    Assert.assertEquals(warningSlaveEvent.getSeverity(), ConsoleEventSeverity.WARNING);
+    Assert.assertEquals(
+        warningSlaveEvent.getConsoleEvent().getMessage(), warningEvent.getMessage());
+    Assert.assertEquals(
+        warningSlaveEvent.getConsoleEvent().getSeverity(), ConsoleEventSeverity.WARNING);
     Assert.assertEquals(warningSlaveEvent.getTimestampMillis(), 42);
 
-    BuildSlaveConsoleEvent severeSlaveEvent =
-        DistBuildUtil.createBuildSlaveConsoleEvent(severeEvent, 42);
-    Assert.assertEquals(severeSlaveEvent.getMessage(), severeEvent.getMessage());
-    Assert.assertEquals(severeSlaveEvent.getSeverity(), ConsoleEventSeverity.SEVERE);
+    BuildSlaveEvent severeSlaveEvent = DistBuildUtil.createBuildSlaveConsoleEvent(severeEvent, 42);
+    Assert.assertEquals(severeSlaveEvent.getConsoleEvent().getMessage(), severeEvent.getMessage());
+    Assert.assertEquals(
+        severeSlaveEvent.getConsoleEvent().getSeverity(), ConsoleEventSeverity.SEVERE);
     Assert.assertEquals(severeSlaveEvent.getTimestampMillis(), 42);
   }
 
   @Test
   public void distBuildSlaveConsoleEventToRegularConsoleEvent() {
-    BuildSlaveConsoleEvent slaveConsoleEvent = new BuildSlaveConsoleEvent();
-    slaveConsoleEvent.setMessage("My message");
+    BuildSlaveEvent slaveConsoleEvent = DistBuildUtil.createBuildSlaveConsoleEvent(21);
+    slaveConsoleEvent.getConsoleEvent().setMessage("My message");
     slaveConsoleEvent.setTimestampMillis(0);
 
-    slaveConsoleEvent.setSeverity(ConsoleEventSeverity.INFO);
+    slaveConsoleEvent.getConsoleEvent().setSeverity(ConsoleEventSeverity.INFO);
     ConsoleEvent consoleEvent = DistBuildUtil.createConsoleEvent(slaveConsoleEvent);
-    Assert.assertTrue(consoleEvent.getMessage().endsWith(slaveConsoleEvent.getMessage()));
+    Assert.assertTrue(
+        consoleEvent.getMessage().endsWith(slaveConsoleEvent.getConsoleEvent().getMessage()));
     Assert.assertEquals(consoleEvent.getLevel(), Level.INFO);
 
-    slaveConsoleEvent.setSeverity(ConsoleEventSeverity.WARNING);
+    slaveConsoleEvent.getConsoleEvent().setSeverity(ConsoleEventSeverity.WARNING);
     consoleEvent = DistBuildUtil.createConsoleEvent(slaveConsoleEvent);
-    Assert.assertTrue(consoleEvent.getMessage().endsWith(slaveConsoleEvent.getMessage()));
+    Assert.assertTrue(
+        consoleEvent.getMessage().endsWith(slaveConsoleEvent.getConsoleEvent().getMessage()));
     Assert.assertEquals(consoleEvent.getLevel(), Level.WARNING);
 
-    slaveConsoleEvent.setSeverity(ConsoleEventSeverity.SEVERE);
+    slaveConsoleEvent.getConsoleEvent().setSeverity(ConsoleEventSeverity.SEVERE);
     consoleEvent = DistBuildUtil.createConsoleEvent(slaveConsoleEvent);
-    Assert.assertTrue(consoleEvent.getMessage().endsWith(slaveConsoleEvent.getMessage()));
+    Assert.assertTrue(
+        consoleEvent.getMessage().endsWith(slaveConsoleEvent.getConsoleEvent().getMessage()));
     Assert.assertEquals(consoleEvent.getLevel(), Level.SEVERE);
   }
 }

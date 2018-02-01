@@ -25,7 +25,6 @@ import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.BuildJobStateTargetGraph;
 import com.facebook.buck.distributed.thrift.BuildJobStateTargetNode;
 import com.facebook.buck.distributed.thrift.BuildMode;
-import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventType;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventsQuery;
@@ -67,7 +66,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -399,14 +397,14 @@ public class DistBuildServiceTest {
     BuildSlaveRunId buildSlaveRunId = new BuildSlaveRunId();
     buildSlaveRunId.setId("duper");
 
-    ImmutableList<BuildSlaveConsoleEvent> consoleEvents =
+    ImmutableList<BuildSlaveEvent> consoleEvents =
         ImmutableList.of(
-            new BuildSlaveConsoleEvent(),
-            new BuildSlaveConsoleEvent(),
-            new BuildSlaveConsoleEvent());
-    consoleEvents.get(0).setMessage("a");
-    consoleEvents.get(1).setMessage("b");
-    consoleEvents.get(2).setMessage("c");
+            DistBuildUtil.createBuildSlaveConsoleEvent(1),
+            DistBuildUtil.createBuildSlaveConsoleEvent(2),
+            DistBuildUtil.createBuildSlaveConsoleEvent(3));
+    consoleEvents.get(0).getConsoleEvent().setMessage("a");
+    consoleEvents.get(1).getConsoleEvent().setMessage("b");
+    consoleEvents.get(2).getConsoleEvent().setMessage("c");
 
     Capture<FrontendRequest> request1 = EasyMock.newCapture();
     Capture<FrontendRequest> request2 = EasyMock.newCapture();
@@ -456,22 +454,19 @@ public class DistBuildServiceTest {
     distBuildService.uploadBuildSlaveConsoleEvents(stampedeId, buildSlaveRunId, consoleEvents);
     BuildSlaveEventsQuery query =
         distBuildService.createBuildSlaveEventsQuery(stampedeId, buildSlaveRunId, 2);
-    List<Pair<Integer, BuildSlaveEvent>> events =
+    List<BuildSlaveEventWrapper> events =
         distBuildService.multiGetBuildSlaveEvents(ImmutableList.of(query));
 
     // Verify correct events are received.
     Assert.assertEquals(events.size(), 3);
-    Assert.assertEquals((int) events.get(0).getFirst(), 0);
-    Assert.assertEquals((int) events.get(1).getFirst(), 1);
-    Assert.assertEquals((int) events.get(2).getFirst(), 2);
-    List<BuildSlaveEvent> buildSlaveEvents =
-        events.stream().map(x -> x.getSecond()).collect(Collectors.toList());
+    Assert.assertEquals(events.get(0).getEventNumber(), 0);
+    Assert.assertEquals(events.get(1).getEventNumber(), 1);
+    Assert.assertEquals(events.get(2).getEventNumber(), 2);
     for (int i = 0; i < 3; ++i) {
-      BuildSlaveEvent event = buildSlaveEvents.get(i);
-      Assert.assertEquals(event.getEventType(), BuildSlaveEventType.CONSOLE_EVENT);
-      Assert.assertEquals(event.getStampedeId(), stampedeId);
-      Assert.assertEquals(event.getBuildSlaveRunId(), buildSlaveRunId);
-      Assert.assertEquals(event.getConsoleEvent(), consoleEvents.get(i));
+      BuildSlaveEventWrapper wrapper = events.get(i);
+      Assert.assertEquals(wrapper.getEvent().getEventType(), BuildSlaveEventType.CONSOLE_EVENT);
+      Assert.assertEquals(wrapper.getBuildSlaveRunId(), buildSlaveRunId);
+      Assert.assertEquals(wrapper.getEvent(), consoleEvents.get(i));
     }
 
     // Verify validity of first request.

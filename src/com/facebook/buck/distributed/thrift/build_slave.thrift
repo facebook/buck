@@ -23,8 +23,7 @@ enum BuildSlaveEventType {
 
 struct BuildSlaveEvent {
     1: optional BuildSlaveEventType eventType = BuildSlaveEventType.UNKNOWN;
-    2: optional stampede.StampedeId stampedeId;
-    3: optional stampede.BuildSlaveRunId buildSlaveRunId;
+    4: optional i64 timestampMillis;
 
     10: optional BuildSlaveConsoleEvent consoleEvent;
 
@@ -41,7 +40,6 @@ enum ConsoleEventSeverity {
 struct BuildSlaveConsoleEvent {
     1: optional string message;
     2: optional ConsoleEventSeverity severity;
-    3: optional i64 timestampMillis;
 }
 
 struct BuildRuleStartedEvent {

@@ -24,7 +24,7 @@ import com.facebook.buck.distributed.build_slave.BuildRuleFinishedPublisher;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.build_slave.HealthCheckStatsTracker;
 import com.facebook.buck.distributed.build_slave.UnexpectedSlaveCacheMissTracker;
-import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
+import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
@@ -86,7 +86,7 @@ public class DistBuildSlaveEventBusListener
   private final Object sendServerUpdatesLock = new Object();
 
   @GuardedBy("consoleEventsLock")
-  private final List<BuildSlaveConsoleEvent> consoleEvents = new LinkedList<>();
+  private final List<BuildSlaveEvent> consoleEvents = new LinkedList<>();
 
   private final List<String> startedTargetsToSignal = new LinkedList<>();
   private final List<String> finishedTargetsToSignal = new LinkedList<>();
@@ -286,7 +286,7 @@ public class DistBuildSlaveEventBusListener
     // TODO: consider batching if list is too big.
     try {
       distBuildService.uploadBuildRuleFinishedEvents(
-          stampedeId, buildSlaveRunId, finishedTargetsCopy);
+          stampedeId, buildSlaveRunId, finishedTargetsCopy, clock.currentTimeMillis());
 
       totalBuildRuleFinishedEventsSent.addAndGet(finishedTargetsCopy.size());
     } catch (IOException e) {
@@ -320,7 +320,7 @@ public class DistBuildSlaveEventBusListener
 
     try {
       distBuildService.uploadBuildRuleStartedEvents(
-          stampedeId, buildSlaveRunId, startedTargetsCopy);
+          stampedeId, buildSlaveRunId, startedTargetsCopy, clock.currentTimeMillis());
     } catch (IOException e) {
       LOG.error(e, "Could not upload build rule started events to frontend.");
     }
@@ -337,7 +337,7 @@ public class DistBuildSlaveEventBusListener
       return;
     }
 
-    ImmutableList<BuildSlaveConsoleEvent> consoleEventsCopy;
+    ImmutableList<BuildSlaveEvent> consoleEventsCopy;
     synchronized (consoleEventsLock) {
       consoleEventsCopy = ImmutableList.copyOf(consoleEvents);
     }
@@ -384,7 +384,8 @@ public class DistBuildSlaveEventBusListener
     }
 
     try {
-      distBuildService.sendMostBuildRulesCompletedEvent(stampedeId, buildSlaveRunId);
+      distBuildService.sendMostBuildRulesCompletedEvent(
+          stampedeId, buildSlaveRunId, clock.currentTimeMillis());
     } catch (IOException e) {
       LOG.error(e, "Failed to send most build rules completed event.");
       mostBuildRulesCompletedEventSent.set(false); // Try again later
@@ -400,7 +401,8 @@ public class DistBuildSlaveEventBusListener
       }
       try {
         if (distBuildService != null) {
-          distBuildService.sendAllBuildRulesPublishedEvent(stampedeId, buildSlaveRunId);
+          distBuildService.sendAllBuildRulesPublishedEvent(
+              stampedeId, buildSlaveRunId, clock.currentTimeMillis());
         }
 
       } catch (RuntimeException | IOException e) {
@@ -428,7 +430,7 @@ public class DistBuildSlaveEventBusListener
       return;
     }
     synchronized (consoleEventsLock) {
-      BuildSlaveConsoleEvent slaveConsoleEvent =
+      BuildSlaveEvent slaveConsoleEvent =
           DistBuildUtil.createBuildSlaveConsoleEvent(event, clock.currentTimeMillis());
       consoleEvents.add(slaveConsoleEvent);
     }

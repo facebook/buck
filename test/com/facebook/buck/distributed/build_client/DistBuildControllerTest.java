@@ -29,6 +29,7 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.distributed.BuildSlaveEventWrapper;
 import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildCellIndexer;
 import com.facebook.buck.distributed.DistBuildCreatedEvent;
@@ -74,7 +75,6 @@ import com.facebook.buck.util.concurrent.FakeWeightedListeningExecutorService;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.DefaultClock;
-import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -420,12 +420,11 @@ public class DistBuildControllerTest {
 
     // Signal that all build rules have been published.
     BuildSlaveEvent buildSlaveEvent = new BuildSlaveEvent();
-    buildSlaveEvent.setStampedeId(stampedeId);
-    buildSlaveEvent.setBuildSlaveRunId(buildSlaveRunId);
     buildSlaveEvent.setEventType(BuildSlaveEventType.ALL_BUILD_RULES_FINISHED_EVENT);
 
     expect(mockDistBuildService.multiGetBuildSlaveEvents(ImmutableList.of(query)))
-        .andReturn(ImmutableList.of(new Pair<>(1, buildSlaveEvent)));
+        .andReturn(
+            Lists.newArrayList(new BuildSlaveEventWrapper(1, buildSlaveRunId, buildSlaveEvent)));
     expect(mockDistBuildService.fetchBuildSlaveFinishedStats(stampedeId, buildSlaveRunId))
         .andReturn(Optional.empty());
 

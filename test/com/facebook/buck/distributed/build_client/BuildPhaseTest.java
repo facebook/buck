@@ -30,6 +30,7 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.distributed.BuildSlaveEventWrapper;
 import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
@@ -89,7 +90,6 @@ import com.facebook.buck.util.concurrent.FakeWeightedListeningExecutorService;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.DefaultClock;
-import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -313,27 +313,25 @@ public class BuildPhaseTest {
 
     // Create first event.
     BuildSlaveEvent event1 = new BuildSlaveEvent();
-    event1.setBuildSlaveRunId(buildSlaveRunIds.get(0));
-    event1.setStampedeId(stampedeId);
     event1.setEventType(BuildSlaveEventType.CONSOLE_EVENT);
+    event1.setTimestampMillis(7);
     BuildSlaveConsoleEvent consoleEvent1 = new BuildSlaveConsoleEvent();
     consoleEvent1.setMessage("This is such fun.");
     consoleEvent1.setSeverity(ConsoleEventSeverity.WARNING);
-    consoleEvent1.setTimestampMillis(7);
     event1.setConsoleEvent(consoleEvent1);
-    Pair<Integer, BuildSlaveEvent> eventWithSeqId1 = new Pair<>(2, event1);
+    BuildSlaveEventWrapper eventWithSeqId1 =
+        new BuildSlaveEventWrapper(2, buildSlaveRunIds.get(0), event1);
 
     // Create second event.
     BuildSlaveEvent event2 = new BuildSlaveEvent();
-    event2.setBuildSlaveRunId(buildSlaveRunIds.get(1));
-    event2.setStampedeId(stampedeId);
     event2.setEventType(BuildSlaveEventType.CONSOLE_EVENT);
+    event2.setTimestampMillis(5);
     BuildSlaveConsoleEvent consoleEvent2 = new BuildSlaveConsoleEvent();
     consoleEvent2.setMessage("This is even more fun.");
     consoleEvent2.setSeverity(ConsoleEventSeverity.SEVERE);
-    consoleEvent2.setTimestampMillis(5);
     event2.setConsoleEvent(consoleEvent2);
-    Pair<Integer, BuildSlaveEvent> eventWithSeqId2 = new Pair<>(1, event2);
+    BuildSlaveEventWrapper eventWithSeqId2 =
+        new BuildSlaveEventWrapper(1, buildSlaveRunIds.get(1), event2);
 
     // Set expectations.
     expect(mockDistBuildService.createBuildSlaveEventsQuery(stampedeId, buildSlaveRunIds.get(0), 0))
@@ -343,18 +341,18 @@ public class BuildPhaseTest {
     expect(mockDistBuildService.multiGetBuildSlaveEvents(ImmutableList.of(query0, query1)))
         .andReturn(ImmutableList.of(eventWithSeqId1, eventWithSeqId2));
 
-    mockEventBus.post(eqConsoleEvent(DistBuildUtil.createConsoleEvent(consoleEvent1)));
-    mockEventBus.post(eqConsoleEvent(DistBuildUtil.createConsoleEvent(consoleEvent2)));
+    mockEventBus.post(eqConsoleEvent(DistBuildUtil.createConsoleEvent(event1)));
+    mockEventBus.post(eqConsoleEvent(DistBuildUtil.createConsoleEvent(event2)));
     expectLastCall();
 
     // At the end, also test that sequence ids are being maintained properly.
     expect(
             mockDistBuildService.createBuildSlaveEventsQuery(
-                stampedeId, buildSlaveRunIds.get(0), eventWithSeqId1.getFirst() + 1))
+                stampedeId, buildSlaveRunIds.get(0), eventWithSeqId1.getEventNumber() + 1))
         .andReturn(query0);
     expect(
             mockDistBuildService.createBuildSlaveEventsQuery(
-                stampedeId, buildSlaveRunIds.get(1), eventWithSeqId2.getFirst() + 1))
+                stampedeId, buildSlaveRunIds.get(1), eventWithSeqId2.getEventNumber() + 1))
         .andReturn(query1);
     expect(mockDistBuildService.multiGetBuildSlaveEvents(ImmutableList.of(query0, query1)))
         .andReturn(ImmutableList.of());
