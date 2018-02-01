@@ -42,7 +42,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
@@ -111,33 +113,27 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     ImmutableList.Builder<Path> compileSrcListBuilder = ImmutableList.builder();
     ImmutableList.Builder<Path> headerSrcListBuilder = ImmutableList.builder();
     ImmutableList.Builder<Path> asmSrcListBuilder = ImmutableList.builder();
+    List<Path> srcFiles = new ArrayList<>();
     for (SourcePath path : srcs) {
       Path srcPath = context.getSourcePathResolver().getAbsolutePath(path);
-      ArrayList<Path> srcFiles = new ArrayList<>();
       if (Files.isDirectory(srcPath)) {
         try {
-          Files.list(srcPath).forEach(
-              (f) -> {
-                if (Files.isRegularFile(f)) {
-                  srcFiles.add(f);
-                }
-              }
-          );
+          srcFiles.addAll(Files.list(srcPath).filter(Files::isRegularFile).collect(Collectors.toList()));
         } catch (IOException e) {
           throw new RuntimeException("An error occur when listing the files under " + srcPath, e);
         }
       } else {
         srcFiles.add(srcPath);
       }
-      for (Path f : srcFiles) {
-        String extension = MorePaths.getFileExtension(f).toLowerCase();
-        if (extension.equals("s")) {
-          asmSrcListBuilder.add(f);
-        } else if (extension.equals("go")) {
-          compileSrcListBuilder.add(f);
-        } else {
-          headerSrcListBuilder.add(f);
-        }
+    }
+    for (Path f : srcFiles) {
+      String extension = MorePaths.getFileExtension(f).toLowerCase();
+      if (extension.equals("s")) {
+        asmSrcListBuilder.add(f);
+      } else if (extension.equals("go")) {
+        compileSrcListBuilder.add(f);
+      } else {
+        headerSrcListBuilder.add(f);
       }
     }
 
