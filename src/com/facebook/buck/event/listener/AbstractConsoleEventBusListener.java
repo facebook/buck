@@ -28,7 +28,6 @@ import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.InstallEvent;
-import com.facebook.buck.event.NetworkEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
@@ -682,20 +681,23 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
             ? convertToAllCapsIfNeeded("Downloaded")
             : convertToAllCapsIfNeeded("Downloading") + "...";
     List<String> columns = new ArrayList<>();
-    Pair<Long, SizeUnit> bytesDownloaded = networkStatsKeeper.getBytesDownloaded();
-    Pair<Double, SizeUnit> readableBytesDownloaded =
-        SizeUnit.getHumanReadableSize(bytesDownloaded.getFirst(), bytesDownloaded.getSecond());
+
+    Pair<Long, SizeUnit> remoteDownloadedBytes =
+        networkStatsKeeper.getRemoteDownloadedArtifactsBytes();
+    Pair<Double, SizeUnit> redableRemoteDownloadedBytes =
+        SizeUnit.getHumanReadableSize(
+            remoteDownloadedBytes.getFirst(), remoteDownloadedBytes.getSecond());
     columns.add(
         String.format(
             locale,
             "%d " + convertToAllCapsIfNeeded("artifacts"),
-            networkStatsKeeper.getDownloadedArtifactDownloaded()));
+            networkStatsKeeper.getRemoteDownloadedArtifactsCount()));
     columns.add(
         String.format(
             locale,
             "%s",
             convertToAllCapsIfNeeded(
-                SizeUnit.toHumanReadableString(readableBytesDownloaded, locale))));
+                SizeUnit.toHumanReadableString(redableRemoteDownloadedBytes, locale))));
     return parseLine + " " + Joiner.on(", ").join(columns);
   }
 
@@ -798,18 +800,32 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   @Subscribe
   public void onHttpArtifactCacheFinishedEvent(HttpArtifactCacheEvent.Finished event) {
-    if (event.getOperation() == ArtifactCacheEvent.Operation.STORE) {
-      if (event.getStoreData().wasStoreSuccessful().orElse(false)) {
-        remoteArtifactUploadedCount.incrementAndGet();
-        Optional<Long> artifactSizeBytes = event.getStoreData().getArtifactSizeBytes();
-        if (artifactSizeBytes.isPresent()) {
-          remoteArtifactTotalBytesUploaded.addAndGet(artifactSizeBytes.get());
+    switch (event.getOperation()) {
+      case MULTI_FETCH:
+      case FETCH:
+        if (event.getCacheResult().isPresent()
+            && event.getCacheResult().get().getType().isSuccess()) {
+          networkStatsKeeper.incrementRemoteDownloadedArtifactsCount();
+          event
+              .getCacheResult()
+              .get()
+              .artifactSizeBytes()
+              .ifPresent(networkStatsKeeper::addRemoteDownloadedArtifactsBytes);
         }
-      } else {
-        remoteArtifactUploadFailedCount.incrementAndGet();
-      }
-    } else {
-      networkStatsKeeper.artifactDownloadFinished();
+        break;
+      case STORE:
+        if (event.getStoreData().wasStoreSuccessful().orElse(false)) {
+          remoteArtifactUploadedCount.incrementAndGet();
+          Optional<Long> artifactSizeBytes = event.getStoreData().getArtifactSizeBytes();
+          if (artifactSizeBytes.isPresent()) {
+            remoteArtifactTotalBytesUploaded.addAndGet(artifactSizeBytes.get());
+          }
+        } else {
+          remoteArtifactUploadFailedCount.incrementAndGet();
+        }
+        break;
+      case MULTI_CONTAINS:
+        break;
     }
   }
 
@@ -837,11 +853,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     } else {
       approximateDistBuildProgress = Optional.empty();
     }
-  }
-
-  @Subscribe
-  public void bytesReceived(NetworkEvent.BytesReceivedEvent bytesReceivedEvent) {
-    networkStatsKeeper.bytesReceived(bytesReceivedEvent);
   }
 
   protected String renderHttpUploads() {

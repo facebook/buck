@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.event.listener;
 
-import com.facebook.buck.event.NetworkEvent.BytesReceivedEvent;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -24,18 +23,19 @@ public class NetworkStatKeeperTest {
   @Test
   public void bytesDownloadedTest() {
     NetworkStatsKeeper networkStatsKeeper = new NetworkStatsKeeper();
-    networkStatsKeeper.bytesReceived(new BytesReceivedEvent(5000));
-    networkStatsKeeper.bytesReceived(new BytesReceivedEvent(3000));
-    Assert.assertEquals(8000, (long) networkStatsKeeper.getBytesDownloaded().getFirst());
+    networkStatsKeeper.addRemoteDownloadedArtifactsBytes(5000);
+    networkStatsKeeper.addRemoteDownloadedArtifactsBytes(3000);
+    Assert.assertEquals(
+        8000, (long) networkStatsKeeper.getRemoteDownloadedArtifactsBytes().getFirst());
   }
 
   @Test
   public void artifactDownloadCountTest() {
     NetworkStatsKeeper networkStatsKeeper = new NetworkStatsKeeper();
 
-    networkStatsKeeper.artifactDownloadFinished();
-    networkStatsKeeper.artifactDownloadFinished();
+    networkStatsKeeper.incrementRemoteDownloadedArtifactsCount();
+    networkStatsKeeper.incrementRemoteDownloadedArtifactsCount();
 
-    Assert.assertEquals(2, networkStatsKeeper.getDownloadedArtifactDownloaded());
+    Assert.assertEquals(2, networkStatsKeeper.getRemoteDownloadedArtifactsCount());
   }
 }

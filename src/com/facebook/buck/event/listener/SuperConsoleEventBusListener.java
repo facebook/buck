@@ -48,8 +48,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.timing.Clock;
-import com.facebook.buck.util.types.Pair;
-import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -480,8 +478,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
 
     // TODO(shivanker): Add a similar source file upload line for distributed build.
-    Pair<Long, SizeUnit> bytesDownloaded = networkStatsKeeper.getBytesDownloaded();
-    if (bytesDownloaded.getFirst() > 0 || !this.hideEmptyDownload) {
+    if (networkStatsKeeper.getRemoteDownloadedArtifactsCount() > 0 || !this.hideEmptyDownload) {
       lines.add(getNetworkStatsLine(buildFinished));
     }
 
