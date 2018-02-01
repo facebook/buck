@@ -126,6 +126,8 @@ public class SingleThreadedBuildRuleResolver implements BuildRuleResolver {
     return metadataCache.requireMetadata(target, metadataClass);
   }
 
+  /** Please use {@code computeIfAbsent} instead */
+  @Deprecated
   @Override
   @VisibleForTesting
   public <T extends BuildRule> T addToIndex(T buildRule) {

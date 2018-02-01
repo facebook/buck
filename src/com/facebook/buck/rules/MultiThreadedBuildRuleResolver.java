@@ -108,6 +108,8 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
             wrap(key -> buildRuleGenerator.transform(targetGraph, this, targetGraph.get(target)))));
   }
 
+  /** Please use {@code computeIfAbsent} instead */
+  @Deprecated
   @Override
   public <T extends BuildRule> T addToIndex(T buildRule) {
     buildRuleIndex.compute(

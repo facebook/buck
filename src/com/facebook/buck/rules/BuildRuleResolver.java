@@ -62,7 +62,10 @@ public interface BuildRuleResolver {
   /**
    * Adds to the index a mapping from {@code buildRule}'s target to itself and returns {@code
    * buildRule}.
+   *
+   * <p>Please use {@code computeIfAbsent} instead
    */
+  @Deprecated
   <T extends BuildRule> T addToIndex(T buildRule);
 
   /**
