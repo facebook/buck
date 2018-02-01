@@ -140,11 +140,11 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected AtomicReference<HttpArtifactCacheEvent.Scheduled> firstHttpCacheUploadScheduled =
       new AtomicReference<>();
 
-  protected final AtomicInteger httpArtifactUploadsScheduledCount = new AtomicInteger(0);
-  protected final AtomicInteger httpArtifactUploadsStartedCount = new AtomicInteger(0);
-  protected final AtomicInteger httpArtifactUploadedCount = new AtomicInteger(0);
-  protected final AtomicLong httpArtifactTotalBytesUploaded = new AtomicLong(0);
-  protected final AtomicInteger httpArtifactUploadFailedCount = new AtomicInteger(0);
+  protected final AtomicInteger remoteArtifactUploadsScheduledCount = new AtomicInteger(0);
+  protected final AtomicInteger remoteArtifactUploadsStartedCount = new AtomicInteger(0);
+  protected final AtomicInteger remoteArtifactUploadedCount = new AtomicInteger(0);
+  protected final AtomicLong remoteArtifactTotalBytesUploaded = new AtomicLong(0);
+  protected final AtomicInteger remoteArtifactUploadFailedCount = new AtomicInteger(0);
 
   @Nullable protected volatile HttpArtifactCacheEvent.Shutdown httpShutdownEvent;
 
@@ -785,14 +785,14 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   public void onHttpArtifactCacheScheduledEvent(HttpArtifactCacheEvent.Scheduled event) {
     if (event.getOperation() == ArtifactCacheEvent.Operation.STORE) {
       firstHttpCacheUploadScheduled.compareAndSet(null, event);
-      httpArtifactUploadsScheduledCount.incrementAndGet();
+      remoteArtifactUploadsScheduledCount.incrementAndGet();
     }
   }
 
   @Subscribe
   public void onHttpArtifactCacheStartedEvent(HttpArtifactCacheEvent.Started event) {
     if (event.getOperation() == ArtifactCacheEvent.Operation.STORE) {
-      httpArtifactUploadsStartedCount.incrementAndGet();
+      remoteArtifactUploadsStartedCount.incrementAndGet();
     }
   }
 
@@ -800,13 +800,13 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   public void onHttpArtifactCacheFinishedEvent(HttpArtifactCacheEvent.Finished event) {
     if (event.getOperation() == ArtifactCacheEvent.Operation.STORE) {
       if (event.getStoreData().wasStoreSuccessful().orElse(false)) {
-        httpArtifactUploadedCount.incrementAndGet();
+        remoteArtifactUploadedCount.incrementAndGet();
         Optional<Long> artifactSizeBytes = event.getStoreData().getArtifactSizeBytes();
         if (artifactSizeBytes.isPresent()) {
-          httpArtifactTotalBytesUploaded.addAndGet(artifactSizeBytes.get());
+          remoteArtifactTotalBytesUploaded.addAndGet(artifactSizeBytes.get());
         }
       } else {
-        httpArtifactUploadFailedCount.incrementAndGet();
+        remoteArtifactUploadFailedCount.incrementAndGet();
       }
     } else {
       networkStatsKeeper.artifactDownloadFinished();
@@ -845,15 +845,15 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   protected String renderHttpUploads() {
-    long bytesUploaded = httpArtifactTotalBytesUploaded.longValue();
+    long bytesUploaded = remoteArtifactTotalBytesUploaded.longValue();
     String humanReadableBytesUploaded =
         convertToAllCapsIfNeeded(
             SizeUnit.toHumanReadableString(
                 SizeUnit.getHumanReadableSize(bytesUploaded, SizeUnit.BYTES), locale));
-    int scheduled = httpArtifactUploadsScheduledCount.get();
-    int complete = httpArtifactUploadedCount.get();
-    int failed = httpArtifactUploadFailedCount.get();
-    int uploading = httpArtifactUploadsStartedCount.get() - (complete + failed);
+    int scheduled = remoteArtifactUploadsScheduledCount.get();
+    int complete = remoteArtifactUploadedCount.get();
+    int failed = remoteArtifactUploadFailedCount.get();
+    int uploading = remoteArtifactUploadsStartedCount.get() - (complete + failed);
     int pending = scheduled - (uploading + complete + failed);
     if (scheduled > 0) {
       return String.format(

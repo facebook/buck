@@ -46,8 +46,8 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
   private static final org.apache.thrift.protocol.TField RULES_SUCCESS_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("rulesSuccessCount", org.apache.thrift.protocol.TType.I32, (short)13);
   private static final org.apache.thrift.protocol.TField RULES_FAILURE_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("rulesFailureCount", org.apache.thrift.protocol.TType.I32, (short)14);
   private static final org.apache.thrift.protocol.TField CACHE_RATE_STATS_FIELD_DESC = new org.apache.thrift.protocol.TField("cacheRateStats", org.apache.thrift.protocol.TType.STRUCT, (short)20);
-  private static final org.apache.thrift.protocol.TField HTTP_ARTIFACT_TOTAL_BYTES_UPLOADED_FIELD_DESC = new org.apache.thrift.protocol.TField("httpArtifactTotalBytesUploaded", org.apache.thrift.protocol.TType.I64, (short)21);
-  private static final org.apache.thrift.protocol.TField HTTP_ARTIFACT_UPLOADS_SCHEDULED_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("httpArtifactUploadsScheduledCount", org.apache.thrift.protocol.TType.I32, (short)22);
+  private static final org.apache.thrift.protocol.TField HTTP_ARTIFACT_TOTAL_BYTES_UPLOADED_FIELD_DESC = new org.apache.thrift.protocol.TField("remoteArtifactTotalBytesUploaded", org.apache.thrift.protocol.TType.I64, (short)21);
+  private static final org.apache.thrift.protocol.TField HTTP_ARTIFACT_UPLOADS_SCHEDULED_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("remoteArtifactUploadsScheduledCount", org.apache.thrift.protocol.TType.I32, (short)22);
   private static final org.apache.thrift.protocol.TField HTTP_ARTIFACT_UPLOADS_ONGOING_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("httpArtifactUploadsOngoingCount", org.apache.thrift.protocol.TType.I32, (short)23);
   private static final org.apache.thrift.protocol.TField HTTP_ARTIFACT_UPLOADS_SUCCESS_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("httpArtifactUploadsSuccessCount", org.apache.thrift.protocol.TType.I32, (short)24);
   private static final org.apache.thrift.protocol.TField HTTP_ARTIFACT_UPLOADS_FAILURE_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("httpArtifactUploadsFailureCount", org.apache.thrift.protocol.TType.I32, (short)25);
@@ -84,8 +84,8 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
     RULES_SUCCESS_COUNT((short)13, "rulesSuccessCount"),
     RULES_FAILURE_COUNT((short)14, "rulesFailureCount"),
     CACHE_RATE_STATS((short)20, "cacheRateStats"),
-    HTTP_ARTIFACT_TOTAL_BYTES_UPLOADED((short)21, "httpArtifactTotalBytesUploaded"),
-    HTTP_ARTIFACT_UPLOADS_SCHEDULED_COUNT((short)22, "httpArtifactUploadsScheduledCount"),
+    HTTP_ARTIFACT_TOTAL_BYTES_UPLOADED((short)21, "remoteArtifactTotalBytesUploaded"),
+    HTTP_ARTIFACT_UPLOADS_SCHEDULED_COUNT((short)22, "remoteArtifactUploadsScheduledCount"),
     HTTP_ARTIFACT_UPLOADS_ONGOING_COUNT((short)23, "httpArtifactUploadsOngoingCount"),
     HTTP_ARTIFACT_UPLOADS_SUCCESS_COUNT((short)24, "httpArtifactUploadsSuccessCount"),
     HTTP_ARTIFACT_UPLOADS_FAILURE_COUNT((short)25, "httpArtifactUploadsFailureCount"),
@@ -204,9 +204,9 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     tmpMap.put(_Fields.CACHE_RATE_STATS, new org.apache.thrift.meta_data.FieldMetaData("cacheRateStats", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, CacheRateStats.class)));
-    tmpMap.put(_Fields.HTTP_ARTIFACT_TOTAL_BYTES_UPLOADED, new org.apache.thrift.meta_data.FieldMetaData("httpArtifactTotalBytesUploaded", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+    tmpMap.put(_Fields.HTTP_ARTIFACT_TOTAL_BYTES_UPLOADED, new org.apache.thrift.meta_data.FieldMetaData("remoteArtifactTotalBytesUploaded", org.apache.thrift.TFieldRequirementType.OPTIONAL,
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
-    tmpMap.put(_Fields.HTTP_ARTIFACT_UPLOADS_SCHEDULED_COUNT, new org.apache.thrift.meta_data.FieldMetaData("httpArtifactUploadsScheduledCount", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+    tmpMap.put(_Fields.HTTP_ARTIFACT_UPLOADS_SCHEDULED_COUNT, new org.apache.thrift.meta_data.FieldMetaData("remoteArtifactUploadsScheduledCount", org.apache.thrift.TFieldRequirementType.OPTIONAL,
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     tmpMap.put(_Fields.HTTP_ARTIFACT_UPLOADS_ONGOING_COUNT, new org.apache.thrift.meta_data.FieldMetaData("httpArtifactUploadsOngoingCount", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
@@ -484,7 +484,7 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
     __isset_bitfield = EncodingUtils.clearBit(__isset_bitfield, __HTTPARTIFACTTOTALBYTESUPLOADED_ISSET_ID);
   }
 
-  /** Returns true if field httpArtifactTotalBytesUploaded is set (has been assigned a value) and false otherwise */
+  /** Returns true if field remoteArtifactTotalBytesUploaded is set (has been assigned a value) and false otherwise */
   public boolean isSetHttpArtifactTotalBytesUploaded() {
     return EncodingUtils.testBit(__isset_bitfield, __HTTPARTIFACTTOTALBYTESUPLOADED_ISSET_ID);
   }
@@ -507,7 +507,7 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
     __isset_bitfield = EncodingUtils.clearBit(__isset_bitfield, __HTTPARTIFACTUPLOADSSCHEDULEDCOUNT_ISSET_ID);
   }
 
-  /** Returns true if field httpArtifactUploadsScheduledCount is set (has been assigned a value) and false otherwise */
+  /** Returns true if field remoteArtifactUploadsScheduledCount is set (has been assigned a value) and false otherwise */
   public boolean isSetHttpArtifactUploadsScheduledCount() {
     return EncodingUtils.testBit(__isset_bitfield, __HTTPARTIFACTUPLOADSSCHEDULEDCOUNT_ISSET_ID);
   }
@@ -1260,13 +1260,13 @@ public class BuildSlaveStatus implements org.apache.thrift.TBase<BuildSlaveStatu
     }
     if (isSetHttpArtifactTotalBytesUploaded()) {
       if (!first) sb.append(", ");
-      sb.append("httpArtifactTotalBytesUploaded:");
+      sb.append("remoteArtifactTotalBytesUploaded:");
       sb.append(this.httpArtifactTotalBytesUploaded);
       first = false;
     }
     if (isSetHttpArtifactUploadsScheduledCount()) {
       if (!first) sb.append(", ");
-      sb.append("httpArtifactUploadsScheduledCount:");
+      sb.append("remoteArtifactUploadsScheduledCount:");
       sb.append(this.httpArtifactUploadsScheduledCount);
       first = false;
     }
