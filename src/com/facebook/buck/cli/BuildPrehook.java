@@ -154,18 +154,13 @@ class BuildPrehook implements AutoCloseable {
     Files.write(tempFile.get(), stringWriter.toString().getBytes(StandardCharsets.UTF_8));
   }
 
-  /** Wait for the build prehook script to finish. */
+  /** Kill the build prehook script. */
   @Override
   public synchronized void close() throws InterruptedException, IOException {
     if (process == null) {
       return;
     }
-    try {
-      processExecutor.destroyProcess(process, /* force */ false);
-      processExecutor.waitForProcess(process);
-    } catch (IOException e) {
-      LOG.debug(e, "The pre-hook script process could not be stopped");
-    }
+    processExecutor.destroyProcess(process, /* force */ true);
     // Removes the temporary file.
     if (tempFile != null) {
       tempFile.close();
