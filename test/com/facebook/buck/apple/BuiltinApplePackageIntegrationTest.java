@@ -38,6 +38,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.facebook.buck.util.zip.Unzip;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -178,7 +179,7 @@ public class BuiltinApplePackageIntegrationTest {
         new DefaultProjectFilesystemFactory(),
         workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")),
         destination,
-        Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+        ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
     Path stubOutsideBundle = destination.resolve("WatchKitSupport2/WK");
     assertTrue(Files.isExecutable(stubOutsideBundle));
@@ -209,7 +210,7 @@ public class BuiltinApplePackageIntegrationTest {
         new DefaultProjectFilesystemFactory(),
         workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")),
         destination,
-        Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+        ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
     Path stub = destination.resolve("WatchKitSupport/WK");
     assertTrue(Files.isExecutable(stub));
@@ -232,7 +233,7 @@ public class BuiltinApplePackageIntegrationTest {
         new DefaultProjectFilesystemFactory(),
         workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")),
         workspace.getDestPath(),
-        Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+        ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
     ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
 

@@ -34,6 +34,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
+import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.facebook.buck.util.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -308,7 +309,7 @@ public class CacheCommand extends AbstractCommand {
               projectFilesystemFactory,
               artifact.toAbsolutePath(),
               tmpDir,
-              Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+              ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
     } catch (IOException e) {
       resultString.append(String.format("%s %s !(Unable to extract) %s\n", ruleKey, buckTarget, e));
       return false;

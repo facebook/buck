@@ -37,6 +37,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.types.Either;
+import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.facebook.buck.util.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -287,7 +288,7 @@ public class ExternalJavac implements Javac {
                 projectFilesystemFactory,
                 projectFilesystem.resolve(path),
                 projectFilesystem.resolve(workingDirectory),
-                Unzip.ExistingFileMode.OVERWRITE);
+                ExistingFileMode.OVERWRITE);
         sources.addAll(
             zipPaths.stream().filter(input -> input.toString().endsWith(".java")).iterator());
       }

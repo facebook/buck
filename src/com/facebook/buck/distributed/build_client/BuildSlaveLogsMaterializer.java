@@ -24,6 +24,7 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.NamedTemporaryFile;
+import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.facebook.buck.util.zip.Unzip;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -158,7 +159,7 @@ public class BuildSlaveLogsMaterializer {
           zipFile.get(),
           filesystem,
           buckLogUnzipPath,
-          Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+          ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
     }
 
     materializedRunIds.add(logDir.buildSlaveRunId);

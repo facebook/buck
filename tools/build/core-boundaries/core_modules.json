@@ -77,6 +77,7 @@
   "//src/com/facebook/buck/util/string:string",
   "//src/com/facebook/buck/util/timing:timing",
   "//src/com/facebook/buck/util/types:types",
+  "//src/com/facebook/buck/util/unarchive:unarchive",
   "//src/com/facebook/buck/util/unit:unit",
   "//src/com/facebook/buck/util/versioncontrol:value_types",
   "//src/com/facebook/buck/util/versioncontrol:versioncontrol",

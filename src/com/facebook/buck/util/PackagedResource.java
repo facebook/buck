@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util;
 
-import static com.facebook.buck.util.zip.Unzip.ExistingFileMode.OVERWRITE;
+import static com.facebook.buck.util.unarchive.ExistingFileMode.OVERWRITE;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;

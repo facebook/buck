@@ -1,9 +1,6 @@
 java_library(
-    name = "zip",
+    name = "unarchive",
     srcs = glob(["*.java"]),
-    tests = [
-        "//test/com/facebook/buck/util/zip:zip",
-    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/io:io",
@@ -13,17 +10,8 @@ java_library(
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/function:function",
         "//src/com/facebook/buck/util/timing:timing",
-        "//src/com/facebook/buck/util/unarchive:unarchive",
         "//third-party/java/commons-compress:commons-compress",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
-    ],
-)
-
-java_binary(
-    name = "zip-write-test",
-    main_class = "com.facebook.buck.util.zip.ZipWriteTest",
-    deps = [
-        ":zip",
     ],
 )

@@ -10,6 +10,7 @@ java_library(
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/unarchive:unarchive",
         "//src/com/facebook/buck/util/zip:zip",
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",

@@ -495,6 +495,7 @@ java_immutables_library(
         "//src/com/facebook/buck/util/sha1:sha1",
         "//src/com/facebook/buck/util/sqlite:sqlite",
         "//src/com/facebook/buck/util/timing:timing",
+        "//src/com/facebook/buck/util/unarchive:unarchive",
         "//src/com/facebook/buck/util/zip:zip",
         "//src/com/facebook/buck/versions:types",
         "//third-party/java/infer-annotations:infer-annotations",

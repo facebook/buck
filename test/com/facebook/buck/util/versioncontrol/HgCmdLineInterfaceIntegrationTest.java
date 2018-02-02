@@ -27,6 +27,7 @@ import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.TestProcessExecutorFactory;
+import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.facebook.buck.util.zip.Unzip;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -210,7 +211,7 @@ public class HgCmdLineInterfaceIntegrationTest {
         new DefaultProjectFilesystemFactory(),
         hgRepoZipCopyPath,
         reposPath,
-        Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+        ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
     return reposPath;
   }

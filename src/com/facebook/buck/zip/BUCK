@@ -30,6 +30,7 @@ java_immutables_library(
         "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/util/types:types",
+        "//src/com/facebook/buck/util/unarchive:unarchive",
         "//src/com/facebook/buck/util/zip:zip",
     ],
 )

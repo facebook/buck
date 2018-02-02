@@ -23,6 +23,7 @@ import com.facebook.buck.python.toolchain.PythonVersion;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.facebook.buck.util.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -196,7 +197,7 @@ public class PexStep extends ShellStep {
                 projectFilesystemFactory,
                 filesystem.resolve(ent.getValue()),
                 destinationDirectory,
-                Unzip.ExistingFileMode.OVERWRITE);
+                ExistingFileMode.OVERWRITE);
         for (Path path : zipPaths) {
           Path modulePath = destinationDirectory.relativize(path);
           sources.put(modulePath, path);

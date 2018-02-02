@@ -20,6 +20,8 @@ import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.util.unarchive.DirectoryCreator;
+import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -38,7 +40,6 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -50,11 +51,6 @@ public class Unzip {
 
   /** Utility class: do not instantiate. */
   private Unzip() {}
-
-  public enum ExistingFileMode {
-    OVERWRITE,
-    OVERWRITE_AND_CLEAN_DIRECTORIES,
-  }
 
   private static void writeZipContents(
       ZipFile zip, ZipArchiveEntry entry, ProjectFilesystem filesystem, Path target)
@@ -205,48 +201,7 @@ public class Unzip {
         }
       }
 
-      /**
-       * This is just used to allow us to record which directories we've already created and skip
-       * creating them multiple times.
-       */
-      class DirectoryCreator {
-        private Set<Path> existing = new HashSet<>();
-
-        private DirectoryCreator() {
-          existing.add(filesystem.getRootPath());
-        }
-
-        private void mkdirs(Path target) throws IOException {
-          if (existing.contains(target)) {
-            return;
-          }
-          filesystem.mkdirs(target);
-          while (target != null) {
-            existing.add(target);
-            target = target.getParent();
-          }
-        }
-
-        private void forcefullyCreateDirs(Path target) throws IOException {
-          if (existing.contains(target)) {
-            return;
-          }
-          if (filesystem.exists(target)) {
-            if (!filesystem.isDirectory(target)) {
-              filesystem.deleteFileAtPath(target);
-              filesystem.mkdirs(target);
-            }
-          } else {
-            if (target.getParent() != null) {
-              forcefullyCreateDirs(target.getParent());
-            }
-            filesystem.mkdirs(target);
-          }
-          existing.add(target);
-        }
-      }
-
-      DirectoryCreator creator = new DirectoryCreator();
+      DirectoryCreator creator = new DirectoryCreator(filesystem);
 
       for (SortedMap.Entry<Path, ZipArchiveEntry> p : pathMap.entrySet()) {
         Path target = p.getKey();

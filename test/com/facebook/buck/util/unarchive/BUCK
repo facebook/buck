@@ -1,22 +1,17 @@
 load("//tools/build_rules:java_rules.bzl", "java_test")
 
 java_test(
-    name = "zip",
+    name = "unarchive",
     srcs = glob(["*Test.java"]),
     resources = [
-        # The sample bytes are a class file. We use the ".properties" extension so that IJ will copy
-        # the file to the output dir when compiling, allowing us to test in the IDE.
-        "macbeth.properties",
-        "sample-bytes.properties",
     ],
-    source_only_abi_deps = ["//src/com/facebook/buck/util/zip:zip"],
     deps = [
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/filesystem/impl:impl",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/unarchive:unarchive",
-        "//src/com/facebook/buck/util/zip:zip",
+        "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",
         "//third-party/java/commons-compress:commons-compress",

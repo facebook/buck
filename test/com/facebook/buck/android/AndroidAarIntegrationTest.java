@@ -28,6 +28,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.facebook.buck.util.zip.Unzip;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -79,7 +80,7 @@ public class AndroidAarIntegrationTest {
 
     Path contents = tmp.getRoot().resolve("aar-contents");
     Unzip.extractZipFile(
-        new DefaultProjectFilesystemFactory(), aar, contents, Unzip.ExistingFileMode.OVERWRITE);
+        new DefaultProjectFilesystemFactory(), aar, contents, ExistingFileMode.OVERWRITE);
     try (JarFile classes = new JarFile(contents.resolve("classes.jar").toFile())) {
       assertThat(classes.getJarEntry("com/example/HelloWorld.class"), Matchers.notNullValue());
     }
@@ -110,7 +111,7 @@ public class AndroidAarIntegrationTest {
 
     Path contents = tmp.getRoot().resolve("aar-contents");
     Unzip.extractZipFile(
-        new DefaultProjectFilesystemFactory(), aar, contents, Unzip.ExistingFileMode.OVERWRITE);
+        new DefaultProjectFilesystemFactory(), aar, contents, ExistingFileMode.OVERWRITE);
     try (JarFile classes = new JarFile(contents.resolve("classes.jar").toFile())) {
       assertThat(classes.getJarEntry("com/example/HelloWorld.class"), Matchers.notNullValue());
     }
@@ -131,7 +132,7 @@ public class AndroidAarIntegrationTest {
 
     Path contents = tmp.getRoot().resolve("aar-contents");
     Unzip.extractZipFile(
-        new DefaultProjectFilesystemFactory(), aar, contents, Unzip.ExistingFileMode.OVERWRITE);
+        new DefaultProjectFilesystemFactory(), aar, contents, ExistingFileMode.OVERWRITE);
     try (JarFile classes = new JarFile(contents.resolve("classes.jar").toFile())) {
       for (JarEntry jarEntry : Collections.list(classes.entries())) {
         String jarEntryName = jarEntry.getName();
@@ -155,10 +156,7 @@ public class AndroidAarIntegrationTest {
 
     Path contents = tmp.getRoot().resolve("aar-contents");
     Unzip.extractZipFile(
-        new DefaultProjectFilesystemFactory(),
-        aarLocation,
-        contents,
-        Unzip.ExistingFileMode.OVERWRITE);
+        new DefaultProjectFilesystemFactory(), aarLocation, contents, ExistingFileMode.OVERWRITE);
 
     URL jarUrl = contents.resolve("classes.jar").toUri().toURL();
     try (URLClassLoader loader = new URLClassLoader(new URL[] {jarUrl})) {

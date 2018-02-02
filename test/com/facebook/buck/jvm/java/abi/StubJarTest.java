@@ -32,6 +32,7 @@ import com.facebook.buck.jvm.java.testutil.compiler.TestCompiler;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.util.timing.FakeClock;
+import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.facebook.buck.util.zip.DeterministicManifest;
 import com.facebook.buck.util.zip.JarBuilder;
 import com.facebook.buck.util.zip.Unzip;
@@ -4076,10 +4077,7 @@ public class StubJarTest {
 
     Path classDir = temp.newFolder().toPath();
     Unzip.extractZipFile(
-        new DefaultProjectFilesystemFactory(),
-        fullJarPath,
-        classDir,
-        Unzip.ExistingFileMode.OVERWRITE);
+        new DefaultProjectFilesystemFactory(), fullJarPath, classDir, ExistingFileMode.OVERWRITE);
 
     Path stubJarPath = createStubJar(classDir);
     tester
