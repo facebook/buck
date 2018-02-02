@@ -113,7 +113,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     ImmutableList.Builder<Path> compileSrcListBuilder = ImmutableList.builder();
     ImmutableList.Builder<Path> headerSrcListBuilder = ImmutableList.builder();
     ImmutableList.Builder<Path> asmSrcListBuilder = ImmutableList.builder();
-    List<Path> srcFiles = getSourchFiles(context);
+    List<Path> srcFiles = getSourceFiles(context);
     for (Path sourceFile : srcFiles) {
       String extension = MorePaths.getFileExtension(sourceFile).toLowerCase();
       if (extension.equals("s")) {
@@ -260,7 +260,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     return steps.build();
   }
 
-  private List<Path> getSourchFiles(BuildContext context) {
+  private List<Path> getSourceFiles(BuildContext context) {
     List<Path> srcFiles = new ArrayList<>();
     for (SourcePath path : srcs) {
       Path srcPath = context.getSourcePathResolver().getAbsolutePath(path);
