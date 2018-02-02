@@ -105,8 +105,12 @@ public class CleanCommand extends AbstractCommand {
     } else {
       // Remove all the paths.
       for (Path path : pathsToDelete) {
-        projectFilesystem.deleteRecursivelyIfExists(path);
-        LOG.debug("Removed path: " + path);
+        try {
+          projectFilesystem.deleteRecursivelyIfExists(path);
+          LOG.debug("Removed path: %s", path);
+        } catch (IOException e) {
+          LOG.warn(e, "Failed to remove path %s", path);
+        }
       }
     }
   }
