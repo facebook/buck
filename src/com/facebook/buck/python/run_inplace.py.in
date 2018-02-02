@@ -76,7 +76,7 @@ def __run():
 
                     if extract:
                         zip.extractall(whl_path)
-            sys.path.insert(0, whl_path)
+            sys.path.insert(1, whl_path)
 
     def setenv(var, val):
         if val is None:
