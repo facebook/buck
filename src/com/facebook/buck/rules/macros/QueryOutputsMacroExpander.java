@@ -19,20 +19,21 @@ package com.facebook.buck.rules.macros;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.DefaultSourcePathResolver;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.query.Query;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -62,57 +63,51 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander<QueryOutputsMa
   }
 
   @Override
-  public String expandFrom(
+  public Arg expandFrom(
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
       QueryOutputsMacro input,
       QueryResults precomputedWork)
       throws MacroException {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-    return precomputedWork
-        .results
-        .stream()
-        .map(
-            queryTarget -> {
-              Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-              return resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
-            })
-        .map(BuildRule::getSourcePathToOutput)
-        .filter(Objects::nonNull)
-        .map(pathResolver::getAbsolutePath)
-        .map(Path::toString)
-        .sorted()
-        .collect(Collectors.joining(" "));
-  }
-
-  @Override
-  public Object extractRuleKeyAppendablesFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      final BuildRuleResolver resolver,
-      QueryOutputsMacro input,
-      QueryResults precomputedWork)
-      throws MacroException {
-
-    // Return a list of SourcePaths to the outputs of our query results. This enables input-based
-    // rule key hits.
-    return precomputedWork
-        .results
-        .stream()
-        .map(
-            queryTarget -> {
-              Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-              return resolver.requireRule(((QueryBuildTarget) queryTarget).getBuildTarget());
-            })
-        .map(BuildRule::getSourcePathToOutput)
-        .filter(Objects::nonNull)
-        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+    return new QueriedOutputsArg(
+        precomputedWork
+            .results
+            .stream()
+            .map(
+                queryTarget -> {
+                  Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
+                  return resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
+                })
+            .map(BuildRule::getSourcePathToOutput)
+            .sorted()
+            .filter(Objects::nonNull)
+            .collect(ImmutableList.toImmutableList()));
   }
 
   @Override
   boolean detectsTargetGraphOnlyDeps() {
     return false;
+  }
+
+  private static class QueriedOutputsArg implements Arg {
+    @AddToRuleKey private final ImmutableList<SourcePath> queriedOutputs;
+
+    public QueriedOutputsArg(ImmutableList<SourcePath> queriedOutputs) {
+      this.queriedOutputs = queriedOutputs;
+    }
+
+    @Override
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+      // TODO(cjhopman): The sorted() call could feasibly (though unlikely) return different
+      // ordering in different contexts.
+      consumer.accept(
+          queriedOutputs
+              .stream()
+              .map(pathResolver::getAbsolutePath)
+              .map(Path::toString)
+              .sorted()
+              .collect(Collectors.joining(" ")));
+    }
   }
 }

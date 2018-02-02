@@ -20,9 +20,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
@@ -87,8 +89,7 @@ abstract class AbstractStringWithMacrosArg implements Arg, RuleKeyAppendable {
   private <M extends Macro> Object extractRuleKeyAppendables(M macro) {
     try {
       return getExpander(macro)
-          .extractRuleKeyAppendablesFrom(
-              getBuildTarget(), getCellPathResolver(), getBuildRuleResolver(), macro);
+          .expandFrom(getBuildTarget(), getCellPathResolver(), getBuildRuleResolver(), macro);
     } catch (MacroException e) {
       throw toHumanReadableException(e);
     }
@@ -96,8 +97,13 @@ abstract class AbstractStringWithMacrosArg implements Arg, RuleKeyAppendable {
 
   private <M extends Macro> String expand(M macro) {
     try {
-      return getExpander(macro)
-          .expandFrom(getBuildTarget(), getCellPathResolver(), getBuildRuleResolver(), macro);
+      StringBuilder builder = new StringBuilder();
+      getExpander(macro)
+          .expandFrom(getBuildTarget(), getCellPathResolver(), getBuildRuleResolver(), macro)
+          .appendToCommandLine(
+              builder::append,
+              DefaultSourcePathResolver.from(new SourcePathRuleFinder(getBuildRuleResolver())));
+      return builder.toString();
     } catch (MacroException e) {
       throw toHumanReadableException(e);
     }
@@ -105,7 +111,7 @@ abstract class AbstractStringWithMacrosArg implements Arg, RuleKeyAppendable {
 
   /** Expands all macros to strings and append them to the given builder. */
   @Override
-  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver resolver) {
     consumer.accept(expand());
   }
 

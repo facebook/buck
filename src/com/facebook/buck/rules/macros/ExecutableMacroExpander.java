@@ -20,17 +20,15 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.util.Escaper;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.ToolArg;
 import com.google.common.collect.ImmutableList;
-import java.util.stream.Collectors;
 
 /** Resolves to the executable command for a build target referencing a {@link BinaryBuildRule}. */
 public class ExecutableMacroExpander extends BuildTargetMacroExpander<ExecutableMacro> {
-
   @Override
   public Class<ExecutableMacro> getInputClass() {
     return ExecutableMacro.class;
@@ -54,27 +52,8 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander<Executable
   }
 
   @Override
-  protected String expand(SourcePathResolver resolver, ExecutableMacro ignored, BuildRule rule)
+  protected Arg expand(SourcePathResolver resolver, ExecutableMacro ignored, BuildRule rule)
       throws MacroException {
-    return expand(resolver, rule);
-  }
-
-  public String expand(SourcePathResolver resolver, BuildRule rule) throws MacroException {
-    // TODO(mikekap): Pass environment variables through.
-    return getTool(rule)
-        .getCommandPrefix(resolver)
-        .stream()
-        .map(Escaper.SHELL_ESCAPER)
-        .collect(Collectors.joining(" "));
-  }
-
-  @Override
-  public Object extractRuleKeyAppendablesFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      ExecutableMacro input)
-      throws MacroException {
-    return getTool(resolve(resolver, input));
+    return ToolArg.of(getTool(rule));
   }
 }

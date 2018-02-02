@@ -118,6 +118,8 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -905,10 +907,13 @@ public class ProjectGenerator {
   private ImmutableList<String> convertStringWithMacros(
       TargetNode<?, ?> node, Iterable<StringWithMacros> flags) {
 
+    // TODO(cjhopman): This seems really broken, it's totally inconsistent about what resolver is
+    // provided. This should either just do rule resolution like normal or maybe do its own custom
+    // MacroReplacer<>.
     LocationMacroExpander locationMacroExpander =
         new LocationMacroExpander() {
           @Override
-          public String expandFrom(
+          public Arg expandFrom(
               BuildTarget target,
               CellPathResolver cellNames,
               BuildRuleResolver ignored,
@@ -928,7 +933,10 @@ public class ProjectGenerator {
             }
 
             requiredBuildTargetsBuilder.add(locationMacroTarget);
-            return super.expandFrom(target, cellNames, resolver, input);
+            return StringArg.of(
+                Arg.stringify(
+                    super.expandFrom(target, cellNames, resolver, input),
+                    DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver))));
           }
         };
 

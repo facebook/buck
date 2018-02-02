@@ -33,6 +33,8 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -153,14 +155,14 @@ public class MacroHandlerTest {
           }
 
           @Override
-          public String expandFrom(
+          public Arg expandFrom(
               BuildTarget target,
               CellPathResolver cellNames,
               BuildRuleResolver resolver,
               String input,
               String precomputedWork)
               throws MacroException {
-            return precomputedWork;
+            return StringArg.of(precomputedWork);
           }
         };
     MacroHandler handler = new MacroHandler(ImmutableMap.of("e", expander));

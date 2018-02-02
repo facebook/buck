@@ -38,8 +38,8 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.WriteToFileArg;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
-import com.facebook.buck.rules.macros.OutputToFileExpanderUtils;
 import com.facebook.buck.rules.macros.WorkerMacroArg;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxProperties;
@@ -336,9 +336,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
             getProjectFilesystem().resolve(pathToTmpDirectory).toString(),
             getProjectFilesystem().resolve(pathToOutDirectory).toString(),
             getProjectFilesystem()
-                .resolve(
-                    OutputToFileExpanderUtils.getMacroPath(
-                        getProjectFilesystem(), getBuildTarget()))
+                .resolve(WriteToFileArg.getMacroPath(getProjectFilesystem(), getBuildTarget()))
                 .toString())
         .addAllowedToReadMetadataPaths(
             getProjectFilesystem().getRootPath().toAbsolutePath().toString())

@@ -24,15 +24,15 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.HasSupplementaryOutputs;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 
 /** Handles '$(output ...)' macro which expands to the path of a named supplementary output. */
 public class OutputMacroExpander extends AbstractMacroExpanderWithoutPrecomputedWork<OutputMacro> {
-
   @Override
-  public String expandFrom(
+  public Arg expandFrom(
       BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, OutputMacro input)
       throws MacroException {
     BuildRule rule =
@@ -47,11 +47,14 @@ public class OutputMacroExpander extends AbstractMacroExpanderWithoutPrecomputed
           ((HasSupplementaryOutputs) rule)
               .getSourcePathToSupplementaryOutput(input.getOutputName());
       if (output != null) {
-        SourcePathResolver sourcePathResolver =
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-        // Using a relative path here since this path will necessarily be used in the same cell as
-        // the rule, since this macro only refers to outputs of the current rule.
-        return sourcePathResolver.getRelativePath(output).toString();
+        // Note: This resolves to a StringArg, not a SourcePathArg. This macro is only used to refer
+        // to a rule's own output. If it expanded to a SourcePathArg, that rule would then have a
+        // dependency on itself. Also, as this is only used by the declaring rule, it can just use a
+        // relative path here as it will necessarily be expanded in the same cell.
+        return StringArg.of(
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver))
+                .getRelativePath(output)
+                .toString());
       }
     }
     throw new MacroException(

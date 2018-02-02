@@ -23,6 +23,8 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.HasSupplementaryOutputs;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
@@ -48,7 +50,7 @@ public class LocationMacroExpander extends BuildTargetMacroExpander<LocationMacr
   }
 
   @Override
-  protected String expand(SourcePathResolver resolver, LocationMacro macro, BuildRule rule)
+  protected Arg expand(SourcePathResolver resolver, LocationMacro macro, BuildRule rule)
       throws MacroException {
     Optional<String> supplementaryOutputIdentifier = macro.getSupplementaryOutputIdentifier();
 
@@ -79,6 +81,6 @@ public class LocationMacroExpander extends BuildTargetMacroExpander<LocationMacr
       }
     }
 
-    return resolver.getAbsolutePath(output).toString();
+    return SourcePathArg.of(output);
   }
 }

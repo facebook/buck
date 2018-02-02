@@ -19,11 +19,14 @@ package com.facebook.buck.rules.macros;
 import com.facebook.buck.jvm.core.HasMavenCoordinates;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * Resolves to the maven coordinates for a build target referencing a {@link HasMavenCoordinates}.
@@ -59,8 +62,15 @@ public class MavenCoordinatesMacroExpander extends BuildTargetMacroExpander<Mave
   }
 
   @Override
-  public String expand(SourcePathResolver resolver, MavenCoordinatesMacro ignored, BuildRule rule)
+  public Arg expand(SourcePathResolver resolver, MavenCoordinatesMacro ignored, BuildRule rule)
       throws MacroException {
-    return getMavenCoordinates(rule);
+    return new Arg() {
+      @AddToRuleKey private final String mavenCoordinates = getMavenCoordinates(rule);
+
+      @Override
+      public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+        consumer.accept(mavenCoordinates);
+      }
+    };
   }
 }

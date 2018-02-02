@@ -19,7 +19,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
-import java.util.Optional;
+import com.facebook.buck.rules.args.Arg;
 
 public abstract class AbstractMacroExpanderWithoutPrecomputedWork<T>
     extends AbstractMacroExpander<T, Object> {
@@ -39,7 +39,7 @@ public abstract class AbstractMacroExpanderWithoutPrecomputedWork<T>
   }
 
   @Override
-  public final String expandFrom(
+  public final Arg expandFrom(
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
@@ -49,25 +49,7 @@ public abstract class AbstractMacroExpanderWithoutPrecomputedWork<T>
     return expandFrom(target, cellNames, resolver, input);
   }
 
-  public abstract String expandFrom(
+  public abstract Arg expandFrom(
       BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, T input)
       throws MacroException;
-
-  @Override
-  public final Object extractRuleKeyAppendablesFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      T input,
-      Object precomputedWork)
-      throws MacroException {
-    return extractRuleKeyAppendablesFrom(target, cellNames, resolver, input);
-  }
-
-  @SuppressWarnings("unused")
-  public Object extractRuleKeyAppendablesFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, T input)
-      throws MacroException {
-    return Optional.empty();
-  }
 }

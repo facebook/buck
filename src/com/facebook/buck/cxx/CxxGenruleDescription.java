@@ -48,7 +48,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -59,6 +58,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ProxyArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.args.ToolArg;
 import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacro;
@@ -94,6 +94,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.immutables.value.Value;
@@ -428,7 +429,6 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
    * flag macros.
    */
   private static class ParseTimeDepsExpander extends FilterAndTargetsExpander {
-
     public ParseTimeDepsExpander(Filter filter) {
       super(filter);
     }
@@ -439,19 +439,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
 
     @Override
-    protected String expand(
+    protected Arg expand(
         BuildRuleResolver resolver, ImmutableList<BuildRule> rule, Optional<Pattern> filter)
-        throws MacroException {
-      // This expander should only be used to determine parse-time deps.
-      throw new IllegalStateException();
-    }
-
-    @Override
-    public Object extractRuleKeyAppendablesFrom(
-        BuildTarget target,
-        CellPathResolver cellNames,
-        BuildRuleResolver resolver,
-        FilterAndTargets input)
         throws MacroException {
       // This expander should only be used to determine parse-time deps.
       throw new IllegalStateException();
@@ -468,17 +457,9 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
 
     @Override
-    public String expandFrom(
+    public Arg expandFrom(
         BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver) {
-      SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-      return shquoteJoin(tool.getCommandPrefix(pathResolver));
-    }
-
-    @Override
-    public Object extractRuleKeyAppendablesFrom(
-        BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver) {
-      return tool;
+      return ToolArg.of(tool);
     }
   }
 
@@ -528,12 +509,12 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       return rules.build();
     }
 
-    protected abstract String expand(
+    protected abstract Arg expand(
         BuildRuleResolver resolver, ImmutableList<BuildRule> rules, Optional<Pattern> filter)
         throws MacroException;
 
     @Override
-    public String expandFrom(
+    public Arg expandFrom(
         BuildTarget target,
         CellPathResolver cellNames,
         BuildRuleResolver resolver,
@@ -551,14 +532,6 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
       buildDepsBuilder.addAll(input.targets);
     }
-
-    @Override
-    public abstract Object extractRuleKeyAppendablesFrom(
-        BuildTarget target,
-        CellPathResolver cellNames,
-        BuildRuleResolver resolver,
-        FilterAndTargets input)
-        throws MacroException;
   }
 
   /**
@@ -619,35 +592,40 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
      * flags and header trees.
      */
     @Override
-    protected String expand(
+    protected Arg expand(
         BuildRuleResolver resolver, ImmutableList<BuildRule> rules, Optional<Pattern> filter)
         throws MacroException {
-      SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-      PreprocessorFlags ppFlags = getPreprocessorFlags(getCxxPreprocessorInput(rules));
-      Preprocessor preprocessor =
-          CxxSourceTypes.getPreprocessor(cxxPlatform, sourceType).resolve(resolver);
-      CxxToolFlags flags =
-          ppFlags.toToolFlags(
-              pathResolver,
-              PathShortener.identity(),
-              CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver),
-              preprocessor,
-              /* pch */ Optional.empty());
-      return Arg.stringify(flags.getAllFlags(), pathResolver)
-          .stream()
-          .map(Escaper.SHELL_ESCAPER)
-          .collect(Collectors.joining(" "));
+      return new CxxPreprocessorFlagsArg(
+          getPreprocessorFlags(getCxxPreprocessorInput(rules)),
+          CxxSourceTypes.getPreprocessor(cxxPlatform, sourceType).resolve(resolver));
     }
 
-    @Override
-    public Object extractRuleKeyAppendablesFrom(
-        final BuildTarget target,
-        final CellPathResolver cellNames,
-        final BuildRuleResolver resolver,
-        FilterAndTargets input)
-        throws MacroException {
-      return getPreprocessorFlags(getCxxPreprocessorInput(resolve(resolver, input.targets)));
+    private class CxxPreprocessorFlagsArg implements Arg {
+      @AddToRuleKey private final PreprocessorFlags ppFlags;
+      @AddToRuleKey private final Preprocessor preprocessor;
+
+      public CxxPreprocessorFlagsArg(PreprocessorFlags ppFlags, Preprocessor preprocessor) {
+        this.ppFlags = ppFlags;
+        this.preprocessor = preprocessor;
+      }
+
+      @Override
+      public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver resolver) {
+        consumer.accept(
+            Arg.stringify(
+                    ppFlags
+                        .toToolFlags(
+                            resolver,
+                            PathShortener.identity(),
+                            CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver),
+                            preprocessor,
+                            /* pch */ Optional.empty())
+                        .getAllFlags(),
+                    resolver)
+                .stream()
+                .map(Escaper.SHELL_ESCAPER)
+                .collect(Collectors.joining(" ")));
+      }
     }
   }
 
@@ -776,23 +754,23 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
      * all linker flags.
      */
     @Override
-    public String expand(
+    public Arg expand(
         BuildRuleResolver resolver, ImmutableList<BuildRule> rules, Optional<Pattern> filter)
         throws MacroException {
-      return shquoteJoin(
-          Arg.stringify(
-              getLinkerArgs(resolver, rules, filter),
-              DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver))));
+      return new ShQuoteJoinArg(getLinkerArgs(resolver, rules, filter));
+    }
+  }
+
+  private static class ShQuoteJoinArg implements Arg {
+    @AddToRuleKey private final ImmutableList<Arg> args;
+
+    public ShQuoteJoinArg(ImmutableList<Arg> args) {
+      this.args = args;
     }
 
     @Override
-    public Object extractRuleKeyAppendablesFrom(
-        final BuildTarget target,
-        final CellPathResolver cellNames,
-        final BuildRuleResolver resolver,
-        FilterAndTargets inputs)
-        throws MacroException {
-      return getLinkerArgs(resolver, resolve(resolver, inputs.targets), inputs.filter);
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+      consumer.accept(shquoteJoin(Arg.stringify(args, pathResolver)));
     }
   }
 

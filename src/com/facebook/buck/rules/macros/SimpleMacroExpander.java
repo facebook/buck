@@ -20,9 +20,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import java.util.Optional;
 
 /** A macro expander with no inputs or precomputed work */
 public abstract class SimpleMacroExpander
@@ -41,27 +41,14 @@ public abstract class SimpleMacroExpander
   }
 
   @Override
-  public final String expandFrom(
+  public final Arg expandFrom(
       BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, Void input)
       throws MacroException {
     return expandFrom(target, cellNames, resolver);
   }
 
-  public abstract String expandFrom(
+  public abstract Arg expandFrom(
       BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver);
-
-  @Override
-  public final Object extractRuleKeyAppendablesFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, Void input)
-      throws MacroException {
-    return extractRuleKeyAppendablesFrom(target, cellNames, resolver);
-  }
-
-  @SuppressWarnings("unused")
-  public Object extractRuleKeyAppendablesFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver) {
-    return Optional.empty();
-  }
 
   @Override
   public final void extractParseTimeDepsFrom(

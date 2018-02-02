@@ -40,7 +40,6 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -120,34 +119,22 @@ public class QueryOutputsMacroExpanderTest {
 
   @Test
   public void extractBuildTimeDeps() throws Exception {
-    Object precomputed =
-        expander.precomputeWork(
-            dep.getBuildTarget(),
-            cellNames,
-            ruleResolver,
-            ImmutableList.of("'set(//exciting:dep)'"));
     assertEquals(
-        ImmutableSortedSet.of(dep.getSourcePathToOutput()),
-        expander.extractRuleKeyAppendables(
-            dep.getBuildTarget(),
-            cellNames,
-            ruleResolver,
-            ImmutableList.of("'set(//exciting:dep)'"),
-            precomputed));
-    Object precomputed2 =
-        expander.precomputeWork(
-            dep.getBuildTarget(),
-            cellNames,
-            ruleResolver,
-            ImmutableList.of("'classpath(//exciting:target)'"));
+        ImmutableList.of(dep),
+        new MacroHandler(ImmutableMap.of("query_outputs", expander))
+            .extractBuildTimeDeps(
+                dep.getBuildTarget(),
+                cellNames,
+                ruleResolver,
+                "$(query_outputs 'set(//exciting:dep)')"));
     assertEquals(
-        ImmutableSortedSet.of(dep.getSourcePathToOutput(), rule.getSourcePathToOutput()),
-        expander.extractRuleKeyAppendables(
-            dep.getBuildTarget(),
-            cellNames,
-            ruleResolver,
-            ImmutableList.of("'classpath(//exciting:target)'"),
-            precomputed2));
+        ImmutableList.of(dep, rule),
+        new MacroHandler(ImmutableMap.of("query_outputs", expander))
+            .extractBuildTimeDeps(
+                dep.getBuildTarget(),
+                cellNames,
+                ruleResolver,
+                "$(query_outputs 'classpath(//exciting:target)')"));
   }
 
   @Test

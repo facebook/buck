@@ -17,10 +17,13 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.macros.MacroException;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.WorkerTool;
+import java.util.function.Consumer;
 
 public class WorkerMacroExpander extends ExecutableMacroExpander {
   @Override
@@ -35,7 +38,19 @@ public class WorkerMacroExpander extends ExecutableMacroExpander {
   }
 
   @Override
-  public String expand(SourcePathResolver resolver, BuildRule rule) throws MacroException {
-    return "";
+  protected Arg expand(SourcePathResolver resolver, ExecutableMacro ignored, BuildRule rule)
+      throws MacroException {
+    return new WorkerToolArg(getTool(rule));
+  }
+
+  private class WorkerToolArg implements Arg {
+    @AddToRuleKey private final Tool tool;
+
+    public WorkerToolArg(Tool tool) {
+      this.tool = tool;
+    }
+
+    @Override
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {}
   }
 }

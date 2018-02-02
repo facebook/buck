@@ -155,16 +155,16 @@ public class QueryPathsMacroExpanderTest {
                 BuildTargetFactory.newInstance(filesystem.getRootPath(), "//some:target"),
                 filesystem)
             .setOut("foo.txt")
-            .setCmd("$(query_paths 'inputs(:dep)')")
+            .setCmd("$(query_paths //some:dep)")
             .build();
 
     TargetGraph graph = TargetGraphFactory.newInstance(dep, target);
 
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRule depRule = resolver.requireRule(dep.getBuildTarget());
     BuildRule rule = resolver.requireRule(target.getBuildTarget());
 
-    assertEquals(
-        ImmutableSortedSet.of(resolver.requireRule(dep.getBuildTarget())), rule.getBuildDeps());
+    assertEquals(ImmutableSortedSet.of(depRule), rule.getBuildDeps());
   }
 }
