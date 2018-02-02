@@ -17,12 +17,15 @@
 package com.facebook.buck.util.zip;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.ZipArchive;
@@ -35,8 +38,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Optional;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -285,5 +290,58 @@ public class UnzipTest {
         ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
     assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve("foo")));
     assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve("foo/bar")));
+  }
+
+  @Test
+  public void testStripsPrefixAndIgnoresSiblings() throws IOException, InterruptedException {
+    byte[] bazDotSh = "echo \"baz.sh\"\n".getBytes(Charsets.UTF_8);
+    try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(zipFile.toFile())) {
+      zip.putArchiveEntry(new ZipArchiveEntry("foo"));
+      zip.closeArchiveEntry();
+      zip.putArchiveEntry(new ZipArchiveEntry("foo/bar/baz.txt"));
+      zip.write(DUMMY_FILE_CONTENTS, 0, DUMMY_FILE_CONTENTS.length);
+      zip.closeArchiveEntry();
+
+      ZipArchiveEntry exeEntry = new ZipArchiveEntry("foo/bar/baz.sh");
+      exeEntry.setUnixMode(
+          (int) MorePosixFilePermissions.toMode(PosixFilePermissions.fromString("r-x------")));
+      exeEntry.setMethod(ZipEntry.STORED);
+      exeEntry.setSize(bazDotSh.length);
+      zip.putArchiveEntry(exeEntry);
+      zip.write(bazDotSh);
+
+      zip.closeArchiveEntry();
+      zip.putArchiveEntry(new ZipArchiveEntry("sibling"));
+      zip.closeArchiveEntry();
+      zip.putArchiveEntry(new ZipArchiveEntry("sibling/some/dir/and/file.txt"));
+      zip.write(DUMMY_FILE_CONTENTS, 0, DUMMY_FILE_CONTENTS.length);
+      zip.closeArchiveEntry();
+    }
+
+    Path extractFolder = Paths.get("output_dir", "nested");
+
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
+    Unzip.extractZipFile(
+        zipFile,
+        filesystem,
+        extractFolder,
+        Optional.of(Paths.get("foo")),
+        ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+
+    assertFalse(filesystem.isDirectory(extractFolder.resolve("sibling")));
+    assertFalse(filesystem.isDirectory(extractFolder.resolve("foo")));
+    assertFalse(filesystem.isDirectory(extractFolder.resolve("some")));
+
+    Path bazDotTxtPath = extractFolder.resolve("bar").resolve("baz.txt");
+    Path bazDotShPath = extractFolder.resolve("bar").resolve("baz.sh");
+
+    assertTrue(filesystem.isDirectory(extractFolder.resolve("bar")));
+    assertTrue(filesystem.isFile(bazDotTxtPath));
+    assertTrue(filesystem.isFile(bazDotShPath));
+    assertTrue(filesystem.isExecutable(bazDotShPath));
+    assertEquals(new String(bazDotSh), filesystem.readFileIfItExists(bazDotShPath).get());
+    assertEquals(
+        new String(DUMMY_FILE_CONTENTS), filesystem.readFileIfItExists(bazDotTxtPath).get());
   }
 }

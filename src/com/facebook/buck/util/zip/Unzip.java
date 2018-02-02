@@ -40,6 +40,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -215,11 +216,61 @@ public class Unzip {
     }
   }
 
+  /**
+   * Get a listing of all files in a zip file that start with a prefix, ignore others
+   *
+   * @param zip The zip file to scan
+   * @param relativePath The relative path where the extraction will be rooted
+   * @param prefix The prefix that will be stripped off.
+   * @return The list of paths in zipFile. sorted by path so dirs come before contents. Prefixes are
+   *     stripped from paths in the zip file, such that foo/bar/baz.txt with a prefix of foo/ will
+   *     be in the map at {@code relativePath}/bar/baz.txt
+   */
+  private static SortedMap<Path, ZipArchiveEntry> getZipFilePathsStrippingPrefix(
+      ZipFile zip, Path relativePath, Path prefix) {
+    SortedMap<Path, ZipArchiveEntry> pathMap = new TreeMap<>();
+    for (ZipArchiveEntry entry : Collections.list(zip.getEntries())) {
+      if (Paths.get(entry.getName()).startsWith(prefix)) {
+        Path target =
+            relativePath.resolve(prefix.relativize(Paths.get(entry.getName()))).normalize();
+        pathMap.put(target, entry);
+      }
+    }
+    return pathMap;
+  }
+
+  /**
+   * Get a listing of all files in a zip file
+   *
+   * @param zip The zip file to scan
+   * @param relativePath The relative path where the extraction will be rooted
+   * @return The list of paths in zipFile. sorted by path so dirs come before contents.
+   */
+  private static SortedMap<Path, ZipArchiveEntry> getZipFilePaths(ZipFile zip, Path relativePath) {
+    SortedMap<Path, ZipArchiveEntry> pathMap = new TreeMap<>();
+    for (ZipArchiveEntry entry : Collections.list(zip.getEntries())) {
+      Path target = relativePath.resolve(entry.getName()).normalize();
+      pathMap.put(target, entry);
+    }
+    return pathMap;
+  }
+
   /** Unzips a file to a destination and returns the paths of the written files. */
   public static ImmutableList<Path> extractZipFile(
       Path zipFile,
       ProjectFilesystem filesystem,
       Path relativePath,
+      ExistingFileMode existingFileMode)
+      throws IOException {
+    return extractZipFile(zipFile, filesystem, relativePath, Optional.empty(), existingFileMode);
+  }
+
+  /** Unzips a file to a destination and returns the paths of the written files. */
+  public static ImmutableList<Path> extractZipFile(
+      Path zipFile,
+      ProjectFilesystem filesystem,
+      Path relativePath,
+      Optional<Path> stripPrefix,
       ExistingFileMode existingFileMode)
       throws IOException {
 
@@ -230,11 +281,11 @@ public class Unzip {
 
     ImmutableList.Builder<Path> filesWritten = ImmutableList.builder();
     try (ZipFile zip = new ZipFile(zipFile.toFile())) {
-      // Get the list of paths in zipFile.  Keep them sorted by path, so dirs come before contents.
-      SortedMap<Path, ZipArchiveEntry> pathMap = new TreeMap<>();
-      for (ZipArchiveEntry entry : Collections.list(zip.getEntries())) {
-        Path target = relativePath.resolve(entry.getName()).normalize();
-        pathMap.put(target, entry);
+      SortedMap<Path, ZipArchiveEntry> pathMap;
+      if (stripPrefix.isPresent()) {
+        pathMap = getZipFilePathsStrippingPrefix(zip, relativePath, stripPrefix.get());
+      } else {
+        pathMap = getZipFilePaths(zip, relativePath);
       }
       // A zip file isn't required to list intermediate paths (e.g., it can contain "foo/" and
       // "foo/bar/baz"), but we need to know not to delete those intermediates, so fill them in.
