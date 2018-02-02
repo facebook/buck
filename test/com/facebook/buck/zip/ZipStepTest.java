@@ -33,9 +33,9 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.ZipArchive;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.facebook.buck.util.zip.OverwritingZipOutputStreamImpl;
-import com.facebook.buck.util.zip.Unzip;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.collect.ImmutableList;
@@ -356,8 +356,14 @@ public class ZipStepTest {
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
     Path destination = tmp.newFolder("output");
-    Unzip.extractZipFile(
-        new DefaultProjectFilesystemFactory(), outputZip, destination, ExistingFileMode.OVERWRITE);
+
+    ArchiveFormat.ZIP
+        .getUnarchiver()
+        .extractArchive(
+            new DefaultProjectFilesystemFactory(),
+            outputZip,
+            destination,
+            ExistingFileMode.OVERWRITE);
     assertTrue(Files.isExecutable(destination.resolve("foo.sh")));
   }
 

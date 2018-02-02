@@ -27,8 +27,8 @@ import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.TestProcessExecutorFactory;
+import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
-import com.facebook.buck.util.zip.Unzip;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -207,11 +207,14 @@ public class HgCmdLineInterfaceIntegrationTest {
     Files.copy(hgRepoZipPath, hgRepoZipCopyPath, REPLACE_EXISTING);
 
     Path reposPath = destination.resolve(REPOS_DIR);
-    Unzip.extractZipFile(
-        new DefaultProjectFilesystemFactory(),
-        hgRepoZipCopyPath,
-        reposPath,
-        ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+
+    ArchiveFormat.ZIP
+        .getUnarchiver()
+        .extractArchive(
+            new DefaultProjectFilesystemFactory(),
+            hgRepoZipCopyPath,
+            reposPath,
+            ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
     return reposPath;
   }

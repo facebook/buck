@@ -14,14 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.util.zip;
+package com.facebook.buck.util.unarchive;
 
 import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
-import com.facebook.buck.util.unarchive.DirectoryCreator;
-import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -48,12 +45,10 @@ import java.util.zip.ZipError;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 
-public class Unzip {
+/** A simple utility class that extracts zip files */
+public class Unzip extends Unarchiver {
 
-  /** Utility class: do not instantiate. */
-  private Unzip() {}
-
-  private static void writeZipContents(
+  private void writeZipContents(
       ZipFile zip, ZipArchiveEntry entry, ProjectFilesystem filesystem, Path target)
       throws IOException {
     // Write file
@@ -173,7 +168,7 @@ public class Unzip {
     }
   }
 
-  private static void extractFile(
+  private void extractFile(
       ImmutableList.Builder<Path> filesWritten,
       ZipFile zip,
       DirectoryCreator creator,
@@ -192,7 +187,7 @@ public class Unzip {
     writeZipContents(zip, entry, filesystem, target);
   }
 
-  private static void extractDirectory(
+  private void extractDirectory(
       ExistingFileMode existingFileMode,
       SortedMap<Path, ZipArchiveEntry> pathMap,
       DirectoryCreator creator,
@@ -222,9 +217,9 @@ public class Unzip {
    * @param zip The zip file to scan
    * @param relativePath The relative path where the extraction will be rooted
    * @param prefix The prefix that will be stripped off.
-   * @return The list of paths in zipFile. sorted by path so dirs come before contents. Prefixes are
-   *     stripped from paths in the zip file, such that foo/bar/baz.txt with a prefix of foo/ will
-   *     be in the map at {@code relativePath}/bar/baz.txt
+   * @return The list of paths in {@code zip} sorted by path so dirs come before contents. Prefixes
+   *     are stripped from paths in the zip file, such that foo/bar/baz.txt with a prefix of foo/
+   *     will be in the map at {@code relativePath}/bar/baz.txt
    */
   private static SortedMap<Path, ZipArchiveEntry> getZipFilePathsStrippingPrefix(
       ZipFile zip, Path relativePath, Path prefix) {
@@ -244,7 +239,7 @@ public class Unzip {
    *
    * @param zip The zip file to scan
    * @param relativePath The relative path where the extraction will be rooted
-   * @return The list of paths in zipFile. sorted by path so dirs come before contents.
+   * @return The list of paths in {@code zip} sorted by path so dirs come before contents.
    */
   private static SortedMap<Path, ZipArchiveEntry> getZipFilePaths(ZipFile zip, Path relativePath) {
     SortedMap<Path, ZipArchiveEntry> pathMap = new TreeMap<>();
@@ -256,31 +251,24 @@ public class Unzip {
   }
 
   /** Unzips a file to a destination and returns the paths of the written files. */
-  public static ImmutableList<Path> extractZipFile(
-      Path zipFile,
-      ProjectFilesystem filesystem,
-      Path relativePath,
-      ExistingFileMode existingFileMode)
-      throws IOException {
-    return extractZipFile(zipFile, filesystem, relativePath, Optional.empty(), existingFileMode);
-  }
-
-  /** Unzips a file to a destination and returns the paths of the written files. */
-  public static ImmutableList<Path> extractZipFile(
-      Path zipFile,
+  @Override
+  public ImmutableList<Path> extractArchive(
+      Path archiveFile,
       ProjectFilesystem filesystem,
       Path relativePath,
       Optional<Path> stripPrefix,
       ExistingFileMode existingFileMode)
       throws IOException {
 
-    // We want to remove stale contents of directories listed in zipFile, but avoid deleting and
+    // We want to remove stale contents of directories listed in {@code archiveFile}, but avoid
+    // deleting and
     // re-creating any directories that already exist. We *also* want to avoid a full recursive
     // scan of listed directories, since that's almost as slow as deleting. So we preprocess the
-    // contents of zipFile and then scan the existing filesystem to remove stale artifacts.
+    // contents of {@code archiveFile} and then scan the existing filesystem to remove stale
+    // artifacts.
 
     ImmutableList.Builder<Path> filesWritten = ImmutableList.builder();
-    try (ZipFile zip = new ZipFile(zipFile.toFile())) {
+    try (ZipFile zip = new ZipFile(archiveFile.toFile())) {
       SortedMap<Path, ZipArchiveEntry> pathMap;
       if (stripPrefix.isPresent()) {
         pathMap = getZipFilePathsStrippingPrefix(zip, relativePath, stripPrefix.get());
@@ -310,30 +298,13 @@ public class Unzip {
     return filesWritten.build();
   }
 
-  public static ImmutableList<Path> extractZipFile(
-      Path zipFile, ProjectFilesystem filesystem, ExistingFileMode existingFileMode)
-      throws IOException {
-    return extractZipFile(zipFile, filesystem, filesystem.getPath(""), existingFileMode);
-  }
-
-  public static ImmutableList<Path> extractZipFile(
-      ProjectFilesystemFactory projectFilesystemFactory,
-      Path zipFile,
-      final Path destination,
-      ExistingFileMode existingFileMode)
-      throws InterruptedException, IOException {
-    // Create output directory if it does not exist
-    Files.createDirectories(destination);
-    return extractZipFile(
-            zipFile,
-            projectFilesystemFactory.createProjectFilesystem(destination),
-            destination.getFileSystem().getPath(""),
-            existingFileMode)
-        .stream()
-        .map(input -> destination.resolve(input).toAbsolutePath())
-        .collect(ImmutableList.toImmutableList());
-  }
-
+  /**
+   * Gets a set of files that are contained in an archive
+   *
+   * @param archiveAbsolutePath The absolute path to the archive
+   * @return A set of files (not directories) that are contained in the zip file
+   * @throws IOException If there is an error reading the archive
+   */
   public static ImmutableSet<Path> getZipMembers(Path archiveAbsolutePath) throws IOException {
     try (FileSystem zipFs = FileSystems.newFileSystem(archiveAbsolutePath, null)) {
       Path root = Iterables.getOnlyElement(zipFs.getRootDirectories());

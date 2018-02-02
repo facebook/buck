@@ -8,6 +8,7 @@ standard_java_test(
         "//src/com/facebook/buck/io/filesystem/impl:impl",
         "//src/com/facebook/buck/util/config:config",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/unarchive:unarchive",
         "//src/com/facebook/buck/util/zip:zip",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/testutil:testutil",

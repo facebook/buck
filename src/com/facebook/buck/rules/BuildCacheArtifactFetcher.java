@@ -28,8 +28,8 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
+import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
-import com.facebook.buck.util.zip.Unzip;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
@@ -217,8 +217,12 @@ public class BuildCacheArtifactFetcher {
           ruleKey,
           BuildInfo.MetadataKey.ORIGIN_BUILD_ID);
 
-      Unzip.extractZipFile(
-          zipPath.toAbsolutePath(), filesystem, ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+      ArchiveFormat.ZIP
+          .getUnarchiver()
+          .extractArchive(
+              zipPath.toAbsolutePath(),
+              filesystem,
+              ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
       // We only delete the ZIP file when it has been unzipped successfully. Otherwise, we leave it
       // around for debugging purposes.

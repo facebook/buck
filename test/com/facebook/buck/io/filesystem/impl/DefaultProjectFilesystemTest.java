@@ -36,7 +36,7 @@ import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.zip.Unzip;
+import com.facebook.buck.util.unarchive.Unzip;
 import com.facebook.buck.util.zip.Zip;
 import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.collect.FluentIterable;
