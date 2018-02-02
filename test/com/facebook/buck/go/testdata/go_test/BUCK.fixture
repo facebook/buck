@@ -61,3 +61,8 @@ go_test(
     srcs = ["test_spinning.go"],
     test_rule_timeout_ms = 500,
 )
+
+go_test(
+    name = "subtests",
+    srcs = ["subtests.go"],
+)

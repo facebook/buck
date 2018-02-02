@@ -30,6 +30,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import org.junit.Assume;
 
 abstract class GoAssumptions {
   public static void assumeGoCompilerAvailable() throws InterruptedException, IOException {
@@ -63,5 +64,11 @@ abstract class GoAssumptions {
       exception = e;
     }
     assumeNoException(exception);
+  }
+
+  public static void assumeGoVersionGreaterThan(double requiredVersion) {
+    float actualVersion = 0;
+    Assume.assumeTrue("Acutal Go version is lower than the required version",
+        actualVersion > requiredVersion);
   }
 }
