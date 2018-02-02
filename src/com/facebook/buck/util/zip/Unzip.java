@@ -172,6 +172,49 @@ public class Unzip {
     }
   }
 
+  private static void extractFile(
+      ImmutableList.Builder<Path> filesWritten,
+      ZipFile zip,
+      DirectoryCreator creator,
+      Path target,
+      ZipArchiveEntry entry)
+      throws IOException {
+    ProjectFilesystem filesystem = creator.getFilesystem();
+    if (filesystem.isFile(target, LinkOption.NOFOLLOW_LINKS)) { // NOPMD for clarity
+      // pass
+    } else if (filesystem.exists(target, LinkOption.NOFOLLOW_LINKS)) {
+      filesystem.deleteRecursivelyIfExists(target);
+    } else if (target.getParent() != null) {
+      creator.forcefullyCreateDirs(target.getParent());
+    }
+    filesWritten.add(target);
+    writeZipContents(zip, entry, filesystem, target);
+  }
+
+  private static void extractDirectory(
+      ExistingFileMode existingFileMode,
+      SortedMap<Path, ZipArchiveEntry> pathMap,
+      DirectoryCreator creator,
+      Path target)
+      throws IOException {
+    ProjectFilesystem filesystem = creator.getFilesystem();
+    if (filesystem.isDirectory(target, LinkOption.NOFOLLOW_LINKS)) {
+      // We have a pre-existing directory: delete its contents if they aren't in the zip.
+      if (existingFileMode == ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES) {
+        for (Path path : filesystem.getDirectoryContents(target)) {
+          if (!pathMap.containsKey(path)) {
+            filesystem.deleteRecursivelyIfExists(path);
+          }
+        }
+      }
+    } else if (filesystem.exists(target, LinkOption.NOFOLLOW_LINKS)) {
+      filesystem.deleteFileAtPath(target);
+      creator.mkdirs(target);
+    } else {
+      creator.forcefullyCreateDirs(target);
+    }
+  }
+
   /** Unzips a file to a destination and returns the paths of the written files. */
   public static ImmutableList<Path> extractZipFile(
       Path zipFile,
@@ -207,31 +250,9 @@ public class Unzip {
         Path target = p.getKey();
         ZipArchiveEntry entry = p.getValue();
         if (entry.isDirectory()) {
-          if (filesystem.isDirectory(target, LinkOption.NOFOLLOW_LINKS)) {
-            // We have a pre-existing directory: delete its contents if they aren't in the zip.
-            if (existingFileMode == ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES) {
-              for (Path path : filesystem.getDirectoryContents(target)) {
-                if (!pathMap.containsKey(path)) {
-                  filesystem.deleteRecursivelyIfExists(path);
-                }
-              }
-            }
-          } else if (filesystem.exists(target, LinkOption.NOFOLLOW_LINKS)) {
-            filesystem.deleteFileAtPath(target);
-            creator.mkdirs(target);
-          } else {
-            creator.forcefullyCreateDirs(target);
-          }
+          extractDirectory(existingFileMode, pathMap, creator, target);
         } else {
-          if (filesystem.isFile(target, LinkOption.NOFOLLOW_LINKS)) { // NOPMD for clarity
-            // pass
-          } else if (filesystem.exists(target, LinkOption.NOFOLLOW_LINKS)) {
-            filesystem.deleteRecursivelyIfExists(target);
-          } else if (target.getParent() != null) {
-            creator.forcefullyCreateDirs(target.getParent());
-          }
-          filesWritten.add(target);
-          writeZipContents(zip, entry, filesystem, target);
+          extractFile(filesWritten, zip, creator, target, entry);
         }
       }
     }
