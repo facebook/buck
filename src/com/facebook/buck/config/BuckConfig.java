@@ -963,6 +963,10 @@ public class BuckConfig implements ConfigPathGetter {
     return getListWithoutComments("clean", "additional_paths");
   }
 
+  public ImmutableList<String> getCleanExcludedCaches() {
+    return getListWithoutComments("clean", "excluded_dir_caches");
+  }
+
   /** @return whether to enable new file hash cache engine. */
   public FileHashCacheMode getFileHashCacheMode() {
     return getEnum("build", "file_hash_cache_mode", FileHashCacheMode.class)
