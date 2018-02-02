@@ -113,27 +113,15 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     ImmutableList.Builder<Path> compileSrcListBuilder = ImmutableList.builder();
     ImmutableList.Builder<Path> headerSrcListBuilder = ImmutableList.builder();
     ImmutableList.Builder<Path> asmSrcListBuilder = ImmutableList.builder();
-    List<Path> srcFiles = new ArrayList<>();
-    for (SourcePath path : srcs) {
-      Path srcPath = context.getSourcePathResolver().getAbsolutePath(path);
-      if (Files.isDirectory(srcPath)) {
-        try {
-          srcFiles.addAll(Files.list(srcPath).filter(Files::isRegularFile).collect(Collectors.toList()));
-        } catch (IOException e) {
-          throw new RuntimeException("An error occur when listing the files under " + srcPath, e);
-        }
-      } else {
-        srcFiles.add(srcPath);
-      }
-    }
-    for (Path f : srcFiles) {
-      String extension = MorePaths.getFileExtension(f).toLowerCase();
+    List<Path> srcFiles = getSourchFiles(context);
+    for (Path sourceFile : srcFiles) {
+      String extension = MorePaths.getFileExtension(sourceFile).toLowerCase();
       if (extension.equals("s")) {
-        asmSrcListBuilder.add(f);
+        asmSrcListBuilder.add(sourceFile);
       } else if (extension.equals("go")) {
-        compileSrcListBuilder.add(f);
+        compileSrcListBuilder.add(sourceFile);
       } else {
-        headerSrcListBuilder.add(f);
+        headerSrcListBuilder.add(sourceFile);
       }
     }
 
@@ -270,6 +258,23 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     }
 
     return steps.build();
+  }
+
+  private List<Path> getSourchFiles(BuildContext context) {
+    List<Path> srcFiles = new ArrayList<>();
+    for (SourcePath path : srcs) {
+      Path srcPath = context.getSourcePathResolver().getAbsolutePath(path);
+      if (Files.isDirectory(srcPath)) {
+        try {
+          srcFiles.addAll(Files.list(srcPath).filter(Files::isRegularFile).collect(Collectors.toList()));
+        } catch (IOException e) {
+          throw new RuntimeException("An error occur when listing the files under " + srcPath, e);
+        }
+      } else {
+        srcFiles.add(srcPath);
+      }
+    }
+    return srcFiles;
   }
 
   @Override
