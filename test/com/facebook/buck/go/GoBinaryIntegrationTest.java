@@ -171,6 +171,14 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
+  public void generatedSourceDir() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "generated_source_dir", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:main").assertSuccess();
+  }
+
+  @Test
   public void emptySources() throws IOException, InterruptedException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "empty_sources", tmp);
