@@ -10,7 +10,7 @@ import StringIO
 from pywatchman import WatchmanError
 from typing import Sequence
 
-from .buck import BuildFileProcessor, Diagnostic, add_rule, process_with_diagnostics
+from .buck import BuildFileProcessor, BuildInclude, Diagnostic, add_rule, process_with_diagnostics
 
 
 def foo_rule(name, srcs=None, visibility=None, options=None, some_optional=None, build_env=None):
@@ -969,17 +969,38 @@ class BuckTest(unittest.TestCase):
                 'foo': os.path.abspath(os.path.join(self.project_root, '../cell'))
             })
         self.assertEqual(
-            os.path.abspath(os.path.join(self.project_root, '../cell/bar/baz')),
-            build_file_processor._get_include_path('foo//bar/baz'))
+            BuildInclude(cell_name='foo',
+                         path=os.path.abspath(os.path.join(self.project_root, '../cell/bar/baz'))),
+            build_file_processor._resolve_include('foo//bar/baz'))
         self.assertEqual(
-            os.path.abspath(os.path.join(self.project_root, 'bar/baz')),
-            build_file_processor._get_include_path('//bar/baz'))
+            BuildInclude(cell_name='',
+                         path=os.path.abspath(os.path.join(self.project_root, 'bar/baz'))),
+            build_file_processor._resolve_include('//bar/baz'))
 
     def test_load_path_is_resolved(self):
-        build_file_processor = self.create_build_file_processor()
-        self.assertEqual(
-            os.path.abspath(os.path.join(self.project_root, 'bar/baz')),
-            build_file_processor._get_load_path('//bar:baz'))
+        extension_file = ProjectFile(
+            self.project_root,
+            path='ext.bzl',
+            contents=(
+                's = struct(name="loaded_name")',
+            )
+        )
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                'load("//:ext.bzl", "s")',
+                'foo_rule(',
+                '  name=s.name,',
+                ')'
+            ))
+        self.write_files(extension_file, build_file)
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            result = build_file_processor.process(self.project_root, None, 'BUCK', [])
+            foo_target = result[0]
+            self.assertEqual(foo_target['name'], 'loaded_name')
+
 
     def test_load_path_with_cell_is_resolved(self):
         build_file_processor = self.create_build_file_processor(
@@ -987,7 +1008,8 @@ class BuckTest(unittest.TestCase):
                 'foo': os.path.abspath(os.path.join(self.project_root, '../cell'))
             })
         self.assertEqual(
-            os.path.abspath(os.path.join(self.project_root, '../cell/bar/baz')),
+            BuildInclude(cell_name='foo',
+                         path=os.path.abspath(os.path.join(self.project_root, '../cell/bar/baz'))),
             build_file_processor._get_load_path('foo//bar:baz'))
 
     def test_load_path_with_skylark_style_cell_is_resolved(self):
@@ -996,7 +1018,8 @@ class BuckTest(unittest.TestCase):
                 'foo': os.path.abspath(os.path.join(self.project_root, '../cell'))
             })
         self.assertEqual(
-            os.path.abspath(os.path.join(self.project_root, '../cell/bar/baz')),
+            BuildInclude(cell_name='foo',
+                         path=os.path.abspath(os.path.join(self.project_root, '../cell/bar/baz'))),
             build_file_processor._get_load_path('@foo//bar:baz'))
 
     def test_json_encoding_failure(self):

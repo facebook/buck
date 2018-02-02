@@ -322,4 +322,34 @@ public class ParserIntegrationTest {
         .runBuckBuild("//java/bar:bar_test", "-c", "parser.polyglot_parsing_enabled=true")
         .assertSuccess();
   }
+
+  @Test
+  public void absoluteTargetPathInCellResolvesRelativeToCellRootInSkylark() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cross_cell_load", temporaryFolder);
+    workspace.setUp();
+    workspace
+        .runBuckBuild(
+            "b//:lib2.bzl",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.default_build_file_syntax=skylark")
+        .assertSuccess();
+  }
+
+  @Test
+  public void absoluteTargetPathInCellResolvesRelativeToCellRootInPythonDSL() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cross_cell_load", temporaryFolder);
+    workspace.setUp();
+    workspace
+        .runBuckBuild(
+            "b//:lib2.bzl",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.default_build_file_syntax=python_dsl")
+        .assertSuccess();
+  }
 }

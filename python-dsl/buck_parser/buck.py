@@ -158,7 +158,13 @@ class BuildFileContext(AbstractContext):
 class IncludeContext(AbstractContext):
     """The build context used when processing an include."""
 
-    def __init__(self):
+    def __init__(self, cell_name):
+        """
+        :param cell_name: a cell name of the current context. Note that this cell name can be
+            different from the one BUCK file is evaluated in, since it can load extension files
+            from other cells, which should resolve their loads relative to their own location.
+        """
+        self.cell_name = cell_name
         self.globals = {}
         self._includes = set()
         self._used_configs = {}
@@ -180,6 +186,9 @@ class IncludeContext(AbstractContext):
     @property
     def diagnostics(self):
         return self._diagnostics
+
+
+BuildInclude = collections.namedtuple("BuildInclude", ["cell_name", "path"])
 
 
 class LazyBuildEnvPartial(object):
@@ -817,9 +826,9 @@ class BuildFileProcessor(object):
             namespace.clear()
             namespace.update(original_namespace)
 
-    def _get_include_path(self, name):
-        # type: (str) -> str
-        """Resolve the given include def name to a full path."""
+    def _resolve_include(self, name):
+        # type: (str) -> BuildInclude
+        """Resolve the given include def name to a BuildInclude metadata."""
         match = re.match(r'^([A-Za-z0-9_]*)//(.*)$', name)
         if match is None:
             raise ValueError(
@@ -833,19 +842,22 @@ class BuildFileProcessor(object):
                 raise KeyError(
                     'include_defs argument {} references an unknown cell named {}'
                     'known cells: {!r}'.format(name, cell_name, self._cell_roots))
-            return os.path.normpath(os.path.join(cell_root, relative_path))
+            return BuildInclude(cell_name=cell_name,
+                                path=os.path.normpath(os.path.join(cell_root, relative_path)))
         else:
-            return os.path.normpath(os.path.join(self._project_root, relative_path))
+            return BuildInclude(cell_name=cell_name,
+                                path=os.path.normpath(
+                                    os.path.join(self._project_root, relative_path)))
 
     def _get_load_path(self, label):
-        # type: (str) -> str
-        """Resolve the given load function label to a full path."""
+        # type: (str) -> BuildInclude
+        """Resolve the given load function label to a BuildInclude metadata."""
         match = re.match(r'^(@?[A-Za-z0-9_]+)?//(.*):(.*)$', label)
         if match is None:
             raise ValueError(
                 'load label {} should be in the form of '
                 '//path:file or cellname//path:file'.format(label))
-        cell_name = match.group(1) or ''
+        cell_name = match.group(1) or self._current_build_env.cell_name
         relative_path = match.group(2)
         file_name = match.group(3)
         if len(cell_name) > 0:
@@ -861,9 +873,13 @@ class BuildFileProcessor(object):
                 raise KeyError(
                     'load label {} references an unknown cell named {}'
                     'known cells: {!r}'.format(label, cell_name, self._cell_roots))
-            return os.path.normpath(os.path.join(cell_root, relative_path, file_name))
+            return BuildInclude(
+                cell_name=cell_name,
+                path=os.path.normpath(os.path.join(cell_root, relative_path, file_name)))
         else:
-            return os.path.normpath(os.path.join(self._project_root, relative_path, file_name))
+            return BuildInclude(
+                cell_name=cell_name,
+                path=os.path.normpath(os.path.join(self._project_root, relative_path, file_name)))
 
     def _read_config(self, section, field, default=None):
         # type: (str, str, Any) -> Any
@@ -942,8 +958,8 @@ class BuildFileProcessor(object):
 
         # Resolve the named include to its path and process it to get its
         # build context and module.
-        path = self._get_include_path(name)
-        inner_env, mod = self._process_include(path, is_implicit_include)
+        build_include = self._resolve_include(name)
+        inner_env, mod = self._process_include(build_include, is_implicit_include)
 
         # Look up the caller's stack frame and merge the include's globals
         # into it's symbol table.
@@ -959,7 +975,7 @@ class BuildFileProcessor(object):
 
         # Pull in the include's accounting of its own referenced includes
         # into the current build context.
-        build_env.includes.add(path)
+        build_env.includes.add(build_include.path)
         build_env.merge(inner_env)
 
     def _load(self, is_implicit_include, name, *symbols, **symbol_kwargs):
@@ -974,8 +990,8 @@ class BuildFileProcessor(object):
 
         # Resolve the named include to its path and process it to get its
         # build context and module.
-        path = self._get_load_path(name)
-        inner_env, module = self._process_include(path, is_implicit_include)
+        build_include = self._get_load_path(name)
+        inner_env, module = self._process_include(build_include, is_implicit_include)
 
         # Look up the caller's stack frame and merge the include's globals
         # into it's symbol table.
@@ -986,7 +1002,7 @@ class BuildFileProcessor(object):
 
         # Pull in the include's accounting of its own referenced includes
         # into the current build context.
-        build_env.includes.add(path)
+        build_env.includes.add(build_include.path)
         build_env.merge(inner_env)
 
     def _provider(self):
@@ -1016,7 +1032,7 @@ class BuildFileProcessor(object):
         # Grab the current build context from the top of the stack.
         build_env = self._current_build_env
 
-        path = self._get_include_path(name)
+        cell_name, path = self._resolve_include(name)
         build_env.includes.add(path)
 
     def _host_info(self):
@@ -1160,10 +1176,10 @@ class BuildFileProcessor(object):
             # processed is an implicit include
             if not is_implicit_include:
                 for include in self._implicit_includes:
-                    include_path = self._get_include_path(include)
-                    inner_env, mod = self._process_include(include_path, True)
+                    build_include = self._resolve_include(include)
+                    inner_env, mod = self._process_include(build_include, True)
                     self._merge_globals(mod, default_globals)
-                    build_env.includes.add(include_path)
+                    build_env.includes.add(build_include.path)
                     build_env.merge(inner_env)
 
             # Build a new module for the given file, using the default globals
@@ -1190,24 +1206,25 @@ class BuildFileProcessor(object):
 
         return build_env, module
 
-    def _process_include(self, path, is_implicit_include):
-        # type: (str, bool) -> Tuple[AbstractContext, types.ModuleType]
+    def _process_include(self, build_include, is_implicit_include):
+        # type: (BuildInclude, bool) -> Tuple[AbstractContext, types.ModuleType]
         """Process the include file at the given path.
 
-        :param path: path to the include.
+        :param build_include: build include metadata (cell_name and path).
         :param is_implicit_include: whether the file being processed is an implicit include, or was
             included from an implicit include.
         """
 
         # First check the cache.
-        cached = self._include_cache.get(path)
+        cached = self._include_cache.get(build_include.path)
         if cached is not None:
             return cached
 
-        build_env = IncludeContext()
-        build_env, mod = self._process(build_env, path, is_implicit_include=is_implicit_include)
+        build_env = IncludeContext(cell_name=build_include.cell_name)
+        build_env, mod = self._process(build_env, build_include.path,
+                                       is_implicit_include=is_implicit_include)
 
-        self._include_cache[path] = build_env, mod
+        self._include_cache[build_include.path] = build_env, mod
         return build_env, mod
 
     def _process_build_file(self, watch_root, project_prefix, path):
