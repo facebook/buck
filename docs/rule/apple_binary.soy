@@ -42,6 +42,15 @@ of the <code>headers</code> and <code>exported_headers</code> attributes for mor
 
 {call apple_common.headers_arg /}
 
+{call buck.arg}
+  {param name: 'entitlements_file' /}
+  {param desc}
+  An optional name of a plist file to be embedded in the binary.  Some platforms like
+  <code>iphonesimulator</code> require this to run properly.
+  {/param}
+{/call}
+
+
 {call apple_common.exported_headers_arg /}
 
 {call apple_common.header_path_prefix_arg /}

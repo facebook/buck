@@ -112,6 +112,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final ImmutableMap<String, String> infoPlistSubstitutions;
 
+  @AddToRuleKey private final Optional<SourcePath> entitlementsFile;
+
   @AddToRuleKey private final Optional<BuildRule> binary;
 
   @AddToRuleKey private final Optional<AppleDsym> appleDsym;
@@ -182,6 +184,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<String> productName,
       SourcePath infoPlist,
       Map<String, String> infoPlistSubstitutions,
+      Optional<SourcePath> entitlementsFile,
       Optional<BuildRule> binary,
       Optional<AppleDsym> appleDsym,
       ImmutableSet<BuildRule> extraBinaries,
@@ -208,6 +211,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.productName = productName;
     this.infoPlist = infoPlist;
     this.infoPlistSubstitutions = ImmutableMap.copyOf(infoPlistSubstitutions);
+    this.entitlementsFile = entitlementsFile;
     this.binary = binary;
     this.appleDsym = appleDsym;
     this.extraBinaries = extraBinaries;

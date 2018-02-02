@@ -187,6 +187,54 @@ public class AppleBinaryIntegrationTest {
   }
 
   @Test
+  public void testAppleBinarySupportsEntitlements() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_builds_something", tmp);
+    workspace.setUp();
+
+    // iphonesimulator -- needs entitlements
+    {
+      BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestAppWithEntitlements");
+      workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+      Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
+      assertThat(Files.exists(outputPath), is(true));
+      assertThat(
+          workspace.runCommand("file", outputPath.toString()).getStdout().get(),
+          containsString("executable"));
+      assertThat(
+          workspace
+              .runCommand("otool", "-s", "__TEXT", "__entitlements", outputPath.toString())
+              .getStdout()
+              .get(),
+          containsString("Contents of (__TEXT,__entitlements) section"));
+    }
+
+    // macosx -- doesn't need entitlements
+    {
+      BuildTarget target =
+          BuildTargetFactory.newInstance("//Apps/TestApp:TestAppWithEntitlements#macosx-x86_64");
+      workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+      Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
+      assertThat(Files.exists(outputPath), is(true));
+      assertThat(
+          workspace.runCommand("file", outputPath.toString()).getStdout().get(),
+          containsString("executable"));
+      assertThat(
+          workspace
+              .runCommand("otool", "-s", "__TEXT", "__entitlements", outputPath.toString())
+              .getStdout()
+              .get(),
+          not(containsString("Contents of (__TEXT,__entitlements) section")));
+    }
+  }
+
+  @Test
   public void testAppleBinaryWithThinLTO() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));

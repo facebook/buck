@@ -18,3 +18,12 @@ apple_binary(
         ],
     )],
 )
+
+apple_binary(
+    name = "TestAppWithEntitlements",
+    srcs = [
+        "answer.s",
+        "main.c",
+    ],
+    entitlements_file = "entitlements.plist",
+)

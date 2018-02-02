@@ -142,6 +142,10 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
     return name.startsWith(IPHONEOS.getName());
   }
 
+  public static boolean needsEntitlementsInBinary(String name) {
+    return name.startsWith(IPHONESIMULATOR.getName());
+  }
+
   public static boolean isSimulator(String name) {
     return name.startsWith(IPHONESIMULATOR.getName())
         || name.startsWith(WATCHSIMULATOR.getName())

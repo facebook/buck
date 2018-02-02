@@ -402,6 +402,7 @@ public class AppleLibraryDescription
         Optional.empty(),
         args.getInfoPlist().get(),
         args.getInfoPlistSubstitutions(),
+        Optional.empty(),
         args.getDeps(),
         args.getTests(),
         debugFormat,

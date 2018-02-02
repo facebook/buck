@@ -45,6 +45,7 @@ import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -148,6 +149,13 @@ public class AppleBundleDescription
               buildTarget.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR));
     }
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    Optional<SourcePath> entitlementsFile = Optional.empty();
+    Optional<HasEntitlementsFile> entitlementsFileFromBinary =
+        resolver.requireMetadata(args.getBinary(), HasEntitlementsFile.class);
+    if (entitlementsFileFromBinary.isPresent()) {
+      entitlementsFile = entitlementsFileFromBinary.get().getEntitlementsFile();
+    }
+
     return AppleDescriptions.createAppleBundle(
         cxxPlatformsProvider.getCxxPlatforms(),
         cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor(),
@@ -166,6 +174,7 @@ public class AppleBundleDescription
         args.getProductName(),
         args.getInfoPlist(),
         args.getInfoPlistSubstitutions(),
+        entitlementsFile,
         args.getDeps(),
         args.getTests(),
         flavoredDebugFormat,

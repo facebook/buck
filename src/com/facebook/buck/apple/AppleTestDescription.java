@@ -297,6 +297,7 @@ public class AppleTestDescription
             Optional.empty(),
             args.getInfoPlist(),
             args.getInfoPlistSubstitutions(),
+            args.getEntitlementsFile(),
             args.getDeps(),
             args.getTests(),
             debugFormat,
@@ -622,6 +623,7 @@ public class AppleTestDescription
           HasAppleBundleFields,
           HasAppleCodesignFields,
           HasContacts,
+          HasEntitlementsFile,
           HasTestTimeout {
     @Value.Default
     default boolean getRunTestSeparately() {
