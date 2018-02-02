@@ -176,7 +176,8 @@ public class PertTimesEventListenerTest {
     assertEquals(new Long(500L), perfTimesStats.getProcessingTimeMs());
     assertEquals(new Long(1000L), perfTimesStats.getParseTimeMs());
     assertEquals(new Long(500L), perfTimesStats.getActionGraphTimeMs());
-    assertEquals(new Long(100L), perfTimesStats.getRulekeyTimeMs());
+    assertEquals(new Long(1500L), perfTimesStats.getRulekeyTimeMs());
+    assertEquals(new Long(100L), perfTimesStats.getTotalRulekeyTimeMs());
     assertEquals(new Long(500L), perfTimesStats.getFetchTimeMs());
     assertEquals(new Long(3500L), perfTimesStats.getBuildTimeMs());
     assertEquals(new Long(1000L), perfTimesStats.getInstallTimeMs());

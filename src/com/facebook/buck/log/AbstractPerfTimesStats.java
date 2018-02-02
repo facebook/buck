@@ -71,6 +71,16 @@ abstract class AbstractPerfTimesStats {
   }
 
   /**
+   * @return rule key computation is happening throughout the build with different types of rule
+   *     keys. This measures the total time we spend calculating all different types of rule keys.
+   */
+  @JsonView(JsonViews.MachineReadableLog.class)
+  @Value.Default
+  public Long getTotalRulekeyTimeMs() {
+    return 0L;
+  }
+
+  /**
    * @return duration of the fetch operation, from the first fetch event to the start of the local
    *     build, in milliseconds.
    */

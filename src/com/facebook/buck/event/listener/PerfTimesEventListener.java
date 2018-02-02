@@ -69,7 +69,6 @@ public class PerfTimesEventListener implements BuckEventListener {
     this.eventBus = eventBus;
     perfTimesStatsBuilder.setPythonTimeMs(
         executionEnvironment.getenv("BUCK_PYTHON_SPACE_INIT_TIME").map(Long::valueOf).orElse(0L));
-    eventBus.post(PerfTimesEvent.update(perfTimesStatsBuilder.build()));
   }
 
   @Subscribe
@@ -93,7 +92,7 @@ public class PerfTimesEventListener implements BuckEventListener {
   }
 
   @Subscribe
-  public void actionGraphFinished(ActionGraphEvent.Finished finished) {
+  public synchronized void actionGraphFinished(ActionGraphEvent.Finished finished) {
     perfTimesStatsBuilder.setActionGraphTimeMs(getTimeDifferenceSinceLastEventToEvent(finished));
     eventBus.post(PerfTimesEvent.update(perfTimesStatsBuilder.build()));
   }
@@ -123,21 +122,21 @@ public class PerfTimesEventListener implements BuckEventListener {
           TimeUnit.NANOSECONDS.toMillis(
               event.getNanoTime() - timeCostEntry.getStartEvent().getNanoTime());
       long newValue = ruleKeyCalculationTotalTimeMs.addAndGet(costTimeMs);
-      perfTimesStatsBuilder.setRulekeyTimeMs(newValue);
+      perfTimesStatsBuilder.setTotalRulekeyTimeMs(newValue);
       eventBus.post(PerfTimesEvent.update(perfTimesStatsBuilder.build()));
     }
   }
 
   @Subscribe
-  public void onHttpArtifactCacheStartedEvent(HttpArtifactCacheEvent.Started event) {
+  public synchronized void onHttpArtifactCacheStartedEvent(HttpArtifactCacheEvent.Started event) {
     if (firstCacheFetchEvent.compareAndSet(false, true)) {
-      getTimeDifferenceSinceLastEventToEvent(event);
+      perfTimesStatsBuilder.setRulekeyTimeMs(getTimeDifferenceSinceLastEventToEvent(event));
       eventBus.post(PerfTimesEvent.update(perfTimesStatsBuilder.build()));
     }
   }
 
   @Subscribe
-  public void buildRuleWillBuildLocally(BuildRuleEvent.WillBuildLocally event) {
+  public synchronized void buildRuleWillBuildLocally(BuildRuleEvent.WillBuildLocally event) {
     if (firstLocalBuildEvent.compareAndSet(false, true)) {
       perfTimesStatsBuilder.setFetchTimeMs(getTimeDifferenceSinceLastEventToEvent(event));
       eventBus.post(PerfTimesEvent.update(perfTimesStatsBuilder.build()));

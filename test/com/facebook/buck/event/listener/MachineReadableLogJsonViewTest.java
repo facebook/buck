@@ -164,6 +164,8 @@ public class MachineReadableLogJsonViewTest {
                 .setPythonTimeMs(4L)
                 .setInitTimeMs(8L)
                 .setProcessingTimeMs(15L)
+                .setRulekeyTimeMs(100L)
+                .setTotalRulekeyTimeMs(42L)
                 .setActionGraphTimeMs(16L)
                 .setBuildTimeMs(23L)
                 .setInstallTimeMs(42L)
@@ -179,7 +181,8 @@ public class MachineReadableLogJsonViewTest {
             + "\"parseTimeMs\":0,"
             + "\"processingTimeMs\":15,"
             + "\"actionGraphTimeMs\":16,"
-            + "\"rulekeyTimeMs\":0,"
+            + "\"rulekeyTimeMs\":100,"
+            + "\"totalRulekeyTimeMs\":42,"
             + "\"fetchTimeMs\":0,"
             + "\"buildTimeMs\":23,"
             + "\"installTimeMs\":42}}",
