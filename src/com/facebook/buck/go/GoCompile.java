@@ -38,8 +38,13 @@ import com.facebook.buck.step.fs.TouchStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
@@ -108,15 +113,15 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     ImmutableList.Builder<Path> compileSrcListBuilder = ImmutableList.builder();
     ImmutableList.Builder<Path> headerSrcListBuilder = ImmutableList.builder();
     ImmutableList.Builder<Path> asmSrcListBuilder = ImmutableList.builder();
-    for (SourcePath path : srcs) {
-      Path srcPath = context.getSourcePathResolver().getAbsolutePath(path);
-      String extension = MorePaths.getFileExtension(srcPath).toLowerCase();
+    List<Path> srcFiles = getSourceFiles(context);
+    for (Path sourceFile : srcFiles) {
+      String extension = MorePaths.getFileExtension(sourceFile).toLowerCase();
       if (extension.equals("s")) {
-        asmSrcListBuilder.add(srcPath);
+        asmSrcListBuilder.add(sourceFile);
       } else if (extension.equals("go")) {
-        compileSrcListBuilder.add(srcPath);
+        compileSrcListBuilder.add(sourceFile);
       } else {
-        headerSrcListBuilder.add(srcPath);
+        headerSrcListBuilder.add(sourceFile);
       }
     }
 
@@ -253,6 +258,24 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     }
 
     return steps.build();
+  }
+
+  private List<Path> getSourceFiles(BuildContext context) {
+    List<Path> srcFiles = new ArrayList<>();
+    for (SourcePath path : srcs) {
+      Path srcPath = context.getSourcePathResolver().getAbsolutePath(path);
+      if (Files.isDirectory(srcPath)) {
+        try {
+          srcFiles.addAll(
+              Files.list(srcPath).filter(Files::isRegularFile).collect(Collectors.toList()));
+        } catch (IOException e) {
+          throw new RuntimeException("An error occur when listing the files under " + srcPath, e);
+        }
+      } else {
+        srcFiles.add(srcPath);
+      }
+    }
+    return srcFiles;
   }
 
   @Override
