@@ -82,13 +82,39 @@ public abstract class Unarchiver {
       final Path destination,
       ExistingFileMode existingFileMode)
       throws InterruptedException, IOException {
+    return extractArchive(
+        projectFilesystemFactory, archiveFile, destination, Optional.empty(), existingFileMode);
+  }
+
+  /**
+   * Extract a given archive to a specific directory
+   *
+   * @param projectFilesystemFactory A factory that creates filesystems
+   * @param archiveFile The path to the archive
+   * @param destination The destination directory where the archive should be extracted to
+   * @param stripPrefix If provided, only files under this prefix will be extracted. This prefix
+   *     prefix will also be removed from the destination path. e.g. foo.tar.gz/foo/bar/baz with a
+   *     prefix of foo will extract bar/baz into the destination directory. If not provided, no
+   *     stripping is done.
+   * @param existingFileMode How to handle existing files
+   * @return A list of paths to files that were created (not directories)
+   * @throws InterruptedException If a filesystem could not be created in the destination directory
+   * @throws IOException If the archive could not be extracted for any reason
+   */
+  public ImmutableList<Path> extractArchive(
+      ProjectFilesystemFactory projectFilesystemFactory,
+      Path archiveFile,
+      final Path destination,
+      Optional<Path> stripPrefix,
+      ExistingFileMode existingFileMode)
+      throws InterruptedException, IOException {
     // Create output directory if it does not exist
     Files.createDirectories(destination);
     return extractArchive(
             archiveFile,
             projectFilesystemFactory.createProjectFilesystem(destination),
             destination.getFileSystem().getPath(""),
-            Optional.empty(),
+            stripPrefix,
             existingFileMode)
         .stream()
         .map(input -> destination.resolve(input).toAbsolutePath())
