@@ -29,7 +29,6 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -112,9 +111,9 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final JavaLibrary compiledTestsLibrary;
 
   private final ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries;
-  @AddToRuleKey private final Tool javaRuntimeLauncher;
+  private final Tool javaRuntimeLauncher;
 
-  @AddToRuleKey private final ImmutableList<String> vmArgs;
+  private final ImmutableList<String> vmArgs;
 
   private final ImmutableMap<String, String> nativeLibsEnvironment;
 
@@ -127,13 +126,13 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Optional<Level> stdOutLogLevel;
   private final Optional<Level> stdErrLogLevel;
 
-  @AddToRuleKey private final TestType testType;
+  private final TestType testType;
 
-  @AddToRuleKey private final Optional<Long> testRuleTimeoutMs;
+  private final Optional<Long> testRuleTimeoutMs;
 
-  @AddToRuleKey private final Optional<Long> testCaseTimeoutMs;
+  private final Optional<Long> testCaseTimeoutMs;
 
-  @AddToRuleKey private final ImmutableMap<String, Arg> env;
+  private final ImmutableMap<String, Arg> env;
 
   private final Path pathToTestLogs;
 
@@ -143,11 +142,11 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Nullable private ImmutableList<JUnitStep> junits;
 
-  @AddToRuleKey private final boolean runTestSeparately;
+  private final boolean runTestSeparately;
 
-  @AddToRuleKey private final ForkMode forkMode;
+  private final ForkMode forkMode;
 
-  @AddToRuleKey private final Optional<SourcePath> unbundledResourcesRoot;
+  private final Optional<SourcePath> unbundledResourcesRoot;
 
   public JavaTest(
       BuildTarget buildTarget,
