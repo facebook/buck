@@ -90,7 +90,9 @@ public class RemoteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), tempFile.getParent())));
-    steps.add(new DownloadStep(getProjectFilesystem(), downloader, uri, sha1, tempFile));
+    steps.add(
+        new DownloadStep(
+            getProjectFilesystem(), downloader, uri, ImmutableList.of(), sha1, tempFile));
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
