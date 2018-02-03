@@ -45,11 +45,12 @@ import java.util.Optional;
  * build.
  */
 public class RemoteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+
   @AddToRuleKey(stringify = true)
   private final URI uri;
 
   @AddToRuleKey(stringify = true)
-  private final HashCode sha1;
+  private final FileHash sha1;
 
   @AddToRuleKey(stringify = true)
   private final Path output;
@@ -71,7 +72,7 @@ public class RemoteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     super(buildTarget, projectFilesystem, params);
 
     this.uri = uri;
-    this.sha1 = sha1;
+    this.sha1 = FileHash.ofSha1(sha1);
     this.downloader = downloader;
     this.type = type;
 

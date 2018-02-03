@@ -27,10 +27,10 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -94,7 +94,7 @@ public class DownloadStepTest {
             new ConditionallyExplodingDownloader(),
             URI.create("https://example.com"),
             ImmutableList.of(),
-            Sha1HashCode.of("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3").asHashCode(),
+            FileHash.ofSha1(HashCode.fromString("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3")),
             outputPath);
 
     StepExecutionResult result = step.execute(context);
@@ -116,7 +116,7 @@ public class DownloadStepTest {
                 URI.create("https://mirror1.example.com/"),
                 URI.create("https://mirror2.example.com/"),
                 URI.create("https://mirror3.example.com/")),
-            Sha1HashCode.of("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3").asHashCode(),
+            FileHash.ofSha1(HashCode.fromString("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3")),
             outputPath);
 
     StepExecutionResult result = step.execute(context);
@@ -140,7 +140,7 @@ public class DownloadStepTest {
   }
 
   @Test
-  public void succeedsIfOneDownloadSucceedsAndHashIsCorrect()
+  public void succeedsIfOneDownloadSucceedsAndSha1IsCorrect()
       throws IOException, InterruptedException {
     ConditionallyExplodingDownloader downloader =
         new ConditionallyExplodingDownloader(
@@ -160,7 +160,7 @@ public class DownloadStepTest {
                 URI.create("https://mirror1.example.com/"),
                 URI.create("https://mirror2.example.com/"),
                 URI.create("https://mirror3.example.com/")),
-            Sha1HashCode.of("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3").asHashCode(),
+            FileHash.ofSha1(HashCode.fromString("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3")),
             outputPath);
 
     StepExecutionResult result = step.execute(context);
@@ -179,7 +179,48 @@ public class DownloadStepTest {
   }
 
   @Test
-  public void failsIfDownloadSucceedsAndHashFails() throws IOException, InterruptedException {
+  public void succeedsIfOneDownloadSucceedsAndSha256IsCorrect()
+      throws IOException, InterruptedException {
+    ConditionallyExplodingDownloader downloader =
+        new ConditionallyExplodingDownloader(
+            uri -> {
+              if (uri.getHost().equalsIgnoreCase("mirror2.example.com")) {
+                return Optional.of("test".getBytes(Charsets.UTF_8));
+              } else {
+                return Optional.empty();
+              }
+            });
+    DownloadStep step =
+        new DownloadStep(
+            filesystem,
+            downloader,
+            URI.create("https://example.com/"),
+            ImmutableList.of(
+                URI.create("https://mirror1.example.com/"),
+                URI.create("https://mirror2.example.com/"),
+                URI.create("https://mirror3.example.com/")),
+            FileHash.ofSha256(
+                HashCode.fromString(
+                    "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08")),
+            outputPath);
+
+    StepExecutionResult result = step.execute(context);
+
+    ImmutableList<String> expectedErrors =
+        ImmutableList.of(
+            "Unable to download https://example.com/, trying to download from https://mirror1.example.com/ instead",
+            "Unable to download https://mirror1.example.com/ (canonical URI: https://example.com/), trying to download from https://mirror2.example.com/ instead");
+
+    Assert.assertThat(
+        listener.getLogMessages().get(0), Matchers.containsString(expectedErrors.get(0)));
+    Assert.assertThat(
+        listener.getLogMessages().get(1), Matchers.containsString(expectedErrors.get(1)));
+    Assert.assertEquals(StepExecutionResults.SUCCESS.getExitCode(), result.getExitCode());
+    Assert.assertEquals("test", filesystem.readFileIfItExists(outputPath).get());
+  }
+
+  @Test
+  public void failsIfDownloadSucceedsAndSha1Fails() throws IOException, InterruptedException {
     ConditionallyExplodingDownloader downloader =
         new ConditionallyExplodingDownloader(
             uri -> Optional.of("test_bad_hash".getBytes(Charsets.UTF_8)));
@@ -193,13 +234,42 @@ public class DownloadStepTest {
                 URI.create("https://mirror1.example.com/"),
                 URI.create("https://mirror2.example.com/"),
                 URI.create("https://mirror3.example.com/")),
-            Sha1HashCode.of("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3").asHashCode(),
+            FileHash.ofSha1(HashCode.fromString("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3")),
             outputPath);
 
     StepExecutionResult result = step.execute(context);
 
     String expectedError =
         "Unable to download https://example.com/ (hashes do not match. Expected a94a8fe5ccb19ba61c4c0873d391e987982fbbd3, saw 2fbb3ff08bfc730eb74aab66df6af048517276bd)";
+
+    Assert.assertThat(listener.getLogMessages().get(0), Matchers.containsString(expectedError));
+    Assert.assertEquals(-1, result.getExitCode());
+  }
+
+  @Test
+  public void failsIfDownloadSucceedsAndSha256Fails() throws IOException, InterruptedException {
+    ConditionallyExplodingDownloader downloader =
+        new ConditionallyExplodingDownloader(
+            uri -> Optional.of("test_bad_hash".getBytes(Charsets.UTF_8)));
+
+    DownloadStep step =
+        new DownloadStep(
+            filesystem,
+            downloader,
+            URI.create("https://example.com/"),
+            ImmutableList.of(
+                URI.create("https://mirror1.example.com/"),
+                URI.create("https://mirror2.example.com/"),
+                URI.create("https://mirror3.example.com/")),
+            FileHash.ofSha256(
+                HashCode.fromString(
+                    "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08")),
+            outputPath);
+
+    StepExecutionResult result = step.execute(context);
+
+    String expectedError =
+        "Unable to download https://example.com/ (hashes do not match. Expected 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08, saw a18d4d9219cee377aa2c4a35428caf63d8462ea6d762904badd828bb5f8f04c4)";
 
     Assert.assertThat(listener.getLogMessages().get(0), Matchers.containsString(expectedError));
     Assert.assertEquals(-1, result.getExitCode());
@@ -216,7 +286,7 @@ public class DownloadStepTest {
                 URI.create("https://mirror1.example.com/"),
                 URI.create("https://mirror2.example.com/"),
                 URI.create("https://mirror3.example.com/")),
-            Sha1HashCode.of("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3").asHashCode(),
+            FileHash.ofSha1(HashCode.fromString("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3")),
             outputPath);
 
     Assert.assertEquals("curl", step.getShortName());
@@ -241,7 +311,7 @@ public class DownloadStepTest {
                 URI.create("https://mirror1.example.com/"),
                 URI.create("https://mirror2.example.com/"),
                 URI.create("https://mirror3.example.com/")),
-            Sha1HashCode.of("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3").asHashCode(),
+            FileHash.ofSha1(HashCode.fromString("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3")),
             outputPath);
 
     Assert.assertEquals(

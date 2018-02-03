@@ -27,7 +27,6 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
-import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import java.io.IOException;
 import java.net.URI;
@@ -38,7 +37,7 @@ public class DownloadStep implements Step {
   private final ProjectFilesystem filesystem;
   private final URI canonicalUri;
   private final ImmutableList<URI> additionalUris;
-  private final HashCode sha1;
+  private final FileHash expectedHash;
   private final Path output;
   private final Downloader downloader;
 
@@ -49,7 +48,7 @@ public class DownloadStep implements Step {
    * @param downloader The downloader to use to fetch files
    * @param canonicalUri The primary uri to try, and the one used in display text
    * @param additionalUris If the original download fails, try to download from these mirrors
-   * @param sha1 The expected sha1 of the file
+   * @param expectedHash The expected expectedHash of the file
    * @param output Where to output the file inside of the filesystem
    */
   public DownloadStep(
@@ -57,13 +56,13 @@ public class DownloadStep implements Step {
       Downloader downloader,
       URI canonicalUri,
       ImmutableList<URI> additionalUris,
-      HashCode sha1,
+      FileHash expectedHash,
       Path output) {
     this.filesystem = filesystem;
     this.downloader = downloader;
     this.canonicalUri = canonicalUri;
     this.additionalUris = additionalUris;
-    this.sha1 = sha1;
+    this.expectedHash = expectedHash;
     this.output = output;
   }
 
@@ -91,12 +90,12 @@ public class DownloadStep implements Step {
           reportFailedDownload(eventBus, allUris.get(allUris.size() - 1)));
     }
 
-    HashCode readHash = Files.asByteSource(resolved.toFile()).hash(Hashing.sha1());
-    if (!sha1.equals(readHash)) {
+    HashCode readHash = Files.asByteSource(resolved.toFile()).hash(expectedHash.getHashFunction());
+    if (!expectedHash.getHashCode().equals(readHash)) {
       eventBus.post(
           ConsoleEvent.severe(
               "Unable to download %s (hashes do not match. Expected %s, saw %s)",
-              canonicalUri, sha1, readHash));
+              canonicalUri, expectedHash, readHash));
       return StepExecutionResult.of(-1);
     }
 
