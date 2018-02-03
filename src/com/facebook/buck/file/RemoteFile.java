@@ -32,7 +32,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MakeExecutableStep;
-import com.facebook.buck.zip.UnzipStep;
+import com.facebook.buck.unarchive.UnzipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import java.net.URI;
@@ -81,7 +81,6 @@ public class RemoteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-
     Path tempFile =
         BuildTargets.getScratchPath(
             getProjectFilesystem(), getBuildTarget(), "%s/" + output.getFileName());

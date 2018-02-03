@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.zip;
+package com.facebook.buck.unarchive;
 
 import static com.facebook.buck.testutil.FakeProjectFilesystem.createJavaOnlyFilesystem;
 import static org.junit.Assert.assertEquals;

@@ -23,7 +23,7 @@ import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.zip.UnzipStep;
+import com.facebook.buck.unarchive.UnzipStep;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 

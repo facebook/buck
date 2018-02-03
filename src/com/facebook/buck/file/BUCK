@@ -32,6 +32,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/toolchain:toolchain",
+        "//src/com/facebook/buck/unarchive:unarchive",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/zip:zip",
