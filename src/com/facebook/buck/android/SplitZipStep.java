@@ -32,7 +32,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -266,11 +265,8 @@ public class SplitZipStep implements Step {
       String internalClassName =
           Preconditions.checkNotNull(deobfuscate.apply(classFileName.replaceAll("\\.class$", "")));
 
-      if (primaryDexClassNames.contains(internalClassName)) {
-        return true;
-      }
-
-      return primaryDexFilter.matches(internalClassName);
+      return primaryDexClassNames.contains(internalClassName) ||
+          primaryDexFilter.matches(internalClassName);
     };
   }
 
@@ -289,16 +285,19 @@ public class SplitZipStep implements Step {
 
     if (primaryDexClassesFile.isPresent()) {
       Iterable<String> classes =
-          FluentIterable.from(filesystem.readLines(primaryDexClassesFile.get()))
-              .transform(String::trim)
-              .filter(SplitZipStep::isNeitherEmptyNorComment);
+          filesystem
+              .readLines(primaryDexClassesFile.get())
+              .stream()
+              .map(String::trim)
+              .filter(SplitZipStep::isNeitherEmptyNorComment)
+              .collect(Collectors.toList());
       builder.addAll(classes);
     }
 
     // If there is a scenario file but overflow is not allowed, then the scenario dependencies
     // are required, and therefore get added here.
     if (!dexSplitMode.isPrimaryDexScenarioOverflowAllowed() && primaryDexScenarioFile.isPresent()) {
-      addScenarioClasses(translatorFactory, classesSupplier, builder);
+      addScenarioClasses(translatorFactory, classesSupplier, builder, primaryDexScenarioFile.get());
     }
 
     return builder.build();
@@ -369,7 +368,7 @@ public class SplitZipStep implements Step {
     // If there is a scenario file and overflow is allowed, then the scenario dependencies
     // are wanted but not required, and therefore get added here.
     if (dexSplitMode.isPrimaryDexScenarioOverflowAllowed() && primaryDexScenarioFile.isPresent()) {
-      addScenarioClasses(translatorFactory, classesSupplier, builder);
+      addScenarioClasses(translatorFactory, classesSupplier, builder, primaryDexScenarioFile.get());
     }
 
     return builder
@@ -390,20 +389,31 @@ public class SplitZipStep implements Step {
   private void addScenarioClasses(
       ProguardTranslatorFactory translatorFactory,
       Supplier<ImmutableList<ClassNode>> classesSupplier,
-      ImmutableSet.Builder<String> builder)
+      ImmutableSet.Builder<String> builder,
+      Path scenarioFile)
       throws IOException {
+
+    Function<String, String> obfuscationFunction = translatorFactory.createObfuscationFunction();
+    Function<String, String> deObfuscationFunction = translatorFactory.createDeobfuscationFunction();
 
     ImmutableList<Type> scenarioClasses =
         filesystem
-            .readLines(primaryDexScenarioFile.get())
+            .readLines(scenarioFile)
             .stream()
             .map(String::trim)
             .filter(SplitZipStep::isNeitherEmptyNorComment)
-            .map(translatorFactory.createObfuscationFunction())
+            .map(obfuscationFunction)
             .map(Type::getObjectType)
             .collect(ImmutableList.toImmutableList());
 
-    FirstOrderHelper.addTypesAndDependencies(scenarioClasses, classesSupplier.get(), builder);
+    ImmutableSet.Builder<String> classBuilder = ImmutableSet.builder();
+    FirstOrderHelper.addTypesAndDependencies(scenarioClasses, classesSupplier.get(), classBuilder);
+
+    builder.addAll(
+        classBuilder.build()
+            .stream()
+            .map(deObfuscationFunction)
+            .collect(Collectors.toSet()));
   }
 
   @VisibleForTesting
