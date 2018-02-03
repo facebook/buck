@@ -31,7 +31,7 @@ public class HeaderSymlinkTree extends SymlinkTree {
       ProjectFilesystem filesystem,
       Path root,
       ImmutableMap<Path, SourcePath> links) {
-    super(target, filesystem, root, links);
+    super("cxx_header", target, filesystem, root, links);
   }
 
   /**

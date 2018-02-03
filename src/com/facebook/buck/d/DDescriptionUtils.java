@@ -176,6 +176,7 @@ abstract class DDescriptionUtils {
       SourceList sources) {
     Preconditions.checkState(target.getFlavors().contains(SOURCE_LINK_TREE));
     return new SymlinkTree(
+        "d_src",
         target,
         projectFilesystem,
         BuildTargets.getGenPath(projectFilesystem, target, "%s"),

@@ -265,6 +265,7 @@ public class JavaTestDescription
           }
           nativeLibsSymlinkTree =
               new SymlinkTree(
+                  "java_test_native_libs",
                   nativeLibsSymlinkTree.getBuildTarget(),
                   nativeLibsSymlinkTree.getProjectFilesystem(),
                   nativeLibsSymlinkTree

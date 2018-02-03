@@ -500,7 +500,10 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
     commands.add(
         new SymlinkTreeStep(
-            getProjectFilesystem(), pathToSrcDirectory, ImmutableSortedMap.copyOf(linksBuilder)));
+            "genrule_srcs",
+            getProjectFilesystem(),
+            pathToSrcDirectory,
+            ImmutableSortedMap.copyOf(linksBuilder)));
   }
 
   /** Get the output name of the generated file, as listed in the BUCK file. */

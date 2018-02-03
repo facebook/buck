@@ -230,7 +230,7 @@ public class AndroidResourceDescription
     }
     Path symlinkTreeRoot =
         BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s").resolve(outputDirName);
-    return new SymlinkTree(buildTarget, projectFilesystem, symlinkTreeRoot, links);
+    return new SymlinkTree("android_res", buildTarget, projectFilesystem, symlinkTreeRoot, links);
   }
 
   public static Optional<SourcePath> getResDirectoryForProject(

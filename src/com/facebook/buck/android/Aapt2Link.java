@@ -139,7 +139,8 @@ public class Aapt2Link extends AbstractBuildRule {
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(), getProjectFilesystem(), linkTreePath))
             .withRecursive(true));
-    steps.add(new SymlinkTreeStep(getProjectFilesystem(), linkTreePath, symlinkMap.build()));
+    steps.add(
+        new SymlinkTreeStep("aapt", getProjectFilesystem(), linkTreePath, symlinkMap.build()));
 
     steps.add(
         new Aapt2LinkStep(

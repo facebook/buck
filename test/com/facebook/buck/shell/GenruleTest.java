@@ -198,7 +198,8 @@ public class GenruleTest {
 
     MoreAsserts.assertStepsNames(
         "",
-        ImmutableList.of("rm", "mkdir", "rm", "mkdir", "rm", "mkdir", "link_tree", "genrule"),
+        ImmutableList.of(
+            "rm", "mkdir", "rm", "mkdir", "rm", "mkdir", "genrule_srcs_link_tree", "genrule"),
         steps);
 
     ExecutionContext executionContext = newEmptyExecutionContext();
@@ -266,6 +267,7 @@ public class GenruleTest {
 
     assertEquals(
         new SymlinkTreeStep(
+            "genrule_srcs",
             filesystem,
             pathToSrcDir,
             ImmutableMap.of(
@@ -558,10 +560,11 @@ public class GenruleTest {
 
     Path baseTmpPath = filesystem.getBuckPaths().getGenDir().resolve("example__srcs");
 
-    MoreAsserts.assertStepsNames("", ImmutableList.of("link_tree"), commands);
+    MoreAsserts.assertStepsNames("", ImmutableList.of("genrule_srcs_link_tree"), commands);
 
     assertEquals(
         new SymlinkTreeStep(
+            "genrule_srcs",
             filesystem,
             baseTmpPath,
             ImmutableMap.of(

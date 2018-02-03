@@ -158,6 +158,7 @@ public class PythonBinaryDescription
     SymlinkTree linkTree =
         resolver.addToIndex(
             new SymlinkTree(
+                "python_in_place_binary",
                 linkTreeTarget,
                 projectFilesystem,
                 linkTreeRoot,

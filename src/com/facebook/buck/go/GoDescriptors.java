@@ -423,7 +423,7 @@ abstract class GoDescriptors {
 
     Path root = BuildTargets.getScratchPath(projectFilesystem, buildTarget, "__%s__tree");
 
-    return new SymlinkTree(buildTarget, projectFilesystem, root, treeMap);
+    return new SymlinkTree("go_linkable", buildTarget, projectFilesystem, root, treeMap);
   }
 
   /**

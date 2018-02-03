@@ -131,7 +131,10 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
                         buildContext.getBuildCellRootPath(), projectFilesystem, symlinkTreeRoot)))
             .add(
                 new SymlinkTreeStep(
-                    projectFilesystem, symlinkTreeRoot, resolver.getMappedPaths(links)))
+                    "cxx_header",
+                    projectFilesystem,
+                    symlinkTreeRoot,
+                    resolver.getMappedPaths(links)))
             .add(
                 new HeaderMapStep(
                     projectFilesystem,

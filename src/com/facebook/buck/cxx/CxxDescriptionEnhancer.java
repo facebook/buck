@@ -185,7 +185,7 @@ public class CxxDescriptionEnhancer {
             projectFilesystem, sandboxSymlinkTreeTarget);
 
     return new SymlinkTree(
-        sandboxSymlinkTreeTarget, projectFilesystem, sandboxSymlinkTreeRoot, map);
+        "cxx_sandbox", sandboxSymlinkTreeTarget, projectFilesystem, sandboxSymlinkTreeRoot, map);
   }
 
   public static HeaderSymlinkTree requireHeaderSymlinkTree(
@@ -1224,7 +1224,8 @@ public class CxxDescriptionEnhancer {
     for (Map.Entry<String, SourcePath> ent : libraries.entrySet()) {
       links.put(Paths.get(ent.getKey()), ent.getValue());
     }
-    return new SymlinkTree(symlinkTreeTarget, filesystem, symlinkTreeRoot, links.build());
+    return new SymlinkTree(
+        "cxx_binary", symlinkTreeTarget, filesystem, symlinkTreeRoot, links.build());
   }
 
   public static SymlinkTree requireSharedLibrarySymlinkTree(
@@ -1275,7 +1276,8 @@ public class CxxDescriptionEnhancer {
       links.put(Paths.get(ent.getKey()), ent.getValue());
     }
     links.put(binaryName, binarySource);
-    return new SymlinkTree(symlinkTreeTarget, filesystem, symlinkTreeRoot, links.build());
+    return new SymlinkTree(
+        "cxx_binary", symlinkTreeTarget, filesystem, symlinkTreeRoot, links.build());
   }
 
   private static SymlinkTree requireBinaryWithSharedLibrariesSymlinkTree(

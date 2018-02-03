@@ -193,7 +193,8 @@ public class ApkGenruleTest {
     List<Step> steps = apkGenrule.getBuildSteps(buildContext, new FakeBuildableContext());
     MoreAsserts.assertStepsNames(
         "",
-        ImmutableList.of("rm", "mkdir", "rm", "mkdir", "rm", "mkdir", "link_tree", "genrule"),
+        ImmutableList.of(
+            "rm", "mkdir", "rm", "mkdir", "rm", "mkdir", "genrule_srcs_link_tree", "genrule"),
         steps);
 
     ExecutionContext executionContext = newEmptyExecutionContext();
@@ -257,6 +258,7 @@ public class ApkGenruleTest {
 
     assertEquals(
         new SymlinkTreeStep(
+            "genrule_srcs",
             projectFilesystem,
             relativePathToSrcDir,
             ImmutableMap.of(

@@ -135,6 +135,7 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
                     getPathToTestWorkingDirectory())))
         .add(
             new SymlinkTreeStep(
+                "go_test",
                 getProjectFilesystem(),
                 getPathToTestWorkingDirectory(),
                 ImmutableMap.copyOf(

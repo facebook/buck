@@ -109,7 +109,8 @@ public class SymlinkTreeTest {
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     // Setup the symlink tree buildable.
-    symlinkTreeBuildRule = new SymlinkTree(buildTarget, projectFilesystem, outputPath, links);
+    symlinkTreeBuildRule =
+        new SymlinkTree("link_tree", buildTarget, projectFilesystem, outputPath, links);
   }
 
   @Test
@@ -128,7 +129,7 @@ public class SymlinkTreeTest {
                         buildContext.getBuildCellRootPath(), projectFilesystem, outputPath)))
             .add(
                 new SymlinkTreeStep(
-                    projectFilesystem, outputPath, pathResolver.getMappedPaths(links)))
+                    "link_tree", projectFilesystem, outputPath, pathResolver.getMappedPaths(links)))
             .build();
     ImmutableList<Step> actualBuildSteps =
         symlinkTreeBuildRule.getBuildSteps(buildContext, buildableContext);
@@ -146,6 +147,7 @@ public class SymlinkTreeTest {
     Files.write(aFile, "hello world".getBytes(Charsets.UTF_8));
     SymlinkTree modifiedSymlinkTreeBuildRule =
         new SymlinkTree(
+            "link_tree",
             buildTarget,
             projectFilesystem,
             outputPath,
@@ -242,6 +244,7 @@ public class SymlinkTreeTest {
 
     symlinkTreeBuildRule =
         new SymlinkTree(
+            "link_tree",
             buildTarget,
             projectFilesystem,
             outputPath,
@@ -270,6 +273,7 @@ public class SymlinkTreeTest {
   public void verifyStepFailsIfKeyContainsDotDot() throws Exception {
     SymlinkTree symlinkTree =
         new SymlinkTree(
+            "link_tree",
             buildTarget,
             projectFilesystem,
             outputPath,
