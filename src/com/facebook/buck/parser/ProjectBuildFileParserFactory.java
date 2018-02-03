@@ -100,6 +100,7 @@ public class ProjectBuildFileParserFactory {
             .setWatchmanQueryTimeoutMs(parserConfig.getWatchmanQueryTimeoutMs())
             .setRawConfig(cell.getBuckConfig().getRawConfigForParser())
             .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
+            .setDisableImplicitNativeRules(parserConfig.getDisableImplicitNativeRules())
             .build();
     return EventReportingProjectBuildFileParser.of(
         createProjectBuildFileParser(

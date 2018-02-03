@@ -2863,6 +2863,20 @@ your <code>.buckjavaargs</code> file</a>:
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'parser' /}
+  {param name: 'disable_implicit_native_rules' /}
+  {param example_value: 'true' /}
+  {param description}
+    If set, native rules (cxx_library, android_library, etc) cannot be used in BUCK files. This
+    can be useful if your team has a common set of macros that should be loaded, and one desires
+    a fast-feedback way to make sure that Buck's native rules are not inadvertently used. If set,
+    native rules can only be accessed via the 'native' object within an extension file that is
+    evaluated with {call buck.fn_load /} or {call buck.fn_include_defs /}.
+    This flag is disabled by default (native rules can be used in build files).
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'project' /}
   {param description}

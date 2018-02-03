@@ -108,7 +108,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private final EventHandler eventHandler;
   private final Supplier<ImmutableList<BuiltinFunction>> buckRuleFunctionsSupplier;
   private final Supplier<ClassObject> nativeModuleSupplier;
-  private final Supplier<Environment.Frame> buckGlobalsSupplier;
+  private final Supplier<Environment.Frame> buckLoadContextGlobalsSupplier;
+  private final Supplier<Environment.Frame> buckBuildFileContextGlobalsSupplier;
   private final LoadingCache<LoadImport, ExtensionData> extensionDataCache;
 
   private SkylarkProjectBuildFileParser(
@@ -127,7 +128,9 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     // TODO(ttsugrii): replace suppliers with eager loading once Skylark parser is on by default
     this.buckRuleFunctionsSupplier = MoreSuppliers.memoize(this::getBuckRuleFunctions);
     this.nativeModuleSupplier = MoreSuppliers.memoize(this::newNativeModule);
-    this.buckGlobalsSupplier = MoreSuppliers.memoize(this::getBuckGlobals);
+    this.buckLoadContextGlobalsSupplier = MoreSuppliers.memoize(this::getBuckLoadContextGlobals);
+    this.buckBuildFileContextGlobalsSupplier =
+        MoreSuppliers.memoize(this::getBuckBuildFileContextGlobals);
     this.extensionDataCache =
         CacheBuilder.newBuilder()
             .build(
@@ -137,6 +140,16 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
                     return loadExtension(loadImport);
                   }
                 });
+  }
+
+  /** Always disable implicit native imports in skylark rules, they should utilize native.foo */
+  private Environment.Frame getBuckLoadContextGlobals() {
+    return getBuckGlobals(true);
+  }
+
+  /** Disable implicit native rules depending on configuration */
+  private Environment.Frame getBuckBuildFileContextGlobals() {
+    return getBuckGlobals(options.getDisableImplicitNativeRules());
   }
 
   /** Create an instance of Skylark project build file parser using provided options. */
@@ -259,7 +272,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     Environment env =
         Environment.builder(mutability)
             .setImportedExtensions(importMap)
-            .setGlobals(buckGlobalsSupplier.get())
+            .setGlobals(buckBuildFileContextGlobalsSupplier.get())
             .setPhase(Environment.Phase.LOADING)
             .useDefaultSemantics()
             .setEventHandler(eventHandler)
@@ -372,7 +385,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       Environment.Builder envBuilder =
           Environment.builder(mutability)
               .setEventHandler(eventHandler)
-              .setGlobals(buckGlobalsSupplier.get());
+              .setGlobals(buckLoadContextGlobalsSupplier.get());
       if (!extensionAst.getImports().isEmpty()) {
         dependencies = loadExtensions(label, extensionAst.getImports());
         envBuilder.setImportedExtensions(toImportMap(dependencies));
@@ -398,8 +411,9 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   /**
    * @return The environment frame with configured buck globals. This includes built-in rules like
    *     {@code java_library}.
+   * @param disableImplicitNativeRules If true, do not export native rules into the provided context
    */
-  private Environment.Frame getBuckGlobals() {
+  private Environment.Frame getBuckGlobals(boolean disableImplicitNativeRules) {
     Environment.Frame buckGlobals;
     try (Mutability mutability = Mutability.create("global")) {
       Environment globalEnv =
@@ -410,8 +424,10 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
 
       BuiltinFunction readConfigFunction = ReadConfig.create();
       globalEnv.setup(readConfigFunction.getName(), readConfigFunction);
-      for (BuiltinFunction buckRuleFunction : buckRuleFunctionsSupplier.get()) {
-        globalEnv.setup(buckRuleFunction.getName(), buckRuleFunction);
+      if (!disableImplicitNativeRules) {
+        for (BuiltinFunction buckRuleFunction : buckRuleFunctionsSupplier.get()) {
+          globalEnv.setup(buckRuleFunction.getName(), buckRuleFunction);
+        }
       }
       buckGlobals = globalEnv.getGlobals();
     }

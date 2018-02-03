@@ -83,7 +83,7 @@ public class BuckPyFunctionTest {
     assertEquals(
         Joiner.on("\n")
             .join(
-                "@provide_for_build",
+                "@provide_as_native_rule",
                 "def named(name, visibility=None, within_view=None, build_env=None):",
                 "    add_rule({",
                 "        'buck.type': 'named',",
@@ -153,7 +153,7 @@ public class BuckPyFunctionTest {
     assertEquals(
         Joiner.on("\n")
             .join(
-                "@provide_for_build",
+                "@provide_as_native_rule",
                 "def either(name, dog, fake, cat=None, egg=None, "
                     + "visibility=None, within_view=None, build_env=None):",
                 "    add_rule({",
@@ -195,7 +195,7 @@ public class BuckPyFunctionTest {
     assertEquals(
         Joiner.on("\n")
             .join(
-                "@provide_for_build",
+                "@provide_as_native_rule",
                 "def case(name, some_field, "
                     + "visibility=None, within_view=None, build_env=None):",
                 "    add_rule({",

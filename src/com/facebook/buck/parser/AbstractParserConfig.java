@@ -234,4 +234,13 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   public boolean isParserCacheMutationWarningEnabled() {
     return getDelegate().getBooleanValue("parser", "parser_cache_mutation_warning_enabled", true);
   }
+
+  /**
+   * @return whether native build rules are available for users in build files. If not, they are
+   *     only accessible in extension files under the 'native' object
+   */
+  @Value.Lazy
+  public boolean getDisableImplicitNativeRules() {
+    return getDelegate().getBooleanValue("parser", "disable_implicit_native_rules", false);
+  }
 }

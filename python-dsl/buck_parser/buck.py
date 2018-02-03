@@ -46,6 +46,8 @@ except ImportError:
 
 # When build files are executed, the functions in this file tagged with
 # @provide_for_build will be provided in the build file's local symbol table.
+# Those tagged with @provide_as_native_rule will be present unless
+# explicitly disabled by parser.native_rules_enabled_in_build_files
 #
 # When these functions are called from a build file, they will be passed
 # a keyword parameter, build_env, which is a object with information about
@@ -59,6 +61,7 @@ except ImportError:
 # "cell_name" - The cell name the build file is in.
 
 BUILD_FUNCTIONS = []
+NATIVE_FUNCTIONS = []
 
 # Wait this many seconds on recv() or send() in the pywatchman client
 # if not otherwise specified in .buckconfig
@@ -356,6 +359,11 @@ class IncorrectArgumentsException(TypeError):
         super(IncorrectArgumentsException, self).__init__(message)
 
 
+def provide_as_native_rule(func):
+    NATIVE_FUNCTIONS.append(func)
+    return func
+
+
 def provide_for_build(func):
     BUILD_FUNCTIONS.append(func)
     return func
@@ -640,7 +648,7 @@ class BuildFileProcessor(object):
                  watchman_use_glob_generator,
                  project_import_whitelist=None, implicit_includes=None,
                  extra_funcs=None, configs=None, env_vars=None,
-                 ignore_paths=None):
+                 ignore_paths=None, disable_implicit_native_rules=False):
         if project_import_whitelist is None:
             project_import_whitelist = []
         if implicit_includes is None:
@@ -669,12 +677,19 @@ class BuildFileProcessor(object):
         self._configs = configs
         self._env_vars = env_vars
         self._ignore_paths = ignore_paths
+        self._disable_implicit_native_rules = disable_implicit_native_rules
 
-        lazy_functions = {}
+        lazy_global_functions = {}
+        lazy_native_functions = {}
         for func in BUILD_FUNCTIONS + extra_funcs:
             func_with_env = LazyBuildEnvPartial(func)
-            lazy_functions[func.__name__] = func_with_env
-        self._functions = lazy_functions
+            lazy_global_functions[func.__name__] = func_with_env
+        for func in NATIVE_FUNCTIONS:
+            func_with_env = LazyBuildEnvPartial(func)
+            lazy_native_functions[func.__name__] = func_with_env
+
+        self._global_functions = lazy_global_functions
+        self._native_functions = lazy_native_functions
         self._import_whitelist_manager = ImportWhitelistManager(
             import_whitelist=self._create_import_whitelist(project_import_whitelist),
             safe_modules_config=self.SAFE_MODULES_CONFIG,
@@ -691,7 +706,7 @@ class BuildFileProcessor(object):
         :return: 'native' module struct.
         """
         native_globals = {}
-        self._install_builtins(native_globals)
+        self._install_builtins(native_globals, force_native_rules=True)
         assert 'glob' not in native_globals
         assert 'host_info' not in native_globals
         native_globals['glob'] = self._glob
@@ -801,16 +816,21 @@ class BuildFileProcessor(object):
         Updates the build functions to use the given build context when called.
         """
 
-        for function in self._functions.itervalues():
+        for function in self._global_functions.itervalues():
+            function.build_env = build_env
+        for function in self._native_functions.itervalues():
             function.build_env = build_env
 
-    def _install_builtins(self, namespace):
+    def _install_builtins(self, namespace, force_native_rules=False):
         """
         Installs the build functions, by their name, into the given namespace.
         """
 
-        for name, function in self._functions.iteritems():
+        for name, function in self._global_functions.iteritems():
             namespace[name] = function.invoke
+        if not self._disable_implicit_native_rules or force_native_rules:
+            for name, function in self._native_functions.iteritems():
+                namespace[name] = function.invoke
 
     @contextlib.contextmanager
     def with_builtins(self, namespace):
@@ -1533,6 +1553,11 @@ def main():
         '--build_file_import_whitelist',
         action='append',
         dest='build_file_import_whitelist')
+    parser.add_option(
+        '--disable_implicit_native_rules',
+        action='store_true',
+        help='Do not allow native rules in build files, only included ones',
+    )
     (options, args) = parser.parse_args()
 
     # Even though project_root is absolute path, it may not be concise. For
@@ -1585,7 +1610,8 @@ def main():
         project_import_whitelist=options.build_file_import_whitelist or [],
         implicit_includes=options.include or [],
         configs=configs,
-        ignore_paths=ignore_paths)
+        ignore_paths=ignore_paths,
+        disable_implicit_native_rules=options.disable_implicit_native_rules)
 
     # While processing, we'll write exceptions as diagnostic messages
     # to the parent then re-raise them to crash the process. While

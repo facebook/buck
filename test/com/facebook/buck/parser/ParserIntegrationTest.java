@@ -44,7 +44,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class ParserIntegrationTest {
-  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths(true);
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
@@ -350,6 +350,155 @@ public class ParserIntegrationTest {
             "parser.polyglot_parsing_enabled=true",
             "-c",
             "parser.default_build_file_syntax=python_dsl")
+        .assertSuccess();
+  }
+
+  private void assertParseFailedWithSubstrings(ProcessResult result, String... substrings) {
+    result.assertExitCode("", ExitCode.PARSE_ERROR);
+    System.out.println(result.getStderr());
+    for (String substring : substrings) {
+      assertThat(result.getStderr(), containsString(substring));
+    }
+  }
+
+  @Test
+  public void testDisablingImplicitNativeRules() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "disable_implicit_native_rules", temporaryFolder);
+    workspace.setUp();
+
+    // Python interpreter, true / false / default for disabling implicit native rules
+
+    assertParseFailedWithSubstrings(
+        workspace.runBuckBuild(
+            "//python/implicit_in_build_file:main",
+            "-c",
+            "parser.disable_implicit_native_rules=true"),
+        "NameError: name 'java_library' is not defined",
+        "BUCK\", line 1");
+    assertParseFailedWithSubstrings(
+        workspace.runBuckBuild(
+            "//python/implicit_in_extension_bzl:main",
+            "-c",
+            "parser.disable_implicit_native_rules=true"),
+        "NameError: global name 'java_library' is not defined",
+        "extension.bzl\", line 5",
+        "BUCK\", line 5");
+    workspace
+        .runBuckBuild(
+            "//python/native_in_extension_bzl:main",
+            "-c",
+            "parser.disable_implicit_native_rules=true")
+        .assertSuccess();
+
+    workspace
+        .runBuckBuild(
+            "//python/implicit_in_build_file:main",
+            "-c",
+            "parser.disable_implicit_native_rules=false")
+        .assertSuccess();
+    workspace
+        .runBuckBuild(
+            "//python/implicit_in_extension_bzl:main",
+            "-c",
+            "parser.disable_implicit_native_rules=false")
+        .assertSuccess();
+    workspace
+        .runBuckBuild(
+            "//python/native_in_extension_bzl:main",
+            "-c",
+            "parser.disable_implicit_native_rules=false")
+        .assertSuccess();
+
+    workspace.runBuckBuild("//python/implicit_in_build_file:main").assertSuccess();
+    workspace.runBuckBuild("//python/implicit_in_extension_bzl:main").assertSuccess();
+    workspace.runBuckBuild("//python/native_in_extension_bzl:main").assertSuccess();
+
+    // Skylark interpreter, true / false / default for disabling implicit native rules
+    // TODO: Specific error messages are disabled until we hook up the skylark parser to the
+    // general buck event bus, since that's how we get messages in integration tests (and how
+    // the python parser is hooked up)
+
+    assertParseFailedWithSubstrings(
+        workspace.runBuckBuild(
+            "//skylark/implicit_in_build_file:main",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.disable_implicit_native_rules=true"));
+    //        "BUCK:1:1: name 'java_library' is not defined");
+    assertParseFailedWithSubstrings(
+        workspace.runBuckBuild(
+            "//skylark/implicit_in_extension_bzl:main",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.disable_implicit_native_rules=true"));
+    //        "name 'java_library' is not defined",
+    //        "extension.bzl\", line 5",
+    //        "BUCK\", line 5");
+    workspace
+        .runBuckBuild(
+            "//skylark/native_in_extension_bzl:main",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.disable_implicit_native_rules=true")
+        .assertSuccess();
+
+    workspace
+        .runBuckBuild(
+            "//skylark/implicit_in_build_file:main",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.disable_implicit_native_rules=false")
+        .assertSuccess();
+    assertParseFailedWithSubstrings(
+        workspace.runBuckBuild(
+            "//skylark/implicit_in_extension_bzl:main",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.disable_implicit_native_rules=false"));
+    //        "name 'java_library' is not defined",
+    //        "extension.bzl\", line 5",
+    //        "BUCK\", line 5");
+    workspace
+        .runBuckBuild(
+            "//skylark/native_in_extension_bzl:main",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.disable_implicit_native_rules=false")
+        .assertSuccess();
+
+    workspace
+        .runBuckBuild(
+            "//skylark/implicit_in_build_file:main",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.default_build_file_syntax=SKYLARK")
+        .assertSuccess();
+    assertParseFailedWithSubstrings(
+        workspace.runBuckBuild(
+            "//skylark/implicit_in_extension_bzl:main",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.default_build_file_syntax=SKYLARK"));
+    //        "name 'java_library' is not defined",
+    //        "extension.bzl\", line 5",
+    //        "BUCK\", line 5");
+    workspace
+        .runBuckBuild(
+            "//skylark/native_in_extension_bzl:main",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.default_build_file_syntax=SKYLARK")
         .assertSuccess();
   }
 }

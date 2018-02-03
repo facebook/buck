@@ -19,7 +19,7 @@ def buck_module(
 
     jar_without_hash_name = name + '_jar_without_hash'
 
-    java_binary(
+    native.java_binary(
         name = jar_without_hash_name,
         deps = [
             ":" + name,
@@ -28,7 +28,7 @@ def buck_module(
 
     calculate_module_hash_name = name + '_calculate_module_hash'
 
-    genrule(
+    native.genrule(
         name = calculate_module_hash_name,
         out = "module-binary-hash.txt",
         cmd = " ".join([
@@ -38,7 +38,7 @@ def buck_module(
         ]),
     )
 
-    genrule(
+    native.genrule(
         name = name + "-module",
         out = "{}.jar".format(name),
         cmd = " ".join([
