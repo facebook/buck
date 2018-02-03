@@ -426,18 +426,18 @@ public class ParserIntegrationTest {
             "-c",
             "parser.polyglot_parsing_enabled=true",
             "-c",
-            "parser.disable_implicit_native_rules=true"));
-    //        "BUCK:1:1: name 'java_library' is not defined");
+            "parser.disable_implicit_native_rules=true"),
+        "BUCK:2:1: name 'java_library' is not defined");
     assertParseFailedWithSubstrings(
         workspace.runBuckBuild(
             "//skylark/implicit_in_extension_bzl:main",
             "-c",
             "parser.polyglot_parsing_enabled=true",
             "-c",
-            "parser.disable_implicit_native_rules=true"));
-    //        "name 'java_library' is not defined",
-    //        "extension.bzl\", line 5",
-    //        "BUCK\", line 5");
+            "parser.disable_implicit_native_rules=true"),
+        "name 'java_library' is not defined",
+        "extension.bzl\", line 5",
+        "BUCK\", line 4");
     workspace
         .runBuckBuild(
             "//skylark/native_in_extension_bzl:main",
@@ -461,10 +461,10 @@ public class ParserIntegrationTest {
             "-c",
             "parser.polyglot_parsing_enabled=true",
             "-c",
-            "parser.disable_implicit_native_rules=false"));
-    //        "name 'java_library' is not defined",
-    //        "extension.bzl\", line 5",
-    //        "BUCK\", line 5");
+            "parser.disable_implicit_native_rules=false"),
+        "name 'java_library' is not defined",
+        "extension.bzl\", line 5",
+        "BUCK\", line 4");
     workspace
         .runBuckBuild(
             "//skylark/native_in_extension_bzl:main",
@@ -488,10 +488,10 @@ public class ParserIntegrationTest {
             "-c",
             "parser.polyglot_parsing_enabled=true",
             "-c",
-            "parser.default_build_file_syntax=SKYLARK"));
-    //        "name 'java_library' is not defined",
-    //        "extension.bzl\", line 5",
-    //        "BUCK\", line 5");
+            "parser.default_build_file_syntax=SKYLARK"),
+        "name 'java_library' is not defined",
+        "extension.bzl\", line 5",
+        "BUCK\", line 4");
     workspace
         .runBuckBuild(
             "//skylark/native_in_extension_bzl:main",

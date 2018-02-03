@@ -29,12 +29,12 @@ import com.facebook.buck.python.toolchain.PythonInterpreter;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.skylark.parser.ConsoleEventHandler;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.events.EventKind;
-import com.google.devtools.build.lib.events.PrintingEventHandler;
 import java.util.Optional;
 
 public class ProjectBuildFileParserFactory {
@@ -134,7 +134,7 @@ public class ProjectBuildFileParserFactory {
                   eventBus,
                   SkylarkFilesystem.using(cell.getFilesystem()),
                   typeCoercerFactory,
-                  new PrintingEventHandler(EventKind.ALL_EVENTS))),
+                  new ConsoleEventHandler(eventBus, EventKind.ALL_EVENTS))),
           parserConfig.getDefaultBuildFileSyntax());
     }
     return pythonDslProjectBuildFileParser;
