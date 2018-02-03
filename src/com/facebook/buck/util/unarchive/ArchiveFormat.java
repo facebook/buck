@@ -23,6 +23,10 @@ import java.util.stream.Stream;
  * A collection different archive types, and the unarchiver that should be used to extract archives
  */
 public enum ArchiveFormat {
+  TAR(".tar", "tar", Untar.tarUnarchiver()),
+  TAR_BZ2(".tar.bz2", "tar.bz2", Untar.bzip2Unarchiver()),
+  TAR_GZ(".tar.gz", "tar.gz", Untar.gzipUnarchiver()),
+  TAR_XZ(".tar.xz", "tar.xz", Untar.xzUnarchiver()),
   ZIP(".zip", "zip", new Unzip());
 
   private final String extension;

@@ -24,6 +24,14 @@ public class ArchiveFormatTest {
   @Test
   public void returnsCorrectCompressionFormatsBasedOnFilename() {
     Assert.assertEquals(
+        ArchiveFormat.TAR, ArchiveFormat.getFormatFromFilename("foo.bar.tar").get());
+    Assert.assertEquals(
+        ArchiveFormat.TAR_BZ2, ArchiveFormat.getFormatFromFilename("foo.bar.tar.bz2").get());
+    Assert.assertEquals(
+        ArchiveFormat.TAR_GZ, ArchiveFormat.getFormatFromFilename("foo.bar.tar.gz").get());
+    Assert.assertEquals(
+        ArchiveFormat.TAR_XZ, ArchiveFormat.getFormatFromFilename("foo.bar.tar.xz").get());
+    Assert.assertEquals(
         ArchiveFormat.ZIP, ArchiveFormat.getFormatFromFilename("foo.bar.zip").get());
   }
 
@@ -34,6 +42,11 @@ public class ArchiveFormatTest {
 
   @Test
   public void returnsCorrectCompressionFormatsBasedOnShortName() {
+    Assert.assertEquals(ArchiveFormat.TAR, ArchiveFormat.getFormatFromShortName("tar").get());
+    Assert.assertEquals(
+        ArchiveFormat.TAR_BZ2, ArchiveFormat.getFormatFromShortName("tar.bz2").get());
+    Assert.assertEquals(ArchiveFormat.TAR_GZ, ArchiveFormat.getFormatFromShortName("tar.gz").get());
+    Assert.assertEquals(ArchiveFormat.TAR_XZ, ArchiveFormat.getFormatFromShortName("tar.xz").get());
     Assert.assertEquals(ArchiveFormat.ZIP, ArchiveFormat.getFormatFromShortName("zip").get());
   }
 

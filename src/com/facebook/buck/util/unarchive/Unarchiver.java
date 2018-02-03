@@ -38,7 +38,7 @@ public abstract class Unarchiver {
    *     prefix of foo will extract bar/baz into the destination directory. If not provided, no
    *     stripping is done.
    * @param existingFileMode How to handle existing files
-   * @return A list of paths to files that were created
+   * @return A list of paths to files that were created (not directories)
    * @throws IOException If the archive could not be extracted for any reason
    */
   public abstract ImmutableList<Path> extractArchive(
@@ -55,7 +55,7 @@ public abstract class Unarchiver {
    * @param archiveFile The path to the archive
    * @param filesystem The filesystem that will be extracted into
    * @param existingFileMode How to handle existing files
-   * @return A list of paths to files that were created
+   * @return A list of paths to files that were created (not directories)
    * @throws IOException If the archive could not be extracted for any reason
    */
   public ImmutableList<Path> extractArchive(
@@ -72,7 +72,7 @@ public abstract class Unarchiver {
    * @param archiveFile The path to the archive
    * @param destination The destination directory where the archive should be extracted to
    * @param existingFileMode How to handle existing files
-   * @return A list of paths to files that were created
+   * @return A list of paths to files that were created (not directories)
    * @throws InterruptedException If a filesystem could not be created in the destination directory
    * @throws IOException If the archive could not be extracted for any reason
    */
