@@ -20,7 +20,6 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -79,8 +78,8 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSet<String> labels;
   private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<String> contacts;
-  @AddToRuleKey private final boolean runTestsSeparately;
-  @AddToRuleKey private final ImmutableSortedSet<SourcePath> resources;
+  private final boolean runTestsSeparately;
+  private final ImmutableSortedSet<SourcePath> resources;
 
   public GoTest(
       BuildTarget buildTarget,
