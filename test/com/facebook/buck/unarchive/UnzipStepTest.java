@@ -25,6 +25,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.junit.Test;
 
 public class UnzipStepTest {
@@ -33,7 +34,8 @@ public class UnzipStepTest {
   public void testGetShortName() throws InterruptedException {
     Path zipFile = Paths.get("the/zipfile.zip");
     Path outputDirectory = Paths.get("an/output/dir");
-    UnzipStep unzipStep = new UnzipStep(createJavaOnlyFilesystem(), zipFile, outputDirectory);
+    UnzipStep unzipStep =
+        new UnzipStep(createJavaOnlyFilesystem(), zipFile, outputDirectory, Optional.empty());
     assertEquals("unzip", unzipStep.getShortName());
   }
 
@@ -49,7 +51,8 @@ public class UnzipStepTest {
 
     Path zipFile = Paths.get("the/zipfile.zip");
     Path outputDirectory = Paths.get("an/output/dir");
-    UnzipStep unzipStep = new UnzipStep(projectFilesystem, zipFile, outputDirectory);
+    UnzipStep unzipStep =
+        new UnzipStep(projectFilesystem, zipFile, outputDirectory, Optional.empty());
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     assertEquals(

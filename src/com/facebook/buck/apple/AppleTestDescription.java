@@ -398,7 +398,8 @@ public class AppleTestDescription
                                 .getAbsolutePath(
                                     Preconditions.checkNotNull(
                                         xctoolZipBuildRule.getSourcePathToOutput())),
-                            outputDirectory))
+                            outputDirectory,
+                            Optional.empty()))
                     .build();
               }
 

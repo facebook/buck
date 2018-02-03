@@ -26,6 +26,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.unarchive.UnzipStep;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class SrcZipAwareFileBundler extends FileBundler {
 
@@ -47,7 +48,7 @@ public class SrcZipAwareFileBundler extends FileBundler {
       Path destination) {
     if (relativePath.toString().endsWith(Javac.SRC_ZIP)
         || relativePath.toString().endsWith(Javac.SRC_JAR)) {
-      steps.add(new UnzipStep(filesystem, absolutePath, destination.getParent()));
+      steps.add(new UnzipStep(filesystem, absolutePath, destination.getParent(), Optional.empty()));
       return;
     }
 

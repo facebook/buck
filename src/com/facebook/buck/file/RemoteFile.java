@@ -37,6 +37,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Represents a remote file that needs to be downloaded. Optionally, this class can be prevented
@@ -101,7 +102,7 @@ public class RemoteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
           MakeCleanDirectoryStep.of(
               BuildCellRelativePath.fromCellRelativePath(
                   context.getBuildCellRootPath(), getProjectFilesystem(), output)));
-      steps.add(new UnzipStep(getProjectFilesystem(), tempFile, output));
+      steps.add(new UnzipStep(getProjectFilesystem(), tempFile, output, Optional.empty()));
     } else {
       steps.add(CopyStep.forFile(getProjectFilesystem(), tempFile, output));
     }

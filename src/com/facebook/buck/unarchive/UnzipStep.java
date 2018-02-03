@@ -19,40 +19,27 @@ package com.facebook.buck.unarchive;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
-import com.facebook.buck.util.unarchive.ExistingFileMode;
-import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
-public class UnzipStep implements Step {
+/** A step that extracts zip archives */
+public class UnzipStep extends UnarchiveStep {
 
-  private final ProjectFilesystem filesystem;
-  private final Path zipFile;
-  private final Path destinationDirectory;
-
-  public UnzipStep(ProjectFilesystem filesystem, Path zipFile, Path destinationDirectory) {
-    this.filesystem = filesystem;
-    this.zipFile = zipFile;
-    this.destinationDirectory = destinationDirectory;
-  }
-
-  @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
-    Path zip =
-        zipFile.isAbsolute()
-            ? zipFile
-            : filesystem.getPathForRelativeExistingPath(zipFile).toAbsolutePath();
-    Path out = filesystem.getPathForRelativeExistingPath(destinationDirectory).toAbsolutePath();
-
-    ArchiveFormat.ZIP
-        .getUnarchiver()
-        .extractArchive(
-            context.getProjectFilesystemFactory(), zip, out, ExistingFileMode.OVERWRITE);
-    return StepExecutionResults.SUCCESS;
+  /**
+   * Create an instance of UnzipStep
+   *
+   * @param filesystem The filesystem that the archive will be extracted into
+   * @param zipFile The path to the file to extract
+   * @param destinationDirectory The directory to extract files into
+   * @param stripPrefix If present, strip this prefix from paths inside of the archive
+   */
+  public UnzipStep(
+      ProjectFilesystem filesystem,
+      Path zipFile,
+      Path destinationDirectory,
+      Optional<Path> stripPrefix) {
+    super(ArchiveFormat.ZIP, filesystem, zipFile, destinationDirectory, stripPrefix);
   }
 
   @Override
@@ -64,7 +51,7 @@ public class UnzipStep implements Step {
   public String getDescription(ExecutionContext context) {
     return String.format(
         "unzip %s -d %s",
-        MorePaths.pathWithUnixSeparators(filesystem.resolve(zipFile)),
+        MorePaths.pathWithUnixSeparators(filesystem.resolve(archiveFile)),
         MorePaths.pathWithUnixSeparators(filesystem.resolve(destinationDirectory)));
   }
 }

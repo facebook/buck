@@ -127,7 +127,7 @@ public class IntraDexReorderStep implements Step {
               BuildCellRelativePath.fromCellRelativePath(
                   context.getBuildCellRootPath(), filesystem, temp)));
       // un-zip
-      steps.add(new UnzipStep(filesystem, inputPath, temp));
+      steps.add(new UnzipStep(filesystem, inputPath, temp, Optional.empty()));
       // run reorder tool
       steps.add(
           new DefaultShellStep(
