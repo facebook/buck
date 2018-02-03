@@ -501,4 +501,31 @@ public class ParserIntegrationTest {
             "parser.default_build_file_syntax=SKYLARK")
         .assertSuccess();
   }
+
+  @Test
+  public void deprecatedSyntaxWarningIsDisplayedWhenReferencingACellWithoutAt() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "deprecated_cell_syntax", temporaryFolder);
+    workspace.setUp();
+    ProcessResult result =
+        workspace
+            .runBuckBuild(
+                "cell//:lib.bzl",
+                "-c",
+                "parser.polyglot_parsing_enabled=true",
+                "-c",
+                "parser.default_build_file_syntax=python_dsl")
+            .assertSuccess();
+    assertThat(
+        result.getStderr(),
+        containsString(
+            "BUCK has a load label \"cell//:lib.bzl\" that uses a deprecated cell format."
+                + " \"cell\" should instead be \"@cell\"."));
+    assertThat(
+        result.getStderr(),
+        containsString(
+            "lib.bzl has a load label \"cell//:lib2.bzl\" that uses a deprecated cell format. "
+                + "\"cell\" should instead be \"@cell\"."));
+  }
 }

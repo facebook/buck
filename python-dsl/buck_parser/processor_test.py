@@ -10,7 +10,8 @@ import StringIO
 from pywatchman import WatchmanError
 from typing import Sequence
 
-from .buck import BuildFileProcessor, BuildInclude, Diagnostic, add_rule, process_with_diagnostics
+from .buck import BuildFileProcessor, BuildInclude, IncludeContext, Diagnostic, add_rule, \
+    process_with_diagnostics
 
 
 def foo_rule(name, srcs=None, visibility=None, options=None, some_optional=None, build_env=None):
@@ -1001,12 +1002,12 @@ class BuckTest(unittest.TestCase):
             foo_target = result[0]
             self.assertEqual(foo_target['name'], 'loaded_name')
 
-
     def test_load_path_with_cell_is_resolved(self):
         build_file_processor = self.create_build_file_processor(
             cell_roots={
                 'foo': os.path.abspath(os.path.join(self.project_root, '../cell'))
             })
+        build_file_processor._current_build_env = IncludeContext('foo', 'some_lib.bzl')
         self.assertEqual(
             BuildInclude(cell_name='foo',
                          path=os.path.abspath(os.path.join(self.project_root, '../cell/bar/baz'))),

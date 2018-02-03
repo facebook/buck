@@ -117,7 +117,7 @@ class AbstractContext(object):
 class BuildFileContext(AbstractContext):
     """The build context used when processing a build file."""
 
-    def __init__(self, project_root, base_path, dirname, cell_name, allow_empty_globs,
+    def __init__(self, project_root, base_path, path, dirname, cell_name, allow_empty_globs,
                  ignore_paths, watchman_client, watchman_watch_root, watchman_project_prefix,
                  sync_cookie_state, watchman_glob_stat_results,
                  watchman_use_glob_generator):
@@ -130,6 +130,7 @@ class BuildFileContext(AbstractContext):
 
         self.project_root = project_root
         self.base_path = base_path
+        self.path = path
         self.cell_name = cell_name
         self.dirname = dirname
         self.allow_empty_globs = allow_empty_globs
@@ -161,13 +162,14 @@ class BuildFileContext(AbstractContext):
 class IncludeContext(AbstractContext):
     """The build context used when processing an include."""
 
-    def __init__(self, cell_name):
+    def __init__(self, cell_name, path):
         """
         :param cell_name: a cell name of the current context. Note that this cell name can be
             different from the one BUCK file is evaluated in, since it can load extension files
             from other cells, which should resolve their loads relative to their own location.
         """
         self.cell_name = cell_name
+        self.path = path
         self.globals = {}
         self._includes = set()
         self._used_configs = {}
@@ -882,10 +884,10 @@ class BuildFileProcessor(object):
         file_name = match.group(3)
         if len(cell_name) > 0:
             if not cell_name.startswith('@'):
-                self._emit_warning('load label {} uses a deprecated style cell references. Instead'
-                                   ' of {} it should be {}.'.format(label, cell_name,
-                                                                    '@' + cell_name),
-                                   'load function')
+                self._emit_warning('{} has a load label "{}" that uses a deprecated cell format. '
+                                   '"{}" should instead be "@{}".'.format(
+                                        self._current_build_env.path, label, cell_name,
+                                        cell_name), 'load function')
             else:
                 cell_name = cell_name[1:]
             cell_root = self._cell_roots.get(cell_name)
@@ -1240,7 +1242,7 @@ class BuildFileProcessor(object):
         if cached is not None:
             return cached
 
-        build_env = IncludeContext(cell_name=build_include.cell_name)
+        build_env = IncludeContext(cell_name=build_include.cell_name, path=build_include.path)
         build_env, mod = self._process(build_env, build_include.path,
                                        is_implicit_include=is_implicit_include)
 
@@ -1259,6 +1261,7 @@ class BuildFileProcessor(object):
         build_env = BuildFileContext(
             self._project_root,
             base_path,
+            path,
             dirname,
             self._cell_name,
             self._allow_empty_globs,
