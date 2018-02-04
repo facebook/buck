@@ -1447,6 +1447,18 @@ $ buck build //big:expensive-rule            # Action Graph is reused.</pre>
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'download' /}
+  {param name: 'in_build' /}
+  {param example_value: 'true' /}
+  {param description}
+    If true, allow downloads to be part of the build process. If false, buck build / run / test
+    will require the user to run 'buck fetch' first. This generally should not be changed, to
+    avoid surprising users with unexpected build times, when the cause is mostly download times.
+    By default this set to false.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'cxx' /}
   {param description}
