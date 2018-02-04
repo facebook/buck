@@ -84,4 +84,9 @@ public enum ArchiveFormat {
   String getShortName() {
     return shortName;
   }
+
+  @Override
+  public String toString() {
+    return String.format("%s (%s)", shortName, extension);
+  }
 }
