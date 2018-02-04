@@ -1384,6 +1384,8 @@ public final class Main {
                     + "%s second timeout. Shutting down forcefully..",
                 executorName, closeTimeoutSeconds);
             executor.shutdownNow();
+          } else {
+            LOG.info("Successfully terminated %s executor service.", executorName);
           }
         });
   }
