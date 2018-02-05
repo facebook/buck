@@ -270,11 +270,11 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   public void setPublicAnnouncements(BuckEventBus eventBus, Optional<String> announcements) {
     this.publicAnnouncements = announcements;
-    if (announcements.isPresent()) {
-      eventBus.post(
-          ConsoleEvent.createForMessageWithAnsiEscapeCodes(
-              Level.INFO, ansi.asInformationText(announcements.get())));
-    }
+    announcements.ifPresent(
+        announcement ->
+            eventBus.post(
+                ConsoleEvent.createForMessageWithAnsiEscapeCodes(
+                    Level.INFO, ansi.asInformationText(announcement))));
   }
 
   // This is used by the logging infrastructure to add a line to the console in a way that doesn't
@@ -373,7 +373,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     if (firstHttpCacheUploadScheduled.get() != null) {
       boolean isFinished = httpShutdownEvent != null;
       String line = "HTTP CACHE UPLOAD" + (isFinished ? ": FINISHED " : "... ");
-      line += renderHttpUploads();
+      line += renderRemoteUploads();
       lines.add(line);
     }
   }
@@ -509,11 +509,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   @Subscribe
   public void commandStartedEvent(CommandEvent.Started startedEvent) {
-    if (progressEstimator.isPresent()) {
-      progressEstimator
-          .get()
-          .setCurrentCommand(startedEvent.getCommandName(), startedEvent.getArgs());
-    }
+    progressEstimator.ifPresent(
+        estimator ->
+            estimator.setCurrentCommand(startedEvent.getCommandName(), startedEvent.getArgs()));
   }
 
   public static void aggregateStartedEvent(
@@ -556,17 +554,13 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @SuppressWarnings("unused")
   @Subscribe
   public void projectGenerationProcessedTarget(ProjectGenerationEvent.Processed processed) {
-    if (progressEstimator.isPresent()) {
-      progressEstimator.get().didGenerateProjectForTarget();
-    }
+    progressEstimator.ifPresent(ProgressEstimator::didGenerateProjectForTarget);
   }
 
   @Subscribe
   public void projectGenerationFinished(ProjectGenerationEvent.Finished finished) {
     projectGenerationFinished = finished;
-    if (progressEstimator.isPresent()) {
-      progressEstimator.get().didFinishProjectGeneration();
-    }
+    progressEstimator.ifPresent(ProgressEstimator::didFinishProjectGeneration);
   }
 
   @Subscribe
@@ -577,17 +571,14 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   @Subscribe
   public void ruleParseFinished(ParseBuckFileEvent.Finished ruleParseFinished) {
-    if (progressEstimator.isPresent()) {
-      progressEstimator.get().didParseBuckRules(ruleParseFinished.getNumRules());
-    }
+    progressEstimator.ifPresent(
+        estimator -> estimator.didParseBuckRules(ruleParseFinished.getNumRules()));
   }
 
   @Subscribe
   public void parseFinished(ParseEvent.Finished finished) {
     parseFinished.add(finished);
-    if (progressEstimator.isPresent()) {
-      progressEstimator.get().didFinishParsing();
-    }
+    progressEstimator.ifPresent(ProgressEstimator::didFinishParsing);
     aggregateFinishedEvent(buckFilesParsingEvents, finished);
   }
 
@@ -616,9 +607,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Subscribe
   public void buildStarted(BuildEvent.Started started) {
     buildStarted = started;
-    if (progressEstimator.isPresent()) {
-      progressEstimator.get().didStartBuild();
-    }
+    progressEstimator.ifPresent(ProgressEstimator::didStartBuild);
   }
 
   @Subscribe
@@ -629,18 +618,14 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Subscribe
   public void ruleCountCalculated(BuildEvent.RuleCountCalculated calculated) {
     ruleCount = Optional.of(calculated.getNumRules());
-    if (progressEstimator.isPresent()) {
-      progressEstimator.get().setNumberOfRules(calculated.getNumRules());
-    }
+    progressEstimator.ifPresent(estimator -> estimator.setNumberOfRules(calculated.getNumRules()));
     cacheRateStatsKeeper.ruleCountCalculated(calculated);
   }
 
   @Subscribe
   public void ruleCountUpdated(BuildEvent.UnskippedRuleCountUpdated updated) {
     ruleCount = Optional.of(updated.getNumRules());
-    if (progressEstimator.isPresent()) {
-      progressEstimator.get().setNumberOfRules(ruleCount.get());
-    }
+    progressEstimator.ifPresent(estimator -> estimator.setNumberOfRules(updated.getNumRules()));
     cacheRateStatsKeeper.ruleCountUpdated(updated);
   }
 
@@ -710,25 +695,19 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   @Subscribe
   public void buildRuleStarted(BuildRuleEvent.Started started) {
-    if (progressEstimator.isPresent()) {
-      progressEstimator.get().didStartRule();
-    }
+    progressEstimator.ifPresent(ProgressEstimator::didStartRule);
     buildRuleThreadTracker.didStartBuildRule(started);
   }
 
   @Subscribe
   public void buildRuleResumed(BuildRuleEvent.Resumed resumed) {
-    if (progressEstimator.isPresent()) {
-      progressEstimator.get().didResumeRule();
-    }
+    progressEstimator.ifPresent(ProgressEstimator::didResumeRule);
     buildRuleThreadTracker.didResumeBuildRule(resumed);
   }
 
   @Subscribe
   public void buildRuleSuspended(BuildRuleEvent.Suspended suspended) {
-    if (progressEstimator.isPresent()) {
-      progressEstimator.get().didSuspendRule();
-    }
+    progressEstimator.ifPresent(ProgressEstimator::didSuspendRule);
     buildRuleThreadTracker.didSuspendBuildRule(suspended);
   }
 
@@ -748,11 +727,10 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     }
 
     if (finished.getStatus() != BuildRuleStatus.CANCELED) {
-      if (progressEstimator.isPresent()) {
-        progressEstimator.get().didFinishRule();
-      }
+      progressEstimator.ifPresent(ProgressEstimator::didFinishRule);
       numRulesCompleted.getAndIncrement();
     }
+
     buildRuleThreadTracker.didFinishBuildRule(finished);
     cacheRateStatsKeeper.buildRuleFinished(finished);
   }
@@ -765,9 +743,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Subscribe
   public void buildFinished(BuildEvent.Finished finished) {
     buildFinished = finished;
-    if (progressEstimator.isPresent()) {
-      progressEstimator.get().didFinishBuild();
-    }
+    progressEstimator.ifPresent(ProgressEstimator::didFinishBuild);
   }
 
   @Subscribe
@@ -823,10 +799,10 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       case STORE:
         if (event.getStoreData().wasStoreSuccessful().orElse(false)) {
           remoteArtifactUploadedCount.incrementAndGet();
-          Optional<Long> artifactSizeBytes = event.getStoreData().getArtifactSizeBytes();
-          if (artifactSizeBytes.isPresent()) {
-            remoteArtifactTotalBytesUploaded.addAndGet(artifactSizeBytes.get());
-          }
+          event
+              .getStoreData()
+              .getArtifactSizeBytes()
+              .ifPresent(remoteArtifactTotalBytesUploaded::addAndGet);
         } else {
           remoteArtifactUploadFailedCount.incrementAndGet();
         }
@@ -857,7 +833,12 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     distBuildFinishedRulesCount = buildProgress.getBuiltRulesCount();
   }
 
-  protected String renderHttpUploads() {
+  /**
+   * A method to print the line responsible to show how our remote cache upload goes.
+   *
+   * @return the line
+   */
+  protected String renderRemoteUploads() {
     long bytesUploaded = remoteArtifactTotalBytesUploaded.longValue();
     String humanReadableBytesUploaded =
         convertToAllCapsIfNeeded(
@@ -902,10 +883,12 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
         keys.limit(numberOfSlowRulesToShow)
             .forEachOrdered(
                 target -> {
-                  slowRulesLogsBuilder.add(
-                      String.format(
-                          "    %s: %s",
-                          target, formatElapsedTime(timeSpentMillisecondsInRules.get(target))));
+                  if (timeSpentMillisecondsInRules.containsKey(target)) {
+                    slowRulesLogsBuilder.add(
+                        String.format(
+                            "    %s: %s",
+                            target, formatElapsedTime(timeSpentMillisecondsInRules.get(target))));
+                  }
                 });
       }
     }

@@ -179,7 +179,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         Optional.empty(),
         lines);
 
-    String httpStatus = renderHttpUploads();
+    String httpStatus = renderRemoteUploads();
     if (remoteArtifactUploadsScheduledCount.get() > 0) {
       lines.add("WAITING FOR HTTP CACHE UPLOADS " + httpStatus);
     }
