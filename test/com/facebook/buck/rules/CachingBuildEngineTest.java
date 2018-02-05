@@ -3852,7 +3852,8 @@ public class CachingBuildEngineTest {
 
     @Test(timeout = 10000)
     public void testBuildLocallyWithImmediateRemoteSynchronization() throws Exception {
-      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer(true);
+      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer();
+      synchronizer.switchToAlwaysWaitingMode();
 
       // Signal completion of the build rule before the caching build engine requests it.
       // waitForBuildRuleToFinishRemotely call inside caching build engine should result in an
@@ -3881,7 +3882,8 @@ public class CachingBuildEngineTest {
 
     @Test(timeout = 10000)
     public void testBuildLocallyWithDelayedRemoteSynchronization() throws Exception {
-      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer(true);
+      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer();
+      synchronizer.switchToAlwaysWaitingMode();
 
       // Signal the completion of the build rule asynchronously.
       // waitForBuildRuleToFinishRemotely call inside caching build engine should result in an
@@ -3923,7 +3925,7 @@ public class CachingBuildEngineTest {
     @Test(timeout = 10000)
     public void testBuildLocallyWhenRemoteBuildNotStartedAndAlwaysWaitSetToFalse()
         throws Exception {
-      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer(false);
+      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer();
 
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild(synchronizer).getSuccess());
       assertTrue(buildRule.isInitializedFromDisk());
@@ -3947,7 +3949,7 @@ public class CachingBuildEngineTest {
 
     @Test(timeout = 10000)
     public void testBuildLocallyWhenRemoteBuildStartedAndAlwaysWaitSetToFalse() throws Exception {
-      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer(false);
+      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer();
 
       // Signal that the build has started, which should ensure build waits.
       synchronizer.signalStartedRemoteBuildingOfBuildRule(BUILD_TARGET.getFullyQualifiedName());

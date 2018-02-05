@@ -18,13 +18,19 @@ package com.facebook.buck.distributed;
 /** Distributed build exit codes used by Stampede. */
 public enum ExitCode {
   /** Build finished successfully */
-  DISTRIBUTED_BUILD_SUCCESSFUL(0),
+  SUCCESSFUL(0),
+
+  /** Generic failure code for either local or remote build */
+  FAILURE(1),
 
   /** Real exit code hasn't been generated yet */
   DISTRIBUTED_PENDING_EXIT_CODE(10),
 
   /** Real exit code hasn't been generated yet */
   LOCAL_PENDING_EXIT_CODE(11),
+
+  /** Exception was thrown before local build finished */
+  LOCAL_BUILD_EXCEPTION_CODE(12),
 
   /** Local build finished before the remote build */
   LOCAL_BUILD_FINISHED_FIRST(20),

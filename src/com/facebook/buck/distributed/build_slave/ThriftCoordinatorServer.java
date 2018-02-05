@@ -198,8 +198,7 @@ public class ThriftCoordinatorServer implements Closeable {
 
     if (status == BuildStatus.FINISHED_SUCCESSFULLY) {
       exitCodeFuture.complete(
-          ExitState.setByServers(
-              ExitCode.DISTRIBUTED_BUILD_SUCCESSFUL.getCode(), "Build succeeded externally."));
+          ExitState.setByServers(ExitCode.SUCCESSFUL.getCode(), "Build succeeded externally."));
     } else {
       exitCodeFuture.complete(
           ExitState.setByServers(

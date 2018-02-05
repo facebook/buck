@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.concurrent.GuardedBy;
 
 /**
  * Used by distributed build client to synchronize the local build and remote build state, which
@@ -41,12 +42,10 @@ public class RemoteBuildRuleSynchronizer
   private boolean remoteBuildFinished = false;
   private final SettableFuture<Void> mostBuildRulesFinished = SettableFuture.create();
 
-  private final boolean alwaysWaitForRemoteBuildBeforeProceedingLocally;
+  @GuardedBy("this")
+  private boolean alwaysWaitForRemoteBuildBeforeProceedingLocally = false;
 
-  public RemoteBuildRuleSynchronizer(boolean alwaysWaitForRemoteBuildBeforeProceedingLocally) {
-    this.alwaysWaitForRemoteBuildBeforeProceedingLocally =
-        alwaysWaitForRemoteBuildBeforeProceedingLocally;
-  }
+  public RemoteBuildRuleSynchronizer() {}
 
   @Override
   public synchronized ListenableFuture<Void> waitForBuildRuleToFinishRemotely(BuildRule buildRule) {
@@ -138,5 +137,9 @@ public class RemoteBuildRuleSynchronizer
     }
 
     return Preconditions.checkNotNull(resultFuturesByBuildTarget.get(buildTarget));
+  }
+
+  public synchronized void switchToAlwaysWaitingMode() {
+    alwaysWaitForRemoteBuildBeforeProceedingLocally = true;
   }
 }

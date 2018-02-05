@@ -17,6 +17,7 @@
 package com.facebook.buck.counters;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -34,6 +35,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class CounterRegistryImpl implements CounterRegistry {
+  private static final Logger LOG = Logger.get(CounterRegistryImpl.class);
+
   private static final int FIRST_FLUSH_INTERVAL_MILLIS = 5000;
   private static final int FLUSH_INTERVAL_MILLIS = 30000;
 
@@ -82,8 +85,10 @@ public class CounterRegistryImpl implements CounterRegistry {
   @Override
   public void registerCounters(Collection<Counter> countersToRegister) {
     synchronized (this) {
-      Preconditions.checkState(
-          counters.addAll(countersToRegister), "Duplicate counters=[%s]", countersToRegister);
+      boolean countersChanged = counters.addAll(countersToRegister);
+      if (!countersChanged) {
+        LOG.warn(String.format("Duplicate counters=[%s]", countersToRegister));
+      }
     }
   }
 

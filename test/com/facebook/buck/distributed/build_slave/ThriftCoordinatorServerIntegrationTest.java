@@ -255,8 +255,7 @@ public class ThriftCoordinatorServerIntegrationTest {
       server.checkBuildStatusIsNotTerminated();
 
       Assert.assertEquals(
-          ExitCode.DISTRIBUTED_BUILD_SUCCESSFUL.getCode(),
-          server.waitUntilBuildCompletesAndReturnExitCode());
+          ExitCode.SUCCESSFUL.getCode(), server.waitUntilBuildCompletesAndReturnExitCode());
     }
   }
 

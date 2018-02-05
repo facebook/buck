@@ -184,7 +184,7 @@ public class DistBuildControllerTest {
             .setMaxTimeoutWaitingForLogsMillis(0)
             .setStatusPollIntervalMillis(1)
             .setLogMaterializationEnabled(true)
-            .setRemoteBuildRuleCompletionNotifier(new RemoteBuildRuleSynchronizer(true))
+            .setRemoteBuildRuleCompletionNotifier(new RemoteBuildRuleSynchronizer())
             .setStampedeIdReference(stampedeIdRef)
             .setBuildLabel(BUILD_LABEL)
             .build());
