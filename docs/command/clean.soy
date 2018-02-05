@@ -34,6 +34,20 @@ the appropriate files for the current version.
   and 10 as the most verbose.
   {/param}
 {/call}
+
+{call buck.param}
+  {param name: 'keep-cache' /}
+  {param desc}
+  It does not remove the local (dir) caches.
+  {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'dry-run' /}
+  {param desc}
+  It prints a list of all the directories that would be removed if the command would run normally.
+  {/param}
+{/call}
 {/param}
 
 {/call}
