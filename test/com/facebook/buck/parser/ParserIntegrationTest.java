@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -321,6 +322,24 @@ public class ParserIntegrationTest {
     workspace
         .runBuckBuild("//java/bar:bar_test", "-c", "parser.polyglot_parsing_enabled=true")
         .assertSuccess();
+  }
+
+  @Test
+  public void testPythonDSLParsingHasNoWarningsForLoadsWithoutCell() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "python_dsl_warnings", temporaryFolder);
+    workspace.setUp();
+    ProcessResult result =
+        workspace.runBuckBuild(
+            "cell//:ext.bzl",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.default_build_file_syntax=python_dsl");
+    System.out.println(result.getStderr());
+    assertThat(result.getStderr(), not(containsString("Warning raised by BUCK file parser")));
+    result.assertSuccess();
   }
 
   @Test

@@ -879,17 +879,20 @@ class BuildFileProcessor(object):
             raise ValueError(
                 'load label {} should be in the form of '
                 '//path:file or cellname//path:file'.format(label))
-        cell_name = match.group(1) or self._current_build_env.cell_name
-        relative_path = match.group(2)
-        file_name = match.group(3)
-        if len(cell_name) > 0:
-            if not cell_name.startswith('@'):
+        cell_name = match.group(1)
+        if cell_name:
+            if cell_name.startswith('@'):
+                cell_name = cell_name[1:]
+            else:
                 self._emit_warning('{} has a load label "{}" that uses a deprecated cell format. '
                                    '"{}" should instead be "@{}".'.format(
                                         self._current_build_env.path, label, cell_name,
                                         cell_name), 'load function')
-            else:
-                cell_name = cell_name[1:]
+        else:
+            cell_name = self._current_build_env.cell_name
+        relative_path = match.group(2)
+        file_name = match.group(3)
+        if cell_name:
             cell_root = self._cell_roots.get(cell_name)
             if cell_root is None:
                 raise KeyError(
