@@ -534,7 +534,9 @@ public class ParserIntegrationTest {
                 "-c",
                 "parser.polyglot_parsing_enabled=true",
                 "-c",
-                "parser.default_build_file_syntax=python_dsl")
+                "parser.default_build_file_syntax=python_dsl",
+                "-c",
+                "parser.warn_about_deprecated_syntax=true")
             .assertSuccess();
     assertThat(
         result.getStderr(),
@@ -546,5 +548,25 @@ public class ParserIntegrationTest {
         containsString(
             "lib.bzl has a load label \"cell//:lib2.bzl\" that uses a deprecated cell format. "
                 + "\"cell\" should instead be \"@cell\"."));
+  }
+
+  @Test
+  public void deprecatedSyntaxWarningIsNotDisplayedIfDisabled() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "deprecated_cell_syntax", temporaryFolder);
+    workspace.setUp();
+    ProcessResult result =
+        workspace
+            .runBuckBuild(
+                "cell//:lib.bzl",
+                "-c",
+                "parser.polyglot_parsing_enabled=true",
+                "-c",
+                "parser.default_build_file_syntax=python_dsl",
+                "-c",
+                "parser.warn_about_deprecated_syntax=false")
+            .assertSuccess();
+    assertThat(result.getStderr(), not(containsString("Warning raised by BUCK file parser")));
   }
 }

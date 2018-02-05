@@ -89,4 +89,9 @@ abstract class AbstractProjectBuildFileParserOptions {
   public boolean getDisableImplicitNativeRules() {
     return false;
   }
+
+  @Value.Default
+  public boolean isWarnAboutDeprecatedSyntax() {
+    return true;
+  }
 }

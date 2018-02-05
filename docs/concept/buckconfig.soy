@@ -2889,6 +2889,16 @@ your <code>.buckjavaargs</code> file</a>:
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'parser' /}
+  {param name: 'warn_about_deprecated_syntax' /}
+  {param example_value: 'false' /}
+  {param description}
+    If set, warnings about deprecated syntax in BUCK files will be issued.
+    This flag is enabled by default.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'project' /}
   {param description}

@@ -650,7 +650,8 @@ class BuildFileProcessor(object):
                  watchman_use_glob_generator,
                  project_import_whitelist=None, implicit_includes=None,
                  extra_funcs=None, configs=None, env_vars=None,
-                 ignore_paths=None, disable_implicit_native_rules=False):
+                 ignore_paths=None, disable_implicit_native_rules=False,
+                 warn_about_deprecated_syntax=True):
         if project_import_whitelist is None:
             project_import_whitelist = []
         if implicit_includes is None:
@@ -680,6 +681,7 @@ class BuildFileProcessor(object):
         self._env_vars = env_vars
         self._ignore_paths = ignore_paths
         self._disable_implicit_native_rules = disable_implicit_native_rules
+        self._warn_about_deprecated_syntax = warn_about_deprecated_syntax
 
         lazy_global_functions = {}
         lazy_native_functions = {}
@@ -883,7 +885,7 @@ class BuildFileProcessor(object):
         if cell_name:
             if cell_name.startswith('@'):
                 cell_name = cell_name[1:]
-            else:
+            elif self._warn_about_deprecated_syntax:
                 self._emit_warning('{} has a load label "{}" that uses a deprecated cell format. '
                                    '"{}" should instead be "@{}".'.format(
                                         self._current_build_env.path, label, cell_name,
@@ -1564,6 +1566,11 @@ def main():
         action='store_true',
         help='Do not allow native rules in build files, only included ones',
     )
+    parser.add_option(
+        '--warn_about_deprecated_syntax',
+        action='store_true',
+        help='Warn about deprecated syntax usage.',
+    )
     (options, args) = parser.parse_args()
 
     # Even though project_root is absolute path, it may not be concise. For
@@ -1617,7 +1624,8 @@ def main():
         implicit_includes=options.include or [],
         configs=configs,
         ignore_paths=ignore_paths,
-        disable_implicit_native_rules=options.disable_implicit_native_rules)
+        disable_implicit_native_rules=options.disable_implicit_native_rules,
+        warn_about_deprecated_syntax=options.warn_about_deprecated_syntax)
 
     # While processing, we'll write exceptions as diagnostic messages
     # to the parent then re-raise them to crash the process. While

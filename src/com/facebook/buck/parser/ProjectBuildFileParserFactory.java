@@ -101,6 +101,7 @@ public class ProjectBuildFileParserFactory {
             .setRawConfig(cell.getBuckConfig().getRawConfigForParser())
             .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
             .setDisableImplicitNativeRules(parserConfig.getDisableImplicitNativeRules())
+            .setWarnAboutDeprecatedSyntax(parserConfig.isWarnAboutDeprecatedSyntax())
             .build();
     return EventReportingProjectBuildFileParser.of(
         createProjectBuildFileParser(

@@ -330,6 +330,10 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       argBuilder.add("--disable_implicit_native_rules");
     }
 
+    if (options.isWarnAboutDeprecatedSyntax()) {
+      argBuilder.add("--warn_about_deprecated_syntax");
+    }
+
     return argBuilder.build();
   }
 
