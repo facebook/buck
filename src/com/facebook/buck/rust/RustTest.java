@@ -21,7 +21,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -69,7 +68,7 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSet<String> labels;
   private final ImmutableSet<String> contacts;
 
-  @AddToRuleKey private final BinaryBuildRule testExeBuild;
+  private final BinaryBuildRule testExeBuild;
 
   private static final Pattern TEST_STDOUT_PATTERN =
       Pattern.compile("^---- (?<name>.+) stdout ----$");
