@@ -107,39 +107,6 @@ public class ShTestDescriptionTest {
   }
 
   @Test
-  public void resourcesAffectRuleKey() throws Exception {
-    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path resource = filesystem.getPath("resource");
-    filesystem.touch(resource);
-
-    SourcePath test = FakeSourcePath.of(filesystem, "some_test");
-    filesystem.touch(Paths.get("some_test"));
-
-    // Create a test rule without resources attached.
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    ShTest shTestWithoutResources =
-        new ShTestBuilder(target).setTest(test).build(resolver, filesystem);
-    RuleKey ruleKeyWithoutResource = getRuleKey(shTestWithoutResources);
-
-    // Create a rule with a resource attached.
-    resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    ShTest shTestWithResources =
-        new ShTestBuilder(target)
-            .setTest(test)
-            .setResources(ImmutableSortedSet.of(resource))
-            .build(resolver, filesystem);
-    RuleKey ruleKeyWithResource = getRuleKey(shTestWithResources);
-
-    // Verify that their rule keys are different.
-    assertThat(ruleKeyWithoutResource, Matchers.not(Matchers.equalTo(ruleKeyWithResource)));
-  }
-
-  @Test
   public void resourcesAreInputs() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -151,21 +118,5 @@ public class ShTestDescriptionTest {
             .setResources(ImmutableSortedSet.of(resource))
             .build();
     assertThat(shTestWithResources.getInputs(), Matchers.hasItem(resource));
-  }
-
-  private RuleKey getRuleKey(BuildRule rule) {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    FileHashCache fileHashCache =
-        new StackedFileHashCache(
-            ImmutableList.of(
-                DefaultFileHashCache.createDefaultFileHashCache(
-                    rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT)));
-    DefaultRuleKeyFactory factory =
-        new TestDefaultRuleKeyFactory(fileHashCache, pathResolver, ruleFinder);
-    return factory.build(rule);
   }
 }
