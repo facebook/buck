@@ -18,5 +18,5 @@ function abs_script_dir_path {
 
 BUCK_DIR=$(abs_script_dir_path "$0")
 
-PYTHON=$(command -v python2 python | head -1)
+PYTHON=$(command -v python2.7 python2 python | head -1)
 PYTHONPATH="$BUCK_DIR"/../third-party/nailgun exec $PYTHON "$BUCK_DIR"/../programs/buck.py "$@"
