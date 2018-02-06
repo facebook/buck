@@ -133,9 +133,10 @@ You can find a more detailed explanation about each step in the development proc
 # Install command line tools. NOTE: If you have Xcode installed, these may
 # already be installed.
 xcode-select --install
-# Install Java - this installs the JDK, a superset of the JRE
+# Install Java - this installs the JDK 8, a superset of the JRE
 brew tap caskroom/cask
-brew cask install java
+brew tap caskroom/versions
+brew cask install java8
 </pre>{/literal}
 
 <span><block class="mac ios" /></span>
@@ -210,7 +211,8 @@ xcode-select --install
 # Then the JDK (superset of the JRE)
 brew update
 brew tap caskroom/cask
-brew install java
+brew tap caskroom/versions
+brew cask install java8
 # Then...
 brew install ant python git watchman
 </pre>{/literal}
