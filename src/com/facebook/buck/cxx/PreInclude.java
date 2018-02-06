@@ -271,6 +271,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   public abstract CxxPrecompiledHeader getPrecompiledHeader(
+      boolean canPrecompile,
       PreprocessorDelegate preprocessorDelegateForCxxRule,
       DependencyAggregation aggregatedPreprocessDepsRule,
       CxxToolFlags computedCompilerFlags,
@@ -289,6 +290,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
    * be added to the resolver cache.
    */
   protected CxxPrecompiledHeader requirePrecompiledHeader(
+      boolean canPrecompile,
       PreprocessorDelegate preprocessorDelegate,
       CxxPlatform cxxPlatform,
       CxxSource.Type sourceType,
@@ -322,6 +324,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
               depsBuilder.add(getHeaderSourcePath());
 
               return new CxxPrecompiledHeader(
+                  canPrecompile,
                   target,
                   getProjectFilesystem(),
                   depsBuilder.build(),

@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
+import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -61,6 +62,7 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
   @AddToRuleKey private final CxxToolFlags compilerFlags;
   @AddToRuleKey private final SourcePath input;
   private final CxxSource.Type inputType;
+  private final Optional<PreInclude> preInclude;
 
   @AddToRuleKey(stringify = true)
   private final Path output;
@@ -77,6 +79,7 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
       CxxToolFlags compilerFlags,
       SourcePath input,
       AbstractCxxSource.Type inputType,
+      Optional<PreInclude> preInclude,
       Path output,
       PreprocessorDelegate preprocessorDelegate,
       InferBuckConfig inferConfig) {
@@ -86,6 +89,7 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
     this.compilerFlags = compilerFlags;
     this.input = input;
     this.inputType = inputType;
+    this.preInclude = preInclude;
     this.output = output;
     this.preprocessorDelegate = preprocessorDelegate;
     this.inferConfig = inferConfig;
@@ -243,10 +247,21 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
       return "Write argfile for clang";
     }
 
+    private ImmutableList<String> getPreIncludeArgs() {
+      ImmutableList.Builder<String> builder = ImmutableList.builder();
+      if (preInclude.isPresent()) {
+        Preprocessor pp = preprocessorDelegate.getPreprocessor();
+        PreInclude pre = preInclude.get();
+        builder.addAll(pp.prefixHeaderArgs(pre.getAbsoluteHeaderPath()));
+      }
+      return builder.build();
+    }
+
     private ImmutableList<String> getCompilerArgs() {
       ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
       return commandBuilder
           .add("-MD", "-MF", getDepFilePath().toString())
+          .addAll(getPreIncludeArgs())
           .addAll(
               Arg.stringify(
                   CxxToolFlags.concat(preprocessorFlags, getSearchPathFlags(), compilerFlags)

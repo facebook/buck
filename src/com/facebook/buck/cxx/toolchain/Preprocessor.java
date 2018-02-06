@@ -17,10 +17,7 @@
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.rules.Tool;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
-import java.util.Optional;
 
 /** Interface for a c/c++ preprocessor. */
 public interface Preprocessor extends Tool {
@@ -45,17 +42,7 @@ public interface Preprocessor extends Tool {
    *     {@code prefixHeader}. Not mutually exclusive with {@code prefixHeader}; if both are given,
    *     the precompiled version of it is preferred.
    */
-  default Iterable<String> prefixOrPCHArgs(
-      Optional<Path> prefixHeader, Optional<Path> pchOutputPath) {
-    ImmutableList.Builder<String> builder = ImmutableList.<String>builder();
-    if (pchOutputPath.isPresent()) {
-      Preconditions.checkState(
-          this.supportsPrecompiledHeaders(),
-          "Precompiled header was requested, but is not supported by " + getClass().toString());
-      builder.addAll(precompiledHeaderArgs(pchOutputPath.get()));
-    } else if (prefixHeader.isPresent()) {
-      builder.addAll(prefixHeaderArgs(prefixHeader.get()));
-    }
-    return builder.build();
+  default Iterable<String> prefixOrPCHArgs(boolean precompiled, Path path) {
+    return precompiled ? precompiledHeaderArgs(path) : prefixHeaderArgs(path);
   }
 }

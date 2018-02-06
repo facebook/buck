@@ -110,6 +110,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         CxxToolFlags.of(),
         FakeSourcePath.of("src.c"),
         AbstractCxxSource.Type.C,
+        Optional.empty(),
         Paths.get("src.o"),
         preprocessorDelegate,
         inferBuckConfig);

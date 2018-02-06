@@ -58,6 +58,9 @@ public class GccPreprocessor extends DelegatingTool implements Preprocessor {
 
   @Override
   public final Iterable<String> prefixHeaderArgs(Path prefixHeader) {
+    Preconditions.checkArgument(
+        !prefixHeader.toString().endsWith(".gch"),
+        "Expected non-precompiled file, got a '.gch': " + prefixHeader);
     return ImmutableList.of("-include", prefixHeader.toString());
   }
 

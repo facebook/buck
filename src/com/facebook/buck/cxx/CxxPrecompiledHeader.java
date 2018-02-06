@@ -40,6 +40,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -90,6 +91,7 @@ class CxxPrecompiledHeader extends AbstractBuildRule
   @AddToRuleKey private final CompilerDelegate compilerDelegate;
   @AddToRuleKey private final SourcePath input;
   @AddToRuleKey private final CxxSource.Type inputType;
+  @AddToRuleKey private final boolean canPrecompileFlag;
 
   // Fields that added to the rule key with some processing.
   @AddToRuleKey private final CxxToolFlags compilerFlags;
@@ -106,6 +108,7 @@ class CxxPrecompiledHeader extends AbstractBuildRule
       CacheBuilder.newBuilder().weakKeys().weakValues().build();
 
   public CxxPrecompiledHeader(
+      boolean canPrecompile,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ImmutableSortedSet<BuildRule> buildDeps,
@@ -120,6 +123,7 @@ class CxxPrecompiledHeader extends AbstractBuildRule
     Preconditions.checkArgument(
         !inputType.isAssembly(), "Asm files do not use precompiled headers.");
     this.buildDeps = buildDeps;
+    this.canPrecompileFlag = canPrecompile;
     this.preprocessorDelegate = preprocessorDelegate;
     this.compilerDelegate = compilerDelegate;
     this.compilerFlags = compilerFlags;
@@ -127,6 +131,20 @@ class CxxPrecompiledHeader extends AbstractBuildRule
     this.input = input;
     this.inputType = inputType;
     this.compilerSanitizer = compilerSanitizer;
+  }
+
+  /** @return whether this should be precompiled, or treated as a regular uncompiled header. */
+  public boolean canPrecompile() {
+    return canPrecompileFlag;
+  }
+
+  /**
+   * @return the path to the file suitable for inclusion on the command line. If this PCH is to be
+   *     precompiled (see {@link #canPrecompile()}) this will correspond to {@link
+   *     #getSourcePathToOutput()}, otherwise it'll be the input header file.
+   */
+  public Path getIncludeFilePath(SourcePathResolver pathResolver) {
+    return pathResolver.getAbsolutePath(canPrecompile() ? getSourcePathToOutput() : input);
   }
 
   @Override
@@ -263,10 +281,15 @@ class CxxPrecompiledHeader extends AbstractBuildRule
 
   @VisibleForTesting
   CxxPreprocessAndCompileStep makeMainStep(SourcePathResolver resolver, Path scratchDir) {
+    Path pchOutput =
+        canPrecompile()
+            ? resolver.getRelativePath(getSourcePathToOutput())
+            : Platform.detect().getNullDevicePath();
+
     return new CxxPreprocessAndCompileStep(
         getProjectFilesystem(),
         CxxPreprocessAndCompileStep.Operation.GENERATE_PCH,
-        resolver.getRelativePath(getSourcePathToOutput()),
+        pchOutput,
         Optional.of(getDepFilePath(resolver)),
         // TODO(10194465): This uses relative path so as to get relative paths in the dep file
         getRelativeInputPath(resolver),
