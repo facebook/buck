@@ -16,15 +16,18 @@
 
 package com.facebook.buck.distributed.build_client;
 
+import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.ExitCode;
 import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.ParallelRuleKeyCalculator;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
@@ -33,6 +36,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
 
 /** High level controls the distributed build. */
 public class DistBuildController {
@@ -43,6 +47,7 @@ public class DistBuildController {
   private final PreBuildPhase preBuildPhase;
   private final BuildPhase buildPhase;
   private final PostBuildPhase postBuildPhase;
+  private final Console console;
 
   private final AtomicReference<StampedeId> stampedeIdReference;
 
@@ -92,6 +97,7 @@ public class DistBuildController {
             args.getDistBuildLogStateTracker(),
             args.getMaxTimeoutWaitingForLogsMillis(),
             args.getLogMaterializationEnabled());
+    this.console = args.getBuilderExecutorArgs().getConsole();
   }
 
   /** Executes the tbuild and prints failures to the event bus. */
@@ -120,6 +126,12 @@ public class DistBuildController {
               repository,
               tenantId,
               ruleKeyCalculatorFuture);
+    } catch (DistBuildService.DistBuildRejectedException ex) {
+      eventBus.post(
+          ConsoleEvent.createForMessageWithAnsiEscapeCodes(
+              Level.WARNING, console.getAnsi().asWarningText(ex.getMessage())));
+      return createFailedExecutionResult(
+          Preconditions.checkNotNull(stampedeIdReference.get()), ExitCode.PREPARATION_STEP_FAILED);
     } catch (IOException | RuntimeException ex) {
       LOG.error(ex, "Distributed build preparation steps failed.");
       return createFailedExecutionResult(

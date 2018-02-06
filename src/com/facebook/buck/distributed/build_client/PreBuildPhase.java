@@ -27,6 +27,7 @@ import com.facebook.buck.distributed.DistBuildCellIndexer;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildCreatedEvent;
 import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.DistBuildService.DistBuildRejectedException;
 import com.facebook.buck.distributed.build_slave.CacheOptimizedBuildTargetsQueueFactory;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJob;
@@ -102,7 +103,7 @@ public class PreBuildPhase {
       String repository,
       String tenantId,
       ListenableFuture<ParallelRuleKeyCalculator<RuleKey>> localRuleKeyCalculatorFuture)
-      throws IOException {
+      throws IOException, DistBuildRejectedException {
     ConsoleEventsDispatcher consoleEventsDispatcher = new ConsoleEventsDispatcher(eventBus);
 
     distBuildClientStats.startTimer(CREATE_DISTRIBUTED_BUILD);

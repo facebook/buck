@@ -34,6 +34,7 @@ import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildCellIndexer;
 import com.facebook.buck.distributed.DistBuildCreatedEvent;
 import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.DistBuildService.DistBuildRejectedException;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
 import com.facebook.buck.distributed.ExitCode;
 import com.facebook.buck.distributed.thrift.BuckVersion;
@@ -260,7 +261,7 @@ public class DistBuildControllerTest {
 
   @Test
   public void testReturnsExecutionResultOnAsyncPreparationFailure()
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, DistBuildRejectedException {
 
     BuildJob job = new BuildJob();
     job.setStampedeId(stampedeId);
@@ -299,7 +300,7 @@ public class DistBuildControllerTest {
 
   @Test
   public void testReturnsExecutionResultOnDistBuildException()
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, DistBuildRejectedException {
     final BuildSlaveRunId buildSlaveRunId = new BuildSlaveRunId();
     buildSlaveRunId.setId("my-fav-runid");
     BuildJob job = new BuildJob();
@@ -335,7 +336,8 @@ public class DistBuildControllerTest {
    * separately.
    */
   @Test
-  public void testOrderlyExecution() throws IOException, InterruptedException {
+  public void testOrderlyExecution()
+      throws IOException, InterruptedException, DistBuildRejectedException {
     final BuildSlaveRunId buildSlaveRunId = new BuildSlaveRunId();
     buildSlaveRunId.setId("my-fav-runid");
     BuildJob job = new BuildJob();
@@ -469,7 +471,7 @@ public class DistBuildControllerTest {
 
   // Sets up mock expectations for a successful distributed build preparation step
   private void setupExpectationsForSuccessfulDistBuildPrepStep(
-      BuildJob job, BuildJobState buildJobState) throws IOException {
+      BuildJob job, BuildJobState buildJobState) throws IOException, DistBuildRejectedException {
     expect(
             mockDistBuildService.createBuild(
                 invocationInfo.getBuildId(),

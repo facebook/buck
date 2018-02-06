@@ -112,6 +112,16 @@ public class DistBuildService implements Closeable {
   private final FrontendService service;
   private final String username;
 
+  /** Exception thrown when CreateBuildRequest is rejected (with a rejection message). */
+  public static class DistBuildRejectedException extends Exception {
+
+    private static final String MESSAGE_PREFIX = "Distributed build will not run: ";
+
+    public DistBuildRejectedException(String message) {
+      super(MESSAGE_PREFIX + message);
+    }
+  }
+
   public DistBuildService(FrontendService service, String username) {
     Preconditions.checkNotNull(username, "Username needs to be set for distributed build.");
     this.service = service;
@@ -327,7 +337,7 @@ public class DistBuildService implements Closeable {
       String tenantId,
       List<String> buildTargets,
       String buildLabel)
-      throws IOException {
+      throws IOException, DistBuildRejectedException {
     Preconditions.checkArgument(
         buildMode == BuildMode.REMOTE_BUILD
             || buildMode == BuildMode.DISTRIBUTED_BUILD_WITH_REMOTE_COORDINATOR
@@ -365,7 +375,7 @@ public class DistBuildService implements Closeable {
 
     CreateBuildResponse createBuildResponse = response.getCreateBuildResponse();
     if (createBuildResponse.isSetWasAccepted() && !createBuildResponse.wasAccepted) {
-      throw new HumanReadableException(createBuildResponse.getRejectionMessage());
+      throw new DistBuildRejectedException(createBuildResponse.getRejectionMessage());
     }
 
     return createBuildResponse.getBuildJob();
