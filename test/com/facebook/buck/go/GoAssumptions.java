@@ -89,8 +89,8 @@ abstract class GoAssumptions {
               /* timeOutMs */ Optional.empty(),
               /* timeoutHandler */ Optional.empty());
       if (goToolResult.getExitCode() == 0) {
-        // e.g., "go version go1.9.2 darwin/amd64", "go version go1.9.2 windows/amd64", "go version
-        // go1.2.1 linux/amd64"
+        // e.g., "go version go1.9.2 darwin/amd64", "go version go1.9.2 windows/amd64",
+        // "go version go1.2.1 linux/amd64"
         actualVersion = goToolResult.getStdout().get().substring(13, 18);
       } else {
         exception = new HumanReadableException(goToolResult.getStderr().get());
