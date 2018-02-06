@@ -721,8 +721,10 @@ public class DaemonicParserState {
     ImmutableMap.Builder<String, List<String>> cachedIncludesBuilder = ImmutableMap.builder();
     try (AutoCloseableLock readLock = cachedStateLock.readLock()) {
       cachedIncludes.forEach(
-          (path, iterable) ->
-              cachedIncludesBuilder.put(path.toString(), Lists.newArrayList(iterable)));
+          (path, iterable) -> {
+            Path relPath = rootCell.getRoot().relativize(path);
+            cachedIncludesBuilder.put(relPath.toString(), Lists.newArrayList(iterable));
+          });
     }
     remote.setCachedIncludes(cachedIncludesBuilder.build());
     remote.setCellPathToDaemonicState(cellPathToDaemonicStateBuilder.build());
@@ -758,7 +760,8 @@ public class DaemonicParserState {
     remote.cachedIncludes.forEach(
         (k, v) -> {
           Path path = Paths.get(k);
-          cachedIncludes.put(path, v);
+          Path absolutePath = rootCell.getRoot().resolve(path).normalize();
+          cachedIncludes.put(absolutePath, v);
         });
     return this;
   }

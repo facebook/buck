@@ -38,7 +38,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -285,6 +284,7 @@ class DaemonicCellState {
 
   private Map<String, Map<String, BuildFileEnvProperty>> getBuildFileEnvForSerialization() {
     Map<String, Map<String, BuildFileEnvProperty>> result = new HashMap<>();
+    Path root = getCellRoot();
     for (Path path : buildFileEnv.keySet()) {
       ImmutableMap.Builder<String, BuildFileEnvProperty> buildFileEnvValuesMapBuilder =
           ImmutableMap.builder();
@@ -297,7 +297,7 @@ class DaemonicCellState {
               buildFileEnvValuesMapBuilder.put(k, prop);
             });
       }
-      result.put(path.toString(), buildFileEnvValuesMapBuilder.build());
+      result.put(root.relativize(path).toString(), buildFileEnvValuesMapBuilder.build());
     }
 
     return result;
@@ -329,7 +329,7 @@ class DaemonicCellState {
     }
 
     for (String pathString : remote.buildFileEnv.keySet()) {
-      Path key = Paths.get(pathString);
+      Path key = root.resolve(pathString);
       Map<String, BuildFileEnvProperty> remoteValues = remote.buildFileEnv.get(pathString);
       ImmutableMap.Builder<String, Optional<String>> builder = ImmutableMap.builder();
       for (String k : remoteValues.keySet()) {
