@@ -48,7 +48,6 @@ public class CxxPlatforms {
   private static final ImmutableList<String> DEFAULT_LDFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_ARFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_RANLIBFLAGS = ImmutableList.of();
-  private static final ImmutableList<String> DEFAULT_COMPILER_ONLY_FLAGS = ImmutableList.of();
 
   // Utility class, do not instantiate.
   private CxxPlatforms() {}
@@ -222,16 +221,11 @@ public class CxxPlatforms {
   }
 
   public static void addToolFlagsFromConfig(CxxBuckConfig config, CxxPlatform.Builder builder) {
-    ImmutableList<String> compilerOnlyFlags =
-        config.getFlags("compiler_only_flags").orElse(DEFAULT_COMPILER_ONLY_FLAGS);
-
     builder
         .addAllAsflags(config.getFlags("asflags").orElse(DEFAULT_ASFLAGS))
         .addAllAsppflags(config.getFlags("asppflags").orElse(DEFAULT_ASPPFLAGS))
         .addAllCflags(config.getFlags("cflags").orElse(DEFAULT_CFLAGS))
-        .addAllCflags(compilerOnlyFlags)
         .addAllCxxflags(config.getFlags("cxxflags").orElse(DEFAULT_CXXFLAGS))
-        .addAllCxxflags(compilerOnlyFlags)
         .addAllCppflags(config.getFlags("cppflags").orElse(DEFAULT_CPPFLAGS))
         .addAllCxxppflags(config.getFlags("cxxppflags").orElse(DEFAULT_CXXPPFLAGS))
         .addAllCudaflags(config.getFlags("cudaflags").orElse(DEFAULT_CUDAFLAGS))
