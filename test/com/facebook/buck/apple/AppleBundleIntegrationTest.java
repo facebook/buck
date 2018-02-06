@@ -1233,6 +1233,35 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void macAppWithPlugin() throws IOException, InterruptedException {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_osx_app_with_plugin", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:App#no-debug");
+    ProcessResult buildResult =
+        workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+    buildResult.assertSuccess();
+
+    Path appPath =
+        workspace.getPath(
+            BuildTargets.getGenPath(
+                    filesystem,
+                    target.withAppendedFlavors(
+                        AppleDebugFormat.NONE.getFlavor(),
+                        AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    "%s")
+                .resolve(target.getShortName() + ".app"));
+    Path pluginPath = appPath.resolve("Contents/PlugIns/Plugin.plugin");
+    Path pluginBinaryPath = pluginPath.resolve("Contents/MacOS/Plugin");
+    Path pluginInfoPlistPath = pluginPath.resolve("Contents/Info.plist");
+    assertTrue(Files.exists(pluginBinaryPath));
+    assertTrue(Files.exists(pluginInfoPlistPath));
+  }
+
+  @Test
   public void resourcesFromOtherCellsCanBeProperlyIncluded() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
