@@ -41,6 +41,10 @@ public class CxxPlatforms {
   private static final ImmutableList<String> DEFAULT_CXXFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_CPPFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_CXXPPFLAGS = ImmutableList.of();
+  private static final ImmutableList<String> DEFAULT_CUDAFLAGS = ImmutableList.of();
+  private static final ImmutableList<String> DEFAULT_CUDAPPFLAGS = ImmutableList.of();
+  private static final ImmutableList<String> DEFAULT_ASMFLAGS = ImmutableList.of();
+  private static final ImmutableList<String> DEFAULT_ASMPPFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_LDFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_ARFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_RANLIBFLAGS = ImmutableList.of();
@@ -218,25 +222,22 @@ public class CxxPlatforms {
   }
 
   public static void addToolFlagsFromConfig(CxxBuckConfig config, CxxPlatform.Builder builder) {
-    ImmutableList<String> asflags = config.getFlags("asflags").orElse(DEFAULT_ASFLAGS);
-    ImmutableList<String> cflags = config.getFlags("cflags").orElse(DEFAULT_CFLAGS);
-    ImmutableList<String> cxxflags = config.getFlags("cxxflags").orElse(DEFAULT_CXXFLAGS);
     ImmutableList<String> compilerOnlyFlags =
         config.getFlags("compiler_only_flags").orElse(DEFAULT_COMPILER_ONLY_FLAGS);
 
     builder
-        .addAllAsflags(asflags)
+        .addAllAsflags(config.getFlags("asflags").orElse(DEFAULT_ASFLAGS))
         .addAllAsppflags(config.getFlags("asppflags").orElse(DEFAULT_ASPPFLAGS))
-        .addAllCflags(cflags)
+        .addAllCflags(config.getFlags("cflags").orElse(DEFAULT_CFLAGS))
         .addAllCflags(compilerOnlyFlags)
-        .addAllCxxflags(cxxflags)
+        .addAllCxxflags(config.getFlags("cxxflags").orElse(DEFAULT_CXXFLAGS))
         .addAllCxxflags(compilerOnlyFlags)
         .addAllCppflags(config.getFlags("cppflags").orElse(DEFAULT_CPPFLAGS))
         .addAllCxxppflags(config.getFlags("cxxppflags").orElse(DEFAULT_CXXPPFLAGS))
-        .addAllCudaflags(config.getFlags("cudaflags").orElse(ImmutableList.of()))
-        .addAllCudappflags(config.getFlags("cudappflags").orElse(ImmutableList.of()))
-        .addAllAsmflags(config.getFlags("asmflags").orElse(ImmutableList.of()))
-        .addAllAsmppflags(config.getFlags("asmppflags").orElse(ImmutableList.of()))
+        .addAllCudaflags(config.getFlags("cudaflags").orElse(DEFAULT_CUDAFLAGS))
+        .addAllCudappflags(config.getFlags("cudappflags").orElse(DEFAULT_CUDAPPFLAGS))
+        .addAllAsmflags(config.getFlags("asmflags").orElse(DEFAULT_ASMFLAGS))
+        .addAllAsmppflags(config.getFlags("asmppflags").orElse(DEFAULT_ASMPPFLAGS))
         .addAllLdflags(config.getFlags("ldflags").orElse(DEFAULT_LDFLAGS))
         .addAllArflags(config.getFlags("arflags").orElse(DEFAULT_ARFLAGS))
         .addAllRanlibflags(config.getFlags("ranlibflags").orElse(DEFAULT_RANLIBFLAGS));
