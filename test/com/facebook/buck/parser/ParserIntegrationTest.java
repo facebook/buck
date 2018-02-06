@@ -435,9 +435,6 @@ public class ParserIntegrationTest {
     workspace.runBuckBuild("//python/native_in_extension_bzl:main").assertSuccess();
 
     // Skylark interpreter, true / false / default for disabling implicit native rules
-    // TODO: Specific error messages are disabled until we hook up the skylark parser to the
-    // general buck event bus, since that's how we get messages in integration tests (and how
-    // the python parser is hooked up)
 
     assertParseFailedWithSubstrings(
         workspace.runBuckBuild(
@@ -518,6 +515,24 @@ public class ParserIntegrationTest {
             "parser.polyglot_parsing_enabled=true",
             "-c",
             "parser.default_build_file_syntax=SKYLARK")
+        .assertSuccess();
+  }
+
+  @Test
+  public void enablingImplicitNativeRulesMakesThemAvailableInExtensionFiles() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "disable_implicit_native_rules", temporaryFolder);
+    workspace.setUp();
+    workspace
+        .runBuckBuild(
+            "//skylark/implicit_in_extension_bzl:main",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.default_build_file_syntax=SKYLARK",
+            "-c",
+            "parser.enable_implicit_native_rules_in_extensions=true")
         .assertSuccess();
   }
 

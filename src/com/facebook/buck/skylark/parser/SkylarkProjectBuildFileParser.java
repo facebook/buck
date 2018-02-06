@@ -144,7 +144,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
 
   /** Always disable implicit native imports in skylark rules, they should utilize native.foo */
   private Environment.Frame getBuckLoadContextGlobals() {
-    return getBuckGlobals(true);
+    return getBuckGlobals(!options.getEnableImplicitNativeRulesInExtensions());
   }
 
   /** Disable implicit native rules depending on configuration */

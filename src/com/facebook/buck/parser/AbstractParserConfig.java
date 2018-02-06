@@ -244,6 +244,16 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
     return getDelegate().getBooleanValue("parser", "disable_implicit_native_rules", false);
   }
 
+  /**
+   * @return whether native build rules are available for users in extension files. If not, they are
+   *     only accessible in extension files under the 'native' object
+   */
+  @Value.Lazy
+  public boolean getEnableImplicitNativeRulesInExtensions() {
+    return getDelegate()
+        .getBooleanValue("parser", "enable_implicit_native_rules_in_extensions", false);
+  }
+
   /** @return whether Buck should warn about deprecated syntax. */
   @Value.Lazy
   public boolean isWarnAboutDeprecatedSyntax() {

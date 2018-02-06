@@ -91,6 +91,11 @@ abstract class AbstractProjectBuildFileParserOptions {
   }
 
   @Value.Default
+  public boolean getEnableImplicitNativeRulesInExtensions() {
+    return false;
+  }
+
+  @Value.Default
   public boolean isWarnAboutDeprecatedSyntax() {
     return true;
   }

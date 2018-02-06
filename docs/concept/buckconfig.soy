@@ -2879,6 +2879,7 @@ your <code>.buckjavaargs</code> file</a>:
   {param section: 'parser' /}
   {param name: 'disable_implicit_native_rules' /}
   {param example_value: 'true' /}
+  {param default_value: 'false' /}
   {param description}
     If set, native rules (cxx_library, android_library, etc) cannot be used in BUCK files. This
     can be useful if your team has a common set of macros that should be loaded, and one desires
@@ -2886,6 +2887,21 @@ your <code>.buckjavaargs</code> file</a>:
     native rules can only be accessed via the 'native' object within an extension file that is
     evaluated with {call buck.fn_load /} or {call buck.fn_include_defs /}.
     This flag is disabled by default (native rules can be used in build files).
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'parser' /}
+  {param name: 'enable_implicit_native_rules_in_extensions' /}
+  {param example_value: 'true' /}
+  {param default_value: 'false' /}
+  {param description}
+    If set, native rules (cxx_library, android_library, etc) can be used in extension files
+    without the 'native.' prefix when using the skylark parser. This is useful when migrating 
+    from the python based parser, but it is suggested users try to migrate their files to use
+    the native. syntax so as to make it absolutely clear where rule definitions are coming from.
+    This flag is disabled by default (native rules cannot be used without the native. prefix in 
+    extension files in skylark).
   {/param}
 {/call}
 
