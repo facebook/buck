@@ -68,7 +68,8 @@ public class InputBasedRuleKeyManager {
 
   public Optional<RuleKey> calculateInputBasedRuleKey() {
     try (Scope ignored =
-        RuleKeyCalculationEvent.scope(eventBus, RuleKeyCalculationEvent.Type.INPUT)) {
+        RuleKeyCalculationEvent.scope(
+            eventBus, RuleKeyCalculationEvent.Type.INPUT, rule.getBuildTarget())) {
       return Optional.of(ruleKeyFactories.getInputBasedRuleKeyFactory().build(rule));
     } catch (SizeLimiter.SizeLimitException ex) {
       return Optional.empty();

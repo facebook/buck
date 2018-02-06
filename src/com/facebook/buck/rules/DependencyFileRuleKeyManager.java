@@ -105,7 +105,8 @@ public class DependencyFileRuleKeyManager {
             .collect(ImmutableList.toImmutableList());
 
     try (Scope ignored =
-        RuleKeyCalculationEvent.scope(eventBus, RuleKeyCalculationEvent.Type.DEP_FILE)) {
+        RuleKeyCalculationEvent.scope(
+            eventBus, RuleKeyCalculationEvent.Type.DEP_FILE, rule.getBuildTarget())) {
       return Optional.of(
           ruleKeyFactories
               .getDepFileRuleKeyFactory()

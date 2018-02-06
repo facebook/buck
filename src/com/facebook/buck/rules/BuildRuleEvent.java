@@ -24,6 +24,7 @@ import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.keys.RuleKeyFactory;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.timing.ClockDuration;
@@ -390,6 +391,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     public Type getType() {
       return Type.NORMAL;
     }
+
+    @Override
+    public BuildTarget getTarget() {
+      return getBuildRule().getBuildTarget();
+    }
   }
 
   /**
@@ -407,6 +413,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     @Override
     public Type getType() {
       return Type.NORMAL;
+    }
+
+    @Override
+    public BuildTarget getTarget() {
+      return getBuildRule().getBuildTarget();
     }
   }
 

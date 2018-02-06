@@ -467,7 +467,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       SupportsDependencyFileRuleKey rule, BuckEventBus eventBus, RuleKeyFactories ruleKeyFactories)
       throws IOException {
     try (Scope scope =
-        RuleKeyCalculationEvent.scope(eventBus, RuleKeyCalculationEvent.Type.MANIFEST)) {
+        RuleKeyCalculationEvent.scope(
+            eventBus, RuleKeyCalculationEvent.Type.MANIFEST, rule.getBuildTarget())) {
       return Optional.of(ruleKeyFactories.getDepFileRuleKeyFactory().buildManifestKey(rule));
     } catch (SizeLimiter.SizeLimitException ex) {
       return Optional.empty();
