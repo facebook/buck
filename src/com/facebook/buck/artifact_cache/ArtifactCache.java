@@ -38,6 +38,9 @@ public interface ArtifactCache extends AutoCloseable {
    */
   ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output);
 
+  /** All pending (and future) async fetches will be immediately marked as skipped. */
+  void skipPendingAndFutureAsyncFetches();
+
   /**
    * Store the artifact at path specified by output to cache, such that it can later be fetched
    * using ruleKey as the lookup key. If any internal errors occur, fail silently and continue

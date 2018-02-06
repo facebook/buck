@@ -4315,6 +4315,11 @@ public class CachingBuildEngineTest {
     }
 
     @Override
+    public void skipPendingAndFutureAsyncFetches() {
+      // Async requests are not supported by FakeArtifactCacheThatWritesAZipFile, so do nothing
+    }
+
+    @Override
     public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
       throw new UnsupportedOperationException();
     }

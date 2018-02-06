@@ -54,6 +54,11 @@ public class LoggingArtifactCacheDecorator implements ArtifactCache, CacheDecora
   }
 
   @Override
+  public void skipPendingAndFutureAsyncFetches() {
+    delegate.skipPendingAndFutureAsyncFetches();
+  }
+
+  @Override
   public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
     ArtifactCacheEvent.Started started =
         eventFactory.newStoreStartedEvent(info.getRuleKeys(), info.getMetadata());

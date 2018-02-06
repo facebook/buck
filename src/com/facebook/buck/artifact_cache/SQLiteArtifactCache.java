@@ -140,6 +140,11 @@ public class SQLiteArtifactCache implements ArtifactCache {
     return Futures.immediateFuture(fetch(ruleKey, output));
   }
 
+  @Override
+  public void skipPendingAndFutureAsyncFetches() {
+    // Async requests are not supported by SQLiteArtifactCache, so do nothing
+  }
+
   private CacheResult fetch(RuleKey ruleKey, LazyPath output) {
     CacheResult artifactResult = fetchContent(ruleKey, output);
     CacheResult metadataResult = fetchMetadata(ruleKey, output);

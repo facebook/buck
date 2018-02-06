@@ -262,6 +262,11 @@ public class MultiArtifactCacheTest {
       return Futures.immediateFuture(fetch(ruleKey, output));
     }
 
+    @Override
+    public void skipPendingAndFutureAsyncFetches() {
+      // Async requests are not supported by SimpleArtifactCache, so do nothing
+    }
+
     private CacheResult fetch(RuleKey ruleKey, LazyPath output) {
       if (ruleKey.equals(storedKey.get())) {
         try {

@@ -452,9 +452,18 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   }
 
   private boolean shouldKeepGoing(BuildEngineBuildContext buildContext) {
-    return firstFailure == null
-        || buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE
-        || buildContext.isKeepGoing();
+    boolean keepGoing =
+        firstFailure == null
+            || buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE
+            || buildContext.isKeepGoing();
+
+    if (!keepGoing) {
+      // Ensure any pending/future cache fetch requests are not processed.
+      // Note: these are processed on a different Executor from the one used by the build engine.
+      buildContext.getArtifactCache().skipPendingAndFutureAsyncFetches();
+    }
+
+    return keepGoing;
   }
 
   @VisibleForTesting

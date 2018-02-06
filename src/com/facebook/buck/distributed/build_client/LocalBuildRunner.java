@@ -141,7 +141,9 @@ public class LocalBuildRunner {
     Build build = Preconditions.checkNotNull(buildReference.get());
     LOG.info(String.format("Killing Build for Stampede local %s build..", localBuildType));
     build.terminateBuildWithFailure(new CleanBuildShutdownException(message));
-    LOG.info(String.format("Killed Build for Stampede local %s build.", localBuildType));
+    LOG.info(
+        String.format(
+            "Sent termination signal to Build for Stampede local %s build.", localBuildType));
 
     waitUntilFinished();
 

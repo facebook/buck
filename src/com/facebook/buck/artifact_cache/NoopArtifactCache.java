@@ -37,6 +37,11 @@ public class NoopArtifactCache implements ArtifactCache {
   }
 
   @Override
+  public void skipPendingAndFutureAsyncFetches() {
+    // Do nothing.
+  }
+
+  @Override
   public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
     return Futures.immediateFuture(null);
   }

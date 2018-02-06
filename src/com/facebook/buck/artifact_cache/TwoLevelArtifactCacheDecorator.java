@@ -181,6 +181,11 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
   }
 
   @Override
+  public void skipPendingAndFutureAsyncFetches() {
+    delegate.skipPendingAndFutureAsyncFetches();
+  }
+
+  @Override
   public ListenableFuture<Void> store(final ArtifactInfo info, final BorrowablePath output) {
 
     return Futures.transformAsync(

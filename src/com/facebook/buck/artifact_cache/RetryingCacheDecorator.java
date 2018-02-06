@@ -93,6 +93,11 @@ public class RetryingCacheDecorator implements ArtifactCache, CacheDecorator {
   }
 
   @Override
+  public void skipPendingAndFutureAsyncFetches() {
+    delegate.skipPendingAndFutureAsyncFetches();
+  }
+
+  @Override
   public ArtifactCache getDelegate() {
     return delegate;
   }

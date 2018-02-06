@@ -99,6 +99,13 @@ public class MultiArtifactCache implements ArtifactCache {
         MoreExecutors.directExecutor());
   }
 
+  @Override
+  public void skipPendingAndFutureAsyncFetches() {
+    for (ArtifactCache artifactCache : artifactCaches) {
+      artifactCache.skipPendingAndFutureAsyncFetches();
+    }
+  }
+
   private static ListenableFuture<Void> storeToCaches(
       ImmutableList<ArtifactCache> caches, ArtifactInfo info, BorrowablePath output) {
     // TODO(cjhopman): support BorrowablePath with multiple writable caches.
