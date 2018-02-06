@@ -20,6 +20,7 @@ import com.facebook.buck.util.CapturingPrintStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.martiansoftware.nailgun.NGClientListener;
+import com.martiansoftware.nailgun.NGCommunicator;
 import com.martiansoftware.nailgun.NGConstants;
 import com.martiansoftware.nailgun.NGContext;
 import com.martiansoftware.nailgun.NGInputStream;
@@ -59,14 +60,17 @@ public class TestContext extends NGContext implements Closeable {
    */
   public TestContext(
       ImmutableMap<String, String> environment, InputStream clientStream, long timeoutMillis) {
-    in =
-        new NGInputStream(
+
+    NGCommunicator comm =
+        new NGCommunicator(
             new DataInputStream(Preconditions.checkNotNull(clientStream)),
             new DataOutputStream(new ByteArrayOutputStream(0)),
             (int) timeoutMillis);
+    in = new NGInputStream(comm);
     out = new CapturingPrintStream();
     err = new CapturingPrintStream();
     setExitStream(new CapturingPrintStream());
+    setCommunicator(comm);
     properties = new Properties();
     for (String key : environment.keySet()) {
       properties.setProperty(key, environment.get(key));
@@ -134,6 +138,6 @@ public class TestContext extends NGContext implements Closeable {
 
   @Override
   public void close() throws IOException {
-    in.close();
+    getCommunicator().close();
   }
 }
