@@ -28,8 +28,14 @@ import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import org.junit.Assume;
 
 abstract class GoAssumptions {
@@ -66,9 +72,54 @@ abstract class GoAssumptions {
     assumeNoException(exception);
   }
 
-  public static void assumeGoVersionGreaterThan(double requiredVersion) {
-    float actualVersion = 0;
-    Assume.assumeTrue("Acutal Go version is lower than the required version",
-        actualVersion > requiredVersion);
+  public static void assumeGoVersionAtLeast(String minimumVersion) {
+    List<Integer> minimumVersionNumbers = getVersionNumbers(minimumVersion);
+    Assume.assumeTrue(
+        "Expect minimum version string in the form of x.y.z, got" + minimumVersion,
+        minimumVersionNumbers.size() == 3);
+    Throwable exception = null;
+    String actualVersion = "0.0.0";
+    ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
+    try {
+      ProcessExecutor.Result goToolResult =
+          processExecutor.launchAndExecute(
+              ProcessExecutorParams.builder().addCommand("go", "version").build(),
+              EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
+              /* stdin */ Optional.empty(),
+              /* timeOutMs */ Optional.empty(),
+              /* timeoutHandler */ Optional.empty());
+      if (goToolResult.getExitCode() == 0) {
+        // e.g., "go version go1.9.2 darwin/amd64", "go version go1.9.2 windows/amd64", "go version
+        // go1.2.1 linux/amd64"
+        actualVersion = goToolResult.getStdout().get().substring(13, 18);
+      } else {
+        exception = new HumanReadableException(goToolResult.getStderr().get());
+      }
+    } catch (Exception e) {
+      exception = e;
+    }
+    assumeNoException(exception);
+    List<Integer> actualVersionNumbers = getVersionNumbers(actualVersion);
+    Assume.assumeTrue(
+        "Expect actual version string in the form of x.y.z, got" + actualVersion,
+        actualVersionNumbers.size() == 3);
+    boolean versionSatisfied = true;
+    for (int i = 0; i < 3; i++) {
+      if (actualVersionNumbers.get(i) < minimumVersionNumbers.get(i)) {
+        versionSatisfied = false;
+        break;
+      } else if (actualVersionNumbers.get(i) > minimumVersionNumbers.get(i)) {
+        versionSatisfied = true;
+        break;
+      }
+    }
+
+    Assume.assumeTrue("Actual Go version is lower than the required version", versionSatisfied);
+  }
+
+  private static List<Integer> getVersionNumbers(String versionString) {
+    return Arrays.stream(versionString.split("\\."))
+        .map(Integer::valueOf)
+        .collect(Collectors.toList());
   }
 }

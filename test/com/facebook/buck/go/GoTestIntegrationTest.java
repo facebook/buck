@@ -110,7 +110,7 @@ public class GoTestIntegrationTest {
 
   @Test
   public void testSubTests() throws IOException {
-    GoAssumptions.assumeGoVersionGreaterThan(1.7);
+    GoAssumptions.assumeGoVersionAtLeast("1.7.0");
     ProcessResult result = workspace.runBuckCommand("test", "//:subtests");
     result.assertSuccess();
   }
