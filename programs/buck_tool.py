@@ -384,27 +384,29 @@ class BuckTool(object):
                     return 0
 
                 use_buckd = self._use_buckd
-                if not self._command_line.is_help():
+                if not use_buckd:
+                    logging.warning("Not using buckd because NO_BUCKD is set.")
+
+                if use_buckd and self._command_line.is_help():
+                    use_buckd = False
+
+                if use_buckd:
                     has_watchman = bool(which('watchman'))
-                    if use_buckd and has_watchman:
-                        running_version = self._buck_project.get_running_buckd_version()
-
-                        if running_version != buck_version_uid:
-                            self.kill_buckd()
-
-                        if not self._is_buckd_running():
-                            self.launch_buckd(buck_version_uid=buck_version_uid)
-                    elif use_buckd and not has_watchman:
+                    if not has_watchman:
+                        use_buckd = False
                         logging.warning("Not using buckd because watchman isn't installed.")
-                    elif not use_buckd:
-                        logging.warning("Not using buckd because NO_BUCKD is set.")
+
+                if use_buckd:
+                    running_version = self._buck_project.get_running_buckd_version()
+                    if running_version != buck_version_uid or not self._is_buckd_running():
+                        self.kill_buckd()
+                        self.launch_buckd(buck_version_uid=buck_version_uid)
 
                 env = self._environ_for_buck()
                 env['BUCK_BUILD_ID'] = build_id
 
-                use_nailgun = use_buckd and self._is_buckd_running()
-                self._reporter.is_buckd = use_nailgun
-                run_fn = self._run_with_nailgun if use_nailgun else self._run_without_nailgun
+                self._reporter.is_buckd = use_buckd
+                run_fn = self._run_with_nailgun if use_buckd else self._run_without_nailgun
 
                 self._unpack_modules()
 
@@ -499,15 +501,6 @@ class BuckTool(object):
                 DETACHED_PROCESS = 0x00000008
                 creationflags = DETACHED_PROCESS
             else:
-                # Make sure the Unix domain socket doesn't exist before this call.
-                try:
-                    os.unlink(buckd_transport_file_path)
-                except OSError as e:
-                    if e.errno == errno.ENOENT:
-                        # Socket didn't previously exist.
-                        pass
-                    else:
-                        raise e
                 """
                 Change the process group of the child buckd process so that when this
                 script is interrupted, it does not kill buckd.
@@ -536,9 +529,13 @@ class BuckTool(object):
             self._buck_project.save_buckd_version(buck_version_uid)
 
             # Give Java some time to create the listening socket.
-            for i in range(0, 300):
-                if not transport_exists(buckd_transport_file_path):
-                    time.sleep(0.01)
+            for i in range(0, 500):
+                if transport_exists(buckd_transport_file_path):
+                    break
+                time.sleep(0.01)
+
+            if not transport_exists(buckd_transport_file_path):
+                raise BuckToolException('Buckd server startup timeout')
 
             returncode = process.poll()
 
@@ -561,10 +558,12 @@ class BuckTool(object):
             buckd_transport_file_path = self._buck_project.get_buckd_transport_file_path()
             if transport_exists(buckd_transport_file_path):
                 logging.debug("Shutting down buck daemon.")
+                wait_socket_close = False
                 try:
                     with NailgunConnection(self._buck_project.get_buckd_transport_address(),
                                            cwd=self._buck_project.root) as c:
                         c.send_command('ng-stop')
+                    wait_socket_close = True
                 except NailgunException as e:
                     if e.code not in (NailgunException.CONNECT_FAILED,
                                       NailgunException.CONNECTION_BROKEN,
@@ -572,6 +571,17 @@ class BuckTool(object):
                         raise BuckToolException(
                             'Unexpected error shutting down nailgun server: ' +
                             str(e))
+
+                # if ng-stop command succeeds, wait for buckd process to terminate and for the
+                # socket to close
+                if wait_socket_close:
+                    for i in range(0, 300):
+                        if not transport_exists(buckd_transport_file_path):
+                            break
+                        time.sleep(0.01)
+
+                if transport_exists(buckd_transport_file_path):
+                    force_close_transport(buckd_transport_file_path)
 
             self._buck_project.clean_up_buckd()
 
@@ -681,6 +691,19 @@ def setup_watchman_watch():
         logging.debug("Using watchman.")
 
 
+def force_close_transport(path):
+    if os.name == 'nt':
+        # TODO(buck_team): do something for Windows too
+        return
+
+    try:
+        os.unlink(path)
+    except OSError as e:
+        # it is ok if socket did not exist
+        if e.errno != errno.ENOENT:
+            raise e
+
+
 def transport_exists(path):
     return os.path.exists(path)
 
@@ -693,8 +716,7 @@ if os.name == 'nt':
     FindFirstFile = ctypes.windll.kernel32.FindFirstFileW
     FindClose = ctypes.windll.kernel32.FindClose
 
-
-    # on windows os.path.exists doen't allow to check reliably that pipe exists
+    # on windows os.path.exists doesn't allow to check reliably that pipe exists
     # (os.path.exists tries to open connection to a pipe)
     def transport_exists(transport_path):
         wfd = WIN32_FIND_DATA()
