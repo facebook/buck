@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.file.HttpArchiveDescription;
 import com.facebook.buck.file.HttpFileDescription;
 import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.file.downloader.Downloader;
@@ -181,7 +182,10 @@ public class FetchCommand extends BuildCommand {
         StackedDownloader.createFromConfig(
             params.getBuckConfig(), params.getCell().getToolchainProvider());
     ImmutableSet<Description<?>> fetchingDescriptions =
-        ImmutableSet.of(new RemoteFileDescription(downloader), new HttpFileDescription(downloader));
+        ImmutableSet.of(
+            new RemoteFileDescription(downloader),
+            new HttpFileDescription(downloader),
+            new HttpArchiveDescription(downloader));
 
     return new FetchTargetNodeToBuildRuleTransformer(fetchingDescriptions);
   }

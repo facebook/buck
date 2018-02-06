@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.unarchive;
 
+import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -76,17 +77,31 @@ public enum ArchiveFormat {
   }
 
   /** Get the extension (including '.') for this archive type */
-  String getExtension() {
+  public String getExtension() {
     return extension;
   }
 
   /** Get the short name for the archive type */
-  String getShortName() {
+  public String getShortName() {
     return shortName;
   }
 
   @Override
   public String toString() {
     return String.format("%s (%s)", shortName, extension);
+  }
+
+  /** Get all available short names */
+  public static ImmutableList<String> getShortNames() {
+    return Stream.of(ArchiveFormat.values())
+        .map(ArchiveFormat::getShortName)
+        .collect(ImmutableList.toImmutableList());
+  }
+
+  /** Get all available file extensions */
+  public static ImmutableList<String> getFileExtensions() {
+    return Stream.of(ArchiveFormat.values())
+        .map(ArchiveFormat::getExtension)
+        .collect(ImmutableList.toImmutableList());
   }
 }

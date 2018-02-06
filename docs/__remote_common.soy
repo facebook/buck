@@ -15,18 +15,6 @@
 {/call}
 {/template}
 
-/***/
-{template .out_arg}
-{call buck.arg}
-  {param name: 'out' /}
-  {param example : 'foo.exe' /}
-  {param default: 'None'   /}
-  {param desc}
-    An optional name to call the downloaded artifact. Buck will generate a default name if one is not
-    provided that uses the <code>name</code> of the rule.
-  {/param}
-{/call}
-{/template}
 
 /***/
 {template .sha256_arg}
