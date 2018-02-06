@@ -1,6 +1,36 @@
+# Preferred way of specifying entitlements file via entitlements_file arg
+
 apple_bundle(
     name = "DemoApp",
     binary = ":DemoAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+)
+
+apple_binary(
+    name = "DemoAppBinary",
+    srcs = glob([
+        "*.m",
+    ]),
+    entitlements_file = "Entitlements.plist",
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    headers = glob([
+        "*.h",
+    ]),
+    libraries = [
+        "$SDKROOT/usr/lib/libobjc.dylib",
+    ],
+    preprocessor_flags = ["-fobjc-arc"],
+)
+
+# Old way of specifying entitlements file via info_plist_substitutions
+
+apple_bundle(
+    name = "DemoAppUsingInfoPlistSubstitutions",
+    binary = ":DemoAppUsingInfoPlistSubstitutionsBinary",
     extension = "app",
     info_plist = "Info.plist",
     info_plist_substitutions = {
@@ -9,7 +39,7 @@ apple_bundle(
 )
 
 apple_binary(
-    name = "DemoAppBinary",
+    name = "DemoAppUsingInfoPlistSubstitutionsBinary",
     srcs = glob([
         "*.m",
     ]),

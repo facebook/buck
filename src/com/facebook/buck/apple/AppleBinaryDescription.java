@@ -374,7 +374,6 @@ public class AppleBinaryDescription
         Optional.empty(),
         args.getInfoPlist().get(),
         args.getInfoPlistSubstitutions(),
-        args.getEntitlementsFile(),
         args.getDeps(),
         args.getTests(),
         flavoredDebugFormat,

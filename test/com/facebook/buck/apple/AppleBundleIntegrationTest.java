@@ -314,6 +314,7 @@ public class AppleBundleIntegrationTest {
     assertTrue(checkCodeSigning(embeddedFrameworkPath));
   }
 
+  // Specifying entitlments file via apple_binary entitlements_file
   @Test
   public void simpleApplicationBundleWithCodeSigningAndEntitlements()
       throws IOException, InterruptedException {
@@ -333,6 +334,41 @@ public class AppleBundleIntegrationTest {
             filesystem,
             target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
+    workspace.assertFilesEqual(
+        Paths.get("DemoApp.xcent.expected"),
+        BuildTargets.getScratchPath(
+            filesystem,
+            target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+            "%s.xcent"));
+
+    Path appPath =
+        workspace.getPath(
+            BuildTargets.getGenPath(
+                    filesystem,
+                    target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    "%s")
+                .resolve(target.getShortName() + ".app"));
+    assertTrue(Files.exists(appPath.resolve(target.getShortName())));
+
+    assertTrue(checkCodeSigning(appPath));
+  }
+
+  // Legacy method -- specifying entitlments file via info_plist_substitutions
+  @Test
+  public void simpleApplicationBundleWithCodeSigningAndEntitlementsUsingInfoPlistSubstitutions()
+      throws IOException, InterruptedException {
+    assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_application_bundle_with_codesigning_and_entitlements", tmp);
+    workspace.setUp();
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance(
+            "//:DemoAppUsingInfoPlistSubstitutions#iphoneos-arm64,no-debug");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
     workspace.assertFilesEqual(
         Paths.get("DemoApp.xcent.expected"),
         BuildTargets.getScratchPath(
