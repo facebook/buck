@@ -22,9 +22,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.util.cache.CacheStats;
 import com.facebook.buck.util.cache.CacheStatsTracker;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.Map;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -86,11 +84,6 @@ public class TrackedRuleKeyCache<V> implements RuleKeyCache<V> {
   @Override
   public void invalidateAll() {
     cache.invalidateAll(statsTracker);
-  }
-
-  @Override
-  public ImmutableList<Map.Entry<BuildRule, V>> getCachedBuildRules() {
-    return cache.getCachedBuildRules();
   }
 
   @VisibleForTesting
