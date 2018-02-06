@@ -204,6 +204,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 import org.kohsuke.args4j.CmdLineException;
@@ -600,12 +601,23 @@ public final class Main {
     // Setup the console.
     console = makeCustomConsole(context, verbosity, buckConfig);
 
+    DistBuildConfig distBuildConfig = new DistBuildConfig(buckConfig);
+
+    // Automatically use distributed build for supported repositories and users.
+    Optional<String> autoDistBuildMessage = Optional.empty();
+    if (command.subcommand != null && command.subcommand instanceof BuildCommand) {
+      BuildCommand subcommand = (BuildCommand) command.subcommand;
+      if (!subcommand.isUseDistributedBuild() && distBuildConfig.shouldUseDistributedBuild()) {
+        subcommand.setUseDistributedBuild(true);
+        autoDistBuildMessage = distBuildConfig.getAutoDistributedBuildMessage();
+      }
+    }
+
     // Switch to async file logging, if configured. A few log samples will have already gone
     // via the regular file logger, but that's OK.
     boolean isDistributedBuild =
         command.subcommand != null && command.subcommand instanceof DistBuildCommand;
     if (isDistributedBuild) {
-      DistBuildConfig distBuildConfig = new DistBuildConfig(buckConfig);
       LogConfig.setUseAsyncFileLogging(distBuildConfig.isAsyncLoggingEnabled());
     }
 
@@ -994,6 +1006,13 @@ public final class Main {
             buildEventBus.post(DaemonEvent.newDaemonInstance());
           }
 
+
+          // Auto dist build message event posted here so that eventbus and listeners are ready.
+          if (autoDistBuildMessage.isPresent()) {
+            buildEventBus.post(
+                ConsoleEvent.createForMessageWithAnsiEscapeCodes(
+                    Level.INFO, console.getAnsi().asInformationText(autoDistBuildMessage.get())));
+          }
 
           VersionControlBuckConfig vcBuckConfig = new VersionControlBuckConfig(buckConfig);
           VersionControlStatsGenerator vcStatsGenerator =

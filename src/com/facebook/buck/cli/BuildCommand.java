@@ -330,6 +330,14 @@ public class BuildCommand extends AbstractCommand {
     this.keepGoing = keepGoing;
   }
 
+  public boolean isUseDistributedBuild() {
+    return useDistributedBuild;
+  }
+
+  public void setUseDistributedBuild(boolean useDistributedBuild) {
+    this.useDistributedBuild = useDistributedBuild;
+  }
+
   /** @return an absolute path or {@link Optional#empty()}. */
   public Optional<Path> getPathToBuildReport(BuckConfig buckConfig) {
     return Optional.ofNullable(
