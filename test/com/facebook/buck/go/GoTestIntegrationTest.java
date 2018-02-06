@@ -107,4 +107,11 @@ public class GoTestIntegrationTest {
         result2.getStderr(),
         containsString("TestPanic"));
   }
+
+  @Test
+  public void testSubTests() throws IOException {
+    GoAssumptions.assumeGoVersionAtLeast("1.7.0");
+    ProcessResult result = workspace.runBuckCommand("test", "//:subtests");
+    result.assertSuccess();
+  }
 }
