@@ -16,4 +16,6 @@
 
 package com.facebook.buck.rules.modern;
 
-public final class OutputData {}
+import com.facebook.buck.rules.AddsToRuleKey;
+
+public final class OutputData implements AddsToRuleKey {}

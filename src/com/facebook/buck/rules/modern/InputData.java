@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules.modern;
 
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.types.Either;
 import com.google.common.annotations.VisibleForTesting;
@@ -23,8 +25,8 @@ import java.util.Optional;
 
 // TODO(cjhopman): make it so that an InputData constructed from an OutputData gets it's data
 // through the OutputData rather than through a SourcePath.
-public final class InputData {
-  private Either<SourcePath, String> data;
+public final class InputData implements AddsToRuleKey {
+  @AddToRuleKey private Either<SourcePath, String> data;
 
   @VisibleForTesting
   public InputData(SourcePath path) {

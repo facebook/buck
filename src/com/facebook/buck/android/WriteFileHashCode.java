@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.event.EventDispatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
@@ -39,8 +40,8 @@ import java.io.IOException;
 
 /** Computes the hash of a file and writes it as the output. */
 public class WriteFileHashCode extends ModernBuildRule<WriteFileHashCode> implements Buildable {
-  private final InputPath inputPath;
-  private final OutputPath outputPath;
+  @AddToRuleKey private final InputPath inputPath;
+  @AddToRuleKey private final OutputPath outputPath;
 
   public WriteFileHashCode(
       BuildTarget buildTarget,

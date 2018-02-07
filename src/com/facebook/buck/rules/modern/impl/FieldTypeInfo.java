@@ -34,6 +34,4 @@ interface FieldTypeInfo<T> {
   default void extractOutputData(String name, T value, BiConsumer<String, OutputData> builder) {}
 
   default void extractOutput(String name, T value, BiConsumer<String, OutputPath> builder) {}
-
-  Object extractRuleKeyObject(T value);
 }

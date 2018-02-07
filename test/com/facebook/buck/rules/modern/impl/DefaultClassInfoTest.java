@@ -26,6 +26,7 @@ import com.facebook.buck.event.EventDispatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -37,6 +38,7 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.keys.AlterRuleKeys;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ClassInfo;
@@ -91,8 +93,8 @@ public class DefaultClassInfoTest {
 
   private abstract static class BaseClass extends NoOpBuildable {
     private static final String BASE_NAME = "BaseClass";
-    private final InputPath baseInputPath;
-    final OutputPath baseOutputPath;
+    @AddToRuleKey private final InputPath baseInputPath;
+    @AddToRuleKey final OutputPath baseOutputPath;
 
     BaseClass(InputPath inputPath) {
       this.baseInputPath = inputPath;
@@ -102,11 +104,11 @@ public class DefaultClassInfoTest {
 
   private static class DerivedClass extends BaseClass {
     private static final Optional<String> STRING = Optional.empty();
-    private final ImmutableList<InputPath> inputs;
-    private final int value = 1;
-    private final long something = 2;
-    private final boolean enabled = true;
-    private final OutputData outputData = new OutputData();
+    @AddToRuleKey private final ImmutableList<InputPath> inputs;
+    @AddToRuleKey private final int value = 1;
+    @AddToRuleKey private final long something = 2;
+    @AddToRuleKey private final boolean enabled = true;
+    @AddToRuleKey private final OutputData outputData = new OutputData();
 
     DerivedClass(InputPath baseInputPath, ImmutableList<InputPath> inputs) {
       super(baseInputPath);
@@ -144,25 +146,27 @@ public class DefaultClassInfoTest {
     ClassInfo<DerivedClass> classInfo = DefaultClassInfoFactory.forBuildable(buildable);
     assertEquals("derived_class", classInfo.getType());
 
-    expect(ruleKeyObjectSink.setReflectively("BASE_NAME", "BaseClass"))
-        .andReturn(ruleKeyObjectSink);
-    expect(ruleKeyObjectSink.setReflectively("baseInputPath", targetSourcePath1))
-        .andReturn(ruleKeyObjectSink);
-    expect(ruleKeyObjectSink.setReflectively("baseOutputPath", "baseOutput"))
-        .andReturn(ruleKeyObjectSink);
-    expect(ruleKeyObjectSink.setReflectively("STRING", Optional.empty()))
-        .andReturn(ruleKeyObjectSink);
     expect(
             ruleKeyObjectSink.setReflectively(
-                "inputs", ImmutableList.of(targetSourcePath2, targetSourcePath3, pathSourcePath)))
+                ".class", "com.facebook.buck.rules.modern.impl.DefaultClassInfoTest$DerivedClass"))
         .andReturn(ruleKeyObjectSink);
-    expect(ruleKeyObjectSink.setReflectively("value", 1)).andReturn(ruleKeyObjectSink);
-    expect(ruleKeyObjectSink.setReflectively("something", 2l)).andReturn(ruleKeyObjectSink);
     expect(ruleKeyObjectSink.setReflectively("enabled", true)).andReturn(ruleKeyObjectSink);
-    expect(ruleKeyObjectSink.setReflectively("outputData", "")).andReturn(ruleKeyObjectSink);
+    expect(
+            ruleKeyObjectSink.setReflectively(
+                "inputs", ImmutableList.of(targetInputPath2, targetInputPath3, pathInputPath)))
+        .andReturn(ruleKeyObjectSink);
+    expect(ruleKeyObjectSink.setReflectively("outputData", buildable.outputData))
+        .andReturn(ruleKeyObjectSink);
+    expect(ruleKeyObjectSink.setReflectively("something", 2l)).andReturn(ruleKeyObjectSink);
+    expect(ruleKeyObjectSink.setReflectively("value", 1)).andReturn(ruleKeyObjectSink);
+
+    expect(ruleKeyObjectSink.setReflectively("baseInputPath", targetInputPath1))
+        .andReturn(ruleKeyObjectSink);
+    expect(ruleKeyObjectSink.setReflectively("baseOutputPath", buildable.baseOutputPath))
+        .andReturn(ruleKeyObjectSink);
 
     replay(ruleKeyObjectSink);
-    classInfo.appendToRuleKey(buildable, ruleKeyObjectSink);
+    AlterRuleKeys.amendKey(ruleKeyObjectSink, buildable);
     verify(ruleKeyObjectSink);
 
     expect(inputRuleResolver.resolve(targetInputPath1)).andReturn(Optional.of(rule1));

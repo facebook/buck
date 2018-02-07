@@ -20,6 +20,7 @@ import com.facebook.buck.android.resources.ResourcesZipBuilder;
 import com.facebook.buck.event.EventDispatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
@@ -52,8 +53,8 @@ import java.util.zip.ZipFile;
 /** Merges resources from third party jars for exo-for-resources. */
 public class MergeThirdPartyJarResources extends ModernBuildRule<MergeThirdPartyJarResources>
     implements Buildable {
-  private final ImmutableSortedSet<InputPath> pathsToThirdPartyJars;
-  private final OutputPath mergedPath;
+  @AddToRuleKey private final ImmutableSortedSet<InputPath> pathsToThirdPartyJars;
+  @AddToRuleKey private final OutputPath mergedPath;
 
   protected MergeThirdPartyJarResources(
       BuildTarget buildTarget,

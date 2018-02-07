@@ -63,7 +63,7 @@ public class DefaultRuleKeyCache<V> implements TrackableRuleKeyCache<V> {
 
   private <K> V calculateNode(K node, Function<K, RuleKeyResult<V>> create) {
     Preconditions.checkArgument(
-        node instanceof BuildRule ^ node instanceof AddsToRuleKey,
+        node instanceof BuildRule || node instanceof AddsToRuleKey,
         "%s must be one of either a `BuildRule` or `AddsToRuleKey`",
         node.getClass());
 

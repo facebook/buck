@@ -20,6 +20,7 @@ import com.facebook.buck.event.EventDispatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
@@ -42,11 +43,11 @@ import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 
 public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildable {
-  private final String name;
-  private final ImmutableSortedSet<InputPath> sources;
-  private final OutputPath output;
-  private final boolean flatten;
-  private final boolean mergeSourceZips;
+  @AddToRuleKey private final String name;
+  @AddToRuleKey private final ImmutableSortedSet<InputPath> sources;
+  @AddToRuleKey private final OutputPath output;
+  @AddToRuleKey private final boolean flatten;
+  @AddToRuleKey private final boolean mergeSourceZips;
 
   public Zip(
       SourcePathRuleFinder ruleFinder,

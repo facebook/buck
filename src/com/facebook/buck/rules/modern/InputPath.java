@@ -17,14 +17,16 @@
 package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import java.util.Objects;
 
-public final class InputPath implements Comparable<InputPath> {
-  private SourcePath sourcePath;
+public final class InputPath implements Comparable<InputPath>, AddsToRuleKey {
+  @AddToRuleKey private SourcePath sourcePath;
 
   public InputPath(SourcePath path) {
     if (path instanceof PathSourcePath) {

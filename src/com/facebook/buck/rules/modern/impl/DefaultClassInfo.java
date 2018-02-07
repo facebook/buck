@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.InputRuleResolver;
@@ -52,6 +52,19 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
           "All fields of a Buildable must be final (%s.%s)",
           clazz.getSimpleName(),
           field.getName());
+
+      if (Modifier.isStatic(field.getModifiers())) {
+        continue;
+      }
+
+      AddToRuleKey addAnnotation = field.getAnnotation(AddToRuleKey.class);
+
+      Preconditions.checkState(
+          addAnnotation != null,
+          "All fields of a Buildable must be annotated with @AddsToRuleKey. %s.%s is missing this annotation.",
+          clazz.getName(),
+          field.getName());
+
       FieldInfo<?> fieldInfo = FieldInfo.forField(field);
       fieldsBuilder.add(fieldInfo);
     }
@@ -94,14 +107,6 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
         classInfo -> classInfo.computeDeps(ruleImpl, inputRuleResolver, depsBuilder));
     for (FieldInfo<?> extractor : fields) {
       extractor.extractDep(ruleImpl, inputRuleResolver, depsBuilder);
-    }
-  }
-
-  @Override
-  public void appendToRuleKey(T ruleImpl, RuleKeyObjectSink sink) {
-    superInfo.ifPresent(classInfo -> classInfo.appendToRuleKey(ruleImpl, sink));
-    for (FieldInfo<?> extractor : fields) {
-      extractor.extractRuleKey(ruleImpl, sink);
     }
   }
 
@@ -152,14 +157,6 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
 
     void extractOutput(Buildable ruleImpl, BiConsumer<String, OutputPath> builder) {
       fieldTypeInfo.extractOutput(field.getName(), getValue(ruleImpl, field), builder);
-    }
-
-    void extractRuleKey(Buildable ruleImpl, RuleKeyObjectSink sink) {
-      // TODO(cjhopman): Should this pass the sink down into the fieldTypeInfo call? To support
-      // something like RuleKeyAppendable (and the rulekey factories' caching of them, I think we'll
-      // need to do that.
-      sink.setReflectively(
-          field.getName(), fieldTypeInfo.extractRuleKeyObject(getValue(ruleImpl, field)));
     }
 
     private T getValue(Buildable ruleImpl, Field field) {

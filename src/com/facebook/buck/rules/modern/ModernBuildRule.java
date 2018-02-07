@@ -29,6 +29,7 @@ import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.keys.AlterRuleKeys;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.DefaultInputRuleResolver;
@@ -273,7 +274,7 @@ public class ModernBuildRule<T extends Buildable>
 
   @Override
   public final void appendToRuleKey(RuleKeyObjectSink sink) {
-    classInfo.appendToRuleKey(buildable, sink);
+    AlterRuleKeys.amendKey(sink, buildable);
   }
 
   @Override

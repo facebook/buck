@@ -19,7 +19,6 @@ package com.facebook.buck.rules.modern.impl;
 import static org.easymock.EasyMock.createStrictMock;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -78,7 +77,6 @@ public class FieldTypeInfosTest {
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
     typeInfo.extractOutput("", value, outputConsumer);
     typeInfo.extractOutputData("", value, outputDataConsumer);
-    assertEquals(value, typeInfo.extractRuleKeyObject(value));
     verify(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
   }
 
@@ -92,7 +90,6 @@ public class FieldTypeInfosTest {
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
     typeInfo.extractOutput("", value, outputConsumer);
     typeInfo.extractOutputData("", value, outputDataConsumer);
-    assertEquals(value, typeInfo.extractRuleKeyObject(value));
     verify(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
   }
 
@@ -184,7 +181,6 @@ public class FieldTypeInfosTest {
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
     typeInfo.extractOutput("", value, outputConsumer);
     typeInfo.extractOutputData("", value, outputDataConsumer);
-    assertEquals(sourcePath, typeInfo.extractRuleKeyObject(value));
     verify(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
   }
 
@@ -205,7 +201,6 @@ public class FieldTypeInfosTest {
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
     typeInfo.extractOutput("", value, outputConsumer);
     typeInfo.extractOutputData("", value, outputDataConsumer);
-    assertEquals(sourcePath, typeInfo.extractRuleKeyObject(value));
     verify(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
   }
 
@@ -227,7 +222,6 @@ public class FieldTypeInfosTest {
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
     typeInfo.extractOutput("", value, outputConsumer);
     typeInfo.extractOutputData("", value, outputDataConsumer);
-    assertEquals(Optional.of(sourcePath), typeInfo.extractRuleKeyObject(value));
     verify(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
   }
 
@@ -241,7 +235,6 @@ public class FieldTypeInfosTest {
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
     typeInfo.extractOutput("", value, outputConsumer);
     typeInfo.extractOutputData("", value, outputDataConsumer);
-    assertEquals(Optional.empty(), typeInfo.extractRuleKeyObject(value));
     verify(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
   }
 
@@ -268,8 +261,6 @@ public class FieldTypeInfosTest {
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
     typeInfo.extractOutput("", value, outputConsumer);
     typeInfo.extractOutputData("", value, outputDataConsumer);
-    assertEquals(
-        ImmutableList.of(targetSourcePath, pathSourcePath), typeInfo.extractRuleKeyObject(value));
     verify(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
   }
 }
