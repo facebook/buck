@@ -81,6 +81,20 @@ public class CxxBuckConfig {
       "enable_deprecated_prebuilt_cxx_library_api";
   private static final String DECLARED_PLATFORMS = "declared_platforms";
 
+  private static final String ASFLAGS = "asflags";
+  private static final String ASPPFLAGS = "asppflags";
+  private static final String CFLAGS = "cflags";
+  private static final String CXXFLAGS = "cxxflags";
+  private static final String CPPFLAGS = "cppflags";
+  private static final String CXXPPFLAGS = "cxxppflags";
+  private static final String CUDAFLAGS = "cudaflags";
+  private static final String CUDAPPFLAGS = "cudappflags";
+  private static final String ASMFLAGS = "asmflags";
+  private static final String ASMPPFLAGS = "asmppflags";
+  private static final String LDFLAGS = "ldflags";
+  private static final String ARFLAGS = "arflags";
+  private static final String RANLIBFLAGS = "ranlibflags";
+
   private final BuckConfig delegate;
   private final String cxxSection;
 
@@ -161,7 +175,7 @@ public class CxxBuckConfig {
     return delegate.getValue(cxxSection, HOST_PLATFORM);
   }
 
-  public Optional<ImmutableList<String>> getFlags(String field) {
+  private Optional<ImmutableList<String>> getFlags(String field) {
     Optional<String> value = delegate.getValue(cxxSection, field);
     if (!value.isPresent()) {
       return Optional.empty();
@@ -171,6 +185,58 @@ public class CxxBuckConfig {
       split.addAll(Splitter.on(" ").split(value.get().trim()));
     }
     return Optional.of(split.build());
+  }
+
+  public Optional<ImmutableList<String>> getAsflags() {
+    return getFlags(ASFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getAsppflags() {
+    return getFlags(ASPPFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getCflags() {
+    return getFlags(CFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getCxxflags() {
+    return getFlags(CXXFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getCppflags() {
+    return getFlags(CPPFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getCxxppflags() {
+    return getFlags(CXXPPFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getCudaflags() {
+    return getFlags(CUDAFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getCudappflags() {
+    return getFlags(CUDAPPFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getAsmflags() {
+    return getFlags(ASMFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getAsmppflags() {
+    return getFlags(ASMPPFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getLdflags() {
+    return getFlags(LDFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getArflags() {
+    return getFlags(ARFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getRanlibflags() {
+    return getFlags(RANLIBFLAGS);
   }
 
   /*

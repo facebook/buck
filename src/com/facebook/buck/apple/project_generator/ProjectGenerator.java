@@ -1438,7 +1438,7 @@ public class ProjectGenerator {
 
         Iterable<String> otherCFlags =
             ImmutableList.<String>builder()
-                .addAll(cxxBuckConfig.getFlags("cflags").orElse(DEFAULT_CFLAGS))
+                .addAll(cxxBuckConfig.getCflags().orElse(DEFAULT_CFLAGS))
                 .addAll(
                     convertStringWithMacros(
                         targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))
@@ -1452,7 +1452,7 @@ public class ProjectGenerator {
                 .build();
         Iterable<String> otherCxxFlags =
             ImmutableList.<String>builder()
-                .addAll(cxxBuckConfig.getFlags("cxxflags").orElse(DEFAULT_CXXFLAGS))
+                .addAll(cxxBuckConfig.getCxxflags().orElse(DEFAULT_CXXFLAGS))
                 .addAll(
                     convertStringWithMacros(
                         targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))

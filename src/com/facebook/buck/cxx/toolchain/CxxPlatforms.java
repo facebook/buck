@@ -222,19 +222,19 @@ public class CxxPlatforms {
 
   public static void addToolFlagsFromConfig(CxxBuckConfig config, CxxPlatform.Builder builder) {
     builder
-        .addAllAsflags(config.getFlags("asflags").orElse(DEFAULT_ASFLAGS))
-        .addAllAsppflags(config.getFlags("asppflags").orElse(DEFAULT_ASPPFLAGS))
-        .addAllCflags(config.getFlags("cflags").orElse(DEFAULT_CFLAGS))
-        .addAllCxxflags(config.getFlags("cxxflags").orElse(DEFAULT_CXXFLAGS))
-        .addAllCppflags(config.getFlags("cppflags").orElse(DEFAULT_CPPFLAGS))
-        .addAllCxxppflags(config.getFlags("cxxppflags").orElse(DEFAULT_CXXPPFLAGS))
-        .addAllCudaflags(config.getFlags("cudaflags").orElse(DEFAULT_CUDAFLAGS))
-        .addAllCudappflags(config.getFlags("cudappflags").orElse(DEFAULT_CUDAPPFLAGS))
-        .addAllAsmflags(config.getFlags("asmflags").orElse(DEFAULT_ASMFLAGS))
-        .addAllAsmppflags(config.getFlags("asmppflags").orElse(DEFAULT_ASMPPFLAGS))
-        .addAllLdflags(config.getFlags("ldflags").orElse(DEFAULT_LDFLAGS))
-        .addAllArflags(config.getFlags("arflags").orElse(DEFAULT_ARFLAGS))
-        .addAllRanlibflags(config.getFlags("ranlibflags").orElse(DEFAULT_RANLIBFLAGS));
+        .addAllAsflags(config.getAsflags().orElse(DEFAULT_ASFLAGS))
+        .addAllAsppflags(config.getAsppflags().orElse(DEFAULT_ASPPFLAGS))
+        .addAllCflags(config.getCflags().orElse(DEFAULT_CFLAGS))
+        .addAllCxxflags(config.getCxxflags().orElse(DEFAULT_CXXFLAGS))
+        .addAllCppflags(config.getCppflags().orElse(DEFAULT_CPPFLAGS))
+        .addAllCxxppflags(config.getCxxppflags().orElse(DEFAULT_CXXPPFLAGS))
+        .addAllCudaflags(config.getCudaflags().orElse(DEFAULT_CUDAFLAGS))
+        .addAllCudappflags(config.getCudappflags().orElse(DEFAULT_CUDAPPFLAGS))
+        .addAllAsmflags(config.getAsmflags().orElse(DEFAULT_ASMFLAGS))
+        .addAllAsmppflags(config.getAsmppflags().orElse(DEFAULT_ASMPPFLAGS))
+        .addAllLdflags(config.getLdflags().orElse(DEFAULT_LDFLAGS))
+        .addAllArflags(config.getArflags().orElse(DEFAULT_ARFLAGS))
+        .addAllRanlibflags(config.getRanlibflags().orElse(DEFAULT_RANLIBFLAGS));
   }
 
   public static CxxPlatform getConfigDefaultCxxPlatform(
