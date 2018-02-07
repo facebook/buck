@@ -25,9 +25,11 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UserFlavor;
 import com.facebook.buck.rules.BinaryBuildRuleToolProvider;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleScheduleInfo;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.util.environment.Platform;
@@ -56,7 +58,6 @@ public class CxxBuckConfig {
   private static final String GTEST_DEFAULT_TEST_MAIN_DEP = "gtest_default_test_main_dep";
   private static final String BOOST_TEST_DEP = "boost_test_dep";
   private static final String HOST_PLATFORM = "host_platform";
-  private static final String AR = "ar";
   private static final String ARCHIVER_PLATFORM = "archiver_platform";
   private static final String MAX_TEST_OUTPUT_SIZE = "max_test_output_size";
   private static final String LINKER_PLATFORM = "linker_platform";
@@ -94,6 +95,12 @@ public class CxxBuckConfig {
   private static final String LDFLAGS = "ldflags";
   private static final String ARFLAGS = "arflags";
   private static final String RANLIBFLAGS = "ranlibflags";
+
+  private static final String AR = "ar";
+  private static final String RANLIB = "ranlib";
+  private static final String OBJCOPY = "objcopy";
+  private static final String NM = "nm";
+  private static final String STRIP = "strip";
 
   private final BuckConfig delegate;
   private final String cxxSection;
@@ -379,8 +386,28 @@ public class CxxBuckConfig {
     return delegate.getBooleanValue(cxxSection, SHOULD_REMAP_HOST_PLATFORM, false);
   }
 
-  public Optional<ToolProvider> getToolProvider(String name) {
+  private Optional<ToolProvider> getToolProvider(String name) {
     return delegate.getView(ToolConfig.class).getToolProvider(cxxSection, name);
+  }
+
+  public Optional<ToolProvider> getRanlib() {
+    return getToolProvider(RANLIB);
+  }
+
+  public Optional<ToolProvider> getObjcopy() {
+    return getToolProvider(OBJCOPY);
+  }
+
+  private Optional<Tool> getTool(String name) {
+    return getPath(name).map(this::getSourcePath).map(HashedFileTool::new);
+  }
+
+  public Optional<Tool> getNm() {
+    return getTool(NM);
+  }
+
+  public Optional<Tool> getStrip() {
+    return getTool(STRIP);
   }
 
   public boolean isUniqueLibraryNameEnabled() {

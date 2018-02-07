@@ -22,7 +22,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.HumanReadableException;
@@ -62,7 +61,7 @@ public class CxxPlatforms {
           sharedLibraryInterfaceParams =
               Optional.of(
                   ElfSharedLibraryInterfaceParams.of(
-                      config.getToolProvider("objcopy").get(),
+                      config.getObjcopy().get(),
                       type == SharedLibraryInterfaceParams.Type.DEFINED_ONLY));
           break;
           // $CASES-OMITTED$
@@ -120,8 +119,8 @@ public class CxxPlatforms {
         .setLd(config.getLinkerProvider("ld", ld.getType()).orElse(ld))
         .addAllLdflags(ldFlags)
         .setAr(config.getArchiverProvider(platform).orElse(ar))
-        .setRanlib(config.getToolProvider("ranlib").orElse(ranlib))
-        .setStrip(getTool("strip", config).orElse(strip))
+        .setRanlib(config.getRanlib().orElse(ranlib))
+        .setStrip(config.getStrip().orElse(strip))
         .setSharedLibraryExtension(sharedLibraryExtension)
         .setSharedLibraryVersionedExtensionFormat(sharedLibraryVersionedExtensionFormat)
         .setStaticLibraryExtension(staticLibraryExtension)
@@ -138,7 +137,7 @@ public class CxxPlatforms {
     builder.setSymbolNameTool(
         new LazyDelegatingSymbolNameTool(
             () -> {
-              Optional<Tool> configNm = getTool("nm", config);
+              Optional<Tool> configNm = config.getNm();
               if (configNm.isPresent()) {
                 return new PosixNmSymbolNameTool(configNm.get());
               } else {
@@ -258,10 +257,6 @@ public class CxxPlatforms {
     }
 
     return systemDefaultCxxPlatform;
-  }
-
-  private static Optional<Tool> getTool(String name, CxxBuckConfig config) {
-    return config.getPath(name).map(config::getSourcePath).map(HashedFileTool::new);
   }
 
   public static Iterable<BuildTarget> getParseTimeDeps(CxxPlatform cxxPlatform) {
