@@ -90,7 +90,10 @@ public class TargetsStressRunner {
    */
   public List<BuckRunner> getBuckRunners(int numRuns, Optional<Path> repositoryPath) {
     List<String> targetArgs =
-        ImmutableList.of("--show-target-hash", "--show-transitive-target-hashes");
+        ImmutableList.of(
+            "--show-target-hash",
+            "--show-transitive-target-hashes",
+            "--target-hash-file-mode=PATHS_ONLY");
     return IntStream.range(0, numRuns)
         .mapToObj(
             i ->

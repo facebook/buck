@@ -80,6 +80,7 @@ public class TargetsStressRunnerTest {
             "config=value",
             "--show-target-hash",
             "--show-transitive-target-hashes",
+            "--target-hash-file-mode=PATHS_ONLY",
             "@",
             "Random hashes configured",
             "Reading arguments from @",
