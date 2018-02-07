@@ -101,6 +101,17 @@ public class CxxBuckConfig {
   private static final String OBJCOPY = "objcopy";
   private static final String NM = "nm";
   private static final String STRIP = "strip";
+  private static final String AS = "as";
+  private static final String ASPP = "aspp";
+  private static final String CC = "cc";
+  private static final String CPP = "cpp";
+  private static final String CXX = "cxx";
+  private static final String CXXPP = "cxxpp";
+  private static final String CUDA = "cuda";
+  private static final String CUDAPP = "cudapp";
+  private static final String ASM = "asm";
+  private static final String ASMPP = "asmpp";
+  private static final String LD = "ld";
 
   private final BuckConfig delegate;
   private final String cxxSection;
@@ -265,8 +276,7 @@ public class CxxBuckConfig {
     return delegate.getLong(cxxSection, MAX_TEST_OUTPUT_SIZE).orElse(DEFAULT_MAX_TEST_OUTPUT_SIZE);
   }
 
-  private Optional<CxxToolProviderParams> getCxxToolProviderParams(
-      String field, Optional<CxxToolProvider.Type> defaultType) {
+  private Optional<CxxToolProviderParams> getCxxToolProviderParams(String field) {
     Optional<String> value = delegate.getValue(cxxSection, field);
     if (!value.isPresent()) {
       return Optional.empty();
@@ -274,10 +284,7 @@ public class CxxBuckConfig {
     String source = String.format("[%s] %s", cxxSection, field);
     Optional<BuildTarget> target = delegate.getMaybeBuildTarget(cxxSection, field);
     Optional<CxxToolProvider.Type> type =
-        delegate
-            .getEnum(cxxSection, field + "_type", CxxToolProvider.Type.class)
-            .map(Optional::of)
-            .orElse(defaultType);
+        delegate.getEnum(cxxSection, field + "_type", CxxToolProvider.Type.class);
     if (type.isPresent() && type.get() == CxxToolProvider.Type.DEFAULT) {
       type = Optional.of(CxxToolProvider.Type.GCC);
     }
@@ -298,26 +305,64 @@ public class CxxBuckConfig {
     }
   }
 
-  public Optional<PreprocessorProvider> getPreprocessorProvider(String field) {
-    Optional<CxxToolProvider.Type> defaultType = Optional.empty();
-    Optional<CxxToolProviderParams> params = getCxxToolProviderParams(field, defaultType);
-    if (!params.isPresent()) {
-      return Optional.empty();
-    }
-    return Optional.of(params.get().getPreprocessorProvider());
+  private Optional<PreprocessorProvider> getPreprocessorProvider(String field) {
+    return getCxxToolProviderParams(field)
+        .map(AbstractCxxToolProviderParams::getPreprocessorProvider);
   }
 
-  public Optional<CompilerProvider> getCompilerProvider(String field) {
-    Optional<CxxToolProviderParams> params = getCxxToolProviderParams(field, Optional.empty());
-    if (!params.isPresent()) {
-      return Optional.empty();
-    }
-    return Optional.of(params.get().getCompilerProvider());
+  private Optional<CompilerProvider> getCompilerProvider(String field) {
+    return getCxxToolProviderParams(field).map(AbstractCxxToolProviderParams::getCompilerProvider);
   }
 
-  public Optional<LinkerProvider> getLinkerProvider(String field, LinkerProvider.Type defaultType) {
+  public Optional<CompilerProvider> getAs() {
+    return getCompilerProvider(AS);
+  }
+
+  public Optional<PreprocessorProvider> getAspp() {
+    return getPreprocessorProvider(ASPP);
+  }
+
+  public Optional<CompilerProvider> getCc() {
+    return getCompilerProvider(CC);
+  }
+
+  public Optional<PreprocessorProvider> getCpp() {
+    return getPreprocessorProvider(CPP);
+  }
+
+  public Optional<CompilerProvider> getCxx() {
+    return getCompilerProvider(CXX);
+  }
+
+  public Optional<PreprocessorProvider> getCxxpp() {
+    return getPreprocessorProvider(CXXPP);
+  }
+
+  public Optional<CompilerProvider> getCuda() {
+    return getCompilerProvider(CUDA);
+  }
+
+  public Optional<PreprocessorProvider> getCudapp() {
+    return getPreprocessorProvider(CUDAPP);
+  }
+
+  public Optional<CompilerProvider> getAsm() {
+    return getCompilerProvider(ASM);
+  }
+
+  public Optional<PreprocessorProvider> getAsmpp() {
+    return getPreprocessorProvider(ASMPP);
+  }
+
+  /**
+   * Construct a linker based on `ld` and `linker_platform` sections in the config.
+   *
+   * @param defaultType the default type for a linker if `linker_platform` is not specified in the
+   *     config.
+   */
+  public Optional<LinkerProvider> getLinkerProvider(LinkerProvider.Type defaultType) {
     Optional<ToolProvider> toolProvider =
-        delegate.getView(ToolConfig.class).getToolProvider(cxxSection, field);
+        delegate.getView(ToolConfig.class).getToolProvider(cxxSection, LD);
     if (!toolProvider.isPresent()) {
       return Optional.empty();
     }
