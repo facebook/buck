@@ -21,6 +21,7 @@ from tracing import Tracing
 from subprocutils import check_output, which, CalledProcessError
 
 BUCKD_CLIENT_TIMEOUT_MILLIS = 120000
+BUCKD_STARTUP_TIMEOUT_MILLIS = 10000
 GC_MAX_PAUSE_TARGET = 15000
 
 JAVA_MAX_HEAP_SIZE_MB = 1000
@@ -529,10 +530,13 @@ class BuckTool(object):
             self._buck_project.save_buckd_version(buck_version_uid)
 
             # Give Java some time to create the listening socket.
-            for i in range(0, 500):
+
+            wait_seconds = 0.01
+            repetitions = int(BUCKD_STARTUP_TIMEOUT_MILLIS / 1000.0 / wait_seconds)
+            for i in range(0, repetitions):
                 if transport_exists(buckd_transport_file_path):
                     break
-                time.sleep(0.01)
+                time.sleep(wait_seconds)
 
             if not transport_exists(buckd_transport_file_path):
                 raise BuckToolException('Buckd server startup timeout')
