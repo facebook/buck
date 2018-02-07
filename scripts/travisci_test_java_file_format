@@ -9,6 +9,16 @@ function finish {
 
 trap finish EXIT
 
+function send_status {
+    cur_commit=$(git rev-parse HEAD)
+    curl -X POST -d $1 \
+         -H "Accept: application/vnd.github.v3+json" \
+         -H "Authorization: token $GH_LINTER_TOKEN" \
+         "https://api.github.com/repos/facebook/buck/statuses/$cur_commit"
+}
+
+STATUS_CONTEXT="continuous-integration/travis-ci/linter"
+
 REPO_ROOT_DIR="$(git rev-parse --show-toplevel)"
 
 FORMAT_JAR_URL="https://github.com/google/google-java-format/releases/download/google-java-format-1.4/google-java-format-1.4-all-deps.jar"
@@ -28,5 +38,22 @@ if [ "$(git status --porcelain)" ]; then
   echo "Some files are not formatted properly."
   git diff
   git checkout -- .
+
+  status="{ \
+            \"state\": \"failure\", \
+            \"target_url\": \"https://example.com/build/status\", \
+            \"context\": \"$STATUS_CONTEXT\", \
+            \"description\": \"Some files are not formatted properly.\" \
+          }"
+  send_status $status
   exit 1
+else
+  status="{ \
+          \"state\": \"success\", \
+          \"target_url\": \"https://example.com/build/status\", \
+          \"context\": \"$STATUS_CONTEXT\", \
+          \"description\": \"All files formatted properly.\" \
+        }"
+  send_status $status
+  exit 0
 fi
