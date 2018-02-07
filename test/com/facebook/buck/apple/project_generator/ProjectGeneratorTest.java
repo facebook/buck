@@ -657,7 +657,7 @@ public class ProjectGeneratorTest {
         settings.get("OTHER_SWIFT_FLAGS"),
         not(
             containsString(
-                "-Xcc -ivfsoverlay -Xcc ../buck-out/gen/_p/CwkbTNOBmb-pub/objc-module-overlay.yaml")));
+                "-Xcc -ivfsoverlay -Xcc '$REPO_ROOT/buck-out/gen/_p/CwkbTNOBmb-pub/objc-module-overlay.yaml'")));
 
     List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
     assertThat(headerSymlinkTrees, hasSize(2));
@@ -1319,10 +1319,10 @@ public class ProjectGeneratorTest {
 
     assertThat(
         buildSettings.get("OTHER_CFLAGS"),
-        containsString("-ivfsoverlay ../buck-out/gen/_p/CwkbTNOBmb-pub/testing-overlay.yaml"));
+        containsString("-ivfsoverlay '$REPO_ROOT/buck-out/gen/_p/CwkbTNOBmb-pub/testing-overlay.yaml'"));
     assertThat(
         buildSettings.get("OTHER_CPLUSPLUSFLAGS"),
-        containsString("-ivfsoverlay ../buck-out/gen/_p/CwkbTNOBmb-pub/testing-overlay.yaml"));
+        containsString("-ivfsoverlay '$REPO_ROOT/buck-out/gen/_p/CwkbTNOBmb-pub/testing-overlay.yaml'"));
 
     List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
     assertThat(headerSymlinkTrees, hasSize(4));
