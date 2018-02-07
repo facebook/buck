@@ -138,6 +138,11 @@ public class BuckConfig implements ConfigPathGetter {
     this.environment = environment;
   }
 
+  /** Returns a clone of the current config with a the argument CellPathResolver. */
+  public BuckConfig withCellPathResolver(CellPathResolver resolver) {
+    return new BuckConfig(config, projectFilesystem, architecture, platform, environment, resolver);
+  }
+
   /**
    * Get a {@link ConfigView} of this config.
    *
