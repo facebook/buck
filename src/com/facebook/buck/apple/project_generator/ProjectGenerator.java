@@ -1430,37 +1430,52 @@ public class ProjectGenerator {
           targetSpecificSwiftFlags.addAll(collectModularTargetSpecificSwiftFlags(targetNode));
         }
 
+        ImmutableList<String> testingOverlay = getFlagsForExcludesForModulesUnderTests(targetNode);
         Iterable<String> otherSwiftFlags =
             Iterables.concat(
                 swiftBuckConfig.getCompilerFlags().orElse(DEFAULT_SWIFTFLAGS),
                 targetSpecificSwiftFlags.build());
+
         Iterable<String> otherCFlags =
-            Iterables.concat(
-                cxxBuckConfig.getFlags("cflags").orElse(DEFAULT_CFLAGS),
-                convertStringWithMacros(
-                    targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)),
-                convertStringWithMacros(
-                    targetNode, targetNode.getConstructorArg().getCompilerFlags()),
-                convertStringWithMacros(
-                    targetNode, targetNode.getConstructorArg().getPreprocessorFlags()));
+            ImmutableList.<String>builder()
+                .addAll(cxxBuckConfig.getFlags("cflags").orElse(DEFAULT_CFLAGS))
+                .addAll(
+                    convertStringWithMacros(
+                        targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))
+                .addAll(
+                    convertStringWithMacros(
+                        targetNode, targetNode.getConstructorArg().getCompilerFlags()))
+                .addAll(
+                    convertStringWithMacros(
+                        targetNode, targetNode.getConstructorArg().getPreprocessorFlags()))
+                .addAll(testingOverlay)
+                .build();
         Iterable<String> otherCxxFlags =
-            Iterables.concat(
-                cxxBuckConfig.getFlags("cxxflags").orElse(DEFAULT_CXXFLAGS),
-                convertStringWithMacros(
-                    targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)),
-                convertStringWithMacros(
-                    targetNode, targetNode.getConstructorArg().getCompilerFlags()),
-                convertStringWithMacros(
-                    targetNode, targetNode.getConstructorArg().getPreprocessorFlags()));
+            ImmutableList.<String>builder()
+                .addAll(cxxBuckConfig.getFlags("cxxflags").orElse(DEFAULT_CXXFLAGS))
+                .addAll(
+                    convertStringWithMacros(
+                        targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))
+                .addAll(
+                    convertStringWithMacros(
+                        targetNode, targetNode.getConstructorArg().getCompilerFlags()))
+                .addAll(
+                    convertStringWithMacros(
+                        targetNode, targetNode.getConstructorArg().getPreprocessorFlags()))
+                .addAll(testingOverlay)
+                .build();
+
         Iterable<String> otherLdFlags =
-            Iterables.concat(
-                appleConfig.linkAllObjC() ? ImmutableList.of("-ObjC") : ImmutableList.of(),
-                convertStringWithMacros(
-                    targetNode,
-                    Iterables.concat(
-                        targetNode.getConstructorArg().getLinkerFlags(),
-                        collectRecursiveExportedLinkerFlags(targetNode))),
-                swiftDebugLinkerFlagsBuilder.build());
+            ImmutableList.<String>builder()
+                .addAll(appleConfig.linkAllObjC() ? ImmutableList.of("-ObjC") : ImmutableList.of())
+                .addAll(
+                    convertStringWithMacros(
+                        targetNode,
+                        Iterables.concat(
+                            targetNode.getConstructorArg().getLinkerFlags(),
+                            collectRecursiveExportedLinkerFlags(targetNode))))
+                .addAll(swiftDebugLinkerFlagsBuilder.build())
+                .build();
 
         appendConfigsBuilder
             .put(
@@ -1617,6 +1632,27 @@ public class ProjectGenerator {
                         },
                         stringExtension -> false))
         .orElse(false);
+  }
+
+  private ImmutableList<String> getFlagsForExcludesForModulesUnderTests(
+      TargetNode<? extends CxxLibraryDescription.CommonArg, ?> testingTarget) {
+    ImmutableList.Builder<String> testingOverlayBuilder = new ImmutableList.Builder<>();
+    visitRecursivePrivateHeaderSymlinkTreesForTests(
+        testingTarget,
+        (targetUnderTest, headerVisibility) -> {
+          // If we are testing a modular apple_library, we expose it non-modular. This allows the
+          // testing target to see both the public and private interfaces of the tested target
+          // without triggering header errors related to modules. We hide the module definition by
+          // using a filesystem overlay that overrides the module.modulemap with an empty file.
+          if (isModularAppleLibrary(targetUnderTest)) {
+            testingOverlayBuilder.add("-ivfsoverlay");
+            Path vfsOverlay =
+                getTestingModulemapVFSOverlayLocationFromSymlinkTreeRoot(
+                    getPathToHeaderSymlinkTree(targetUnderTest, HeaderVisibility.PUBLIC));
+            testingOverlayBuilder.add("$REPO_ROOT/" + vfsOverlay.toString());
+          }
+        });
+    return testingOverlayBuilder.build();
   }
 
   private boolean isFrameworkProductType(ProductType productType) {
@@ -2227,6 +2263,22 @@ public class ProjectGenerator {
               new ModuleMap(moduleName.get(), ModuleMap.SwiftMode.NO_SWIFT).render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
         }
+        Path absoluteModuleRoot =
+            projectFilesystem
+                .getRootPath()
+                .resolve(headerSymlinkTreeRoot.resolve(moduleName.get()));
+        VFSOverlay vfsOverlay =
+            new VFSOverlay(
+                ImmutableSortedMap.of(
+                    absoluteModuleRoot.resolve("module.modulemap"),
+                    absoluteModuleRoot.resolve("testing.modulemap")));
+
+        projectFilesystem.writeContentsToPath(
+            vfsOverlay.render(),
+            getTestingModulemapVFSOverlayLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot));
+        projectFilesystem.writeContentsToPath(
+            "", // empty modulemap to allow non-modular imports for testing
+            headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("testing.modulemap"));
       }
     }
     headerSymlinkTrees.add(headerSymlinkTreeRoot);
@@ -2635,6 +2687,11 @@ public class ProjectGenerator {
 
   private Path getObjcModulemapVFSOverlayLocationFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
     return headerSymlinkTreeRoot.resolve("objc-module-overlay.yaml");
+  }
+
+  private Path getTestingModulemapVFSOverlayLocationFromSymlinkTreeRoot(
+      Path headerSymlinkTreeRoot) {
+    return headerSymlinkTreeRoot.resolve("testing-overlay.yaml");
   }
 
   private Path getHeaderMapLocationFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
