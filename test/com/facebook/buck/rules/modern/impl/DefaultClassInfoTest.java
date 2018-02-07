@@ -42,12 +42,10 @@ import com.facebook.buck.rules.keys.AlterRuleKeys;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ClassInfo;
-import com.facebook.buck.rules.modern.InputDataRetriever;
 import com.facebook.buck.rules.modern.InputPath;
 import com.facebook.buck.rules.modern.InputPathResolver;
 import com.facebook.buck.rules.modern.InputRuleResolver;
 import com.facebook.buck.rules.modern.ModernBuildRule;
-import com.facebook.buck.rules.modern.OutputData;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
@@ -71,9 +69,6 @@ public class DefaultClassInfoTest {
   @SuppressWarnings("unchecked")
   private BiConsumer<String, OutputPath> outputConsumer = createStrictMock(BiConsumer.class);
 
-  @SuppressWarnings("unchecked")
-  private BiConsumer<String, OutputData> outputDataConsumer = createStrictMock(BiConsumer.class);
-
   private RuleKeyObjectSink ruleKeyObjectSink = createStrictMock(RuleKeyObjectSink.class);
 
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -84,7 +79,6 @@ public class DefaultClassInfoTest {
         EventDispatcher eventDispatcher,
         ProjectFilesystem filesystem,
         InputPathResolver inputPathResolver,
-        InputDataRetriever inputDataRetriever,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
       return ImmutableList.of();
@@ -108,7 +102,6 @@ public class DefaultClassInfoTest {
     @AddToRuleKey private final int value = 1;
     @AddToRuleKey private final long something = 2;
     @AddToRuleKey private final boolean enabled = true;
-    @AddToRuleKey private final OutputData outputData = new OutputData();
 
     DerivedClass(InputPath baseInputPath, ImmutableList<InputPath> inputs) {
       super(baseInputPath);
@@ -155,8 +148,6 @@ public class DefaultClassInfoTest {
             ruleKeyObjectSink.setReflectively(
                 "inputs", ImmutableList.of(targetInputPath2, targetInputPath3, pathInputPath)))
         .andReturn(ruleKeyObjectSink);
-    expect(ruleKeyObjectSink.setReflectively("outputData", buildable.outputData))
-        .andReturn(ruleKeyObjectSink);
     expect(ruleKeyObjectSink.setReflectively("something", 2l)).andReturn(ruleKeyObjectSink);
     expect(ruleKeyObjectSink.setReflectively("value", 1)).andReturn(ruleKeyObjectSink);
 
@@ -182,12 +173,6 @@ public class DefaultClassInfoTest {
     classInfo.computeDeps(buildable, inputRuleResolver, buildRuleConsumer);
     verify(inputRuleResolver, buildRuleConsumer);
 
-    outputDataConsumer.accept("outputData", buildable.outputData);
-
-    replay(outputDataConsumer);
-    classInfo.getOutputData(buildable, outputDataConsumer);
-    verify(outputDataConsumer);
-
     outputConsumer.accept("baseOutputPath", buildable.baseOutputPath);
 
     replay(outputConsumer);
@@ -202,7 +187,6 @@ public class DefaultClassInfoTest {
           (eventDispatcher,
               filesystem,
               inputPathResolver,
-              inputDataRetriever,
               outputPathResolver,
               buildCellPathFactory) -> null);
     } catch (Exception e) {
@@ -322,7 +306,6 @@ public class DefaultClassInfoTest {
         EventDispatcher eventDispatcher,
         ProjectFilesystem filesystem,
         InputPathResolver inputPathResolver,
-        InputDataRetriever inputDataRetriever,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
       return ImmutableList.of();

@@ -17,9 +17,7 @@
 package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.modern.InputData;
 import com.facebook.buck.rules.modern.InputPath;
-import com.facebook.buck.rules.modern.OutputData;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
@@ -144,10 +142,6 @@ class FieldTypeInfoFactory {
         return FieldTypeInfos.OutputPathFieldTypeInfo.INSTANCE;
       } else if (rawClass.equals(InputPath.class)) {
         return FieldTypeInfos.InputPathFieldTypeInfo.INSTANCE;
-      } else if (rawClass.equals(OutputData.class)) {
-        return FieldTypeInfos.OutputDataFieldTypeInfo.INSTANCE;
-      } else if (rawClass.equals(InputData.class)) {
-        return FieldTypeInfos.InputDataFieldTypeInfo.INSTANCE;
       }
     } else if (type instanceof ParameterizedType) {
       // This is a parameterized type where one of the parameters requires special handling (i.e.

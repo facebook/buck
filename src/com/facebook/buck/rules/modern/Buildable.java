@@ -43,7 +43,6 @@ public interface Buildable extends AddsToRuleKey {
       EventDispatcher eventDispatcher,
       ProjectFilesystem filesystem,
       InputPathResolver inputPathResolver,
-      InputDataRetriever inputDataRetriever,
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory);
 }

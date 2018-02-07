@@ -231,7 +231,6 @@ public class ModernBuildRule<T extends Buildable>
             context.getEventBus(),
             filesystem,
             new DefaultInputPathResolver(context.getSourcePathResolver()),
-            getInputDataRetriever(),
             outputPathResolver,
             new DefaultBuildCellRelativePathFactory(
                 context.getBuildCellRootPath(), filesystem, Optional.of(outputPathResolver))));
@@ -246,25 +245,11 @@ public class ModernBuildRule<T extends Buildable>
     // All the outputs are already forced to be within getGenDirectory(), and so this recording
     // isn't actually necessary.
     classInfo.getOutputs(buildable, (name, output) -> recordOutput(buildableContext, output));
-
-    classInfo.getOutputData(buildable, (name, data) -> recordData(buildableContext, name, data));
     return stepBuilder.build();
   }
 
   private void recordOutput(BuildableContext buildableContext, OutputPath output) {
     buildableContext.recordArtifact(outputPathResolver.resolvePath(output));
-  }
-
-  private void recordData(BuildableContext buildableContext, String name, OutputData outputData) {
-    buildableContext.getClass();
-    name.getClass();
-    outputData.getClass();
-    // TODO(cjhopman): implement
-    throw new UnsupportedOperationException();
-  }
-
-  private InputDataRetriever getInputDataRetriever() {
-    return new InputDataRetriever() {};
   }
 
   @Override

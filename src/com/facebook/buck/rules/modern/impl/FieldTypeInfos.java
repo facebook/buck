@@ -17,10 +17,8 @@
 package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.modern.InputData;
 import com.facebook.buck.rules.modern.InputPath;
 import com.facebook.buck.rules.modern.InputRuleResolver;
-import com.facebook.buck.rules.modern.OutputData;
 import com.facebook.buck.rules.modern.OutputPath;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -52,27 +50,6 @@ class FieldTypeInfos {
     }
   }
 
-  static class OutputDataFieldTypeInfo implements FieldTypeInfo<OutputData> {
-    public static final OutputDataFieldTypeInfo INSTANCE = new OutputDataFieldTypeInfo();
-
-    @Override
-    public void extractOutputData(
-        String name, OutputData value, BiConsumer<String, OutputData> builder) {
-      builder.accept(name, value);
-    }
-  }
-
-  static class InputDataFieldTypeInfo implements FieldTypeInfo<InputData> {
-    public static final InputDataFieldTypeInfo INSTANCE = new InputDataFieldTypeInfo();
-
-    @Override
-    public void extractDep(
-        InputData value, InputRuleResolver inputRuleResolver, Consumer<BuildRule> builder) {
-      Optional<BuildRule> buildRule = inputRuleResolver.resolve(value);
-      buildRule.ifPresent(builder);
-    }
-  }
-
   static class OptionalFieldTypeInfo<T> implements FieldTypeInfo<Optional<T>> {
     private final FieldTypeInfo<T> innerType;
 
@@ -84,12 +61,6 @@ class FieldTypeInfos {
     public void extractDep(
         Optional<T> value, InputRuleResolver inputRuleResolver, Consumer<BuildRule> builder) {
       value.ifPresent(o -> innerType.extractDep(o, inputRuleResolver, builder));
-    }
-
-    @Override
-    public void extractOutputData(
-        String name, Optional<T> value, BiConsumer<String, OutputData> builder) {
-      value.ifPresent(o -> innerType.extractOutputData(name, o, builder));
     }
 
     @Override
@@ -110,13 +81,6 @@ class FieldTypeInfos {
     public void extractDep(
         Iterable<T> value, InputRuleResolver inputRuleResolver, Consumer<BuildRule> builder) {
       value.forEach(o -> innerType.extractDep(o, inputRuleResolver, builder));
-    }
-
-    @Override
-    public void extractOutputData(
-        String name, Iterable<T> value, BiConsumer<String, OutputData> builder) {
-      // TODO(cjhopman): should the name be modified to indicate position in the map?
-      value.forEach(o -> innerType.extractOutputData(name, o, builder));
     }
 
     @Override

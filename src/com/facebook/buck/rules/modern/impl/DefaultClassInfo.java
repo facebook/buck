@@ -21,7 +21,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.InputRuleResolver;
-import com.facebook.buck.rules.modern.OutputData;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
@@ -111,14 +110,6 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
   }
 
   @Override
-  public void getOutputData(T ruleImpl, BiConsumer<String, OutputData> outputDataBuilder) {
-    superInfo.ifPresent(classInfo -> classInfo.getOutputData(ruleImpl, outputDataBuilder));
-    for (FieldInfo<?> extractor : fields) {
-      extractor.extractOutputData(ruleImpl, outputDataBuilder);
-    }
-  }
-
-  @Override
   public void getOutputs(T ruleImpl, BiConsumer<String, OutputPath> dataBuilder) {
     superInfo.ifPresent(classInfo -> classInfo.getOutputs(ruleImpl, dataBuilder));
     for (FieldInfo<?> extractor : fields) {
@@ -149,10 +140,6 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
     void extractDep(
         Buildable ruleImpl, InputRuleResolver inputRuleResolver, Consumer<BuildRule> builder) {
       fieldTypeInfo.extractDep(getValue(ruleImpl, field), inputRuleResolver, builder);
-    }
-
-    void extractOutputData(Buildable ruleImpl, BiConsumer<String, OutputData> builder) {
-      fieldTypeInfo.extractOutputData(field.getName(), getValue(ruleImpl, field), builder);
     }
 
     void extractOutput(Buildable ruleImpl, BiConsumer<String, OutputPath> builder) {

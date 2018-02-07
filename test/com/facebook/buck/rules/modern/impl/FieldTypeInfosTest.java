@@ -33,7 +33,6 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.InputPath;
 import com.facebook.buck.rules.modern.InputRuleResolver;
-import com.facebook.buck.rules.modern.OutputData;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Throwables;
@@ -62,9 +61,6 @@ public class FieldTypeInfosTest {
   @SuppressWarnings("unchecked")
   private BiConsumer<String, OutputPath> outputConsumer = createStrictMock(BiConsumer.class);
 
-  @SuppressWarnings("unchecked")
-  private BiConsumer<String, OutputData> outputDataConsumer = createStrictMock(BiConsumer.class);
-
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
   @Test
@@ -73,11 +69,10 @@ public class FieldTypeInfosTest {
         FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<Integer>() {});
 
     int value = 1;
-    replay(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
     typeInfo.extractOutput("", value, outputConsumer);
-    typeInfo.extractOutputData("", value, outputDataConsumer);
-    verify(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    verify(inputRuleResolver, buildRuleConsumer, outputConsumer);
   }
 
   @Test
@@ -86,11 +81,10 @@ public class FieldTypeInfosTest {
         FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<String>() {});
 
     String value = "hello";
-    replay(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
     typeInfo.extractOutput("", value, outputConsumer);
-    typeInfo.extractOutputData("", value, outputDataConsumer);
-    verify(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    verify(inputRuleResolver, buildRuleConsumer, outputConsumer);
   }
 
   @Test(expected = RuntimeException.class)
@@ -177,11 +171,10 @@ public class FieldTypeInfosTest {
     InputPath value = new InputPath(sourcePath);
     EasyMock.expect(inputRuleResolver.resolve(value)).andReturn(Optional.empty());
 
-    replay(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
     typeInfo.extractOutput("", value, outputConsumer);
-    typeInfo.extractOutputData("", value, outputDataConsumer);
-    verify(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    verify(inputRuleResolver, buildRuleConsumer, outputConsumer);
   }
 
   @Test
@@ -197,11 +190,10 @@ public class FieldTypeInfosTest {
     EasyMock.expect(inputRuleResolver.resolve(value)).andReturn(Optional.of(rule));
     buildRuleConsumer.accept(rule);
 
-    replay(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
     typeInfo.extractOutput("", value, outputConsumer);
-    typeInfo.extractOutputData("", value, outputDataConsumer);
-    verify(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    verify(inputRuleResolver, buildRuleConsumer, outputConsumer);
   }
 
   @Test
@@ -218,11 +210,10 @@ public class FieldTypeInfosTest {
     EasyMock.expect(inputRuleResolver.resolve(inputPath)).andReturn(Optional.of(rule));
     buildRuleConsumer.accept(rule);
 
-    replay(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
     typeInfo.extractOutput("", value, outputConsumer);
-    typeInfo.extractOutputData("", value, outputDataConsumer);
-    verify(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    verify(inputRuleResolver, buildRuleConsumer, outputConsumer);
   }
 
   @Test
@@ -231,11 +222,10 @@ public class FieldTypeInfosTest {
         FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<Optional<InputPath>>() {});
 
     Optional<InputPath> value = Optional.empty();
-    replay(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
     typeInfo.extractOutput("", value, outputConsumer);
-    typeInfo.extractOutputData("", value, outputDataConsumer);
-    verify(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    verify(inputRuleResolver, buildRuleConsumer, outputConsumer);
   }
 
   @Test
@@ -257,10 +247,9 @@ public class FieldTypeInfosTest {
     EasyMock.expect(inputRuleResolver.resolve(pathInputPath)).andReturn(Optional.empty());
     buildRuleConsumer.accept(rule);
 
-    replay(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
     typeInfo.extractOutput("", value, outputConsumer);
-    typeInfo.extractOutputData("", value, outputDataConsumer);
-    verify(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    verify(inputRuleResolver, buildRuleConsumer, outputConsumer);
   }
 }

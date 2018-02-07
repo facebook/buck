@@ -25,7 +25,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
-import com.facebook.buck.rules.modern.InputDataRetriever;
 import com.facebook.buck.rules.modern.InputPath;
 import com.facebook.buck.rules.modern.InputPathResolver;
 import com.facebook.buck.rules.modern.ModernBuildRule;
@@ -83,7 +82,6 @@ public class MergeThirdPartyJarResources extends ModernBuildRule<MergeThirdParty
       EventDispatcher eventDispatcher,
       ProjectFilesystem filesystem,
       InputPathResolver inputPathResolver,
-      InputDataRetriever inputDataRetriever,
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
     ImmutableSet<Path> thirdPartyJars =

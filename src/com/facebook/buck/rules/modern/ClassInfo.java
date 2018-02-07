@@ -29,9 +29,6 @@ public interface ClassInfo<T extends Buildable> {
   void computeDeps(
       T ruleImpl, InputRuleResolver inputRuleResolver, Consumer<BuildRule> depsBuilder);
 
-  /** Adds all OutputData in ruleImpl to the outputDataBuilder. */
-  void getOutputData(T ruleImpl, BiConsumer<String, OutputData> outputDataBuilder);
-
   /** Adds all outputPaths in ruleImpl to the dataBuilder. */
   void getOutputs(T ruleImpl, BiConsumer<String, OutputPath> dataBuilder);
 
