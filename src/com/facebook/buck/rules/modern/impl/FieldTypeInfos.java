@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.modern.InputPath;
 import com.facebook.buck.rules.modern.InputRuleResolver;
 import com.facebook.buck.rules.modern.OutputPath;
 import java.util.Optional;
@@ -36,17 +35,6 @@ class FieldTypeInfos {
     public void extractOutput(
         String name, OutputPath value, BiConsumer<String, OutputPath> builder) {
       builder.accept(name, value);
-    }
-  }
-
-  static class InputPathFieldTypeInfo implements FieldTypeInfo<InputPath> {
-    public static final InputPathFieldTypeInfo INSTANCE = new InputPathFieldTypeInfo();
-
-    @Override
-    public void extractDep(
-        InputPath value, InputRuleResolver inputRuleResolver, Consumer<BuildRule> builder) {
-      Optional<BuildRule> buildRule = inputRuleResolver.resolve(value);
-      buildRule.ifPresent(builder);
     }
   }
 

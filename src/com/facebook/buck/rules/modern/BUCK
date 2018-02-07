@@ -1,8 +1,6 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
 TYPES = [
-    "InputPath.java",
-    "AbstractLimitedSourcePath.java",
     "OutputPath.java",
 ]
 

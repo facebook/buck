@@ -16,9 +16,9 @@
 
 package com.facebook.buck.rules.modern;
 
-import com.facebook.buck.event.EventDispatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.AddsToRuleKey;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 
@@ -40,9 +40,8 @@ public interface Buildable extends AddsToRuleKey {
   // safety-first ModernStep and have this return a list of those. That would be painful for
   // migration so we'd probably want something like ModernStep.fromUnsafeClassicStep(...).
   ImmutableList<Step> getBuildSteps(
-      EventDispatcher eventDispatcher,
+      BuildContext buildContext,
       ProjectFilesystem filesystem,
-      InputPathResolver inputPathResolver,
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory);
 }

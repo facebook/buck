@@ -18,19 +18,22 @@ package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.modern.InputRuleResolver;
-import java.util.Optional;
+import com.facebook.buck.rules.modern.OutputPath;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
-public class DefaultInputRuleResolver implements InputRuleResolver {
-  private SourcePathRuleFinder ruleFinder;
+/** FieldTypeInfo for SourcePaths. The SourcePath will be added to deps/inputs. */
+public class SourcePathFieldTypeInfo implements FieldTypeInfo<SourcePath> {
+  public static SourcePathFieldTypeInfo INSTANCE = new SourcePathFieldTypeInfo();
 
-  public DefaultInputRuleResolver(SourcePathRuleFinder ruleFinder) {
-    this.ruleFinder = ruleFinder;
+  @Override
+  public void extractDep(
+      SourcePath value, InputRuleResolver inputRuleResolver, Consumer<BuildRule> builder) {
+    inputRuleResolver.resolve(value).ifPresent(builder);
   }
 
   @Override
-  public Optional<BuildRule> resolve(SourcePath path) {
-    return ruleFinder.getRule(path);
-  }
+  public void extractOutput(
+      String name, SourcePath value, BiConsumer<String, OutputPath> builder) {}
 }

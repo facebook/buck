@@ -29,7 +29,6 @@ import com.facebook.buck.rules.macros.ExecutableMacro;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.MavenCoordinatesMacro;
 import com.facebook.buck.rules.macros.OutputMacro;
-import com.facebook.buck.rules.modern.InputPath;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
@@ -93,7 +92,6 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     PathTypeCoercer pathTypeCoercer = new PathTypeCoercer(pathExistenceVerificationMode);
     TypeCoercer<SourcePath> sourcePathTypeCoercer =
         new SourcePathTypeCoercer(buildTargetTypeCoercer, pathTypeCoercer);
-    TypeCoercer<InputPath> inputPathTypeCoercer = new InputPathTypeCoercer(sourcePathTypeCoercer);
     TypeCoercer<SourceWithFlags> sourceWithFlagsTypeCoercer =
         new SourceWithFlagsTypeCoercer(
             sourcePathTypeCoercer, new ListTypeCoercer<>(stringTypeCoercer));
@@ -109,7 +107,6 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
           pathTypeCoercer,
           flavorTypeCoercer,
           sourcePathTypeCoercer,
-          inputPathTypeCoercer,
           buildTargetTypeCoercer,
           buildTargetPatternTypeCoercer,
 

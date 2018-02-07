@@ -196,12 +196,6 @@ public class ModernBuildRule<T extends Buildable>
         buildTarget, outputPathResolver.resolvePath(outputPath));
   }
 
-  protected final InputPath toInputPath(OutputPath outputPath) {
-    // TODO(cjhopman): either enforce that this is our own outputPath, or support actually
-    // converting other rule's outputs to our own inputs.
-    return new InputPath(getSourcePath(outputPath));
-  }
-
   @Override
   public final ImmutableSortedSet<BuildRule> getBuildDeps() {
     return deps.get();
@@ -228,9 +222,8 @@ public class ModernBuildRule<T extends Buildable>
 
     stepBuilder.addAll(
         buildable.getBuildSteps(
-            context.getEventBus(),
+            context,
             filesystem,
-            new DefaultInputPathResolver(context.getSourcePathResolver()),
             outputPathResolver,
             new DefaultBuildCellRelativePathFactory(
                 context.getBuildCellRootPath(), filesystem, Optional.of(outputPathResolver))));

@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.modern.InputPath;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
@@ -126,11 +125,9 @@ class FieldTypeInfoFactory {
       Class<?> rawClass = Primitives.wrap((Class<?>) type);
       if (rawClass.equals(Path.class)) {
         throw new IllegalArgumentException(
-            "Buildables should not have Path fields. Use InputPath or OutputPath instead");
+            "Buildables should not have Path fields. Use SourcePath or OutputPath instead");
       } else if (SourcePath.class.isAssignableFrom(rawClass)) {
-        throw new IllegalArgumentException(
-            "Buildables should not have SourcePath fields. "
-                + "Use InputPath or OutputPath instead");
+        return SourcePathFieldTypeInfo.INSTANCE;
       }
 
       if (rawClass.isEnum()) {
@@ -140,8 +137,6 @@ class FieldTypeInfoFactory {
 
       if (rawClass.equals(OutputPath.class)) {
         return FieldTypeInfos.OutputPathFieldTypeInfo.INSTANCE;
-      } else if (rawClass.equals(InputPath.class)) {
-        return FieldTypeInfos.InputPathFieldTypeInfo.INSTANCE;
       }
     } else if (type instanceof ParameterizedType) {
       // This is a parameterized type where one of the parameters requires special handling (i.e.
