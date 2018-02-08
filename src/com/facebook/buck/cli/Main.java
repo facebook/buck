@@ -916,7 +916,13 @@ public final class Main {
                     executionEnvironment.getWifiSsid(),
                     httpWriteExecutorService.get(),
                     httpFetchExecutorService.get(),
-                    diskIoExecutorService.get()); ) {
+                    diskIoExecutorService.get());
+
+            // This will get executed first once it gets out of try block and just wait for
+            // event bus to dispatch all pending events before we proceed to termination
+            // procedures
+            CloseableWrapper<BuckEventBus, InterruptedException> waitEvents =
+                getWaitEventsWrapper(buildEventBus); ) {
 
           LOG.debug(invocationInfo.toLogLine());
 
@@ -1141,10 +1147,6 @@ public final class Main {
                   parserAndCaches.getVersionedTargetGraphCache().getCacheStats()));
           buildEventBus.post(CommandEvent.finished(startedEvent, exitCode));
         } finally {
-          // wait for event bus to process all pending events
-          buildEventBus.waitEvents(EVENT_BUS_TIMEOUT_SECONDS * 1000);
-          eventListeners.forEach(buildEventBus::unregister);
-
           // signal nailgun that we are not interested in client disconnect events anymore
           context.ifPresent(c -> c.removeAllClientListeners());
 
@@ -1383,6 +1385,24 @@ public final class Main {
           context.isPresent(), parserConfig.getGlobHandler());
     }
     return watchman;
+  }
+
+  /**
+   * RAII wrapper which does not really close any object but waits for all events in given event bus
+   * to complete. We want to have it this way to safely start deinitializing event listeners
+   */
+  private static CloseableWrapper<BuckEventBus, InterruptedException> getWaitEventsWrapper(
+      BuckEventBus buildEventBus) {
+    return CloseableWrapper.of(
+        buildEventBus,
+        eventBus -> {
+          // wait for event bus to process all pending events
+          if (!eventBus.waitEvents(EVENT_BUS_TIMEOUT_SECONDS * 1000)) {
+            LOG.warn(
+                "Event bus did not complete all events within timeout; event listener's data"
+                    + "may be incorrect");
+          }
+        });
   }
 
   private static <T extends ExecutorService>
