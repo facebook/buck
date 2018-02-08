@@ -1,9 +1,17 @@
-swift_library(
-    name = "dep",
-    srcs = [
-        "dep.swift",
-    ],
-)
+if read_config('testconfig', 'dep_type') == 'swift_library':
+  swift_library(
+      name = "dep",
+      srcs = [
+          "dep.swift",
+      ],
+  )
+elif read_config('testconfig', 'dep_type') == 'apple_library':
+  apple_library(
+      name = "dep",
+      srcs = [
+          "dep.swift",
+      ],
+  )
 
 apple_binary(
     name = "binary",

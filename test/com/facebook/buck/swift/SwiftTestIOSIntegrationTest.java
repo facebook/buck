@@ -95,7 +95,7 @@ public class SwiftTestIOSIntegrationTest {
   }
 
   @Test
-  public void testSwiftInHostAndTestBundle() throws Exception {
+  public void testSwiftInHostAndTestBundleAppleLibrary() throws Exception {
     assumeThat(
         AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
     ProjectWorkspace workspace =
@@ -111,7 +111,90 @@ public class SwiftTestIOSIntegrationTest {
 
     BuildTarget target = workspace.newBuildTarget("//:swifttest#iphonesimulator-x86_64");
     ProcessResult result =
-        workspace.runBuckCommand("test", target.getFullyQualifiedName());
+        workspace.runBuckCommand("test", target.getFullyQualifiedName(), "--config", "testconfig.dep_type=apple_library");
     result.assertSuccess();
+
+    Path binaryOutput =
+        workspace
+            .getPath(
+                BuildTargets.getGenPath(
+                    filesystem,
+                    target.withAppendedFlavors(
+                        InternalFlavor.of("iphonesimulator-x86_64"),
+                        InternalFlavor.of("apple-test-bundle"),
+                        AppleDebugFormat.DWARF.getFlavor(),
+                        LinkerMapMode.NO_LINKER_MAP.getFlavor(),
+                        AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    "%s/swifttest.xctest"))
+            .resolve("swifttest");
+    assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));
+
+    assertThat(
+        workspace.runCommand("file", binaryOutput.toString()).getStdout().get(),
+        containsString("bundle x86_64"));
+    assertThat(
+        workspace.runCommand("otool", "-hv", binaryOutput.toString()).getStdout().get(),
+        containsString("X86_64"));
+    assertThat(
+        workspace.runCommand("otool", "-L", binaryOutput.toString()).getStdout().get(),
+        containsString("XCTest.framework/XCTest"));
+    assertThat(
+        workspace.runCommand("otool", "-L", binaryOutput.toString()).getStdout().get(),
+        containsString("@rpath/libswiftCore.dylib"));
+    assertThat(
+        workspace.runCommand("otool", "-l", binaryOutput.toString()).getStdout().get(),
+        containsString("@loader_path/Frameworks"));
+  }
+
+  @Test
+  public void testSwiftInHostAndTestBundleSwiftLibrary() throws Exception {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "swift_test_with_host", tmp);
+    workspace.setUp();
+    workspace.copyRecursively(
+        TestDataHelper.getTestDataDirectory(AppleTestBuilder.class).resolve("fbxctest"),
+        Paths.get("fbxctest"));
+    workspace.addBuckConfigLocalOption("apple", "xctool_path", "fbxctest/bin/fbxctest");
+
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    BuildTarget target = workspace.newBuildTarget("//:swifttest#iphonesimulator-x86_64");
+    ProcessResult result =
+        workspace.runBuckCommand("test", target.getFullyQualifiedName(), "--config", "testconfig.dep_type=swift_library");
+    result.assertSuccess();
+
+    Path binaryOutput =
+        workspace
+            .getPath(
+                BuildTargets.getGenPath(
+                    filesystem,
+                    target.withAppendedFlavors(
+                        InternalFlavor.of("iphonesimulator-x86_64"),
+                        InternalFlavor.of("apple-test-bundle"),
+                        AppleDebugFormat.DWARF.getFlavor(),
+                        LinkerMapMode.NO_LINKER_MAP.getFlavor(),
+                        AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    "%s/swifttest.xctest"))
+            .resolve("swifttest");
+    assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));
+
+    assertThat(
+        workspace.runCommand("file", binaryOutput.toString()).getStdout().get(),
+        containsString("bundle x86_64"));
+    assertThat(
+        workspace.runCommand("otool", "-hv", binaryOutput.toString()).getStdout().get(),
+        containsString("X86_64"));
+    assertThat(
+        workspace.runCommand("otool", "-L", binaryOutput.toString()).getStdout().get(),
+        containsString("XCTest.framework/XCTest"));
+    assertThat(
+        workspace.runCommand("otool", "-L", binaryOutput.toString()).getStdout().get(),
+        containsString("@rpath/libswiftCore.dylib"));
+    assertThat(
+        workspace.runCommand("otool", "-l", binaryOutput.toString()).getStdout().get(),
+        containsString("@loader_path/Frameworks"));
   }
 }
