@@ -22,9 +22,6 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.python.PythonBuckConfig;
-import com.facebook.buck.python.toolchain.PythonInterpreter;
-import com.facebook.buck.python.toolchain.impl.PythonInterpreterFromConfig;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
@@ -48,10 +45,8 @@ public class ParserPythonInterpreterProviderTest {
                         "python_interpreter", configPythonFile.toAbsolutePath().toString())))
             .build();
     ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
-    PythonInterpreter pythonInterpreter =
-        new PythonInterpreterFromConfig(new PythonBuckConfig(buckConfig), new ExecutableFinder());
     ParserPythonInterpreterProvider provider =
-        new ParserPythonInterpreterProvider(pythonInterpreter, parserConfig);
+        new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder());
     assertEquals(
         "Should return path to temp file.",
         configPythonFile.toAbsolutePath().toString(),
@@ -67,37 +62,13 @@ public class ParserPythonInterpreterProviderTest {
                 ImmutableMap.of("parser", ImmutableMap.of("python_interpreter", invalidPath)))
             .build();
     ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
-    PythonInterpreter pythonInterpreter =
-        new PythonInterpreterFromConfig(new PythonBuckConfig(buckConfig), new ExecutableFinder());
     ParserPythonInterpreterProvider provider =
-        new ParserPythonInterpreterProvider(pythonInterpreter, parserConfig);
+        new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder());
     try {
       provider.getOrFail();
       fail("Should throw exception as python config is invalid.");
     } catch (HumanReadableException e) {
       assertEquals("Not a python executable: " + invalidPath, e.getHumanReadableErrorMessage());
     }
-  }
-
-  @Test
-  public void whenParserPythonIsNotSetFallbackIsUsed() throws IOException {
-    Path configPythonFile = temporaryFolder.newExecutableFile("python");
-    // This sets the python.interpreter section, not parser.python_interpreter
-    BuckConfig buckConfig =
-        FakeBuckConfig.builder()
-            .setSections(
-                ImmutableMap.of(
-                    "python",
-                    ImmutableMap.of("interpreter", configPythonFile.toAbsolutePath().toString())))
-            .build();
-    ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
-    PythonInterpreter pythonInterpreter =
-        new PythonInterpreterFromConfig(new PythonBuckConfig(buckConfig), new ExecutableFinder());
-    ParserPythonInterpreterProvider provider =
-        new ParserPythonInterpreterProvider(pythonInterpreter, parserConfig);
-    assertEquals(
-        "Should return path to temp file.",
-        configPythonFile.toAbsolutePath().toString(),
-        provider.getOrFail());
   }
 }

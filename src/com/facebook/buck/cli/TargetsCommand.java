@@ -766,6 +766,7 @@ public class TargetsCommand extends AbstractCommand {
         new PerBuildState(
             params.getParser(),
             params.getBuckEventBus(),
+            params.getExecutableFinder(),
             executor,
             params.getCell(),
             params.getKnownBuildRuleTypesProvider(),

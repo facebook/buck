@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ParsingEvent;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -57,6 +58,7 @@ public class PerBuildState implements AutoCloseable {
   private final Parser parser;
   private final AtomicLong parseProcessedBytes = new AtomicLong();
   private final BuckEventBus eventBus;
+  private final ParserPythonInterpreterProvider parserPythonInterpreterProvider;
   private final boolean enableProfiling;
 
   private final Console console;
@@ -88,6 +90,27 @@ public class PerBuildState implements AutoCloseable {
   public PerBuildState(
       Parser parser,
       BuckEventBus eventBus,
+      ExecutableFinder executableFinder,
+      ListeningExecutorService executorService,
+      Cell rootCell,
+      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
+      boolean enableProfiling,
+      SpeculativeParsing speculativeParsing) {
+    this(
+        parser,
+        eventBus,
+        new ParserPythonInterpreterProvider(rootCell.getBuckConfig(), executableFinder),
+        executorService,
+        rootCell,
+        knownBuildRuleTypesProvider,
+        enableProfiling,
+        speculativeParsing);
+  }
+
+  PerBuildState(
+      Parser parser,
+      BuckEventBus eventBus,
+      ParserPythonInterpreterProvider parserPythonInterpreterProvider,
       ListeningExecutorService executorService,
       Cell rootCell,
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
@@ -96,6 +119,7 @@ public class PerBuildState implements AutoCloseable {
 
     this.parser = parser;
     this.eventBus = eventBus;
+    this.parserPythonInterpreterProvider = parserPythonInterpreterProvider;
     this.enableProfiling = enableProfiling;
     this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
 
@@ -189,6 +213,7 @@ public class PerBuildState implements AutoCloseable {
         this.parser.getTypeCoercerFactory(),
         console,
         eventBus,
+        parserPythonInterpreterProvider,
         descriptions,
         enableProfiling);
   }

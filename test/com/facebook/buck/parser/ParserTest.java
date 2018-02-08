@@ -149,6 +149,7 @@ public class ParserTest {
   private KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
   private ParseEventStartedCounter counter;
   private ListeningExecutorService executorService;
+  private ExecutableFinder executableFinder;
 
   public ParserTest(int threads, boolean parallelParsing) {
     this.threads = threads;
@@ -180,12 +181,14 @@ public class ParserTest {
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
       boolean enableProfiling,
       ListeningExecutorService executor,
+      ExecutableFinder executableFinder,
       Path buildFile)
       throws InterruptedException, BuildFileParseException {
     try (PerBuildState state =
         new PerBuildState(
             parser,
             eventBus,
+            executableFinder,
             executor,
             cell,
             knownBuildRuleTypesProvider,
@@ -253,13 +256,15 @@ public class ParserTest {
 
     ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
 
+    executableFinder = new ExecutableFinder();
+
     ToolchainCreationContext toolchainCreationContext =
         ToolchainCreationContext.of(
             ImmutableMap.of(),
             config,
             filesystem,
             processExecutor,
-            new ExecutableFinder(),
+            executableFinder,
             TestRuleKeyConfigurationFactory.create());
 
     ToolchainProviderBuilder toolchainProviderBuilder = new ToolchainProviderBuilder();
@@ -307,7 +312,8 @@ public class ParserTest {
             cell.getBuckConfig().getView(ParserConfig.class),
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
-            knownBuildRuleTypesProvider);
+            knownBuildRuleTypesProvider,
+            executableFinder);
 
     counter = new ParseEventStartedCounter();
     eventBus.register(counter);
@@ -651,7 +657,14 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Process event.
     parser.onFileSystemChange(
@@ -662,7 +675,14 @@ public class ParserTest {
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, counter.calls);
@@ -673,7 +693,14 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Process event.
     WatchmanPathEvent event =
@@ -685,7 +712,14 @@ public class ParserTest {
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, counter.calls);
@@ -696,7 +730,14 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Process event.
     WatchmanPathEvent event =
@@ -708,7 +749,14 @@ public class ParserTest {
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, counter.calls);
@@ -719,7 +767,14 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Process event.
     WatchmanPathEvent event =
@@ -731,7 +786,14 @@ public class ParserTest {
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, counter.calls);
@@ -742,7 +804,14 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     assertEquals("Should have parsed at all.", 1, counter.calls);
 
@@ -756,7 +825,14 @@ public class ParserTest {
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, counter.calls);
@@ -767,7 +843,14 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Process event.
     WatchmanPathEvent event =
@@ -779,7 +862,14 @@ public class ParserTest {
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, counter.calls);
@@ -790,7 +880,14 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Process event.
     WatchmanPathEvent event =
@@ -802,7 +899,14 @@ public class ParserTest {
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, counter.calls);
@@ -813,7 +917,14 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Process event.
     WatchmanPathEvent event =
@@ -825,7 +936,14 @@ public class ParserTest {
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, counter.calls);
@@ -836,7 +954,14 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Process event.
     WatchmanPathEvent event =
@@ -848,7 +973,14 @@ public class ParserTest {
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, counter.calls);
@@ -859,7 +991,14 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Process event.
     WatchmanPathEvent event =
@@ -871,7 +1010,14 @@ public class ParserTest {
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, counter.calls);
@@ -882,7 +1028,14 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Process event.
     WatchmanPathEvent event =
@@ -894,7 +1047,14 @@ public class ParserTest {
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, counter.calls);
@@ -905,7 +1065,14 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Process event.
     WatchmanPathEvent event =
@@ -917,7 +1084,14 @@ public class ParserTest {
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, counter.calls);
@@ -929,7 +1103,14 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Process event.
     WatchmanPathEvent event =
@@ -941,7 +1122,14 @@ public class ParserTest {
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, counter.calls);
@@ -972,6 +1160,7 @@ public class ParserTest {
         knownBuildRuleTypesProvider,
         false,
         executorService,
+        executableFinder,
         testAncestorBuildFile);
 
     // Process event.
@@ -990,6 +1179,7 @@ public class ParserTest {
         knownBuildRuleTypesProvider,
         false,
         executorService,
+        executableFinder,
         testAncestorBuildFile);
 
     // Test that the second parseBuildFile call repopulated the cache.
@@ -1001,7 +1191,14 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Process event.
     WatchmanPathEvent event =
@@ -1013,7 +1210,14 @@ public class ParserTest {
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Test that the second parseBuildFile call did not repopulate the cache.
     assertEquals("Should have not invalidated cache.", 1, counter.calls);
@@ -1025,7 +1229,14 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Process event.
     WatchmanPathEvent event =
@@ -1037,7 +1248,14 @@ public class ParserTest {
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, counter.calls);
@@ -1048,7 +1266,14 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Process event.
     WatchmanPathEvent event =
@@ -1060,7 +1285,14 @@ public class ParserTest {
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should not have invalidated cache.", 1, counter.calls);
@@ -1071,7 +1303,14 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Process event.
     WatchmanPathEvent event =
@@ -1083,7 +1322,14 @@ public class ParserTest {
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should not have invalidated cache.", 1, counter.calls);
@@ -1094,7 +1340,14 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Process event.
     WatchmanPathEvent event =
@@ -1106,7 +1359,14 @@ public class ParserTest {
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should not have invalidated cache.", 1, counter.calls);
@@ -1117,7 +1377,14 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Process event.
     WatchmanPathEvent event =
@@ -1129,7 +1396,14 @@ public class ParserTest {
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Test that the second parseBuildFile call did not repopulate the cache.
     assertEquals("Should have not invalidated cache.", 1, counter.calls);
@@ -1140,7 +1414,14 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Process event.
     WatchmanPathEvent event =
@@ -1152,7 +1433,14 @@ public class ParserTest {
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Test that the second parseBuildFile call did not repopulate the cache.
     assertEquals("Should have not invalidated cache.", 1, counter.calls);
@@ -1163,7 +1451,14 @@ public class ParserTest {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Process event.
     WatchmanPathEvent event =
@@ -1175,7 +1470,14 @@ public class ParserTest {
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
-        parser, eventBus, cell, knownBuildRuleTypesProvider, false, executorService, testBuildFile);
+        parser,
+        eventBus,
+        cell,
+        knownBuildRuleTypesProvider,
+        false,
+        executorService,
+        executableFinder,
+        testBuildFile);
 
     // Test that the second parseBuildFile call did not repopulate the cache.
     assertEquals("Should have not invalidated cache.", 1, counter.calls);
@@ -1329,7 +1631,8 @@ public class ParserTest {
             cell.getBuckConfig().getView(ParserConfig.class),
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
-            knownBuildRuleTypesProvider);
+            knownBuildRuleTypesProvider,
+            executableFinder);
     Path testFooJavaFile = tempDir.newFile("foo/Foo.java");
     Files.write(testFooJavaFile, "// Ceci n'est pas une Javafile\n".getBytes(UTF_8));
     HashCode updated = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
@@ -1447,7 +1750,8 @@ public class ParserTest {
             cell.getBuckConfig().getView(ParserConfig.class),
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
-            knownBuildRuleTypesProvider);
+            knownBuildRuleTypesProvider,
+            executableFinder);
     Files.write(
         testFooBuckFile,
         ("java_library(name = 'lib', deps = [], visibility=['PUBLIC'])\njava_library("
@@ -1733,7 +2037,8 @@ public class ParserTest {
             cell.getBuckConfig().getView(ParserConfig.class),
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
-            knownBuildRuleTypesProvider);
+            knownBuildRuleTypesProvider,
+            executableFinder);
     // Restore state.
     parser.restoreParserState(remote, cell);
     // Try to use the restored target graph.

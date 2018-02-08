@@ -711,7 +711,9 @@ public final class Main {
 
       Optional<Daemon> daemon =
           context.isPresent() && (watchman != WatchmanFactory.NULL_WATCHMAN)
-              ? Optional.of(daemonLifecycleManager.getDaemon(rootCell, knownBuildRuleTypesProvider))
+              ? Optional.of(
+                  daemonLifecycleManager.getDaemon(
+                      rootCell, knownBuildRuleTypesProvider, executableFinder))
               : Optional.empty();
 
       // Used the cached provider, if present.
@@ -1064,7 +1066,8 @@ public final class Main {
                   rootCell,
                   daemon,
                   broadcastEventListener,
-                  buildEventBus);
+                  buildEventBus,
+                  executableFinder);
 
           // Because the Parser is potentially constructed before the CounterRegistry,
           // we need to manually register its counters after it's created.
@@ -1210,7 +1213,8 @@ public final class Main {
       Cell rootCell,
       Optional<Daemon> daemonOptional,
       BroadcastEventListener broadcastEventListener,
-      BuckEventBus buildEventBus)
+      BuckEventBus buildEventBus,
+      ExecutableFinder executableFinder)
       throws IOException, InterruptedException {
     WatchmanWatcher watchmanWatcher = null;
     if (daemonOptional.isPresent() && watchman.getTransportPath().isPresent()) {
@@ -1265,7 +1269,8 @@ public final class Main {
                   rootCell.getBuckConfig().getView(ParserConfig.class),
                   typeCoercerFactory,
                   new ConstructorArgMarshaller(typeCoercerFactory),
-                  knownBuildRuleTypesProvider),
+                  knownBuildRuleTypesProvider,
+                  executableFinder),
               typeCoercerFactory,
               new InstrumentedVersionedTargetGraphCache(
                   new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),

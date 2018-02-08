@@ -16,20 +16,32 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.python.toolchain.PythonInterpreter;
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 class ParserPythonInterpreterProvider {
 
-  private final PythonInterpreter pythonInterpreter;
-  private final ParserConfig parserConfig;
+  private static final ImmutableList<String> PYTHON_INTERPRETER_NAMES =
+      ImmutableList.of("python2", "python");
 
-  ParserPythonInterpreterProvider(PythonInterpreter pythonInterpreter, ParserConfig parserConfig) {
-    this.pythonInterpreter = pythonInterpreter;
+  private final ParserConfig parserConfig;
+  private final ExecutableFinder executableFinder;
+
+  ParserPythonInterpreterProvider(BuckConfig buckConfig, ExecutableFinder executableFinder) {
+    this(buckConfig.getView(ParserConfig.class), executableFinder);
+  }
+
+  ParserPythonInterpreterProvider(ParserConfig parserConfig, ExecutableFinder executableFinder) {
     this.parserConfig = parserConfig;
+    this.executableFinder = executableFinder;
   }
 
   /**
@@ -41,15 +53,41 @@ class ParserPythonInterpreterProvider {
    * @return The found python interpreter.
    */
   public String getOrFail() {
-    Path path =
-        parserConfig
-            .getParserPythonInterpreterPath()
-            .map(c -> pythonInterpreter.getPythonInterpreterPath(Optional.of(c)))
-            // Fall back to the Python section configuration
-            .orElseGet(pythonInterpreter::getPythonInterpreterPath);
+    Path path = getPythonInterpreter(parserConfig.getParserPythonInterpreterPath());
     if (!(Files.isExecutable(path) && !Files.isDirectory(path))) {
       throw new HumanReadableException("Not a python executable: " + path);
     }
     return path.toString();
+  }
+
+  private Path findInterpreter(ImmutableList<String> interpreterNames) {
+    Preconditions.checkArgument(!interpreterNames.isEmpty());
+    for (String interpreterName : interpreterNames) {
+      Optional<Path> python =
+          executableFinder.getOptionalExecutable(
+              Paths.get(interpreterName), parserConfig.getDelegate().getEnvironment());
+      if (python.isPresent()) {
+        return python.get().toAbsolutePath();
+      }
+    }
+    throw new HumanReadableException(
+        "No python interpreter found (searched %s).", Joiner.on(", ").join(interpreterNames));
+  }
+
+  /**
+   * Returns the path to python interpreter. If python is specified in 'interpreter' key of the
+   * 'python' section that is used and an error reported if invalid.
+   *
+   * @return The found python interpreter.
+   */
+  private Path getPythonInterpreter(Optional<String> interpreterPath) {
+    if (!interpreterPath.isPresent()) {
+      return findInterpreter(PYTHON_INTERPRETER_NAMES);
+    }
+    Path configPath = Paths.get(interpreterPath.get());
+    if (!configPath.isAbsolute()) {
+      return findInterpreter(ImmutableList.of(interpreterPath.get()));
+    }
+    return configPath;
   }
 }

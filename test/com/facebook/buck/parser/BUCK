@@ -216,8 +216,6 @@ java_test(
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/parser/options:options",
         "//src/com/facebook/buck/plugin/impl:impl",
-        "//src/com/facebook/buck/python/toolchain:toolchain",
-        "//src/com/facebook/buck/python/toolchain/impl:impl",
         "//src/com/facebook/buck/query:query",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:caching_build_engine_delegates",
