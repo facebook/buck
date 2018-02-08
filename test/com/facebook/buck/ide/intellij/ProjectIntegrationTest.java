@@ -294,6 +294,24 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testGeneratingAndroidManifestWithMinSdkWithDifferentVersionsFromManifest()
+      throws InterruptedException, IOException {
+    runBuckProjectAndVerify("min_sdk_version_different_from_manifests");
+  }
+
+  @Test
+  public void testGeneratingAndroidManifestWithMinSdkFromBuckConfig()
+      throws InterruptedException, IOException {
+    runBuckProjectAndVerify("min_sdk_version_from_buck_config");
+  }
+
+  @Test
+  public void testGeneratingAndroidManifestWithNoMinSdkConfig()
+      throws InterruptedException, IOException {
+    runBuckProjectAndVerify("min_sdk_version_with_no_config");
+  }
+
+  @Test
   public void testPreprocessScript() throws InterruptedException, IOException {
     ProcessResult result = runBuckProjectAndVerify("preprocess_script_test");
 

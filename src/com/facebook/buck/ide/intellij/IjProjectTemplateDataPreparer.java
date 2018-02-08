@@ -17,6 +17,7 @@
 package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.ide.intellij.aggregation.AggregationMode;
+import com.facebook.buck.ide.intellij.lang.android.AndroidManifestParser;
 import com.facebook.buck.ide.intellij.lang.android.AndroidResourceFolder;
 import com.facebook.buck.ide.intellij.model.ContentRoot;
 import com.facebook.buck.ide.intellij.model.DependencyType;
@@ -83,6 +84,7 @@ public class IjProjectTemplateDataPreparer {
   private final ProjectFilesystem projectFilesystem;
   private final IjProjectConfig projectConfig;
   private final IjSourceRootSimplifier sourceRootSimplifier;
+  private final AndroidManifestParser androidManifestParser;
   private final ImmutableSet<Path> referencedFolderPaths;
   private final ImmutableSet<Path> filesystemTraversalBoundaryPaths;
   private final ImmutableSet<IjModule> modulesToBeWritten;
@@ -92,7 +94,8 @@ public class IjProjectTemplateDataPreparer {
       JavaPackageFinder javaPackageFinder,
       IjModuleGraph moduleGraph,
       ProjectFilesystem projectFilesystem,
-      IjProjectConfig projectConfig) {
+      IjProjectConfig projectConfig,
+      AndroidManifestParser androidManifestParser) {
     this.javaPackageFinder = javaPackageFinder;
     this.moduleGraph = moduleGraph;
     this.projectFilesystem = projectFilesystem;
@@ -100,6 +103,7 @@ public class IjProjectTemplateDataPreparer {
     this.sourceRootSimplifier = new IjSourceRootSimplifier(javaPackageFinder);
     this.modulesToBeWritten = createModulesToBeWritten(moduleGraph);
     this.librariesToBeWritten = moduleGraph.getLibraries();
+    this.androidManifestParser = androidManifestParser;
     this.filesystemTraversalBoundaryPaths =
         createFilesystemTraversalBoundaryPathSet(modulesToBeWritten);
     this.referencedFolderPaths = createReferencedFolderPathsSet(modulesToBeWritten);
@@ -467,26 +471,23 @@ public class IjProjectTemplateDataPreparer {
   }
 
   private Optional<Path> getAndroidManifestPath(IjModuleAndroidFacet androidFacet) {
-    ImmutableSet<Path> androidManifestPaths = androidFacet.getManifestPaths();
-
-    if (androidManifestPaths.size() == 1) {
-      return Optional.of(androidManifestPaths.iterator().next());
-    }
-
     if (projectConfig.isGeneratingAndroidManifestEnabled()) {
-      Optional<String> packageName = androidFacet.getPackageName();
+      Optional<String> packageName = androidFacet.discoverPackageName(androidManifestParser);
       if (packageName.isPresent()) {
         return Optional.of(
             androidFacet
                 .getGeneratedSourcePath()
                 .resolve(packageName.get().replace('.', '/'))
                 .resolve("AndroidManifest.xml"));
-      } else if (androidManifestPaths.size() > 0) {
-        return Optional.of(androidManifestPaths.iterator().next());
       }
     }
 
-    return projectConfig.getAndroidManifest();
+    Optional<Path> firstManifest = androidFacet.getFirstManifestPath();
+    if (firstManifest.isPresent()) {
+      return firstManifest;
+    } else {
+      return projectConfig.getAndroidManifest();
+    }
   }
 
   private void addAndroidProguardPath(

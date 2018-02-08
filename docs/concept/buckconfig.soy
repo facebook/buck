@@ -2090,6 +2090,16 @@ cxx_library(
 {/call}
 
 {call buckconfig.entry}
+  {param section: 'intellij' /}
+  {param name: 'default_min_android_sdk_version' /}
+  {param example_value: '9' /}
+  {param description}
+    Default minimum Android SDK version supported for this project. Overwritten by min SDK version if
+    specified in target's AndroidManifest.xml.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
   {param section: 'project' /}
   {param name: 'generate_android_manifest' /}
   {param example_value: 'true' /}
