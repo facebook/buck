@@ -227,7 +227,7 @@ public abstract class AbstractWorkspace {
    *     {@code ["project"]}, etc.
    * @return the result of running Buck, which includes the exit code, stdout, and stderr.
    */
-  public abstract ProcessResult runBuckCommand(String... args) throws IOException;
+  public abstract ProcessResult runBuckCommand(String... args) throws Exception;
 
   /**
    * Runs Buck with the specified list of command-line arguments with the given map of environment
@@ -239,7 +239,7 @@ public abstract class AbstractWorkspace {
    * @return the result of running Buck, which includes the exit code, stdout, and stderr.
    */
   public abstract ProcessResult runBuckCommand(
-      ImmutableMap<String, String> environment, String... args) throws IOException;
+      ImmutableMap<String, String> environment, String... args) throws Exception;
 
   /**
    * Gets the path the workspace is held.
