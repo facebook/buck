@@ -41,6 +41,16 @@ def __run():
     import sys
     import zipfile
 
+    def setenv(var, val):
+        if val is None:
+            os.environ.pop(var, None)
+        else:
+            os.environ[var] = val
+
+    def restoreenv(d):
+        for k, v in d.items():
+            setenv(k, v)
+
     # Set `argv[0]` to the executing script.
     assert sys.argv[0] == '-c'
     sys.argv[0] = {arg0!r}
@@ -78,18 +88,7 @@ def __run():
                         zip.extractall(whl_path)
             sys.path.insert(1, whl_path)
 
-    def setenv(var, val):
-        if val is None:
-            os.environ.pop(var, None)
-        else:
-            os.environ[var] = val
-
-    def restoreenv(d):
-        for k, v in d.items():
-            setenv(k, v)
-
     restoreenv({env_vals!r})
-
     runpy._run_module_as_main({main_module!r}, False)
 
 __run()
