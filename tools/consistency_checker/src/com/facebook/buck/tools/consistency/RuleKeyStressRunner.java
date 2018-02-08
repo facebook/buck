@@ -25,6 +25,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -101,13 +103,15 @@ public class RuleKeyStressRunner {
                       String.format("--rulekeys-log-path=%s", binLogPath.toAbsolutePath()),
                       "--show-rulekey",
                       "--show-transitive-rulekeys");
+              ArrayList<String> targetsRandom = new ArrayList<>(targets);
+              Collections.shuffle(targetsRandom);
               return new BuckRunner(
                   interpreter,
                   buckBinPath,
                   "targets",
                   buckArgs,
                   targetsArgs,
-                  targets,
+                  targetsRandom,
                   repositoryPath,
                   true);
             })

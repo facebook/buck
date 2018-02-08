@@ -22,6 +22,8 @@ import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
 import com.facebook.buck.tools.consistency.TargetHashFileParser.ParsedTargetsFile;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -96,16 +98,19 @@ public class TargetsStressRunner {
             "--target-hash-file-mode=PATHS_ONLY");
     return IntStream.range(0, numRuns)
         .mapToObj(
-            i ->
-                new BuckRunner(
-                    interpreter,
-                    buckBinPath,
-                    "targets",
-                    buckArgs,
-                    targetArgs,
-                    targets,
-                    repositoryPath,
-                    true))
+            i -> {
+              ArrayList<String> targetsRandom = new ArrayList<>(targets);
+              Collections.shuffle(targetsRandom);
+              return new BuckRunner(
+                  interpreter,
+                  buckBinPath,
+                  "targets",
+                  buckArgs,
+                  targetArgs,
+                  targetsRandom,
+                  repositoryPath,
+                  true);
+            })
         .collect(Collectors.toList());
   }
 

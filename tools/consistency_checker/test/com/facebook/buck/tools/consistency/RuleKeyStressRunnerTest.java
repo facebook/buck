@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -112,18 +113,31 @@ public class RuleKeyStressRunnerTest {
 
     Assert.assertEquals(0, commands.get(0).run(testStream1));
     Assert.assertEquals(0, commands.get(1).run(testStream2));
-    assertAllStartWithPrefix(Arrays.asList(testStream1.getOutputLines()), expectedOutput1);
-    assertAllStartWithPrefix(Arrays.asList(testStream2.getOutputLines()), expectedOutput2);
+    assertAllStartWithPrefix(Arrays.asList(testStream1.getOutputLines()), expectedOutput1, 9);
+    assertAllStartWithPrefix(Arrays.asList(testStream2.getOutputLines()), expectedOutput2, 9);
   }
 
-  private void assertAllStartWithPrefix(List<String> lines, List<String> expectedPrefixes) {
+  private void assertAllStartWithPrefix(
+      List<String> lines, List<String> expectedPrefixes, int randomStartIdx) {
     Assert.assertEquals(expectedPrefixes.size(), lines.size());
-    for (int i = 0; i < lines.size(); i++) {
-      String line = lines.get(i);
-      String expected = expectedPrefixes.get(i);
-      Assert.assertTrue(
-          String.format("Line %s must start with %s", line, expected), line.startsWith(expected));
-    }
+    int partition = randomStartIdx == -1 ? lines.size() : randomStartIdx;
+    Assert.assertThat(
+        lines.subList(0, partition),
+        Matchers.contains(
+            expectedPrefixes
+                .subList(0, partition)
+                .stream()
+                .map(prefix -> Matchers.startsWith(prefix))
+                .collect(ImmutableList.toImmutableList())));
+
+    Assert.assertThat(
+        lines.subList(partition, lines.size()),
+        Matchers.containsInAnyOrder(
+            expectedPrefixes
+                .subList(partition, expectedPrefixes.size())
+                .stream()
+                .map(prefix -> Matchers.startsWith(prefix))
+                .collect(ImmutableList.toImmutableList())));
   }
 
   @Test
