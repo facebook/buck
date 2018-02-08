@@ -9,12 +9,26 @@ check out the documentation at <http://buckbuild.com/>.
 Installation
 ------------
 
-To build Buck, run the following:
+First, clone the Buck repository:
+
+    git clone https://github.com/facebook/buck.git
+    cd buck
+
+Since Buck is used to build Buck, the initial build process invovles 2 phases:
+
+##### 1. Bootstrap Buck with ant
 
     git clone https://github.com/facebook/buck.git
     cd buck
     ant
-    ./bin/buck --help
+
+##### 2. Use bootstrapped version of Buck to build Buck:
+
+    ./bin/buck build --show-output buck
+    # output will contain something like
+    # //programs:buck buck-out/gen/programs/buck.pex
+    buck-out/gen/programs/buck.pex --help
+
 
 License
 -------

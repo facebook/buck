@@ -1442,13 +1442,19 @@ docsearch({
 {literal}<pre>
 git clone https://github.com/facebook/buck.git
 cd buck
-ant{/literal}{\n}
+ant{/literal}
 {if $withAlias and not $isWindows}
 sudo ln -s ${lb}PWD{rb}/bin/buck /usr/bin/buck
 {elseif not $isWindows}
-./bin/buck --help
+{literal}
+./bin/buck build --show-output buck
+buck-out/gen/programs/buck.pex --help
+{/literal}
 {else}
-.\bin\buck --help
+{literal}
+.\bin\buck build --show-output buck
+buck-out\gen\programs\buck.pex --help
+{/literal}
 {/if}
 </pre>
 {/template}
