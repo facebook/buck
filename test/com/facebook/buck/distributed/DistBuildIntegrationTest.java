@@ -77,37 +77,6 @@ public class DistBuildIntegrationTest {
   }
 
   @Test
-  public void canBuildCrossCellWithGenRules() throws Exception {
-    final Path sourceFolderPath = temporaryFolder.newFolder("source");
-    final Path destinationFolderPath = temporaryFolder.newFolder("destination");
-    final String scenario = "multi_cell_genrule_target";
-    final Path stateFilePath = temporaryFolder.getRoot().resolve("state_dump.bin");
-
-    ProjectWorkspace mainCellWorkspace = setupCell(scenario, "main_cell", sourceFolderPath);
-    setupCell(scenario, "secondary_cell", sourceFolderPath);
-
-    mainCellWorkspace
-        .runBuckBuild(
-            "//:cross_cell_gen_rule",
-            "--distributed",
-            "--build-state-file",
-            stateFilePath.toString())
-        .assertSuccess();
-
-    ProjectWorkspace destinationWorkspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "empty", destinationFolderPath);
-    destinationWorkspace.setUp();
-
-    runDistBuildWithFakeFrontend(
-            destinationWorkspace,
-            "--build-state-file",
-            stateFilePath.toString(),
-            "--buildslave-run-id",
-            "i_am_slave_with_run_id_42")
-        .assertSuccess();
-  }
-
-  @Test
   public void canBuildCrossCellWithSymlinksAndAbsPathTools() throws Exception {
     final Path sourceFolderPath = temporaryFolder.newFolder("source");
     final Path destinationFolderPath = temporaryFolder.newFolder("destination");

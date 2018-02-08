@@ -38,9 +38,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.pf4j.PluginManager;
 
 public class CellProviderFactory {
@@ -199,17 +197,7 @@ public class CellProviderFactory {
   }
 
   public static CellProvider createForDistributedBuild(
-      Path rootCellPath, ImmutableMap<Path, DistBuildCellParams> cellParams) {
-    final Map<String, Path> cellPaths =
-        cellParams
-            .values()
-            .stream()
-            .filter(p -> p.getCanonicalName().isPresent())
-            .collect(
-                Collectors.toMap(
-                    p -> p.getCanonicalName().get(), p -> p.getFilesystem().getRootPath()));
-    ImmutableSet<String> declaredCellNames = ImmutableSet.copyOf(cellPaths.keySet());
-    DefaultCellPathResolver rootCellResolver = DefaultCellPathResolver.of(rootCellPath, cellPaths);
+      ImmutableMap<Path, DistBuildCellParams> cellParams) {
     return new CellProvider(
         cellProvider ->
             CacheLoader.from(
@@ -220,28 +208,11 @@ public class CellProviderFactory {
                       ConfigRuleKeyConfigurationFactory.create(
                           cellParam.getConfig(), cellParam.getPluginManager());
 
-                  CellPathResolver currentCellResolver = rootCellResolver;
-                  Path currentCellRoot = cellParam.getFilesystem().getRootPath();
-                  if (!currentCellRoot.equals(rootCellPath)) {
-                    // The CellPathResolverView is required because it makes the
-                    // [RootPath<->CanonicalName] resolver methods non-symmetrical to handle the
-                    // fact
-                    // that relative main cell from inside a secondary cell resolves actually to
-                    // secondary cell. If the DefaultCellPathResolver is used, then it would return
-                    // a BuildTarget as if it belonged to the main cell.
-                    currentCellResolver =
-                        new CellPathResolverView(
-                            rootCellResolver,
-                            declaredCellNames,
-                            cellParam.getFilesystem().getRootPath());
-                  }
-                  final BuckConfig configWithResolver =
-                      cellParam.getConfig().withCellPathResolver(currentCellResolver);
                   ToolchainProvider toolchainProvider =
                       new DefaultToolchainProvider(
                           cellParam.getPluginManager(),
                           cellParam.getEnvironment(),
-                          configWithResolver,
+                          cellParam.getConfig(),
                           cellParam.getFilesystem(),
                           cellParam.getProcessExecutor(),
                           cellParam.getExecutableFinder(),
@@ -254,7 +225,7 @@ public class CellProviderFactory {
                       cellParam.getCanonicalName(),
                       cellParam.getFilesystem(),
                       WatchmanFactory.NULL_WATCHMAN,
-                      configWithResolver,
+                      cellParam.getConfig(),
                       cellProvider,
                       toolchainProvider,
                       ruleKeyConfiguration);

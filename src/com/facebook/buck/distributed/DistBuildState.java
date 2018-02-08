@@ -147,7 +147,6 @@ public class DistBuildState {
 
     Path uniqueBuildRoot = Files.createTempDirectory(sandboxPath, "build");
 
-    Path distBuildMainCellPath = null;
     for (Map.Entry<Integer, BuildJobStateCell> remoteCellEntry : jobState.getCells().entrySet()) {
       BuildJobStateCell remoteCell = remoteCellEntry.getValue();
 
@@ -176,15 +175,9 @@ public class DistBuildState {
               executableFinder,
               pluginManager));
       cellIndex.put(remoteCellEntry.getKey(), cellRoot);
-
-      if (remoteCellEntry.getKey() == DistBuildCellIndexer.ROOT_CELL_INDEX) {
-        distBuildMainCellPath = cellRoot;
-      }
     }
 
-    CellProvider cellProvider =
-        CellProviderFactory.createForDistributedBuild(
-            Preconditions.checkNotNull(distBuildMainCellPath), cellParams.build());
+    CellProvider cellProvider = CellProviderFactory.createForDistributedBuild(cellParams.build());
 
     ImmutableBiMap<Integer, Cell> cells =
         ImmutableBiMap.copyOf(Maps.transformValues(cellIndex.build(), cellProvider::getCellByPath));
