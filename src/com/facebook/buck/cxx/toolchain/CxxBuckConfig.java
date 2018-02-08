@@ -35,7 +35,6 @@ import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -198,11 +197,7 @@ public class CxxBuckConfig {
     if (!value.isPresent()) {
       return Optional.empty();
     }
-    ImmutableList.Builder<String> split = ImmutableList.builder();
-    if (!value.get().trim().isEmpty()) {
-      split.addAll(Splitter.on(" ").split(value.get().trim()));
-    }
-    return Optional.of(split.build());
+    return Optional.of(delegate.getListWithoutComments(cxxSection, field, ' '));
   }
 
   public Optional<ImmutableList<String>> getAsflags() {
