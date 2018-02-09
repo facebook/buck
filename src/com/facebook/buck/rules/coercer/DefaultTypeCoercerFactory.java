@@ -27,8 +27,14 @@ import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.macros.ClasspathMacro;
 import com.facebook.buck.rules.macros.ExecutableMacro;
 import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MavenCoordinatesMacro;
 import com.facebook.buck.rules.macros.OutputMacro;
+import com.facebook.buck.rules.macros.QueryOutputsMacro;
+import com.facebook.buck.rules.macros.QueryPathsMacro;
+import com.facebook.buck.rules.macros.QueryTargetsAndOutputsMacro;
+import com.facebook.buck.rules.macros.QueryTargetsMacro;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
@@ -101,6 +107,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     TypeCoercer<NeededCoverageSpec> neededCoverageSpecTypeCoercer =
         new NeededCoverageSpecTypeCoercer(
             floatTypeCoercer, buildTargetTypeCoercer, stringTypeCoercer);
+    TypeCoercer<Query> queryTypeCoercer = new QueryCoercer();
     nonParameterizedTypeCoercers =
         new TypeCoercer<?>[] {
           // special classes
@@ -136,20 +143,32 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
           neededCoverageSpecTypeCoercer,
           new ConstraintTypeCoercer(),
           new VersionTypeCoercer(),
-          new QueryCoercer(),
+          queryTypeCoercer,
           StringWithMacrosTypeCoercer.from(
-              ImmutableMap.of(
-                  "classpath", ClasspathMacro.class,
-                  "exe", ExecutableMacro.class,
-                  "location", LocationMacro.class,
-                  "maven_coords", MavenCoordinatesMacro.class,
-                  "output", OutputMacro.class),
+              ImmutableMap.<String, Class<? extends Macro>>builder()
+                  .put("classpath", ClasspathMacro.class)
+                  .put("exe", ExecutableMacro.class)
+                  .put("location", LocationMacro.class)
+                  .put("maven_coords", MavenCoordinatesMacro.class)
+                  .put("output", OutputMacro.class)
+                  .put("query_targets", QueryTargetsMacro.class)
+                  .put("query_outputs", QueryOutputsMacro.class)
+                  .put("query_paths", QueryPathsMacro.class)
+                  .put("query_targets_and_outputs", QueryTargetsAndOutputsMacro.class)
+                  .build(),
               ImmutableList.of(
                   new ClasspathMacroTypeCoercer(buildTargetTypeCoercer),
                   new ExecutableMacroTypeCoercer(buildTargetTypeCoercer),
                   new LocationMacroTypeCoercer(buildTargetTypeCoercer),
                   new MavenCoordinatesMacroTypeCoercer(buildTargetTypeCoercer),
-                  new OutputMacroTypeCoercer())),
+                  new OutputMacroTypeCoercer(),
+                  new QueryMacroTypeCoercer<>(
+                      queryTypeCoercer, QueryTargetsMacro.class, QueryTargetsMacro::of),
+                  new QueryMacroTypeCoercer<>(
+                      queryTypeCoercer, QueryOutputsMacro.class, QueryOutputsMacro::of),
+                  new QueryMacroTypeCoercer<>(
+                      queryTypeCoercer, QueryPathsMacro.class, QueryPathsMacro::of),
+                  new QueryTargetsAndOutputsMacroTypeCoercer(queryTypeCoercer))),
         };
   }
 

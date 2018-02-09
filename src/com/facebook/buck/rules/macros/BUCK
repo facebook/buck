@@ -8,6 +8,7 @@ TYPES_SRCS = [
     "AbstractOutputMacro.java",
     "AbstractQueryOutputsMacro.java",
     "AbstractQueryPathsMacro.java",
+    "AbstractQueryTargetsAndOutputsMacro.java",
     "AbstractQueryTargetsMacro.java",
     "AbstractStringWithMacros.java",
     "BuildTargetMacro.java",
