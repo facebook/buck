@@ -401,7 +401,9 @@ class BuckTool(object):
                     running_version = self._buck_project.get_running_buckd_version()
                     if running_version != buck_version_uid or not self._is_buckd_running():
                         self.kill_buckd()
-                        self.launch_buckd(buck_version_uid=buck_version_uid)
+                        if not self.launch_buckd(buck_version_uid=buck_version_uid):
+                            logging.warning("Not using buckd because daemon failed to start.")
+                            use_buckd = False
 
                 env = self._environ_for_buck()
                 env['BUCK_BUILD_ID'] = build_id
@@ -533,21 +535,21 @@ class BuckTool(object):
 
             wait_seconds = 0.01
             repetitions = int(BUCKD_STARTUP_TIMEOUT_MILLIS / 1000.0 / wait_seconds)
-            for i in range(0, repetitions):
+            for i in range(repetitions):
                 if transport_exists(buckd_transport_file_path):
                     break
                 time.sleep(wait_seconds)
 
             if not transport_exists(buckd_transport_file_path):
-                raise BuckToolException('Buckd server startup timeout')
+                return False
 
             returncode = process.poll()
 
             # If the process hasn't exited yet, everything is working as expected
             if returncode is None:
-                return 0
+                return True
 
-            return returncode
+            return False
 
     def _get_repository(self):
         arcconfig = os.path.join(self._buck_project.root, '.arcconfig')
