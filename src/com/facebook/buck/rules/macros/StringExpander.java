@@ -22,12 +22,20 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 
-public class StringExpander extends SimpleMacroExpander {
+/** Expands macros into fixed strings. */
+public class StringExpander<M extends Macro> extends SimpleMacroExpander<M> {
 
+  private final Class<M> clazz;
   private final StringArg toReturn;
 
-  public StringExpander(String toReturn) {
-    this.toReturn = StringArg.of(toReturn);
+  public StringExpander(Class<M> clazz, StringArg toReturn) {
+    this.clazz = clazz;
+    this.toReturn = toReturn;
+  }
+
+  @Override
+  public Class<M> getInputClass() {
+    return clazz;
   }
 
   @Override

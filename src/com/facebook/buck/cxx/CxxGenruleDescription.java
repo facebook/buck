@@ -63,6 +63,7 @@ import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWor
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.SimpleMacroExpander;
@@ -200,11 +201,11 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     macros.put("exe", new ExecutableMacroExpander());
     macros.put("location", new LocationMacroExpander());
     macros.put("location-platform", new LocationMacroExpander());
-    macros.put("platform-name", new StringExpander(""));
+    macros.put("platform-name", new StringExpander<>(Macro.class, StringArg.of("")));
     macros.put("cc", new CxxPlatformParseTimeDepsExpander(cxxPlatforms));
     macros.put("cxx", new CxxPlatformParseTimeDepsExpander(cxxPlatforms));
-    macros.put("cflags", new StringExpander(""));
-    macros.put("cxxflags", new StringExpander(""));
+    macros.put("cflags", new StringExpander<>(Macro.class, StringArg.of("")));
+    macros.put("cxxflags", new StringExpander<>(Macro.class, StringArg.of("")));
     macros.put("cppflags", new ParseTimeDepsExpander(Filter.NONE));
     macros.put("cxxppflags", new ParseTimeDepsExpander(Filter.NONE));
     macros.put("solibs", new ParseTimeDepsExpander(Filter.NONE));
@@ -237,7 +238,9 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     ImmutableMap.Builder<String, MacroExpander> macros = ImmutableMap.builder();
     macros.put("exe", new ExecutableMacroExpander());
     macros.put("location", new CxxLocationMacroExpander(cxxPlatform));
-    macros.put("platform-name", new StringExpander(cxxPlatform.getFlavor().toString()));
+    macros.put(
+        "platform-name",
+        new StringExpander<>(Macro.class, StringArg.of(cxxPlatform.getFlavor().toString())));
     macros.put(
         "location-platform",
         new LocationMacroExpander() {
@@ -254,8 +257,14 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     ImmutableList<String> asflags = cxxPlatform.getAsflags();
     ImmutableList<String> cflags = cxxPlatform.getCflags();
     ImmutableList<String> cxxflags = cxxPlatform.getCxxflags();
-    macros.put("cflags", new StringExpander(shquoteJoin(Iterables.concat(cflags, asflags))));
-    macros.put("cxxflags", new StringExpander(shquoteJoin(Iterables.concat(cxxflags, asflags))));
+    macros.put(
+        "cflags",
+        new StringExpander<>(
+            Macro.class, StringArg.of(shquoteJoin(Iterables.concat(cflags, asflags)))));
+    macros.put(
+        "cxxflags",
+        new StringExpander<>(
+            Macro.class, StringArg.of(shquoteJoin(Iterables.concat(cxxflags, asflags)))));
 
     macros.put("cppflags", new CxxPreprocessorFlagsExpander(cxxPlatform, CxxSource.Type.C));
     macros.put("cxxppflags", new CxxPreprocessorFlagsExpander(cxxPlatform, CxxSource.Type.CXX));
@@ -448,12 +457,17 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   }
 
   /** A macro expander that expands to a specific {@link Tool}. */
-  private static class ToolExpander extends SimpleMacroExpander {
+  private static class ToolExpander extends SimpleMacroExpander<Macro> {
 
     private final Tool tool;
 
     public ToolExpander(Tool tool) {
       this.tool = tool;
+    }
+
+    @Override
+    public Class<Macro> getInputClass() {
+      return Macro.class;
     }
 
     @Override
@@ -774,12 +788,12 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
   }
 
-  private static class CxxPlatformParseTimeDepsExpander extends StringExpander {
+  private static class CxxPlatformParseTimeDepsExpander extends StringExpander<Macro> {
 
     private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
     public CxxPlatformParseTimeDepsExpander(FlavorDomain<CxxPlatform> cxxPlatforms) {
-      super("");
+      super(Macro.class, StringArg.of(""));
       this.cxxPlatforms = cxxPlatforms;
     }
 

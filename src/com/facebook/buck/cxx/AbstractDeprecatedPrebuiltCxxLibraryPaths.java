@@ -27,7 +27,9 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.StringExpander;
 import com.facebook.buck.util.HumanReadableException;
@@ -67,7 +69,7 @@ abstract class AbstractDeprecatedPrebuiltCxxLibraryPaths implements PrebuiltCxxL
                 .<LocationMacroExpander>map(CxxLocationMacroExpander::new)
                 .orElseGet(LocationMacroExpander::new),
             "platform",
-            new StringExpander(flav)));
+            new StringExpander<>(Macro.class, StringArg.of(flav))));
   }
 
   private String expandMacros(

@@ -17,33 +17,27 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import javax.annotation.Nullable;
 
 /** A macro expander with no inputs or precomputed work */
-public abstract class SimpleMacroExpander
-    extends AbstractMacroExpanderWithoutPrecomputedWork<Void> {
+public abstract class SimpleMacroExpander<M extends Macro>
+    extends AbstractMacroExpanderWithoutPrecomputedWork<M> {
 
   @Override
-  protected final Void parse(
-      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
-      throws MacroException {
+  @Nullable
+  protected final M parse(
+      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input) {
     return null;
   }
 
   @Override
-  public final Class<Void> getInputClass() {
-    return Void.class;
-  }
-
-  @Override
   public final Arg expandFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, Void input)
-      throws MacroException {
+      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, M input) {
     return expandFrom(target, cellNames, resolver);
   }
 
@@ -54,10 +48,9 @@ public abstract class SimpleMacroExpander
   public final void extractParseTimeDepsFrom(
       BuildTarget target,
       CellPathResolver cellNames,
-      Void input,
+      M input,
       ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
-      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder)
-      throws MacroException {
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extractParseTimeDepsFrom(target, cellNames, buildDepsBuilder, targetGraphOnlyDepsBuilder);
   }
 

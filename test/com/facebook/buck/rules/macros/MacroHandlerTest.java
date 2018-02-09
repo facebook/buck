@@ -98,7 +98,9 @@ public class MacroHandlerTest {
 
   @Test
   public void automaticallyAddsOutputToFileVariant() throws MacroException {
-    MacroHandler handler = new MacroHandler(ImmutableMap.of("foo", new StringExpander("cake")));
+    MacroHandler handler =
+        new MacroHandler(
+            ImmutableMap.of("foo", new StringExpander<>(Macro.class, StringArg.of("cake"))));
     String expanded =
         handler.expand(target, createCellRoots(filesystem), resolver, "Hello $(@foo //:test)");
 
