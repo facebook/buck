@@ -32,7 +32,6 @@ public final class BuckIcons {
       load("/icons/buck_tool_window_icon.png"); // 13x13
   public static final Icon ACTION_DEBUG = load("/icons/actions/Debug.png");
   public static final Icon ACTION_FIND = load("/icons/actions/Find.png");
-  public static final Icon ACTION_GOTO = load("/icons/actions/GoTo.png");
   public static final Icon ACTION_INSTALL = load("/icons/actions/Install.png");
   public static final Icon ACTION_KILL = load("/icons/actions/Kill.png");
   public static final Icon ACTION_PROJECT = load("/icons/actions/Project.png");
