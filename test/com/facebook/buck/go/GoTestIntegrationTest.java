@@ -114,4 +114,10 @@ public class GoTestIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("test", "//:subtests");
     result.assertSuccess();
   }
+
+  @Test
+  public void testIndirectDeps() throws IOException {
+    ProcessResult result = workspace.runBuckCommand("test", "//add:test-add13");
+    result.assertSuccess();
+  }
 }

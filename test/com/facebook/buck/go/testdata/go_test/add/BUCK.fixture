@@ -1,0 +1,12 @@
+go_library(
+    name = "add13",
+    srcs = ["add13.go"],
+    tests = [":test-add13"],
+    deps = ["//other_pkg:base"],
+)
+
+go_test(
+    name = "test-add13",
+    srcs = ["add13_test.go"],
+    library = ":add13",
+)
