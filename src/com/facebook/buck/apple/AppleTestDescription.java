@@ -304,6 +304,7 @@ public class AppleTestDescription
             appleConfig.cacheBundlesAndPackages(),
             appleConfig.shouldVerifyBundleResources(),
             appleConfig.assetCatalogValidation(),
+            args.getAssetCatalogsCompilationOptions(),
             args.getCodesignFlags(),
             args.getCodesignIdentity(),
             Optional.empty());

@@ -20,6 +20,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 public interface HasAppleBundleFields {
   Either<AppleBundleExtension, String> getExtension();
@@ -31,4 +32,9 @@ public interface HasAppleBundleFields {
   Optional<String> getXcodeProductType();
 
   ImmutableMap<String, String> getInfoPlistSubstitutions();
+
+  @Value.Default
+  default AppleAssetCatalogsCompilationOptions getAssetCatalogsCompilationOptions() {
+    return AppleAssetCatalogsCompilationOptions.builder().build();
+  }
 }

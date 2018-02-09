@@ -54,22 +54,6 @@ public class AppleAssetCatalogDescription implements Description<AppleAssetCatal
     return new NoopBuildRuleWithDeclaredAndExtraDeps(buildTarget, projectFilesystem, params);
   }
 
-  public enum Optimization {
-    SPACE("space"),
-    TIME("time"),
-    ;
-
-    private final String argument;
-
-    Optimization(String argument) {
-      this.argument = argument;
-    }
-
-    public String toArgument() {
-      return argument;
-    }
-  }
-
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractAppleAssetCatalogDescriptionArg extends CommonDescriptionArg {
@@ -79,10 +63,5 @@ public class AppleAssetCatalogDescription implements Description<AppleAssetCatal
     Optional<String> getAppIcon();
 
     Optional<String> getLaunchImage();
-
-    @Value.Default
-    default Optimization getOptimization() {
-      return Optimization.SPACE;
-    }
   }
 }

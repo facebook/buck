@@ -320,7 +320,8 @@ public class AppleDescriptions {
       ApplePlatform applePlatform,
       String targetSDKVersion,
       Tool actool,
-      AppleAssetCatalog.ValidationType assetCatalogValidation) {
+      AppleAssetCatalog.ValidationType assetCatalogValidation,
+      AppleAssetCatalogsCompilationOptions appleAssetCatalogsCompilationOptions) {
     TargetNode<?, ?> targetNode = targetGraph.get(buildTarget);
 
     ImmutableSet<AppleAssetCatalogDescriptionArg> assetCatalogArgs =
@@ -333,13 +334,7 @@ public class AppleDescriptions {
     Optional<String> appIcon = Optional.empty();
     Optional<String> launchImage = Optional.empty();
 
-    AppleAssetCatalogDescription.Optimization optimization = null;
-
     for (AppleAssetCatalogDescriptionArg arg : assetCatalogArgs) {
-      if (optimization == null) {
-        optimization = arg.getOptimization();
-      }
-
       assetCatalogDirsBuilder.addAll(arg.getDirs());
       if (arg.getAppIcon().isPresent()) {
         if (appIcon.isPresent()) {
@@ -360,13 +355,6 @@ public class AppleDescriptions {
 
         launchImage = arg.getLaunchImage();
       }
-
-      if (arg.getOptimization() != optimization) {
-        throw new HumanReadableException(
-            "At most one asset catalog optimisation style can be "
-                + "specified in the dependencies %s",
-            buildTarget);
-      }
     }
 
     ImmutableSortedSet<SourcePath> assetCatalogDirs = assetCatalogDirsBuilder.build();
@@ -374,8 +362,6 @@ public class AppleDescriptions {
     if (assetCatalogDirs.isEmpty()) {
       return Optional.empty();
     }
-    Preconditions.checkNotNull(
-        optimization, "optimization was null even though assetCatalogArgs was not empty");
 
     validateAssetCatalogs(
         assetCatalogDirs,
@@ -402,7 +388,7 @@ public class AppleDescriptions {
             assetCatalogDirs,
             appIcon,
             launchImage,
-            optimization,
+            appleAssetCatalogsCompilationOptions,
             MERGED_ASSET_CATALOG_NAME));
   }
 
@@ -573,6 +559,7 @@ public class AppleDescriptions {
       boolean cacheable,
       boolean verifyResources,
       AppleAssetCatalog.ValidationType assetCatalogValidation,
+      AppleAssetCatalogsCompilationOptions appleAssetCatalogsCompilationOptions,
       ImmutableList<String> codesignFlags,
       Optional<String> codesignAdhocIdentity,
       Optional<Boolean> ibtoolModuleFlag) {
@@ -648,7 +635,8 @@ public class AppleDescriptions {
             appleCxxPlatform.getAppleSdk().getApplePlatform(),
             appleCxxPlatform.getMinVersion(),
             appleCxxPlatform.getActool(),
-            assetCatalogValidation);
+            assetCatalogValidation,
+            appleAssetCatalogsCompilationOptions);
     addToIndex(resolver, assetCatalog);
 
     Optional<CoreDataModel> coreDataModel =

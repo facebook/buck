@@ -174,6 +174,7 @@ public class AppleBundleDescription
         appleConfig.cacheBundlesAndPackages(),
         appleConfig.shouldVerifyBundleResources(),
         appleConfig.assetCatalogValidation(),
+        args.getAssetCatalogsCompilationOptions(),
         args.getCodesignFlags(),
         args.getCodesignIdentity(),
         args.getIbtoolModuleFlag());

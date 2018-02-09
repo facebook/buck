@@ -813,6 +813,17 @@ public class AppleBundleIntegrationTest {
         "%s/" + appTarget.getShortName() + ".app/Assets.car");
   }
 
+  @Test
+  public void appleAssetCatalogsWithCompilationOptions() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_asset_catalogs_are_included_in_bundle", tmp);
+    workspace.setUp();
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//:DemoAppWithAssetCatalogCompilationOptions#no-debug");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+  }
+
   private void assertFileInOutputContainsString(
       String needle, ProjectWorkspace workspace, BuildTarget target, String genPathFormat)
       throws IOException {

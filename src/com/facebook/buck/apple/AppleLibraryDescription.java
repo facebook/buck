@@ -409,6 +409,7 @@ public class AppleLibraryDescription
         appleConfig.cacheBundlesAndPackages(),
         appleConfig.shouldVerifyBundleResources(),
         appleConfig.assetCatalogValidation(),
+        AppleAssetCatalogsCompilationOptions.builder().build(),
         ImmutableList.of(),
         Optional.empty(),
         Optional.empty());
