@@ -1273,6 +1273,35 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void macAppWithPrefPane() throws IOException, InterruptedException {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_osx_app_with_prefpane", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:App#no-debug");
+    ProcessResult buildResult =
+        workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+    buildResult.assertSuccess();
+
+    Path appPath =
+        workspace.getPath(
+            BuildTargets.getGenPath(
+                    filesystem,
+                    target.withAppendedFlavors(
+                        AppleDebugFormat.NONE.getFlavor(),
+                        AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    "%s")
+                .resolve(target.getShortName() + ".app"));
+    Path prefPanePath = appPath.resolve("Contents/Resources/PrefPane.prefPane");
+    Path prefPaneBinaryPath = prefPanePath.resolve("Contents/MacOS/PrefPane");
+    Path prefPaneInfoPlistPath = prefPanePath.resolve("Contents/Info.plist");
+    assertTrue(Files.exists(prefPaneBinaryPath));
+    assertTrue(Files.exists(prefPaneInfoPlistPath));
+  }
+
+  @Test
   public void resourcesFromOtherCellsCanBeProperlyIncluded() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(

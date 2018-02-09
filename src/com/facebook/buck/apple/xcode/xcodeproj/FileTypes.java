@@ -179,6 +179,7 @@ public final class FileTypes {
           .put("png", "image.png")
           .put("pp", "sourcecode.pascal")
           .put("ppob", "archive.ppob")
+          .put("prefpane", "wrapper.cfbundle")
           .put("proto", "text")
           .put("py", "text.script.python")
           .put("qtz", "video.quartz-composer")

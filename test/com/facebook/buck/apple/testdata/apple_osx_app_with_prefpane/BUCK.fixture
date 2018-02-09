@@ -1,0 +1,35 @@
+apple_binary(
+    name = "AppBinary",
+    srcs = ["App/App.m"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/AppKit.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    headers = ["App/App.h"],
+)
+
+apple_bundle(
+    name = "App",
+    binary = ":AppBinary",
+    extension = "app",
+    info_plist = "App/Info.plist",
+    deps = [
+        ":PrefPane",
+    ],
+)
+
+apple_binary(
+    name = "PrefPaneBinary",
+    srcs = ["PrefPane/PrefPane.m"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/AppKit.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+)
+
+apple_bundle(
+    name = "PrefPane",
+    binary = ":PrefPaneBinary",
+    extension = "prefPane",
+    info_plist = "PrefPane/Info.plist",
+)

@@ -926,6 +926,10 @@ public class AppleDescriptions {
             .toFileExtension()
             .equals(appleBundle.getExtension())) {
           extensionBundlePaths.put(sourcePath, destinations.getPlugInsPath().toString());
+        } else if (AppleBundleExtension.PREFPANE
+            .toFileExtension()
+            .equals(appleBundle.getExtension())) {
+          extensionBundlePaths.put(sourcePath, destinations.getResourcesPath().toString());
         }
       }
     }

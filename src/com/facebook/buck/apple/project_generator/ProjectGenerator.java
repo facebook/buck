@@ -1663,6 +1663,7 @@ public class ProjectGenerator {
                             case PLUGIN:
                             case BUNDLE:
                             case XCTEST:
+                            case PREFPANE:
                             case XPC:
                               // All of the above bundles can have loaders which do not contain
                               // a Swift runtime, so it must get bundled to ensure they run.
@@ -2487,6 +2488,9 @@ public class ProjectGenerator {
         case PLUGIN:
           return Optional.of(
               CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.PLUGINS));
+        case PREFPANE:
+          return Optional.of(
+              CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.RESOURCES));
         case APP:
           if (isWatchApplicationNode(targetNode)) {
             return Optional.of(
