@@ -47,23 +47,11 @@ public final class BuckWSServerPortUtils {
     Process p = commandLine.createProcess();
     BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
-    int port = CONNECTION_FAILED_PORT;
+    int port = -2;
     String line;
-    while ((line = reader.readLine()) != null) {
+    while ((line = reader.readLine()) != null && port != CONNECTION_FAILED_PORT) {
       if (line.startsWith(SEARCH_FOR)) {
         port = Integer.parseInt(line.substring(SEARCH_FOR.length()));
-        if (port == CONNECTION_FAILED_PORT) {
-          // if the buck server is off, and it gives us -1, throw this exception
-          String error =
-              "Your buck server may be turned off, since the Buck daemon is on port "
-                  + port
-                  + ".\nTry adding to your '.buckconfig.local' or '.buckconfig' file,"
-                  + " if you don't have it already set:\n"
-                  + "[httpserver]\n"
-                  + "    port = 0\n"
-                  + "After that, restart IntelliJ or reopen your project.\n";
-          throw new RuntimeException(error);
-        }
       }
     }
     return port;

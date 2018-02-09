@@ -23,6 +23,7 @@
 <h3>3.5</h3>
 <ul>
   <li>Moved "Go to Buck file" action to Navigate menu and "Go To" popup menu.</li>
+  <li>Show warning about missing Buck server as a balloon.</li>
 </ul>
 
 <h3>3.4</h3>
@@ -238,6 +239,7 @@
         serviceImplementation="com.facebook.buck.intellij.ideabuck.build.BuckBuildManager"/>
     <projectService
         serviceImplementation="com.facebook.buck.intellij.ideabuck.ui.BuckUIManager"/>
+    <projectService serviceImplementation="com.facebook.buck.intellij.ideabuck.notification.BuckNotification"/>
     <configurationType
             implementation="com.facebook.buck.intellij.ideabuck.configurations.TestConfigurationType"/>
     <programRunner
