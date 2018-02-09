@@ -34,6 +34,7 @@ import com.facebook.buck.rules.macros.QueryOutputsMacro;
 import com.facebook.buck.rules.macros.QueryPathsMacro;
 import com.facebook.buck.rules.macros.QueryTargetsAndOutputsMacro;
 import com.facebook.buck.rules.macros.QueryTargetsMacro;
+import com.facebook.buck.rules.macros.WorkerMacro;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
@@ -155,12 +156,18 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                   .put("query_outputs", QueryOutputsMacro.class)
                   .put("query_paths", QueryPathsMacro.class)
                   .put("query_targets_and_outputs", QueryTargetsAndOutputsMacro.class)
+                  .put("worker", WorkerMacro.class)
                   .build(),
               ImmutableList.of(
-                  new ClasspathMacroTypeCoercer(buildTargetTypeCoercer),
-                  new ExecutableMacroTypeCoercer(buildTargetTypeCoercer),
+                  new BuildTargetMacroTypeCoercer<>(
+                      buildTargetTypeCoercer, ClasspathMacro.class, ClasspathMacro::of),
+                  new BuildTargetMacroTypeCoercer<>(
+                      buildTargetTypeCoercer, ExecutableMacro.class, ExecutableMacro::of),
                   new LocationMacroTypeCoercer(buildTargetTypeCoercer),
-                  new MavenCoordinatesMacroTypeCoercer(buildTargetTypeCoercer),
+                  new BuildTargetMacroTypeCoercer<>(
+                      buildTargetTypeCoercer,
+                      MavenCoordinatesMacro.class,
+                      MavenCoordinatesMacro::of),
                   new OutputMacroTypeCoercer(),
                   new QueryMacroTypeCoercer<>(
                       queryTypeCoercer, QueryTargetsMacro.class, QueryTargetsMacro::of),
@@ -168,7 +175,9 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                       queryTypeCoercer, QueryOutputsMacro.class, QueryOutputsMacro::of),
                   new QueryMacroTypeCoercer<>(
                       queryTypeCoercer, QueryPathsMacro.class, QueryPathsMacro::of),
-                  new QueryTargetsAndOutputsMacroTypeCoercer(queryTypeCoercer))),
+                  new QueryTargetsAndOutputsMacroTypeCoercer(queryTypeCoercer),
+                  new BuildTargetMacroTypeCoercer<>(
+                      buildTargetTypeCoercer, WorkerMacro.class, WorkerMacro::of))),
         };
   }
 

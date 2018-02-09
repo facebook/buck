@@ -22,14 +22,23 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.macros.BuildTargetMacro;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
+import java.util.function.Function;
 
-public abstract class BuildTargetMacroTypeCoercer<M extends BuildTargetMacro>
+/** Coercer for macros which take a single {@link BuildTarget} arg. */
+public final class BuildTargetMacroTypeCoercer<M extends BuildTargetMacro>
     implements MacroTypeCoercer<M> {
 
   private final TypeCoercer<BuildTarget> buildTargetTypeCoercer;
+  private final Class<M> mClass;
+  private final Function<BuildTarget, M> factory;
 
-  public BuildTargetMacroTypeCoercer(TypeCoercer<BuildTarget> buildTargetTypeCoercer) {
+  public BuildTargetMacroTypeCoercer(
+      TypeCoercer<BuildTarget> buildTargetTypeCoercer,
+      Class<M> mClass,
+      Function<BuildTarget, M> factory) {
     this.buildTargetTypeCoercer = buildTargetTypeCoercer;
+    this.mClass = mClass;
+    this.factory = factory;
   }
 
   @Override
@@ -42,7 +51,10 @@ public abstract class BuildTargetMacroTypeCoercer<M extends BuildTargetMacro>
     buildTargetTypeCoercer.traverse(macro.getTarget(), traversal);
   }
 
-  abstract M create(BuildTarget target);
+  @Override
+  public Class<M> getOutputClass() {
+    return mClass;
+  }
 
   @Override
   public M coerce(
@@ -58,6 +70,6 @@ public abstract class BuildTargetMacroTypeCoercer<M extends BuildTargetMacro>
     BuildTarget target =
         buildTargetTypeCoercer.coerce(
             cellRoots, filesystem, pathRelativeToProjectRoot, args.get(0));
-    return create(target);
+    return factory.apply(target);
   }
 }

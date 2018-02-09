@@ -14,24 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.coercer;
+package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.macros.ExecutableMacro;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
+import org.immutables.value.Value;
 
-public class ExecutableMacroTypeCoercer extends BuildTargetMacroTypeCoercer<ExecutableMacro> {
-
-  ExecutableMacroTypeCoercer(TypeCoercer<BuildTarget> buildTargetTypeCoercer) {
-    super(buildTargetTypeCoercer);
-  }
-
-  @Override
-  public Class<ExecutableMacro> getOutputClass() {
-    return ExecutableMacro.class;
-  }
-
-  @Override
-  ExecutableMacro create(BuildTarget target) {
-    return ExecutableMacro.of(target);
-  }
-}
+/** Type for the `$(worker ...)` macro. */
+@Value.Immutable
+@BuckStyleTuple
+abstract class AbstractWorkerMacro extends BuildTargetMacro {}
