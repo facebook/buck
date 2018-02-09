@@ -245,8 +245,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         "location-platform",
         new LocationMacroExpander() {
           @Override
-          protected BuildRule resolve(BuildRuleResolver resolver, LocationMacro input)
-              throws MacroException {
+          protected BuildRule resolve(BuildRuleResolver resolver, LocationMacro input) {
             return resolver.requireRule(
                 input.getTarget().withAppendedFlavors(cxxPlatform.getFlavor()));
           }
@@ -438,7 +437,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
    * flag macros.
    */
   private static class ParseTimeDepsExpander extends FilterAndTargetsExpander {
-    public ParseTimeDepsExpander(Filter filter) {
+    ParseTimeDepsExpander(Filter filter) {
       super(filter);
     }
 
@@ -449,8 +448,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
     @Override
     protected Arg expand(
-        BuildRuleResolver resolver, ImmutableList<BuildRule> rule, Optional<Pattern> filter)
-        throws MacroException {
+        BuildRuleResolver resolver, ImmutableList<BuildRule> rule, Optional<Pattern> filter) {
       // This expander should only be used to determine parse-time deps.
       throw new IllegalStateException();
     }
@@ -461,7 +459,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
     private final Tool tool;
 
-    public ToolExpander(Tool tool) {
+    ToolExpander(Tool tool) {
       this.tool = tool;
     }
 
@@ -482,7 +480,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
     private final Filter filter;
 
-    public FilterAndTargetsExpander(Filter filter) {
+    FilterAndTargetsExpander(Filter filter) {
       this.filter = filter;
     }
 
@@ -556,7 +554,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     private final CxxPlatform cxxPlatform;
     private final CxxSource.Type sourceType;
 
-    public CxxPreprocessorFlagsExpander(CxxPlatform cxxPlatform, CxxSource.Type sourceType) {
+    CxxPreprocessorFlagsExpander(CxxPlatform cxxPlatform, CxxSource.Type sourceType) {
       super(Filter.NONE);
       this.cxxPlatform = cxxPlatform;
       this.sourceType = sourceType;
@@ -607,8 +605,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
      */
     @Override
     protected Arg expand(
-        BuildRuleResolver resolver, ImmutableList<BuildRule> rules, Optional<Pattern> filter)
-        throws MacroException {
+        BuildRuleResolver resolver, ImmutableList<BuildRule> rules, Optional<Pattern> filter) {
       return new CxxPreprocessorFlagsArg(
           getPreprocessorFlags(getCxxPreprocessorInput(rules)),
           CxxSourceTypes.getPreprocessor(cxxPlatform, sourceType).resolve(resolver));
@@ -618,7 +615,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       @AddToRuleKey private final PreprocessorFlags ppFlags;
       @AddToRuleKey private final Preprocessor preprocessor;
 
-      public CxxPreprocessorFlagsArg(PreprocessorFlags ppFlags, Preprocessor preprocessor) {
+      CxxPreprocessorFlagsArg(PreprocessorFlags ppFlags, Preprocessor preprocessor) {
         this.ppFlags = ppFlags;
         this.preprocessor = preprocessor;
       }
@@ -655,7 +652,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     private final Linker.LinkableDepType depType;
     private final String out;
 
-    public CxxLinkerFlagsExpander(
+    CxxLinkerFlagsExpander(
         BuildTarget buildTarget,
         ProjectFilesystem filesystem,
         CxxPlatform cxxPlatform,
@@ -690,7 +687,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
      *     their shared library dependencies at runtime.
      */
     private ImmutableList<Arg> getSharedLinkArgs(
-        BuildRuleResolver resolver, ImmutableList<BuildRule> rules) throws MacroException {
+        BuildRuleResolver resolver, ImmutableList<BuildRule> rules) {
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
@@ -752,8 +749,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
     /** Return the args formed by the transitive native linkable input for the given rules. */
     private ImmutableList<Arg> getLinkerArgs(
-        BuildRuleResolver resolver, ImmutableList<BuildRule> rules, Optional<Pattern> filter)
-        throws MacroException {
+        BuildRuleResolver resolver, ImmutableList<BuildRule> rules, Optional<Pattern> filter) {
       ImmutableList.Builder<Arg> args = ImmutableList.builder();
       args.addAll(StringArg.from(cxxPlatform.getLdflags()));
       if (depType == Linker.LinkableDepType.SHARED) {
@@ -769,8 +765,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
      */
     @Override
     public Arg expand(
-        BuildRuleResolver resolver, ImmutableList<BuildRule> rules, Optional<Pattern> filter)
-        throws MacroException {
+        BuildRuleResolver resolver, ImmutableList<BuildRule> rules, Optional<Pattern> filter) {
       return new ShQuoteJoinArg(getLinkerArgs(resolver, rules, filter));
     }
   }
@@ -778,7 +773,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   private static class ShQuoteJoinArg implements Arg {
     @AddToRuleKey private final ImmutableList<Arg> args;
 
-    public ShQuoteJoinArg(ImmutableList<Arg> args) {
+    ShQuoteJoinArg(ImmutableList<Arg> args) {
       this.args = args;
     }
 
@@ -792,7 +787,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
     private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
-    public CxxPlatformParseTimeDepsExpander(FlavorDomain<CxxPlatform> cxxPlatforms) {
+    CxxPlatformParseTimeDepsExpander(FlavorDomain<CxxPlatform> cxxPlatforms) {
       super(Macro.class, StringArg.of(""));
       this.cxxPlatforms = cxxPlatforms;
     }
@@ -815,7 +810,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     public final Optional<Pattern> filter;
     public final ImmutableList<BuildTarget> targets;
 
-    public FilterAndTargets(Optional<Pattern> filter, ImmutableList<BuildTarget> targets) {
+    FilterAndTargets(Optional<Pattern> filter, ImmutableList<BuildTarget> targets) {
       this.filter = filter;
       this.targets = targets;
     }
@@ -830,7 +825,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
 
     @Override
-    public String replace(MacroMatchResult input) throws MacroException {
+    public String replace(MacroMatchResult input) {
       return replace(input.getMacroInput());
     }
 
