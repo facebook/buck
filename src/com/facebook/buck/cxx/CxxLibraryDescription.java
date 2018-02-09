@@ -357,7 +357,7 @@ public class CxxLibraryDescription
     }
 
     /**
-     * Retrieve the transtiive {@link CxxPreprocessorInput} from an explicitly specified deps list.
+     * Retrieve the transitive {@link CxxPreprocessorInput} from an explicitly specified deps list.
      *
      * <p>This is used by AppleTest, which doesn't generate a CxxLibrary rule that computes this.
      */
