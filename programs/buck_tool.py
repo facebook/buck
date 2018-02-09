@@ -645,8 +645,9 @@ class BuckTool(object):
                         Resource("libjcocoa.dylib"))))
 
             if "BUCK_DEBUG_MODE" in os.environ and os.environ.get("BUCK_DEBUG_MODE") != "0":
+                suspend = "n" if os.environ.get("BUCK_DEBUG_MODE") == "2" else "y"
                 java_args.append("-agentlib:jdwp=transport=dt_socket,"
-                                 "server=y,suspend=y,quiet=y,address=8888")
+                                 "server=y,suspend=" + suspend + ",quiet=y,address=8888")
 
             if os.environ.get("BUCK_DEBUG_SOY"):
                 java_args.append("-Dbuck.soy.debug=true")
