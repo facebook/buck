@@ -50,9 +50,11 @@ import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class BuckConfigTest {
 
+  @Rule public ExpectedException thrown = ExpectedException.none();
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   /**
@@ -541,6 +543,67 @@ public class BuckConfigTest {
                         "thread_core_ratio_min_threads", "6")))
             .build();
     assertThat(buckConfig.getDefaultMaximumNumberOfThreads(10), Matchers.equalTo(6));
+  }
+
+  @Test
+  public void testTestThreadUtilizationRatioDefaultValue() {
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("build", ImmutableMap.of("threads", "10")))
+            .build();
+    assertThat(buckConfig.getNumTestThreads(), Matchers.equalTo(10));
+  }
+
+  @Test
+  public void testTestThreadUtilizationRatioRoundsUp() {
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "build", ImmutableMap.of("threads", "10"),
+                    "test", ImmutableMap.of("thread_utilization_ratio", "0.51")))
+            .build();
+    assertThat(buckConfig.getNumTestThreads(), Matchers.equalTo(6));
+  }
+
+  @Test
+  public void testTestThreadUtilizationRatioGreaterThanZero() {
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "build", ImmutableMap.of("threads", "1"),
+                    "test", ImmutableMap.of("thread_utilization_ratio", "0.00001")))
+            .build();
+    assertThat(buckConfig.getNumTestThreads(), Matchers.equalTo(1));
+  }
+
+  @Test
+  public void testTestThreadUtilizationRatioZero() {
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(Matchers.startsWith("thread_utilization_ratio must be greater than zero"));
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "build", ImmutableMap.of("threads", "1"),
+                    "test", ImmutableMap.of("thread_utilization_ratio", "0")))
+            .build();
+    buckConfig.getNumTestThreads();
+  }
+
+  @Test
+  public void testTestThreadUtilizationRatioLessThanZero() {
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(Matchers.startsWith("thread_utilization_ratio must be greater than zero"));
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "build", ImmutableMap.of("threads", "1"),
+                    "test", ImmutableMap.of("thread_utilization_ratio", "-0.00001")))
+            .build();
+    buckConfig.getNumTestThreads();
   }
 
   @Test

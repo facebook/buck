@@ -152,4 +152,20 @@ public class ExternalTestRunnerIntegrationTest {
     result.assertSuccess();
     assertThat(result.getStdout().trim(), is(equalTo("13")));
   }
+
+  @Test
+  public void numberOfJobsWithUtilizationRatioAppliedIsPassedToExternalRunner() throws IOException {
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "-c",
+            "test.external_runner=" + workspace.getPath("test_runner_echo_jobs.py"),
+            "-c",
+            "test.thread_utilization_ratio=0.5",
+            "//:pass",
+            "-j",
+            "13");
+    result.assertSuccess();
+    assertThat(result.getStdout().trim(), is(equalTo("7")));
+  }
 }

@@ -253,7 +253,7 @@ public class TestCommand extends BuildCommand {
     if (isDebugEnabled()) {
       return 1;
     }
-    return buckConfig.getNumThreads();
+    return buckConfig.getNumTestThreads();
   }
 
   public int getNumTestManagedThreads(ResourcesConfig resourcesConfig) {
@@ -295,6 +295,16 @@ public class TestCommand extends BuildCommand {
     return builder.build();
   }
 
+  private ConcurrencyLimit getTestConcurrencyLimit(CommandRunnerParams params) {
+    ResourcesConfig resourcesConfig = params.getBuckConfig().getView(ResourcesConfig.class);
+    return new ConcurrencyLimit(
+        getNumTestThreads(params.getBuckConfig()),
+        resourcesConfig.getResourceAllocationFairness(),
+        getNumTestManagedThreads(resourcesConfig),
+        resourcesConfig.getDefaultResourceAmounts(),
+        resourcesConfig.getMaximumResourceAmounts());
+  }
+
   private ExitCode runTestsInternal(
       CommandRunnerParams params,
       BuildEngine buildEngine,
@@ -308,15 +318,8 @@ public class TestCommand extends BuildCommand {
           "unexpected arguments after \"--\" when using internal runner");
     }
 
-    ResourcesConfig resourcesConfig = params.getBuckConfig().getView(ResourcesConfig.class);
-    ConcurrencyLimit concurrencyLimit =
-        new ConcurrencyLimit(
-            getNumTestThreads(params.getBuckConfig()),
-            resourcesConfig.getResourceAllocationFairness(),
-            getNumTestManagedThreads(resourcesConfig),
-            resourcesConfig.getDefaultResourceAmounts(),
-            resourcesConfig.getMaximumResourceAmounts());
-    try (CommandThreadManager testPool = new CommandThreadManager("Test-Run", concurrencyLimit)) {
+    try (CommandThreadManager testPool =
+        new CommandThreadManager("Test-Run", getTestConcurrencyLimit(params))) {
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(build.getRuleResolver());
       int exitCodeInt =
           TestRunning.runTests(
@@ -410,8 +413,7 @@ public class TestCommand extends BuildCommand {
             .addAllCommand(withDashArguments)
             .setEnvironment(params.getEnvironment())
             .addCommand("--buck-test-info", infoFile.toString())
-            .addCommand(
-                "--jobs", String.valueOf(getConcurrencyLimit(params.getBuckConfig()).threadLimit))
+            .addCommand("--jobs", String.valueOf(getTestConcurrencyLimit(params).threadLimit))
             .setDirectory(params.getCell().getFilesystem().getRootPath())
             .build();
     ForwardingProcessListener processListener =

@@ -3510,6 +3510,17 @@ your <code>.buckjavaargs</code> file</a>:
 
 {call buckconfig.entry}
   {param section: 'test' /}
+  {param name: 'thread_utilization_ratio' /}
+  {param example_value: '0.5' /}
+  {param description}
+    Sets the maximum number of threads to use for testing as a ratio of the number of threads
+    used for building. By default(<code>1.0</code>), buck uses runs tests on all threads that
+    were used for building.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'test' /}
   {param name: 'parallel_external_test_spec_computation_enabled' /}
   {param example_value: 'false' /}
   {param description}
