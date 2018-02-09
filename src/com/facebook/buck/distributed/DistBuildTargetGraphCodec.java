@@ -129,6 +129,10 @@ public class DistBuildTargetGraphCodec {
 
     for (BuildJobStateTargetNode remoteNode : remoteTargetGraph.getNodes()) {
       Cell cell = cellLookup.apply(remoteNode.getCellIndex());
+      if (remoteNode.getCellIndex() == DistBuildCellIndexer.ROOT_CELL_INDEX) {
+        cell = cell.withCanonicalName(Optional.empty());
+      }
+
       ProjectFilesystem projectFilesystem = cell.getFilesystem();
       BuildTarget target = decodeBuildTarget(remoteNode.getBuildTarget(), cell);
       if (topLevelTargets.contains(target.getFullyQualifiedName())) {
