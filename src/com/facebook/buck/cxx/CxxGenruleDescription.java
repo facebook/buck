@@ -61,7 +61,6 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.args.ToolArg;
 import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
-import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroExpander;
@@ -200,7 +199,6 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     ImmutableMap.Builder<String, MacroExpander> macros = ImmutableMap.builder();
     macros.put("exe", new ExecutableMacroExpander());
     macros.put("location", new LocationMacroExpander());
-    macros.put("location-platform", new LocationMacroExpander());
     macros.put("platform-name", new StringExpander<>(Macro.class, StringArg.of("")));
     macros.put("cc", new CxxPlatformParseTimeDepsExpander(cxxPlatforms));
     macros.put("cxx", new CxxPlatformParseTimeDepsExpander(cxxPlatforms));
@@ -241,15 +239,6 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     macros.put(
         "platform-name",
         new StringExpander<>(Macro.class, StringArg.of(cxxPlatform.getFlavor().toString())));
-    macros.put(
-        "location-platform",
-        new LocationMacroExpander() {
-          @Override
-          protected BuildRule resolve(BuildRuleResolver resolver, LocationMacro input) {
-            return resolver.requireRule(
-                input.getTarget().withAppendedFlavors(cxxPlatform.getFlavor()));
-          }
-        });
     macros.put("cc", new ToolExpander(cxxPlatform.getCc().resolve(resolver)));
     macros.put("cxx", new ToolExpander(cxxPlatform.getCxx().resolve(resolver)));
 
@@ -343,7 +332,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
     ImmutableMap.Builder<String, MacroReplacer<String>> macros = ImmutableMap.builder();
 
-    ImmutableList.of("exe", "location", "location-platform", "cppflags", "cxxppflags", "solibs")
+    ImmutableList.of("exe", "location", "cppflags", "cxxppflags", "solibs")
         .forEach(
             name ->
                 macros.put(
