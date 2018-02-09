@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.UserFlavor;
+import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -30,7 +31,10 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.ProxyArg;
 import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
+import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacrosArg;
@@ -49,12 +53,33 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class JsUtil {
   private static final ImmutableList<AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro>>
-      MACRO_EXPANDERS = ImmutableList.of(new LocationMacroExpander());
+      MACRO_EXPANDERS =
+          ImmutableList.of(
+              /**
+               * Expands JSON with macros, escaping macro values for interpolation into quoted
+               * strings.
+               */
+              new LocationMacroExpander() {
+                @Override
+                protected Arg expand(
+                    SourcePathResolver resolver, LocationMacro macro, BuildRule rule)
+                    throws MacroException {
+                  return new ProxyArg(super.expand(resolver, macro, rule)) {
+                    @Override
+                    public void appendToCommandLine(
+                        Consumer<String> consumer, SourcePathResolver pathResolver) {
+                      super.appendToCommandLine(
+                          s -> consumer.accept(escapeJsonForStringEmbedding(s)), pathResolver);
+                    }
+                  };
+                }
+              });
   private static final int[] outputEscapes = CharTypes.get7BitOutputEscapes();
 
   private JsUtil() {}
@@ -143,7 +168,7 @@ public class JsUtil {
    * Wraps the {@link com.facebook.buck.rules.macros.StringWithMacros} coming from {@link
    * HasExtraJson} so that it can be added to rule keys and expanded easily.
    */
-  public static Optional<StringWithMacrosArg> getExtraJson(
+  public static Optional<Arg> getExtraJson(
       HasExtraJson args,
       BuildTarget target,
       BuildRuleResolver resolver,
@@ -158,11 +183,6 @@ public class JsUtil {
                     target,
                     cellRoots,
                     resolver));
-  }
-
-  /** Expands JSON with macros, escaping macro values for interpolation into quoted strings. */
-  public static String expandJsonWithMacros(StringWithMacrosArg jsonStringWithMacros) {
-    return jsonStringWithMacros.expand(JsUtil::escapeJsonForStringEmbedding);
   }
 
   /** @return The input with all special JSON characters escaped, but not wrapped in quotes. */
