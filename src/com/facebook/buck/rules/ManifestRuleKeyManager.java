@@ -160,7 +160,10 @@ public class ManifestRuleKeyManager {
     resultBuilder.setStoreFuture(
         MoreFutures.addListenableCallback(
             cache.store(
-                ArtifactInfo.builder().addRuleKeys(manifestKey.getRuleKey()).build(),
+                ArtifactInfo.builder()
+                    .addRuleKeys(manifestKey.getRuleKey())
+                    .setManifest(true)
+                    .build(),
                 BorrowablePath.borrowablePath(tempFile)),
             MoreFutures.finallyCallback(
                 () -> {
