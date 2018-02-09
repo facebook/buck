@@ -602,12 +602,14 @@ public final class Main {
     console = makeCustomConsole(context, verbosity, buckConfig);
 
     DistBuildConfig distBuildConfig = new DistBuildConfig(buckConfig);
+    boolean isUsingDistributedBuild = false;
 
     // Automatically use distributed build for supported repositories and users.
     Optional<String> autoDistBuildMessage = Optional.empty();
     if (command.subcommand != null && command.subcommand instanceof BuildCommand) {
       BuildCommand subcommand = (BuildCommand) command.subcommand;
       if (!subcommand.isUseDistributedBuild() && distBuildConfig.shouldUseDistributedBuild()) {
+        isUsingDistributedBuild = true;
         subcommand.setUseDistributedBuild(true);
         autoDistBuildMessage = distBuildConfig.getAutoDistributedBuildMessage();
       }
@@ -615,9 +617,9 @@ public final class Main {
 
     // Switch to async file logging, if configured. A few log samples will have already gone
     // via the regular file logger, but that's OK.
-    boolean isDistributedBuild =
+    boolean isDistBuildCommand =
         command.subcommand != null && command.subcommand instanceof DistBuildCommand;
-    if (isDistributedBuild) {
+    if (isDistBuildCommand) {
       LogConfig.setUseAsyncFileLogging(distBuildConfig.isAsyncLoggingEnabled());
     }
 
@@ -827,7 +829,7 @@ public final class Main {
             CloseableWrapper<ListeningExecutorService, InterruptedException>
                 httpWriteExecutorService =
                     getExecutorWrapper(
-                        getHttpWriteExecutorService(cacheBuckConfig, isDistributedBuild),
+                        getHttpWriteExecutorService(cacheBuckConfig, isUsingDistributedBuild),
                         "HTTP Write",
                         cacheBuckConfig.getHttpWriterShutdownTimeout());
             CloseableWrapper<ListeningExecutorService, InterruptedException>
@@ -1435,8 +1437,8 @@ public final class Main {
   }
 
   private static ListeningExecutorService getHttpWriteExecutorService(
-      ArtifactCacheBuckConfig buckConfig, boolean isDistributedBuild) {
-    if (isDistributedBuild || buckConfig.hasAtLeastOneWriteableCache()) {
+      ArtifactCacheBuckConfig buckConfig, boolean isUsingDistributedBuild) {
+    if (isUsingDistributedBuild || buckConfig.hasAtLeastOneWriteableCache()) {
       // Distributed builds need to upload from the local cache to the remote cache.
       ExecutorService executorService =
           MostExecutors.newMultiThreadExecutor(
