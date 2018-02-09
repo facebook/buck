@@ -1208,6 +1208,11 @@ public class ProjectGenerator {
 
     extraSettingsBuilder.putAll(swiftDepsSettingsBuilder.build());
 
+    setAppIconSettings(
+        recursiveAssetCatalogs, directAssetCatalogs, buildTarget, defaultSettingsBuilder);
+    setLaunchImageSettings(
+        recursiveAssetCatalogs, directAssetCatalogs, buildTarget, defaultSettingsBuilder);
+
     ImmutableSortedMap<Path, SourcePath> publicCxxHeaders = getPublicCxxHeaders(targetNode);
     if (isModularAppleLibrary(targetNode) && isFrameworkProductType(productType)) {
       // Modular frameworks should not include Buck-generated hmaps as they break the VFS overlay
@@ -1601,6 +1606,46 @@ public class ProjectGenerator {
     }
 
     return target;
+  }
+
+  private void setAppIconSettings(
+      ImmutableSet<AppleAssetCatalogDescriptionArg> recursiveAssetCatalogs,
+      ImmutableSet<AppleAssetCatalogDescriptionArg> directAssetCatalogs,
+      BuildTarget buildTarget,
+      ImmutableMap.Builder<String, String> defaultSettingsBuilder) {
+    ImmutableList<String> appIcon =
+        Stream.concat(directAssetCatalogs.stream(), recursiveAssetCatalogs.stream())
+            .map(x -> x.getAppIcon())
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(ImmutableList.toImmutableList());
+    if (appIcon.size() > 1) {
+      throw new HumanReadableException(
+          "At most one asset catalog in the dependencies of %s " + "can have a app_icon",
+          buildTarget);
+    } else if (appIcon.size() == 1) {
+      defaultSettingsBuilder.put("ASSETCATALOG_COMPILER_APPICON_NAME", appIcon.get(0));
+    }
+  }
+
+  private void setLaunchImageSettings(
+      ImmutableSet<AppleAssetCatalogDescriptionArg> recursiveAssetCatalogs,
+      ImmutableSet<AppleAssetCatalogDescriptionArg> directAssetCatalogs,
+      BuildTarget buildTarget,
+      ImmutableMap.Builder<String, String> defaultSettingsBuilder) {
+    ImmutableList<String> launchImage =
+        Stream.concat(directAssetCatalogs.stream(), recursiveAssetCatalogs.stream())
+            .map(x -> x.getLaunchImage())
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(ImmutableList.toImmutableList());
+    if (launchImage.size() > 1) {
+      throw new HumanReadableException(
+          "At most one asset catalog in the dependencies of %s " + "can have a launch_image",
+          buildTarget);
+    } else if (launchImage.size() == 1) {
+      defaultSettingsBuilder.put("ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME", launchImage.get(0));
+    }
   }
 
   private boolean shouldEmbedSwiftRuntimeInBundleTarget(
