@@ -18,25 +18,26 @@ package com.facebook.buck.rules.args;
 
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
 import java.util.function.Consumer;
+import org.immutables.value.Value;
 
 /**
  * CompositeArg holds a list of args and appends them all to the command-line. It does not add any
  * separator between the args, so if that's necessary it should be added via StringArgs in the list
  * of Args.
  */
-public class CompositeArg implements Arg {
-  @AddToRuleKey private final ImmutableList<Arg> args;
-
-  public CompositeArg(ImmutableList<Arg> args) {
-    this.args = args;
-  }
+@Value.Immutable
+@BuckStyleTuple
+abstract class AbstractCompositeArg implements Arg {
+  @AddToRuleKey
+  abstract ImmutableList<Arg> getArgs();
 
   @Override
   public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
     StringBuilder builder = new StringBuilder();
-    args.forEach(arg -> arg.appendToCommandLine(builder::append, pathResolver));
+    getArgs().forEach(arg -> arg.appendToCommandLine(builder::append, pathResolver));
     consumer.accept(builder.toString());
   }
 }
