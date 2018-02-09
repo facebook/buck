@@ -29,6 +29,7 @@ buck_module(
         "//test/com/facebook/buck/zip/rules:rules",
     ],
     visibility = [
+        "//test/com/facebook/buck/cli:cli",
         "//test/com/facebook/buck/ide/intellij:intellij",
         "//test/com/facebook/buck/zip/rules:rules",
     ],
