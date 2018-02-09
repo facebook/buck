@@ -16,7 +16,21 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.TargetTranslatable;
+import java.util.Optional;
 
 /** Base class for strongly typed macros. */
-public interface Macro extends TargetTranslatable<Macro> {}
+public interface Macro extends TargetTranslatable<Macro> {
+
+  @Override
+  default Optional<Macro> translateTargets(
+      CellPathResolver cellPathResolver,
+      BuildTargetPatternParser<BuildTargetPattern> pattern,
+      TargetNodeTranslator translator) {
+    return Optional.empty();
+  }
+}

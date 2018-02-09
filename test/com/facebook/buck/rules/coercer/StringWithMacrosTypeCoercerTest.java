@@ -20,19 +20,15 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.versions.TargetNodeTranslator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -145,14 +141,6 @@ public class StringWithMacrosTypeCoercerTest {
     @Override
     public int hashCode() {
       return args.hashCode();
-    }
-
-    @Override
-    public Optional<Macro> translateTargets(
-        CellPathResolver cellPathResolver,
-        BuildTargetPatternParser<BuildTargetPattern> pattern,
-        TargetNodeTranslator translator) {
-      return Optional.empty();
     }
   }
 
