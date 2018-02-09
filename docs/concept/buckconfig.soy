@@ -3072,6 +3072,16 @@ your <code>.buckjavaargs</code> file</a>:
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'project' /}
+  {param name: 'motd' /}
+  {param example_value: '"DO NOT BREAK THE BUILD"' /}
+  {param description}
+    A plain text message that will be printed first when a user interacts with buck. This supports
+    simple special characters like newlines (\n).
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'python' /}
   {param description}
