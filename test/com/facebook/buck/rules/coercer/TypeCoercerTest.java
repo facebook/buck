@@ -33,6 +33,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -54,6 +55,7 @@ import java.util.Optional;
 import java.util.Set;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
+import org.immutables.value.Value;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -631,6 +633,81 @@ public class TypeCoercerTest {
     ImmutableList<String> expected = ImmutableList.of("foo", "bar");
 
     assertEquals(expected, result);
+  }
+
+  @Test
+  public void canCoerceImmutableType() throws Exception {
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(SomeImmutable.class);
+    ImmutableMap<String, Object> map =
+        ImmutableMap.of(
+            "another_immutable",
+            ImmutableMap.of(
+                "set_optional", "green",
+                "required", "black",
+                "default1", "white",
+                "default2", "red"));
+    Object result = coercer.coerce(cellRoots, filesystem, Paths.get(""), map);
+
+    SomeImmutable expected =
+        SomeImmutable.builder()
+            .setAnotherImmutable(
+                AnotherImmutable.builder()
+                    .setInterfaceDefault("blue")
+                    .setSetOptional("green")
+                    .setRequired("black")
+                    .setDefault1("white")
+                    .build())
+            .build();
+    assertEquals(expected, result);
+  }
+
+  @Test
+  public void cantCoerceImmutableType() throws Exception {
+    exception.expectMessage("another_immutable");
+    exception.expect(CoerceFailedException.class);
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(SomeImmutable.class);
+    ImmutableMap<String, Object> map = ImmutableMap.of("wrong_key", ImmutableMap.of());
+    coercer.coerce(cellRoots, filesystem, Paths.get(""), map);
+  }
+
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractSomeImmutable {
+    AnotherImmutable getAnotherImmutable();
+  }
+
+  interface AnotherImmutableInterface {
+    Optional<String> getInterfaceOptional();
+
+    @Value.Default
+    default String getInterfaceDefault() {
+      return "blue";
+    }
+  }
+
+  @BuckStyleImmutable
+  @Value.Immutable
+  abstract static class AbstractAnotherImmutable implements AnotherImmutableInterface {
+    abstract Optional<String> getSetOptional();
+
+    abstract Optional<String> getUnsetOptional();
+
+    abstract String getRequired();
+
+    @Value.Default
+    String getDefault1() {
+      return "purple";
+    }
+
+    @Value.Default
+    String getDefault2() {
+      return "red";
+    }
+
+    @Value.Default
+    String getDefault3() {
+      return "yellow";
+    }
   }
 
   @SuppressFieldNotInitialized

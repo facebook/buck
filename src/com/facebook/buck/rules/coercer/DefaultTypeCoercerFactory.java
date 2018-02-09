@@ -36,6 +36,8 @@ import com.facebook.buck.rules.macros.QueryTargetsAndOutputsMacro;
 import com.facebook.buck.rules.macros.QueryTargetsMacro;
 import com.facebook.buck.rules.macros.WorkerMacro;
 import com.facebook.buck.rules.query.Query;
+import com.facebook.buck.util.Types;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
@@ -213,6 +215,14 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
             throw new IllegalArgumentException("multiple coercers matched for type: " + type);
           }
         }
+      }
+      if (selectedTypeCoercer == null
+          && Types.getSupertypes(rawClass)
+              .stream()
+              .anyMatch(c -> c.getAnnotation(BuckStyleImmutable.class) != null)) {
+        selectedTypeCoercer =
+            new ImmutableTypeCoercer<>(
+                rawClass, CoercedTypeCache.INSTANCE.getAllParamInfo(this, rawClass).values());
       }
       if (selectedTypeCoercer != null) {
         return selectedTypeCoercer;

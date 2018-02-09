@@ -136,6 +136,10 @@ public class ParamInfo implements Comparable<ParamInfo> {
     return name;
   }
 
+  public TypeCoercer<?> getTypeCoercer() {
+    return typeCoercer;
+  }
+
   public boolean isOptional() {
     return this.isOptional.get();
   }
