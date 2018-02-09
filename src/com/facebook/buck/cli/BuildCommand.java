@@ -30,6 +30,7 @@ import com.facebook.buck.command.Build;
 import com.facebook.buck.command.LocalBuildExecutor;
 import com.facebook.buck.command.LocalBuildExecutorInvoker;
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.distributed.AnalysisResults;
 import com.facebook.buck.distributed.BuckVersionUtil;
 import com.facebook.buck.distributed.BuildJobStateSerializer;
 import com.facebook.buck.distributed.ClientStatsTracker;
@@ -41,6 +42,7 @@ import com.facebook.buck.distributed.DistBuildPostBuildAnalysis;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
+import com.facebook.buck.distributed.RuleKeyNameAndType;
 import com.facebook.buck.distributed.build_client.DistBuildControllerArgs;
 import com.facebook.buck.distributed.build_client.DistBuildControllerInvocationArgs;
 import com.facebook.buck.distributed.build_client.LogStateTracker;
@@ -773,6 +775,12 @@ public class BuildCommand extends AbstractCommand {
       throws IOException, InterruptedException {
     Preconditions.checkNotNull(distBuildClientEventListener);
 
+    Preconditions.checkArgument(
+        (distBuildConfig.getPerformRuleKeyConsistencyCheck()
+                && distBuildConfig.getLogMaterializationEnabled())
+            || !distBuildConfig.getPerformRuleKeyConsistencyCheck(),
+        "Log materialization must be enabled to perform rule key consistency check.");
+
     if (distributedBuildStateFile == null
         && distBuildConfig.getBuildMode().equals(BuildMode.DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR)
         && !distBuildConfig.getMinionQueue().isPresent()) {
@@ -959,15 +967,22 @@ public class BuildCommand extends AbstractCommand {
         LOG.error("Failed to publish distributed build client cache request event", ex);
       }
 
-      performStampedePostBuildAnalysis(
-          params,
-          distBuildConfig,
-          filesystem,
-          distBuildClientStats,
-          stampedeId,
-          distributedBuildExitCode,
-          localExitCode,
-          distBuildLogStateTracker);
+      boolean ruleKeyConsistencyChecksPassedOrSkipped =
+          performStampedePostBuildAnalysisAndRuleKeyConsistencyChecks(
+              params,
+              distBuildConfig,
+              filesystem,
+              distBuildClientStats,
+              stampedeId,
+              distributedBuildExitCode,
+              localExitCode,
+              distBuildLogStateTracker);
+
+      int finalExitCode = localExitCode;
+      if (!ruleKeyConsistencyChecksPassedOrSkipped) {
+        finalExitCode =
+            com.facebook.buck.distributed.ExitCode.RULE_KEY_CONSISTENCY_CHECK_FAILED.getCode();
+      }
 
       // Post distributed build phase starts POST_DISTRIBUTED_BUILD_LOCAL_STEPS counter internally.
       if (distributedBuildExitCode == 0) {
@@ -980,7 +995,7 @@ public class BuildCommand extends AbstractCommand {
             .post(new DistBuildClientStatsEvent(distBuildClientStats.generateStats()));
       }
 
-      return ExitCode.map(localExitCode);
+      return ExitCode.map(finalExitCode);
     }
   }
 
@@ -995,7 +1010,7 @@ public class BuildCommand extends AbstractCommand {
     }
   }
 
-  private void performStampedePostBuildAnalysis(
+  private boolean performStampedePostBuildAnalysisAndRuleKeyConsistencyChecks(
       CommandRunnerParams params,
       DistBuildConfig distBuildConfig,
       ProjectFilesystem filesystem,
@@ -1019,8 +1034,13 @@ public class BuildCommand extends AbstractCommand {
               distBuildLogStateTracker.getBuildSlaveLogsMaterializer().getMaterializedRunIds(),
               DistBuildCommand.class.getSimpleName().toLowerCase());
 
-      Path analysisSummaryFile =
-          postBuildAnalysis.dumpResultsToLogFile(postBuildAnalysis.runAnalysis());
+      LOG.info("Created DistBuildPostBuildAnalysis");
+      AnalysisResults results = postBuildAnalysis.runAnalysis();
+      Path analysisSummaryFile = postBuildAnalysis.dumpResultsToLogFile(results);
+
+      distBuildClientStats.stopTimer(POST_BUILD_ANALYSIS);
+
+      LOG.info(String.format("Dumped DistBuildPostBuildAnalysis to [%s]", analysisSummaryFile));
       Path relativePathToSummaryFile = filesystem.getRootPath().relativize(analysisSummaryFile);
       params
           .getBuckEventBus()
@@ -1028,8 +1048,33 @@ public class BuildCommand extends AbstractCommand {
               ConsoleEvent.warning(
                   "Details of distributed build analysis: %s",
                   relativePathToSummaryFile.toString()));
-      distBuildClientStats.stopTimer(POST_BUILD_ANALYSIS);
+
+      LOG.info(
+          "Number of mismatching default rule keys: " + results.numMismatchingDefaultRuleKeys());
+      if (distBuildConfig.getPerformRuleKeyConsistencyCheck()
+          && results.numMismatchingDefaultRuleKeys() > 0) {
+        params
+            .getBuckEventBus()
+            .post(
+                ConsoleEvent.severe(
+                    "*** [%d] default rule keys mismatched between client and server. *** \nMismatching rule keys:",
+                    results.numMismatchingDefaultRuleKeys()));
+
+        for (RuleKeyNameAndType ruleKeyNameAndType :
+            postBuildAnalysis.getMismatchingDefaultRuleKeys(results)) {
+          params
+              .getBuckEventBus()
+              .post(
+                  ConsoleEvent.severe(
+                      "%s [%s]",
+                      ruleKeyNameAndType.getRuleName(), ruleKeyNameAndType.getRuleType()));
+        }
+
+        return false; // Rule keys were not consistent
+      }
     }
+
+    return true; // Rule keys were consistent, or test was skipped.
   }
 
   private BuckVersion getBuckVersion() throws IOException {

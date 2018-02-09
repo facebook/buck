@@ -60,7 +60,10 @@ public enum ExitCode {
   DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION(205),
 
   /** Distributed build failed because of a remote issue (e.g. minion died) */
-  DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE(206);
+  DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE(206),
+
+  /** Signals that rule keys were inconsistent between Stampede client and servers */
+  RULE_KEY_CONSISTENCY_CHECK_FAILED(301);
 
   private final int code;
 

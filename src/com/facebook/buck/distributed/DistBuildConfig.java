@@ -83,6 +83,10 @@ public class DistBuildConfig {
   private static final String LOG_MATERIALIZATION_ENABLED = "log_materialization_enabled";
   private static final boolean DEFAULT_LOG_MATERIALIZATION_ENABLED = false;
 
+  private static final String PERFORM_RULE_KEY_CONSISTENCY_CHECK =
+      "perform_rule_key_consistency_check";
+  private static final boolean DEFAULT_PERFORM_RULE_KEY_CONSISTENCY_CHECK = false;
+
   @VisibleForTesting static final String SERVER_BUCKCONFIG_OVERRIDE = "server_buckconfig_override";
 
   private static final String FRONTEND_REQUEST_MAX_RETRIES = "frontend_request_max_retries";
@@ -261,6 +265,12 @@ public class DistBuildConfig {
     return buckConfig
         .getBoolean(STAMPEDE_SECTION, LOG_MATERIALIZATION_ENABLED)
         .orElse(DEFAULT_LOG_MATERIALIZATION_ENABLED);
+  }
+
+  public boolean getPerformRuleKeyConsistencyCheck() {
+    return buckConfig
+        .getBoolean(STAMPEDE_SECTION, PERFORM_RULE_KEY_CONSISTENCY_CHECK)
+        .orElse(DEFAULT_PERFORM_RULE_KEY_CONSISTENCY_CHECK);
   }
 
   public long getMinionPollLoopIntervalMillis() {

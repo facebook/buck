@@ -113,6 +113,12 @@ public class DistBuildRunner {
       distributedBuildExitCode.compareAndSet(
           ExitCode.DISTRIBUTED_PENDING_EXIT_CODE.getCode(), exitCode);
 
+      // If remote build succeeded, always set the code.
+      // This is important for allowing post build analysis to proceed.
+      if (exitCode == 0) {
+        distributedBuildExitCode.set(exitCode);
+      }
+
       if (distributedBuildExitCode.get()
           == ExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION.getCode()) {
         LOG.warn(
