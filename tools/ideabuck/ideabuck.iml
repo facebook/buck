@@ -19,5 +19,6 @@
     <orderEntry type="library" name="test-lib" level="project" />
     <orderEntry type="library" name="jackson-mrbean-2.7.8" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="android" level="project" />
+    <orderEntry type="library" name="gson" level="project" />
   </component>
 </module>
