@@ -291,6 +291,7 @@ public class DaemonicParserState {
   private final DaemonicRawCacheView rawNodeCache;
 
   private final int parsingThreads;
+  private final boolean shouldIgnoreEnvironmentVariablesChanges;
 
   private final LoadingCache<Cell, BuildFileTree> buildFileTrees;
 
@@ -309,8 +310,10 @@ public class DaemonicParserState {
   public DaemonicParserState(
       BroadcastEventListener broadcastEventListener,
       TypeCoercerFactory typeCoercerFactory,
-      int parsingThreads) {
+      int parsingThreads,
+      boolean shouldIgnoreEnvironmentVariablesChanges) {
     this.parsingThreads = parsingThreads;
+    this.shouldIgnoreEnvironmentVariablesChanges = shouldIgnoreEnvironmentVariablesChanges;
     this.typeCoercerFactory = typeCoercerFactory;
     this.cacheInvalidatedByEnvironmentVariableChangeCounter =
         new TagSetCounter(
@@ -596,6 +599,10 @@ public class DaemonicParserState {
     try (AutoCloseableLock readLock = cellStateLock.readLock()) {
       DaemonicCellState state = cellPathToDaemonicState.get(cell.getRoot());
       if (state == null) {
+        return false;
+      }
+
+      if (shouldIgnoreEnvironmentVariablesChanges) {
         return false;
       }
 

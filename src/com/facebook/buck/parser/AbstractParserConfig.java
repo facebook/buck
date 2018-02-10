@@ -249,4 +249,14 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   public boolean isWarnAboutDeprecatedSyntax() {
     return getDelegate().getBooleanValue("parser", "warn_about_deprecated_syntax", true);
   }
+
+  /**
+   * @return whether Buck should invalidate the parser state based on environment variables.
+   *     <p>WARNING: Environment variable changes won't discard the parser state. This setting
+   *     should be used with caution since it can lead to wrong parser results.
+   */
+  @Value.Lazy
+  public boolean shouldIgnoreEnvironmentVariablesChanges() {
+    return getDelegate().getBooleanValue("parser", "ignore_environment_variables_changes", false);
+  }
 }

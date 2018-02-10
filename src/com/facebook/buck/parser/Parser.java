@@ -99,7 +99,10 @@ public class Parser {
     this.typeCoercerFactory = typeCoercerFactory;
     this.permState =
         new DaemonicParserState(
-            broadcastEventListener, typeCoercerFactory, parserConfig.getNumParsingThreads());
+            broadcastEventListener,
+            typeCoercerFactory,
+            parserConfig.getNumParsingThreads(),
+            parserConfig.shouldIgnoreEnvironmentVariablesChanges());
     this.marshaller = marshaller;
     this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
     this.parserPythonInterpreterProvider =

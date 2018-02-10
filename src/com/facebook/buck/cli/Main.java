@@ -1239,6 +1239,14 @@ public final class Main {
       }
     }
 
+    ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
+    if (parserConfig.shouldIgnoreEnvironmentVariablesChanges()
+        && parserConfig.isParserCacheMutationWarningEnabled()) {
+      buildEventBus.post(
+          ConsoleEvent.warning(
+              "WARNING: Environment variable changes won't discard the parser state."));
+    }
+
     // Create or get Parser and invalidate cached command parameters.
     ParserAndCaches parserAndCaches;
     if (watchmanWatcher != null) {
@@ -1268,7 +1276,7 @@ public final class Main {
           ParserAndCaches.of(
               new Parser(
                   broadcastEventListener,
-                  rootCell.getBuckConfig().getView(ParserConfig.class),
+                  parserConfig,
                   typeCoercerFactory,
                   new ConstructorArgMarshaller(typeCoercerFactory),
                   knownBuildRuleTypesProvider,
