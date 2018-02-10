@@ -1,21 +1,10 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
-TYPES_SRCS = [
-    "AbstractClasspathMacro.java",
-    "AbstractExecutableMacro.java",
-    "AbstractLocationMacro.java",
-    "AbstractMavenCoordinatesMacro.java",
-    "AbstractOutputMacro.java",
-    "AbstractQueryOutputsMacro.java",
-    "AbstractQueryPathsMacro.java",
-    "AbstractQueryTargetsAndOutputsMacro.java",
-    "AbstractQueryTargetsMacro.java",
-    "AbstractStringWithMacros.java",
-    "AbstractWorkerMacro.java",
-    "BuildTargetMacro.java",
-    "Macro.java",
-    "QueryMacro.java",
-]
+TYPES_SRCS = (
+    glob(["*Macro.java"]) + [
+        "AbstractStringWithMacros.java",
+    ]
+)
 
 java_immutables_library(
     name = "types",

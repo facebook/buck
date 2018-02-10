@@ -62,11 +62,26 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.args.ToolArg;
 import com.facebook.buck.rules.macros.AbstractMacroExpander;
 import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
+import com.facebook.buck.rules.macros.CcFlagsMacro;
+import com.facebook.buck.rules.macros.CcMacro;
+import com.facebook.buck.rules.macros.CppFlagsMacro;
+import com.facebook.buck.rules.macros.CxxFlagsMacro;
+import com.facebook.buck.rules.macros.CxxGenruleFilterAndTargetsMacro;
+import com.facebook.buck.rules.macros.CxxMacro;
+import com.facebook.buck.rules.macros.CxxppFlagsMacro;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
+import com.facebook.buck.rules.macros.LdMacro;
+import com.facebook.buck.rules.macros.LdflagsSharedFilterMacro;
+import com.facebook.buck.rules.macros.LdflagsSharedMacro;
+import com.facebook.buck.rules.macros.LdflagsStaticFilterMacro;
+import com.facebook.buck.rules.macros.LdflagsStaticMacro;
+import com.facebook.buck.rules.macros.LdflagsStaticPicFilterMacro;
+import com.facebook.buck.rules.macros.LdflagsStaticPicMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.rules.macros.PlatformNameMacro;
 import com.facebook.buck.rules.macros.SimpleMacroExpander;
 import com.facebook.buck.rules.macros.StringExpander;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
@@ -77,7 +92,6 @@ import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.TargetTranslatorOverridingDescription;
@@ -272,18 +286,27 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         new CxxPreprocessorFlagsExpander<>(CxxppFlagsMacro.class, cxxPlatform, CxxSource.Type.CXX));
     macros.put("ld", new ToolExpander<>(LdMacro.class, cxxPlatform.getLd().resolve(resolver)));
 
-    for (Map.Entry<Class<? extends FilterAndTargets>, Pair<LinkableDepType, Filter>> ent :
-        ImmutableMap.<Class<? extends FilterAndTargets>, Pair<LinkableDepType, Filter>>builder()
-            .put(LdflagsSharedMacro.class, new Pair<>(LinkableDepType.SHARED, Filter.NONE))
-            .put(LdflagsSharedFilterMacro.class, new Pair<>(LinkableDepType.SHARED, Filter.PARAM))
-            .put(LdflagsStaticMacro.class, new Pair<>(LinkableDepType.STATIC, Filter.NONE))
-            .put(LdflagsStaticFilterMacro.class, new Pair<>(LinkableDepType.STATIC, Filter.PARAM))
-            .put(LdflagsStaticPicMacro.class, new Pair<>(LinkableDepType.STATIC_PIC, Filter.NONE))
-            .put(
-                LdflagsStaticPicFilterMacro.class,
-                new Pair<>(LinkableDepType.STATIC_PIC, Filter.PARAM))
-            .build()
-            .entrySet()) {
+    for (Map.Entry<Class<? extends CxxGenruleFilterAndTargetsMacro>, Pair<LinkableDepType, Filter>>
+        ent :
+            ImmutableMap
+                .<Class<? extends CxxGenruleFilterAndTargetsMacro>, Pair<LinkableDepType, Filter>>
+                    builder()
+                .put(LdflagsSharedMacro.class, new Pair<>(LinkableDepType.SHARED, Filter.NONE))
+                .put(
+                    LdflagsSharedFilterMacro.class,
+                    new Pair<>(LinkableDepType.SHARED, Filter.PARAM))
+                .put(LdflagsStaticMacro.class, new Pair<>(LinkableDepType.STATIC, Filter.NONE))
+                .put(
+                    LdflagsStaticFilterMacro.class,
+                    new Pair<>(LinkableDepType.STATIC, Filter.PARAM))
+                .put(
+                    LdflagsStaticPicMacro.class,
+                    new Pair<>(LinkableDepType.STATIC_PIC, Filter.NONE))
+                .put(
+                    LdflagsStaticPicFilterMacro.class,
+                    new Pair<>(LinkableDepType.STATIC_PIC, Filter.PARAM))
+                .build()
+                .entrySet()) {
       macros.put(
           CaseFormat.UPPER_CAMEL.to(
               CaseFormat.LOWER_HYPHEN, ent.getKey().getSimpleName().replace("Macro", "")),
@@ -495,7 +518,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
   }
 
-  private abstract static class FilterAndTargetsExpander<M extends FilterAndTargets>
+  private abstract static class FilterAndTargetsExpander<M extends CxxGenruleFilterAndTargetsMacro>
       extends AbstractMacroExpanderWithoutPrecomputedWork<M> {
 
     private final Filter filter;
@@ -506,7 +529,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
     /** @return an instance of the subclass represented by T. */
     @SuppressWarnings("unchecked")
-    public <T extends FilterAndTargets> T create(
+    public <T extends CxxGenruleFilterAndTargetsMacro> T create(
         Class<T> clazz, Optional<Pattern> filter, ImmutableList<BuildTarget> targets) {
       try {
         return (T)
@@ -581,7 +604,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
    * A build target expander that replaces lists of build target with their transitive preprocessor
    * input.
    */
-  private static class CxxPreprocessorFlagsExpander<M extends FilterAndTargets>
+  private static class CxxPreprocessorFlagsExpander<M extends CxxGenruleFilterAndTargetsMacro>
       extends FilterAndTargetsExpander<M> {
     private final Class<M> clazz;
     private final CxxPlatform cxxPlatform;
@@ -679,7 +702,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
    * A build target expander that replaces lists of build target with their transitive preprocessor
    * input.
    */
-  private static class CxxLinkerFlagsExpander<M extends FilterAndTargets>
+  private static class CxxLinkerFlagsExpander<M extends CxxGenruleFilterAndTargetsMacro>
       extends FilterAndTargetsExpander<M> {
 
     private final Class<M> clazz;
@@ -843,95 +866,6 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       }
     }
   }
-
-  /** Base class for {@link CxxGenruleDescription} flags-based macros. */
-  abstract static class FilterAndTargets implements Macro {
-
-    public abstract Optional<Pattern> getFilter();
-
-    public abstract ImmutableList<BuildTarget> getTargets();
-
-    /** @return a copy of this {@link FilterAndTargets} with the given {@link BuildTarget}. */
-    abstract FilterAndTargets withTargets(Iterable<? extends BuildTarget> targets);
-
-    @Override
-    public Optional<Macro> translateTargets(
-        CellPathResolver cellPathResolver,
-        BuildTargetPatternParser<BuildTargetPattern> pattern,
-        TargetNodeTranslator translator) {
-      return translator.translate(cellPathResolver, pattern, getTargets()).map(this::withTargets);
-    }
-  }
-
-  /** <code>$(platform-name)</code> macro type. */
-  @Value.Immutable
-  @BuckStyleTuple
-  interface AbstractPlatformNameMacro extends Macro {}
-
-  /** <code>$(cc)</code> macro type. */
-  @Value.Immutable
-  @BuckStyleTuple
-  interface AbstractCcMacro extends Macro {}
-
-  /** <code>$(cflags)</code> macro type. */
-  @Value.Immutable
-  @BuckStyleTuple
-  interface AbstractCcFlagsMacro extends Macro {}
-
-  /** <code>$(cppflags ...)</code> macro type. */
-  @Value.Immutable
-  @BuckStyleTuple
-  abstract static class AbstractCppFlagsMacro extends FilterAndTargets {}
-
-  /** <code>$(cxx)</code> macro type. */
-  @Value.Immutable
-  @BuckStyleTuple
-  interface AbstractCxxMacro extends Macro {}
-
-  /** <code>$(cxxflags)</code> macro type. */
-  @Value.Immutable
-  @BuckStyleTuple
-  interface AbstractCxxFlagsMacro extends Macro {}
-
-  /** <code>$(cxxppflags ...)</code> macro type. */
-  @Value.Immutable
-  @BuckStyleTuple
-  abstract static class AbstractCxxppFlagsMacro extends FilterAndTargets {}
-
-  /** <code>$(ld)</code> macro type. */
-  @Value.Immutable
-  @BuckStyleTuple
-  static class AbstractLdMacro implements Macro {}
-
-  /** <code>$(ldflags-shared ...)</code> macro type. */
-  @Value.Immutable
-  @BuckStyleTuple
-  abstract static class AbstractLdflagsSharedMacro extends FilterAndTargets {}
-
-  /** <code>$(ldflags-shared-filter ...)</code> macro type. */
-  @Value.Immutable
-  @BuckStyleTuple
-  abstract static class AbstractLdflagsSharedFilterMacro extends FilterAndTargets {}
-
-  /** <code>$(ldflags-static ...)</code> macro type. */
-  @Value.Immutable
-  @BuckStyleTuple
-  abstract static class AbstractLdflagsStaticMacro extends FilterAndTargets {}
-
-  /** <code>$(ldflags-static-filter ...)</code> macro type. */
-  @Value.Immutable
-  @BuckStyleTuple
-  abstract static class AbstractLdflagsStaticFilterMacro extends FilterAndTargets {}
-
-  /** <code>$(ldflags-static-pic ...)</code> macro type. */
-  @Value.Immutable
-  @BuckStyleTuple
-  abstract static class AbstractLdflagsStaticPicMacro extends FilterAndTargets {}
-
-  /** <code>$(ldflags-static-pic-filter ...)</code> macro type. */
-  @Value.Immutable
-  @BuckStyleTuple
-  abstract static class AbstractLdflagsStaticPicFilterMacro extends FilterAndTargets {}
 
   private static class AsIsMacroReplacer implements MacroReplacer<String> {
 
