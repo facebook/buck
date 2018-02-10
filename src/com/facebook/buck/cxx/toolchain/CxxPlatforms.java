@@ -85,7 +85,7 @@ public class CxxPlatforms {
       Iterable<String> ldFlags,
       Tool strip,
       final ArchiverProvider ar,
-      final ToolProvider ranlib,
+      final Optional<ToolProvider> ranlib,
       final SymbolNameTool nm,
       ImmutableList<String> asflags,
       ImmutableList<String> asppflags,
@@ -119,7 +119,7 @@ public class CxxPlatforms {
         .setLd(config.getLinkerProvider(ld.getType()).orElse(ld))
         .addAllLdflags(ldFlags)
         .setAr(config.getArchiverProvider(platform).orElse(ar))
-        .setRanlib(config.getRanlib().orElse(ranlib))
+        .setRanlib(config.getRanlib().isPresent() ? config.getRanlib() : ranlib)
         .setStrip(config.getStrip().orElse(strip))
         .setSharedLibraryExtension(sharedLibraryExtension)
         .setSharedLibraryVersionedExtensionFormat(sharedLibraryVersionedExtensionFormat)
@@ -281,7 +281,9 @@ public class CxxPlatforms {
     }
     deps.addAll(cxxPlatform.getLd().getParseTimeDeps());
     deps.addAll(cxxPlatform.getAr().getParseTimeDeps());
-    deps.addAll(cxxPlatform.getRanlib().getParseTimeDeps());
+    if (cxxPlatform.getRanlib().isPresent()) {
+      deps.addAll(cxxPlatform.getRanlib().get().getParseTimeDeps());
+    }
     cxxPlatform.getSharedLibraryInterfaceParams().ifPresent(f -> deps.addAll(f.getParseTimeDeps()));
     return deps.build();
   }

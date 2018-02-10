@@ -91,7 +91,7 @@ interface AbstractCxxPlatform extends FlavorConvertible {
 
   List<String> getArflags();
 
-  ToolProvider getRanlib();
+  Optional<ToolProvider> getRanlib();
 
   List<String> getRanlibflags();
 

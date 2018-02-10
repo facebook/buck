@@ -191,8 +191,7 @@ public class AppleCxxPlatforms {
       ldflagsBuilder.addAll(Linkers.iXlinker("-ObjC"));
     }
     if (targetSdk.getApplePlatform().equals(ApplePlatform.WATCHOS)) {
-      ldflagsBuilder.addAll(
-          Linkers.iXlinker("-bitcode_verify"));
+      ldflagsBuilder.addAll(Linkers.iXlinker("-bitcode_verify"));
     }
 
     // Populate Xcode version keys from Xcode's own Info.plist if available.
@@ -430,7 +429,7 @@ public class AppleCxxPlatforms {
             ImmutableList.<String>builder().addAll(cflags).addAll(ldflagsBuilder.build()).build(),
             strip,
             ArchiverProvider.from(new BsdArchiver(ar)),
-            new ConstantToolProvider(ranlib),
+            Optional.of(new ConstantToolProvider(ranlib)),
             new PosixNmSymbolNameTool(nm),
             cflagsBuilder.build(),
             ImmutableList.of(),
