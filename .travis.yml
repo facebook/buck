@@ -1,5 +1,6 @@
 language: android
 jdk:
+  - openjdk8
   - oraclejdk8
 env:
   - CI_ACTION=build
