@@ -61,6 +61,8 @@ import org.junit.Test;
 
 public class BuckQueryEnvironmentTest {
 
+  private static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
+
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private BuckQueryEnvironment buckQueryEnvironment;
@@ -123,7 +125,8 @@ public class BuckQueryEnvironmentTest {
             parserState,
             executor,
             targetPatternEvaluator,
-            null /* TODO */);
+            null /* TODO */,
+            TYPE_COERCER_FACTORY);
     cellRoot = workspace.getDestPath();
   }
 

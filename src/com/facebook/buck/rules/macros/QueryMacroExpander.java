@@ -29,6 +29,8 @@ import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.HumanReadableException;
@@ -44,6 +46,8 @@ import java.util.stream.Stream;
 /** Abstract base class for the query_targets and query_outputs macros */
 public abstract class QueryMacroExpander<T extends QueryMacro>
     extends AbstractMacroExpander<T, QueryMacroExpander.QueryResults> {
+
+  private static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
 
   private Optional<TargetGraph> targetGraph;
 
@@ -61,6 +65,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
         new GraphEnhancementQueryEnvironment(
             resolver,
             targetGraph,
+            TYPE_COERCER_FACTORY,
             cellNames,
             BuildTargetPatternParser.forBaseName(target.getBaseName()),
             ImmutableSet.of());
@@ -93,6 +98,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
         new GraphEnhancementQueryEnvironment(
             Optional.of(resolver),
             targetGraph,
+            TYPE_COERCER_FACTORY,
             cellNames,
             BuildTargetPatternParser.forBaseName(target.getBaseName()),
             ImmutableSet.of());

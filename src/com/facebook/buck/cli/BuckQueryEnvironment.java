@@ -46,6 +46,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.base.Functions;
@@ -89,6 +90,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   private final TargetPatternEvaluator targetPatternEvaluator;
   private final Console console;
   private final QueryEnvironment.TargetEvaluator queryTargetEvaluator;
+  private final TypeCoercerFactory typeCoercerFactory;
 
   private final ImmutableMap<Cell, BuildFileTree> buildFileTrees;
   private final Map<BuildTarget, QueryTarget> buildTargetToQueryTarget = new HashMap<>();
@@ -104,7 +106,8 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       PerBuildState parserState,
       ListeningExecutorService executor,
       TargetPatternEvaluator targetPatternEvaluator,
-      Console console) {
+      Console console,
+      TypeCoercerFactory typeCoercerFactory) {
     this.parserState = parserState;
     this.rootCell = rootCell;
     this.ownersReportBuilder = ownersReportBuilder;
@@ -122,6 +125,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     this.targetPatternEvaluator = targetPatternEvaluator;
     this.console = console;
     this.queryTargetEvaluator = new TargetEvaluator(targetPatternEvaluator, executor);
+    this.typeCoercerFactory = typeCoercerFactory;
   }
 
   public static BuckQueryEnvironment from(
@@ -130,9 +134,16 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       PerBuildState parserState,
       ListeningExecutorService executor,
       TargetPatternEvaluator targetPatternEvaluator,
-      Console console) {
+      Console console,
+      TypeCoercerFactory typeCoercerFactory) {
     return new BuckQueryEnvironment(
-        rootCell, ownersReportBuilder, parserState, executor, targetPatternEvaluator, console);
+        rootCell,
+        ownersReportBuilder,
+        parserState,
+        executor,
+        targetPatternEvaluator,
+        console,
+        typeCoercerFactory);
   }
 
   public static BuckQueryEnvironment from(
@@ -151,7 +162,8 @@ public class BuckQueryEnvironment implements QueryEnvironment {
             params.getParser(),
             params.getBuckEventBus(),
             enableProfiling),
-        params.getConsole());
+        params.getConsole(),
+        params.getTypeCoercerFactory());
   }
 
   public DirectedAcyclicGraph<TargetNode<?, ?>> getTargetGraph() {
@@ -484,14 +496,16 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   @Override
   public ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, String attribute)
       throws QueryException {
-    return QueryTargetAccessor.getTargetsInAttribute(getNode(target), attribute);
+    return QueryTargetAccessor.getTargetsInAttribute(
+        typeCoercerFactory, getNode(target), attribute);
   }
 
   @Override
   public ImmutableSet<Object> filterAttributeContents(
       QueryTarget target, String attribute, final Predicate<Object> predicate)
       throws QueryException {
-    return QueryTargetAccessor.filterAttributeContents(getNode(target), attribute, predicate);
+    return QueryTargetAccessor.filterAttributeContents(
+        typeCoercerFactory, getNode(target), attribute, predicate);
   }
 
   @Override

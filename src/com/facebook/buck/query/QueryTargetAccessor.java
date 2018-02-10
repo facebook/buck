@@ -22,7 +22,6 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
-import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
@@ -33,12 +32,10 @@ import java.util.function.Predicate;
 
 public class QueryTargetAccessor {
 
-  private static final TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-
   private QueryTargetAccessor() {}
 
   public static <T> ImmutableSet<QueryTarget> getTargetsInAttribute(
-      TargetNode<T, ?> node, String attribute) {
+      TypeCoercerFactory typeCoercerFactory, TargetNode<T, ?> node, String attribute) {
     Class<?> constructorArgClass = node.getConstructorArg().getClass();
     ParamInfo info =
         CoercedTypeCache.INSTANCE
@@ -75,7 +72,10 @@ public class QueryTargetAccessor {
 
   /** Filters the objects in the given attribute that satisfy the given predicate. */
   public static <T> ImmutableSet<Object> filterAttributeContents(
-      TargetNode<T, ?> node, String attribute, final Predicate<Object> predicate) {
+      TypeCoercerFactory typeCoercerFactory,
+      TargetNode<T, ?> node,
+      String attribute,
+      final Predicate<Object> predicate) {
     Class<?> constructorArgClass = node.getConstructorArg().getClass();
     ParamInfo info =
         CoercedTypeCache.INSTANCE
