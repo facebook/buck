@@ -2,6 +2,7 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
 TYPES_SRCS = (
     glob(["*Macro.java"]) + [
+        "AbstractMacroContainer.java",
         "AbstractStringWithMacros.java",
     ]
 )

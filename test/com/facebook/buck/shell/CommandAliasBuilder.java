@@ -29,6 +29,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.MacroContainer;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -112,6 +113,7 @@ public class CommandAliasBuilder
             values
                 .map(stringWithMacros -> stringWithMacros.getMacros())
                 .flatMap(Collection::stream))
+        .map(MacroContainer::getMacro)
         .filter(LocationMacro.class)
         .map(LocationMacro::getTarget)
         .forEach(this::addTarget);

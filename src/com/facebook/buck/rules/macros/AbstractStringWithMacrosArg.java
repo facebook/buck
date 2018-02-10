@@ -129,7 +129,7 @@ abstract class AbstractStringWithMacrosArg implements Arg, RuleKeyAppendable {
                     return s;
                   }
                 },
-                this::extractRuleKeyAppendables));
+                m -> extractRuleKeyAppendables(m.getMacro())));
   }
 
   /**
@@ -138,7 +138,7 @@ abstract class AbstractStringWithMacrosArg implements Arg, RuleKeyAppendable {
    *     values of macros.
    */
   public String expand(UnaryOperator<String> transformExpandedMacro) {
-    return getStringWithMacros().format(transformExpandedMacro.compose(this::expand));
+    return getStringWithMacros().format(transformExpandedMacro.compose(m -> expand(m.getMacro())));
   }
 
   /**
@@ -146,6 +146,6 @@ abstract class AbstractStringWithMacrosArg implements Arg, RuleKeyAppendable {
    *     com.facebook.buck.rules.macros.StringWithMacros}.
    */
   public String expand() {
-    return getStringWithMacros().format(this::expand);
+    return getStringWithMacros().format(m -> expand(m.getMacro()));
   }
 }

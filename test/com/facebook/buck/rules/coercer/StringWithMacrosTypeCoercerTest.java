@@ -24,6 +24,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.coercer.TypeCoercer.Traversal;
 import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.MacroContainer;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -115,6 +116,19 @@ public class StringWithMacrosTypeCoercerTest {
             StringWithMacrosUtils.format(
                 "first %s second %s",
                 new TestMacro(ImmutableList.of("arg1")), new TestMacro(ImmutableList.of("arg2")))));
+  }
+
+  @Test
+  public void outputToFile() throws CoerceFailedException {
+    StringWithMacrosTypeCoercer coercer =
+        StringWithMacrosTypeCoercer.from(
+            ImmutableMap.of("test", TestMacro.class), ImmutableList.of(new TestMacroTypeCoercer()));
+    assertThat(
+        coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, "string with $(@test arg) macro"),
+        Matchers.equalTo(
+            StringWithMacrosUtils.format(
+                "string with %s macro",
+                MacroContainer.of(new TestMacro(ImmutableList.of("arg")), true))));
   }
 
   private static class TestMacro implements Macro {

@@ -21,6 +21,7 @@ import com.facebook.buck.model.macros.MacroFinderAutomaton;
 import com.facebook.buck.model.macros.MacroMatchResult;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.MacroContainer;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
@@ -75,10 +76,10 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
   @Override
   public void traverse(
       CellPathResolver cellRoots, StringWithMacros stringWithMacros, Traversal traversal) {
-    for (Macro macro : stringWithMacros.getMacros()) {
+    for (MacroContainer macroContainer : stringWithMacros.getMacros()) {
       MacroTypeCoercer<? extends Macro> coercer =
-          Preconditions.checkNotNull(coercers.get(macro.getClass()));
-      traverse(cellRoots, coercer, macro, traversal);
+          Preconditions.checkNotNull(coercers.get(macroContainer.getMacro().getClass()));
+      traverse(cellRoots, coercer, macroContainer.getMacro(), traversal);
     }
   }
 
@@ -89,7 +90,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
       String blob)
       throws CoerceFailedException {
 
-    ImmutableList.Builder<Either<String, Macro>> parts = ImmutableList.builder();
+    ImmutableList.Builder<Either<String, MacroContainer>> parts = ImmutableList.builder();
 
     // Iterate over all macros found in the string, expanding each found macro.
     int lastEnd = 0;
@@ -102,9 +103,18 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
         parts.add(Either.ofLeft(blob.substring(lastEnd, matchResult.getStartIndex())));
       }
 
+      MacroContainer.Builder macroContainer = MacroContainer.builder();
+
       String macroString = blob.substring(matchResult.getStartIndex(), matchResult.getEndIndex());
-      // Look up the macro coercer that owns this macro name.
+
+      // Extract the macro name and hande the `@` prefix.
       String name = matchResult.getMacroType();
+      if (name.startsWith("@")) {
+        macroContainer.setOutputToFile(true);
+        name = name.substring(1);
+      }
+
+      // Look up the macro coercer that owns this macro name.
       Class<? extends Macro> clazz = macros.get(name);
       if (clazz == null) {
         throw new CoerceFailedException(
@@ -125,7 +135,9 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
             e);
       }
 
-      parts.add(Either.ofRight(macro));
+      macroContainer.setMacro(macro);
+
+      parts.add(Either.ofRight(macroContainer.build()));
 
       lastEnd = matchResult.getEndIndex();
     }
