@@ -20,27 +20,23 @@ import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.macros.QueryMacro;
-import com.facebook.buck.rules.macros.QueryOutputsMacro;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-public class QueryMacroTypeCoercerTest {
+public class QueryCoercerTest {
 
   @Test
-  public void coerceQueryMacroFromStringArg() throws CoerceFailedException {
-    Path basePath = Paths.get("java/com/facebook/buck/example");
+  public void traverseBuildTargets() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    QueryMacroTypeCoercer<QueryMacro> coercer =
-        new QueryMacroTypeCoercer<>(new QueryCoercer(), QueryMacro.class, QueryOutputsMacro::of);
-    QueryMacro queryMacro =
-        coercer.coerce(
-            createCellRoots(filesystem), filesystem, basePath, ImmutableList.of("some query"));
-    assertThat(queryMacro.getQuery(), Matchers.equalTo(Query.of("some query", "//" + basePath)));
+    QueryCoercer coercer = new QueryCoercer();
+    Query query = Query.of("deps(//:a)");
+    List<Object> traversed = new ArrayList<>();
+    coercer.traverse(createCellRoots(filesystem), query, traversed::add);
+    assertThat(traversed, Matchers.contains(BuildTargetFactory.newInstance("//:a")));
   }
 }

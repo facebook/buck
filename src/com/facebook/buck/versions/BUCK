@@ -67,6 +67,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/rules/query:query",
         "//src/com/facebook/buck/rules/query:types",
+        "//src/com/facebook/buck/rules/query:utils",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/cache:cache",

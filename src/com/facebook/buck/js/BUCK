@@ -32,6 +32,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/rules/macros:types",
         "//src/com/facebook/buck/rules/query:query",
         "//src/com/facebook/buck/rules/query:types",
+        "//src/com/facebook/buck/rules/query:utils",
         "//src/com/facebook/buck/rules/tool/config:config",
         "//src/com/facebook/buck/sandbox:sandbox",
         "//src/com/facebook/buck/shell:rules",

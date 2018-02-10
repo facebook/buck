@@ -117,7 +117,7 @@ public class QueryTargetsAndOutputsMacroExpander
       throw new MacroException(
           "One quoted query expression is expected, or a separator and a query");
     }
-    return QueryTargetsAndOutputsMacro.of(separator, Query.of(query));
+    return QueryTargetsAndOutputsMacro.of(separator, Query.of(query, target.getBaseName()));
   }
 
   private class QueriedTargestAndOutputsArg implements Arg {

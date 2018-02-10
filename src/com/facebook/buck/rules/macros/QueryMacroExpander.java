@@ -137,7 +137,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
     if (input.size() != 1) {
       throw new MacroException("One quoted query expression is expected");
     }
-    return fromQuery(Query.of(input.get(0)));
+    return fromQuery(Query.of(input.get(0), target.getBaseName()));
   }
 
   abstract boolean detectsTargetGraphOnlyDeps();

@@ -316,6 +316,7 @@ java_library(
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/rules/keys/config:config",
         "//src/com/facebook/buck/rules/query:query",
+        "//src/com/facebook/buck/rules/query:utils",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/test:test",

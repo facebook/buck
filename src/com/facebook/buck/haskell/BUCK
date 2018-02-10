@@ -27,6 +27,7 @@ buck_module(
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/rules/query:query",
         "//src/com/facebook/buck/rules/query:types",
+        "//src/com/facebook/buck/rules/query:utils",
         "//src/com/facebook/buck/rules/tool/config:config",
         "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/shell:steps",
