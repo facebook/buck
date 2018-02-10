@@ -45,7 +45,7 @@ public class MacroHandler {
 
   private final ImmutableMap<String, MacroExpander> expanders;
 
-  public MacroHandler(ImmutableMap<String, MacroExpander> expanders) {
+  public MacroHandler(ImmutableMap<String, ? extends MacroExpander> expanders) {
     this.expanders = addOutputToFileExpanders(expanders);
   }
 
@@ -63,9 +63,9 @@ public class MacroHandler {
   }
 
   private static ImmutableMap<String, MacroExpander> addOutputToFileExpanders(
-      ImmutableMap<String, MacroExpander> source) {
+      ImmutableMap<String, ? extends MacroExpander> source) {
     ImmutableMap.Builder<String, MacroExpander> builder = ImmutableMap.builder();
-    for (Map.Entry<String, MacroExpander> entry : source.entrySet()) {
+    for (Map.Entry<String, ? extends MacroExpander> entry : source.entrySet()) {
       builder.put(entry.getKey(), entry.getValue());
       builder.put("@" + entry.getKey(), entry.getValue());
     }
