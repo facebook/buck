@@ -46,9 +46,10 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, S
   }
 
   @Override
-  public void traverse(Pair<FIRST, SECOND> object, Traversal traversal) {
-    firstTypeCoercer.traverse(object.getFirst(), traversal);
-    secondTypeCoercer.traverse(object.getSecond(), traversal);
+  public void traverse(
+      CellPathResolver cellRoots, Pair<FIRST, SECOND> object, Traversal traversal) {
+    firstTypeCoercer.traverse(cellRoots, object.getFirst(), traversal);
+    secondTypeCoercer.traverse(cellRoots, object.getSecond(), traversal);
   }
 
   @Override

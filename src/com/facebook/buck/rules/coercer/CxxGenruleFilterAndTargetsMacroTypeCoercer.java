@@ -59,10 +59,11 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilt
   }
 
   @Override
-  public void traverse(M macro, TypeCoercer.Traversal traversal) {
+  public void traverse(CellPathResolver cellRoots, M macro, TypeCoercer.Traversal traversal) {
     patternTypeCoercer.ifPresent(
-        coercer -> macro.getFilter().ifPresent(filter -> coercer.traverse(filter, traversal)));
-    buildTargetsTypeCoercer.traverse(macro.getTargets(), traversal);
+        coercer ->
+            macro.getFilter().ifPresent(filter -> coercer.traverse(cellRoots, filter, traversal)));
+    buildTargetsTypeCoercer.traverse(cellRoots, macro.getTargets(), traversal);
   }
 
   @Override

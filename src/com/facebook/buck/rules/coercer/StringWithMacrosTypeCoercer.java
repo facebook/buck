@@ -68,16 +68,17 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
   }
 
   private <M extends Macro> void traverse(
-      MacroTypeCoercer<M> coercer, Macro macro, Traversal traversal) {
-    coercer.traverse(coercer.getOutputClass().cast(macro), traversal);
+      CellPathResolver cellRoots, MacroTypeCoercer<M> coercer, Macro macro, Traversal traversal) {
+    coercer.traverse(cellRoots, coercer.getOutputClass().cast(macro), traversal);
   }
 
   @Override
-  public void traverse(StringWithMacros stringWithMacros, Traversal traversal) {
+  public void traverse(
+      CellPathResolver cellRoots, StringWithMacros stringWithMacros, Traversal traversal) {
     for (Macro macro : stringWithMacros.getMacros()) {
       MacroTypeCoercer<? extends Macro> coercer =
           Preconditions.checkNotNull(coercers.get(macro.getClass()));
-      traverse(coercer, macro, traversal);
+      traverse(cellRoots, coercer, macro, traversal);
     }
   }
 

@@ -51,9 +51,9 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<SourceWithFlags> 
   }
 
   @Override
-  public void traverse(SourceWithFlags object, Traversal traversal) {
-    sourcePathTypeCoercer.traverse(object.getSourcePath(), traversal);
-    flagsTypeCoercer.traverse(ImmutableList.copyOf(object.getFlags()), traversal);
+  public void traverse(CellPathResolver cellRoots, SourceWithFlags object, Traversal traversal) {
+    sourcePathTypeCoercer.traverse(cellRoots, object.getSourcePath(), traversal);
+    flagsTypeCoercer.traverse(cellRoots, ImmutableList.copyOf(object.getFlags()), traversal);
   }
 
   @Override

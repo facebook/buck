@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.rules.CellPathResolver;
+
 /** Superclass of coercers for non-collection/map types. */
 public abstract class LeafTypeCoercer<T> implements TypeCoercer<T> {
 
@@ -30,7 +32,7 @@ public abstract class LeafTypeCoercer<T> implements TypeCoercer<T> {
   }
 
   @Override
-  public void traverse(Object object, Traversal traversal) {
+  public void traverse(CellPathResolver cellPathResolver, Object object, Traversal traversal) {
     traversal.traverse(object);
   }
 }

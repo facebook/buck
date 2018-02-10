@@ -37,8 +37,9 @@ class LocationMacroTypeCoercer implements MacroTypeCoercer<LocationMacro> {
   }
 
   @Override
-  public void traverse(LocationMacro macro, TypeCoercer.Traversal traversal) {
-    buildTargetTypeCoercer.traverse(macro.getTarget(), traversal);
+  public void traverse(
+      CellPathResolver cellRoots, LocationMacro macro, TypeCoercer.Traversal traversal) {
+    buildTargetTypeCoercer.traverse(cellRoots, macro.getTarget(), traversal);
   }
 
   @Override

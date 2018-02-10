@@ -52,10 +52,11 @@ public class VersionMatchedCollectionTypeCoercer<T>
   }
 
   @Override
-  public void traverse(VersionMatchedCollection<T> object, Traversal traversal) {
+  public void traverse(
+      CellPathResolver cellRoots, VersionMatchedCollection<T> object, Traversal traversal) {
     for (Pair<ImmutableMap<BuildTarget, Version>, T> pair : object.getValuePairs()) {
-      versionsTypeCoercer.traverse(pair.getFirst(), traversal);
-      valueTypeCoercer.traverse(pair.getSecond(), traversal);
+      versionsTypeCoercer.traverse(cellRoots, pair.getFirst(), traversal);
+      valueTypeCoercer.traverse(cellRoots, pair.getSecond(), traversal);
     }
   }
 

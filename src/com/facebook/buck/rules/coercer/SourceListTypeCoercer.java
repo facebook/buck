@@ -47,13 +47,13 @@ public class SourceListTypeCoercer implements TypeCoercer<SourceList> {
   }
 
   @Override
-  public void traverse(SourceList object, Traversal traversal) {
+  public void traverse(CellPathResolver cellRoots, SourceList object, Traversal traversal) {
     switch (object.getType()) {
       case UNNAMED:
-        unnamedHeadersTypeCoercer.traverse(object.getUnnamedSources().get(), traversal);
+        unnamedHeadersTypeCoercer.traverse(cellRoots, object.getUnnamedSources().get(), traversal);
         break;
       case NAMED:
-        namedHeadersTypeCoercer.traverse(object.getNamedSources().get(), traversal);
+        namedHeadersTypeCoercer.traverse(cellRoots, object.getNamedSources().get(), traversal);
         break;
     }
   }

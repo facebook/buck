@@ -44,7 +44,7 @@ public interface TypeCoercer<T> {
    * <p>#{link Traversal#traverse} function will be called once for the object. If the object is a
    * collection or map, it will also recursively traverse all elements of the map.
    */
-  void traverse(T object, Traversal traversal);
+  void traverse(CellPathResolver cellRoots, T object, Traversal traversal);
 
   /** @throws CoerceFailedException Input object cannot be coerced into the given type. */
   T coerce(

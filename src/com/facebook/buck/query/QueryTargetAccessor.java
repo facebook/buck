@@ -50,6 +50,7 @@ public class QueryTargetAccessor {
     }
     final ImmutableSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();
     info.traverse(
+        node.getCellNames(),
         value -> {
           if (value instanceof Path) {
             builder.add(QueryFileTarget.of(PathSourcePath.of(node.getFilesystem(), (Path) value)));
@@ -86,6 +87,7 @@ public class QueryTargetAccessor {
     }
     final ImmutableSet.Builder<Object> builder = ImmutableSet.builder();
     info.traverse(
+        node.getCellNames(),
         value -> {
           if (predicate.test(value)) {
             builder.add(value);

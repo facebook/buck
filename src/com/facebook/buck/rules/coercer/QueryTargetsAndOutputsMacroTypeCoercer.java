@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.coercer.TypeCoercer.Traversal;
 import com.facebook.buck.rules.macros.QueryTargetsAndOutputsMacro;
 import com.facebook.buck.rules.query.Query;
 import com.google.common.base.CharMatcher;
@@ -40,8 +41,9 @@ class QueryTargetsAndOutputsMacroTypeCoercer
   }
 
   @Override
-  public void traverse(QueryTargetsAndOutputsMacro macro, TypeCoercer.Traversal traversal) {
-    queryCoercer.traverse(macro.getQuery(), traversal);
+  public void traverse(
+      CellPathResolver cellRoots, QueryTargetsAndOutputsMacro macro, Traversal traversal) {
+    queryCoercer.traverse(cellRoots, macro.getQuery(), traversal);
   }
 
   @Override

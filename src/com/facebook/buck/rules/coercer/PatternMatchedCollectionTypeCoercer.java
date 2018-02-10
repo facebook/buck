@@ -54,10 +54,11 @@ public class PatternMatchedCollectionTypeCoercer<T>
   }
 
   @Override
-  public void traverse(PatternMatchedCollection<T> object, Traversal traversal) {
+  public void traverse(
+      CellPathResolver cellRoots, PatternMatchedCollection<T> object, Traversal traversal) {
     for (Pair<Pattern, T> value : object.getPatternsAndValues()) {
       traversal.traverse(value.getFirst());
-      valueTypeCoercer.traverse(value.getSecond(), traversal);
+      valueTypeCoercer.traverse(cellRoots, value.getSecond(), traversal);
     }
   }
 

@@ -40,8 +40,8 @@ public class OcamlSourceTypeCoercer implements TypeCoercer<OcamlSource> {
   }
 
   @Override
-  public void traverse(OcamlSource object, Traversal traversal) {
-    sourcePathTypeCoercer.traverse(object.getSource(), traversal);
+  public void traverse(CellPathResolver cellRoots, OcamlSource object, Traversal traversal) {
+    sourcePathTypeCoercer.traverse(cellRoots, object.getSource(), traversal);
   }
 
   @Override

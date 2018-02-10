@@ -47,8 +47,8 @@ public final class BuildTargetMacroTypeCoercer<M extends BuildTargetMacro>
   }
 
   @Override
-  public void traverse(M macro, TypeCoercer.Traversal traversal) {
-    buildTargetTypeCoercer.traverse(macro.getTarget(), traversal);
+  public void traverse(CellPathResolver cellRoots, M macro, TypeCoercer.Traversal traversal) {
+    buildTargetTypeCoercer.traverse(cellRoots, macro.getTarget(), traversal);
   }
 
   @Override

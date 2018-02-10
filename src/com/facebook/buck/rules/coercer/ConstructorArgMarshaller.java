@@ -99,6 +99,7 @@ public class ConstructorArgMarshaller {
     ParamInfo deps = allParamInfo.get("deps");
     if (deps != null && deps.isDep()) {
       deps.traverse(
+          cellRoots,
           object -> {
             if (!(object instanceof BuildTarget)) {
               return;

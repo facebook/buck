@@ -98,7 +98,7 @@ public class TargetNodeFactory implements NodeCopier {
           && info.hasElementTypes(BuildTarget.class, SourcePath.class, Path.class)
           && !info.getName().equals("deps")) {
         detectBuildTargetsAndPathsForConstructorArg(
-            extraDepsBuilder, pathsBuilder, info, constructorArg);
+            cellRoots, extraDepsBuilder, pathsBuilder, info, constructorArg);
       }
     }
 
@@ -138,6 +138,7 @@ public class TargetNodeFactory implements NodeCopier {
   }
 
   private static void detectBuildTargetsAndPathsForConstructorArg(
+      CellPathResolver cellRoots,
       final ImmutableSet.Builder<BuildTarget> depsBuilder,
       final ImmutableSet.Builder<Path> pathsBuilder,
       ParamInfo info,
@@ -147,6 +148,7 @@ public class TargetNodeFactory implements NodeCopier {
 
     try {
       info.traverse(
+          cellRoots,
           object -> {
             if (object instanceof PathSourcePath) {
               pathsBuilder.add(((PathSourcePath) object).getRelativePath());

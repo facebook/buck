@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TestCellPathResolver;
+import com.facebook.buck.rules.coercer.TypeCoercer.Traversal;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -157,7 +158,7 @@ public class StringWithMacrosTypeCoercerTest {
     }
 
     @Override
-    public void traverse(TestMacro macro, TypeCoercer.Traversal traversal) {}
+    public void traverse(CellPathResolver cellRoots, TestMacro macro, Traversal traversal) {}
 
     @Override
     public TestMacro coerce(
@@ -183,7 +184,7 @@ public class StringWithMacrosTypeCoercerTest {
     }
 
     @Override
-    public void traverse(TestMacro macro, TypeCoercer.Traversal traversal) {}
+    public void traverse(CellPathResolver cellRoots, TestMacro macro, Traversal traversal) {}
 
     @Override
     public TestMacro coerce(

@@ -176,7 +176,7 @@ public class TypeCoercerTest {
             "bar", ImmutableList.of(":bar", "//foo:foo"));
 
     TestTraversal traversal = new TestTraversal();
-    coercer.traverse(input, traversal);
+    coercer.traverse(cellRoots, input, traversal);
 
     Matcher<Iterable<?>> matcher =
         Matchers.contains(
@@ -287,7 +287,7 @@ public class TypeCoercerTest {
 
     TestTraversal traversal = new TestTraversal();
     Either<String, List<String>> input = Either.ofRight((List<String>) ImmutableList.of("foo"));
-    coercer.traverse(input, traversal);
+    coercer.traverse(cellRoots, input, traversal);
     assertThat(
         traversal.getObjects(),
         Matchers.contains(
@@ -297,7 +297,7 @@ public class TypeCoercerTest {
 
     traversal = new TestTraversal();
     Either<String, List<String>> input2 = Either.ofLeft("foo");
-    coercer.traverse(input2, traversal);
+    coercer.traverse(cellRoots, input2, traversal);
     assertThat(traversal.getObjects(), hasSize(1));
     assertThat(traversal.getObjects().get(0), sameInstance((Object) "foo"));
   }
@@ -346,7 +346,7 @@ public class TypeCoercerTest {
 
     TestTraversal traversal = new TestTraversal();
     Pair<Path, String> input = new Pair<>(Paths.get("foo"), "bar");
-    coercer.traverse(input, traversal);
+    coercer.traverse(cellRoots, input, traversal);
     assertThat(
         traversal.getObjects(),
         Matchers.contains(

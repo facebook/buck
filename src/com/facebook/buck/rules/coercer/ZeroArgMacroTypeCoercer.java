@@ -40,7 +40,7 @@ public class ZeroArgMacroTypeCoercer<M extends Macro> implements MacroTypeCoerce
   }
 
   @Override
-  public void traverse(M macro, Traversal traversal) {}
+  public void traverse(CellPathResolver cellRoots, M macro, Traversal traversal) {}
 
   @Override
   public Class<M> getOutputClass() {

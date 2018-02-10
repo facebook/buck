@@ -67,11 +67,11 @@ public class ImmutableTypeCoercer<T> implements TypeCoercer<T> {
   }
 
   @Override
-  public void traverse(T object, Traversal traversal) {
+  public void traverse(CellPathResolver cellRoots, T object, Traversal traversal) {
     for (ParamInfo paramInfo : paramInfos.values()) {
       @SuppressWarnings("unchecked")
       TypeCoercer<Object> paramTypeCoercer = (TypeCoercer<Object>) paramInfo.getTypeCoercer();
-      paramTypeCoercer.traverse(object, traversal);
+      paramTypeCoercer.traverse(cellRoots, object, traversal);
     }
   }
 
