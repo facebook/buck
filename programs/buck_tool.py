@@ -116,6 +116,7 @@ class BuckStatusReporter(object):
         self.build_id = None
         self.buck_version = None
         self.is_buckd = False
+        self.no_buckd_reason = None
         self.status_message = None
         self.repository = None
         self.start_time = time.time()
@@ -387,14 +388,17 @@ class BuckTool(object):
                 use_buckd = self._use_buckd
                 if not use_buckd:
                     logging.warning("Not using buckd because NO_BUCKD is set.")
+                    self._reporter.no_buckd_reason = "explicit"
 
                 if use_buckd and self._command_line.is_help():
                     use_buckd = False
+                    self._reporter.no_buckd_reason = "help"
 
                 if use_buckd:
                     has_watchman = bool(which('watchman'))
                     if not has_watchman:
                         use_buckd = False
+                        self._reporter.no_buckd_reason = "watchman"
                         logging.warning("Not using buckd because watchman isn't installed.")
 
                 if use_buckd:
@@ -402,8 +406,9 @@ class BuckTool(object):
                     if running_version != buck_version_uid or not self._is_buckd_running():
                         self.kill_buckd()
                         if not self.launch_buckd(buck_version_uid=buck_version_uid):
-                            logging.warning("Not using buckd because daemon failed to start.")
                             use_buckd = False
+                            self._reporter.no_buckd_reason = "daemon_failure"
+                            logging.warning("Not using buckd because daemon failed to start.")
 
                 env = self._environ_for_buck()
                 env['BUCK_BUILD_ID'] = build_id
