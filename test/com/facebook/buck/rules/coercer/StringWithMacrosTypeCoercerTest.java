@@ -25,8 +25,10 @@ import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.coercer.TypeCoercer.Traversal;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroContainer;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
@@ -129,6 +131,22 @@ public class StringWithMacrosTypeCoercerTest {
             StringWithMacrosUtils.format(
                 "string with %s macro",
                 MacroContainer.of(new TestMacro(ImmutableList.of("arg")), true))));
+  }
+
+  @Test
+  public void escaping() throws CoerceFailedException {
+    StringWithMacrosTypeCoercer coercer =
+        StringWithMacrosTypeCoercer.from(
+            ImmutableMap.of("test", TestMacro.class), ImmutableList.of(new TestMacroTypeCoercer()));
+    assertThat(
+        coercer.coerce(
+            CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, "string with \\$(test arg) macro"),
+        Matchers.equalTo(
+            StringWithMacros.of(
+                ImmutableList.of(
+                    Either.ofLeft("string with "),
+                    Either.ofLeft("$(test arg)"),
+                    Either.ofLeft(" macro")))));
   }
 
   private static class TestMacro implements Macro {
