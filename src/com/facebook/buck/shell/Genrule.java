@@ -375,9 +375,9 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public WorkerShellStep createWorkerShellStep(BuildContext context) {
     return new WorkerShellStep(
         getBuildTarget(),
-        convertToWorkerJobParams(cmd),
-        convertToWorkerJobParams(bash),
-        convertToWorkerJobParams(cmdExe),
+        convertToWorkerJobParams(context.getSourcePathResolver(), cmd),
+        convertToWorkerJobParams(context.getSourcePathResolver(), bash),
+        convertToWorkerJobParams(context.getSourcePathResolver(), cmdExe),
         new WorkerProcessPoolFactory(getProjectFilesystem())) {
       @Override
       protected ImmutableMap<String, String> getEnvironmentVariables() {
@@ -388,12 +388,13 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     };
   }
 
-  private static Optional<WorkerJobParams> convertToWorkerJobParams(Optional<Arg> arg) {
+  private static Optional<WorkerJobParams> convertToWorkerJobParams(
+      SourcePathResolver resolver, Optional<Arg> arg) {
     return arg.map(
         arg1 -> {
           WorkerMacroArg workerMacroArg = (WorkerMacroArg) arg1;
           return WorkerJobParams.of(
-              workerMacroArg.getJobArgs(),
+              workerMacroArg.getJobArgs(resolver),
               WorkerProcessParams.of(
                   workerMacroArg.getTempDir(),
                   workerMacroArg.getStartupCommand(),

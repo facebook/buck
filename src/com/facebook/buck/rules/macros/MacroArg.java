@@ -107,14 +107,15 @@ public class MacroArg implements Arg, RuleKeyAppendable {
       final CellPathResolver cellNames,
       final BuildRuleResolver resolver) {
     return unexpanded -> {
+      MacroArg arg = new MacroArg(handler, target, cellNames, resolver, unexpanded);
       try {
         if (containsWorkerMacro(handler, unexpanded)) {
-          return new WorkerMacroArg(handler, target, cellNames, resolver, unexpanded);
+          return WorkerMacroArg.fromMacroArg(arg, handler, target, cellNames, resolver, unexpanded);
         }
       } catch (MacroException e) {
         throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
       }
-      return new MacroArg(handler, target, cellNames, resolver, unexpanded);
+      return arg;
     };
   }
 

@@ -26,8 +26,9 @@ import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.ProxyArg;
 import com.facebook.buck.shell.WorkerTool;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -35,21 +36,39 @@ import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class WorkerMacroArg extends MacroArg {
+/**
+ * Worker macro wrapper which extracts/verifies details from the an underlying {@link WorkerTool}.
+ */
+public class WorkerMacroArg extends ProxyArg {
 
+  private final BuildTarget workerTarget;
   private final WorkerTool workerTool;
   private final ImmutableList<String> startupCommand;
   private final ImmutableMap<String, String> startupEnvironment;
-  private final BuildTarget buildTarget;
 
-  public WorkerMacroArg(
+  private WorkerMacroArg(
+      Arg arg,
+      BuildTarget workerTarget,
+      WorkerTool workerTool,
+      ImmutableList<String> startupCommand,
+      ImmutableMap<String, String> startupEnvironment) {
+    super(arg);
+    this.workerTarget = workerTarget;
+    this.workerTool = workerTool;
+    this.startupCommand = startupCommand;
+    this.startupEnvironment = startupEnvironment;
+  }
+
+  /** @return a {@link WorkerMacroArg} which wraps the given {@link MacroArg}. */
+  public static WorkerMacroArg fromMacroArg(
+      MacroArg arg,
       MacroHandler macroHandler,
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
       String unexpanded)
       throws MacroException {
-    super(macroHandler, target, cellNames, resolver, unexpanded);
+
     for (MacroMatchResult matchResult : macroHandler.getMacroMatchResults(unexpanded)) {
       if (macroHandler.getExpander(matchResult.getMacroType()) instanceof WorkerMacroExpander
           && matchResult.getStartIndex() != 0) {
@@ -70,21 +89,22 @@ public class WorkerMacroArg extends MacroArg {
               "Unable to extract any build targets for the macros " + "used in \"%s\" of target %s",
               unexpanded, target));
     }
-    this.buildTarget = targets.get(0);
-    BuildRule workerTool = resolver.getRule(buildTarget);
-    if (!(workerTool instanceof WorkerTool)) {
+    BuildTarget workerTarget = targets.get(0);
+    BuildRule workerRule = resolver.getRule(workerTarget);
+    if (!(workerRule instanceof WorkerTool)) {
       throw new MacroException(
           String.format(
               "%s used in worker macro, \"%s\", of target %s does "
                   + "not correspond to a worker_tool",
-              buildTarget, unexpanded, target));
+              workerTarget, unexpanded, target));
     }
-    this.workerTool = (WorkerTool) workerTool;
+    WorkerTool workerTool = (WorkerTool) workerRule;
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-    Tool exe = this.workerTool.getTool();
-    startupCommand = exe.getCommandPrefix(pathResolver);
-    startupEnvironment = exe.getEnvironment(pathResolver);
+    Tool exe = workerTool.getTool();
+    ImmutableList<String> startupCommand = exe.getCommandPrefix(pathResolver);
+    ImmutableMap<String, String> startupEnvironment = exe.getEnvironment(pathResolver);
+    return new WorkerMacroArg(arg, workerTarget, workerTool, startupCommand, startupEnvironment);
   }
 
   public ImmutableList<String> getStartupCommand() {
@@ -101,7 +121,7 @@ public class WorkerMacroArg extends MacroArg {
 
   public Optional<String> getPersistentWorkerKey() {
     if (workerTool.isPersistent()) {
-      return Optional.of(buildTarget.getCellPath().toString() + buildTarget.toString());
+      return Optional.of(workerTarget.getCellPath().toString() + workerTarget.toString());
     } else {
       return Optional.empty();
     }
@@ -115,11 +135,7 @@ public class WorkerMacroArg extends MacroArg {
     return workerTool.getMaxWorkers();
   }
 
-  public String getJobArgs() {
-    try {
-      return expander.expand(target, cellNames, resolver, unexpanded).trim();
-    } catch (MacroException e) {
-      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
-    }
+  public String getJobArgs(SourcePathResolver pathResolver) {
+    return Arg.stringify(arg, pathResolver).trim();
   }
 }
