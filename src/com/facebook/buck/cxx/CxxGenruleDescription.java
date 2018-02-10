@@ -225,7 +225,6 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     macros.put("cxxflags", new StringExpander<>(Macro.class, StringArg.of("")));
     macros.put("cppflags", new ParseTimeDepsExpander(Filter.NONE));
     macros.put("cxxppflags", new ParseTimeDepsExpander(Filter.NONE));
-    macros.put("solibs", new ParseTimeDepsExpander(Filter.NONE));
     macros.put("ld", new CxxPlatformParseTimeDepsExpander(cxxPlatforms));
     for (Linker.LinkableDepType style : Linker.LinkableDepType.values()) {
       for (Filter filter : Filter.values()) {
@@ -384,7 +383,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
     ImmutableMap.Builder<String, MacroReplacer<String>> macros = ImmutableMap.builder();
 
-    ImmutableList.of("exe", "location", "cppflags", "cxxppflags", "solibs")
+    ImmutableList.of("exe", "location", "cppflags", "cxxppflags")
         .forEach(
             name ->
                 macros.put(
