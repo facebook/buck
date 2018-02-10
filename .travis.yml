@@ -42,6 +42,9 @@ addons:
       - oracle-java8-installer
       # Haskell tests require GHC (and at least version 7.6).
       - ghc
+      # base ghc package does not include dynamic libraries
+      # https://stackoverflow.com/a/11711501/1548477
+      - ghc-dynamic
 
 before_install:
   # Limit Ant's and Buck's memory usage to avoid the OOM killer.
