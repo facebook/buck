@@ -24,6 +24,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.trace.uploader.launcher.UploaderLauncher;
+import com.facebook.buck.util.trace.uploader.types.CompressionType;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Closer;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -212,7 +213,7 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
 
         Path uploadLogFile = logDirectoryPath.resolve("upload-dist-build-build-trace.log");
         UploaderLauncher.uploadInBackground(
-            buildId, traceFilePath, "dist_build", uploadUri, uploadLogFile);
+            buildId, traceFilePath, "dist_build", uploadUri, uploadLogFile, CompressionType.GZIP);
       } catch (Exception e) {
         LOG.warn("Failed to write or upload distbuild chrome trace", e);
       }

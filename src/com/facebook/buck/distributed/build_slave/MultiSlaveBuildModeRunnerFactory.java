@@ -130,7 +130,7 @@ public class MultiSlaveBuildModeRunnerFactory {
     ChromeTraceBuckConfig chromeTraceBuckConfig =
         distBuildConfig.getBuckConfig().getView(ChromeTraceBuckConfig.class);
 
-    Optional<URI> traceUploadUri = chromeTraceBuckConfig.getTraceUploadUri();
+    Optional<URI> traceUploadUri = chromeTraceBuckConfig.getTraceUploadUriIfEnabled();
 
     return new CoordinatorModeRunner(
         queueFuture,
