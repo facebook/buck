@@ -59,6 +59,8 @@ before_install:
   - echo -e "[go]\n  root = ${GOROOT}" >> .buckconfig.local
   # Set up the Groovy environment
   - export GROOVY_HOME=/usr/share/groovy/
+  # Install Rust.
+  - curl -sSf https://static.rust-lang.org/rustup.sh | sh && rustc -V
 
 # Buck dependencies are checked in, so no need to download dependencies
 install: true
