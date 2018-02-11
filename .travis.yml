@@ -73,6 +73,8 @@ notifications:
   slack:
     rooms:
       secure: SYKQV9DT55kHf5Mpe6g5a3NmGXJb5E7kWiLulRp+EmKDIhf3lVmxGbx4Yr/TKZixbNILsPzhhiB56V0H+0mAgMpygVXaq4M9eSHKLljJEmEdeLKmQaRuOUikMOkpLsHw/epvmqrsvlb3yVpsJZZhhHmi9B0oQc0AnjpL/qLBaZE=
+  # Send Travis CI notifications to internal sytems like Phabricator.
+  webhooks: https://code.facebook.com/travis/webhook/
 
 script:
   - ./scripts/travisci_run.sh
