@@ -3692,6 +3692,18 @@ your <code>.buckjavaargs</code> file</a>:
 {/call}
 
 {call buckconfig.entry}
+  {param section: 'ui' /}
+  {param name: 'superconsole' /}
+  {param example_value: 'ENABLED' /}
+  {param description}
+    Whether the super console is enabled. If so, a more reactive UI will be shown.
+    Valid values are ENABLED, DISABLED, and AUTO. By default, this is set to AUTO
+    which will take OS, terminal settings and other things into account. In most 
+    interactive cases, it will be enabled.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
   {param section: 'unknown_flavors_messages' /}
   {param name: 'unknown_flavors_messages' /}
   {param description}
