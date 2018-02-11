@@ -17,6 +17,8 @@
 package com.facebook.buck.cli;
 
 import static com.facebook.buck.rules.CellConfig.MalformedOverridesException;
+import static com.facebook.buck.util.AnsiEnvironmentChecking.NAILGUN_STDERR_ISTTY_ENV;
+import static com.facebook.buck.util.AnsiEnvironmentChecking.NAILGUN_STDOUT_ISTTY_ENV;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static com.google.common.util.concurrent.MoreExecutors.newDirectExecutorService;
 
@@ -156,6 +158,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 import com.google.common.reflect.ClassPath;
@@ -1491,14 +1494,25 @@ public final class Main {
    * @return the client environment, which is either the process environment or the environment sent
    *     to the daemon by the Nailgun client. This method should always be used in preference to
    *     System.getenv() and should be the only call to System.getenv() within the Buck codebase to
-   *     ensure that the use of the Buck daemon is transparent.
+   *     ensure that the use of the Buck daemon is transparent. This also scrubs NG environment
+   *     variables if no context is actually present.
    */
   @SuppressWarnings({"unchecked", "rawtypes"}) // Safe as Property is a Map<String, String>.
   private static ImmutableMap<String, String> getClientEnvironment(Optional<NGContext> context) {
     if (context.isPresent()) {
       return ImmutableMap.<String, String>copyOf((Map) context.get().getEnv());
     } else {
-      return ImmutableMap.copyOf(System.getenv());
+
+      Builder<String, String> builder = ImmutableMap.builder();
+      System.getenv()
+          .entrySet()
+          .stream()
+          .filter(
+              e ->
+                  !NAILGUN_STDOUT_ISTTY_ENV.equals(e.getKey())
+                      && !NAILGUN_STDERR_ISTTY_ENV.equals(e.getKey()))
+          .forEach(builder::put);
+      return builder.build();
     }
   }
 
