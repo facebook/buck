@@ -179,7 +179,7 @@ public class MacroFinderTest {
             Optional.of(
                 MacroMatchResult.builder()
                     .setMacroType("macro1")
-                    .addMacroInput("')'")
+                    .addMacroInput(")")
                     .setStartIndex(0)
                     .setEndIndex(13)
                     .setEscaped(false)
@@ -190,7 +190,7 @@ public class MacroFinderTest {
             Optional.of(
                 MacroMatchResult.builder()
                     .setMacroType("macro1")
-                    .addMacroInput("\")\"")
+                    .addMacroInput(")")
                     .setStartIndex(0)
                     .setEndIndex(13)
                     .setEscaped(false)

@@ -25,7 +25,6 @@ import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
 import com.facebook.buck.rules.query.Query;
-import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -51,7 +50,7 @@ public class QueryCoercer implements TypeCoercer<Query> {
             ImmutableSet.of());
     QueryExpression parsedExp;
     try {
-      parsedExp = QueryExpression.parse(CharMatcher.anyOf("\"'").trimFrom(query.getQuery()), env);
+      parsedExp = QueryExpression.parse(query.getQuery(), env);
     } catch (QueryException e) {
       throw new RuntimeException("Error parsing query: " + query.getQuery(), e);
     }

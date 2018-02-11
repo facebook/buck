@@ -21,7 +21,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.coercer.TypeCoercer.Traversal;
 import com.facebook.buck.rules.macros.QueryTargetsAndOutputsMacro;
 import com.facebook.buck.rules.query.Query;
-import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
@@ -61,7 +60,7 @@ class QueryTargetsAndOutputsMacroTypeCoercer
     String separator = " ";
     String query;
     if (args.size() == 2) {
-      separator = CharMatcher.anyOf("\"'").trimFrom(args.get(0));
+      separator = args.get(0);
       query = args.get(1);
     } else if (args.size() == 1) {
       query = args.get(0);

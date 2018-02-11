@@ -30,7 +30,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.RichStream;
-import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
@@ -109,7 +108,7 @@ public class QueryTargetsAndOutputsMacroExpander
     String separator = " ";
     String query;
     if (input.size() == 2) {
-      separator = CharMatcher.anyOf("\"'").trimFrom(input.get(0));
+      separator = input.get(0);
       query = input.get(1);
     } else if (input.size() == 1) {
       query = input.get(0);

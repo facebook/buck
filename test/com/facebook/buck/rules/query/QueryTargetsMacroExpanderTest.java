@@ -118,10 +118,7 @@ public class QueryTargetsMacroExpanderTest {
   public void extractBuildTimeDeps() throws Exception {
     Object precomputed =
         expander.precomputeWork(
-            dep.getBuildTarget(),
-            cellNames,
-            ruleResolver,
-            ImmutableList.of("'set(//exciting:dep)'"));
+            dep.getBuildTarget(), cellNames, ruleResolver, ImmutableList.of("set(//exciting:dep)"));
     // No build time deps for targets macro
     assertEquals(
         ImmutableList.of(),
@@ -133,7 +130,7 @@ public class QueryTargetsMacroExpanderTest {
                           dep.getBuildTarget(),
                           cellNames,
                           ruleResolver,
-                          ImmutableList.of("'set(//exciting:dep)'"),
+                          ImmutableList.of("set(//exciting:dep)"),
                           precomputed);
                 },
                 new SourcePathRuleFinder(ruleResolver))
@@ -143,7 +140,7 @@ public class QueryTargetsMacroExpanderTest {
             dep.getBuildTarget(),
             cellNames,
             ruleResolver,
-            ImmutableList.of("'classpath(//exciting:target)'"));
+            ImmutableList.of("classpath(//exciting:target)"));
     assertEquals(
         ImmutableList.of(),
         BuildableSupport.deriveDeps(
@@ -154,7 +151,7 @@ public class QueryTargetsMacroExpanderTest {
                           dep.getBuildTarget(),
                           cellNames,
                           ruleResolver,
-                          ImmutableList.of("'classpath(//exciting:target)'"),
+                          ImmutableList.of("classpath(//exciting:target)"),
                           precomputed2);
                 },
                 new SourcePathRuleFinder(ruleResolver))
