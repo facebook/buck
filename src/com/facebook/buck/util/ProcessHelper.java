@@ -183,7 +183,7 @@ public class ProcessHelper {
     if (IS_JDK9) {
       try {
         // Invoking via reflection to avoid a strong dependency on JDK 9
-        Method getPid = Process.class.getMethod("getPid");
+        Method getPid = Process.class.getMethod("pid");
         return (Long) getPid.invoke(process);
       } catch (Exception e) {
         LOG.warn(e, "Cannot get process id!");
