@@ -14,14 +14,19 @@
  * under the License.
  */
 
+#if os(OSX)
+import Cocoa
+@objc public class AppDelegate: NSObject, NSApplicationDelegate {}
+
+#elseif os(iOS)
 import UIKit
+@objc public class AppDelegate: UIResponder, UIApplicationDelegate {}
 
-@objc public class AppDelegate: UIResponder, UIApplicationDelegate {
-
-}
+#endif
 
 public class Echo {
   public class func echo() -> String {
     return "echo"
   }
 }
+

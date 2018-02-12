@@ -13,6 +13,11 @@ elif read_config('testconfig', 'dep_type') == 'apple_library':
       ],
   )
 
+if 'macosx' in read_config('cxx', 'default_platform'):
+  default_frameworks = ["$SDKROOT/System/Library/Frameworks/AppKit.framework"]
+else:
+  default_frameworks = ["$SDKROOT/System/Library/Frameworks/UIKit.framework"]
+
 apple_binary(
     name = "binary",
     srcs = [
@@ -23,8 +28,7 @@ apple_binary(
     ],
     frameworks = [
         "$SDKROOT/System/Library/Frameworks/Foundation.framework",
-        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
-    ],
+    ] + default_frameworks,
 )
 
 apple_bundle(

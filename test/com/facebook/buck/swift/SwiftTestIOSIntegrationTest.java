@@ -19,6 +19,7 @@ package com.facebook.buck.swift;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.apple.AppleDebugFormat;
@@ -144,6 +145,55 @@ public class SwiftTestIOSIntegrationTest {
     assertThat(
         workspace.runCommand("otool", "-l", binaryOutput.toString()).getStdout().get(),
         containsString("@loader_path/Frameworks"));
+  }
+
+  @Test
+  public void testSwiftInHostAndTestBundleAppleLibraryMacOS() throws Exception {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX), is(true));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "swift_test_with_host", tmp);
+    workspace.setUp();
+    workspace.copyRecursively(
+        TestDataHelper.getTestDataDirectory(AppleTestBuilder.class).resolve("fbxctest"),
+        Paths.get("fbxctest"));
+    workspace.addBuckConfigLocalOption("apple", "xctool_path", "fbxctest/bin/fbxctest");
+
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    BuildTarget target = workspace.newBuildTarget("//:swifttest#macosx-x86_64");
+    ProcessResult result =
+        workspace.runBuckCommand("test", target.getFullyQualifiedName(), "--config", "testconfig.dep_type=apple_library", "--config", "cxx.default_platform=macosx-x86_64");
+    result.assertSuccess();
+
+    Path binaryOutput =
+        workspace
+            .getPath(
+                BuildTargets.getGenPath(
+                    filesystem,
+                    target.withAppendedFlavors(
+                        InternalFlavor.of("macosx-x86_64"),
+                        InternalFlavor.of("apple-test-bundle"),
+                        AppleDebugFormat.DWARF.getFlavor(),
+                        LinkerMapMode.NO_LINKER_MAP.getFlavor(),
+                        AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    "%s/swifttest.xctest"))
+            .resolve("Contents/MacOS/swifttest/");
+    assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));
+
+    assertThat(
+        workspace.runCommand("file", binaryOutput.toString()).getStdout().get(),
+        containsString("bundle x86_64"));
+    assertThat(
+        workspace.runCommand("otool", "-hv", binaryOutput.toString()).getStdout().get(),
+        containsString("X86_64"));
+    assertThat(
+        workspace.runCommand("otool", "-L", binaryOutput.toString()).getStdout().get(),
+        containsString("XCTest.framework/Versions/A/XCTest"));
+    assertThat(
+        workspace.runCommand("otool", "-L", binaryOutput.toString()).getStdout().get(),
+        not(containsString("@rpath/libswiftCore.dylib")));
   }
 
   @Test
