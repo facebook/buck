@@ -79,7 +79,8 @@ interface HttpCommonDescriptionArg extends CommonDescriptionArg {
             target.getUnflavoredBuildTarget().getFullyQualifiedName());
       }
       for (URI uri : uris) {
-        if (!uri.getScheme().equals("http") && !uri.getScheme().equals("https")) {
+        if (!uri.getScheme().equals("http") && !uri.getScheme().equals("https")
+            && !uri.getScheme().equals("mvn")) {
           throw new HumanReadableException(
               "Unsupported protocol '%s' for url %s in %s. Must be http or https",
               uri.getScheme(),
