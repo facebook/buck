@@ -39,8 +39,6 @@ addons:
         # We rely on -gno-record-gcc-switches which was added in 4.7.
       - gcc
       - g++
-      # Getting compile errors on javac 1.8.0_31-b13
-      - oracle-java8-installer
       # Haskell tests require GHC (and at least version 7.6).
       - ghc
       # base ghc package does not include dynamic libraries
