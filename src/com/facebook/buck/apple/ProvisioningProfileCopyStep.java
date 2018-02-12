@@ -18,7 +18,6 @@ package com.facebook.buck.apple;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
-import com.dd.plist.NSString;
 import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
@@ -193,8 +192,6 @@ class ProvisioningProfileCopyStep implements Step {
     // Copy the actual .mobileprovision.
     filesystem.copy(provisioningProfileSource, provisioningProfileDestination, CopySourceMode.FILE);
 
-    String appID = bestProfile.get().getAppID().getFirst() + "." + bundleID;
-
     // Merge the entitlements with the profile, and write out.
     if (entitlementsPlist.isPresent()) {
       return (new PlistProcessStep(
@@ -203,11 +200,12 @@ class ProvisioningProfileCopyStep implements Step {
               Optional.empty(),
               signingEntitlementsTempPath,
               bestProfile.get().getMergeableEntitlements(),
-              ImmutableMap.of(APPLICATION_IDENTIFIER, new NSString(appID)),
+              ImmutableMap.of(),
               PlistProcessStep.OutputFormat.XML))
           .execute(context);
     } else {
       // No entitlements.plist explicitly specified; write out the minimal entitlements needed.
+      String appID = bestProfile.get().getAppID().getFirst() + "." + bundleID;
       NSDictionary entitlementsPlist = new NSDictionary();
       entitlementsPlist.putAll(bestProfile.get().getMergeableEntitlements());
       entitlementsPlist.put(APPLICATION_IDENTIFIER, appID);

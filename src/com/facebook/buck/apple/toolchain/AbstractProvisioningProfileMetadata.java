@@ -102,6 +102,7 @@ abstract class AbstractProvisioningProfileMetadata implements AddsToRuleKey {
 
   public ImmutableMap<String, NSObject> getMergeableEntitlements() {
     final ImmutableSet<String> includedKeys = ImmutableSet.of(
+        "application-identifier",
         "beta-reports-active",
         "get-task-allow",
         "com.apple.developer.aps-environment",
