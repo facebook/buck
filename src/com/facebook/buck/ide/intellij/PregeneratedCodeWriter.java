@@ -135,7 +135,7 @@ public class PregeneratedCodeWriter {
 
     ST contents = StringTemplateFile.ANDROID_MANIFEST.getST().add("package", packageName);
 
-    minSdkVersion.ifPresent(version -> contents.add("minSdkVersion", version));
+    contents.add("minSdkVersion", minSdkVersion.orElse(null));
 
     writeTemplateToFile(androidFacet, cleaner, "AndroidManifest.xml", packageName, contents);
   }
