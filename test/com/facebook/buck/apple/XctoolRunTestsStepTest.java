@@ -665,7 +665,7 @@ public class XctoolRunTestsStepTest {
         new XctoolRunTestsStep(
             projectFilesystem,
             Paths.get("/path/to/xctool"),
-            ImmutableMap.of(),
+            ImmutableMap.of("LLVM_PROFILE_FILE", "/tmp/some.profraw"),
             Optional.empty(),
             "iphonesimulator",
             Optional.empty(),
@@ -702,7 +702,8 @@ public class XctoolRunTestsStepTest {
                     "DEVELOPER_DIR", "/path/to/developer/dir",
                     "XCTOOL_TEST_ENV_TEST_LOG_PATH", "/path/to/test-logs",
                     "XCTOOL_TEST_ENV_TEST_LOG_LEVEL", "verbose",
-                    "XCTOOL_TEST_ENV_FB_REFERENCE_IMAGE_DIR", "/path/to/snapshotimages"))
+                    "XCTOOL_TEST_ENV_FB_REFERENCE_IMAGE_DIR", "/path/to/snapshotimages",
+                    "LLVM_PROFILE_FILE", "/tmp/some.profraw"))
             .setDirectory(projectFilesystem.getRootPath().toAbsolutePath())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();

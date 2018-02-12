@@ -602,6 +602,28 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
+  public void targetspecificEnvironmentOverrideAffectsXctestTest() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_env", tmp);
+    workspace.setUp();
+    ProcessResult result;
+    result =
+        workspace.runBuckCommand(
+            "test", "--config", "apple.xctest_platforms=macosx", "//:foo#macosx-x86_64");
+    result.assertTestFailure("normally the test should fail");
+    workspace.resetBuildLogFile();
+    result =
+        workspace.runBuckCommand(
+            "test",
+            "--config",
+            "apple.xctest_platforms=macosx",
+            "--config",
+            "testcase.set_targetspecific_env=True",
+            "//:foo#macosx-x86_64");
+    result.assertSuccess("should pass when I pass correct environment");
+  }
+
+  @Test
   public void appleTestWithoutTestHostShouldSupportMultiarch() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_xctest", tmp);
