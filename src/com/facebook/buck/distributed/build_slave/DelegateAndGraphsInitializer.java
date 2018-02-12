@@ -175,7 +175,8 @@ public class DelegateAndGraphsInitializer {
               DefaultSourcePathResolver.from(ruleFinder),
               ruleFinder,
               caches.remoteStateCache,
-              caches.materializingCache);
+              caches.materializingCache,
+              this.args.getRuleKeyConfiguration());
     } else {
       cachingBuildEngineDelegate = new LocalCachingBuildEngineDelegate(caches.remoteStateCache);
     }
