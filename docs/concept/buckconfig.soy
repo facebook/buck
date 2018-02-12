@@ -614,17 +614,17 @@ $ buck targets --resolve-alias app#src_jar
 {call buckconfig.entry}
   {param section: 'build' /}
   {param name: 'depfiles' /}
-  {param example_value: 'enabled' /}
+  {param example_value: 'cache' /}
   {param description}
     Configures the use of dependency files for rules that support them.  This is an optimization
     that is useful when dependencies are over-specified and the rule can dynamically determine the
     subset of dependencies it actually needs.  The possible values are:
     <ul>
       <li>
-        <code>enabled</code> (default): Use dependency files to avoid unnecessary rebuilds.
+        <code>enabled</code>: Use dependency files to avoid unnecessary rebuilds.
       </li>
       <li>
-        <code>cache</code>: Use dependency files to avoid unnecessary rebuilds and to store/fetch
+        <code>cache</code> (default): Use dependency files to avoid unnecessary rebuilds and to store/fetch
         artifacts to/from the cache.
       </li>
       <li>
