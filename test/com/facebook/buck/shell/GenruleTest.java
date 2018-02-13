@@ -53,6 +53,11 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
+import com.facebook.buck.rules.macros.ClasspathMacro;
+import com.facebook.buck.rules.macros.ExecutableMacro;
+import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.facebook.buck.rules.macros.WorkerMacro;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -420,7 +425,7 @@ public class GenruleTest {
 
     return GenruleBuilder.newGenruleBuilder(
             BuildTargetFactory.newInstance("//:genrule_with_worker"))
-        .setCmd("$(worker :worker_rule) abc")
+        .setCmd(StringWithMacrosUtils.format("%s abc", WorkerMacro.of(workerTool.getBuildTarget())))
         .setOut("output.txt");
   }
 
@@ -514,7 +519,9 @@ public class GenruleTest {
 
     BuildRule genrule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule_with_worker"))
-            .setCmd("$(worker :worker_rule) abc")
+            .setCmd(
+                StringWithMacrosUtils.format(
+                    "%s abs", WorkerMacro.of(workerToolRule.getBuildTarget())))
             .setOut("output.txt")
             .build(ruleResolver);
 
@@ -813,7 +820,9 @@ public class GenruleTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     GenruleBuilder ruleBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
-            .setCmd("run $(location //:dep)")
+            .setCmd(
+                StringWithMacrosUtils.format(
+                    "run %s", LocationMacro.of(BuildTargetFactory.newInstance("//:dep"))))
             .setOut("output");
 
     // Create an initial input-based rule key
@@ -900,7 +909,9 @@ public class GenruleTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     GenruleBuilder ruleBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
-            .setCmd("run $(exe //:dep)")
+            .setCmd(
+                StringWithMacrosUtils.format(
+                    "run %s", ExecutableMacro.of(BuildTargetFactory.newInstance("//:dep"))))
             .setOut("output");
 
     // Create an initial input-based rule key
@@ -990,7 +1001,9 @@ public class GenruleTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     GenruleBuilder ruleBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
-            .setCmd("run $(classpath //:dep)")
+            .setCmd(
+                StringWithMacrosUtils.format(
+                    "run %s", ClasspathMacro.of(BuildTargetFactory.newInstance("//:dep"))))
             .setOut("output");
 
     // Create an initial input-based rule key

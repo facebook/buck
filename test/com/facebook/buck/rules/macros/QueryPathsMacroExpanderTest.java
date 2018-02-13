@@ -32,6 +32,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.HashMapWithStats;
@@ -155,7 +156,10 @@ public class QueryPathsMacroExpanderTest {
                 BuildTargetFactory.newInstance(filesystem.getRootPath(), "//some:target"),
                 filesystem)
             .setOut("foo.txt")
-            .setCmd("$(query_paths //some:dep)")
+            .setCmd(
+                StringWithMacrosUtils.format(
+                    "%s",
+                    QueryPathsMacro.of(Query.of(dep.getBuildTarget().getFullyQualifiedName()))))
             .build();
 
     TargetGraph graph = TargetGraphFactory.newInstance(dep, target);

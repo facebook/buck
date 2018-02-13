@@ -29,6 +29,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ProxyArg;
 import com.facebook.buck.shell.WorkerTool;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -93,6 +94,39 @@ public class WorkerMacroArg extends ProxyArg {
     BuildRule workerRule = resolver.getRule(workerTarget);
     if (!(workerRule instanceof WorkerTool)) {
       throw new MacroException(
+          String.format(
+              "%s used in worker macro, \"%s\", of target %s does "
+                  + "not correspond to a worker_tool",
+              workerTarget, unexpanded, target));
+    }
+    WorkerTool workerTool = (WorkerTool) workerRule;
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+    Tool exe = workerTool.getTool();
+    ImmutableList<String> startupCommand = exe.getCommandPrefix(pathResolver);
+    ImmutableMap<String, String> startupEnvironment = exe.getEnvironment(pathResolver);
+    return new WorkerMacroArg(arg, workerTarget, workerTool, startupCommand, startupEnvironment);
+  }
+
+  /** @return a {@link WorkerMacroArg} which wraps the given {@link StringWithMacros}. */
+  public static WorkerMacroArg fromStringWithMacros(
+      Arg arg, BuildTarget target, BuildRuleResolver resolver, StringWithMacros unexpanded) {
+    if (unexpanded.getMacros().isEmpty()) {
+      throw new HumanReadableException(
+          String.format("%s: no macros in \"%s\"", target, unexpanded));
+    }
+    Macro firstMacro = unexpanded.getMacros().get(0).getMacro();
+    if (!(firstMacro instanceof WorkerMacro)) {
+      throw new HumanReadableException(
+          String.format(
+              "%s: the worker macro in \"%s\" must be at the beginning", target, unexpanded));
+    }
+    WorkerMacro workerMacro = (WorkerMacro) firstMacro;
+
+    BuildTarget workerTarget = workerMacro.getTarget();
+    BuildRule workerRule = resolver.getRule(workerTarget);
+    if (!(workerRule instanceof WorkerTool)) {
+      throw new HumanReadableException(
           String.format(
               "%s used in worker macro, \"%s\", of target %s does "
                   + "not correspond to a worker_tool",

@@ -47,6 +47,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -140,9 +141,9 @@ public class ApkGenruleTest {
         ApkGenruleDescriptionArg.builder()
             .setName(buildTarget.getShortName())
             .setApk(new FakeInstallable(apkTarget).getBuildTarget())
-            .setBash("")
-            .setCmd("python signer.py $APK key.properties > $OUT")
-            .setCmdExe("")
+            .setBash(StringWithMacrosUtils.format(""))
+            .setCmd(StringWithMacrosUtils.format("python signer.py $APK key.properties > $OUT"))
+            .setCmdExe(StringWithMacrosUtils.format(""))
             .setOut("signed_fb4a.apk")
             .setSrcs(
                 ImmutableList.of(

@@ -22,6 +22,8 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
@@ -89,17 +91,22 @@ public class GenruleBuilder
   }
 
   public GenruleBuilder setBash(@Nullable String bash) {
-    getArgForPopulating().setBash(Optional.ofNullable(bash));
+    getArgForPopulating().setBash(Optional.ofNullable(bash).map(StringWithMacrosUtils::format));
     return this;
   }
 
-  public GenruleBuilder setCmd(@Nullable String cmd) {
+  public GenruleBuilder setCmd(@Nullable StringWithMacros cmd) {
     getArgForPopulating().setCmd(Optional.ofNullable(cmd));
     return this;
   }
 
+  public GenruleBuilder setCmd(@Nullable String cmd) {
+    getArgForPopulating().setCmd(Optional.ofNullable(cmd).map(StringWithMacrosUtils::format));
+    return this;
+  }
+
   public GenruleBuilder setCmdExe(@Nullable String cmdExe) {
-    getArgForPopulating().setCmdExe(Optional.ofNullable(cmdExe));
+    getArgForPopulating().setCmdExe(Optional.ofNullable(cmdExe).map(StringWithMacrosUtils::format));
     return this;
   }
 

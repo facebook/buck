@@ -18,6 +18,8 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 
@@ -43,6 +45,11 @@ public class ApkGenruleBuilder
   }
 
   public ApkGenruleBuilder setCmd(String cmd) {
+    getArgForPopulating().setCmd(StringWithMacrosUtils.format(cmd));
+    return this;
+  }
+
+  public ApkGenruleBuilder setCmd(StringWithMacros cmd) {
     getArgForPopulating().setCmd(cmd);
     return this;
   }

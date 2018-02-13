@@ -25,6 +25,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 
@@ -55,7 +56,7 @@ public class CxxGenruleBuilder
     return this;
   }
 
-  public CxxGenruleBuilder setCmd(String cmd) {
+  public CxxGenruleBuilder setCmd(StringWithMacros cmd) {
     getArgForPopulating().setCmd(cmd);
     return this;
   }

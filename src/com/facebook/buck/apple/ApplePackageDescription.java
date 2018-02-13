@@ -40,14 +40,25 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.macros.ClasspathMacroExpander;
+import com.facebook.buck.rules.macros.ExecutableMacroExpander;
+import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroArg;
+import com.facebook.buck.rules.macros.MacroExpander;
+import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.rules.macros.MavenCoordinatesMacroExpander;
+import com.facebook.buck.rules.macros.QueryOutputsMacroExpander;
+import com.facebook.buck.rules.macros.QueryPathsMacroExpander;
+import com.facebook.buck.rules.macros.QueryTargetsAndOutputsMacroExpander;
+import com.facebook.buck.rules.macros.QueryTargetsMacroExpander;
+import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
-import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -64,6 +75,22 @@ public class ApplePackageDescription
         Flavored,
         ImplicitDepsInferringDescription<
             ApplePackageDescription.AbstractApplePackageDescriptionArg> {
+
+  private static final MacroHandler PARSE_TIME_MACRO_HANDLER =
+      new MacroHandler(
+          ImmutableMap.<String, MacroExpander>builder()
+              .put("classpath", new ClasspathMacroExpander())
+              .put("exe", new ExecutableMacroExpander())
+              .put("worker", new WorkerMacroExpander())
+              .put("location", new LocationMacroExpander())
+              .put("maven_coords", new MavenCoordinatesMacroExpander())
+              .put("query_targets", new QueryTargetsMacroExpander(Optional.empty()))
+              .put("query_outputs", new QueryOutputsMacroExpander(Optional.empty()))
+              .put("query_paths", new QueryPathsMacroExpander(Optional.empty()))
+              .put(
+                  "query_targets_and_outputs",
+                  new QueryTargetsAndOutputsMacroExpander(Optional.empty()))
+              .build());
 
   private final ToolchainProvider toolchainProvider;
   private final SandboxExecutionStrategy sandboxExecutionStrategy;
@@ -95,10 +122,7 @@ public class ApplePackageDescription
         getApplePackageConfig(
             buildTarget,
             MacroArg.toMacroArgFunction(
-                AbstractGenruleDescription.PARSE_TIME_MACRO_HANDLER,
-                buildTarget,
-                cellRoots,
-                resolver));
+                PARSE_TIME_MACRO_HANDLER, buildTarget, cellRoots, resolver));
 
     if (applePackageConfigAndPlatformInfo.isPresent()) {
       return new ExternallyBuiltApplePackage(
@@ -228,7 +252,7 @@ public class ApplePackageDescription
 
       if (packageConfig.isPresent()) {
         try {
-          AbstractGenruleDescription.PARSE_TIME_MACRO_HANDLER.extractParseTimeDeps(
+          PARSE_TIME_MACRO_HANDLER.extractParseTimeDeps(
               target,
               cellNames,
               packageConfig.get().getCommand(),

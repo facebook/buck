@@ -19,6 +19,7 @@ package com.facebook.buck.js;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
@@ -63,7 +64,7 @@ public class JsBundleGenruleBuilder
     boolean rewriteSourcemap = false;
     boolean rewriteMisc = false;
     boolean skipResources = false;
-    public String cmd = null;
+    public StringWithMacros cmd = null;
 
     public static Options of(BuildTarget genruleTarget, BuildTarget jsBundle) {
       return new Options(genruleTarget, jsBundle);
@@ -84,7 +85,7 @@ public class JsBundleGenruleBuilder
       return this;
     }
 
-    public Options setCmd(String cmd) {
+    public Options setCmd(StringWithMacros cmd) {
       this.cmd = cmd;
       return this;
     }
