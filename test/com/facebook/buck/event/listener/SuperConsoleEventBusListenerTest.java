@@ -2404,6 +2404,35 @@ public class SuperConsoleEventBusListenerTest {
   }
 
   @Test
+  public void writingToStdoutDoesntStopRenderLoop() {
+    // We don't really write to stdout, so let other people do it. We only concern ourselves with
+    // stderr
+
+    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
+    SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
+
+    eventBus.post(ConsoleEvent.severe("Hello world!"));
+
+    listener.render();
+    TestConsole console = (TestConsole) listener.console;
+    String beforeStdOutWrite = console.getTextWrittenToStdErr();
+    assertEquals(
+        String.format("Hello world!%s\n", listener.ansi.clearToTheEndOfLine()), beforeStdOutWrite);
+
+    console.getStdOut().print("Dirty up that stdout stream");
+    assertEquals("Dirty up that stdout stream", console.getTextWrittenToStdOut());
+
+    eventBus.post(ConsoleEvent.severe("Hello world... again!"));
+    listener.render();
+    assertEquals(
+        String.format(
+            "Hello world!%s\nHello world... again!%s\n",
+            listener.ansi.clearToTheEndOfLine(), listener.ansi.clearToTheEndOfLine()),
+        console.getTextWrittenToStdErr());
+  }
+
+  @Test
   public void renderLinesWithLineLimit() throws IOException {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
     BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
