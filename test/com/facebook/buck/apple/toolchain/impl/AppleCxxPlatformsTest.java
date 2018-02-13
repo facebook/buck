@@ -185,7 +185,7 @@ public class AppleCxxPlatformsTest {
     paths.forEach(this::touchFile);
 
     AppleCxxPlatform appleCxxPlatform =
-        AppleCxxPlatforms.buildWithExecutableChecker(
+        AppleCxxPlatforms.buildWithXcodeToolFinder(
             projectFilesystem,
             targetSdk,
             "7.0",
@@ -283,7 +283,7 @@ public class AppleCxxPlatformsTest {
     paths.forEach(this::touchFile);
 
     AppleCxxPlatform appleCxxPlatform =
-        AppleCxxPlatforms.buildWithExecutableChecker(
+        AppleCxxPlatforms.buildWithXcodeToolFinder(
             projectFilesystem,
             targetSdk,
             "2.0",
@@ -377,7 +377,7 @@ public class AppleCxxPlatformsTest {
     paths.forEach(this::touchFile);
 
     AppleCxxPlatform appleCxxPlatform =
-        AppleCxxPlatforms.buildWithExecutableChecker(
+        AppleCxxPlatforms.buildWithXcodeToolFinder(
             projectFilesystem,
             targetSdk,
             "9.1",
@@ -472,7 +472,7 @@ public class AppleCxxPlatformsTest {
             .build();
 
     AppleCxxPlatform appleCxxPlatform =
-        AppleCxxPlatforms.buildWithExecutableChecker(
+        AppleCxxPlatforms.buildWithXcodeToolFinder(
             projectFilesystem,
             targetSdk,
             "7.0",
@@ -523,7 +523,7 @@ public class AppleCxxPlatformsTest {
             .build();
 
     AppleCxxPlatform appleCxxPlatform =
-        AppleCxxPlatforms.buildWithExecutableChecker(
+        AppleCxxPlatforms.buildWithXcodeToolFinder(
             projectFilesystem,
             targetSdk,
             "7.0",
@@ -579,7 +579,7 @@ public class AppleCxxPlatformsTest {
             .setToolchains(ImmutableList.of(toolchain))
             .build();
 
-    AppleCxxPlatforms.buildWithExecutableChecker(
+    AppleCxxPlatforms.buildWithXcodeToolFinder(
         projectFilesystem,
         targetSdk,
         "7.0",
@@ -628,7 +628,7 @@ public class AppleCxxPlatformsTest {
             .build();
 
     AppleCxxPlatform appleCxxPlatform =
-        AppleCxxPlatforms.buildWithExecutableChecker(
+        AppleCxxPlatforms.buildWithXcodeToolFinder(
             projectFilesystem,
             targetSdk,
             "7.0",
@@ -682,7 +682,7 @@ public class AppleCxxPlatformsTest {
             .build();
 
     AppleCxxPlatform appleCxxPlatform =
-        AppleCxxPlatforms.buildWithExecutableChecker(
+        AppleCxxPlatforms.buildWithXcodeToolFinder(
             projectFilesystem,
             targetSdk,
             "2.0",
@@ -737,7 +737,7 @@ public class AppleCxxPlatformsTest {
             .build();
 
     AppleCxxPlatform appleCxxPlatform =
-        AppleCxxPlatforms.buildWithExecutableChecker(
+        AppleCxxPlatforms.buildWithXcodeToolFinder(
             projectFilesystem,
             targetSdk,
             "9.1",
@@ -892,7 +892,7 @@ public class AppleCxxPlatformsTest {
             .build();
     getCommonKnownPaths(root).forEach(this::touchFile);
     this.touchFile(root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/ar"));
-    return AppleCxxPlatforms.buildWithExecutableChecker(
+    return AppleCxxPlatforms.buildWithXcodeToolFinder(
         projectFilesystem,
         targetSdk,
         "7.0",
@@ -1142,7 +1142,7 @@ public class AppleCxxPlatformsTest {
                     "Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-stdlib-tool"))
             .build();
     knownPaths.forEach(this::touchFile);
-    return AppleCxxPlatforms.buildWithExecutableChecker(
+    return AppleCxxPlatforms.buildWithXcodeToolFinder(
         projectFilesystem,
         FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_SDK,
         "7.0",

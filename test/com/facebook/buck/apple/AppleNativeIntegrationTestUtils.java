@@ -80,7 +80,7 @@ public class AppleNativeIntegrationTestUtils {
     }
     AppleSdk anySdk = anySdkOptional.get();
     AppleCxxPlatform appleCxxPlatform =
-        AppleCxxPlatforms.buildWithExecutableChecker(
+        AppleCxxPlatforms.buildWithXcodeToolFinder(
             new FakeProjectFilesystem(),
             anySdk,
             "fakeversion",

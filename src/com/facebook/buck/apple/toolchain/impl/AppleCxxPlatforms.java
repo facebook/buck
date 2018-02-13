@@ -131,7 +131,7 @@ public class AppleCxxPlatforms {
               LOG.debug("SDK %s using default version %s", sdk, targetSdkVersion);
               for (String architecture : sdk.getArchitectures()) {
                 appleCxxPlatformsBuilder.add(
-                    buildWithExecutableChecker(
+                    buildWithXcodeToolFinder(
                         filesystem,
                         sdk,
                         targetSdkVersion,
@@ -147,7 +147,7 @@ public class AppleCxxPlatforms {
   }
 
   @VisibleForTesting
-  public static AppleCxxPlatform buildWithExecutableChecker(
+  public static AppleCxxPlatform buildWithXcodeToolFinder(
       ProjectFilesystem filesystem,
       AppleSdk targetSdk,
       String minVersion,
