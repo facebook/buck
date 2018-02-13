@@ -127,7 +127,7 @@ public class DaemonIntegrationTest {
             timeoutMillis)) {
       Thread thread = Thread.currentThread();
       context.addClientListener(
-          () -> {
+          reason -> {
             Threads.interruptThread(thread);
           });
       Thread.sleep(1000);

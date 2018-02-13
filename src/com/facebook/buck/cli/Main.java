@@ -164,6 +164,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.reflect.ClassPath;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.martiansoftware.nailgun.NGClientDisconnectReason;
 import com.martiansoftware.nailgun.NGContext;
 import com.martiansoftware.nailgun.NGListeningAddress;
 import com.martiansoftware.nailgun.NGServer;
@@ -1294,11 +1295,10 @@ public final class Main {
     return parserAndCaches;
   }
 
-  private static void registerClientDisconnectedListener(NGContext context, Daemon daemon)
-      throws IOException {
+  private static void registerClientDisconnectedListener(NGContext context, Daemon daemon) {
     Thread mainThread = Thread.currentThread();
     context.addClientListener(
-        () -> {
+        reason -> {
           if (Main.isSessionLeader && Main.commandSemaphoreNgClient.orElse(null) == context) {
             LOG.info(
                 "Killing background processes on nailgun client disconnection"
@@ -1307,9 +1307,11 @@ public final class Main {
             BgProcessKiller.killBgProcesses();
           }
 
-          // signal daemon to complete required tasks and interrupt main thread
-          // this will hopefully trigger InterruptedException and program shutdown
-          daemon.interruptOnClientExit(mainThread);
+          if (reason != NGClientDisconnectReason.SESSION_SHUTDOWN) {
+            // signal daemon to complete required tasks and interrupt main thread
+            // this will hopefully trigger InterruptedException and program shutdown
+            daemon.interruptOnClientExit(mainThread);
+          }
         });
   }
 

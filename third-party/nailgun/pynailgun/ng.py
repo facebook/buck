@@ -53,10 +53,8 @@ CHUNKTYPE_SENDINPUT = 'S'
 CHUNKTYPE_HEARTBEAT = 'H'
 
 NSEC_PER_SEC = 1000000000
-
-# 500 ms heartbeat timeout
-HEARTBEAT_TIMEOUT_NANOS = NSEC_PER_SEC / 2
-HEARTBEAT_TIMEOUT_SECS = HEARTBEAT_TIMEOUT_NANOS / (NSEC_PER_SEC * 1.0)
+DEFAULT_HEARTBEAT_INTERVAL_SEC = 0.5
+SELECT_MAX_BLOCK_TIME_SEC = 1.0
 
 # We need to support Python 2.6 hosts which lack memoryview().
 import __builtin__
@@ -385,7 +383,8 @@ class NailgunConnection(object):
             stdin=sys.stdin,
             stdout=sys.stdout,
             stderr=sys.stderr,
-            cwd=None):
+            cwd=None,
+            heartbeat_interval_sec = DEFAULT_HEARTBEAT_INTERVAL_SEC):
         self.transport = make_nailgun_transport(server_name, server_port, cwd)
         self.stdin = stdin
         self.stdout = stdout
@@ -394,8 +393,7 @@ class NailgunConnection(object):
         self.send_flags = 0
         self.header_buf = ctypes.create_string_buffer(CHUNK_HEADER_LEN)
         self.buf = ctypes.create_string_buffer(BUFSIZE)
-        
-        self.sendtime_nanos = 0
+
         self.exit_code = None
         
         self.shutdown_event = Event()
@@ -411,6 +409,13 @@ class NailgunConnection(object):
         self.send_condition = Condition()
         self.send_thread = Thread(target=send_thread_main, args=(self,))
         self.send_thread.daemon = True
+
+        self.heartbeat_interval_sec = heartbeat_interval_sec
+        self.heartbeat_condition = Condition()
+        self.heartbeat_thread = None
+        if heartbeat_interval_sec > 0:
+            self.heartbeat_thread = Thread(target=heartbeat_thread_main, args=(self,))
+            self.heartbeat_thread.daemon = True
 
     def send_command(
             self,
@@ -452,16 +457,24 @@ class NailgunConnection(object):
             self._send_chunk(cwd, CHUNKTYPE_DIR)
             self._send_chunk(cmd, CHUNKTYPE_CMD)
 
+            if self.heartbeat_thread is not None:
+                self.heartbeat_thread.start()
+
             while self.exit_code is None:
                 self._process_next_chunk()
 
         finally:
 
             self.shutdown_event.set()
+
             with self.stdin_condition:
                 self.stdin_condition.notify()
             with self.send_condition:
                 self.send_condition.notify()
+            if self.heartbeat_thread is not None:
+                with self.heartbeat_condition:
+                    self.heartbeat_condition.notify()
+                self.heartbeat_thread.join(THREAD_TERMINATION_TIMEOUT_SEC)
             self.stdin_thread.join(THREAD_TERMINATION_TIMEOUT_SEC)
             self.send_thread.join(THREAD_TERMINATION_TIMEOUT_SEC)
 
@@ -471,12 +484,9 @@ class NailgunConnection(object):
         """
         Processes the next chunk from the nailgun server.
         """
-        readable, exceptional = self.transport.select(HEARTBEAT_TIMEOUT_SECS)
+        readable, exceptional = self.transport.select(SELECT_MAX_BLOCK_TIME_SEC)
         if readable:
             self._process_nailgun_stream()
-        now = monotonic_time_nanos()
-        if now - self.sendtime_nanos > HEARTBEAT_TIMEOUT_NANOS:
-            self._send_heartbeat()
         if exceptional:
             raise NailgunException(
                 'Server disconnected in select',
@@ -714,17 +724,20 @@ def send_thread_main(conn):
     """
     try:
         header_buf = ctypes.create_string_buffer(CHUNK_HEADER_LEN)
-        while not conn.shutdown_event.is_set():
+        while True:
             while not conn.send_queue.empty():
                 # only this thread can deplete the queue, so it is safe to use blocking get()
                 (chunk_type, buf) = conn.send_queue.get()
                 struct.pack_into('>ic', header_buf, 0, len(buf), chunk_type)
-                conn.sendtime_nanos = monotonic_time_nanos()
                 conn.transport.sendall(header_buf.raw)
                 conn.transport.sendall(buf)
 
             with conn.send_condition:
+                if conn.shutdown_event.is_set():
+                    return
                 conn.send_condition.wait()
+                if conn.shutdown_event.is_set():
+                    return
     except Exception as e:
         # save exception to rethrow on main thread
         with conn.error_lock:
@@ -743,10 +756,11 @@ def stdin_thread_main(conn):
             # wait for signal to read new line from stdin or shutdown
             # we  do not start reading from stdin before server actually requests that
             with conn.stdin_condition:
+                if conn.shutdown_event.is_set():
+                    return
                 conn.stdin_condition.wait()
-
-            if conn.shutdown_event.is_set():
-                return
+                if conn.shutdown_event.is_set():
+                    return
 
             if not conn.stdin or eof:
                 conn._send_chunk(buf, CHUNKTYPE_STDIN_EOF)
@@ -758,6 +772,28 @@ def stdin_thread_main(conn):
                 conn._send_chunk(buf, CHUNKTYPE_STDIN_EOF)
                 continue
             conn._send_chunk(buf, CHUNKTYPE_STDIN)
+    except Exception as e:
+        # save exception to rethrow on main thread
+        with conn.error_lock:
+            conn.error = e
+        conn.shutdown_event.set()
+
+
+def heartbeat_thread_main(conn):
+    """
+    Heartbeat thread worker function
+    Periodically sends heartbeats to server as long as command is running
+    """
+    try:
+        while True:
+            conn._send_heartbeat()
+
+            with conn.heartbeat_condition:
+                if conn.shutdown_event.is_set():
+                    return
+                conn.heartbeat_condition.wait(conn.heartbeat_interval_sec)
+                if conn.shutdown_event.is_set():
+                    return
     except Exception as e:
         # save exception to rethrow on main thread
         with conn.error_lock:
