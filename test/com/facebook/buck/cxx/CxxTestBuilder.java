@@ -69,12 +69,12 @@ public class CxxTestBuilder
     this(target, config, CxxPlatformUtils.DEFAULT_PLATFORM, CxxTestUtils.createDefaultPlatforms());
   }
 
-  public CxxTestBuilder setEnv(ImmutableMap<String, String> env) {
+  public CxxTestBuilder setEnv(ImmutableMap<String, StringWithMacros> env) {
     getArgForPopulating().setEnv(env);
     return this;
   }
 
-  public CxxTestBuilder setArgs(ImmutableList<String> args) {
+  public CxxTestBuilder setArgs(ImmutableList<StringWithMacros> args) {
     getArgForPopulating().setArgs(args);
     return this;
   }

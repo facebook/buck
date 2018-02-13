@@ -27,7 +27,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -42,9 +41,12 @@ import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionRoot;
@@ -220,22 +222,24 @@ public class CxxTestDescription
             .copyAppendingExtraDeps(
                 BuildableSupport.getDepsCollection(cxxLinkAndCompileRules.executable, ruleFinder));
 
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.builder()
+            .setBuildTarget(buildTarget)
+            .setCellPathResolver(cellRoots)
+            .setResolver(resolver)
+            .addExpanders(new LocationMacroExpander())
+            .build();
+
     // Supplier which expands macros in the passed in test environment.
-    ImmutableMap<String, String> testEnv =
-        ImmutableMap.copyOf(
-            Maps.transformValues(
-                args.getEnv(),
-                CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(buildTarget, cellRoots, resolver)
-                    ::apply));
+    ImmutableMap<String, Arg> testEnv =
+        ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert));
 
     // Supplier which expands macros in the passed in test arguments.
-    Supplier<ImmutableList<String>> testArgs =
+    Supplier<ImmutableList<Arg>> testArgs =
         () ->
             args.getArgs()
                 .stream()
-                .map(
-                    CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
-                        buildTarget, cellRoots, resolver))
+                .map(macrosConverter::convert)
                 .collect(ImmutableList.toImmutableList());
 
     Supplier<ImmutableSortedSet<BuildRule>> additionalDeps =
@@ -249,14 +253,9 @@ public class CxxTestDescription
                   params.getBuildDeps(), cxxLinkAndCompileRules.getBinaryRule().getBuildDeps()));
 
           // Add any build-time from any macros embedded in the `env` or `args` parameter.
-          for (String part : Iterables.concat(args.getArgs(), args.getEnv().values())) {
-            try {
-              deps.addAll(
-                  CxxDescriptionEnhancer.MACRO_HANDLER.extractBuildTimeDeps(
-                      buildTarget, cellRoots, resolver, part));
-            } catch (MacroException e) {
-              throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
-            }
+          for (StringWithMacros part : Iterables.concat(args.getArgs(), args.getEnv().values())) {
+            deps.addAll(
+                BuildableSupport.getDepsCollection(macrosConverter.convert(part), ruleFinder));
           }
 
           return deps.build();
@@ -337,21 +336,6 @@ public class CxxTestDescription
     targetGraphOnlyDepsBuilder.addAll(
         CxxPlatforms.getParseTimeDeps(getCxxPlatform(buildTarget, constructorArg)));
 
-    // Extract parse time deps from flags, args, and environment parameters.
-    Iterable<Iterable<String>> macroStrings =
-        ImmutableList.<Iterable<String>>builder()
-            .add(constructorArg.getArgs())
-            .add(constructorArg.getEnv().values())
-            .build();
-    for (String macroString : Iterables.concat(macroStrings)) {
-      try {
-        CxxDescriptionEnhancer.MACRO_HANDLER.extractParseTimeDeps(
-            buildTarget, cellRoots, macroString, extraDepsBuilder, targetGraphOnlyDepsBuilder);
-      } catch (MacroException e) {
-        throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
-      }
-    }
-
     // Add in any implicit framework deps.
     extraDepsBuilder.addAll(getImplicitFrameworkDeps(constructorArg));
 
@@ -417,9 +401,9 @@ public class CxxTestDescription
       extends CxxBinaryDescription.CommonArg, HasContacts, HasTestTimeout {
     Optional<CxxTestType> getFramework();
 
-    ImmutableMap<String, String> getEnv();
+    ImmutableMap<String, StringWithMacros> getEnv();
 
-    ImmutableList<String> getArgs();
+    ImmutableList<StringWithMacros> getArgs();
 
     Optional<Boolean> getRunTestSeparately();
 

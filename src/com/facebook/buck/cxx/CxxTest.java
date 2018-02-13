@@ -34,6 +34,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -62,8 +63,8 @@ import java.util.stream.Stream;
 abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements TestRule, HasRuntimeDeps, BinaryBuildRule, CacheableBuildRule {
 
-  @AddToRuleKey private final ImmutableMap<String, String> env;
-  @AddToRuleKey private final Supplier<ImmutableList<String>> args;
+  @AddToRuleKey private final ImmutableMap<String, Arg> env;
+  @AddToRuleKey private final Supplier<ImmutableList<Arg>> args;
   @AddToRuleKey private final Tool executable;
 
   @AddToRuleKey
@@ -82,8 +83,8 @@ abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Tool executable,
-      ImmutableMap<String, String> env,
-      Supplier<ImmutableList<String>> args,
+      ImmutableMap<String, Arg> env,
+      Supplier<ImmutableList<Arg>> args,
       ImmutableSortedSet<? extends SourcePath> resources,
       ImmutableSet<SourcePath> additionalCoverageTargets,
       Supplier<ImmutableSortedSet<BuildRule>> additionalDeps,
@@ -158,7 +159,7 @@ abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     .addAll(
                         getShellCommand(
                             buildContext.getSourcePathResolver(), getPathToTestResults()))
-                    .addAll(args.get())
+                    .addAll(Arg.stringify(args.get(), buildContext.getSourcePathResolver()))
                     .build(),
                 getEnv(buildContext.getSourcePathResolver()),
                 getPathToTestExitCode(),
@@ -265,11 +266,11 @@ abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   protected ImmutableMap<String, String> getEnv(SourcePathResolver pathResolver) {
     return new ImmutableMap.Builder<String, String>()
         .putAll(executable.getEnvironment(pathResolver))
-        .putAll(env)
+        .putAll(Arg.stringify(env, pathResolver))
         .build();
   }
 
-  protected Supplier<ImmutableList<String>> getArgs() {
+  protected Supplier<ImmutableList<Arg>> getArgs() {
     return args;
   }
 }

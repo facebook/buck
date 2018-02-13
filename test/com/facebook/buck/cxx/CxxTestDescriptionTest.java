@@ -156,7 +156,12 @@ public class CxxTestDescriptionTest {
             .setOut("someRule")
             .build(resolver);
     CxxTestBuilder builder =
-        createTestBuilder().setEnv(ImmutableMap.of("TEST", "value $(location //:some_rule)"));
+        createTestBuilder()
+            .setEnv(
+                ImmutableMap.of(
+                    "TEST",
+                    StringWithMacrosUtils.format(
+                        "value %s", LocationMacro.of(someRule.getBuildTarget()))));
     addSandbox(resolver, filesystem, builder.getTarget());
     CxxTest cxxTest = builder.build(resolver);
     TestRunningOptions options =
@@ -191,7 +196,11 @@ public class CxxTestDescriptionTest {
             .setOut("someRule")
             .build(resolver);
     CxxTestBuilder builder =
-        createTestBuilder().setArgs(ImmutableList.of("value $(location //:some_rule)"));
+        createTestBuilder()
+            .setArgs(
+                ImmutableList.of(
+                    StringWithMacrosUtils.format(
+                        "value %s", LocationMacro.of(someRule.getBuildTarget()))));
     addSandbox(resolver, filesystem, builder.getTarget());
     CxxTest cxxTest = builder.build(resolver);
     TestRunningOptions testOptions =

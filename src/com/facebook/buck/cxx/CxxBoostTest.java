@@ -30,6 +30,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestRunningOptions;
@@ -80,8 +81,8 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
       BuildRuleParams params,
       BuildRule binary,
       Tool executable,
-      ImmutableMap<String, String> env,
-      Supplier<ImmutableList<String>> args,
+      ImmutableMap<String, Arg> env,
+      Supplier<ImmutableList<Arg>> args,
       ImmutableSortedSet<? extends SourcePath> resources,
       ImmutableSet<SourcePath> additionalCoverageTargets,
       Supplier<ImmutableSortedSet<BuildRule>> additionalDeps,
@@ -249,7 +250,7 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
         .setType("boost")
         .addAllCommand(
             getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()))
-        .addAllCommand(getArgs().get())
+        .addAllCommand(Arg.stringify(getArgs().get(), buildContext.getSourcePathResolver()))
         .putAllEnv(getEnv(buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
