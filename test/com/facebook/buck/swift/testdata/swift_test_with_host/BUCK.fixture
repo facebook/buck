@@ -1,22 +1,14 @@
-if read_config('testconfig', 'dep_type') == 'swift_library':
-  swift_library(
-      name = "dep",
-      srcs = [
-          "dep.swift",
-      ],
-  )
-elif read_config('testconfig', 'dep_type') == 'apple_library':
-  apple_library(
-      name = "dep",
-      srcs = [
-          "dep.swift",
-      ],
-  )
-
 if 'macosx' in read_config('cxx', 'default_platform'):
   default_frameworks = ["$SDKROOT/System/Library/Frameworks/AppKit.framework"]
 else:
   default_frameworks = ["$SDKROOT/System/Library/Frameworks/UIKit.framework"]
+
+apple_library(
+    name = "dep",
+    srcs = [
+        "dep.swift",
+    ],
+)
 
 apple_binary(
     name = "binary",
