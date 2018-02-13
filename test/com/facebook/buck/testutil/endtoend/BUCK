@@ -8,6 +8,7 @@ java_library(
         ["*.java"],
         exclude = TEST_SRCS,
     ),
+    required_for_source_only_abi = True,
     resources = glob(["testdata/**"]),
     visibility = [
         "//test/...",

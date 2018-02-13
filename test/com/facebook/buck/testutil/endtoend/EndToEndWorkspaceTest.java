@@ -47,16 +47,14 @@ public class EndToEndWorkspaceTest {
 
   @Test
   public void shouldBuildSuccessfullyWithBuckd() throws InterruptedException, IOException {
-    ProcessResult result =
-        workspace.withBuckd().runBuckCommand("build", "simple_successful_helloworld");
+    ProcessResult result = workspace.runBuckCommand(true, "build", "simple_successful_helloworld");
     result.assertExitCode(
         "simple_successful_helloworld did not successfully build", ExitCode.map(0));
   }
 
   @Test
   public void shouldNotBuildSuccessfullyWithBuckd() throws InterruptedException, IOException {
-    ProcessResult result =
-        workspace.withBuckd().runBuckCommand("build", "simple_failed_helloworld");
+    ProcessResult result = workspace.runBuckCommand(true, "build", "simple_failed_helloworld");
     result.assertFailure("simple_failed_helloworld built when it should have failed to compile");
   }
 }

@@ -47,9 +47,9 @@ import org.junit.runners.model.Statement;
  * </ul>
  */
 public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
-  private TemporaryPaths tempPath;
-  private Boolean buckdEnabled;
-  private final ProcessExecutor processExecutor;
+  private TemporaryPaths tempPath = new TemporaryPaths();
+  private final ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
+  private Boolean ranWithBuckd = false;
 
   private static final String TESTDATA_DIRECTORY = "testdata";
 
@@ -66,9 +66,6 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
    */
   public EndToEndWorkspace() {
     super();
-    this.tempPath = new TemporaryPaths();
-    this.processExecutor = new DefaultProcessExecutor(new TestConsole());
-    this.buckdEnabled = false;
   }
 
   /**
@@ -94,7 +91,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
    * environment accidentally.
    */
   public void teardown() {
-    if (this.buckdEnabled) {
+    if (this.ranWithBuckd) {
       try {
         this.runBuckCommand("kill");
       } catch (Exception e) {
@@ -121,24 +118,17 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
   }
 
   private ImmutableMap<String, String> overrideSystemEnvironment(
-      ImmutableMap<String, String> environmentOverrides) {
-    ImmutableMap.Builder<String, String> environmentBuilder =
-        ImmutableMap.<String, String>builder();
+      Boolean buckdEnabled, ImmutableMap<String, String> environmentOverrides) {
+    ImmutableMap.Builder<String, String> environmentBuilder = ImmutableMap.builder();
     for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
-      if (entry.getKey() == "NO_BUCKD" && this.buckdEnabled) continue;
+      if (entry.getKey() == "NO_BUCKD" && buckdEnabled) continue;
       environmentBuilder.put(entry.getKey(), entry.getValue());
     }
-    if (!this.buckdEnabled) {
+    if (buckdEnabled) {
       environmentBuilder.put("NO_BUCKD", "1");
     }
     environmentBuilder.putAll(environmentOverrides);
     return environmentBuilder.build();
-  }
-
-  /** Enables the usage of Buckd while running buck commands. */
-  public EndToEndWorkspace withBuckd() {
-    this.buckdEnabled = true;
-    return this;
   }
 
   /**
@@ -156,6 +146,22 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
   }
 
   /**
+   * Runs Buck with the specified list of command-line arguments, and the current system environment
+   * variables.
+   *
+   * @param buckdEnabled determines whether the command is run with buckdEnabled or not
+   * @param args to pass to {@code buck}, so that could be {@code ["build", "//path/to:target"]},
+   *     {@code ["project"]}, etc.
+   * @return the result of running Buck, which includes the exit code, stdout, and stderr.
+   */
+  public ProcessResult runBuckCommand(Boolean buckdEnabled, String... args)
+      throws InterruptedException, IOException {
+    ImmutableMap<String, String> environment = ImmutableMap.of();
+    String[] templates = new String[] {};
+    return runBuckCommand(buckdEnabled, environment, templates, args);
+  }
+
+  /**
    * Runs Buck with the specified list of command-line arguments with the given map of environment
    * variables as overrides of the current system environment.
    *
@@ -164,13 +170,38 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
    *     {@code ["project"]}, etc.
    * @return the result of running Buck, which includes the exit code, stdout, and stderr.
    */
-  @Override
   public ProcessResult runBuckCommand(
       ImmutableMap<String, String> environmentOverrides, String... args)
       throws InterruptedException, IOException {
+    String[] templates = new String[] {};
+    return runBuckCommand(false, environmentOverrides, templates, args);
+  }
+
+  /**
+   * Runs Buck with the specified list of command-line arguments with the given map of environment
+   * variables as overrides of the current system environment.
+   *
+   * @param buckdEnabled determines whether the command is run with buckdEnabled or not
+   * @param environmentOverrides set of environment variables to override
+   * @param templates is an array of premade templates to add to the workspace before running the
+   *     command.
+   * @param args to pass to {@code buck}, so that could be {@code ["build", "//path/to:target"]},
+   *     {@code ["project"]}, etc.
+   * @return the result of running Buck, which includes the exit code, stdout, and stderr.
+   */
+  public ProcessResult runBuckCommand(
+      Boolean buckdEnabled,
+      ImmutableMap<String, String> environmentOverrides,
+      String[] templates,
+      String... args)
+      throws InterruptedException, IOException {
+    for (String template : templates) {
+      this.addPremadeTemplate(template);
+    }
     List<String> command =
         ImmutableList.<String>builder().add(BUCK_EXE).addAll(ImmutableList.copyOf(args)).build();
-    ImmutableMap<String, String> environment = overrideSystemEnvironment(environmentOverrides);
+    ImmutableMap<String, String> environment =
+        overrideSystemEnvironment(buckdEnabled, environmentOverrides);
     ProcessExecutorParams params =
         ProcessExecutorParams.builder()
             .setCommand(command)
@@ -178,6 +209,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
             .setDirectory(destPath.toAbsolutePath())
             .build();
     ProcessExecutor.Result result = processExecutor.launchAndExecute(params);
+    ranWithBuckd = ranWithBuckd || buckdEnabled;
     return new ProcessResult(
         ExitCode.map(result.getExitCode()),
         result.getStdout().orElse(""),

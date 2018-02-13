@@ -23,6 +23,7 @@ IGNORE_PREFIXES = [
   'buck-out',
   'build-ij',
   'src/com/facebook/buck/testrunner',
+  'test/com/facebook/buck/testutil/endtoend/EndToEndRunner',
   # t13833822
   'tools/ideabuck/tests/integration',
 ]
