@@ -27,7 +27,7 @@ public class EndToEndWorkspaceTest {
   @Rule public EndToEndWorkspace workspace = new EndToEndWorkspace();
 
   @Before
-  public void buildCppEnv() throws IOException {
+  public void buildCppEnv() throws Exception {
     workspace.addPremadeTemplate("cxx");
   }
 

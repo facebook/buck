@@ -26,22 +26,31 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
+import java.net.URL;
 import java.nio.channels.Channels;
-import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystemNotFoundException;
+import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.spi.FileSystemProvider;
+import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Queue;
 
 /**
  * {@link AbstractWorkspace} is a directory that contains a Buck project, complete with build files.
@@ -121,11 +130,91 @@ public abstract class AbstractWorkspace {
     saveBuckConfigLocal();
   }
 
+  /** Stamp the buck-out directory if it exists and isn't stamped already */
+  private void stampBuckVersion() throws IOException {
+    if (!Files.exists(destPath.resolve(BuckConstant.getBuckOutputPath()))) {
+      return;
+    }
+    try (OutputStream outputStream =
+        new BufferedOutputStream(
+            Channels.newOutputStream(
+                Files.newByteChannel(
+                    destPath.resolve(BuckConstant.getBuckOutputPath().resolve(".currentversion")),
+                    ImmutableSet.<OpenOption>of(
+                        StandardOpenOption.CREATE, StandardOpenOption.WRITE))))) {
+      outputStream.write(BuckVersion.getVersion().getBytes(Charsets.UTF_8));
+    }
+  }
+
+  private void ensureNoLocalBuckConfig() throws IOException {
+    if (Files.exists(getPath(".buckconfig.local"))) {
+      throw new IllegalStateException(
+          "Found a .buckconfig.local in the Workspace template, which is illegal."
+              + "  Use addBuckConfigLocalOption instead."
+              + "  This can also happen if workspace.setUp() is called twice.");
+    }
+  }
+
+  private void addDefaultLocalBuckConfigs() throws IOException {
+    // Disable the directory cache by default.  Tests that want to enable it can call
+    // `enableDirCache` on this object.  Only do this if a .buckconfig.local file does not already
+    // exist, however (we assume the test knows what it is doing at that point).
+    addBuckConfigLocalOption("cache", "mode", "");
+
+    // Limit the number of threads by default to prevent multiple integration tests running at the
+    // same time from creating a quadratic number of threads. Tests can disable this using
+    // `disableThreadLimitOverride`.
+    addBuckConfigLocalOption("build", "threads", "2");
+  }
+
+  private void ensureWatchmanConfig() throws IOException {
+    // We have to have .watchmanconfig on windows, otherwise we have problems with deleting stuff
+    // from buck-out while watchman indexes/touches files.
+    if (!Files.exists(getPath(".watchmanconfig"))) {
+      writeContentsToPath("{\"ignore_dirs\":[\"buck-out\",\".buckd\"]}", ".watchmanconfig");
+    }
+  }
+
+  private FileSystem getOrCreateJarFileSystem(URI jarURI) throws IOException {
+    try {
+      return FileSystems.getFileSystem(jarURI);
+    } catch (FileSystemNotFoundException e) {
+      Map<String, String> env = new HashMap<>();
+      env.put("create", "true");
+      return FileSystems.newFileSystem(jarURI, env);
+    }
+  }
+
+  private void copyTemplateContentsToDestPath(
+      FileSystemProvider provider, Path templatePath, Path contentPath) throws IOException {
+    String fileName = contentPath.getFileName().toString();
+    String extension = com.google.common.io.Files.getFileExtension(fileName);
+    if (extension.equals(EXPECTED_SUFFIX)) {
+      return;
+    }
+
+    Path outputPath = contentPath;
+    if (extension.equals(FIXTURE_SUFFIX)) {
+      outputPath =
+          contentPath
+              .getParent()
+              .resolve(com.google.common.io.Files.getNameWithoutExtension(fileName));
+    }
+    outputPath = templatePath.relativize(outputPath);
+
+    try (InputStream inStream = provider.newInputStream(contentPath);
+        FileOutputStream outStream =
+            new FileOutputStream(destPath.resolve(outputPath.toString()).toString())) {
+      byte[] buffer = new byte[inStream.available()];
+      inStream.read(buffer);
+      outStream.write(buffer);
+    }
+  }
+
   /**
    * This will copy the template directory, renaming files named {@code foo.fixture} to {@code foo}
    * in the process. Files whose names end in {@code .expected} will not be copied.
    */
-  @SuppressWarnings("PMD.EmptyCatchBlock")
   public void addTemplateToWorkspace(Path templatePath) throws IOException {
     // renames those with FIXTURE_SUFFIX, removes those with EXPECTED_SUFFIX
     MoreFiles.copyRecursively(
@@ -145,19 +234,7 @@ public abstract class AbstractWorkspace {
           }
         });
 
-    // Stamp the buck-out directory if it exists and isn't stamped already
-    try (OutputStream outputStream =
-        new BufferedOutputStream(
-            Channels.newOutputStream(
-                Files.newByteChannel(
-                    destPath.resolve(BuckConstant.getBuckOutputPath().resolve(".currentversion")),
-                    ImmutableSet.<OpenOption>of(
-                        StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE))))) {
-      outputStream.write(BuckVersion.getVersion().getBytes(Charsets.UTF_8));
-    } catch (FileAlreadyExistsException | NoSuchFileException e) {
-      // If the current version file already exists we don't need to create it
-      // If buck-out doesn't exist we don't need to stamp it
-    }
+    stampBuckVersion();
 
     if (Platform.detect() == Platform.WINDOWS) {
       // Hack for symlinks on Windows.
@@ -196,27 +273,59 @@ public abstract class AbstractWorkspace {
       Files.walkFileTree(destPath, copyDirVisitor);
     }
 
-    if (Files.exists(getPath(".buckconfig.local"))) {
-      throw new IllegalStateException(
-          "Found a .buckconfig.local in the Workspace template, which is illegal."
-              + "  Use addBuckConfigLocalOption instead."
-              + "  This can also happen if workspace.setUp() is called twice.");
+    ensureNoLocalBuckConfig();
+    addDefaultLocalBuckConfigs();
+    ensureWatchmanConfig();
+  }
+
+  /**
+   * Copies a template to the Workspace regardless of what provider the template has its path
+   * defined with. This is needed since using the "regular" copying mechanics with our destPath and
+   * a non-default FileSystemProvider causes a ProviderMismatchException
+   */
+  private void copyTemplateToWorkspace(FileSystemProvider provider, Path templatePath)
+      throws IOException {
+    Queue<Path> contentQueue = new ArrayDeque<>();
+    addDirectoryContentToQueue(provider, templatePath, contentQueue);
+    while (!contentQueue.isEmpty()) {
+      Path contentPath = contentQueue.remove();
+      if (Files.isDirectory(contentPath)) {
+        Files.createDirectory(destPath.resolve(templatePath.relativize(contentPath).toString()));
+        addDirectoryContentToQueue(provider, contentPath, contentQueue);
+      } else {
+        copyTemplateContentsToDestPath(provider, templatePath, contentPath);
+      }
     }
+  }
 
-    // Disable the directory cache by default.  Tests that want to enable it can call
-    // `enableDirCache` on this object.  Only do this if a .buckconfig.local file does not already
-    // exist, however (we assume the test knows what it is doing at that point).
-    addBuckConfigLocalOption("cache", "mode", "");
+  /**
+   * This will copy the template directory, renaming files named {@code foo.fixture} to {@code foo}
+   * in the process. Files whose names end in {@code .expected} will not be copied.
+   *
+   * <p>Assumes that {@param testDataResource} is contained in a jar.
+   */
+  public void addTemplateToWorkspace(URL testDataResource, String templateName) throws Exception {
+    // not using "!/" as the ZipFileProvider (which is what is used for Jar files) treats "/" as the
+    // root of the jar, and we want to keep it in the split
+    String[] jarSplit = testDataResource.toURI().toString().split("!");
+    URI jarURI = URI.create(jarSplit[0]);
+    FileSystem testDataFS = getOrCreateJarFileSystem(jarURI);
+    FileSystemProvider provider = testDataFS.provider();
+    Path templatePath = testDataFS.getPath(jarSplit[1].toString(), templateName);
 
-    // Limit the number of threads by default to prevent multiple integration tests running at the
-    // same time from creating a quadratic number of threads. Tests can disable this using
-    // `disableThreadLimitOverride`.
-    addBuckConfigLocalOption("build", "threads", "2");
+    copyTemplateToWorkspace(provider, templatePath);
+    stampBuckVersion();
+    ensureNoLocalBuckConfig();
+    addDefaultLocalBuckConfigs();
+    ensureWatchmanConfig();
+  }
 
-    // We have to have .watchmanconfig on windows, otherwise we have problems with deleting stuff
-    // from buck-out while watchman indexes/touches files.
-    if (!Files.exists(getPath(".watchmanconfig"))) {
-      writeContentsToPath("{\"ignore_dirs\":[\"buck-out\",\".buckd\"]}", ".watchmanconfig");
+  private void addDirectoryContentToQueue(
+      FileSystemProvider provider, Path dirPath, Queue<Path> contentQueue) throws IOException {
+    try (DirectoryStream<Path> dirStream = provider.newDirectoryStream(dirPath, entry -> true)) {
+      for (Path contents : dirStream) {
+        contentQueue.add(contents);
+      }
     }
   }
 

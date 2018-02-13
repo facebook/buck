@@ -27,6 +27,7 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.List;
@@ -187,7 +188,13 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
    * Copies the template directory of a premade template, contained in endtoend/testdata, stripping
    * the suffix from files with suffix .fixture, and not copying files with suffix .expected
    */
-  public void addPremadeTemplate(String templateName) throws IOException {
+  public void addPremadeTemplate(String templateName) throws Exception {
+    URL testDataResource = getClass().getResource(TESTDATA_DIRECTORY);
+    // If we're running this test in IJ, then this path doesn't exist. Fall back to one that does
+    if (testDataResource != null) {
+      this.addTemplateToWorkspace(testDataResource, templateName);
+      return;
+    }
     Path templatePath =
         FileSystems.getDefault()
             .getPath(
