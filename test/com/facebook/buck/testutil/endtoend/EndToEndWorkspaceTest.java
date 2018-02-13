@@ -18,7 +18,6 @@ package com.facebook.buck.testutil.endtoend;
 
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.util.ExitCode;
-import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,28 +31,28 @@ public class EndToEndWorkspaceTest {
   }
 
   @Test
-  public void shouldBuildSuccessfully() throws InterruptedException, IOException {
+  public void shouldBuildSuccessfully() throws Exception {
     ProcessResult result = workspace.runBuckCommand("build", "simple_successful_helloworld");
     result.assertExitCode(
         "simple_successful_helloworld did not successfully build", ExitCode.map(0));
   }
 
   @Test
-  public void shouldNotBuildSuccessfully() throws InterruptedException, IOException {
+  public void shouldNotBuildSuccessfully() throws Exception {
     ProcessResult result = workspace.runBuckCommand("build", "simple_failed_helloworld");
     result.assertFailure(
         "simple_failed_helloworld successfully built when it should have failed to compile");
   }
 
   @Test
-  public void shouldBuildSuccessfullyWithBuckd() throws InterruptedException, IOException {
+  public void shouldBuildSuccessfullyWithBuckd() throws Exception {
     ProcessResult result = workspace.runBuckCommand(true, "build", "simple_successful_helloworld");
     result.assertExitCode(
         "simple_successful_helloworld did not successfully build", ExitCode.map(0));
   }
 
   @Test
-  public void shouldNotBuildSuccessfullyWithBuckd() throws InterruptedException, IOException {
+  public void shouldNotBuildSuccessfullyWithBuckd() throws Exception {
     ProcessResult result = workspace.runBuckCommand(true, "build", "simple_failed_helloworld");
     result.assertFailure("simple_failed_helloworld built when it should have failed to compile");
   }

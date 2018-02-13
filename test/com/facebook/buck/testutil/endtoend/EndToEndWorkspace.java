@@ -26,7 +26,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
 import java.net.URL;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -140,7 +139,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
    * @return the result of running Buck, which includes the exit code, stdout, and stderr.
    */
   @Override
-  public ProcessResult runBuckCommand(String... args) throws InterruptedException, IOException {
+  public ProcessResult runBuckCommand(String... args) throws Exception {
     ImmutableMap<String, String> environment = ImmutableMap.of();
     return runBuckCommand(environment, args);
   }
@@ -154,8 +153,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
    *     {@code ["project"]}, etc.
    * @return the result of running Buck, which includes the exit code, stdout, and stderr.
    */
-  public ProcessResult runBuckCommand(Boolean buckdEnabled, String... args)
-      throws InterruptedException, IOException {
+  public ProcessResult runBuckCommand(Boolean buckdEnabled, String... args) throws Exception {
     ImmutableMap<String, String> environment = ImmutableMap.of();
     String[] templates = new String[] {};
     return runBuckCommand(buckdEnabled, environment, templates, args);
@@ -171,8 +169,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
    * @return the result of running Buck, which includes the exit code, stdout, and stderr.
    */
   public ProcessResult runBuckCommand(
-      ImmutableMap<String, String> environmentOverrides, String... args)
-      throws InterruptedException, IOException {
+      ImmutableMap<String, String> environmentOverrides, String... args) throws Exception {
     String[] templates = new String[] {};
     return runBuckCommand(false, environmentOverrides, templates, args);
   }
@@ -194,7 +191,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
       ImmutableMap<String, String> environmentOverrides,
       String[] templates,
       String... args)
-      throws InterruptedException, IOException {
+      throws Exception {
     for (String template : templates) {
       this.addPremadeTemplate(template);
     }
