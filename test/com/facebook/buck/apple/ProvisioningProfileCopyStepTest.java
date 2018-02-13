@@ -306,4 +306,67 @@ public class ProvisioningProfileCopyStepTest {
         xcentPlist.get("com.apple.developer.team-identifier"),
         profileEntitlements.get("com.apple.developer.team-identifier"));
   }
+
+  @Test
+  public void testEntitlementsMergesValidProfileKeys() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProvisioningProfileCopyStep step =
+        new ProvisioningProfileCopyStep(
+            projectFilesystem,
+            testdataDir.resolve("Info.plist"),
+            ApplePlatform.IPHONEOS,
+            Optional.of("00000000-0000-0000-0000-000000000000"),
+            Optional.of(entitlementsFile),
+            ProvisioningProfileStoreFactory.fromSearchPath(
+                new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
+            outputFile,
+            xcentFile,
+            codeSignIdentitiesSupplier,
+            Optional.empty());
+    step.execute(executionContext);
+
+    ProvisioningProfileMetadata selectedProfile =
+        step.getSelectedProvisioningProfileFuture().get().get();
+    ImmutableMap<String, NSObject> profileEntitlements = selectedProfile.getEntitlements();
+    assertTrue(profileEntitlements.containsKey("get-task-allow"));
+
+    Optional<String> entitlementsContents = projectFilesystem.readFileIfItExists(entitlementsFile);
+    assertTrue(entitlementsContents.isPresent());
+    NSDictionary entitlementsPlist =
+        (NSDictionary) PropertyListParser.parse(entitlementsContents.get().getBytes());
+    assertFalse(entitlementsPlist.containsKey("get-task-allow"));
+
+    Optional<String> xcentContents = projectFilesystem.readFileIfItExists(xcentFile);
+    assertTrue(xcentContents.isPresent());
+    NSDictionary xcentPlist =
+        (NSDictionary) PropertyListParser.parse(xcentContents.get().getBytes());
+    assertTrue(xcentPlist.containsKey("get-task-allow"));
+  }
+
+  @Test
+  public void testApplicationIdentifierIsValid() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProvisioningProfileCopyStep step =
+        new ProvisioningProfileCopyStep(
+            projectFilesystem,
+            testdataDir.resolve("Info.plist"),
+            ApplePlatform.IPHONEOS,
+            Optional.of("00000000-0000-0000-0000-000000000000"),
+            Optional.of(entitlementsFile),
+            ProvisioningProfileStoreFactory.fromSearchPath(
+                new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
+            outputFile,
+            xcentFile,
+            codeSignIdentitiesSupplier,
+            Optional.empty());
+    step.execute(executionContext);
+
+    Optional<String> xcentContents = projectFilesystem.readFileIfItExists(xcentFile);
+    assertTrue(xcentContents.isPresent());
+    NSDictionary xcentPlist =
+        (NSDictionary) PropertyListParser.parse(xcentContents.get().getBytes());
+    assertEquals(
+        xcentPlist.get("application-identifier"),
+        new NSString("ABCDE12345.com.example.TestApp"));
+  }
 }
