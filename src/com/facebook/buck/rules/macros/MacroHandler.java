@@ -40,7 +40,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-/** Extracts macros from input strings and calls registered expanders to handle their input. */
+/**
+ * Extracts macros from input strings and calls registered expanders to handle their input.
+ *
+ * <p>Deprecated: Use {@link StringWithMacros} in constructor args and {@link
+ * StringWithMacrosConverter} instead.
+ */
+@Deprecated
 public class MacroHandler {
 
   private final ImmutableMap<String, MacroExpander> expanders;

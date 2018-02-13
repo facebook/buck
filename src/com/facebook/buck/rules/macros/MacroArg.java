@@ -32,7 +32,13 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-/** An {@link Arg} which contains macros that need to be expanded. */
+/**
+ * An {@link Arg} which contains macros that need to be expanded.
+ *
+ * <p>Deprecated: Use {@link StringWithMacros} in constructor args and {@link
+ * StringWithMacrosConverter} instead.
+ */
+@Deprecated
 public class MacroArg implements Arg, RuleKeyAppendable {
 
   protected final MacroHandler expander;
