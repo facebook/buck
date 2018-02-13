@@ -37,7 +37,7 @@ import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWor
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
-import com.facebook.buck.rules.macros.StringWithMacrosArg;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.shell.WorkerShellStep;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.worker.WorkerJobParams;
@@ -173,16 +173,9 @@ public class JsUtil {
       BuildTarget target,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots) {
-    return args.getExtraJson()
-        .map(
-            stringWithMacros ->
-                StringWithMacrosArg.of(
-                    stringWithMacros,
-                    MACRO_EXPANDERS,
-                    Optional.empty(),
-                    target,
-                    cellRoots,
-                    resolver));
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.of(target, cellRoots, resolver, MACRO_EXPANDERS);
+    return args.getExtraJson().map(macrosConverter::convert);
   }
 
   /** @return The input with all special JSON characters escaped, but not wrapped in quotes. */

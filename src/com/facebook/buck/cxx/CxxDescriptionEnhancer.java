@@ -69,7 +69,7 @@ import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.OutputMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.rules.macros.StringWithMacrosArg;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
@@ -951,18 +951,21 @@ public class CxxDescriptionEnhancer {
 
     // Build up the linker flags, which support macro expansion.
     {
-      Optional<Function<String, String>> sanitizer =
-          Optional.of(getStringWithMacrosArgSanitizer(cxxPlatform));
       ImmutableList<AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro>> expanders =
           ImmutableList.of(new CxxLocationMacroExpander(cxxPlatform), new OutputMacroExpander());
 
+      StringWithMacrosConverter macrosConverter =
+          StringWithMacrosConverter.builder()
+              .setBuildTarget(linkRuleTarget)
+              .setCellPathResolver(cellRoots)
+              .setResolver(resolver)
+              .setExpanders(expanders)
+              .setSanitizer(getStringWithMacrosArgSanitizer(cxxPlatform))
+              .build();
       CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
               linkerFlags, platformLinkerFlags, cxxPlatform)
           .stream()
-          .map(
-              f ->
-                  StringWithMacrosArg.of(
-                      f, expanders, sanitizer, linkRuleTarget, cellRoots, resolver))
+          .map(macrosConverter::convert)
           .forEach(argsBuilder::add);
     }
 
@@ -1380,13 +1383,15 @@ public class CxxDescriptionEnhancer {
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       StringWithMacros flag) {
-    return StringWithMacrosArg.of(
-        flag,
-        ImmutableList.of(new CxxLocationMacroExpander(cxxPlatform), new OutputMacroExpander()),
-        Optional.of(getStringWithMacrosArgSanitizer(cxxPlatform)),
-        target,
-        cellPathResolver,
-        resolver);
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.builder()
+            .setBuildTarget(target)
+            .setCellPathResolver(cellPathResolver)
+            .setResolver(resolver)
+            .addExpanders(new CxxLocationMacroExpander(cxxPlatform), new OutputMacroExpander())
+            .setSanitizer(getStringWithMacrosArgSanitizer(cxxPlatform))
+            .build();
+    return macrosConverter.convert(flag);
   }
 
   private static Function<String, String> getStringWithMacrosArgSanitizer(CxxPlatform platform) {

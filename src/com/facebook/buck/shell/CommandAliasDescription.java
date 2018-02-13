@@ -30,7 +30,7 @@ import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWor
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.rules.macros.StringWithMacrosArg;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -74,17 +74,15 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
     ImmutableList.Builder<Arg> toolArgs = ImmutableList.builder();
     ImmutableSortedMap.Builder<String, Arg> toolEnv = ImmutableSortedMap.naturalOrder();
 
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.of(buildTarget, cellRoots, resolver, MACRO_EXPANDERS);
+
     for (StringWithMacros x : args.getArgs()) {
-      toolArgs.add(
-          StringWithMacrosArg.of(
-              x, MACRO_EXPANDERS, Optional.empty(), buildTarget, cellRoots, resolver));
+      toolArgs.add(macrosConverter.convert(x));
     }
 
     for (Map.Entry<String, StringWithMacros> x : args.getEnv().entrySet()) {
-      toolEnv.put(
-          x.getKey(),
-          StringWithMacrosArg.of(
-              x.getValue(), MACRO_EXPANDERS, Optional.empty(), buildTarget, cellRoots, resolver));
+      toolEnv.put(x.getKey(), macrosConverter.convert(x.getValue()));
     }
 
     Optional<BuildRule> exe = args.getExe().map(resolver::getRule);

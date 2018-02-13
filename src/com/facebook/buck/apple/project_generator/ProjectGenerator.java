@@ -127,7 +127,7 @@ import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.rules.macros.StringWithMacrosArg;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.facebook.buck.swift.SwiftBuckConfig;
@@ -944,15 +944,14 @@ public class ProjectGenerator {
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer(), buckEventBus);
     ImmutableList.Builder<String> result = new ImmutableList.Builder<>();
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.of(
+            node.getBuildTarget(),
+            node.getCellNames(),
+            emptyBuildRuleResolver,
+            ImmutableList.of(locationMacroExpander));
     for (StringWithMacros flag : flags) {
-      StringWithMacrosArg.of(
-              flag,
-              ImmutableList.of(locationMacroExpander),
-              Optional.empty(),
-              node.getBuildTarget(),
-              node.getCellNames(),
-              emptyBuildRuleResolver)
-          .appendToCommandLine(result::add, defaultPathResolver);
+      macrosConverter.convert(flag).appendToCommandLine(result::add, defaultPathResolver);
     }
     return result.build();
   }

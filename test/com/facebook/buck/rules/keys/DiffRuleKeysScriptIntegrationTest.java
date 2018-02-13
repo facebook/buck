@@ -257,8 +257,7 @@ public class DiffRuleKeysScriptIntegrationTest {
     String expectedFileContent = new String(Files.readAllBytes(logPath), UTF_8);
     assertThat(
         expectedFileContent,
-        Matchers.containsString(
-            "string(\"-I$SDKROOT/usr/include/libxml2\"):container(LIST,len=1):key(macros):"));
+        Matchers.containsString("string(\"-I$SDKROOT/usr/include/libxml2\"):key(sanitized):"));
   }
 
   private void writeBuckConfig(ProjectWorkspace projectWorkspace, String javaVersion)

@@ -19,32 +19,31 @@ package com.facebook.buck.ocaml;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.rules.macros.StringWithMacrosArg;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.google.common.collect.ImmutableList;
-import java.util.Optional;
 
 public class OcamlDescriptionEnhancer {
 
   private OcamlDescriptionEnhancer() {}
 
-  public static ImmutableList<StringWithMacrosArg> toStringWithMacrosArgs(
+  public static ImmutableList<Arg> toStringWithMacrosArgs(
       BuildTarget target,
       CellPathResolver cellPathResolver,
       BuildRuleResolver resolver,
       Iterable<StringWithMacros> flags) {
-    ImmutableList.Builder<StringWithMacrosArg> args = ImmutableList.builder();
+    ImmutableList.Builder<Arg> args = ImmutableList.builder();
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.of(
+            target,
+            cellPathResolver,
+            resolver,
+            ImmutableList.of(new LocationMacroExpander(), new ExecutableMacroExpander()));
     for (StringWithMacros flag : flags) {
-      args.add(
-          StringWithMacrosArg.of(
-              flag,
-              ImmutableList.of(new LocationMacroExpander(), new ExecutableMacroExpander()),
-              Optional.empty(),
-              target,
-              cellPathResolver,
-              resolver));
+      args.add(macrosConverter.convert(flag));
     }
     return args.build();
   }
