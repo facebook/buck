@@ -93,6 +93,10 @@ class InterfaceScanner {
         // scanning the package name because it is not needed.
         scan(node.getImports(), aVoid);
         scan(node.getPackageAnnotations(), aVoid);
+
+        // getTypeDecls has a bug whereby it can return some imports in addition to types, but
+        // since getImports returns all of the imports in that case we can still iterate this last
+        // like the superclass does.
         scan(node.getTypeDecls(), aVoid);
         return null;
       }
