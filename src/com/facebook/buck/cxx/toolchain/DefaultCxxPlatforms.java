@@ -214,7 +214,7 @@ public class DefaultCxxPlatforms {
             ImmutableBiMap.of()),
         ImmutableMap.of(),
         binaryExtension,
-        config.getHeaderVerification(),
+        config.getHeaderVerificationOrIgnore(),
         picTypeForSharedLinking);
   }
 

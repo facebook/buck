@@ -366,7 +366,7 @@ public class CxxBuckConfig {
     return Optional.of(new DefaultLinkerProvider(type.orElse(defaultType), toolProvider.get()));
   }
 
-  public HeaderVerification getHeaderVerification() {
+  public HeaderVerification getHeaderVerificationOrIgnore() {
     return HeaderVerification.builder()
         .setMode(
             delegate

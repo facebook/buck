@@ -409,7 +409,7 @@ public class AppleCxxPlatforms {
       }
     }
     HeaderVerification headerVerification =
-        config.getHeaderVerification().withPlatformWhitelist(whitelistBuilder.build());
+        config.getHeaderVerificationOrIgnore().withPlatformWhitelist(whitelistBuilder.build());
     LOG.debug(
         "Headers verification platform whitelist: %s", headerVerification.getPlatformWhitelist());
 

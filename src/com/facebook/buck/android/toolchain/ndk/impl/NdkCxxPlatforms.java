@@ -510,7 +510,7 @@ public class NdkCxxPlatforms {
     // Add the NDK root path to the white-list so that headers from the NDK won't trigger the
     // verification warnings.  Ideally, long-term, we'd model NDK libs/headers via automatically
     // generated nodes/descriptions so that they wouldn't need to special case it here.
-    HeaderVerification headerVerification = config.getHeaderVerification();
+    HeaderVerification headerVerification = config.getHeaderVerificationOrIgnore();
     try {
       headerVerification =
           headerVerification.withPlatformWhitelist(
@@ -534,8 +534,7 @@ public class NdkCxxPlatforms {
 
       String ndkVersion = readVersion(ndkRoot);
       if (getNdkMajorVersion(ndkVersion) >= 12 && cxxRuntime == NdkCxxRuntime.LIBCXX) {
-        cxxPlatformBuilder.putRuntimeLdflags(
-          Linker.LinkableDepType.STATIC, "-lc++abi");
+        cxxPlatformBuilder.putRuntimeLdflags(Linker.LinkableDepType.STATIC, "-lc++abi");
         if (targetConfiguration.getTargetArchAbi() == NdkTargetArchAbi.ARMEABI) {
           cxxPlatformBuilder.putRuntimeLdflags(Linker.LinkableDepType.STATIC, "-latomic");
         }
