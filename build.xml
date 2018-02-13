@@ -72,7 +72,6 @@
   <property name="buck.combined.hash.file" value="${buck.hash.dir}/buck-combined-binary-hash.txt"/>
 
   <property name="buck.info.file" value="${build.dir}/buck-info.json"/>
-  <property name="buck.info.error.file" value="${build.dir}/buck-info-error.txt"/>
 
   <property name="modules.dir.name" value="buck-modules" />
 
@@ -786,7 +785,7 @@
   </target>
 
   <target name="gen-buck-info">
-    <exec executable="python" output="${buck.info.file}" error="${buck.info.error.file}">
+    <exec executable="python" output="${buck.info.file}" logError="true" failonerror="true">
       <arg value="programs/gen_buck_info.py"/>
     </exec>
   </target>
