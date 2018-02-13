@@ -48,7 +48,7 @@ import org.immutables.value.Value;
 public class CxxBuckConfig {
 
   private static final String FLAVORED_CXX_SECTION_PREFIX = "cxx#";
-  private static final String UNFLAVORED_CXX_SECTION_PREFIX = "cxx";
+  private static final String UNFLAVORED_CXX_SECTION = "cxx";
 
   private static final long DEFAULT_MAX_TEST_OUTPUT_SIZE = 8096;
 
@@ -135,7 +135,7 @@ public class CxxBuckConfig {
 
   public CxxBuckConfig(BuckConfig delegate) {
     this.delegate = delegate;
-    this.cxxSection = UNFLAVORED_CXX_SECTION_PREFIX;
+    this.cxxSection = UNFLAVORED_CXX_SECTION;
   }
 
   /*
