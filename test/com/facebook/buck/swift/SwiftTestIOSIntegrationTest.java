@@ -112,7 +112,11 @@ public class SwiftTestIOSIntegrationTest {
 
     BuildTarget target = workspace.newBuildTarget("//:swifttest#iphonesimulator-x86_64");
     ProcessResult result =
-        workspace.runBuckCommand("test", target.getFullyQualifiedName(), "--config", "testconfig.dep_type=apple_library");
+        workspace.runBuckCommand(
+            "test",
+            target.getFullyQualifiedName(),
+            "--config",
+            "testconfig.dep_type=apple_library");
     result.assertSuccess();
 
     Path binaryOutput =
@@ -149,8 +153,7 @@ public class SwiftTestIOSIntegrationTest {
 
   @Test
   public void testSwiftInHostAndTestBundleAppleLibraryMacOS() throws Exception {
-    assumeThat(
-        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX), is(true));
+    assumeThat(AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX), is(true));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "swift_test_with_host", tmp);
     workspace.setUp();
@@ -164,7 +167,13 @@ public class SwiftTestIOSIntegrationTest {
 
     BuildTarget target = workspace.newBuildTarget("//:swifttest#macosx-x86_64");
     ProcessResult result =
-        workspace.runBuckCommand("test", target.getFullyQualifiedName(), "--config", "testconfig.dep_type=apple_library", "--config", "cxx.default_platform=macosx-x86_64");
+        workspace.runBuckCommand(
+            "test",
+            target.getFullyQualifiedName(),
+            "--config",
+            "testconfig.dep_type=apple_library",
+            "--config",
+            "cxx.default_platform=macosx-x86_64");
     result.assertSuccess();
 
     Path binaryOutput =
@@ -213,7 +222,11 @@ public class SwiftTestIOSIntegrationTest {
 
     BuildTarget target = workspace.newBuildTarget("//:swifttest#iphonesimulator-x86_64");
     ProcessResult result =
-        workspace.runBuckCommand("test", target.getFullyQualifiedName(), "--config", "testconfig.dep_type=swift_library");
+        workspace.runBuckCommand(
+            "test",
+            target.getFullyQualifiedName(),
+            "--config",
+            "testconfig.dep_type=swift_library");
     result.assertSuccess();
 
     Path binaryOutput =
