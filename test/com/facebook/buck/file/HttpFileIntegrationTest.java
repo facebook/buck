@@ -59,7 +59,12 @@ public class HttpFileIntegrationTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "fetch_files", temporaryDir);
     httpdHandler =
         new HttpdForTests.CapturingHttpHandler(
-            ImmutableMap.of("/foo/bar/echo.sh", echoDotSh.getBytes(Charsets.UTF_8)));
+            ImmutableMap.<String, byte[]>builder()
+                .put("/foo/bar/echo.sh", echoDotSh.getBytes(Charsets.UTF_8))
+                .put("/package/artifact_name/version/artifact_name-version-classifier.zip",
+                    echoDotSh.getBytes(Charsets.UTF_8))
+                .build()
+        );
     httpd = new HttpdForTests();
     httpd.addHandler(httpdHandler);
     httpd.start();
@@ -226,6 +231,34 @@ public class HttpFileIntegrationTest {
     Assert.assertTrue(Files.exists(workspace.resolve(outputPath)));
     Assert.assertEquals(echoDotSh, workspace.getFileContents(outputPath));
     Assert.assertEquals(ImmutableList.of("/foo/bar/echo.sh"), httpdHandler.getRequestedPaths());
+    Assert.assertEquals(
+        0, Files.walk(workspace.resolve(scratchPath)).filter(Files::isRegularFile).count());
+  }
+
+  @Test
+  public void downloadsFromMavenCoordinates() throws IOException, InterruptedException {
+    workspace.setUp();
+    TestDataHelper.overrideBuckconfig(
+        workspace,
+        ImmutableMap.of(
+            "download",
+            ImmutableMap.of("maven_repo", httpd.getRootUri().toString())));
+
+    Path outputPath =
+        workspace
+            .getBuckPaths()
+            .getGenDir()
+            .resolve("echo_from_maven.sh")
+            .resolve("echo_from_maven.sh");
+    Path scratchPath = workspace.getBuckPaths().getScratchDir().resolve("echo_from_maven.sh");
+
+    workspace.runBuckCommand("fetch", "//:echo_from_maven.sh").assertSuccess();
+
+    Assert.assertTrue(Files.exists(workspace.resolve(outputPath)));
+    Assert.assertEquals(echoDotSh, workspace.getFileContents(outputPath));
+    Assert.assertEquals(
+        ImmutableList.of("/package/artifact_name/version/artifact_name-version-classifier.zip"),
+        httpdHandler.getRequestedPaths());
     Assert.assertEquals(
         0, Files.walk(workspace.resolve(scratchPath)).filter(Files::isRegularFile).count());
   }

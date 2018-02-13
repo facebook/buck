@@ -148,3 +148,13 @@ http_archive(
         "http://<HOST>:<PORT>/really_a_zip.tar",
     ],
 )
+
+http_archive(
+    name = "zip_from_maven",
+    sha256 = ZIP_NO_SYMLINKS_SHA256,
+    strip_prefix = "root",
+    type = "zip",
+    urls = [
+        "mvn:package:artifact_name:zip:classifier:version",
+    ],
+)

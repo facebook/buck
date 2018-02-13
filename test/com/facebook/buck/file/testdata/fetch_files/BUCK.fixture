@@ -51,3 +51,11 @@ http_file(
         "http://<HOST>:<PORT>/foo/bar/echo.sh",
     ],
 )
+
+http_file(
+    name = "echo_from_maven.sh",
+    sha256 = "2c7ae82268c1bab8d048a76405a6f7f39c2d95791df37ad2c36cb9252ee3a6ca",
+    urls = [
+        "mvn:package:artifact_name:zip:classifier:version",
+    ],
+)
