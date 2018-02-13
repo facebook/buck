@@ -19,24 +19,20 @@ package com.facebook.buck.python.toolchain;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.util.Optional;
-import org.immutables.value.Value;
 
-@Value.Immutable(copy = true)
-@BuckStyleImmutable
-interface AbstractPythonPlatform extends FlavorConvertible {
-
+/**
+ * A toolchain that provides access to Python environment (an interpreter and its version) and cxx
+ * library.
+ */
+public interface PythonPlatform extends FlavorConvertible {
   /** @return the {@link Flavor} associated with this python platform. */
-  @Value.Parameter
   @Override
   Flavor getFlavor();
 
   /** @return the {@link PythonEnvironment} for this python platform. */
-  @Value.Parameter
   PythonEnvironment getEnvironment();
 
   /** @return the {@link BuildTarget} wrapping the C/C++ library used by C/C++ extensions. */
-  @Value.Parameter
   Optional<BuildTarget> getCxxLibrary();
 }

@@ -19,18 +19,14 @@ package com.facebook.buck.python.toolchain.impl;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.python.PythonBuckConfig;
-import com.facebook.buck.python.toolchain.PythonEnvironment;
-import com.facebook.buck.python.toolchain.PythonInterpreter;
 import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
-import com.facebook.buck.python.toolchain.PythonVersion;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 import java.util.Optional;
 
 public class PythonPlatformsProviderFactory implements ToolchainFactory<PythonPlatformsProvider> {
@@ -39,10 +35,8 @@ public class PythonPlatformsProviderFactory implements ToolchainFactory<PythonPl
   public Optional<PythonPlatformsProvider> createToolchain(
       ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(context.getBuckConfig());
-    PythonInterpreter pythonInterpreter =
-        toolchainProvider.getByName(PythonInterpreter.DEFAULT_NAME, PythonInterpreter.class);
     ImmutableList<PythonPlatform> pythonPlatformsList =
-        getPythonPlatforms(pythonInterpreter, pythonBuckConfig, context.getProcessExecutor());
+        getPythonPlatforms(toolchainProvider, pythonBuckConfig, context.getProcessExecutor());
     FlavorDomain<PythonPlatform> pythonPlatforms =
         FlavorDomain.from("Python Platform", pythonPlatformsList);
     return Optional.of(PythonPlatformsProvider.of(pythonPlatforms));
@@ -53,13 +47,13 @@ public class PythonPlatformsProviderFactory implements ToolchainFactory<PythonPl
    * section names of the form python#{flavor name}.
    */
   public ImmutableList<PythonPlatform> getPythonPlatforms(
-      PythonInterpreter pythonInterpreter,
+      ToolchainProvider toolchainProvider,
       PythonBuckConfig pythonBuckConfig,
       ProcessExecutor processExecutor) {
     ImmutableList.Builder<PythonPlatform> builder = ImmutableList.builder();
 
     // Add the python platform described in the top-level section first.
-    builder.add(getDefaultPythonPlatform(pythonInterpreter, pythonBuckConfig, processExecutor));
+    builder.add(getDefaultPythonPlatform(toolchainProvider, pythonBuckConfig, processExecutor));
 
     pythonBuckConfig
         .getPythonPlatformSections()
@@ -67,68 +61,35 @@ public class PythonPlatformsProviderFactory implements ToolchainFactory<PythonPl
             section ->
                 builder.add(
                     getPythonPlatform(
-                        pythonInterpreter,
+                        toolchainProvider,
                         pythonBuckConfig,
                         processExecutor,
-                        section,
-                        pythonBuckConfig.calculatePythonPlatformFlavorFromSection(section))));
+                        pythonBuckConfig.calculatePythonPlatformFlavorFromSection(section),
+                        section)));
 
     return builder.build();
   }
 
   private PythonPlatform getPythonPlatform(
-      PythonInterpreter pythonInterpreter,
+      ToolchainProvider toolchainProvider,
       PythonBuckConfig pythonBuckConfig,
       ProcessExecutor processExecutor,
-      String section,
-      Flavor flavor) {
-    return PythonPlatform.of(
-        flavor,
-        getPythonEnvironment(pythonInterpreter, pythonBuckConfig, processExecutor, section),
-        pythonBuckConfig.getCxxLibrary(section));
-  }
-
-  @VisibleForTesting
-  protected PythonEnvironment getPythonEnvironment(
-      PythonInterpreter pythonInterpreter,
-      PythonBuckConfig pythonBuckConfig,
-      ProcessExecutor processExecutor,
+      Flavor flavor,
       String section) {
-    Path pythonPath = pythonInterpreter.getPythonInterpreterPath(section);
-    PythonVersion pythonVersion =
-        getVersion(pythonBuckConfig, processExecutor, section, pythonPath);
-    return new PythonEnvironment(pythonPath, pythonVersion);
+    return new LazyPythonPlatform(
+        toolchainProvider, pythonBuckConfig, processExecutor, flavor, section);
   }
 
   @VisibleForTesting
   protected PythonPlatform getDefaultPythonPlatform(
-      PythonInterpreter pythonInterpreter,
+      ToolchainProvider toolchainProvider,
       PythonBuckConfig pythonBuckConfig,
       ProcessExecutor executor) {
     return getPythonPlatform(
-        pythonInterpreter,
+        toolchainProvider,
         pythonBuckConfig,
         executor,
-        pythonBuckConfig.getDefaultPythonPlatformSection(),
-        pythonBuckConfig.getDefaultPythonPlatformFlavor());
-  }
-
-  private PythonVersion getVersion(
-      PythonBuckConfig pythonBuckConfig,
-      ProcessExecutor processExecutor,
-      String section,
-      Path path) {
-
-    Optional<PythonVersion> configuredVersion =
-        pythonBuckConfig.getConfiguredVersion(section).map(PythonVersionFactory::fromString);
-    if (configuredVersion.isPresent()) {
-      return configuredVersion.get();
-    }
-
-    try {
-      return PythonVersionFactory.fromInterpreter(processExecutor, path);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
+        pythonBuckConfig.getDefaultPythonPlatformFlavor(),
+        pythonBuckConfig.getDefaultPythonPlatformSection());
   }
 }

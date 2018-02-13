@@ -33,7 +33,7 @@ public class PythonTestUtils {
       new PythonBuckConfig(FakeBuckConfig.builder().build());
 
   public static final PythonPlatform PYTHON_PLATFORM =
-      PythonPlatform.of(
+      new TestPythonPlatform(
           InternalFlavor.of("default"),
           new PythonEnvironment(Paths.get("python"), PythonVersion.of("CPython", "2.6")),
           Optional.empty());

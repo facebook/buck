@@ -95,7 +95,7 @@ public class PythonBinaryDescriptionTest {
   private static final BuildTarget PYTHON2_DEP_TARGET =
       BuildTargetFactory.newInstance("//:python2_dep");
   private static final PythonPlatform PY2 =
-      PythonPlatform.of(
+      new TestPythonPlatform(
           InternalFlavor.of("py2"),
           new PythonEnvironment(Paths.get("python2"), PythonVersion.of("CPython", "2.6")),
           Optional.of(PYTHON2_DEP_TARGET));
@@ -259,12 +259,12 @@ public class PythonBinaryDescriptionTest {
   @Test
   public void explicitPythonHome() throws Exception {
     PythonPlatform platform1 =
-        PythonPlatform.of(
+        new TestPythonPlatform(
             InternalFlavor.of("pyPlat1"),
             new PythonEnvironment(Paths.get("python2.6"), PythonVersion.of("CPython", "2.6.9")),
             Optional.empty());
     PythonPlatform platform2 =
-        PythonPlatform.of(
+        new TestPythonPlatform(
             InternalFlavor.of("pyPlat2"),
             new PythonEnvironment(Paths.get("python2.7"), PythonVersion.of("CPython", "2.7.11")),
             Optional.empty());

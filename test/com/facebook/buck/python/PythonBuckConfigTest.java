@@ -16,6 +16,7 @@
 
 package com.facebook.buck.python;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -29,7 +30,10 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -38,6 +42,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -46,6 +51,9 @@ public class PythonBuckConfigTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Rule public TemporaryPaths temporaryFolder2 = new TemporaryPaths();
+
+  @Before
+  public void setUp() throws Exception {}
 
   @Test
   public void testPathToPexExecuterUsesConfigSetting() throws IOException {
@@ -73,5 +81,14 @@ public class PythonBuckConfigTest {
     assertThat(
         config.getPexExecutor(resolver).get().getCommandPrefix(pathResolver),
         Matchers.contains(projectDir.resolve(pexExecuter).toString()));
+  }
+
+  @Test
+  public void testPythonPlatformsNotConstructedEagerly() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "python_platform", temporaryFolder);
+    workspace.setUp();
+    ProcessResult result = workspace.runBuckCommand("run", ":file").assertSuccess();
+    assertThat(result.getStdout(), containsString("I'm a file. A lonely, lonely file."));
   }
 }
