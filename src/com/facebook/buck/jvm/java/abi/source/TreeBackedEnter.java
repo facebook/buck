@@ -20,7 +20,6 @@ import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.AnnotationTree;
-import com.sun.source.tree.BlockTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.MethodTree;
@@ -29,24 +28,19 @@ import com.sun.source.tree.TypeParameterTree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.source.util.TreePath;
-import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
@@ -83,7 +77,7 @@ class TreeBackedEnter {
     private final Deque<TreeBackedElement> contextStack = new ArrayDeque<>();
     @Nullable private TreePath currentPath;
     @Nullable private Tree currentTree;
-    @Nullable private Map<Element, Tree> elementToTreeMap;
+    @Nullable private ElementTreeFinder elementTreeFinder;
 
     private TreeBackedElement getCurrentContext() {
       return contextStack.peek();
@@ -100,7 +94,7 @@ class TreeBackedEnter {
         return;
       }
 
-      elementToTreeMap = buildElementToTreeMap(compilationUnitTree);
+      elementTreeFinder = ElementTreeFinder.forCompilationUnit(compilationUnitTree, javacTrees);
       currentPath = new TreePath(compilationUnitTree);
       currentTree = compilationUnitTree;
       try {
@@ -111,47 +105,7 @@ class TreeBackedEnter {
       } finally {
         currentPath = null;
         currentTree = null;
-        elementToTreeMap = null;
       }
-    }
-
-    private Map<Element, Tree> buildElementToTreeMap(CompilationUnitTree tree) {
-      Map<Element, Tree> result = new HashMap<>();
-
-      new TreePathScanner<Void, Void>() {
-        @Override
-        public Void visitClass(ClassTree node, Void aVoid) {
-          result.put(javacTrees.getElement(getCurrentPath()), node);
-          return super.visitClass(node, aVoid);
-        }
-
-        @Override
-        public Void visitMethod(MethodTree node, Void aVoid) {
-          result.put(javacTrees.getElement(getCurrentPath()), node);
-          return super.visitMethod(node, aVoid);
-        }
-
-        @Override
-        public Void visitVariable(VariableTree node, Void aVoid) {
-          result.put(javacTrees.getElement(getCurrentPath()), node);
-          // Don't recurse into variable initializers
-          return null;
-        }
-
-        @Override
-        public Void visitTypeParameter(TypeParameterTree node, Void aVoid) {
-          result.put(javacTrees.getElement(getCurrentPath()), node);
-          return super.visitTypeParameter(node, aVoid);
-        }
-
-        @Override
-        public Void visitBlock(BlockTree node, Void aVoid) {
-          // Don't recurse into method bodies
-          return null;
-        }
-      }.scan(tree, null);
-
-      return result;
     }
 
     private TreeBackedPackageElement enterPackageElement() {
@@ -196,7 +150,7 @@ class TreeBackedEnter {
     public Void scan(Element e, Void aVoid) {
       TreePath previousPath = currentPath;
       Tree previousTree = currentTree;
-      currentTree = reallyGetTree(currentPath, e);
+      currentTree = Preconditions.checkNotNull(elementTreeFinder).getTree(e);
       currentPath = currentTree == null ? null : new TreePath(currentPath, currentTree);
       try {
         if (currentPath != null && javacTrees.getElement(currentPath) != e) {
@@ -210,44 +164,6 @@ class TreeBackedEnter {
         currentPath = previousPath;
         currentTree = previousTree;
       }
-    }
-
-    /**
-     * Trees.getTree has a couple of blind spots -- method and type parameters. This method works
-     * around those.
-     */
-    @Nullable
-    private Tree reallyGetTree(@Nullable TreePath parentPath, Element element) {
-      if (parentPath == null) {
-        return null;
-      }
-
-      Tree result = Preconditions.checkNotNull(elementToTreeMap).get(element);
-      if (result == null) {
-        Tree parentTree = parentPath.getLeaf();
-        Name simpleName = element.getSimpleName();
-        if (element.getKind() == ElementKind.PARAMETER) {
-          MethodTree methodTree = (MethodTree) parentTree;
-          for (VariableTree variableTree : methodTree.getParameters()) {
-            if (variableTree.getName().equals(simpleName)) {
-              return variableTree;
-            }
-          }
-        } else if (element.getKind() == ElementKind.TYPE_PARAMETER) {
-          for (TypeParameterTree typeParameter : getTypeParameters(parentTree)) {
-            if (typeParameter.getName().equals(simpleName)) {
-              return typeParameter;
-            }
-          }
-        } else {
-          // If it's not a param or a type param, it's compiler generated
-          return null;
-        }
-
-        throw new AssertionError(String.format("Couldn't find tree for element %s", element));
-      }
-
-      return result;
     }
 
     @Override
@@ -444,27 +360,6 @@ class TreeBackedEnter {
           @Override
           protected List<? extends AnnotationTree> defaultAction(Tree node, Void aVoid) {
             throw new AssertionError(String.format("Unexpected tree: %s", node));
-          }
-        },
-        null);
-  }
-
-  private static List<? extends TypeParameterTree> getTypeParameters(Tree parentTree) {
-    return parentTree.accept(
-        new SimpleTreeVisitor<List<? extends TypeParameterTree>, Void>() {
-          @Override
-          public List<? extends TypeParameterTree> visitClass(ClassTree node, Void aVoid) {
-            return node.getTypeParameters();
-          }
-
-          @Override
-          public List<? extends TypeParameterTree> visitMethod(MethodTree node, Void aVoid) {
-            return node.getTypeParameters();
-          }
-
-          @Override
-          protected List<? extends TypeParameterTree> defaultAction(Tree node, Void aVoid) {
-            throw new AssertionError(String.format("Unexpected tree %s", node));
           }
         },
         null);
