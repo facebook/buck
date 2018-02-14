@@ -151,7 +151,6 @@ public abstract class CxxToolProvider<T> {
 
   public enum Type {
     CLANG,
-    DEFAULT,
     GCC,
     WINDOWS
   }
