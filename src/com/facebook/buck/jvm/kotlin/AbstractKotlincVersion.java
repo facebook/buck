@@ -15,12 +15,14 @@
  */
 package com.facebook.buck.jvm.kotlin;
 
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractKotlincVersion {
+abstract class AbstractKotlincVersion implements AddsToRuleKey {
+
   @Value.Parameter
   public abstract String getVersionString();
 

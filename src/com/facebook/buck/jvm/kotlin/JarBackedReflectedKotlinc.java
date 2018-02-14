@@ -44,6 +44,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.tools.ToolProvider;
 
 public class JarBackedReflectedKotlinc implements Kotlinc {
 
@@ -174,7 +175,7 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
 
       ClassLoader classLoader =
           classLoaderCache.getClassLoaderForClassPath(
-              null /* parent classloader */,
+              ToolProvider.getSystemToolClassLoader(),
               ImmutableList.copyOf(
                   compilerClassPath
                       .stream()

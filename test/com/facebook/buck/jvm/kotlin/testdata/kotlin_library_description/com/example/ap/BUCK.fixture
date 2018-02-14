@@ -7,19 +7,6 @@ kotlin_library(
   plugins = [
       ":ap",
   ],
-  deps = [
-    ":lib",
-  ],
-)
-
-java_library(
-    name = "lib",
-    srcs = [
-        "Lib.java",
-    ],
-    plugins = [
-        ":ap",
-    ],
 )
 
 java_annotation_processor(
@@ -35,4 +22,8 @@ java_library(
     srcs = [
         "AnnotationProcessor.java",
     ],
+    resources = glob([
+        'resources/**',
+    ]),
+    resources_root = "resources"
 )
