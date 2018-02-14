@@ -46,10 +46,10 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.NeededCoverageSpec;
-import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.rules.macros.MacroArg;
-import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
@@ -84,9 +84,6 @@ public class PythonTestDescription
         VersionRoot<PythonTestDescriptionArg> {
 
   private static final Flavor BINARY_FLAVOR = InternalFlavor.of("binary");
-
-  private static final MacroHandler MACRO_HANDLER =
-      new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
 
   private final ToolchainProvider toolchainProvider;
   private final PythonBinaryDescription binaryDescription;
@@ -320,6 +317,13 @@ public class PythonTestDescription
             .concat(args.getNeededCoverage().stream().map(NeededCoverageSpec::getBuildTarget))
             .map(resolver::getRule)
             .collect(ImmutableList.toImmutableList());
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.builder()
+            .setBuildTarget(buildTarget)
+            .setCellPathResolver(cellRoots)
+            .setResolver(resolver)
+            .setExpanders(PythonUtil.MACRO_EXPANDERS)
+            .build();
     PythonPackageComponents allComponents =
         PythonUtil.getAllComponents(
             cellRoots,
@@ -335,9 +339,7 @@ public class PythonTestDescription
             cxxPlatform,
             args.getLinkerFlags()
                 .stream()
-                .map(
-                    MacroArg.toMacroArgFunction(
-                        PythonUtil.MACRO_HANDLER, buildTarget, cellRoots, resolver))
+                .map(macrosConverter::convert)
                 .collect(ImmutableList.toImmutableList()),
             pythonBuckConfig.getNativeLinkStrategy(),
             args.getPreloadDeps());
@@ -399,12 +401,8 @@ public class PythonTestDescription
       }
     }
 
-    Supplier<ImmutableMap<String, String>> testEnv =
-        () ->
-            ImmutableMap.copyOf(
-                Maps.transformValues(
-                    args.getEnv(),
-                    MACRO_HANDLER.getExpander(buildTarget, cellRoots, resolver)::apply));
+    Supplier<ImmutableMap<String, Arg>> testEnv =
+        () -> ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert));
 
     // Generate and return the python test rule, which depends on the python binary rule above.
     return PythonTest.from(
@@ -455,12 +453,12 @@ public class PythonTestDescription
 
     ImmutableSet<BuildTarget> getPreloadDeps();
 
-    ImmutableList<String> getLinkerFlags();
+    ImmutableList<StringWithMacros> getLinkerFlags();
 
     ImmutableList<NeededCoverageSpec> getNeededCoverage();
 
     ImmutableList<String> getBuildArgs();
 
-    ImmutableMap<String, String> getEnv();
+    ImmutableMap<String, StringWithMacros> getEnv();
   }
 }

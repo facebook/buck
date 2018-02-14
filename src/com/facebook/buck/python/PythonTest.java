@@ -36,6 +36,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -63,7 +64,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule, BinaryBuildRule {
 
   private final Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps;
-  private final Supplier<ImmutableMap<String, String>> env;
+  private final Supplier<ImmutableMap<String, Arg>> env;
   private final PythonBinary binary;
   private final ImmutableSet<String> labels;
   private final Optional<Long> testRuleTimeoutMs;
@@ -75,7 +76,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps,
-      Supplier<ImmutableMap<String, String>> env,
+      Supplier<ImmutableMap<String, Arg>> env,
       PythonBinary binary,
       ImmutableSet<String> labels,
       ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
@@ -95,7 +96,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      Supplier<ImmutableMap<String, String>> env,
+      Supplier<ImmutableMap<String, Arg>> env,
       PythonBinary binary,
       ImmutableSet<String> labels,
       ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
@@ -156,7 +157,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private ImmutableMap<String, String> getMergedEnv(SourcePathResolver pathResolver) {
     return new ImmutableMap.Builder<String, String>()
         .putAll(binary.getExecutableCommand().getEnvironment(pathResolver))
-        .putAll(env.get())
+        .putAll(Arg.stringify(env.get(), pathResolver))
         .build();
   }
 

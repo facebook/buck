@@ -45,8 +45,9 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
+import com.facebook.buck.rules.macros.AbstractMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.Version;
@@ -70,8 +71,8 @@ import java.util.Optional;
 
 public class PythonUtil {
 
-  static final MacroHandler MACRO_HANDLER =
-      new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
+  static final ImmutableList<AbstractMacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
+      ImmutableList.of(new LocationMacroExpander());
 
   private PythonUtil() {}
 
