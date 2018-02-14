@@ -1083,7 +1083,7 @@ public class BuildCommand extends AbstractCommand {
               .getBuckEventBus()
               .post(
                   ConsoleEvent.severe(
-                      "%s [%s]",
+                      "MISMATCHING RULE: %s [%s]",
                       ruleKeyNameAndType.getRuleName(), ruleKeyNameAndType.getRuleType()));
         }
 
