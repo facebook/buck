@@ -65,6 +65,28 @@ public class ErrorLogger {
     new ErrorLogger(dispatcher, "Error occurred: ", "Error occured: ").logException(e);
   }
 
+  /** Prints the stacktrace as formatted by an ErrorLogger. */
+  public static String getUserFriendlyMessage(Exception e) {
+    StringBuilder builder = new StringBuilder();
+    new ErrorLogger(
+            new LogImpl() {
+              @Override
+              public void logUserVisible(String message) {
+                builder.append(message);
+              }
+
+              @Override
+              public void logUserVisibleInternalError(String message) {
+                builder.append(message);
+              }
+
+              @Override
+              public void logVerbose(Throwable e) {}
+            })
+        .logException(e);
+    return builder.toString();
+  }
+
   public ErrorLogger(EventDispatcher dispatcher, String userPrefix, String verboseMessage) {
     this(
         new LogImpl() {

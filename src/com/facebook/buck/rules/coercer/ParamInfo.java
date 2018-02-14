@@ -22,6 +22,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Types;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -129,7 +130,13 @@ public class ParamInfo implements Comparable<ParamInfo> {
     }
     this.name = builder.toString();
 
-    this.typeCoercer = typeCoercerFactory.typeCoercerForType(setter.getGenericParameterTypes()[0]);
+    try {
+      this.typeCoercer =
+          typeCoercerFactory.typeCoercerForType(setter.getGenericParameterTypes()[0]);
+    } catch (Exception e) {
+      throw new BuckUncheckedExecutionException(
+          e, "When getting ParamInfo for %s.%s.", setter.getDeclaringClass().getName(), name);
+    }
   }
 
   public String getName() {
