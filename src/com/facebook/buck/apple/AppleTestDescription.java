@@ -64,6 +64,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.swift.SwiftLibraryDescription;
+import com.facebook.buck.swift.SwiftRuntimeNativeLinkable;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.unarchive.UnzipStep;
 import com.facebook.buck.util.HumanReadableException;
@@ -538,8 +539,14 @@ public class AppleTestDescription
     // ignored.
     ImmutableSet.Builder<BuildTarget> blacklistBuilder = ImmutableSet.builder();
     for (CxxPlatform platform : cxxPlatforms) {
-      blacklistBuilder.addAll(
-          NativeLinkables.getTransitiveNativeLinkables(platform, roots.values()).keySet());
+      ImmutableSet<BuildTarget> blacklistables =
+          NativeLinkables.getTransitiveNativeLinkables(platform, roots.values())
+              .entrySet()
+              .stream()
+              .filter(x -> !(x.getValue() instanceof SwiftRuntimeNativeLinkable))
+              .map(x -> x.getKey())
+              .collect(ImmutableSet.toImmutableSet());
+      blacklistBuilder.addAll(blacklistables);
     }
 
     if (!uiTestTargetAppBuildTarget.isPresent()) {
