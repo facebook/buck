@@ -214,7 +214,7 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
         ruleKeyCalculator
             .getAllKnownTargets()
             .stream()
-            .map(resolver::getRule)
+            .map(resolver::requireRule)
             .collect(ImmutableSet.toImmutableSet()));
   }
 
