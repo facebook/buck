@@ -16,8 +16,9 @@
 
 package com.facebook.buck.rules.modern;
 
-import com.facebook.buck.event.EventDispatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.AddsToRuleKey;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 
@@ -29,7 +30,7 @@ import com.google.common.collect.ImmutableList;
  * Fields are limited to primitive types, Strings, Input/OutputPath, Input/OutputData and
  * ImmutableList, Optional, ImmutableSortedSet, ImmutableSortedMap, and Pair composed of those.
  */
-public interface Buildable {
+public interface Buildable extends AddsToRuleKey {
   // TODO(cjhopman): The filesystem object here should verify that reads/writes only
   // go to the declared InputPaths and OutputPaths.
   // TODO(cjhopman): The resolvers/retrievers should verify that requests are only for
@@ -39,10 +40,8 @@ public interface Buildable {
   // safety-first ModernStep and have this return a list of those. That would be painful for
   // migration so we'd probably want something like ModernStep.fromUnsafeClassicStep(...).
   ImmutableList<Step> getBuildSteps(
-      EventDispatcher eventDispatcher,
+      BuildContext buildContext,
       ProjectFilesystem filesystem,
-      InputPathResolver inputPathResolver,
-      InputDataRetriever inputDataRetriever,
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory);
 }

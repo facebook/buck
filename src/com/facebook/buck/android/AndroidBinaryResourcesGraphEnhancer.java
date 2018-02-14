@@ -20,6 +20,7 @@ import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.exopackage.ExopackagePathAndHash;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -62,7 +63,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       InternalFlavor.of("write_exo_resources_hash");
   private static final Flavor COPY_MANIFEST_FLAVOR = InternalFlavor.of("copy_manifest");
 
-  private final AndroidLegacyToolchain androidLegacyToolchain;
+  private final AndroidPlatformTarget androidPlatformTarget;
   private final SourcePathRuleFinder ruleFinder;
   private final FilterResourcesSteps.ResourceFilter resourceFilter;
   private final ResourcesFilter.ResourceCompressionMode resourceCompressionMode;
@@ -88,7 +89,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   public AndroidBinaryResourcesGraphEnhancer(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      AndroidLegacyToolchain androidLegacyToolchain,
+      AndroidPlatformTarget androidPlatformTarget,
       BuildRuleResolver ruleResolver,
       BuildTarget originalBuildTarget,
       boolean exopackageForResources,
@@ -107,7 +108,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       ManifestEntries manifestEntries,
       Optional<Arg> postFilterResourcesCmd,
       boolean noAutoVersionResources) {
-    this.androidLegacyToolchain = androidLegacyToolchain;
+    this.androidPlatformTarget = androidPlatformTarget;
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
     this.ruleResolver = ruleResolver;
@@ -362,10 +363,10 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new SplitResources(
         buildTarget.withAppendedFlavors(SPLIT_RESOURCES_FLAVOR),
         projectFilesystem,
-        androidLegacyToolchain,
         ruleFinder,
         aaptOutputPath,
-        aaptRDotTxtPath);
+        aaptRDotTxtPath,
+        androidPlatformTarget);
   }
 
   private Aapt2Link createAapt2Link(
@@ -387,7 +388,7 @@ class AndroidBinaryResourcesGraphEnhancer {
             new Aapt2Compile(
                 buildTarget.withAppendedFlavors(InternalFlavor.of("aapt2_compile_" + index)),
                 projectFilesystem,
-                androidLegacyToolchain,
+                androidPlatformTarget,
                 compileDeps,
                 resDir);
         ruleResolver.addToIndex(compileRule);
@@ -406,13 +407,13 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new Aapt2Link(
         buildTarget.withAppendedFlavors(AAPT2_LINK_FLAVOR),
         projectFilesystem,
-        androidLegacyToolchain,
         ruleFinder,
         compileListBuilder.build(),
         getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
         realManifest,
         manifestEntries,
-        noAutoVersionResources);
+        noAutoVersionResources,
+        androidPlatformTarget);
   }
 
   private GenerateRDotJava createGenerateRDotJava(
@@ -465,7 +466,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new AaptPackageResources(
         buildTarget.withAppendedFlavors(AAPT_PACKAGE_FLAVOR),
         projectFilesystem,
-        androidLegacyToolchain,
+        androidPlatformTarget,
         ruleFinder,
         ruleResolver,
         realManifest,

@@ -33,6 +33,7 @@ import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSet;
@@ -67,7 +68,7 @@ public class AndroidBinaryDescriptionTest {
             .setManifest(FakeSourcePath.of("manifest.xml"))
             .setKeystore(BuildTargetFactory.newInstance("//:keystore"))
             // Force no predexing.
-            .setPreprocessJavaClassesBash("cp")
+            .setPreprocessJavaClassesBash(StringWithMacrosUtils.format("cp"))
             .setNoDx(ImmutableSet.of(transitiveDepNode.getBuildTarget()))
             .setOriginalDeps(ImmutableSortedSet.of(depNode.getBuildTarget()))
             .build();

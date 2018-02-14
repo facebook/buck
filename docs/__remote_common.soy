@@ -1,0 +1,43 @@
+{namespace remote_common}
+
+/**
+ * @param rule The name of the rule to link to
+ */
+{template .name_arg}
+{call buck.arg}
+  {param name: 'name' /}
+  {param example : 'guava-23.0.jar' /}
+  {param desc}
+    The name of the rule. This is used in the filename on disk if &nbsp;
+    {call buck.ruleLink}{param name: $rule /} {param section: 'out' /}{/call}&nbsp;
+    is not provided.
+  {/param}
+{/call}
+{/template}
+
+
+/***/
+{template .sha256_arg}
+{call buck.arg}
+  {param name: 'sha256' /}
+  {param example : 'fed9324e865b366027517b24fc513c869584fbcf3e6fbc41b53a626d2f80f904' /}
+  {param desc}
+    The <a href="//wikipedia.org/wiki/SHA-2"><code>SHA-256</code></a> hash of the downloaded artifact.
+    Buck verifies this is correct and fails the fetch command if it doesn't match in order to
+    guarantee repeatable builds.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .urls_arg}
+{call buck.arg}
+  {param name: 'urls' /}
+  {param example : '["https://example.com/foo/bar.txt", "https://mirror1.example.com/foo/bar_mirror.txt"]' /}
+  {param desc}
+    A list of urls to attempt to download from. They are tried in order, and
+    subsequent ones are only tried if the download fails. If validation fails,
+    a new URL is not used. Supported protocols are "http", "https", and "mvn".
+  {/param}
+{/call}
+{/template}

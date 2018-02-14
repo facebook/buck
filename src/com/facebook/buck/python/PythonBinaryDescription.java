@@ -46,7 +46,8 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.macros.MacroArg;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
@@ -158,6 +159,7 @@ public class PythonBinaryDescription
     SymlinkTree linkTree =
         resolver.addToIndex(
             new SymlinkTree(
+                "python_in_place_binary",
                 linkTreeTarget,
                 projectFilesystem,
                 linkTreeRoot,
@@ -326,6 +328,13 @@ public class PythonBinaryDescription
                         .<Flavor>map(InternalFlavor::of)
                         .orElse(pythonPlatforms.getFlavors().iterator().next())));
     CxxPlatform cxxPlatform = getCxxPlatform(buildTarget, args);
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.builder()
+            .setBuildTarget(buildTarget)
+            .setCellPathResolver(cellRoots)
+            .setResolver(resolver)
+            .setExpanders(PythonUtil.MACRO_EXPANDERS)
+            .build();
     PythonPackageComponents allPackageComponents =
         PythonUtil.getAllComponents(
             cellRoots,
@@ -344,9 +353,7 @@ public class PythonBinaryDescription
             cxxPlatform,
             args.getLinkerFlags()
                 .stream()
-                .map(
-                    MacroArg.toMacroArgFunction(
-                        PythonUtil.MACRO_HANDLER, buildTarget, cellRoots, resolver))
+                .map(macrosConverter::convert)
                 .collect(ImmutableList.toImmutableList()),
             pythonBuckConfig.getNativeLinkStrategy(),
             args.getPreloadDeps());
@@ -412,7 +419,7 @@ public class PythonBinaryDescription
 
     ImmutableSet<BuildTarget> getPreloadDeps();
 
-    ImmutableList<String> getLinkerFlags();
+    ImmutableList<StringWithMacros> getLinkerFlags();
 
     Optional<String> getExtension();
   }

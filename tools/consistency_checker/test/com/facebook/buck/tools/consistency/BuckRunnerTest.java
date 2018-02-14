@@ -16,7 +16,7 @@
 
 package com.facebook.buck.tools.consistency;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -50,6 +50,7 @@ public class BuckRunnerTest {
             "build",
             ImmutableList.of("-c", "cxx.cxx=/bin/false"),
             ImmutableList.of("//:main", "//:test"),
+            ImmutableList.of(),
             Optional.of(temporaryFolder.getRoot()),
             false);
     int ret = runner.run(stream);
@@ -78,6 +79,7 @@ public class BuckRunnerTest {
             "build",
             ImmutableList.of("-c", "cxx.cxx=/bin/false"),
             ImmutableList.of("//:main", "//:test"),
+            ImmutableList.of(),
             Optional.of(temporaryFolder.getRoot()),
             false);
     int ret = runner.run(stream);
@@ -106,6 +108,7 @@ public class BuckRunnerTest {
             "build",
             ImmutableList.of("-c", "cxx.cxx=/bin/false"),
             ImmutableList.of("//:main", "//:test"),
+            ImmutableList.of(),
             Optional.empty(),
             false);
     int ret = runner.run(stream);
@@ -134,6 +137,7 @@ public class BuckRunnerTest {
             "build",
             ImmutableList.of("-c", "cxx.cxx=/bin/false"),
             ImmutableList.of("//:main", "//:test"),
+            ImmutableList.of(),
             Optional.empty(),
             true);
     int ret = runner.run(stream);
@@ -150,5 +154,37 @@ public class BuckRunnerTest {
     Assert.assertEquals("//:main", lines[5]);
     Assert.assertEquals("//:test", lines[6]);
     Assert.assertEquals("Random hashes configured", lines[7]);
+  }
+
+  @Test
+  public void writesOutArgumentsToATemporaryFileIfProvided()
+      throws IOException, InterruptedException {
+    writer.writeArgEchoer(0);
+
+    BuckRunner runner =
+        new BuckRunner(
+            Optional.of("python"),
+            binPath.toAbsolutePath().toString(),
+            "build",
+            ImmutableList.of("-c", "cxx.cxx=/bin/false"),
+            ImmutableList.of(),
+            ImmutableList.of("//:main", "//:test"),
+            Optional.of(temporaryFolder.getRoot()),
+            false);
+    int ret = runner.run(stream);
+
+    Assert.assertEquals(0, ret);
+    String[] lines = stream.getOutputLines();
+
+    Assert.assertEquals(9, lines.length);
+    Assert.assertEquals(temporaryFolder.getRoot().toString(), lines[0]);
+    Assert.assertEquals(binPath.toAbsolutePath().toString(), lines[1]);
+    Assert.assertEquals("build", lines[2]);
+    Assert.assertEquals("-c", lines[3]);
+    Assert.assertEquals("cxx.cxx=/bin/false", lines[4]);
+    Assert.assertTrue(lines[5].startsWith("@"));
+    Assert.assertTrue(lines[6].startsWith("Reading arguments from @"));
+    Assert.assertEquals("//:main", lines[7]);
+    Assert.assertEquals("//:test", lines[8]);
   }
 }

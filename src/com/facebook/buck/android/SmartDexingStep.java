@@ -16,6 +16,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.DxStep.Option;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -83,7 +84,7 @@ public class SmartDexingStep implements Step {
     ImmutableMap<Path, Sha1HashCode> getDexInputHashes();
   }
 
-  private final AndroidLegacyToolchain androidLegacyToolchain;
+  private final AndroidPlatformTarget androidPlatformTarget;
   private final BuildContext buildContext;
   private final ProjectFilesystem filesystem;
   private final Supplier<Multimap<Path, Path>> outputToInputsSupplier;
@@ -111,7 +112,7 @@ public class SmartDexingStep implements Step {
    */
   public SmartDexingStep(
       BuildTarget target,
-      AndroidLegacyToolchain androidLegacyToolchain,
+      AndroidPlatformTarget androidPlatformTarget,
       BuildContext buildContext,
       ProjectFilesystem filesystem,
       final Path primaryOutputPath,
@@ -126,7 +127,7 @@ public class SmartDexingStep implements Step {
       Optional<String> dxMaxHeapSize,
       String dexTool) {
     this.target = target;
-    this.androidLegacyToolchain = androidLegacyToolchain;
+    this.androidPlatformTarget = androidPlatformTarget;
     this.buildContext = buildContext;
     this.filesystem = filesystem;
     this.outputToInputsSupplier =
@@ -300,7 +301,7 @@ public class SmartDexingStep implements Step {
       pseudoRules.add(
           new DxPseudoRule(
               target,
-              androidLegacyToolchain,
+              androidPlatformTarget,
               buildContext,
               filesystem,
               dexInputHashes,
@@ -337,7 +338,7 @@ public class SmartDexingStep implements Step {
   @VisibleForTesting
   static class DxPseudoRule {
     private final BuildTarget target;
-    private final AndroidLegacyToolchain androidLegacyToolchain;
+    private final AndroidPlatformTarget androidPlatformTarget;
     private final BuildContext buildContext;
     private final ProjectFilesystem filesystem;
     private final Map<Path, Sha1HashCode> dexInputHashes;
@@ -352,7 +353,7 @@ public class SmartDexingStep implements Step {
 
     public DxPseudoRule(
         BuildTarget target,
-        AndroidLegacyToolchain androidLegacyToolchain,
+        AndroidPlatformTarget androidPlatformTarget,
         BuildContext buildContext,
         ProjectFilesystem filesystem,
         Map<Path, Sha1HashCode> dexInputHashes,
@@ -364,7 +365,7 @@ public class SmartDexingStep implements Step {
         Optional<String> dxMaxHeapSize,
         String dexTool) {
       this.target = target;
-      this.androidLegacyToolchain = androidLegacyToolchain;
+      this.androidPlatformTarget = androidPlatformTarget;
       this.buildContext = buildContext;
       this.filesystem = filesystem;
       this.dexInputHashes = ImmutableMap.copyOf(dexInputHashes);
@@ -417,7 +418,7 @@ public class SmartDexingStep implements Step {
 
       createDxStepForDxPseudoRule(
           target,
-          androidLegacyToolchain,
+          androidPlatformTarget,
           steps,
           buildContext,
           filesystem,
@@ -441,7 +442,7 @@ public class SmartDexingStep implements Step {
    */
   static void createDxStepForDxPseudoRule(
       BuildTarget target,
-      AndroidLegacyToolchain androidLegacyToolchain,
+      AndroidPlatformTarget androidPlatformTarget,
       ImmutableList.Builder<Step> steps,
       BuildContext context,
       ProjectFilesystem filesystem,
@@ -460,7 +461,7 @@ public class SmartDexingStep implements Step {
           new DxStep(
               target,
               filesystem,
-              androidLegacyToolchain,
+              androidPlatformTarget,
               tempDexJarOutput,
               filesToDex,
               dxOptions,
@@ -476,7 +477,7 @@ public class SmartDexingStep implements Step {
               tempDexJarOutput,
               repackedJar,
               ImmutableSet.of("classes.dex"),
-              ZipCompressionLevel.MIN_COMPRESSION_LEVEL));
+              ZipCompressionLevel.NONE));
       steps.add(
           RmStep.of(
               BuildCellRelativePath.fromCellRelativePath(
@@ -501,7 +502,7 @@ public class SmartDexingStep implements Step {
           new DxStep(
               target,
               filesystem,
-              androidLegacyToolchain,
+              androidPlatformTarget,
               tempDexJarOutput,
               filesToDex,
               dxOptions,
@@ -514,7 +515,7 @@ public class SmartDexingStep implements Step {
               tempDexJarOutput,
               outputPath,
               ImmutableSet.of("classes.dex"),
-              ZipCompressionLevel.MIN_COMPRESSION_LEVEL));
+              ZipCompressionLevel.NONE));
       steps.add(
           RmStep.of(
               BuildCellRelativePath.fromCellRelativePath(
@@ -533,7 +534,7 @@ public class SmartDexingStep implements Step {
           new DxStep(
               target,
               filesystem,
-              androidLegacyToolchain,
+              androidPlatformTarget,
               outputPath,
               filesToDex,
               dxOptions,

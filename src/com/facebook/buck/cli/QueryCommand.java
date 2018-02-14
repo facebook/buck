@@ -16,11 +16,10 @@
 
 package com.facebook.buck.cli;
 
-import static java.util.stream.Collectors.toList;
-
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.Dot;
+import com.facebook.buck.graph.Dot.Builder;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -41,6 +40,7 @@ import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -56,11 +56,14 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.codehaus.plexus.util.StringUtils;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -160,6 +163,7 @@ public class QueryCommand extends AbstractCommand {
             new PerBuildState(
                 params.getParser(),
                 params.getBuckEventBus(),
+                params.getExecutableFinder(),
                 pool.getListeningExecutorService(),
                 params.getCell(),
                 params.getKnownBuildRuleTypesProvider(),
@@ -281,15 +285,14 @@ public class QueryCommand extends AbstractCommand {
     ImmutableSet<QueryTarget> queryResult = env.evaluateQuery(query);
 
     LOG.debug("Printing out the following targets: " + queryResult);
-    if (shouldOutputAttributes()) {
-      collectAndPrintAttributes(params, env, queryResult);
+    if (getOutputFormat() == OutputFormat.MINRANK || getOutputFormat() == OutputFormat.MAXRANK) {
+      printRankOutput(params, env, queryResult, getOutputFormat());
     } else if (shouldGenerateDotOutput()) {
       printDotOutput(params, env, queryResult);
+    } else if (shouldOutputAttributes()) {
+      collectAndPrintAttributesAsJson(params, env, queryResult);
     } else if (shouldGenerateJsonOutput()) {
       CommandHelper.printJSON(params, queryResult);
-    } else if (getOutputFormat() == OutputFormat.MINRANK
-        || getOutputFormat() == OutputFormat.MAXRANK) {
-      printRankOutput(params, env, queryResult, getOutputFormat());
     } else {
       CommandHelper.printToConsole(params, queryResult);
     }
@@ -299,14 +302,31 @@ public class QueryCommand extends AbstractCommand {
   private void printDotOutput(
       CommandRunnerParams params, BuckQueryEnvironment env, Set<QueryTarget> queryResult)
       throws IOException, QueryException {
-    Dot.builder(env.getTargetGraph(), "result_graph")
-        .setNodesToFilter(env.getNodesFromQueryTargets(queryResult)::contains)
-        .setNodeToName(targetNode -> targetNode.getBuildTarget().getFullyQualifiedName())
-        .setNodeToTypeName(
-            targetNode -> Description.getBuildRuleType(targetNode.getDescription()).getName())
-        .setBfsSorted(shouldGenerateBFSOutput())
-        .build()
-        .writeOutput(params.getConsole().getStdOut());
+    Builder<TargetNode<?, ?>> dotBuilder =
+        Dot.builder(env.getTargetGraph(), "result_graph")
+            .setNodesToFilter(env.getNodesFromQueryTargets(queryResult)::contains)
+            .setNodeToName(targetNode -> targetNode.getBuildTarget().getFullyQualifiedName())
+            .setNodeToTypeName(
+                targetNode -> Description.getBuildRuleType(targetNode.getDescription()).getName())
+            .setBfsSorted(shouldGenerateBFSOutput());
+    if (shouldOutputAttributes()) {
+      PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes.get());
+      dotBuilder.setNodeToAttributes(
+          node ->
+              getAttributes(params, env, patternsMatcher, node)
+                  .map(
+                      attrs ->
+                          attrs
+                              .entrySet()
+                              .stream()
+                              .collect(
+                                  ImmutableSortedMap.toImmutableSortedMap(
+                                      Comparator.naturalOrder(),
+                                      Entry::getKey,
+                                      e -> String.valueOf(e.getValue()))))
+                  .orElse(ImmutableSortedMap.of()));
+    }
+    dotBuilder.build().writeOutput(params.getConsole().getStdOut());
   }
 
   private void printRankOutput(
@@ -321,24 +341,75 @@ public class QueryCommand extends AbstractCommand {
             env.getNodesFromQueryTargets(queryResult)::contains,
             outputFormat);
 
-    // Also sort by name to ensure output is deterministic
-    List<Map.Entry<TargetNode<?, ?>, Integer>> entries =
-        ranks
-            .entrySet()
-            .stream()
-            .sorted(
-                Comparator.comparing(Map.Entry<TargetNode<?, ?>, Integer>::getValue)
-                    .thenComparing(
-                        Comparator.comparing(Map.Entry<TargetNode<?, ?>, Integer>::getKey)))
-            .collect(toList());
-
     PrintStream stdOut = params.getConsole().getStdOut();
-    for (Map.Entry<TargetNode<?, ?>, Integer> entry : entries) {
-      int rank = entry.getValue();
-      String name =
-          entry.getKey().getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName();
-      stdOut.println(rank + " " + name);
+    if (shouldOutputAttributes()) {
+      ImmutableSortedMap<String, ImmutableSortedMap<String, Object>> attributesWithRanks =
+          extendAttributesWithRankMetadata(params, env, outputFormat, ranks.entrySet());
+      printAttributesAsJson(attributesWithRanks, stdOut);
+    } else {
+      printRankOutputAsPlainText(ranks, stdOut);
     }
+  }
+
+  private void printRankOutputAsPlainText(
+      Map<TargetNode<?, ?>, Integer> ranks, PrintStream stdOut) {
+    ranks
+        .entrySet()
+        .stream()
+        // sort by rank and target nodes to break ties in order to make output deterministic
+        .sorted(
+            Comparator.comparing(Entry<TargetNode<?, ?>, Integer>::getValue)
+                .thenComparing(Comparator.comparing(Entry<TargetNode<?, ?>, Integer>::getKey)))
+        .forEach(
+            entry -> {
+              int rank = entry.getValue();
+              String name = toPresentationForm(entry.getKey());
+              stdOut.println(rank + " " + name);
+            });
+  }
+
+  /**
+   * Returns {@code attributes} with included min/max rank metadata into keyed by the result of
+   * {@link #toPresentationForm(TargetNode)}
+   *
+   * @param rankEntries A set of pairs that map {@link TargetNode}s to their rank value (min or max)
+   *     depending on {@code outputFormat}.
+   */
+  private ImmutableSortedMap<String, ImmutableSortedMap<String, Object>>
+      extendAttributesWithRankMetadata(
+          CommandRunnerParams params,
+          BuckQueryEnvironment env,
+          OutputFormat outputFormat,
+          Set<Entry<TargetNode<?, ?>, Integer>> rankEntries) {
+    PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes.get());
+    // since some nodes differ in their flavors but ultimately have the same attributes, immutable
+    // resulting map is created only after duplicates are merged by using regular HashMap
+    Map<String, Integer> rankIndex =
+        rankEntries
+            .stream()
+            .collect(
+                Collectors.toMap(entry -> toPresentationForm(entry.getKey()), Entry::getValue));
+    return ImmutableSortedMap.copyOf(
+        rankEntries
+            .stream()
+            .collect(
+                Collectors.toMap(
+                    entry -> toPresentationForm(entry.getKey()),
+                    entry -> {
+                      String label = toPresentationForm(entry.getKey());
+                      // NOTE: for resiliency in case attributes cannot be resolved a map with only
+                      // minrank is returned, which means clients should be prepared to deal with
+                      // potentially missing fields. Consider not returning a node in such case,
+                      // since most likely an attempt to use that node would fail anyways.
+                      SortedMap<String, Object> attributes =
+                          getAttributes(params, env, patternsMatcher, entry.getKey())
+                              .orElseGet(TreeMap::new);
+                      return ImmutableSortedMap.<String, Object>naturalOrder()
+                          .putAll(attributes)
+                          .put(outputFormat.name().toLowerCase(), rankIndex.get(label))
+                          .build();
+                    })),
+        Comparator.<String>comparingInt(rankIndex::get).thenComparing(Comparator.naturalOrder()));
   }
 
   private Map<TargetNode<?, ?>, Integer> computeRanks(
@@ -380,47 +451,16 @@ public class QueryCommand extends AbstractCommand {
     return ranks;
   }
 
-  private void collectAndPrintAttributes(
+  private void collectAndPrintAttributesAsJson(
       CommandRunnerParams params, BuckQueryEnvironment env, Set<QueryTarget> queryResult)
       throws QueryException {
-    PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes.get());
-    SortedMap<String, SortedMap<String, Object>> result = new TreeMap<>();
-    for (QueryTarget target : queryResult) {
-      if (!(target instanceof QueryBuildTarget)) {
-        continue;
-      }
-      TargetNode<?, ?> node = env.getNode(target);
-      try {
-        SortedMap<String, Object> sortedTargetRule =
-            params.getParser().getRawTargetNode(env.getParserState(), params.getCell(), node);
-        if (sortedTargetRule == null) {
-          params
-              .getConsole()
-              .printErrorText(
-                  "unable to find rule for target "
-                      + node.getBuildTarget().getFullyQualifiedName());
-          continue;
-        }
-        SortedMap<String, Object> attributes = new TreeMap<>();
-        if (patternsMatcher.hasPatterns()) {
-          for (String key : sortedTargetRule.keySet()) {
-            String snakeCaseKey = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, key);
-            if (patternsMatcher.matches(snakeCaseKey)) {
-              attributes.put(snakeCaseKey, sortedTargetRule.get(key));
-            }
-          }
-        }
+    ImmutableSortedMap<String, SortedMap<String, Object>> result =
+        collectAttributes(params, env, queryResult);
+    printAttributesAsJson(result, params.getConsole().getStdOut());
+  }
 
-        result.put(
-            node.getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName(), attributes);
-      } catch (BuildFileParseException e) {
-        params
-            .getConsole()
-            .printErrorText(
-                "unable to find rule for target " + node.getBuildTarget().getFullyQualifiedName());
-        continue;
-      }
-    }
+  private <T extends SortedMap<String, Object>> void printAttributesAsJson(
+      ImmutableSortedMap<String, T> result, PrintStream outputStream) {
     StringWriter stringWriter = new StringWriter();
     try {
       ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, result);
@@ -429,7 +469,72 @@ public class QueryCommand extends AbstractCommand {
       throw new RuntimeException(e);
     }
     String output = stringWriter.getBuffer().toString();
-    params.getConsole().getStdOut().println(output);
+    outputStream.println(output);
+  }
+
+  private ImmutableSortedMap<String, SortedMap<String, Object>> collectAttributes(
+      CommandRunnerParams params, BuckQueryEnvironment env, Set<QueryTarget> queryResult)
+      throws QueryException {
+    PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes.get());
+    // use HashMap instead of ImmutableSortedMap.Builder to allow duplicates
+    // TODO(buckteam): figure out if duplicates should actually be allowed. It seems like the only
+    // reason why duplicates may occur is because TargetNode's unflavored name is used as a key,
+    // which may or may not be a good idea
+    Map<String, SortedMap<String, Object>> attributesMap = new HashMap<>();
+    for (QueryTarget target : queryResult) {
+      if (!(target instanceof QueryBuildTarget)) {
+        continue;
+      }
+      TargetNode<?, ?> node = env.getNode(target);
+      try {
+        Optional<SortedMap<String, Object>> attributes =
+            getAttributes(params, env, patternsMatcher, node);
+        if (!attributes.isPresent()) {
+          continue;
+        }
+
+        attributesMap.put(toPresentationForm(node), attributes.get());
+      } catch (BuildFileParseException e) {
+        params
+            .getConsole()
+            .printErrorText(
+                "unable to find rule for target " + node.getBuildTarget().getFullyQualifiedName());
+        continue;
+      }
+    }
+    return ImmutableSortedMap.<String, SortedMap<String, Object>>naturalOrder()
+        .putAll(attributesMap)
+        .build();
+  }
+
+  private Optional<SortedMap<String, Object>> getAttributes(
+      CommandRunnerParams params,
+      BuckQueryEnvironment env,
+      PatternsMatcher patternsMatcher,
+      TargetNode<?, ?> node) {
+    SortedMap<String, Object> sortedTargetRule =
+        params.getParser().getRawTargetNode(env.getParserState(), params.getCell(), node);
+    if (sortedTargetRule == null) {
+      params
+          .getConsole()
+          .printErrorText(
+              "unable to find rule for target " + node.getBuildTarget().getFullyQualifiedName());
+      return Optional.empty();
+    }
+    SortedMap<String, Object> attributes = new TreeMap<>();
+    if (patternsMatcher.hasPatterns()) {
+      for (String key : sortedTargetRule.keySet()) {
+        String snakeCaseKey = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, key);
+        if (patternsMatcher.matches(snakeCaseKey)) {
+          attributes.put(snakeCaseKey, sortedTargetRule.get(key));
+        }
+      }
+    }
+    return Optional.of(attributes);
+  }
+
+  private String toPresentationForm(TargetNode<?, ?> node) {
+    return node.getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName();
   }
 
   @Override

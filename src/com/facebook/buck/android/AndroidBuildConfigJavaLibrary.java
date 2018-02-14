@@ -31,6 +31,7 @@ import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.facebook.buck.jvm.java.ZipArchiveDependencySupplier;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildDeps;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -63,9 +64,10 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
     super(
         buildTarget,
         projectFilesystem,
-        ImmutableSortedSet.copyOf(
-            Iterables.concat(
-                params.getBuildDeps(), ruleFinder.filterBuildRuleInputs(abiClasspath.get()))),
+        new BuildDeps(
+            ImmutableSortedSet.copyOf(
+                Iterables.concat(
+                    params.getBuildDeps(), ruleFinder.filterBuildRuleInputs(abiClasspath.get())))),
         resolver,
         new JarBuildStepsFactory(
             projectFilesystem,
@@ -96,6 +98,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         /* exportedDeps */ ImmutableSortedSet.of(),
         /* providedDeps */ ImmutableSortedSet.of(),
         HasJavaAbi.getClassAbiJar(buildTarget),
+        /* sourceOnlyAbiJar */ null,
         /* mavenCoords */ Optional.empty(),
         /* tests */ ImmutableSortedSet.of(),
         /* requiredForSourceOnlyAbi */ false);

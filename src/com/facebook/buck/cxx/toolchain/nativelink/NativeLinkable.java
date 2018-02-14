@@ -20,6 +20,9 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -97,6 +100,16 @@ public interface NativeLinkable {
   /** @return whether this {@link NativeLinkable} supports omnibus linking. */
   default boolean supportsOmnibusLinking(@SuppressWarnings("unused") CxxPlatform cxxPlatform) {
     return true;
+  }
+
+  /**
+   * @param loader the method to load missing element to cache
+   * @return a LoadingCache for native linkable
+   */
+  public static LoadingCache<NativeLinkableCacheKey, NativeLinkableInput>
+      getNativeLinkableInputCache(
+          com.google.common.base.Function<NativeLinkableCacheKey, NativeLinkableInput> loader) {
+    return CacheBuilder.newBuilder().build(CacheLoader.from(loader));
   }
 
   enum Linkage {

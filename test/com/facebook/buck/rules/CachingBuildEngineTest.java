@@ -85,7 +85,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.FakeFileHashCache;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
@@ -3089,7 +3089,7 @@ public class CachingBuildEngineTest {
           pathResolver,
           ImmutableSet.of(input),
           ImmutableSet.of(input));
-      Path manifestPath = CachingBuildRuleBuilder.getManifestPath(rule);
+      Path manifestPath = ManifestRuleKeyManager.getManifestPath(rule);
       filesystem.mkdirs(manifestPath.getParent());
       try (OutputStream outputStream = filesystem.newFileOutputStream(manifestPath)) {
         manifest.serialize(outputStream);
@@ -3850,9 +3850,10 @@ public class CachingBuildEngineTest {
           secondState);
     }
 
-    @Test
+    @Test(timeout = 10000)
     public void testBuildLocallyWithImmediateRemoteSynchronization() throws Exception {
       RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer();
+      synchronizer.switchToAlwaysWaitingMode();
 
       // Signal completion of the build rule before the caching build engine requests it.
       // waitForBuildRuleToFinishRemotely call inside caching build engine should result in an
@@ -3872,11 +3873,17 @@ public class CachingBuildEngineTest {
           "Building locally should invalidate InitializableFromDisk state.",
           firstState,
           secondState);
+
+      // Check that the build engine waited for the remote build of rule to finish.
+      assertTrue(
+          synchronizer.buildCompletionWaitingFutureCreatedForTarget(
+              BUILD_TARGET.getFullyQualifiedName()));
     }
 
-    @Test
+    @Test(timeout = 10000)
     public void testBuildLocallyWithDelayedRemoteSynchronization() throws Exception {
       RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer();
+      synchronizer.switchToAlwaysWaitingMode();
 
       // Signal the completion of the build rule asynchronously.
       // waitForBuildRuleToFinishRemotely call inside caching build engine should result in an
@@ -3908,6 +3915,80 @@ public class CachingBuildEngineTest {
           secondState);
 
       signalBuildRuleCompletedThread.join(1000);
+
+      // Check that the build engine waited for the remote build of rule to finish.
+      assertTrue(
+          synchronizer.buildCompletionWaitingFutureCreatedForTarget(
+              BUILD_TARGET.getFullyQualifiedName()));
+    }
+
+    @Test(timeout = 10000)
+    public void testBuildLocallyWhenRemoteBuildNotStartedAndAlwaysWaitSetToFalse()
+        throws Exception {
+      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer();
+
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild(synchronizer).getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      writeDepfileInput("new content");
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      assertNotEquals(
+          "Building locally should invalidate InitializableFromDisk state.",
+          firstState,
+          secondState);
+
+      // Check that the build engine did not wait for the remote build of rule to finish
+      assertFalse(
+          synchronizer.buildCompletionWaitingFutureCreatedForTarget(
+              BUILD_TARGET.getFullyQualifiedName()));
+    }
+
+    @Test(timeout = 10000)
+    public void testBuildLocallyWhenRemoteBuildStartedAndAlwaysWaitSetToFalse() throws Exception {
+      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer();
+
+      // Signal that the build has started, which should ensure build waits.
+      synchronizer.signalStartedRemoteBuildingOfBuildRule(BUILD_TARGET.getFullyQualifiedName());
+
+      // Signal the completion of the build rule asynchronously.
+      // waitForBuildRuleToFinishRemotely call inside caching build engine should result in an
+      // Future that later has its completion handler invoked by the Thread below.
+      Thread signalBuildRuleCompletedThread =
+          new Thread(
+              () -> {
+                try {
+                  Thread.sleep(10);
+                } catch (InterruptedException e) {
+                  fail("Test was interrupted");
+                }
+                synchronizer.signalCompletionOfBuildRule(BUILD_TARGET.getFullyQualifiedName());
+              });
+      signalBuildRuleCompletedThread.start();
+
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild(synchronizer).getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      writeDepfileInput("new content");
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      assertNotEquals(
+          "Building locally should invalidate InitializableFromDisk state.",
+          firstState,
+          secondState);
+
+      signalBuildRuleCompletedThread.join(1000);
+
+      // Check that the build engine waited for the remote build of rule to finish.
+      assertTrue(
+          synchronizer.buildCompletionWaitingFutureCreatedForTarget(
+              BUILD_TARGET.getFullyQualifiedName()));
     }
 
     private BuildEngineBuildContext createBuildContext(BuildId buildId) {
@@ -4231,6 +4312,11 @@ public class CachingBuildEngineTest {
       }
       return Futures.immediateFuture(
           CacheResult.hit("dir", ArtifactCacheMode.dir).withMetadata(metadata));
+    }
+
+    @Override
+    public void skipPendingAndFutureAsyncFetches() {
+      // Async requests are not supported by FakeArtifactCacheThatWritesAZipFile, so do nothing
     }
 
     @Override

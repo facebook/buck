@@ -37,6 +37,11 @@ public class NoopArtifactCache implements ArtifactCache {
   }
 
   @Override
+  public void skipPendingAndFutureAsyncFetches() {
+    // Do nothing.
+  }
+
+  @Override
   public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
     return Futures.immediateFuture(null);
   }
@@ -72,17 +77,20 @@ public class NoopArtifactCache implements ArtifactCache {
     }
 
     @Override
-    public ArtifactCache newInstance(boolean distributedBuildModeEnabled) {
+    public ArtifactCache newInstance(
+        boolean distributedBuildModeEnabled, boolean isDownloadHeavyBuild) {
       return new NoopArtifactCache();
     }
 
     @Override
-    public ArtifactCache remoteOnlyInstance(boolean distributedBuildModeEnabled) {
+    public ArtifactCache remoteOnlyInstance(
+        boolean distributedBuildModeEnabled, boolean isDownloadHeavyBuild) {
       return new NoopArtifactCache();
     }
 
     @Override
-    public ArtifactCache localOnlyInstance(boolean distributedBuildModeEnabled) {
+    public ArtifactCache localOnlyInstance(
+        boolean distributedBuildModeEnabled, boolean isDownloadHeavyBuild) {
       return new NoopArtifactCache();
     }
 

@@ -1,18 +1,5 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_library_with_plugins")
 
-CXXRUNTIME_SRCS = [
-    "AbstractNdkCxxPlatformCompiler.java",
-]
-
-java_immutables_library(
-    name = "cxxruntime",
-    srcs = CXXRUNTIME_SRCS,
-    visibility = ["PUBLIC"],
-    deps = [
-        "//src/com/facebook/buck/android/toolchain/ndk:ndk",
-    ],
-)
-
 BUCK_CONFIG_SRCS = [
     "AndroidBuckConfig.java",
     "AndroidInstallConfig.java",
@@ -33,7 +20,6 @@ java_immutables_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
-        ":cxxruntime",
         "//src/com/facebook/buck/android/toolchain/ndk:ndk",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/event:event",
@@ -166,7 +152,6 @@ java_library_with_plugins(
     visibility = ["PUBLIC"],
     deps = [
         ":config",
-        ":cxxruntime",
         ":helpers",
         ":split_dex",
         ":steps",
@@ -202,7 +187,6 @@ java_library_with_plugins(
         "//src/com/facebook/buck/jvm/scala:scala",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/model/macros:macros",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/rules:build_rule",
@@ -225,6 +209,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/test:test",
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/test/selectors:selectors",
+        "//src/com/facebook/buck/unarchive:unarchive",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:packaged_resource",
         "//src/com/facebook/buck/util:process_executor",
@@ -293,10 +278,6 @@ java_library(
 
 HELPERS_SRCS = [
     "AdbHelper.java",
-    "AndroidLegacyToolchain.java",
-    "AndroidPlatformTargetSupplier.java",
-    "DefaultAndroidLegacyToolchain.java",
-    "DefaultAndroidLegacyToolchainFactory.java",
     "DexFilesInfo.java",
     "NativeFilesInfo.java",
     "ResourceFilesInfo.java",
@@ -338,7 +319,6 @@ java_immutables_library(
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/log:log",
         "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/step:step",
@@ -353,10 +333,7 @@ java_immutables_library(
 )
 
 UTILS_SRCS = [
-    "AndroidDirectoryResolver.java",
-    "AndroidPlatformTarget.java",
     "AndroidManifestReader.java",
-    "DefaultAndroidDirectoryResolver.java",
     "DefaultAndroidManifestReader.java",
 ]
 
@@ -365,6 +342,8 @@ java_immutables_library(
     srcs = UTILS_SRCS,
     exported_deps = [
         "//src/com/facebook/buck/android:utils_api",
+        "//src/com/facebook/buck/android/toolchain:toolchain",
+        "//src/com/facebook/buck/android/toolchain/common:common",
         "//third-party/java/android:ddmlib",
     ],
     tests = [
@@ -378,7 +357,6 @@ java_immutables_library(
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/rules:rule_key",
         "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/util:exceptions",
@@ -406,7 +384,6 @@ java_immutables_library(
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/rules:rule_key",
         "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/util:exceptions",
@@ -422,7 +399,7 @@ java_immutables_library(
     name = "steps",
     srcs = glob(
         ["*.java"],
-        exclude = CXXRUNTIME_SRCS + BUCK_CONFIG_SRCS + RULES_SRCS +
+        exclude = BUCK_CONFIG_SRCS + RULES_SRCS +
                   SPLIT_DEX_SRCS + UTILS_API_SRCS + UTILS_SRCS + HELPERS_SRCS,
     ),
     exported_deps = [
@@ -436,7 +413,6 @@ java_immutables_library(
     visibility = ["PUBLIC"],
     deps = [
         ":config",
-        ":cxxruntime",
         ":helpers",
         ":split_dex",
         ":utils",
@@ -446,6 +422,7 @@ java_immutables_library(
         "//src/com/facebook/buck/android/packageable:packageable",
         "//src/com/facebook/buck/android/toolchain:toolchain",
         "//src/com/facebook/buck/android/toolchain/ndk:ndk",
+        "//src/com/facebook/buck/android/toolchain/ndk/impl:impl",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/cxx/toolchain/elf:elf",
@@ -473,6 +450,7 @@ java_immutables_library(
         "//src/com/facebook/buck/rules/macros:macros",
         "//src/com/facebook/buck/shell:steps",
         "//src/com/facebook/buck/step/fs:fs",
+        "//src/com/facebook/buck/unarchive:unarchive",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:io",
         "//src/com/facebook/buck/util:process_executor",

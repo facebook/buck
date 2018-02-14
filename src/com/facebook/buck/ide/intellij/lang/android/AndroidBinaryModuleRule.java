@@ -26,14 +26,18 @@ import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
+import java.nio.file.Path;
 
 public class AndroidBinaryModuleRule extends AndroidModuleRule<AndroidBinaryDescriptionArg> {
+
+  private final AndroidManifestParser androidManifestParser;
 
   public AndroidBinaryModuleRule(
       ProjectFilesystem projectFilesystem,
       IjModuleFactoryResolver moduleFactoryResolver,
       IjProjectConfig projectConfig) {
     super(projectFilesystem, moduleFactoryResolver, projectConfig, AndroidProjectType.APP);
+    androidManifestParser = new AndroidManifestParser(projectFilesystem);
   }
 
   @Override
@@ -47,9 +51,15 @@ public class AndroidBinaryModuleRule extends AndroidModuleRule<AndroidBinaryDesc
     context.addDeps(target.getBuildDeps(), DependencyType.PROD);
 
     IjModuleAndroidFacet.Builder androidFacetBuilder = context.getOrCreateAndroidFacetBuilder();
-    androidFacetBuilder
-        .addManifestPaths(moduleFactoryResolver.getAndroidManifestPath(target))
-        .setProguardConfigPath(moduleFactoryResolver.getProguardConfigPath(target));
+    androidFacetBuilder.setProguardConfigPath(moduleFactoryResolver.getProguardConfigPath(target));
+
+    Path manifestPath = moduleFactoryResolver.getAndroidManifestPath(target);
+    androidFacetBuilder.addManifestPaths(manifestPath);
+
+    Path projectManifestPath = projectFilesystem.getPathForRelativePath(manifestPath);
+    androidManifestParser
+        .parseMinSdkVersion(projectManifestPath)
+        .ifPresent(androidFacetBuilder::addMinSdkVersions);
   }
 
   @Override

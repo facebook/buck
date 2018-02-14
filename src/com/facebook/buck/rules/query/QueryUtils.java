@@ -30,6 +30,8 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.HasDepsQuery;
 import com.facebook.buck.rules.HasProvidedDepsQuery;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Threads;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -44,6 +46,8 @@ import java.util.stream.Stream;
  * Will almost certainly change in interface and implementation.
  */
 public final class QueryUtils {
+
+  private static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
 
   private QueryUtils() {
     // This class cannot be instantiated
@@ -104,6 +108,7 @@ public final class QueryUtils {
         new GraphEnhancementQueryEnvironment(
             Optional.of(resolver),
             Optional.of(targetGraph),
+            TYPE_COERCER_FACTORY,
             cellRoots,
             BuildTargetPatternParser.forBaseName(target.getBaseName()),
             declaredDeps);
@@ -138,7 +143,12 @@ public final class QueryUtils {
       throws QueryException {
     GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(
-            Optional.empty(), Optional.empty(), cellPathResolver, parserPattern, ImmutableSet.of());
+            Optional.empty(),
+            Optional.empty(),
+            TYPE_COERCER_FACTORY,
+            cellPathResolver,
+            parserPattern,
+            ImmutableSet.of());
     QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env);
     return parsedExp
         .getTargets(env)

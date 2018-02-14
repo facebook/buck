@@ -93,66 +93,70 @@ class TreeBackedTypeResolutionSimulator {
           (QualifiedNameable) Preconditions.checkNotNull(trees.getElement(referencingPath));
       this.enclosingElement = enclosingElement;
       scope = Preconditions.checkNotNull(trees.getScope(location));
-
-      remediations = new ArrayList<>();
-      if (!isCanonicalReference()) {
-        message =
-            "Source-only ABI generation requires that this type be referred to by its canonical name.";
-        if (enclosingElement == null) {
-          remediations.add(new ImportTypeRemediation((TypeElement) canonicalElement));
-        }
-        remediations.add(new CanonicalizeReferenceRemediation());
-      } else if (!isResolvable()) {
-        TypeElement referencedType = (TypeElement) referencedElement;
-        if (imports != null && imports.isOnDemandImported(referencedElement)
-            || (imports != null
-                && imports.isOnDemandStaticImported(referencedType)
-                && imports.getOnDemandStaticImportContainer(referencedType)
-                    == referencedType.getEnclosingElement())) {
+      try {
+        remediations = new ArrayList<>();
+        if (!isCanonicalReference()) {
           message =
-              "Source-only ABI generation requires that this type be explicitly imported (star imports are not accepted).";
-          remediations.add(new ImportTypeRemediation((TypeElement) referencedElement));
-        } else if (imports != null
-            && (imports.isOnDemandStaticImported(referencedType)
-                || imports.isStaticImported(referencedType))) {
-          message = null;
-          remediations.add(new CannotFixRemediation());
+              "Source-only ABI generation requires that this type be referred to by its canonical name.";
+          if (enclosingElement == null) {
+            remediations.add(new ImportTypeRemediation((TypeElement) canonicalElement));
+          }
+          remediations.add(new CanonicalizeReferenceRemediation());
+        } else if (!isResolvable()) {
+          TypeElement referencedType = (TypeElement) referencedElement;
+          if (imports != null && imports.isOnDemandImported(referencedElement)
+              || (imports != null
+                  && imports.isOnDemandStaticImported(referencedType)
+                  && imports.getOnDemandStaticImportContainer(referencedType)
+                      == referencedType.getEnclosingElement())) {
+            message =
+                "Source-only ABI generation requires that this type be explicitly imported (star imports are not accepted).";
+            remediations.add(new ImportTypeRemediation((TypeElement) referencedElement));
+          } else if (imports != null
+              && (imports.isOnDemandStaticImported(referencedType)
+                  || imports.isStaticImported(referencedType))) {
+            message = null;
+            remediations.add(new CannotFixRemediation());
+          } else {
+            message =
+                "Source-only ABI generation requires that this member type reference be more explicit.";
+            remediations.add(
+                new ImportTypeRemediation((TypeElement) referencedElement.getEnclosingElement()));
+            remediations.add(new QualifyNameRemediation(referencedType));
+          }
+        } else if (!nameIsCorrectCase()) {
+          message =
+              referencedElement.accept(
+                  new SimpleElementVisitor8<String, Void>() {
+                    @Override
+                    public String visitPackage(PackageElement e, Void aVoid) {
+                      remediations.add(
+                          new RenameRemediation(
+                              e.getSimpleName(), fixNameCase(e, Character::toLowerCase)));
+                      return "Source-only ABI generation requires package names to start with a lowercase letter.";
+                    }
+
+                    @Override
+                    public String visitType(TypeElement e, Void aVoid) {
+                      remediations.add(
+                          new RenameRemediation(
+                              e.getSimpleName(), fixNameCase(e, Character::toUpperCase)));
+                      return "Source-only ABI generation requires top-level class names to start with a capital letter.";
+                    }
+
+                    @Override
+                    protected String defaultAction(Element e, Void aVoid) {
+                      throw new IllegalArgumentException(
+                          String.format("Unexpected element of kind %s: %s", e.getKind(), e));
+                    }
+                  },
+                  null);
         } else {
-          message =
-              "Source-only ABI generation requires that this member type reference be more explicit.";
-          remediations.add(
-              new ImportTypeRemediation((TypeElement) referencedElement.getEnclosingElement()));
-          remediations.add(new QualifyNameRemediation(referencedType));
+          message = null;
         }
-      } else if (!nameIsCorrectCase()) {
-        message =
-            referencedElement.accept(
-                new SimpleElementVisitor8<String, Void>() {
-                  @Override
-                  public String visitPackage(PackageElement e, Void aVoid) {
-                    remediations.add(
-                        new RenameRemediation(
-                            e.getSimpleName(), fixNameCase(e, Character::toLowerCase)));
-                    return "Source-only ABI generation requires package names to start with a lowercase letter.";
-                  }
-
-                  @Override
-                  public String visitType(TypeElement e, Void aVoid) {
-                    remediations.add(
-                        new RenameRemediation(
-                            e.getSimpleName(), fixNameCase(e, Character::toUpperCase)));
-                    return "Source-only ABI generation requires top-level class names to start with a capital letter.";
-                  }
-
-                  @Override
-                  protected String defaultAction(Element e, Void aVoid) {
-                    throw new IllegalArgumentException(
-                        String.format("Unexpected element of kind %s: %s", e.getKind(), e));
-                  }
-                },
-                null);
-      } else {
-        message = null;
+      } catch (RuntimeException e) {
+        throw new RuntimeException(
+            String.format("When resolving %s at %s.", referencedElement, location), e);
       }
     }
 

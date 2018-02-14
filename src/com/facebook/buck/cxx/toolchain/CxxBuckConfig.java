@@ -25,15 +25,16 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UserFlavor;
 import com.facebook.buck.rules.BinaryBuildRuleToolProvider;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleScheduleInfo;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -47,9 +48,69 @@ import org.immutables.value.Value;
 public class CxxBuckConfig {
 
   private static final String FLAVORED_CXX_SECTION_PREFIX = "cxx#";
-  private static final String UNFLAVORED_CXX_SECTION_PREFIX = "cxx";
+  private static final String UNFLAVORED_CXX_SECTION = "cxx";
 
   private static final long DEFAULT_MAX_TEST_OUTPUT_SIZE = 8096;
+
+  private static final String DEFAULT_PLATFORM = "default_platform";
+  private static final String GTEST_DEP = "gtest_dep";
+  private static final String GTEST_DEFAULT_TEST_MAIN_DEP = "gtest_default_test_main_dep";
+  private static final String BOOST_TEST_DEP = "boost_test_dep";
+  private static final String HOST_PLATFORM = "host_platform";
+  private static final String ARCHIVER_PLATFORM = "archiver_platform";
+  private static final String MAX_TEST_OUTPUT_SIZE = "max_test_output_size";
+  private static final String LINKER_PLATFORM = "linker_platform";
+  private static final String UNTRACKED_HEADERS = "untracked_headers";
+  private static final String UNTRACKED_HEADERS_WHITELIST = "untracked_headers_whitelist";
+  private static final String EXPORTED_HEADERS_SYMLINKS_ENABLED =
+      "exported_headers_symlinks_enabled";
+  private static final String HEADERS_SYMLINKS_ENABLED = "headers_symlinks_enabled";
+  private static final String LINK_WEIGHT = "link_weight";
+  private static final String CACHE_LINKS = "cache_links";
+  private static final String PCH_ENABLED = "pch_enabled";
+  private static final String SANDBOX_SOURCES = "sandbox_sources";
+  private static final String ARCHIVE_CONTENTS = "archive_contents";
+  private static final String DEBUG_PATH_SANITIZER_LIMIT = "debug_path_sanitizer_limit";
+  private static final String SHOULD_REMAP_HOST_PLATFORM = "should_remap_host_platform";
+  private static final String UNIQUE_LIBRARY_NAME_ENABLED = "unique_library_name_enabled";
+  private static final String DEFAULT_REEXPORT_ALL_HEADER_DEPENDENCIES =
+      "default_reexport_all_header_dependencies";
+  private static final String SHLIB_INTERFACES = "shlib_interfaces";
+  private static final String SHARED_LIBRARY_INTERFACES = "shared_library_interfaces";
+  private static final String ENABLE_DEPRECATED_PREBUILT_CXX_LIBRARY_API =
+      "enable_deprecated_prebuilt_cxx_library_api";
+  private static final String DECLARED_PLATFORMS = "declared_platforms";
+
+  private static final String ASFLAGS = "asflags";
+  private static final String ASPPFLAGS = "asppflags";
+  private static final String CFLAGS = "cflags";
+  private static final String CXXFLAGS = "cxxflags";
+  private static final String CPPFLAGS = "cppflags";
+  private static final String CXXPPFLAGS = "cxxppflags";
+  private static final String CUDAFLAGS = "cudaflags";
+  private static final String CUDAPPFLAGS = "cudappflags";
+  private static final String ASMFLAGS = "asmflags";
+  private static final String ASMPPFLAGS = "asmppflags";
+  private static final String LDFLAGS = "ldflags";
+  private static final String ARFLAGS = "arflags";
+  private static final String RANLIBFLAGS = "ranlibflags";
+
+  private static final String AR = "ar";
+  private static final String RANLIB = "ranlib";
+  private static final String OBJCOPY = "objcopy";
+  private static final String NM = "nm";
+  private static final String STRIP = "strip";
+  private static final String AS = "as";
+  private static final String ASPP = "aspp";
+  private static final String CC = "cc";
+  private static final String CPP = "cpp";
+  private static final String CXX = "cxx";
+  private static final String CXXPP = "cxxpp";
+  private static final String CUDA = "cuda";
+  private static final String CUDAPP = "cudapp";
+  private static final String ASM = "asm";
+  private static final String ASMPP = "asmpp";
+  private static final String LD = "ld";
 
   private final BuckConfig delegate;
   private final String cxxSection;
@@ -74,7 +135,7 @@ public class CxxBuckConfig {
 
   public CxxBuckConfig(BuckConfig delegate) {
     this.delegate = delegate;
-    this.cxxSection = UNFLAVORED_CXX_SECTION_PREFIX;
+    this.cxxSection = UNFLAVORED_CXX_SECTION;
   }
 
   /*
@@ -94,7 +155,7 @@ public class CxxBuckConfig {
 
   /** @return the {@link BuildTarget} which represents the gtest library. */
   public Optional<BuildTarget> getGtestDep() {
-    return delegate.getBuildTarget(cxxSection, "gtest_dep");
+    return delegate.getBuildTarget(cxxSection, GTEST_DEP);
   }
 
   /**
@@ -102,12 +163,12 @@ public class CxxBuckConfig {
    *     by default (if no other main is given).
    */
   public Optional<BuildTarget> getGtestDefaultTestMainDep() {
-    return delegate.getBuildTarget(cxxSection, "gtest_default_test_main_dep");
+    return delegate.getBuildTarget(cxxSection, GTEST_DEFAULT_TEST_MAIN_DEP);
   }
 
   /** @return the {@link BuildTarget} which represents the boost testing library. */
   public Optional<BuildTarget> getBoostTestDep() {
-    return delegate.getBuildTarget(cxxSection, "boost_test_dep");
+    return delegate.getBuildTarget(cxxSection, BOOST_TEST_DEP);
   }
 
   public Optional<Path> getPath(String name) {
@@ -124,23 +185,71 @@ public class CxxBuckConfig {
   }
 
   public Optional<String> getDefaultPlatform() {
-    return delegate.getValue(cxxSection, "default_platform");
+    return delegate.getValue(cxxSection, DEFAULT_PLATFORM);
   }
 
   public Optional<String> getHostPlatform() {
-    return delegate.getValue(cxxSection, "host_platform");
+    return delegate.getValue(cxxSection, HOST_PLATFORM);
   }
 
-  public Optional<ImmutableList<String>> getFlags(String field) {
+  private Optional<ImmutableList<String>> getFlags(String field) {
     Optional<String> value = delegate.getValue(cxxSection, field);
     if (!value.isPresent()) {
       return Optional.empty();
     }
-    ImmutableList.Builder<String> split = ImmutableList.builder();
-    if (!value.get().trim().isEmpty()) {
-      split.addAll(Splitter.on(" ").split(value.get().trim()));
-    }
-    return Optional.of(split.build());
+    return Optional.of(delegate.getListWithoutComments(cxxSection, field, ' '));
+  }
+
+  public Optional<ImmutableList<String>> getAsflags() {
+    return getFlags(ASFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getAsppflags() {
+    return getFlags(ASPPFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getCflags() {
+    return getFlags(CFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getCxxflags() {
+    return getFlags(CXXFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getCppflags() {
+    return getFlags(CPPFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getCxxppflags() {
+    return getFlags(CXXPPFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getCudaflags() {
+    return getFlags(CUDAFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getCudappflags() {
+    return getFlags(CUDAPPFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getAsmflags() {
+    return getFlags(ASMFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getAsmppflags() {
+    return getFlags(ASMPPFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getLdflags() {
+    return getFlags(LDFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getArflags() {
+    return getFlags(ARFLAGS);
+  }
+
+  public Optional<ImmutableList<String>> getRanlibflags() {
+    return getFlags(RANLIBFLAGS);
   }
 
   /*
@@ -148,24 +257,21 @@ public class CxxBuckConfig {
    */
   public Optional<ArchiverProvider> getArchiverProvider(Platform defaultPlatform) {
     Optional<ToolProvider> toolProvider =
-        delegate.getView(ToolConfig.class).getToolProvider(cxxSection, "ar");
+        delegate.getView(ToolConfig.class).getToolProvider(cxxSection, AR);
     return toolProvider.map(
         archiver -> {
           Optional<Platform> archiverPlatform =
-              delegate.getEnum(cxxSection, "archiver_platform", Platform.class);
+              delegate.getEnum(cxxSection, ARCHIVER_PLATFORM, Platform.class);
           return ArchiverProvider.from(archiver, archiverPlatform.orElse(defaultPlatform));
         });
   }
 
   /** @return the maximum size in bytes of test output to report in test results. */
   public long getMaximumTestOutputSize() {
-    return delegate
-        .getLong(cxxSection, "max_test_output_size")
-        .orElse(DEFAULT_MAX_TEST_OUTPUT_SIZE);
+    return delegate.getLong(cxxSection, MAX_TEST_OUTPUT_SIZE).orElse(DEFAULT_MAX_TEST_OUTPUT_SIZE);
   }
 
-  private Optional<CxxToolProviderParams> getCxxToolProviderParams(
-      String field, Optional<CxxToolProvider.Type> defaultType) {
+  private Optional<CxxToolProviderParams> getCxxToolProviderParams(String field) {
     Optional<String> value = delegate.getValue(cxxSection, field);
     if (!value.isPresent()) {
       return Optional.empty();
@@ -173,19 +279,13 @@ public class CxxBuckConfig {
     String source = String.format("[%s] %s", cxxSection, field);
     Optional<BuildTarget> target = delegate.getMaybeBuildTarget(cxxSection, field);
     Optional<CxxToolProvider.Type> type =
-        delegate
-            .getEnum(cxxSection, field + "_type", CxxToolProvider.Type.class)
-            .map(Optional::of)
-            .orElse(defaultType);
-    if (type.isPresent() && type.get() == CxxToolProvider.Type.DEFAULT) {
-      type = Optional.of(CxxToolProvider.Type.GCC);
-    }
+        delegate.getEnum(cxxSection, field + "_type", CxxToolProvider.Type.class);
     if (target.isPresent()) {
       return Optional.of(
           CxxToolProviderParams.builder()
               .setSource(source)
               .setBuildTarget(target.get())
-              .setType(type.orElse(CxxToolProvider.Type.GCC))
+              .setType(type)
               .build());
     } else {
       return Optional.of(
@@ -197,54 +297,92 @@ public class CxxBuckConfig {
     }
   }
 
-  public Optional<PreprocessorProvider> getPreprocessorProvider(String field) {
-    Optional<CxxToolProvider.Type> defaultType = Optional.empty();
-    Optional<CxxToolProviderParams> params = getCxxToolProviderParams(field, defaultType);
-    if (!params.isPresent()) {
-      return Optional.empty();
-    }
-    return Optional.of(params.get().getPreprocessorProvider());
+  private Optional<PreprocessorProvider> getPreprocessorProvider(String field) {
+    return getCxxToolProviderParams(field)
+        .map(AbstractCxxToolProviderParams::getPreprocessorProvider);
   }
 
-  public Optional<CompilerProvider> getCompilerProvider(String field) {
-    Optional<CxxToolProviderParams> params = getCxxToolProviderParams(field, Optional.empty());
-    if (!params.isPresent()) {
-      return Optional.empty();
-    }
-    return Optional.of(params.get().getCompilerProvider());
+  private Optional<CompilerProvider> getCompilerProvider(String field) {
+    return getCxxToolProviderParams(field).map(AbstractCxxToolProviderParams::getCompilerProvider);
   }
 
-  public Optional<LinkerProvider> getLinkerProvider(String field, LinkerProvider.Type defaultType) {
+  public Optional<CompilerProvider> getAs() {
+    return getCompilerProvider(AS);
+  }
+
+  public Optional<PreprocessorProvider> getAspp() {
+    return getPreprocessorProvider(ASPP);
+  }
+
+  public Optional<CompilerProvider> getCc() {
+    return getCompilerProvider(CC);
+  }
+
+  public Optional<PreprocessorProvider> getCpp() {
+    return getPreprocessorProvider(CPP);
+  }
+
+  public Optional<CompilerProvider> getCxx() {
+    return getCompilerProvider(CXX);
+  }
+
+  public Optional<PreprocessorProvider> getCxxpp() {
+    return getPreprocessorProvider(CXXPP);
+  }
+
+  public Optional<CompilerProvider> getCuda() {
+    return getCompilerProvider(CUDA);
+  }
+
+  public Optional<PreprocessorProvider> getCudapp() {
+    return getPreprocessorProvider(CUDAPP);
+  }
+
+  public Optional<CompilerProvider> getAsm() {
+    return getCompilerProvider(ASM);
+  }
+
+  public Optional<PreprocessorProvider> getAsmpp() {
+    return getPreprocessorProvider(ASMPP);
+  }
+
+  /**
+   * Construct a linker based on `ld` and `linker_platform` sections in the config.
+   *
+   * @param defaultType the default type for a linker if `linker_platform` is not specified in the
+   *     config.
+   */
+  public Optional<LinkerProvider> getLinkerProvider(LinkerProvider.Type defaultType) {
     Optional<ToolProvider> toolProvider =
-        delegate.getView(ToolConfig.class).getToolProvider(cxxSection, field);
+        delegate.getView(ToolConfig.class).getToolProvider(cxxSection, LD);
     if (!toolProvider.isPresent()) {
       return Optional.empty();
     }
     Optional<LinkerProvider.Type> type =
-        delegate.getEnum(cxxSection, "linker_platform", LinkerProvider.Type.class);
+        delegate.getEnum(cxxSection, LINKER_PLATFORM, LinkerProvider.Type.class);
     return Optional.of(new DefaultLinkerProvider(type.orElse(defaultType), toolProvider.get()));
   }
 
-  public HeaderVerification getHeaderVerification() {
+  public HeaderVerification getHeaderVerificationOrIgnore() {
     return HeaderVerification.builder()
         .setMode(
             delegate
-                .getEnum(cxxSection, "untracked_headers", HeaderVerification.Mode.class)
+                .getEnum(cxxSection, UNTRACKED_HEADERS, HeaderVerification.Mode.class)
                 .orElse(HeaderVerification.Mode.IGNORE))
-        .addAllWhitelist(delegate.getListWithoutComments(cxxSection, "untracked_headers_whitelist"))
+        .addAllWhitelist(delegate.getListWithoutComments(cxxSection, UNTRACKED_HEADERS_WHITELIST))
         .build();
   }
 
   public boolean getPublicHeadersSymlinksEnabled() {
-    return delegate.getBooleanValue(cxxSection, "exported_headers_symlinks_enabled", true);
+    return delegate.getBooleanValue(cxxSection, EXPORTED_HEADERS_SYMLINKS_ENABLED, true);
   }
 
   public boolean getPrivateHeadersSymlinksEnabled() {
-    return delegate.getBooleanValue(cxxSection, "headers_symlinks_enabled", true);
+    return delegate.getBooleanValue(cxxSection, HEADERS_SYMLINKS_ENABLED, true);
   }
 
   public Optional<RuleScheduleInfo> getLinkScheduleInfo() {
-    Optional<Long> linkWeight = delegate.getLong(cxxSection, "link_weight");
+    Optional<Long> linkWeight = delegate.getLong(cxxSection, LINK_WEIGHT);
     if (!linkWeight.isPresent()) {
       return Optional.empty();
     }
@@ -253,26 +391,20 @@ public class CxxBuckConfig {
   }
 
   public boolean shouldCacheLinks() {
-    return delegate.getBooleanValue(cxxSection, "cache_links", true);
+    return delegate.getBooleanValue(cxxSection, CACHE_LINKS, true);
   }
 
   public boolean isPCHEnabled() {
-    return delegate.getBooleanValue(cxxSection, "pch_enabled", true);
-  }
-
-  public PchUnavailableMode getPchUnavailableMode() {
-    return delegate
-        .getEnum(cxxSection, "pch_unavailable", PchUnavailableMode.class)
-        .orElse(PchUnavailableMode.ERROR);
+    return delegate.getBooleanValue(cxxSection, PCH_ENABLED, true);
   }
 
   public boolean sandboxSources() {
-    return delegate.getBooleanValue(cxxSection, "sandbox_sources", false);
+    return delegate.getBooleanValue(cxxSection, SANDBOX_SOURCES, false);
   }
 
   public ArchiveContents getArchiveContents() {
     return delegate
-        .getEnum(cxxSection, "archive_contents", ArchiveContents.class)
+        .getEnum(cxxSection, ARCHIVE_CONTENTS, ArchiveContents.class)
         .orElse(ArchiveContents.NORMAL);
   }
 
@@ -283,20 +415,44 @@ public class CxxBuckConfig {
   }
 
   public int getDebugPathSanitizerLimit() {
-    return delegate.getInteger(cxxSection, "debug_path_sanitizer_limit").orElse(250);
+    return delegate.getInteger(cxxSection, DEBUG_PATH_SANITIZER_LIMIT).orElse(250);
   }
 
   /** @return whether to remap to the underlying host platform or to use #default */
   public boolean getShouldRemapHostPlatform() {
-    return delegate.getBooleanValue(cxxSection, "should_remap_host_platform", false);
+    return delegate.getBooleanValue(cxxSection, SHOULD_REMAP_HOST_PLATFORM, false);
   }
 
-  public Optional<ToolProvider> getToolProvider(String name) {
+  private Optional<ToolProvider> getToolProvider(String name) {
     return delegate.getView(ToolConfig.class).getToolProvider(cxxSection, name);
   }
 
+  public Optional<ToolProvider> getRanlib() {
+    return getToolProvider(RANLIB);
+  }
+
+  public Optional<ToolProvider> getObjcopy() {
+    return getToolProvider(OBJCOPY);
+  }
+
+  private Optional<Tool> getTool(String name) {
+    return getPath(name).map(this::getSourcePath).map(HashedFileTool::new);
+  }
+
+  public Optional<Tool> getNm() {
+    return getTool(NM);
+  }
+
+  public Optional<Tool> getStrip() {
+    return getTool(STRIP);
+  }
+
   public boolean isUniqueLibraryNameEnabled() {
-    return delegate.getBooleanValue(cxxSection, "unique_library_name_enabled", false);
+    return delegate.getBooleanValue(cxxSection, UNIQUE_LIBRARY_NAME_ENABLED, false);
+  }
+
+  public boolean getDefaultReexportAllHeaderDependencies() {
+    return delegate.getBooleanValue(cxxSection, DEFAULT_REEXPORT_ALL_HEADER_DEPENDENCIES, true);
   }
 
   /** @return whether to enable shared library interfaces. */
@@ -304,13 +460,13 @@ public class CxxBuckConfig {
 
     // Check for an explicit setting.
     Optional<SharedLibraryInterfaceParams.Type> setting =
-        delegate.getEnum(cxxSection, "shlib_interfaces", SharedLibraryInterfaceParams.Type.class);
+        delegate.getEnum(cxxSection, SHLIB_INTERFACES, SharedLibraryInterfaceParams.Type.class);
     if (setting.isPresent()) {
       return setting.get();
     }
 
     // For backwards compatibility, check the older boolean setting.
-    Optional<Boolean> oldSetting = delegate.getBoolean(cxxSection, "shared_library_interfaces");
+    Optional<Boolean> oldSetting = delegate.getBoolean(cxxSection, SHARED_LIBRARY_INTERFACES);
     if (oldSetting.isPresent()) {
       return oldSetting.get()
           ? SharedLibraryInterfaceParams.Type.ENABLED
@@ -322,14 +478,13 @@ public class CxxBuckConfig {
   }
 
   public boolean isDeprecatedPrebuiltCxxLibraryApiEnabled() {
-    return delegate.getBooleanValue(
-        cxxSection, "enable_deprecated_prebuilt_cxx_library_api", false);
+    return delegate.getBooleanValue(cxxSection, ENABLE_DEPRECATED_PREBUILT_CXX_LIBRARY_API, false);
   }
 
   /** @return the list of flavors that buck will consider valid when building the target graph. */
   public ImmutableSet<Flavor> getDeclaredPlatforms() {
     return delegate
-        .getListWithoutComments(cxxSection, "declared_platforms")
+        .getListWithoutComments(cxxSection, DECLARED_PLATFORMS)
         .stream()
         .map(s -> UserFlavor.of(s, String.format("Declared platform: %s", s)))
         .collect(ImmutableSet.toImmutableSet());

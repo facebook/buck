@@ -26,28 +26,19 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
-import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.cache.FileHashCacheMode;
-import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
-import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -107,39 +98,6 @@ public class ShTestDescriptionTest {
   }
 
   @Test
-  public void resourcesAffectRuleKey() throws Exception {
-    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path resource = filesystem.getPath("resource");
-    filesystem.touch(resource);
-
-    SourcePath test = FakeSourcePath.of(filesystem, "some_test");
-    filesystem.touch(Paths.get("some_test"));
-
-    // Create a test rule without resources attached.
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    ShTest shTestWithoutResources =
-        new ShTestBuilder(target).setTest(test).build(resolver, filesystem);
-    RuleKey ruleKeyWithoutResource = getRuleKey(shTestWithoutResources);
-
-    // Create a rule with a resource attached.
-    resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    ShTest shTestWithResources =
-        new ShTestBuilder(target)
-            .setTest(test)
-            .setResources(ImmutableSortedSet.of(resource))
-            .build(resolver, filesystem);
-    RuleKey ruleKeyWithResource = getRuleKey(shTestWithResources);
-
-    // Verify that their rule keys are different.
-    assertThat(ruleKeyWithoutResource, Matchers.not(Matchers.equalTo(ruleKeyWithResource)));
-  }
-
-  @Test
   public void resourcesAreInputs() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -151,21 +109,5 @@ public class ShTestDescriptionTest {
             .setResources(ImmutableSortedSet.of(resource))
             .build();
     assertThat(shTestWithResources.getInputs(), Matchers.hasItem(resource));
-  }
-
-  private RuleKey getRuleKey(BuildRule rule) {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    FileHashCache fileHashCache =
-        new StackedFileHashCache(
-            ImmutableList.of(
-                DefaultFileHashCache.createDefaultFileHashCache(
-                    rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT)));
-    DefaultRuleKeyFactory factory =
-        new TestDefaultRuleKeyFactory(fileHashCache, pathResolver, ruleFinder);
-    return factory.build(rule);
   }
 }

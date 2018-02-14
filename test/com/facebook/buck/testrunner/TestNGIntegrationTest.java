@@ -17,11 +17,12 @@
 package com.facebook.buck.testrunner;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import org.junit.Before;
@@ -62,6 +63,17 @@ public class TestNGIntegrationTest {
     assertThat(
         skippedTestNGTestResult.getStderr(),
         containsString("TESTS PASSED (with some assumption violations)"));
+  }
+
+  @Test
+  public void testSelectors() throws IOException {
+    ProcessResult filteredTestNGTestResult =
+        workspace.runBuckCommand("test", "//test:", "-f", "SimpleTest");
+    filteredTestNGTestResult.assertSuccess();
+    // should run SimpleTest
+    assertThat(filteredTestNGTestResult.getStderr(), containsString("SimpleTest"));
+    // should not run SimpleTest
+    assertThat(filteredTestNGTestResult.getStderr(), not(containsString("SimpleFailingTest")));
   }
 
   @Test

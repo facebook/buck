@@ -1,0 +1,160 @@
+ZIP_SHA256 = "d29acd2e2a5bc00e04c85a44c3ca7106c51dc0d2488f8222b07179d567a7f128"
+
+ZIP_NO_SYMLINKS_SHA256 = "6a58adc3072c8e19691f622ef00ca79f03ca6a0e7958daabae88329acd25d806"
+
+TAR_SHA256 = "4828b132aef4234e1bd3f0d003379e067061ad9bc4aa5201e3c3629f94dc2dba"
+
+TAR_BZ2_SHA256 = "1eb0a382121f1e6be3f1dfac4baefba511ca743a1a520783f270b94f3178fb17"
+
+TAR_GZ_SHA256 = "8457c8bfefda827f053fd13c19fe5c2cbff7ebb34911f28e80dc9fb0015f8dde"
+
+TAR_XZ_SHA256 = "606fa21af5417e2c3493ce8ece6455ccbb63f212e744232d59eff671a0874796"
+
+http_archive(
+    name = "bad_urls.tar",
+    sha256 = TAR_SHA256,
+    type = "tar.gz",
+    urls = [
+        "http://<HOST>:<PORT>/invalid_path",
+        "http://<HOST>:<PORT>/missing",
+    ],
+)
+
+http_archive(
+    name = "bad_hash.tar",
+    sha256 = "534be6d331e8f1ab7892f19e8fe23db4907bdc54f517a8b22adc82e69b6b1093",
+    urls = [
+        "http://<HOST>:<PORT>/foo.tar",
+    ],
+)
+
+http_archive(
+    name = "out_specified",
+    out = "some_directory",
+    sha256 = TAR_SHA256,
+    urls = [
+        "http://<HOST>:<PORT>/foo.tar",
+    ],
+)
+
+http_archive(
+    name = "test.tar",
+    sha256 = TAR_SHA256,
+    urls = [
+        "http://<HOST>:<PORT>/foo.tar",
+    ],
+)
+
+http_archive(
+    name = "test.tar.bz2",
+    sha256 = TAR_BZ2_SHA256,
+    urls = [
+        "http://<HOST>:<PORT>/foo.tar.bz2",
+    ],
+)
+
+http_archive(
+    name = "test.tar.gz",
+    sha256 = TAR_GZ_SHA256,
+    urls = [
+        "http://<HOST>:<PORT>/foo.tar.gz",
+    ],
+)
+
+http_archive(
+    name = "test.tar.xz",
+    sha256 = TAR_XZ_SHA256,
+    urls = [
+        "http://<HOST>:<PORT>/foo.tar.xz",
+    ],
+)
+
+http_archive(
+    name = "test.zip",
+    sha256 = ZIP_SHA256,
+    urls = [
+        "http://<HOST>:<PORT>/foo.zip",
+    ],
+)
+
+http_archive(
+    name = "test_no_symlinks.zip",
+    sha256 = ZIP_NO_SYMLINKS_SHA256,
+    urls = [
+        "http://<HOST>:<PORT>/foo_no_symlinks.zip",
+    ],
+)
+
+http_archive(
+    name = "strip.tar",
+    sha256 = TAR_SHA256,
+    strip_prefix = "root",
+    urls = [
+        "http://<HOST>:<PORT>/foo.tar",
+    ],
+)
+
+http_archive(
+    name = "strip.tar.bz2",
+    sha256 = TAR_BZ2_SHA256,
+    strip_prefix = "root",
+    urls = [
+        "http://<HOST>:<PORT>/foo.tar.bz2",
+    ],
+)
+
+http_archive(
+    name = "strip.tar.gz",
+    sha256 = TAR_GZ_SHA256,
+    strip_prefix = "root",
+    urls = [
+        "http://<HOST>:<PORT>/foo.tar.gz",
+    ],
+)
+
+http_archive(
+    name = "strip.tar.xz",
+    sha256 = TAR_XZ_SHA256,
+    strip_prefix = "root",
+    urls = [
+        "http://<HOST>:<PORT>/foo.tar.xz",
+    ],
+)
+
+http_archive(
+    name = "strip.zip",
+    sha256 = ZIP_SHA256,
+    strip_prefix = "root",
+    urls = [
+        "http://<HOST>:<PORT>/foo.zip",
+    ],
+)
+
+http_archive(
+    name = "strip_no_symlinks.zip",
+    sha256 = ZIP_NO_SYMLINKS_SHA256,
+    strip_prefix = "root",
+    urls = [
+        "http://<HOST>:<PORT>/foo_no_symlinks.zip",
+    ],
+)
+
+http_archive(
+    name = "override_type",
+    sha256 = ZIP_NO_SYMLINKS_SHA256,
+    strip_prefix = "root",
+    type = "zip",
+    urls = [
+        "http://<HOST>:<PORT>/really_a_zip.tar",
+    ],
+)
+
+http_archive(
+    name = "zip_from_maven",
+    sha256 = ZIP_NO_SYMLINKS_SHA256,
+    strip_prefix = "root",
+    type = "zip",
+    urls = [
+        "mvn:package:artifact_name:zip:classifier:version",
+    ],
+)

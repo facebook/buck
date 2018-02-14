@@ -22,12 +22,15 @@ import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientSt
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.PERFORM_LOCAL_BUILD;
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.POST_BUILD_ANALYSIS;
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.POST_DISTRIBUTED_BUILD_LOCAL_STEPS;
+import static com.facebook.buck.util.concurrent.MostExecutors.newMultiThreadExecutor;
 
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.cli.output.Mode;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.command.LocalBuildExecutor;
+import com.facebook.buck.command.LocalBuildExecutorInvoker;
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.distributed.AnalysisResults;
 import com.facebook.buck.distributed.BuckVersionUtil;
 import com.facebook.buck.distributed.BuildJobStateSerializer;
 import com.facebook.buck.distributed.ClientStatsTracker;
@@ -39,19 +42,24 @@ import com.facebook.buck.distributed.DistBuildPostBuildAnalysis;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
-import com.facebook.buck.distributed.build_client.BuildController;
+import com.facebook.buck.distributed.RuleKeyNameAndType;
+import com.facebook.buck.distributed.build_client.DistBuildControllerArgs;
+import com.facebook.buck.distributed.build_client.DistBuildControllerInvocationArgs;
 import com.facebook.buck.distributed.build_client.LogStateTracker;
+import com.facebook.buck.distributed.build_client.StampedeBuildClient;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.RuleKeyLogEntry;
+import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.listener.DistBuildClientEventListener;
 import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.model.BuildTarget;
@@ -73,7 +81,6 @@ import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.rules.ParallelRuleKeyCalculator;
 import com.facebook.buck.rules.RemoteBuildRuleCompletionWaiter;
-import com.facebook.buck.rules.RemoteBuildRuleSynchronizer;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -91,6 +98,7 @@ import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
@@ -98,6 +106,7 @@ import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Joiner;
@@ -108,7 +117,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -126,14 +134,17 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 public class BuildCommand extends AbstractCommand {
+
   private static final Logger LOG = Logger.get(BuildCommand.class);
 
   private static final String KEEP_GOING_LONG_ARG = "--keep-going";
@@ -155,8 +166,7 @@ public class BuildCommand extends AbstractCommand {
 
   private static final String BUCK_GIT_COMMIT_KEY = "buck.git_commit";
 
-  private static final int DIST_BUILD_REMOTE_STEP_FAILED_EXIT_CODE = 1;
-  private static final int DIST_BUILD_LOCAL_STEP_FAILED_EXIT_CODE = 2;
+  private static final int STAMPEDE_EXECUTOR_SHUTDOWN_TIMEOUT_MILLIS = 100;
 
   @Option(name = KEEP_GOING_LONG_ARG, usage = "Keep going when some targets can't be made.")
   private boolean keepGoing = false;
@@ -324,13 +334,21 @@ public class BuildCommand extends AbstractCommand {
     this.keepGoing = keepGoing;
   }
 
+  public boolean isUseDistributedBuild() {
+    return useDistributedBuild;
+  }
+
+  public void setUseDistributedBuild(boolean useDistributedBuild) {
+    this.useDistributedBuild = useDistributedBuild;
+  }
+
   /** @return an absolute path or {@link Optional#empty()}. */
   public Optional<Path> getPathToBuildReport(BuckConfig buckConfig) {
     return Optional.ofNullable(
         buckConfig.resolvePathThatMayBeOutsideTheProjectFilesystem(buildReport));
   }
 
-  @Nullable private volatile Build lastBuild;
+  private final AtomicReference<Build> lastBuild = new AtomicReference<>(null);
   private final SettableFuture<ParallelRuleKeyCalculator<RuleKey>> localRuleKeyCalculator =
       SettableFuture.create();
 
@@ -342,6 +360,7 @@ public class BuildCommand extends AbstractCommand {
    * @param buildTargets - Top level targets.
    * @param params - Client side parameters.
    * @param executor - Executor for async ops.
+   * @param poolSupplier - the supplier of an executor for parallel action graph construction
    * @return - New instance of serializable {@link BuildJobState}.
    * @throws InterruptedException
    * @throws IOException
@@ -349,14 +368,15 @@ public class BuildCommand extends AbstractCommand {
   public static ListenableFuture<BuildJobState> getAsyncDistBuildState(
       List<String> buildTargets,
       CommandRunnerParams params,
-      WeightedListeningExecutorService executor)
+      WeightedListeningExecutorService executor,
+      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier)
       throws InterruptedException, IOException {
     BuildCommand buildCommand = new BuildCommand(buildTargets);
     buildCommand.assertArguments(params);
 
     ActionAndTargetGraphs graphs = null;
     try {
-      graphs = buildCommand.createGraphs(params, executor, Optional.empty());
+      graphs = buildCommand.createGraphs(params, executor, Optional.empty(), poolSupplier);
     } catch (ActionGraphCreationException e) {
       throw BuildFileParseException.createForUnknownParseError(e.getMessage());
     }
@@ -413,8 +433,9 @@ public class BuildCommand extends AbstractCommand {
     }
     BuildEvent.Started started = postBuildStartedEvent(params);
     ExitCode exitCode = ExitCode.SUCCESS;
-    try {
-      exitCode = executeBuildAndProcessResult(params, commandThreadManager);
+    try (CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier =
+        getForkJoinPoolSupplier(params.getBuckConfig())) {
+      exitCode = executeBuildAndProcessResult(params, commandThreadManager, poolSupplier);
     } catch (ActionGraphCreationException e) {
       params.getConsole().printBuildFailure(e.getMessage());
       exitCode = ExitCode.PARSE_ERROR;
@@ -439,7 +460,8 @@ public class BuildCommand extends AbstractCommand {
   private ActionAndTargetGraphs createGraphs(
       CommandRunnerParams params,
       ListeningExecutorService executorService,
-      Optional<ThriftRuleKeyLogger> ruleKeyLogger)
+      Optional<ThriftRuleKeyLogger> ruleKeyLogger,
+      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier)
       throws ActionGraphCreationException, IOException, InterruptedException {
     TargetGraphAndBuildTargets unversionedTargetGraph =
         createUnversionedTargetGraph(params, executorService);
@@ -458,7 +480,7 @@ public class BuildCommand extends AbstractCommand {
             unversionedTargetGraph, versionedTargetGraph);
     checkSingleBuildTargetSpecifiedForOutBuildMode(targetGraphForLocalBuild);
     ActionGraphAndResolver actionGraph =
-        createActionGraphAndResolver(params, targetGraphForLocalBuild, ruleKeyLogger);
+        createActionGraphAndResolver(params, targetGraphForLocalBuild, ruleKeyLogger, poolSupplier);
     return ActionAndTargetGraphs.builder()
         .setUnversionedTargetGraph(unversionedTargetGraph)
         .setVersionedTargetGraph(versionedTargetGraph)
@@ -482,7 +504,9 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private ExitCode executeBuildAndProcessResult(
-      CommandRunnerParams params, CommandThreadManager commandThreadManager)
+      CommandRunnerParams params,
+      CommandThreadManager commandThreadManager,
+      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier)
       throws IOException, InterruptedException, ActionGraphCreationException {
     ExitCode exitCode = ExitCode.SUCCESS;
     final ActionAndTargetGraphs graphs;
@@ -495,7 +519,10 @@ public class BuildCommand extends AbstractCommand {
       distBuildClientStatsTracker.startTimer(LOCAL_GRAPH_CONSTRUCTION);
       graphs =
           createGraphs(
-              params, commandThreadManager.getListeningExecutorService(), Optional.empty());
+              params,
+              commandThreadManager.getListeningExecutorService(),
+              Optional.empty(),
+              poolSupplier);
       distBuildClientStatsTracker.stopTimer(LOCAL_GRAPH_CONSTRUCTION);
 
       try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
@@ -512,9 +539,10 @@ public class BuildCommand extends AbstractCommand {
                   distBuildClientStatsTracker,
                   ruleKeyCacheScope);
         } catch (Throwable ex) {
-          distBuildClientStatsTracker.setBuckClientError(true);
           String stackTrace = Throwables.getStackTraceAsString(ex);
           distBuildClientStatsTracker.setBuckClientErrorMessage(ex.toString() + "\n" + stackTrace);
+          distBuildClientStatsTracker.setBuckClientError(true);
+
           throw ex;
         } finally {
           if (distBuildClientStatsTracker.hasStampedeId()) {
@@ -535,7 +563,10 @@ public class BuildCommand extends AbstractCommand {
         Optional<ThriftRuleKeyLogger> optionalRuleKeyLogger = Optional.ofNullable(ruleKeyLogger);
         graphs =
             createGraphs(
-                params, commandThreadManager.getListeningExecutorService(), optionalRuleKeyLogger);
+                params,
+                commandThreadManager.getListeningExecutorService(),
+                optionalRuleKeyLogger,
+                poolSupplier);
         try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
             getDefaultRuleKeyCacheScope(params, graphs.getActionGraphAndResolver())) {
           exitCode =
@@ -545,8 +576,10 @@ public class BuildCommand extends AbstractCommand {
                   commandThreadManager.getWeightedListeningExecutorService(),
                   optionalRuleKeyLogger,
                   new NoOpRemoteBuildRuleCompletionWaiter(),
+                  false,
                   Optional.empty(),
-                  ruleKeyCacheScope);
+                  ruleKeyCacheScope,
+                  lastBuild);
           if (exitCode == ExitCode.SUCCESS) {
             exitCode = processSuccessfulBuild(params, graphs, ruleKeyCacheScope);
           }
@@ -706,20 +739,43 @@ public class BuildCommand extends AbstractCommand {
                 .collect(Collectors.toSet()));
 
     return new AsyncJobStateAndCells(
+        distributedBuildFileHashes,
         executorService.submit(
             () -> {
-              BuildJobState state =
-                  DistBuildState.dump(
-                      cellIndexer,
-                      distributedBuildFileHashes,
-                      targetGraphCodec,
-                      targetGraphAndBuildTargets.getTargetGraph(),
-                      buildTargets,
-                      clientStatsTracker);
-              LOG.info("Finished computing serializable distributed build state.");
-              return state;
+              try {
+                BuildJobState state =
+                    DistBuildState.dump(
+                        cellIndexer,
+                        distributedBuildFileHashes,
+                        targetGraphCodec,
+                        targetGraphAndBuildTargets.getTargetGraph(),
+                        buildTargets,
+                        clientStatsTracker);
+                LOG.info("Finished computing serializable distributed build state.");
+                return state;
+              } catch (InterruptedException ex) {
+                LOG.warn(
+                    ex,
+                    "Failed computing serializable distributed build state as interrupted. Local build probably finished first.");
+                Thread.currentThread().interrupt();
+                throw ex;
+              }
             }),
         cellIndexer);
+  }
+
+  private ListeningExecutorService createStampedeControllerExecutorService(int maxThreads) {
+    CommandThreadFactory stampedeCommandThreadFactory =
+        new CommandThreadFactory("StampedeController");
+    return MoreExecutors.listeningDecorator(
+        newMultiThreadExecutor(stampedeCommandThreadFactory, maxThreads));
+  }
+
+  private ListeningExecutorService createStampedeLocalBuildExecutorService() {
+    CommandThreadFactory stampedeCommandThreadFactory =
+        new CommandThreadFactory("StampedeLocalBuild");
+    return MoreExecutors.listeningDecorator(
+        MostExecutors.newSingleThreadExecutor(stampedeCommandThreadFactory));
   }
 
   private ExitCode executeDistBuild(
@@ -734,17 +790,21 @@ public class BuildCommand extends AbstractCommand {
       throws IOException, InterruptedException {
     Preconditions.checkNotNull(distBuildClientEventListener);
 
-    BuildEvent.DistBuildStarted started = null;
-    if (distributedBuildStateFile == null) {
-      if (distBuildConfig.getBuildMode().equals(BuildMode.DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR)
-          && !distBuildConfig.getMinionQueue().isPresent()) {
-        throw new HumanReadableException(
-            "Stampede Minion Queue name must be specified to use Local Coordinator Mode.");
-      }
+    Preconditions.checkArgument(
+        (distBuildConfig.getPerformRuleKeyConsistencyCheck()
+                && distBuildConfig.getLogMaterializationEnabled())
+            || !distBuildConfig.getPerformRuleKeyConsistencyCheck(),
+        "Log materialization must be enabled to perform rule key consistency check.");
 
-      started = BuildEvent.distBuildStarted();
-      params.getBuckEventBus().post(started);
+    if (distributedBuildStateFile == null
+        && distBuildConfig.getBuildMode().equals(BuildMode.DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR)
+        && !distBuildConfig.getMinionQueue().isPresent()) {
+      throw new HumanReadableException(
+          "Stampede Minion Queue name must be specified to use Local Coordinator Mode.");
     }
+
+    BuildEvent.DistBuildStarted started = BuildEvent.distBuildStarted();
+    params.getBuckEventBus().post(started);
 
     LOG.info("Starting async file hash computation and job state serialization.");
     AsyncJobStateAndCells stateAndCells =
@@ -777,189 +837,261 @@ public class BuildCommand extends AbstractCommand {
       return ExitCode.SUCCESS;
     }
 
-    int distBuildExitCode = DIST_BUILD_REMOTE_STEP_FAILED_EXIT_CODE;
-    BuildController.ExecutionResult distBuildResult;
     BuckVersion buckVersion = getBuckVersion();
     Preconditions.checkArgument(params.getInvocationInfo().isPresent());
 
-    ListenableFuture<?> localBuildFuture;
-    CountDownLatch localBuildInitializationLatch = new CountDownLatch(1);
-    AtomicInteger localBuildExitCode = new AtomicInteger(DIST_BUILD_LOCAL_STEP_FAILED_EXIT_CODE);
-    try (DistBuildService service = DistBuildFactory.newDistBuildService(params)) {
+    distBuildClientStats.setIsLocalFallbackBuildEnabled(
+        distBuildConfig.isSlowLocalBuildFallbackModeEnabled());
+
+    try (DistBuildService distBuildService = DistBuildFactory.newDistBuildService(params)) {
+      ListeningExecutorService stampedeControllerExecutor =
+          createStampedeControllerExecutorService(distBuildConfig.getControllerMaxThreadCount());
+
+      ListeningExecutorService stampedeLocalBuildExecutor =
+          createStampedeLocalBuildExecutorService();
+
       LogStateTracker distBuildLogStateTracker =
           DistBuildFactory.newDistBuildLogStateTracker(
-              params.getInvocationInfo().get().getLogDirectoryPath(), filesystem, service);
+              params.getInvocationInfo().get().getLogDirectoryPath(), filesystem, distBuildService);
+
+      DistBuildControllerArgs.Builder distBuildControllerArgsBuilder =
+          DistBuildControllerArgs.builder()
+              .setBuilderExecutorArgs(params.createBuilderArgs())
+              .setBuckEventBus(params.getBuckEventBus())
+              .setTopLevelTargets(buildTargets)
+              .setBuildGraphs(graphs)
+              .setCachingBuildEngineDelegate(
+                  Optional.of(new LocalCachingBuildEngineDelegate(params.getFileHashCache())))
+              .setAsyncJobState(asyncJobState)
+              .setDistBuildCellIndexer(distBuildCellIndexer)
+              .setDistBuildService(distBuildService)
+              .setDistBuildLogStateTracker(distBuildLogStateTracker)
+              .setBuckVersion(buckVersion)
+              .setDistBuildClientStats(distBuildClientStats)
+              .setScheduler(params.getScheduledExecutor())
+              .setMaxTimeoutWaitingForLogsMillis(
+                  distBuildConfig.getMaxWaitForRemoteLogsToBeAvailableMillis())
+              .setLogMaterializationEnabled(distBuildConfig.getLogMaterializationEnabled())
+              .setBuildLabel(distBuildConfig.getBuildLabel());
+
+      LocalBuildExecutorInvoker localBuildExecutorInvoker =
+          new LocalBuildExecutorInvoker() {
+            @Override
+            public int executeLocalBuild(
+                boolean isDownloadHeavyBuild,
+                RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
+                CountDownLatch initializeBuildLatch,
+                AtomicReference<Build> buildReference)
+                throws IOException, InterruptedException {
+              return BuildCommand.this
+                  .executeLocalBuild(
+                      params,
+                      graphs.getActionGraphAndResolver(),
+                      executorService,
+                      Optional.empty(),
+                      remoteBuildRuleCompletionWaiter,
+                      isDownloadHeavyBuild,
+                      Optional.of(initializeBuildLatch),
+                      ruleKeyCacheScope,
+                      buildReference)
+                  .getCode();
+            }
+          };
+
+      DistBuildControllerInvocationArgs distBuildControllerInvocationArgs =
+          DistBuildControllerInvocationArgs.builder()
+              .setExecutorService(stampedeControllerExecutor)
+              .setProjectFilesystem(filesystem)
+              .setFileHashCache(fileHashCache)
+              .setInvocationInfo(params.getInvocationInfo().get())
+              .setBuildMode(distBuildConfig.getBuildMode())
+              .setNumberOfMinions(distBuildConfig.getNumberOfMinions())
+              .setRepository(distBuildConfig.getRepository())
+              .setTenantId(distBuildConfig.getTenantId())
+              .setRuleKeyCalculatorFuture(localRuleKeyCalculator)
+              .build();
+
+      // TODO(alisdair): ensure minion build status recorded even if local build finishes first.
+      boolean waitForDistBuildThreadToFinishGracefully =
+          distBuildConfig.getLogMaterializationEnabled();
+
+      StampedeBuildClient stampedeBuildClient =
+          new StampedeBuildClient(
+              params.getBuckEventBus(),
+              stampedeLocalBuildExecutor,
+              stampedeControllerExecutor,
+              distBuildService,
+              started,
+              localBuildExecutorInvoker,
+              distBuildControllerArgsBuilder,
+              distBuildControllerInvocationArgs,
+              waitForDistBuildThreadToFinishGracefully);
+
+      distBuildClientStats.startTimer(PERFORM_LOCAL_BUILD);
+
+      // Perform either a single phase build that waits for all remote artifacts before proceeding,
+      // or a two stage build where local build first races against remote, and depending on
+      // progress either completes first or falls back to build that waits for remote artifacts.
+      boolean skipRacingBuild =
+          distBuildConfig.shouldAlwaysWaitForRemoteBuildBeforeProceedingLocally();
+      int localExitCode =
+          stampedeBuildClient.build(
+              skipRacingBuild, distBuildConfig.isSlowLocalBuildFallbackModeEnabled());
+
+      // All local/distributed build steps are now finished.
+      StampedeId stampedeId = stampedeBuildClient.getStampedeId();
+      int distributedBuildExitCode = stampedeBuildClient.getDistBuildExitCode();
+      distBuildClientStats.setStampedeId(stampedeId.getId());
+      distBuildClientStats.setDistributedBuildExitCode(distributedBuildExitCode);
+
+      // Set local build stats
+      distBuildClientStats.setPerformedLocalBuild(true);
+      distBuildClientStats.stopTimer(PERFORM_LOCAL_BUILD);
+      distBuildClientStats.setLocalBuildExitCode(localExitCode);
+
+      // If local build finished before hashing was complete, it's important to cancel
+      // related Futures to avoid this operation blocking forever.
+      stateAndCells.cancel();
+
+      // stampedeControllerExecutor is now redundant. Kill it as soon as possible.
+      killExecutor(
+          stampedeControllerExecutor,
+          ("Stampede controller executor service still running after build finished"
+              + " and timeout elapsed. Terminating.."));
+
+      killExecutor(
+          stampedeLocalBuildExecutor,
+          ("Stampede local build executor service still running after build finished"
+              + " and timeout elapsed. Terminating.."));
+
+      // Publish details about all default rule keys that were cache misses.
+      // A non-zero value suggests a problem that needs investigating.
       try {
-        // Synchronizer ensures that local build blocks on cachable artifacts until
-        // Stampede has marked them as available.
-        final RemoteBuildRuleSynchronizer remoteBuildSynchronizer =
-            new RemoteBuildRuleSynchronizer();
-        BuildController build =
-            new BuildController(
-                params.createBuilderArgs(),
-                buildTargets,
-                graphs,
-                Optional.of(new LocalCachingBuildEngineDelegate(params.getFileHashCache())),
-                asyncJobState,
-                distBuildCellIndexer,
-                service,
-                distBuildLogStateTracker,
-                buckVersion,
-                distBuildClientStats,
-                params.getScheduledExecutor(),
-                distBuildConfig.getMaxWaitForRemoteLogsToBeAvailableMillis(),
-                distBuildConfig.getLogMaterializationEnabled(),
-                remoteBuildSynchronizer);
-
-        // Kick off the local build, which will initially block and then download
-        // artifacts (and build uncachables) as Stampede makes them available.
-        localBuildFuture =
-            Preconditions.checkNotNull(params.getExecutors().get(ExecutorPool.CPU))
-                .submit(
-                    () -> {
-                      distBuildClientStats.startTimer(PERFORM_LOCAL_BUILD);
-                      try {
-                        localBuildExitCode.set(
-                            executeLocalBuild(
-                                    params,
-                                    graphs.getActionGraphAndResolver(),
-                                    executorService,
-                                    Optional.empty(),
-                                    remoteBuildSynchronizer,
-                                    Optional.of(localBuildInitializationLatch),
-                                    ruleKeyCacheScope)
-                                .getCode());
-
-                        LOG.info("Distributed build local client has finished building");
-                      } catch (IOException e) {
-                        throw new RuntimeException(e);
-                      } catch (InterruptedException e) {
-                        LOG.error(e);
-                        Thread.currentThread().interrupt();
-                        return;
-                      }
-                      distBuildClientStats.stopTimer(PERFORM_LOCAL_BUILD);
-                      distBuildClientStats.setLocalBuildExitCode(localBuildExitCode.get());
-                      distBuildClientStats.setPerformedLocalBuild(true);
-                    });
-
-        // Kick off the distributed build
-        try {
-          distBuildResult =
-              build.executeAndPrintFailuresToEventBus(
-                  executorService,
-                  filesystem,
-                  fileHashCache,
-                  params.getBuckEventBus(),
-                  params.getInvocationInfo().get(),
-                  distBuildConfig.getBuildMode(),
-                  distBuildConfig.getNumberOfMinions(),
-                  distBuildConfig.getRepository(),
-                  distBuildConfig.getTenantId(),
-                  Futures.transform(
-                      localRuleKeyCalculator, Optional::of, MoreExecutors.directExecutor()));
-          distBuildExitCode = distBuildResult.exitCode;
-        } finally {
-          // Local build should not be blocked, even if one of the distributed stages failed.
-          remoteBuildSynchronizer.signalCompletionOfRemoteBuild();
-        }
-      } finally {
-        BuildEvent.DistBuildFinished finished =
-            BuildEvent.distBuildFinished(
-                Preconditions.checkNotNull(started), ExitCode.map(distBuildExitCode));
-        params.getBuckEventBus().post(finished);
+        Set<String> cacheMissRequestKeys =
+            distBuildClientEventListener.getDefaultCacheMissRequestKeys();
+        ArtifactCacheBuckConfig artifactCacheBuckConfig =
+            ArtifactCacheBuckConfig.of(distBuildConfig.getBuckConfig());
+        List<RuleKeyLogEntry> ruleKeyLogs =
+            distBuildService.fetchRuleKeyLogs(
+                cacheMissRequestKeys,
+                artifactCacheBuckConfig.getRepository(),
+                artifactCacheBuckConfig.getScheduleType(),
+                true /* distributedBuildModeEnabled */);
+        params
+            .getBuckEventBus()
+            .post(distBuildClientEventListener.createDistBuildClientCacheResultsEvent(ruleKeyLogs));
+      } catch (Exception ex) {
+        LOG.error("Failed to publish distributed build client cache request event", ex);
       }
 
-      distBuildClientStats.setIsLocalFallbackBuildEnabled(
-          distBuildConfig.isSlowLocalBuildFallbackModeEnabled());
-      distBuildClientStats.setDistributedBuildExitCode(distBuildExitCode);
+      boolean ruleKeyConsistencyChecksPassedOrSkipped =
+          performStampedePostBuildAnalysisAndRuleKeyConsistencyChecks(
+              params,
+              distBuildConfig,
+              filesystem,
+              distBuildClientStats,
+              stampedeId,
+              distributedBuildExitCode,
+              localExitCode,
+              distBuildLogStateTracker);
 
-      if (distBuildExitCode != 0 && !distBuildConfig.isSlowLocalBuildFallbackModeEnabled()) {
-        // Ensure that lastBuild was initialized in local build thread.
-        localBuildInitializationLatch.await();
-        Preconditions.checkNotNull(lastBuild);
-
-        // Attempt to terminate the build early.
-        lastBuild.terminateBuildWithFailure(
-            new Exception(
-                "Distributed build finished with non-zero exit code. Terminating local build."));
+      int finalExitCode = localExitCode;
+      if (!ruleKeyConsistencyChecksPassedOrSkipped) {
+        finalExitCode =
+            com.facebook.buck.distributed.ExitCode.RULE_KEY_CONSISTENCY_CHECK_FAILED.getCode();
       }
 
-      // Wait for the local build thread to finish
-      try {
-        localBuildFuture.get();
-      } catch (ExecutionException e) {
-        LOG.error(e);
-        throw new RuntimeException(e);
+      // Post distributed build phase starts POST_DISTRIBUTED_BUILD_LOCAL_STEPS counter internally.
+      if (distributedBuildExitCode == 0) {
+        distBuildClientStats.stopTimer(POST_DISTRIBUTED_BUILD_LOCAL_STEPS);
       }
 
-      int exitCode = distBuildExitCode;
-      if (distBuildConfig.isSlowLocalBuildFallbackModeEnabled() || distBuildExitCode == 0) {
-        if (distBuildExitCode != 0) {
-          String errorMessage =
-              String.format(
-                  "The remote/distributed build with Stampede ID [%s] "
-                      + "failed with exit code [%d] trying to build "
-                      + "targets [%s]. This program will continue now by falling back to a "
-                      + "local build because config "
-                      + "[stampede.enable_slow_local_build_fallback=true]. ",
-                  distBuildResult.stampedeId, distBuildExitCode, Joiner.on(" ").join(arguments));
-          params.getConsole().printErrorText(errorMessage);
-          LOG.error(errorMessage);
-        }
+      if (distBuildClientStats.hasStampedeId()) {
+        params
+            .getBuckEventBus()
+            .post(new DistBuildClientStatsEvent(distBuildClientStats.generateStats()));
+      }
 
-        // Publish details about all default rule keys that were cache misses.
-        // A non-zero value suggests a problem that needs investigating.
-        try {
-          Set<String> cacheMissRequestKeys =
-              distBuildClientEventListener.getDefaultCacheMissRequestKeys();
-          ArtifactCacheBuckConfig artifactCacheBuckConfig =
-              ArtifactCacheBuckConfig.of(distBuildConfig.getBuckConfig());
-          List<RuleKeyLogEntry> ruleKeyLogs =
-              service.fetchRuleKeyLogs(
-                  cacheMissRequestKeys,
-                  artifactCacheBuckConfig.getRepository(),
-                  artifactCacheBuckConfig.getScheduleType(),
-                  true /* distributedBuildModeEnabled */);
-          params
-              .getBuckEventBus()
-              .post(
-                  distBuildClientEventListener.createDistBuildClientCacheResultsEvent(ruleKeyLogs));
-        } catch (Exception ex) {
-          LOG.error("Failed to publish distributed build client cache request event", ex);
-        }
+      return ExitCode.map(finalExitCode);
+    }
+  }
 
-        distBuildClientStats.startTimer(POST_BUILD_ANALYSIS);
-        DistBuildPostBuildAnalysis postBuildAnalysis =
-            new DistBuildPostBuildAnalysis(
-                params.getInvocationInfo().get().getBuildId(),
-                distBuildResult.stampedeId,
-                filesystem.resolve(params.getInvocationInfo().get().getLogDirectoryPath()),
-                distBuildLogStateTracker.getBuildSlaveLogsMaterializer().getMaterializedRunIds(),
-                DistBuildCommand.class.getSimpleName().toLowerCase());
+  private void killExecutor(
+      ListeningExecutorService stampedeControllerExecutor, String failureWarning)
+      throws InterruptedException {
+    stampedeControllerExecutor.shutdown();
+    if (!stampedeControllerExecutor.awaitTermination(
+        STAMPEDE_EXECUTOR_SHUTDOWN_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)) {
+      LOG.warn(failureWarning);
+      stampedeControllerExecutor.shutdownNow();
+    }
+  }
 
-        Path analysisSummaryFile =
-            postBuildAnalysis.dumpResultsToLogFile(postBuildAnalysis.runAnalysis());
-        Path relativePathToSummaryFile = filesystem.getRootPath().relativize(analysisSummaryFile);
+  private boolean performStampedePostBuildAnalysisAndRuleKeyConsistencyChecks(
+      CommandRunnerParams params,
+      DistBuildConfig distBuildConfig,
+      ProjectFilesystem filesystem,
+      ClientStatsTracker distBuildClientStats,
+      StampedeId stampedeId,
+      int distributedBuildExitCode,
+      int localBuildExitCode,
+      LogStateTracker distBuildLogStateTracker)
+      throws IOException {
+    // If we are pulling down remote logs, and the distributed build finished successfully,
+    // then perform analysis
+    if (distBuildConfig.getLogMaterializationEnabled()
+        && distributedBuildExitCode == 0
+        && localBuildExitCode == 0) {
+      distBuildClientStats.startTimer(POST_BUILD_ANALYSIS);
+      DistBuildPostBuildAnalysis postBuildAnalysis =
+          new DistBuildPostBuildAnalysis(
+              params.getInvocationInfo().get().getBuildId(),
+              stampedeId,
+              filesystem.resolve(params.getInvocationInfo().get().getLogDirectoryPath()),
+              distBuildLogStateTracker.getBuildSlaveLogsMaterializer().getMaterializedRunIds(),
+              DistBuildCommand.class.getSimpleName().toLowerCase());
+
+      LOG.info("Created DistBuildPostBuildAnalysis");
+      AnalysisResults results = postBuildAnalysis.runAnalysis();
+      Path analysisSummaryFile = postBuildAnalysis.dumpResultsToLogFile(results);
+
+      distBuildClientStats.stopTimer(POST_BUILD_ANALYSIS);
+
+      LOG.info(String.format("Dumped DistBuildPostBuildAnalysis to [%s]", analysisSummaryFile));
+      Path relativePathToSummaryFile = filesystem.getRootPath().relativize(analysisSummaryFile);
+      params
+          .getBuckEventBus()
+          .post(
+              ConsoleEvent.warning(
+                  "Details of distributed build analysis: %s",
+                  relativePathToSummaryFile.toString()));
+
+      LOG.info(
+          "Number of mismatching default rule keys: " + results.numMismatchingDefaultRuleKeys());
+      if (distBuildConfig.getPerformRuleKeyConsistencyCheck()
+          && results.numMismatchingDefaultRuleKeys() > 0) {
         params
             .getBuckEventBus()
             .post(
-                ConsoleEvent.warning(
-                    "Details of distributed build analysis: %s",
-                    relativePathToSummaryFile.toString()));
-        distBuildClientStats.stopTimer(POST_BUILD_ANALYSIS);
+                ConsoleEvent.severe(
+                    "*** [%d] default rule keys mismatched between client and server. *** \nMismatching rule keys:",
+                    results.numMismatchingDefaultRuleKeys()));
 
-        // Local build has now either completed, or has exit code -1.
-        exitCode = localBuildExitCode.get();
+        for (RuleKeyNameAndType ruleKeyNameAndType :
+            postBuildAnalysis.getMismatchingDefaultRuleKeys(results)) {
+          params
+              .getBuckEventBus()
+              .post(
+                  ConsoleEvent.severe(
+                      "%s [%s]",
+                      ruleKeyNameAndType.getRuleName(), ruleKeyNameAndType.getRuleType()));
+        }
+
+        return false; // Rule keys were not consistent
       }
-
-      distBuildClientStats.stopTimer(POST_DISTRIBUTED_BUILD_LOCAL_STEPS);
-
-      params
-          .getBuckEventBus()
-          .post(new DistBuildClientStatsEvent(distBuildClientStats.generateStats()));
-      return ExitCode.map(exitCode);
     }
+
+    return true; // Rule keys were consistent, or test was skipped.
   }
 
   private BuckVersion getBuckVersion() throws IOException {
@@ -1067,7 +1199,8 @@ public class BuildCommand extends AbstractCommand {
   private ActionGraphAndResolver createActionGraphAndResolver(
       CommandRunnerParams params,
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
-      Optional<ThriftRuleKeyLogger> ruleKeyLogger)
+      Optional<ThriftRuleKeyLogger> ruleKeyLogger,
+      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier)
       throws ActionGraphCreationException {
     buildTargets = targetGraphAndBuildTargets.getBuildTargets();
     buildTargetsHaveBeenCalculated = true;
@@ -1079,7 +1212,8 @@ public class BuildCommand extends AbstractCommand {
                 targetGraphAndBuildTargets.getTargetGraph(),
                 params.getBuckConfig(),
                 params.getRuleKeyConfiguration(),
-                ruleKeyLogger);
+                ruleKeyLogger,
+                poolSupplier);
 
     // If the user specified an explicit build target, use that.
     if (justBuildTarget != null) {
@@ -1108,8 +1242,10 @@ public class BuildCommand extends AbstractCommand {
       WeightedListeningExecutorService executor,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
+      boolean isDownloadHeavyBuild,
       Optional<CountDownLatch> initializeBuildLatch,
-      RuleKeyCacheScope<RuleKey> ruleKeyCacheScope)
+      RuleKeyCacheScope<RuleKey> ruleKeyCacheScope,
+      AtomicReference<Build> buildReference)
       throws IOException, InterruptedException {
 
     LocalBuildExecutor builder =
@@ -1121,11 +1257,13 @@ public class BuildCommand extends AbstractCommand {
             executor,
             isKeepGoing(),
             useDistributedBuild,
-            Optional.of(ruleKeyCacheScope),
+            isDownloadHeavyBuild,
+            ruleKeyCacheScope,
             getBuildEngineMode(),
             ruleKeyLogger,
             remoteBuildRuleCompletionWaiter);
-    lastBuild = builder.getBuild();
+    buildReference.set(builder.getBuild());
+    // TODO(alisdair): ensure that all Stampede local builds re-use same calculator
     localRuleKeyCalculator.set(builder.getCachingBuildEngine().getRuleKeyCalculator());
 
     if (initializeBuildLatch.isPresent()) {
@@ -1178,8 +1316,7 @@ public class BuildCommand extends AbstractCommand {
   }
 
   Build getBuild() {
-    Preconditions.checkNotNull(lastBuild);
-    return lastBuild;
+    return Preconditions.checkNotNull(lastBuild.get());
   }
 
   public ImmutableList<BuildTarget> getBuildTargets() {
@@ -1205,13 +1342,23 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private static class AsyncJobStateAndCells {
+    final DistBuildFileHashes distributedBuildFileHashes;
     final ListenableFuture<BuildJobState> asyncJobState;
     final DistBuildCellIndexer distBuildCellIndexer;
 
     AsyncJobStateAndCells(
-        ListenableFuture<BuildJobState> asyncJobState, DistBuildCellIndexer cellIndexer) {
+        DistBuildFileHashes distributedBuildFileHashes,
+        ListenableFuture<BuildJobState> asyncJobState,
+        DistBuildCellIndexer cellIndexer) {
+      this.distributedBuildFileHashes = distributedBuildFileHashes;
       this.asyncJobState = asyncJobState;
       this.distBuildCellIndexer = cellIndexer;
+    }
+
+    // Cancels any ongoing Future operations
+    protected void cancel() {
+      distributedBuildFileHashes.cancel();
+      asyncJobState.cancel(true);
     }
   }
 

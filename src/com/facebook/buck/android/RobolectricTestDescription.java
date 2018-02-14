@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
@@ -193,15 +194,15 @@ public class RobolectricTestDescription
     Function<String, Arg> toMacroArgFunction =
         MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);
 
-    AndroidLegacyToolchain androidLegacyToolchain =
+    AndroidPlatformTarget androidPlatformTarget =
         toolchainProvider.getByName(
-            AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
+            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
 
     return new RobolectricTest(
         buildTarget,
         projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(testsLibrary)).withoutExtraDeps(),
-        androidLegacyToolchain,
+        androidPlatformTarget,
         testsLibrary,
         args.getLabels(),
         args.getContacts(),

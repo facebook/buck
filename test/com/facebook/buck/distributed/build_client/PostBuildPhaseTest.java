@@ -62,7 +62,7 @@ public class PostBuildPhaseTest {
   private StampedeId stampedeId;
   private ClientStatsTracker distBuildClientStatsTracker;
   private PostBuildPhase postBuildPhase;
-  private EventSender eventSender;
+  private ConsoleEventsDispatcher consoleEventsDispatcher;
 
   @Before
   public void setUp() throws IOException, InterruptedException {
@@ -78,7 +78,7 @@ public class PostBuildPhaseTest {
 
     directExecutor = MoreExecutors.listeningDecorator(MoreExecutors.newDirectExecutorService());
     mockEventBus = EasyMock.createMock(BuckEventBus.class);
-    eventSender = new EventSender(mockEventBus);
+    consoleEventsDispatcher = new ConsoleEventsDispatcher(mockEventBus);
     stampedeId = new StampedeId();
     stampedeId.setId("uber-cool-stampede-id");
   }
@@ -102,8 +102,8 @@ public class PostBuildPhaseTest {
 
     BuildJob job = new BuildJob();
     job.setStampedeId(stampedeId);
-    job.putToSlaveInfoByRunId(buildSlaveRunId1.getId(), slaveInfo1);
-    job.putToSlaveInfoByRunId(buildSlaveRunId2.getId(), slaveInfo2);
+    job.addToBuildSlaves(slaveInfo1);
+    job.addToBuildSlaves(slaveInfo2);
 
     return job;
   }
@@ -112,8 +112,7 @@ public class PostBuildPhaseTest {
   public void testPublishingBuildSlaveFinishedStats() throws IOException {
     final BuildJob job = PostBuildPhaseTest.createBuildJobWithSlaves(stampedeId);
     List<BuildSlaveRunId> buildSlaveRunIds =
-        job.getSlaveInfoByRunId()
-            .values()
+        job.getBuildSlaves()
             .stream()
             .map(BuildSlaveInfo::getBuildSlaveRunId)
             .collect(Collectors.toList());
@@ -152,7 +151,8 @@ public class PostBuildPhaseTest {
     replay(mockDistBuildService);
     replay(mockEventBus);
 
-    postBuildPhase.publishBuildSlaveFinishedStatsEvent(job, directExecutor, eventSender);
+    postBuildPhase.publishBuildSlaveFinishedStatsEvent(
+        job, directExecutor, consoleEventsDispatcher);
 
     verify(mockDistBuildService);
     verify(mockEventBus);
@@ -168,7 +168,7 @@ public class PostBuildPhaseTest {
             .sorted(Comparator.comparing(Entry::getKey))
             .map(x -> x.getValue())
             .collect(Collectors.toList());
-    assertEquals(finishedStatsList.get(1), actualFinishedStats.get(0).get());
-    assertEquals(Optional.empty(), actualFinishedStats.get(1));
+    assertEquals(Optional.empty(), actualFinishedStats.get(0));
+    assertEquals(finishedStatsList.get(1), actualFinishedStats.get(1).get());
   }
 }

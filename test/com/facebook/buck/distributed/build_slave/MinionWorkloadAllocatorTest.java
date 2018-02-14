@@ -19,6 +19,7 @@ package com.facebook.buck.distributed.build_slave;
 import com.facebook.buck.distributed.NoopArtifactCacheByBuildRule;
 import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
 import com.facebook.buck.distributed.thrift.WorkUnit;
+import com.facebook.buck.event.listener.NoOpCoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -33,6 +34,7 @@ public class MinionWorkloadAllocatorTest {
 
   private static final String MINION_ONE = "Super minion 1";
   private static final int MAX_WORK_UNITS = 10;
+  public static final int MOST_BUILD_RULES_FINISHED_PERCENTAGE = 100;
 
   private BuildTargetsQueue queue;
   private BuildTarget target;
@@ -44,7 +46,10 @@ public class MinionWorkloadAllocatorTest {
     queue =
         new CacheOptimizedBuildTargetsQueueFactory(
                 resolver, new NoopArtifactCacheByBuildRule(), false)
-            .createBuildTargetsQueue(ImmutableList.of(target));
+            .createBuildTargetsQueue(
+                ImmutableList.of(target),
+                new NoOpCoordinatorBuildRuleEventsPublisher(),
+                MOST_BUILD_RULES_FINISHED_PERCENTAGE);
   }
 
   @Test

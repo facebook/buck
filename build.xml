@@ -72,7 +72,6 @@
   <property name="buck.combined.hash.file" value="${buck.hash.dir}/buck-combined-binary-hash.txt"/>
 
   <property name="buck.info.file" value="${build.dir}/buck-info.json"/>
-  <property name="buck.info.error.file" value="${build.dir}/buck-info-error.txt"/>
 
   <property name="modules.dir.name" value="buck-modules" />
 
@@ -101,7 +100,7 @@
     <include name="jackson/jackson-datatype-guava-2.7.8.jar" />
     <include name="jsr/jsr305.jar" />
     <include name="android/sdklib-25.3.0.jar" />
-    <include name="nailgun/nailgun-server-0.9.2-SNAPSHOT.jar" />
+    <include name="nailgun/nailgun-server-0.9.3-SNAPSHOT.jar" />
     <include name="jna/jna-4.4.0.jar" />
     <include name="jna/jna-platform-4.4.0.jar" />
     <include name="sqlite/sqlite-jdbc-3.20.0.jar" />
@@ -141,8 +140,8 @@
     <include name="immutables/value-2.5.7-SNAPSHOT.jar" />
     <include name="infer-annotations/infer-annotations-4.1.jar" />
     <include name="nuprocess/nuprocess-1.1.0.jar" />
-    <include name="jacoco/org.jacoco.core-0.7.7.201606060606.jar" />
-    <include name="jacoco/org.jacoco.report-0.7.7.201606060606.jar" />
+    <include name="jacoco/org.jacoco.core-0.8.0.jar" />
+    <include name="jacoco/org.jacoco.report-0.8.0.jar" />
     <include name="jetty/jetty-all-9.2.10.v20150310.jar" />
     <include name="jdom/jdom-2.0.6.jar" />
     <include name="jimfs/jimfs-1.1.jar" />
@@ -660,8 +659,8 @@
 
   <target name="report-generator-jar" depends="compile">
     <jar destfile="${build.dir}/report-generator.jar">
-      <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.core-0.7.7.201606060606.jar"/>
-      <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.report-0.7.7.201606060606.jar"/>
+      <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.core-0.8.0.jar"/>
+      <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.report-0.8.0.jar"/>
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/plexus/plexus-utils-3.0.20.jar"/>
       <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-6.0.jar" />
       <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-analysis-6.0.jar" />
@@ -786,7 +785,7 @@
   </target>
 
   <target name="gen-buck-info">
-    <exec executable="python" output="${buck.info.file}" error="${buck.info.error.file}">
+    <exec executable="python" output="${buck.info.file}" logError="true" failonerror="true">
       <arg value="programs/gen_buck_info.py"/>
     </exec>
   </target>

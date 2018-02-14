@@ -32,10 +32,11 @@ import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DexInspector;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ObjectMappers;
@@ -128,7 +129,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void testRawSplitDexHasSecondary() throws IOException {
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", RAW_DEX_TARGET);
+    ProcessResult result = workspace.runBuckCommand("build", RAW_DEX_TARGET);
     result.assertSuccess();
 
     ZipInspector zipInspector =
@@ -194,7 +195,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
         "java/com/sample/app/MyApplication.java", "package com", "package\ncom");
 
     workspace.resetBuildLogFile();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", SIMPLE_TARGET);
+    ProcessResult result = workspace.runBuckCommand("build", SIMPLE_TARGET);
     result.assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
 
@@ -208,7 +209,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     workspace.replaceFileContents("java/com/sample/lib/Sample.java", "package com", "package\ncom");
 
     workspace.resetBuildLogFile();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", SIMPLE_TARGET);
+    ProcessResult result = workspace.runBuckCommand("build", SIMPLE_TARGET);
     result.assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
 
@@ -233,7 +234,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   @Test
   public void testProvidedDependenciesAreExcludedEvenIfSpecifiedInOtherDeps() throws IOException {
     String target = "//apps/sample:app_with_exported_and_provided_deps";
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(target);
+    ProcessResult result = workspace.runBuckBuild(target);
     result.assertSuccess();
 
     DexInspector dexInspector =
@@ -323,7 +324,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   @Test
   public void testApksHaveDeterministicTimestamps() throws IOException {
     String target = "//apps/sample:app";
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", target);
+    ProcessResult result = workspace.runBuckCommand("build", target);
     result.assertSuccess();
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
@@ -568,7 +569,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
         "keystores/debug.keystore.properties", "key.alias=my_alias", "key.alias=invalid_alias");
 
     workspace.resetBuildLogFile();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", SIMPLE_TARGET);
+    ProcessResult result = workspace.runBuckCommand("build", SIMPLE_TARGET);
     result.assertFailure("Invalid keystore key alias should fail.");
 
     assertThat(

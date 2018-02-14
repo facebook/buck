@@ -27,7 +27,6 @@ java_test(
         "//src/com/facebook/buck/jvm/java:javac-sink",
         "//src/com/facebook/buck/model:build_id",
         "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/rules:build_rule",

@@ -20,7 +20,7 @@ import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.log.thrift.rulekeys.RuleKeyHash;
 import com.facebook.buck.log.thrift.rulekeys.Value;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.tools.consistency.DifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyDiffer.GraphTraversalException;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -77,9 +78,11 @@ public class RuleKeyStressRunnerTest {
             String.format("--rulekeys-log-path=%s", temporaryPaths.getRoot().resolve("0.bin.log")),
             "--show-rulekey",
             "--show-transitive-rulekeys",
+            "@",
+            "Random hashes configured",
+            "Reading arguments from @",
             "//:test1",
-            "//:test2",
-            "Random hashes configured");
+            "//:test2");
 
     List<String> expectedOutput2 =
         ImmutableList.of(
@@ -89,9 +92,11 @@ public class RuleKeyStressRunnerTest {
             String.format("--rulekeys-log-path=%s", temporaryPaths.getRoot().resolve("1.bin.log")),
             "--show-rulekey",
             "--show-transitive-rulekeys",
+            "@",
+            "Random hashes configured",
+            "Reading arguments from @",
             "//:test1",
-            "//:test2",
-            "Random hashes configured");
+            "//:test2");
 
     RuleKeyStressRunner runner =
         new RuleKeyStressRunner(
@@ -108,8 +113,31 @@ public class RuleKeyStressRunnerTest {
 
     Assert.assertEquals(0, commands.get(0).run(testStream1));
     Assert.assertEquals(0, commands.get(1).run(testStream2));
-    Assert.assertEquals(expectedOutput1, Arrays.asList(testStream1.getOutputLines()));
-    Assert.assertEquals(expectedOutput2, Arrays.asList(testStream2.getOutputLines()));
+    assertAllStartWithPrefix(Arrays.asList(testStream1.getOutputLines()), expectedOutput1, 9);
+    assertAllStartWithPrefix(Arrays.asList(testStream2.getOutputLines()), expectedOutput2, 9);
+  }
+
+  private void assertAllStartWithPrefix(
+      List<String> lines, List<String> expectedPrefixes, int randomStartIdx) {
+    Assert.assertEquals(expectedPrefixes.size(), lines.size());
+    int partition = randomStartIdx == -1 ? lines.size() : randomStartIdx;
+    Assert.assertThat(
+        lines.subList(0, partition),
+        Matchers.contains(
+            expectedPrefixes
+                .subList(0, partition)
+                .stream()
+                .map(prefix -> Matchers.startsWith(prefix))
+                .collect(ImmutableList.toImmutableList())));
+
+    Assert.assertThat(
+        lines.subList(partition, lines.size()),
+        Matchers.containsInAnyOrder(
+            expectedPrefixes
+                .subList(partition, expectedPrefixes.size())
+                .stream()
+                .map(prefix -> Matchers.startsWith(prefix))
+                .collect(ImmutableList.toImmutableList())));
   }
 
   @Test

@@ -51,10 +51,6 @@ abstract class AbstractImmediateDirectoryBuildTargetPattern implements BuildTarg
 
   @Override
   public String toString() {
-    return "+"
-        + getCellPath().getFileName().toString()
-        + "//"
-        + getPathWithinCell().toString()
-        + ":";
+    return getCellPath().getFileName().toString() + "//" + getPathWithinCell().toString() + ":";
   }
 }

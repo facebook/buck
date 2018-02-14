@@ -100,6 +100,7 @@ public class TargetNodeParsePipeline
   }
 
   @Override
+  @SuppressWarnings("CheckReturnValue")
   protected TargetNode<?, ?> computeNode(
       final Cell cell,
       final KnownBuildRuleTypes knownBuildRuleTypes,

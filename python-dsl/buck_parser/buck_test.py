@@ -4,6 +4,7 @@ from .buck import (
     flatten_dicts,
     get_mismatched_args,
     subdir_glob,
+    host_info,
 )
 from .glob_watchman import format_watchman_query_params
 from .glob_internal import path_component_contains_dot, glob_internal
@@ -242,7 +243,8 @@ class TestBuckSubdirGlobMixin(object):
 
     def test_subdir_glob(self):
         build_env = BuildFileContext(
-            self.fake_path(''), None, None, None, None, [], None, None, None, None, False, False)
+            self.fake_path(''), None, 'BUCK', None, None, None, [], None, None, None, None, False,
+            False)
         search_base = self.fake_path(
             'foo',
             glob_results={
@@ -264,7 +266,8 @@ class TestBuckSubdirGlobMixin(object):
 
     def test_subdir_glob_with_prefix(self):
         build_env = BuildFileContext(
-            self.fake_path(''), None, None, None, None, [], None, None, None, None, False, False)
+            self.fake_path(''), None, 'BUCK', None, None, None, [], None, None, None, None, False,
+            False)
         search_base = self.fake_path(
             'foo',
             glob_results={
@@ -477,6 +480,74 @@ class TestBuck(unittest.TestCase):
         self.assertTrue(path_component_contains_dot(Path('.foo/bar')))
         self.assertTrue(path_component_contains_dot(Path('foo/.bar')))
         self.assertTrue(path_component_contains_dot(Path('.foo/.bar')))
+
+
+class TestHostInfo(unittest.TestCase):
+
+    def test_returns_correct_os(self):
+
+        test_data = {
+            'Darwin': 'is_macos',
+            'Windows': 'is_windows',
+            'Linux': 'is_linux',
+            'FreeBSD': 'is_freebsd',
+            'blarg': 'is_unknown',
+            'unknown': 'is_unknown',
+        }
+
+        for platform_value, expected_true_field in test_data.items():
+            struct = host_info(
+                platform_system=lambda: platform_value,
+                platform_machine=lambda: 'x86_64')
+
+            self.validate_host_info_struct(
+                struct, 'os', expected_true_field, 'platform.system',
+                platform_value)
+
+    def test_returns_correct_arch(self):
+        test_data = {
+            'aarch64': 'is_aarch64',
+            'arm': 'is_arm',
+            'armeb': 'is_armeb',
+            'i386': 'is_i386',
+            'mips': 'is_mips',
+            'mips64': 'is_mips64',
+            'mipsel': 'is_mipsel',
+            'mipsel64': 'is_mipsel64',
+            'powerpc': 'is_powerpc',
+            'ppc64': 'is_ppc64',
+            'unknown': 'is_unknown',
+            'blarg': 'is_unknown',
+            'x86_64': 'is_x86_64',
+            'amd64': 'is_x86_64',
+            'arm64': 'is_aarch64',
+        }
+
+        for platform_value, expected_true_field in test_data.items():
+            struct = host_info(
+                platform_system=lambda: 'Darwin',
+                platform_machine=lambda: platform_value)
+
+            self.validate_host_info_struct(
+                struct, 'arch', expected_true_field, 'platform.machine',
+                platform_value)
+
+    def validate_host_info_struct(
+            self, struct, top_level, true_key, platform_func, platform_value):
+        top_level_struct = getattr(struct, top_level)
+        for field in top_level_struct._fields:
+            if field == true_key:
+                continue
+            self.assertFalse(
+                getattr(top_level_struct, field),
+                'Expected {}.{} to be false in {} with {} returning '
+                'value {}'.format(
+                    top_level, field, struct, platform_func, platform_value))
+        self.assertTrue(
+            getattr(top_level_struct, true_key),
+            'Expected {}.{} to be false in {} with {} returning '
+            'value {}'.format(
+                top_level, true_key, struct, platform_func, platform_value))
 
 
 class TestMemoized(unittest.TestCase):

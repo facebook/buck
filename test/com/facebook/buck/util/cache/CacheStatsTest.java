@@ -68,21 +68,40 @@ public class CacheStatsTest {
   }
 
   @Test
-  public void testAggregateCacheStats() {
-    CacheStats stats1 = CacheStats.builder().setHitCount(2L).setNumberEntries(100L).build();
-    CacheStats stats2 = CacheStats.builder().setNumberEntries(500L).setMissCount(4L).build();
+  public void testAddCacheStats() {
+    CacheStats stats1 = CacheStats.builder().setHitCount(2L).setNumberEntries(500L).build();
+    CacheStats stats2 = CacheStats.builder().setNumberEntries(100L).setMissCount(4L).build();
 
-    CacheStats stats = CacheStats.aggregate(stats1, stats2);
-    assertEquals(Optional.of(2L), stats.getHitCount());
-    assertEquals(Optional.of(4L), stats.getMissCount());
-    assertEquals(Optional.empty(), stats.getMissMatchCount());
-    assertEquals(Optional.empty(), stats.getEvictionCount());
-    assertEquals(Optional.empty(), stats.getInvalidationCount());
-    assertEquals(Optional.empty(), stats.getLoadSuccessCount());
-    assertEquals(Optional.empty(), stats.getLoadExceptionCount());
-    assertEquals(Optional.empty(), stats.getRetrievalTime());
-    assertEquals(Optional.empty(), stats.getTotalLoadTime());
-    assertEquals(Optional.empty(), stats.getTotalMissTime());
-    assertEquals(Optional.of(600L), stats.getNumberEntries());
+    CacheStats addStats = stats1.add(stats2);
+    assertEquals(Optional.of(2L), addStats.getHitCount());
+    assertEquals(Optional.of(4L), addStats.getMissCount());
+    assertEquals(Optional.empty(), addStats.getMissMatchCount());
+    assertEquals(Optional.empty(), addStats.getEvictionCount());
+    assertEquals(Optional.empty(), addStats.getInvalidationCount());
+    assertEquals(Optional.empty(), addStats.getLoadSuccessCount());
+    assertEquals(Optional.empty(), addStats.getLoadExceptionCount());
+    assertEquals(Optional.empty(), addStats.getRetrievalTime());
+    assertEquals(Optional.empty(), addStats.getTotalLoadTime());
+    assertEquals(Optional.empty(), addStats.getTotalMissTime());
+    assertEquals(Optional.of(600L), addStats.getNumberEntries());
+  }
+
+  @Test
+  public void testSubtractCacheStats() {
+    CacheStats stats1 = CacheStats.builder().setHitCount(2L).setNumberEntries(500L).build();
+    CacheStats stats2 = CacheStats.builder().setNumberEntries(100L).setMissCount(4L).build();
+
+    CacheStats minusStats = stats1.subtract(stats2);
+    assertEquals(Optional.of(2L), minusStats.getHitCount());
+    assertEquals(Optional.of(0L), minusStats.getMissCount());
+    assertEquals(Optional.empty(), minusStats.getMissMatchCount());
+    assertEquals(Optional.empty(), minusStats.getEvictionCount());
+    assertEquals(Optional.empty(), minusStats.getInvalidationCount());
+    assertEquals(Optional.empty(), minusStats.getLoadSuccessCount());
+    assertEquals(Optional.empty(), minusStats.getLoadExceptionCount());
+    assertEquals(Optional.empty(), minusStats.getRetrievalTime());
+    assertEquals(Optional.empty(), minusStats.getTotalLoadTime());
+    assertEquals(Optional.empty(), minusStats.getTotalMissTime());
+    assertEquals(Optional.of(400L), minusStats.getNumberEntries());
   }
 }

@@ -420,4 +420,22 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
 
     assertEquals(2, methods.size());
   }
+
+  /**
+   * javac has this bug where getTypeDecls thinks that once it sees a non-ImportTree, everything
+   * else must be a type. Not so; it's perfectly legal (if odd) to have an EmptyStatementTree in the
+   * midst of ImportTrees.
+   */
+  @Test
+  public void testEnterElementEvenWithEmptyStatementsInImports() throws IOException {
+    compile(
+        Joiner.on('\n')
+            .join(
+                "import java.io.IOException;;",
+                "import java.io.InputStream;",
+                "public class Foo { }"));
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    assertEquals("Foo", fooElement.getQualifiedName().toString());
+  }
 }

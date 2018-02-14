@@ -36,7 +36,6 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ParallelRuleKeyCalculator;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
@@ -68,12 +67,11 @@ public class MultiSlaveBuildModeRunnerFactory {
       Optional<BuildId> clientBuildId,
       boolean isLocalMinionAlsoRunning,
       Path logDirectoryPath,
-      BuildRuleFinishedPublisher buildRuleFinishedPublisher,
+      CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher,
       BuckEventBus eventBus,
       ListeningExecutorService executorService,
       ArtifactCache remoteCache,
-      RuleKeyConfiguration rkConfigForCache,
-      ListenableFuture<Optional<ParallelRuleKeyCalculator<RuleKey>>> asyncRuleKeyCalculatorOptional,
+      ListenableFuture<ParallelRuleKeyCalculator<RuleKey>> asyncRuleKeyCalculatorOptional,
       HealthCheckStatsTracker healthCheckStatsTracker,
       Optional<BuildSlaveTimingStatsTracker> timingStatsTracker) {
 
@@ -93,8 +91,6 @@ public class MultiSlaveBuildModeRunnerFactory {
                               executorService,
                               remoteCache,
                               eventBus,
-                              graphs.getCachingBuildEngineDelegate().getFileHashCache(),
-                              rkConfigForCache,
                               ruleKeyCalculatorOptional,
                               Optional.empty())) {
                         queue =
@@ -102,7 +98,10 @@ public class MultiSlaveBuildModeRunnerFactory {
                                     graphs.getActionGraphAndResolver().getResolver(),
                                     artifactCache,
                                     distBuildConfig.isDeepRemoteBuildEnabled())
-                                .createBuildTargetsQueue(topLevelTargetsToBuild);
+                                .createBuildTargetsQueue(
+                                    topLevelTargetsToBuild,
+                                    coordinatorBuildRuleEventsPublisher,
+                                    distBuildConfig.getMostBuildRulesFinishedPercentageThreshold());
                       } catch (Exception e) {
                         LOG.error(e, "Failed to create BuildTargetsQueue.");
                         throw new RuntimeException(e);
@@ -131,14 +130,14 @@ public class MultiSlaveBuildModeRunnerFactory {
     ChromeTraceBuckConfig chromeTraceBuckConfig =
         distBuildConfig.getBuckConfig().getView(ChromeTraceBuckConfig.class);
 
-    Optional<URI> traceUploadUri = chromeTraceBuckConfig.getTraceUploadUri();
+    Optional<URI> traceUploadUri = chromeTraceBuckConfig.getTraceUploadUriIfEnabled();
 
     return new CoordinatorModeRunner(
         queueFuture,
         stampedeId,
         listener,
         logDirectoryPath,
-        buildRuleFinishedPublisher,
+        coordinatorBuildRuleEventsPublisher,
         distBuildService,
         clientBuildId,
         traceUploadUri,
@@ -159,7 +158,7 @@ public class MultiSlaveBuildModeRunnerFactory {
       String coordinatorAddress,
       OptionalInt coordinatorPort,
       DistBuildConfig distBuildConfig,
-      UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker,
+      MinionBuildProgressTracker minionBuildProgressTracker,
       double availableBuildCapacityRatio) {
     Preconditions.checkArgument(
         availableBuildCapacityRatio > 0, availableBuildCapacityRatio + " is not > 0");
@@ -200,7 +199,7 @@ public class MultiSlaveBuildModeRunnerFactory {
             .threadLimit,
         checker,
         distBuildConfig.getMinionPollLoopIntervalMillis(),
-        unexpectedCacheMissTracker,
+        minionBuildProgressTracker,
         distBuildConfig.getCoordinatorConnectionTimeoutMillis());
   }
 
@@ -220,12 +219,11 @@ public class MultiSlaveBuildModeRunnerFactory {
       BuildSlaveRunId buildSlaveRunId,
       ListenableFuture<BuildExecutor> localBuildExecutor,
       Path logDirectoryPath,
-      BuildRuleFinishedPublisher buildRuleFinishedPublisher,
-      UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker,
+      CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher,
+      MinionBuildProgressTracker minionBuildProgressTracker,
       BuckEventBus eventBus,
       ListeningExecutorService executorService,
       ArtifactCache remoteCache,
-      RuleKeyConfiguration rkConfigForCache,
       BuildSlaveTimingStatsTracker timingStatsTracker,
       HealthCheckStatsTracker healthCheckStatsTracker,
       double coordinatorBuildCapacityRatio) {
@@ -239,15 +237,13 @@ public class MultiSlaveBuildModeRunnerFactory {
             clientBuildId,
             true,
             logDirectoryPath,
-            buildRuleFinishedPublisher,
+            coordinatorBuildRuleEventsPublisher,
             eventBus,
             executorService,
             remoteCache,
-            rkConfigForCache,
             Futures.transform(
                 localBuildExecutor,
-                buildExecutor ->
-                    Optional.of(buildExecutor.getCachingBuildEngine().getRuleKeyCalculator()),
+                buildExecutor -> buildExecutor.getCachingBuildEngine().getRuleKeyCalculator(),
                 executorService),
             healthCheckStatsTracker,
             Optional.of(timingStatsTracker)),
@@ -259,7 +255,7 @@ public class MultiSlaveBuildModeRunnerFactory {
             LOCALHOST_ADDRESS,
             OptionalInt.empty(),
             distBuildConfig,
-            unexpectedCacheMissTracker,
+            minionBuildProgressTracker,
             coordinatorBuildCapacityRatio));
   }
 }

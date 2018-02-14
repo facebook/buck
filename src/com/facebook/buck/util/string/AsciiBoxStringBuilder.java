@@ -25,7 +25,7 @@ public class AsciiBoxStringBuilder {
   private final int maxLength;
 
   public AsciiBoxStringBuilder(int maxLength) {
-    this.maxLength = maxLength;
+    this.maxLength = Math.max(1, maxLength);
   }
 
   public AsciiBoxStringBuilder writeLine(String line, Object... args) {
@@ -43,7 +43,7 @@ public class AsciiBoxStringBuilder {
 
     while (line.length() > maxLength) {
       lineBreakIndex = line.indexOf(' ') + 1;
-      if (lineBreakIndex == 0 || lineBreakIndex == maxLength) {
+      if (lineBreakIndex == 0 || lineBreakIndex >= maxLength) {
         // No space? Just split it at max length
         lineBreakIndex = maxLength;
       }

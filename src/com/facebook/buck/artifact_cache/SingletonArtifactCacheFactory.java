@@ -30,17 +30,20 @@ public class SingletonArtifactCacheFactory implements ArtifactCacheFactory {
   }
 
   @Override
-  public ArtifactCache newInstance(boolean distributedBuildModeEnabled) {
+  public ArtifactCache newInstance(
+      boolean distributedBuildModeEnabled, boolean isDownloadHeavyBuild) {
     return artifactCache;
   }
 
   @Override
-  public ArtifactCache remoteOnlyInstance(boolean distributedBuildModeEnabled) {
+  public ArtifactCache remoteOnlyInstance(
+      boolean distributedBuildModeEnabled, boolean isDownloadHeavyBuild) {
     return artifactCache;
   }
 
   @Override
-  public ArtifactCache localOnlyInstance(boolean distributedBuildModeEnabled) {
+  public ArtifactCache localOnlyInstance(
+      boolean distributedBuildModeEnabled, boolean isDownloadHeavyBuild) {
     return artifactCache;
   }
 

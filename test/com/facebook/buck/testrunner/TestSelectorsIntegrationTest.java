@@ -21,8 +21,9 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -46,14 +47,14 @@ public class TestSelectorsIntegrationTest {
 
   @Test
   public void shouldFailWithoutAnySelectors() throws IOException {
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "--all");
+    ProcessResult result = workspace.runBuckCommand("test", "--all");
     result.assertTestFailure("Some tests fail");
     assertThat(result.getStderr(), containsString("TESTS FAILED: 1 FAILURE"));
   }
 
   @Test
   public void shouldRunASingleTest() throws IOException {
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("test", "--all", "--filter", "com.example.clown.FlowerTest");
     result.assertSuccess("The test passed");
     assertThat(result.getStderr(), containsString("TESTS PASSED"));
@@ -63,7 +64,7 @@ public class TestSelectorsIntegrationTest {
   public void shouldPassWhenUnselectingEntireFailingClass() throws IOException {
     String testSelector = "!com.example.clown.PrimeMinisterialDecreeTest";
     String[] command1 = {"test", "--all", "--test-selectors", testSelector};
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(command1);
+    ProcessResult result = workspace.runBuckCommand(command1);
     result.assertSuccess("All tests pass");
     assertTestsPassed(result);
     assertThatATestRan(result, "com.example.clown.CarTest");
@@ -73,7 +74,7 @@ public class TestSelectorsIntegrationTest {
   @Test
   public void shouldPassWhenUnselectingTheFailingMethod() throws IOException {
     String[] command = {"test", "--all", "--test-selectors", "!#formAllianceWithClowns"};
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(command);
+    ProcessResult result = workspace.runBuckCommand(command);
     result.assertSuccess("All tests pass");
     assertTestsPassed(result);
     assertThatATestRan(result, "com.example.clown.CarTest");
@@ -83,7 +84,7 @@ public class TestSelectorsIntegrationTest {
   @Test
   public void shouldNotMatchMethodsUsingPrefixAlone() throws IOException {
     String[] command = {"test", "--all", "--test-selectors", "#test"};
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(command);
+    ProcessResult result = workspace.runBuckCommand(command);
     assertNoTestsRan(result);
     result.assertSuccess("Should pass, albeit because nothing actually ran");
   }
@@ -103,8 +104,7 @@ public class TestSelectorsIntegrationTest {
   public void shouldFilterFromFile() throws IOException {
     Path testSelectorsFile = workspace.getPath("test-selectors.txt");
     String arg = String.format("@%s", testSelectorsFile.toAbsolutePath().toString());
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("test", "--all", "--filter", arg);
+    ProcessResult result = workspace.runBuckCommand("test", "--all", "--filter", arg);
     result.assertSuccess();
   }
 
@@ -125,20 +125,19 @@ public class TestSelectorsIntegrationTest {
 
   @Test
   public void assertNoSummariesForASingleTest() throws IOException {
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("test", "//test/com/example/clown:clown");
+    ProcessResult result = workspace.runBuckCommand("test", "//test/com/example/clown:clown");
     assertNoTestSummaryShown(result);
   }
 
-  private void assertNotCached(ProjectWorkspace.ProcessResult result) {
+  private void assertNotCached(ProcessResult result) {
     assertThat(result.getStderr(), not(containsString("CACHED")));
   }
 
-  private void assertThatATestRan(ProjectWorkspace.ProcessResult result, String testName) {
+  private void assertThatATestRan(ProcessResult result, String testName) {
     assertThat(result.getStderr(), containsString(testName));
   }
 
-  private void assertNoTestsRan(ProjectWorkspace.ProcessResult result) {
+  private void assertNoTestsRan(ProcessResult result) {
     assertThat(result.getStderr(), not(containsString("com.example.clown.CarTest")));
     assertThat(result.getStderr(), not(containsString("com.example.clown.FlowerTest")));
     assertThat(
@@ -147,11 +146,11 @@ public class TestSelectorsIntegrationTest {
     assertThat(result.getStderr(), containsString("NO TESTS RAN"));
   }
 
-  private void assertTestsPassed(ProjectWorkspace.ProcessResult result) {
+  private void assertTestsPassed(ProcessResult result) {
     assertThat(result.getStderr(), containsString("TESTS PASSED"));
   }
 
-  private void assertNoTestSummaryShown(ProjectWorkspace.ProcessResult result) {
+  private void assertNoTestSummaryShown(ProcessResult result) {
     assertThat(result.getStderr(), not(containsString("Results for ")));
   }
 }

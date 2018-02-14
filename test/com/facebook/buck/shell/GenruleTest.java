@@ -22,9 +22,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.AndroidLegacyToolchain;
-import com.facebook.buck.android.AndroidPlatformTarget;
-import com.facebook.buck.android.TestAndroidLegacyToolchainFactory;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -55,6 +53,11 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
+import com.facebook.buck.rules.macros.ClasspathMacro;
+import com.facebook.buck.rules.macros.ExecutableMacro;
+import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.facebook.buck.rules.macros.WorkerMacro;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -79,9 +82,9 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -179,14 +182,12 @@ public class GenruleTest {
             .resolve("src/com/facebook/katana/katana_manifest/AndroidManifest.xml"),
         pathResolver.getRelativePath(genrule.getSourcePathToOutput()));
     assertEquals(
-        filesystem
-            .resolve(
-                filesystem
-                    .getBuckPaths()
-                    .getGenDir()
-                    .resolve("src/com/facebook/katana/katana_manifest/AndroidManifest.xml"))
-            .toString(),
-        genrule.getAbsoluteOutputFilePath(pathResolver));
+        filesystem.resolve(
+            filesystem
+                .getBuckPaths()
+                .getGenDir()
+                .resolve("src/com/facebook/katana/katana_manifest/AndroidManifest.xml")),
+        genrule.getAbsoluteOutputFilePath());
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(pathResolver)
             .withBuildCellRootPath(filesystem.getRootPath());
@@ -202,7 +203,8 @@ public class GenruleTest {
 
     MoreAsserts.assertStepsNames(
         "",
-        ImmutableList.of("rm", "mkdir", "rm", "mkdir", "rm", "mkdir", "link_tree", "genrule"),
+        ImmutableList.of(
+            "rm", "mkdir", "rm", "mkdir", "rm", "mkdir", "genrule_srcs_link_tree", "genrule"),
         steps);
 
     ExecutionContext executionContext = newEmptyExecutionContext();
@@ -270,6 +272,7 @@ public class GenruleTest {
 
     assertEquals(
         new SymlinkTreeStep(
+            "genrule_srcs",
             filesystem,
             pathToSrcDir,
             ImmutableMap.of(
@@ -422,7 +425,7 @@ public class GenruleTest {
 
     return GenruleBuilder.newGenruleBuilder(
             BuildTargetFactory.newInstance("//:genrule_with_worker"))
-        .setCmd("$(worker :worker_rule) abc")
+        .setCmd(StringWithMacrosUtils.format("%s abc", WorkerMacro.of(workerTool.getBuildTarget())))
         .setOut("output.txt");
   }
 
@@ -516,7 +519,9 @@ public class GenruleTest {
 
     BuildRule genrule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule_with_worker"))
-            .setCmd("$(worker :worker_rule) abc")
+            .setCmd(
+                StringWithMacrosUtils.format(
+                    "%s abs", WorkerMacro.of(workerToolRule.getBuildTarget())))
             .setOut("output.txt")
             .build(ruleResolver);
 
@@ -562,10 +567,11 @@ public class GenruleTest {
 
     Path baseTmpPath = filesystem.getBuckPaths().getGenDir().resolve("example__srcs");
 
-    MoreAsserts.assertStepsNames("", ImmutableList.of("link_tree"), commands);
+    MoreAsserts.assertStepsNames("", ImmutableList.of("genrule_srcs_link_tree"), commands);
 
     assertEquals(
         new SymlinkTreeStep(
+            "genrule_srcs",
             filesystem,
             baseTmpPath,
             ImmutableMap.of(
@@ -603,19 +609,28 @@ public class GenruleTest {
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-    AndroidPlatformTarget android = EasyMock.createNiceMock(AndroidPlatformTarget.class);
+    AndroidPlatformTarget android =
+        AndroidPlatformTarget.of(
+            "android",
+            Paths.get(""),
+            Collections.emptyList(),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get("zipalign"),
+            Paths.get("."),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""));
     Path sdkDir = Paths.get("/opt/users/android_sdk");
     Path ndkDir = Paths.get("/opt/users/android_ndk");
-    EasyMock.expect(android.getDxExecutable()).andStubReturn(Paths.get("."));
-    EasyMock.expect(android.getZipalignExecutable()).andStubReturn(Paths.get("zipalign"));
-    EasyMock.replay(android);
 
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
     ToolchainProvider toolchainProvider =
         new ToolchainProviderBuilder()
-            .withToolchain(
-                AndroidLegacyToolchain.DEFAULT_NAME,
-                TestAndroidLegacyToolchainFactory.create(android))
+            .withToolchain(AndroidPlatformTarget.DEFAULT_NAME, android)
             .withToolchain(
                 AndroidNdk.DEFAULT_NAME, AndroidNdk.of("12", ndkDir, new ExecutableFinder()))
             .withToolchain(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.of(sdkDir))
@@ -634,8 +649,6 @@ public class GenruleTest {
     assertEquals(Paths.get("zipalign").toString(), env.get("ZIPALIGN"));
     assertEquals(sdkDir.toString(), env.get("ANDROID_HOME"));
     assertEquals(ndkDir.toString(), env.get("NDK_HOME"));
-
-    EasyMock.verify(android);
   }
 
   @Test
@@ -807,7 +820,9 @@ public class GenruleTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     GenruleBuilder ruleBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
-            .setCmd("run $(location //:dep)")
+            .setCmd(
+                StringWithMacrosUtils.format(
+                    "run %s", LocationMacro.of(BuildTargetFactory.newInstance("//:dep"))))
             .setOut("output");
 
     // Create an initial input-based rule key
@@ -894,7 +909,9 @@ public class GenruleTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     GenruleBuilder ruleBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
-            .setCmd("run $(exe //:dep)")
+            .setCmd(
+                StringWithMacrosUtils.format(
+                    "run %s", ExecutableMacro.of(BuildTargetFactory.newInstance("//:dep"))))
             .setOut("output");
 
     // Create an initial input-based rule key
@@ -984,7 +1001,9 @@ public class GenruleTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     GenruleBuilder ruleBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
-            .setCmd("run $(classpath //:dep)")
+            .setCmd(
+                StringWithMacrosUtils.format(
+                    "run %s", ClasspathMacro.of(BuildTargetFactory.newInstance("//:dep"))))
             .setOut("output");
 
     // Create an initial input-based rule key

@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.coercer.TypeCoercer.Traversal;
 import com.facebook.buck.rules.macros.Macro;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
@@ -29,7 +30,7 @@ interface MacroTypeCoercer<T extends Macro> {
 
   Class<T> getOutputClass();
 
-  void traverse(T macro, TypeCoercer.Traversal traversal);
+  void traverse(CellPathResolver cellRoots, T macro, Traversal traversal);
 
   T coerce(
       CellPathResolver cellRoots,

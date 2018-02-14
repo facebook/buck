@@ -25,12 +25,12 @@ import static org.junit.Assume.assumeTrue;
 
 import com.dd.plist.NSDate;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;

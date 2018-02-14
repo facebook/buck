@@ -16,8 +16,10 @@
 
 package com.facebook.buck.rules;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
@@ -25,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.SortedSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -49,10 +52,21 @@ class BuildRulePipelinesRunner {
       Preconditions.checkState(
           previousRuleInPipeline.getPipelineStateFactory() == rule.getPipelineStateFactory(),
           "To help ensure that rules have pipeline-compatible rule keys, all rules in a pipeline must share a PipelineStateFactory instance.");
+      SortedSet<BuildRule> currentDeps = rule.getBuildDeps();
+      SortedSet<BuildRule> previousDeps = previousRuleInPipeline.getBuildDeps();
       Preconditions.checkState(
-          Sets.difference(rule.getBuildDeps(), previousRuleInPipeline.getBuildDeps())
-              .equals(Collections.singleton(previousRuleInPipeline)),
-          "Each rule in a pipeline cannot depend on rules which are not also dependencies of the previous rule in the pipeline. This ensures that each rule in the pipeline is ready to build as soon as the previous one completes.");
+          currentDeps.contains(previousRuleInPipeline),
+          "Each rule in a pipeline must depend on the previous rule in the pipeline.");
+      SetView<BuildRule> extraDeps =
+          Sets.difference(
+              currentDeps, Sets.union(previousDeps, Collections.singleton(previousRuleInPipeline)));
+      Preconditions.checkState(
+          extraDeps.isEmpty(),
+          "Each rule in a pipeline cannot depend on rules which are not also dependencies of the previous rule in the pipeline. "
+              + "This ensures that each rule in the pipeline is ready to build as soon as the previous one completes. "
+              + "%s has extra deps <%s>.",
+          rule,
+          Joiner.on(", ").join(extraDeps));
       getPipelineStage(previousRuleInPipeline).setNextStage(pipelineStage);
     }
 
@@ -192,6 +206,7 @@ class BuildRulePipelinesRunner {
     @Nullable private BuildRulePipeline<T> pipeline;
     @Nullable private RunnableWithFuture<Optional<BuildResult>> runner;
 
+    @SuppressWarnings("CheckReturnValue")
     private BuildRulePipelineStage() {
       Futures.catching(future, Throwable.class, throwable -> error = throwable);
     }

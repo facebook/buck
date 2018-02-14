@@ -37,10 +37,10 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
   }
 
   @Override
-  public void traverse(C object, Traversal traversal) {
+  public void traverse(CellPathResolver cellRoots, C object, Traversal traversal) {
     traversal.traverse(object);
     for (T element : object) {
-      elementTypeCoercer.traverse(element, traversal);
+      elementTypeCoercer.traverse(cellRoots, element, traversal);
     }
   }
 

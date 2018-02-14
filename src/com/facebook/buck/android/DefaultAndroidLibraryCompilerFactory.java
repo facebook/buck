@@ -46,10 +46,7 @@ public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompi
 
   @Override
   public ConfiguredCompilerFactory getCompiler(AndroidLibraryDescription.JvmLanguage language) {
-    ExtraClasspathProvider extraClasspathProvider =
-        new AndroidClasspathProvider(
-            toolchainProvider.getByName(
-                AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class));
+    ExtraClasspathProvider extraClasspathProvider = new AndroidClasspathProvider(toolchainProvider);
     switch (language) {
       case JAVA:
         return new JavaConfiguredCompilerFactory(javaConfig, extraClasspathProvider);

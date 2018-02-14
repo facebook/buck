@@ -41,7 +41,7 @@ import com.facebook.buck.rules.macros.QueryTargetsMacroExpander;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.HashMapWithStats;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Paths;
@@ -118,10 +118,7 @@ public class QueryTargetsMacroExpanderTest {
   public void extractBuildTimeDeps() throws Exception {
     Object precomputed =
         expander.precomputeWork(
-            dep.getBuildTarget(),
-            cellNames,
-            ruleResolver,
-            ImmutableList.of("'set(//exciting:dep)'"));
+            dep.getBuildTarget(), cellNames, ruleResolver, ImmutableList.of("set(//exciting:dep)"));
     // No build time deps for targets macro
     assertEquals(
         ImmutableList.of(),
@@ -133,7 +130,7 @@ public class QueryTargetsMacroExpanderTest {
                           dep.getBuildTarget(),
                           cellNames,
                           ruleResolver,
-                          ImmutableList.of("'set(//exciting:dep)'"),
+                          ImmutableList.of("set(//exciting:dep)"),
                           precomputed);
                 },
                 new SourcePathRuleFinder(ruleResolver))
@@ -143,7 +140,7 @@ public class QueryTargetsMacroExpanderTest {
             dep.getBuildTarget(),
             cellNames,
             ruleResolver,
-            ImmutableList.of("'classpath(//exciting:target)'"));
+            ImmutableList.of("classpath(//exciting:target)"));
     assertEquals(
         ImmutableList.of(),
         BuildableSupport.deriveDeps(
@@ -154,7 +151,7 @@ public class QueryTargetsMacroExpanderTest {
                           dep.getBuildTarget(),
                           cellNames,
                           ruleResolver,
-                          ImmutableList.of("'classpath(//exciting:target)'"),
+                          ImmutableList.of("classpath(//exciting:target)"),
                           precomputed2);
                 },
                 new SourcePathRuleFinder(ruleResolver))

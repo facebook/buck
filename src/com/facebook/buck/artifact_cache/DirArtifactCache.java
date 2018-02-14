@@ -94,6 +94,11 @@ public class DirArtifactCache implements ArtifactCache {
     return Futures.immediateFuture(fetch(ruleKey, output));
   }
 
+  @Override
+  public void skipPendingAndFutureAsyncFetches() {
+    // Async requests are not supported by DirArtifactCache, so do nothing
+  }
+
   private CacheResult fetch(RuleKey ruleKey, LazyPath output) {
     CacheResult result;
     try {

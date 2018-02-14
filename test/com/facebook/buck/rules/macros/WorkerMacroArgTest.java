@@ -25,10 +25,14 @@ import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.shell.ShBinaryBuilder;
@@ -45,6 +49,8 @@ public class WorkerMacroArgTest {
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
     BuildRule shBinaryRule =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))
@@ -62,17 +68,19 @@ public class WorkerMacroArgTest {
     MacroHandler macroHandler =
         new MacroHandler(ImmutableMap.of("worker", new WorkerMacroExpander()));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-
+    CellPathResolver cellNames = TestCellBuilder.createCellRoots(filesystem);
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     String jobArgs = "jobargs";
+    String unexpanded = "$(worker //:worker_rule) " + jobArgs;
     WorkerMacroArg arg =
-        new WorkerMacroArg(
+        WorkerMacroArg.fromMacroArg(
+            new MacroArg(macroHandler, target, cellNames, resolver, unexpanded),
             macroHandler,
             target,
-            TestCellBuilder.createCellRoots(filesystem),
+            cellNames,
             resolver,
-            "$(worker //:worker_rule) " + jobArgs);
-    assertThat(arg.getJobArgs(), Matchers.equalTo(jobArgs));
+            unexpanded);
+    assertThat(arg.getJobArgs(pathResolver), Matchers.equalTo(jobArgs));
     assertThat(
         arg.getStartupCommand().subList(1, 2),
         Matchers.equalTo(ImmutableList.<String>builder().add(startupArgs).build()));
@@ -88,14 +96,17 @@ public class WorkerMacroArgTest {
     MacroHandler macroHandler =
         new MacroHandler(ImmutableMap.of("worker", new WorkerMacroExpander()));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-
+    String unexpanded = "no macros here";
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    CellPathResolver cellNames = TestCellBuilder.createCellRoots(filesystem);
     try {
-      new WorkerMacroArg(
+      WorkerMacroArg.fromMacroArg(
+          new MacroArg(macroHandler, target, cellNames, resolver, unexpanded),
           macroHandler,
-          BuildTargetFactory.newInstance("//:rule"),
-          TestCellBuilder.createCellRoots(filesystem),
+          target,
+          cellNames,
           resolver,
-          "no macros here");
+          unexpanded);
     } catch (MacroException e) {
       assertThat(e.getMessage(), Matchers.containsString("Unable to extract any build targets"));
     }
@@ -115,14 +126,17 @@ public class WorkerMacroArgTest {
     MacroHandler macroHandler =
         new MacroHandler(ImmutableMap.of("worker", new WorkerMacroExpander()));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    CellPathResolver cellNames = TestCellBuilder.createCellRoots(filesystem);
+    String unexpanded = "$(worker //:not_worker_rule)";
     try {
-      new WorkerMacroArg(
+      WorkerMacroArg.fromMacroArg(
+          new MacroArg(macroHandler, target, cellNames, resolver, unexpanded),
           macroHandler,
-          BuildTargetFactory.newInstance("//:rule"),
-          TestCellBuilder.createCellRoots(filesystem),
+          target,
+          cellNames,
           resolver,
-          "$(worker //:not_worker_rule)");
+          unexpanded);
     } catch (MacroException e) {
       assertThat(e.getMessage(), Matchers.containsString("does not correspond to a worker_tool"));
     }
@@ -137,14 +151,18 @@ public class WorkerMacroArgTest {
     MacroHandler macroHandler =
         new MacroHandler(ImmutableMap.of("worker", new WorkerMacroExpander()));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    CellPathResolver cellNames = TestCellBuilder.createCellRoots(filesystem);
+    String unexpanded = "mkdir && $(worker :worker)";
 
     try {
-      new WorkerMacroArg(
+      WorkerMacroArg.fromMacroArg(
+          new MacroArg(macroHandler, target, cellNames, resolver, unexpanded),
           macroHandler,
-          BuildTargetFactory.newInstance("//:rule"),
-          TestCellBuilder.createCellRoots(filesystem),
+          target,
+          cellNames,
           resolver,
-          "mkdir && $(worker :worker)");
+          unexpanded);
     } catch (MacroException e) {
       assertThat(e.getMessage(), Matchers.containsString("must be at the beginning"));
     }

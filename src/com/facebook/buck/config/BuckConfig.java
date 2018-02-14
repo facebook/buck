@@ -138,6 +138,11 @@ public class BuckConfig implements ConfigPathGetter {
     this.environment = environment;
   }
 
+  /** Returns a clone of the current config with a the argument CellPathResolver. */
+  public BuckConfig withCellPathResolver(CellPathResolver resolver) {
+    return new BuckConfig(config, projectFilesystem, architecture, platform, environment, resolver);
+  }
+
   /**
    * Get a {@link ConfigView} of this config.
    *
@@ -726,6 +731,19 @@ public class BuckConfig implements ConfigPathGetter {
     return getNumThreads(getDefaultMaximumNumberOfThreads());
   }
 
+  /**
+   * @return the number of threads Buck should use for testing. This will use the build
+   *     parallelization settings if not configured.
+   */
+  public int getNumTestThreads() {
+    double ratio = config.getFloat(TEST_SECTION_HEADER, "thread_utilization_ratio").orElse(1.0F);
+    if (ratio <= 0.0F) {
+      throw new HumanReadableException(
+          "thread_utilization_ratio must be greater than zero (was " + ratio + ")");
+    }
+    return (int) Math.ceil(ratio * getNumThreads());
+  }
+
   /** @return the number of threads to be used for the scheduled executor thread pool. */
   public int getNumThreadsForSchedulerPool() {
     return config.getLong("build", "scheduler_threads").orElse((long) 2).intValue();
@@ -963,9 +981,8 @@ public class BuckConfig implements ConfigPathGetter {
     return getListWithoutComments("clean", "additional_paths");
   }
 
-  /** @return whether to enable new file hash cache engine. */
-  public boolean getCompareFileHashCacheEngines() {
-    return getBooleanValue("build", "compare_file_hash_cache_engines", false);
+  public ImmutableList<String> getCleanExcludedCaches() {
+    return getListWithoutComments("clean", "excluded_dir_caches");
   }
 
   /** @return whether to enable new file hash cache engine. */

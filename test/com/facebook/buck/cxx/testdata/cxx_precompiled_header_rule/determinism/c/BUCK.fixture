@@ -12,5 +12,5 @@ cxx_binary(
 cxx_library(
     name = "baz",
     srcs = ["baz.cpp"],
-    headers = ["baz.h"],
+    exported_headers = ["baz.h"],
 )

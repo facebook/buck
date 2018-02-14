@@ -20,8 +20,8 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.util.BuckCellArg;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Files;
@@ -42,16 +42,8 @@ public class CommandLineTargetNodeSpecParser {
   @VisibleForTesting
   protected String normalizeBuildTargetString(String target) {
     // Check and save the cell name
-    int targetSeparator = target.indexOf("//");
-    String cellName = "";
-    if (targetSeparator > 0) {
-      cellName = target.substring(0, targetSeparator);
-      target = target.substring(targetSeparator);
-    }
-
-    // Strip out the leading "//" if there is one to make it easier to normalize the
-    // remaining target string.  We'll add this back at the end.
-    target = MoreStrings.stripPrefix(target, "//").orElse(target);
+    BuckCellArg arg = BuckCellArg.of(target);
+    target = arg.getArg();
 
     // Look up the section after the colon, if present, and strip it off.
     int colonIndex = target.indexOf(':');
@@ -82,7 +74,7 @@ public class CommandLineTargetNodeSpecParser {
       target += ":" + nameAfterColon.get();
     }
 
-    return cellName + "//" + target;
+    return arg.getCellName().orElse("") + "//" + target;
   }
 
   /**

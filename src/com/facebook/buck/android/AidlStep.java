@@ -16,11 +16,13 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableList;
@@ -33,7 +35,7 @@ import java.util.Set;
 public class AidlStep extends ShellStep {
 
   private final ProjectFilesystem filesystem;
-  private final AndroidLegacyToolchain androidLegacyToolchain;
+  private final ToolchainProvider toolchainProvider;
   private final Path aidlFilePath;
   private final Set<String> importDirectoryPaths;
   private final Path destinationDirectory;
@@ -41,14 +43,14 @@ public class AidlStep extends ShellStep {
   public AidlStep(
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
-      AndroidLegacyToolchain androidLegacyToolchain,
+      ToolchainProvider toolchainProvider,
       Path aidlFilePath,
       Set<String> importDirectoryPaths,
       Path destinationDirectory) {
     super(Optional.of(buildTarget), filesystem.getRootPath());
 
     this.filesystem = filesystem;
-    this.androidLegacyToolchain = androidLegacyToolchain;
+    this.toolchainProvider = toolchainProvider;
     this.aidlFilePath = aidlFilePath;
     this.importDirectoryPaths = ImmutableSet.copyOf(importDirectoryPaths);
     this.destinationDirectory = destinationDirectory;
@@ -60,8 +62,12 @@ public class AidlStep extends ShellStep {
 
     // The arguments passed to aidl are based off of what I observed when running Ant in verbose
     // mode.
-    AndroidPlatformTarget androidPlatformTarget = androidLegacyToolchain.getAndroidPlatformTarget();
     verifyImportPaths(filesystem, importDirectoryPaths);
+
+    AndroidPlatformTarget androidPlatformTarget =
+        toolchainProvider.getByName(
+            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+
     args.add(androidPlatformTarget.getAidlExecutable().toString());
 
     // For some reason, all of the flags to aidl do not permit a space between the flag name and

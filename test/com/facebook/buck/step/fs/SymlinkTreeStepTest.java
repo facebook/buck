@@ -56,6 +56,7 @@ public class SymlinkTreeStepTest {
 
     SymlinkTreeStep step =
         new SymlinkTreeStep(
+            "link_tree",
             projectFilesystem,
             root,
             ImmutableMap.of(

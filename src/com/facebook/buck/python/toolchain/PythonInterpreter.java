@@ -18,12 +18,9 @@ package com.facebook.buck.python.toolchain;
 
 import com.facebook.buck.toolchain.Toolchain;
 import java.nio.file.Path;
-import java.util.Optional;
 
 public interface PythonInterpreter extends Toolchain {
   String DEFAULT_NAME = "python-interpreter";
-
-  Path getPythonInterpreterPath(Optional<String> config);
 
   Path getPythonInterpreterPath(String section);
 

@@ -172,6 +172,17 @@ js_bundle_genrule(
     rewrite_sourcemap = True,
 )
 
+js_bundle_genrule(
+    name = "misc-genrule",
+    bash = """
+        set -e
+        echo "bundle" > "$OUT/bundle.txt"
+        echo "misc" > "$MISC_OUT/misc.txt"
+    """,
+    js_bundle = ":bundle-with-genrule-dep",
+    rewrite_misc = True,
+)
+
 js_library(
     name = "fruit_with_tests",
     srcs = [

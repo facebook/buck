@@ -43,6 +43,7 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 public class DLibraryDescription
@@ -151,6 +152,7 @@ public class DLibraryDescription
             buildTarget,
             cxxPlatform.getFlavor(),
             pic,
+            Optional.empty(),
             cxxPlatform.getStaticLibraryExtension(),
             cxxBuckConfig.isUniqueLibraryNameEnabled());
 

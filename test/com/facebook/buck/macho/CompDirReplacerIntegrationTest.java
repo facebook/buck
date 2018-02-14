@@ -32,8 +32,9 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
@@ -94,7 +95,7 @@ public class CompDirReplacerIntegrationTest {
     BuildTarget target =
         BuildTargetFactory.newInstance("//Apps/TestApp:TestApp")
             .withAppendedFlavors(platformFlavor);
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "build", "--config", "cxx.cflags=-g", target.getFullyQualifiedName());
     result.assertSuccess();

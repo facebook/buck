@@ -362,6 +362,7 @@ public final class CxxInferEnhancer {
     } else if (args instanceof CxxLibraryDescription.CommonArg) {
       preprocessorInputs =
           CxxLibraryDescription.getPreprocessorInputsForBuildingLibrarySources(
+              cxxBuckConfig,
               ruleResolver,
               cellRoots,
               target,

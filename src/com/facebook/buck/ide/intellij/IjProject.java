@@ -17,6 +17,7 @@
 package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.ide.intellij.aggregation.DefaultAggregationModuleFactory;
+import com.facebook.buck.ide.intellij.lang.android.AndroidManifestParser;
 import com.facebook.buck.ide.intellij.lang.java.ParsingJavaPackageFinder;
 import com.facebook.buck.ide.intellij.model.IjLibraryFactory;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
@@ -89,6 +90,7 @@ public class IjProject {
     SupportedTargetTypeRegistry typeRegistry =
         new SupportedTargetTypeRegistry(
             projectFilesystem, moduleFactoryResolver, projectConfig, javaPackageFinder);
+    AndroidManifestParser androidManifestParser = new AndroidManifestParser(projectFilesystem);
     IjModuleGraph moduleGraph =
         IjModuleGraphFactory.from(
             projectFilesystem,
@@ -105,7 +107,11 @@ public class IjProject {
             javaPackageFinder);
     IjProjectTemplateDataPreparer templateDataPreparer =
         new IjProjectTemplateDataPreparer(
-            parsingJavaPackageFinder, moduleGraph, projectFilesystem, projectConfig);
+            parsingJavaPackageFinder,
+            moduleGraph,
+            projectFilesystem,
+            projectConfig,
+            androidManifestParser);
     IjProjectWriter writer =
         new IjProjectWriter(templateDataPreparer, projectConfig, projectFilesystem);
 
@@ -114,7 +120,8 @@ public class IjProject {
     writer.write(cleaner);
 
     PregeneratedCodeWriter pregeneratedCodeWriter =
-        new PregeneratedCodeWriter(templateDataPreparer, projectConfig, projectFilesystem);
+        new PregeneratedCodeWriter(
+            templateDataPreparer, projectConfig, projectFilesystem, androidManifestParser);
     pregeneratedCodeWriter.write(cleaner);
 
     cleaner.clean(

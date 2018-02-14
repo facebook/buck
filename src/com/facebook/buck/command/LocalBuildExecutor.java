@@ -33,10 +33,11 @@ import com.facebook.buck.rules.CachingBuildEngine.BuildMode;
 import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.CachingBuildEngineDelegate;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.MetadataChecker;
 import com.facebook.buck.rules.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
@@ -68,7 +69,7 @@ public class LocalBuildExecutor implements BuildExecutor {
   private final WeightedListeningExecutorService executorService;
   private final CachingBuildEngineDelegate cachingBuildEngineDelegate;
   private final BuildExecutorArgs args;
-  private final Optional<RuleKeyCacheScope<RuleKey>> ruleKeyCacheScope;
+  private final RuleKeyCacheScope<RuleKey> ruleKeyCacheScope;
   private final RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter;
   private final Optional<CachingBuildEngine.BuildMode> buildEngineMode;
   private final Optional<ThriftRuleKeyLogger> ruleKeyLogger;
@@ -86,7 +87,8 @@ public class LocalBuildExecutor implements BuildExecutor {
       WeightedListeningExecutorService executorService,
       boolean keepGoing,
       boolean useDistributedBuildCache,
-      Optional<RuleKeyCacheScope<RuleKey>> ruleKeyRuleKeyCacheScope,
+      boolean isDownloadHeavyBuild,
+      RuleKeyCacheScope<RuleKey> ruleKeyRuleKeyCacheScope,
       Optional<BuildMode> buildEngineMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
@@ -106,7 +108,8 @@ public class LocalBuildExecutor implements BuildExecutor {
             actionGraphAndResolver.getResolver(),
             args.getRootCell(),
             cachingBuildEngine,
-            args.getArtifactCacheFactory().newInstance(useDistributedBuildCache),
+            args.getArtifactCacheFactory()
+                .newInstance(useDistributedBuildCache, isDownloadHeavyBuild),
             args.getBuckConfig().getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),
             args.getClock(),
             executionContext,
@@ -193,6 +196,8 @@ public class LocalBuildExecutor implements BuildExecutor {
 
     CachingBuildEngineBuckConfig engineConfig =
         args.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
+    SourcePathRuleFinder sourcePathRuleFinder =
+        new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
 
     return new CachingBuildEngine(
         cachingBuildEngineDelegate,
@@ -204,6 +209,8 @@ public class LocalBuildExecutor implements BuildExecutor {
         engineConfig.getBuildMaxDepFileCacheEntries(),
         engineConfig.getBuildArtifactCacheSizeLimit(),
         actionGraphAndResolver.getResolver(),
+        sourcePathRuleFinder,
+        DefaultSourcePathResolver.from(sourcePathRuleFinder),
         args.getBuildInfoStoreManager(),
         engineConfig.getResourceAwareSchedulingInfo(),
         engineConfig.getConsoleLogBuildRuleFailuresInline(),
@@ -212,7 +219,7 @@ public class LocalBuildExecutor implements BuildExecutor {
             cachingBuildEngineDelegate.getFileHashCache(),
             actionGraphAndResolver.getResolver(),
             args.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
-            ruleKeyCacheScope.map(RuleKeyCacheScope::getCache).orElse(new DefaultRuleKeyCache<>()),
+            ruleKeyCacheScope.getCache(),
             ruleKeyLogger),
         remoteBuildRuleCompletionWaiter);
   }

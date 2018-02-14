@@ -16,17 +16,15 @@
 
 package com.facebook.buck.zip.rules;
 
-import com.facebook.buck.event.EventDispatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
-import com.facebook.buck.rules.modern.InputDataRetriever;
-import com.facebook.buck.rules.modern.InputPath;
-import com.facebook.buck.rules.modern.InputPathResolver;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
@@ -38,15 +36,14 @@ import com.facebook.buck.zip.bundler.FileBundler;
 import com.facebook.buck.zip.bundler.SrcZipAwareFileBundler;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 
 public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildable {
-  private final String name;
-  private final ImmutableSortedSet<InputPath> sources;
-  private final OutputPath output;
-  private final boolean flatten;
-  private final boolean mergeSourceZips;
+  @AddToRuleKey private final String name;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> sources;
+  @AddToRuleKey private final OutputPath output;
+  @AddToRuleKey private final boolean flatten;
+  @AddToRuleKey private final boolean mergeSourceZips;
 
   public Zip(
       SourcePathRuleFinder ruleFinder,
@@ -59,11 +56,7 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
     super(buildTarget, projectFilesystem, ruleFinder, Zip.class);
 
     this.name = outputName;
-    this.sources =
-        sources
-            .stream()
-            .map(InputPath::new)
-            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+    this.sources = sources;
     this.output = new OutputPath(name);
     this.flatten = flatten;
     this.mergeSourceZips = mergeSourceZips;
@@ -71,21 +64,13 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      EventDispatcher eventDispatcher,
+      BuildContext buildContext,
       ProjectFilesystem filesystem,
-      InputPathResolver inputPathResolver,
-      InputDataRetriever inputDataRetriever,
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
     Path outputPath = outputPathResolver.resolvePath(this.output);
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-
-    ImmutableSortedSet<SourcePath> sourcePathSources =
-        sources
-            .stream()
-            .map(InputPath::getLimitedSourcePath)
-            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
 
     Path scratchDir = outputPathResolver.getTempPath();
 
@@ -100,8 +85,8 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
         buildCellPathFactory,
         steps,
         scratchDir,
-        sourcePathSources,
-        inputPathResolver.getLimitedSourcePathResolver());
+        sources,
+        buildContext.getSourcePathResolver());
 
     steps.add(
         new ZipStep(
@@ -109,7 +94,7 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
             outputPath,
             ImmutableSortedSet.of(),
             flatten,
-            ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
+            ZipCompressionLevel.DEFAULT,
             scratchDir));
 
     return steps.build();

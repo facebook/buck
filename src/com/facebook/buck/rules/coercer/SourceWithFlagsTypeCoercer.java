@@ -17,10 +17,10 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -51,9 +51,9 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<SourceWithFlags> 
   }
 
   @Override
-  public void traverse(SourceWithFlags object, Traversal traversal) {
-    sourcePathTypeCoercer.traverse(object.getSourcePath(), traversal);
-    flagsTypeCoercer.traverse(ImmutableList.copyOf(object.getFlags()), traversal);
+  public void traverse(CellPathResolver cellRoots, SourceWithFlags object, Traversal traversal) {
+    sourcePathTypeCoercer.traverse(cellRoots, object.getSourcePath(), traversal);
+    flagsTypeCoercer.traverse(cellRoots, ImmutableList.copyOf(object.getFlags()), traversal);
   }
 
   @Override

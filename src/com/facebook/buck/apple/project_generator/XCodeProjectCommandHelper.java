@@ -644,12 +644,13 @@ public class XCodeProjectCommandHelper {
     LOG.debug("Displaying prompt %s..", prompt);
     console.getStdOut().print(console.getAnsi().asWarningText(prompt + " [Y/n] "));
 
-    Optional<String> result;
-    try (InputStreamReader stdinReader = new InputStreamReader(System.in, Charsets.UTF_8);
-        BufferedReader bufferedStdinReader = new BufferedReader(stdinReader)) {
-      result = Optional.ofNullable(bufferedStdinReader.readLine());
-    }
-    LOG.debug("Result of prompt: [%s]", result);
+    // Do not close readers! Otherwise they close System.in in turn
+    // Another design may be to provide reader in the context, to use instead of System.in
+    BufferedReader bufferedStdinReader =
+        new BufferedReader(new InputStreamReader(System.in, Charsets.UTF_8));
+    Optional<String> result = Optional.ofNullable(bufferedStdinReader.readLine());
+
+    LOG.debug("Result of prompt: [%s]", result.orElse(""));
     return result.isPresent()
         && (result.get().isEmpty() || result.get().toLowerCase(Locale.US).startsWith("y"));
   }

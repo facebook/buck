@@ -1,0 +1,12 @@
+java_library(
+    name = "common",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/util/types:types",
+        "//third-party/java/guava:guava",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/android:",
+        "//src/com/facebook/buck/android/toolchain/...",
+    ],
+)

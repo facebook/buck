@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.json.HybridProjectBuildFileParser;
@@ -25,16 +26,15 @@ import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.decorators.EventReportingProjectBuildFileParser;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
-import com.facebook.buck.python.toolchain.PythonInterpreter;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.skylark.parser.ConsoleEventHandler;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.events.EventKind;
-import com.google.devtools.build.lib.events.PrintingEventHandler;
 import java.util.Optional;
 
 public class ProjectBuildFileParserFactory {
@@ -47,20 +47,50 @@ public class ProjectBuildFileParserFactory {
       TypeCoercerFactory typeCoercerFactory,
       Console console,
       BuckEventBus eventBus,
+      ExecutableFinder executableFinder,
       Iterable<Description<?>> descriptions) {
     return createBuildFileParser(
-        cell, typeCoercerFactory, console, eventBus, descriptions, /* enableProfiling */ false);
+        cell,
+        typeCoercerFactory,
+        console,
+        eventBus,
+        new ParserPythonInterpreterProvider(cell.getBuckConfig(), executableFinder),
+        descriptions, /* enableProfiling */
+        false);
   }
 
   /**
-   * Same as @{{@link #createBuildFileParser(Cell, TypeCoercerFactory, Console, BuckEventBus,
-   * Iterable)}} but provides a way to configure whether parse profiling should be enabled
+   * Callers are responsible for managing the life-cycle of the created {@link
+   * ProjectBuildFileParser}.
    */
   public static ProjectBuildFileParser createBuildFileParser(
       Cell cell,
       TypeCoercerFactory typeCoercerFactory,
       Console console,
       BuckEventBus eventBus,
+      ParserPythonInterpreterProvider pythonInterpreterProvider,
+      Iterable<Description<?>> descriptions) {
+    return createBuildFileParser(
+        cell,
+        typeCoercerFactory,
+        console,
+        eventBus,
+        pythonInterpreterProvider,
+        descriptions, /* enableProfiling */
+        false);
+  }
+
+  /**
+   * Same as @{{@link #createBuildFileParser(Cell, TypeCoercerFactory, Console, BuckEventBus,
+   * ParserPythonInterpreterProvider, Iterable)}} but provides a way to configure whether parse
+   * profiling should be enabled
+   */
+  static ProjectBuildFileParser createBuildFileParser(
+      Cell cell,
+      TypeCoercerFactory typeCoercerFactory,
+      Console console,
+      BuckEventBus eventBus,
+      ParserPythonInterpreterProvider pythonInterpreterProvider,
       Iterable<Description<?>> descriptions,
       boolean enableProfiling) {
 
@@ -73,11 +103,6 @@ public class ProjectBuildFileParserFactory {
         parserConfig.getWatchmanGlobSanityCheck() == ParserConfig.WatchmanGlobSanityCheck.STAT;
     boolean watchmanUseGlobGenerator =
         cell.getWatchman().getCapabilities().contains(WatchmanFactory.Capability.GLOB_GENERATOR);
-    PythonInterpreter pythonInterpreter =
-        cell.getToolchainProvider()
-            .getByName(PythonInterpreter.DEFAULT_NAME, PythonInterpreter.class);
-    String pythonInterpreterPath =
-        new ParserPythonInterpreterProvider(pythonInterpreter, parserConfig).getOrFail();
     Optional<String> pythonModuleSearchPath = parserConfig.getPythonModuleSearchPath();
 
     ProjectBuildFileParserOptions buildFileParserOptions =
@@ -86,8 +111,7 @@ public class ProjectBuildFileParserFactory {
             .setProjectRoot(cell.getFilesystem().getRootPath())
             .setCellRoots(cell.getCellPathResolver().getCellPaths())
             .setCellName(cell.getCanonicalName().orElse(""))
-            .setFreezeGlobals(parserConfig.getFreezeGlobals())
-            .setPythonInterpreter(pythonInterpreterPath)
+            .setPythonInterpreter(pythonInterpreterProvider.getOrFail())
             .setPythonModuleSearchPath(pythonModuleSearchPath)
             .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
             .setIgnorePaths(cell.getFilesystem().getIgnorePaths())
@@ -101,6 +125,8 @@ public class ProjectBuildFileParserFactory {
             .setWatchmanQueryTimeoutMs(parserConfig.getWatchmanQueryTimeoutMs())
             .setRawConfig(cell.getBuckConfig().getRawConfigForParser())
             .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
+            .setDisableImplicitNativeRules(parserConfig.getDisableImplicitNativeRules())
+            .setWarnAboutDeprecatedSyntax(parserConfig.isWarnAboutDeprecatedSyntax())
             .build();
     return EventReportingProjectBuildFileParser.of(
         createProjectBuildFileParser(
@@ -134,7 +160,7 @@ public class ProjectBuildFileParserFactory {
                   eventBus,
                   SkylarkFilesystem.using(cell.getFilesystem()),
                   typeCoercerFactory,
-                  new PrintingEventHandler(EventKind.ALL_EVENTS))),
+                  new ConsoleEventHandler(eventBus, EventKind.ALL_EVENTS))),
           parserConfig.getDefaultBuildFileSyntax());
     }
     return pythonDslProjectBuildFileParser;

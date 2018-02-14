@@ -17,11 +17,11 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.util.types.Either;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.TargetTranslatable;
 import com.google.common.collect.ImmutableList;
@@ -36,10 +36,10 @@ import org.immutables.value.Value;
 abstract class AbstractStringWithMacros implements TargetTranslatable<StringWithMacros> {
 
   // The components of the macro string.  Each part is either a plain string or a macro.
-  abstract ImmutableList<Either<String, Macro>> getParts();
+  abstract ImmutableList<Either<String, MacroContainer>> getParts();
 
   /** @return the list of all {@link Macro}s in the macro string. */
-  public ImmutableList<Macro> getMacros() {
+  public ImmutableList<MacroContainer> getMacros() {
     return RichStream.from(getParts())
         .filter(Either::isRight)
         .map(Either::getRight)
@@ -48,7 +48,7 @@ abstract class AbstractStringWithMacros implements TargetTranslatable<StringWith
 
   public <T> ImmutableList<T> map(
       Function<? super String, ? extends T> stringMapper,
-      Function<? super Macro, ? extends T> macroMapper) {
+      Function<? super MacroContainer, ? extends T> macroMapper) {
     return RichStream.from(getParts())
         .map(e -> e.isLeft() ? stringMapper.apply(e.getLeft()) : macroMapper.apply(e.getRight()))
         .toImmutableList();
@@ -58,7 +58,7 @@ abstract class AbstractStringWithMacros implements TargetTranslatable<StringWith
    * @return format the macro string into a {@link String}, using {@code mapper} to stringify the
    *     embedded {@link Macro}s.
    */
-  public String format(Function<? super Macro, ? extends CharSequence> mapper) {
+  public String format(Function<? super MacroContainer, ? extends CharSequence> mapper) {
     return map(s -> s, mapper).stream().collect(Collectors.joining());
   }
 
@@ -69,7 +69,11 @@ abstract class AbstractStringWithMacros implements TargetTranslatable<StringWith
   public StringWithMacros mapStrings(Function<String, String> mapper) {
     return StringWithMacros.of(
         RichStream.from(getParts())
-            .map(e -> e.isRight() ? e : Either.<String, Macro>ofLeft(mapper.apply(e.getLeft())))
+            .map(
+                e ->
+                    e.isRight()
+                        ? e
+                        : Either.<String, MacroContainer>ofLeft(mapper.apply(e.getLeft())))
             .toImmutableList());
   }
 
@@ -79,15 +83,15 @@ abstract class AbstractStringWithMacros implements TargetTranslatable<StringWith
       BuildTargetPatternParser<BuildTargetPattern> pattern,
       TargetNodeTranslator translator) {
     boolean modified = false;
-    ImmutableList.Builder<Either<String, Macro>> parts = ImmutableList.builder();
-    for (Either<String, Macro> part : getParts()) {
+    ImmutableList.Builder<Either<String, MacroContainer>> parts = ImmutableList.builder();
+    for (Either<String, MacroContainer> part : getParts()) {
       if (part.isLeft()) {
         parts.add(part);
       } else {
         Optional<Macro> translated =
-            translator.translate(cellPathResolver, pattern, part.getRight());
+            translator.translate(cellPathResolver, pattern, part.getRight().getMacro());
         if (translated.isPresent()) {
-          parts.add(Either.ofRight(translated.get()));
+          parts.add(Either.ofRight(part.getRight().withMacro(translated.get())));
           modified = true;
         } else {
           parts.add(part);

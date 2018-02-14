@@ -20,7 +20,6 @@
   linker_platform=windows
   ar=$LIB_EXE$
   archiver_platform=windows
-  ranlib=$LIB_EXE$
 
 [project]
   windows_symlinks=yes

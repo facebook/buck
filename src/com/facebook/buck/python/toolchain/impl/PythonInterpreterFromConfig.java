@@ -43,11 +43,6 @@ public class PythonInterpreterFromConfig implements PythonInterpreter {
   }
 
   @Override
-  public Path getPythonInterpreterPath(Optional<String> config) {
-    return getPythonInterpreter(config);
-  }
-
-  @Override
   public Path getPythonInterpreterPath(String section) {
     return getPythonInterpreter(section);
   }
@@ -77,18 +72,15 @@ public class PythonInterpreterFromConfig implements PythonInterpreter {
    *
    * @return The found python interpreter.
    */
-  private Path getPythonInterpreter(Optional<String> config) {
-    if (!config.isPresent()) {
+  private Path getPythonInterpreter(String section) {
+    Optional<String> pathToInterpreter = pythonBuckConfig.getInterpreter(section);
+    if (!pathToInterpreter.isPresent()) {
       return findInterpreter(PYTHON_INTERPRETER_NAMES);
     }
-    Path configPath = Paths.get(config.get());
+    Path configPath = Paths.get(pathToInterpreter.get());
     if (!configPath.isAbsolute()) {
-      return findInterpreter(ImmutableList.of(config.get()));
+      return findInterpreter(ImmutableList.of(pathToInterpreter.get()));
     }
     return configPath;
-  }
-
-  private Path getPythonInterpreter(String section) {
-    return getPythonInterpreter(pythonBuckConfig.getInterpreter(section));
   }
 }

@@ -19,7 +19,6 @@ package com.facebook.buck.rules.modern.impl;
 import static org.easymock.EasyMock.createStrictMock;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -32,9 +31,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.modern.InputPath;
 import com.facebook.buck.rules.modern.InputRuleResolver;
-import com.facebook.buck.rules.modern.OutputData;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Throwables;
@@ -63,9 +60,6 @@ public class FieldTypeInfosTest {
   @SuppressWarnings("unchecked")
   private BiConsumer<String, OutputPath> outputConsumer = createStrictMock(BiConsumer.class);
 
-  @SuppressWarnings("unchecked")
-  private BiConsumer<String, OutputData> outputDataConsumer = createStrictMock(BiConsumer.class);
-
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
   @Test
@@ -74,12 +68,10 @@ public class FieldTypeInfosTest {
         FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<Integer>() {});
 
     int value = 1;
-    replay(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
     typeInfo.extractOutput("", value, outputConsumer);
-    typeInfo.extractOutputData("", value, outputDataConsumer);
-    assertEquals(value, typeInfo.extractRuleKeyObject(value));
-    verify(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    verify(inputRuleResolver, buildRuleConsumer, outputConsumer);
   }
 
   @Test
@@ -88,47 +80,15 @@ public class FieldTypeInfosTest {
         FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<String>() {});
 
     String value = "hello";
-    replay(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
     typeInfo.extractOutput("", value, outputConsumer);
-    typeInfo.extractOutputData("", value, outputDataConsumer);
-    assertEquals(value, typeInfo.extractRuleKeyObject(value));
-    verify(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    verify(inputRuleResolver, buildRuleConsumer, outputConsumer);
   }
 
   @Test(expected = RuntimeException.class)
   public void testPath() {
     FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<Path>() {});
-  }
-
-  @Test
-  public void testSourcePath() {
-    try {
-      FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<SourcePath>() {});
-      fail();
-    } catch (Exception e) {
-      assertThat(
-          Throwables.getCausalChain(e)
-              .stream()
-              .map(Throwable::toString)
-              .collect(Collectors.toList()),
-          Matchers.hasItem(Matchers.stringContainsInOrder("Use InputPath or OutputPath")));
-    }
-  }
-
-  @Test
-  public void testBuildTargetSourcePath() {
-    try {
-      FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<BuildTargetSourcePath>() {});
-      fail();
-    } catch (Exception e) {
-      assertThat(
-          Throwables.getCausalChain(e)
-              .stream()
-              .map(Throwable::toString)
-              .collect(Collectors.toList()),
-          Matchers.hasItem(Matchers.stringContainsInOrder("Use InputPath or OutputPath")));
-    }
   }
 
   @Test(expected = RuntimeException.class)
@@ -172,104 +132,88 @@ public class FieldTypeInfosTest {
   }
 
   @Test
-  public void testPathInputPath() {
-    FieldTypeInfo<InputPath> typeInfo =
-        FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<InputPath>() {});
+  public void testPathSourcePath() {
+    FieldTypeInfo<SourcePath> typeInfo =
+        FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<SourcePath>() {});
 
     PathSourcePath sourcePath = FakeSourcePath.of(filesystem, "path");
-    InputPath value = new InputPath(sourcePath);
-    EasyMock.expect(inputRuleResolver.resolve(value)).andReturn(Optional.empty());
+    EasyMock.expect(inputRuleResolver.resolve(sourcePath)).andReturn(Optional.empty());
 
-    replay(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
-    typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
-    typeInfo.extractOutput("", value, outputConsumer);
-    typeInfo.extractOutputData("", value, outputDataConsumer);
-    assertEquals(sourcePath, typeInfo.extractRuleKeyObject(value));
-    verify(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
+    typeInfo.extractDep(sourcePath, inputRuleResolver, buildRuleConsumer);
+    typeInfo.extractOutput("", sourcePath, outputConsumer);
+    verify(inputRuleResolver, buildRuleConsumer, outputConsumer);
   }
 
   @Test
-  public void testBuildTargetInputPath() {
-    FieldTypeInfo<InputPath> typeInfo =
-        FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<InputPath>() {});
+  public void testBuildTargetSourcePath() {
+    FieldTypeInfo<SourcePath> typeInfo =
+        FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<SourcePath>() {});
 
     BuildTarget target = BuildTarget.of(Paths.get("some"), "//some", "name");
     BuildRule rule = new FakeBuildRule(target, ImmutableSortedSet.of());
     BuildTargetSourcePath sourcePath = ExplicitBuildTargetSourcePath.of(target, Paths.get("path"));
 
-    InputPath value = new InputPath(sourcePath);
-    EasyMock.expect(inputRuleResolver.resolve(value)).andReturn(Optional.of(rule));
+    EasyMock.expect(inputRuleResolver.resolve(sourcePath)).andReturn(Optional.of(rule));
     buildRuleConsumer.accept(rule);
 
-    replay(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
-    typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
-    typeInfo.extractOutput("", value, outputConsumer);
-    typeInfo.extractOutputData("", value, outputDataConsumer);
-    assertEquals(sourcePath, typeInfo.extractRuleKeyObject(value));
-    verify(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
+    typeInfo.extractDep(sourcePath, inputRuleResolver, buildRuleConsumer);
+    typeInfo.extractOutput("", sourcePath, outputConsumer);
+    verify(inputRuleResolver, buildRuleConsumer, outputConsumer);
   }
 
   @Test
   public void testOptional() {
-    FieldTypeInfo<Optional<InputPath>> typeInfo =
-        FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<Optional<InputPath>>() {});
+    FieldTypeInfo<Optional<SourcePath>> typeInfo =
+        FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<Optional<SourcePath>>() {});
 
     BuildTarget target = BuildTarget.of(Paths.get("some"), "//some", "name");
     BuildRule rule = new FakeBuildRule(target, ImmutableSortedSet.of());
     BuildTargetSourcePath sourcePath = ExplicitBuildTargetSourcePath.of(target, Paths.get("path"));
 
-    InputPath inputPath = new InputPath(sourcePath);
-    Optional<InputPath> value = Optional.of(inputPath);
-    EasyMock.expect(inputRuleResolver.resolve(inputPath)).andReturn(Optional.of(rule));
+    Optional<SourcePath> value = Optional.of(sourcePath);
+    EasyMock.expect(inputRuleResolver.resolve(sourcePath)).andReturn(Optional.of(rule));
     buildRuleConsumer.accept(rule);
 
-    replay(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
     typeInfo.extractOutput("", value, outputConsumer);
-    typeInfo.extractOutputData("", value, outputDataConsumer);
-    assertEquals(Optional.of(sourcePath), typeInfo.extractRuleKeyObject(value));
-    verify(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    verify(inputRuleResolver, buildRuleConsumer, outputConsumer);
   }
 
   @Test
   public void testEmptyOptional() {
-    FieldTypeInfo<Optional<InputPath>> typeInfo =
-        FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<Optional<InputPath>>() {});
+    FieldTypeInfo<Optional<SourcePath>> typeInfo =
+        FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<Optional<SourcePath>>() {});
 
-    Optional<InputPath> value = Optional.empty();
-    replay(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    Optional<SourcePath> value = Optional.empty();
+    replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
     typeInfo.extractOutput("", value, outputConsumer);
-    typeInfo.extractOutputData("", value, outputDataConsumer);
-    assertEquals(Optional.empty(), typeInfo.extractRuleKeyObject(value));
-    verify(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    verify(inputRuleResolver, buildRuleConsumer, outputConsumer);
   }
 
   @Test
   public void testImmutableList() {
-    FieldTypeInfo<ImmutableList<InputPath>> typeInfo =
-        FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<ImmutableList<InputPath>>() {});
+    FieldTypeInfo<ImmutableList<SourcePath>> typeInfo =
+        FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<ImmutableList<SourcePath>>() {});
 
     BuildTarget target = BuildTarget.of(Paths.get("some"), "//some", "name");
     BuildRule rule = new FakeBuildRule(target, ImmutableSortedSet.of());
     BuildTargetSourcePath targetSourcePath =
         ExplicitBuildTargetSourcePath.of(target, Paths.get("path"));
-    InputPath targetInputPath = new InputPath(targetSourcePath);
 
     PathSourcePath pathSourcePath = FakeSourcePath.of(filesystem, "path");
-    InputPath pathInputPath = new InputPath(pathSourcePath);
-    ImmutableList<InputPath> value = ImmutableList.of(targetInputPath, pathInputPath);
+    ImmutableList<SourcePath> value = ImmutableList.of(targetSourcePath, pathSourcePath);
 
-    EasyMock.expect(inputRuleResolver.resolve(targetInputPath)).andReturn(Optional.of(rule));
-    EasyMock.expect(inputRuleResolver.resolve(pathInputPath)).andReturn(Optional.empty());
+    EasyMock.expect(inputRuleResolver.resolve(targetSourcePath)).andReturn(Optional.of(rule));
+    EasyMock.expect(inputRuleResolver.resolve(pathSourcePath)).andReturn(Optional.empty());
     buildRuleConsumer.accept(rule);
 
-    replay(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
     typeInfo.extractOutput("", value, outputConsumer);
-    typeInfo.extractOutputData("", value, outputDataConsumer);
-    assertEquals(
-        ImmutableList.of(targetSourcePath, pathSourcePath), typeInfo.extractRuleKeyObject(value));
-    verify(inputRuleResolver, buildRuleConsumer, outputConsumer, outputDataConsumer);
+    verify(inputRuleResolver, buildRuleConsumer, outputConsumer);
   }
 }

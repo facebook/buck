@@ -19,8 +19,8 @@ package com.facebook.buck.file;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.DescriptionCreationContext;
 import com.facebook.buck.rules.DescriptionProvider;
+import com.google.common.collect.ImmutableList;
 import java.util.Collection;
-import java.util.Collections;
 import org.pf4j.Extension;
 
 @Extension
@@ -28,6 +28,9 @@ public class FileDescriptionsProvider implements DescriptionProvider {
 
   @Override
   public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
-    return Collections.singletonList(new RemoteFileDescription(context.getToolchainProvider()));
+    return ImmutableList.of(
+        new HttpArchiveDescription(context.getToolchainProvider()),
+        new HttpFileDescription(context.getToolchainProvider()),
+        new RemoteFileDescription(context.getToolchainProvider()));
   }
 }

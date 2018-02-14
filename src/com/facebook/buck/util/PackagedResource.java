@@ -16,11 +16,11 @@
 
 package com.facebook.buck.util;
 
-import static com.facebook.buck.util.zip.Unzip.ExistingFileMode.OVERWRITE;
+import static com.facebook.buck.util.unarchive.ExistingFileMode.OVERWRITE;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.zip.Unzip;
+import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Resources;
@@ -31,6 +31,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -108,7 +109,9 @@ public class PackagedResource implements Supplier<Path> {
         Path zip = Files.createTempFile(filename.toString(), ".zip");
         // Ensure we tidy up
         Files.copy(stream, zip, REPLACE_EXISTING);
-        Unzip.extractZipFile(zip, filesystem, outputPath, OVERWRITE);
+        ArchiveFormat.ZIP
+            .getUnarchiver()
+            .extractArchive(zip, filesystem, outputPath, Optional.empty(), OVERWRITE);
         Files.delete(zip);
       } else {
         filesystem.createParentDirs(outputPath);

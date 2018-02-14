@@ -16,8 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.util.zip.ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL;
-
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
@@ -114,7 +112,7 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
               output,
               ImmutableSet.<Path>of(),
               /* junk paths */ false,
-              ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
+              ZipCompressionLevel.NONE,
               output));
       return steps.build();
     }
@@ -187,7 +185,7 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
             output,
             ImmutableSet.of(),
             /* junk paths */ false,
-            DEFAULT_COMPRESSION_LEVEL,
+            ZipCompressionLevel.DEFAULT,
             uncompressedOutputDir));
 
     return steps.build();

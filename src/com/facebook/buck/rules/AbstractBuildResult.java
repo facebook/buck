@@ -47,10 +47,6 @@ abstract class AbstractBuildResult {
 
   abstract Optional<Throwable> getFailureOptional();
 
-  abstract Optional<ManifestFetchResult> getManifestFetchResult();
-
-  abstract Optional<ManifestStoreResult> getManifestStoreResult();
-
   abstract Optional<Set<String>> getDepsWithCacheMisses();
 
   @Value.Check

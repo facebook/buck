@@ -24,8 +24,9 @@ import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import org.junit.Rule;
@@ -42,8 +43,7 @@ public class SwiftOSXBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "helloworld", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult runResult =
-        workspace.runBuckCommand("run", ":hello-bin#macosx-x86_64");
+    ProcessResult runResult = workspace.runBuckCommand("run", ":hello-bin#macosx-x86_64");
     runResult.assertSuccess();
     assertThat(runResult.getStdout(), equalTo("Hello, \uD83C\uDF0E!\n"));
   }
@@ -55,15 +55,13 @@ public class SwiftOSXBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "helloworld", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult runResult =
-        workspace.runBuckCommand("run", ":hello-bin#macosx-x86_64");
+    ProcessResult runResult = workspace.runBuckCommand("run", ":hello-bin#macosx-x86_64");
     runResult.assertSuccess();
     assertThat(runResult.getStdout(), equalTo("Hello, \uD83C\uDF0E!\n"));
 
     workspace.replaceFileContents("main.swift", "Hello", "Goodbye");
 
-    ProjectWorkspace.ProcessResult secondRunResult =
-        workspace.runBuckCommand("run", ":hello-bin#macosx-x86_64");
+    ProcessResult secondRunResult = workspace.runBuckCommand("run", ":hello-bin#macosx-x86_64");
     secondRunResult.assertSuccess();
     assertThat(secondRunResult.getStdout(), equalTo("Goodbye, \uD83C\uDF0E!\n"));
   }
@@ -76,8 +74,7 @@ public class SwiftOSXBinaryIntegrationTest {
     workspace.setUp();
     workspace.addBuckConfigLocalOption("swift", "version", "2.3");
 
-    ProjectWorkspace.ProcessResult runResult =
-        workspace.runBuckCommand("run", ":DemoMix#macosx-x86_64");
+    ProcessResult runResult = workspace.runBuckCommand("run", ":DemoMix#macosx-x86_64");
     runResult.assertSuccess();
     assertThat(runResult.getStdout(), equalTo("Hello Swift\n"));
   }
@@ -89,8 +86,7 @@ public class SwiftOSXBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "swift_calls_objc", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult runResult =
-        workspace.runBuckCommand("run", ":SwiftCallsObjC#macosx-x86_64");
+    ProcessResult runResult = workspace.runBuckCommand("run", ":SwiftCallsObjC#macosx-x86_64");
     runResult.assertSuccess();
     assertThat(runResult.getStdout(), containsString("Hello ObjC\n"));
   }

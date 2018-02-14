@@ -21,6 +21,8 @@ import com.android.tools.r8.CompilationMode;
 import com.android.tools.r8.D8Command;
 import com.android.tools.r8.Diagnostic;
 import com.android.tools.r8.DiagnosticsHandler;
+import com.android.tools.r8.OutputMode;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -79,7 +81,7 @@ public class DxStep extends ShellStep {
   public static final String D8 = "d8";
 
   private final ProjectFilesystem filesystem;
-  private final AndroidLegacyToolchain androidLegacyToolchain;
+  private final AndroidPlatformTarget androidPlatformTarget;
   private final Path outputDexFile;
   private final Set<Path> filesToDex;
   private final Set<Option> options;
@@ -97,13 +99,13 @@ public class DxStep extends ShellStep {
   public DxStep(
       BuildTarget target,
       ProjectFilesystem filesystem,
-      AndroidLegacyToolchain androidLegacyToolchain,
+      AndroidPlatformTarget androidPlatformTarget,
       Path outputDexFile,
       Iterable<Path> filesToDex) {
     this(
         target,
         filesystem,
-        androidLegacyToolchain,
+        androidPlatformTarget,
         outputDexFile,
         filesToDex,
         EnumSet.noneOf(DxStep.Option.class),
@@ -120,7 +122,7 @@ public class DxStep extends ShellStep {
   public DxStep(
       BuildTarget target,
       ProjectFilesystem filesystem,
-      AndroidLegacyToolchain androidLegacyToolchain,
+      AndroidPlatformTarget androidPlatformTarget,
       Path outputDexFile,
       Iterable<Path> filesToDex,
       EnumSet<Option> options,
@@ -128,7 +130,7 @@ public class DxStep extends ShellStep {
     this(
         target,
         filesystem,
-        androidLegacyToolchain,
+        androidPlatformTarget,
         outputDexFile,
         filesToDex,
         options,
@@ -148,7 +150,7 @@ public class DxStep extends ShellStep {
   public DxStep(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
-      AndroidLegacyToolchain androidLegacyToolchain,
+      AndroidPlatformTarget androidPlatformTarget,
       Path outputDexFile,
       Iterable<Path> filesToDex,
       EnumSet<Option> options,
@@ -157,7 +159,7 @@ public class DxStep extends ShellStep {
       boolean intermediate) {
     super(Optional.of(buildTarget), filesystem.getRootPath());
     this.filesystem = filesystem;
-    this.androidLegacyToolchain = androidLegacyToolchain;
+    this.androidPlatformTarget = androidPlatformTarget;
     this.outputDexFile = filesystem.resolve(outputDexFile);
     this.filesToDex = ImmutableSet.copyOf(filesToDex);
     this.options = Sets.immutableEnumSet(options);
@@ -178,7 +180,6 @@ public class DxStep extends ShellStep {
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    AndroidPlatformTarget androidPlatformTarget = androidLegacyToolchain.getAndroidPlatformTarget();
     String dx = androidPlatformTarget.getDxExecutable().toString();
 
     if (options.contains(Option.USE_CUSTOM_DX_IF_AVAILABLE)) {
@@ -262,11 +263,12 @@ public class DxStep extends ShellStep {
             D8Command.builder(diagnosticsHandler)
                 .addProgramFiles(inputs)
                 .setIntermediate(intermediate)
+                .addLibraryFiles(androidPlatformTarget.getAndroidJar())
                 .setMode(
                     options.contains(Option.NO_OPTIMIZE)
                         ? CompilationMode.DEBUG
                         : CompilationMode.RELEASE)
-                .setOutputPath(output);
+                .setOutput(output, OutputMode.DexIndexed);
         D8Command d8Command = builder.build();
         com.android.tools.r8.D8.run(d8Command);
 

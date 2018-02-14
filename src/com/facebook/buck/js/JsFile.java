@@ -29,7 +29,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.macros.StringWithMacrosArg;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.RmStep;
@@ -43,7 +43,7 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @AddToRuleKey private final Optional<String> extraArgs;
 
-  @AddToRuleKey private final Optional<StringWithMacrosArg> extraJson;
+  @AddToRuleKey private final Optional<Arg> extraJson;
 
   @AddToRuleKey private final WorkerTool worker;
 
@@ -51,7 +51,7 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      Optional<StringWithMacrosArg> extraJson,
+      Optional<Arg> extraJson,
       Optional<String> extraArgs,
       WorkerTool worker) {
     super(buildTarget, projectFilesystem, params);
@@ -67,7 +67,7 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.jsfile"));
   }
 
-  public Optional<StringWithMacrosArg> getExtraJson() {
+  public Optional<Arg> getExtraJson() {
     return extraJson;
   }
 
@@ -107,7 +107,7 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         SourcePath src,
         Optional<String> subPath,
         Optional<Path> virtualPath,
-        Optional<StringWithMacrosArg> extraJson,
+        Optional<Arg> extraJson,
         Optional<String> extraArgs,
         WorkerTool worker) {
       super(buildTarget, projectFilesystem, params, extraJson, extraArgs, worker);
@@ -137,7 +137,7 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                       () ->
                           MorePaths.pathWithUnixSeparators(
                               sourcePathResolver.getRelativePath(src))))
-              .addRaw("extraData", getExtraJson().map(JsUtil::expandJsonWithMacros))
+              .addRaw("extraData", getExtraJson().map(a -> Arg.stringify(a, sourcePathResolver)))
               .addString("extraArgs", getExtraArgs())
               .toString();
 
@@ -164,7 +164,7 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         ProjectFilesystem projectFilesystem,
         BuildRuleParams buildRuleParams,
         SourcePath devFile,
-        Optional<StringWithMacrosArg> extraJson,
+        Optional<Arg> extraJson,
         Optional<String> extraArgs,
         WorkerTool worker) {
       super(buildTarget, projectFilesystem, buildRuleParams, extraJson, extraArgs, worker);
@@ -185,7 +185,7 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
               .addString("platform", JsUtil.getPlatformString(getBuildTarget().getFlavors()))
               .addString(
                   "transformedJsFilePath", sourcePathResolver.getAbsolutePath(devFile).toString())
-              .addRaw("extraData", getExtraJson().map(JsUtil::expandJsonWithMacros))
+              .addRaw("extraData", getExtraJson().map(a -> Arg.stringify(a, sourcePathResolver)))
               .addString("extraArgs", getExtraArgs())
               .toString();
 

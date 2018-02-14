@@ -160,7 +160,7 @@ public class FakeAppleRuleDescriptions {
       };
 
   public static final AppleCxxPlatform DEFAULT_IPHONEOS_I386_PLATFORM =
-      AppleCxxPlatforms.buildWithExecutableChecker(
+      AppleCxxPlatforms.buildWithXcodeToolFinder(
           FAKE_PROJECT_FILESYSTEM,
           DEFAULT_IPHONEOS_SDK,
           "8.0",
@@ -172,7 +172,7 @@ public class FakeAppleRuleDescriptions {
           Optional.empty());
 
   public static final AppleCxxPlatform DEFAULT_IPHONEOS_X86_64_PLATFORM =
-      AppleCxxPlatforms.buildWithExecutableChecker(
+      AppleCxxPlatforms.buildWithXcodeToolFinder(
           FAKE_PROJECT_FILESYSTEM,
           DEFAULT_IPHONEOS_SDK,
           "8.0",
@@ -184,7 +184,7 @@ public class FakeAppleRuleDescriptions {
           Optional.empty());
 
   public static final AppleCxxPlatform DEFAULT_MACOSX_X86_64_PLATFORM =
-      AppleCxxPlatforms.buildWithExecutableChecker(
+      AppleCxxPlatforms.buildWithXcodeToolFinder(
           FAKE_PROJECT_FILESYSTEM,
           DEFAULT_MACOSX_SDK,
           "8.0",

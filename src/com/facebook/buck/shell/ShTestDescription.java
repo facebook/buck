@@ -40,7 +40,7 @@ import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.rules.macros.StringWithMacrosArg;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.FluentIterable;
@@ -51,7 +51,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
 
@@ -85,17 +84,15 @@ public class ShTestDescription implements Description<ShTestDescriptionArg> {
       CellPathResolver cellRoots,
       ShTestDescriptionArg args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    Function<StringWithMacros, Arg> toArg =
-        arg ->
-            StringWithMacrosArg.of(
-                arg, MACRO_EXPANDERS, Optional.empty(), buildTarget, cellRoots, resolver);
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.of(buildTarget, cellRoots, resolver, MACRO_EXPANDERS);
     ImmutableList<Arg> testArgs =
         Stream.concat(
                 Optionals.toStream(args.getTest()).map(SourcePathArg::of),
-                args.getArgs().stream().map(toArg))
+                args.getArgs().stream().map(macrosConverter::convert))
             .collect(ImmutableList.toImmutableList());
     ImmutableMap<String, Arg> testEnv =
-        ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), toArg::apply));
+        ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert));
     return new ShTest(
         buildTarget,
         projectFilesystem,

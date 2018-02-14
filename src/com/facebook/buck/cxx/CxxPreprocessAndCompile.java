@@ -24,10 +24,10 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
@@ -50,11 +50,14 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.SortedSet;
 import java.util.function.Predicate;
 
 /** A build rule which preprocesses and/or compiles a C/C++ source in a single step. */
-public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps
+public class CxxPreprocessAndCompile extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, SupportsDependencyFileRuleKey {
+
+  private final ImmutableSortedSet<BuildRule> buildDeps;
 
   /** The presence or absence of this field denotes whether the input needs to be preprocessed. */
   @AddToRuleKey private final Optional<PreprocessorDelegate> preprocessDelegate;
@@ -73,7 +76,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
   private CxxPreprocessAndCompile(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      ImmutableSortedSet<BuildRule> buildDeps,
       Optional<PreprocessorDelegate> preprocessDelegate,
       CompilerDelegate compilerDelegate,
       Path output,
@@ -82,7 +85,8 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
       Optional<CxxPrecompiledHeader> precompiledHeaderRule,
       DebugPathSanitizer sanitizer,
       Optional<SymlinkTree> sandboxTree) {
-    super(buildTarget, projectFilesystem, params);
+    super(buildTarget, projectFilesystem);
+    this.buildDeps = buildDeps;
     this.sandboxTree = sandboxTree;
     if (precompiledHeaderRule.isPresent()) {
       Preconditions.checkState(
@@ -111,7 +115,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
   public static CxxPreprocessAndCompile compile(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      ImmutableSortedSet<BuildRule> buildDeps,
       CompilerDelegate compilerDelegate,
       Path output,
       SourcePath input,
@@ -121,7 +125,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
     return new CxxPreprocessAndCompile(
         buildTarget,
         projectFilesystem,
-        params,
+        buildDeps,
         Optional.empty(),
         compilerDelegate,
         output,
@@ -138,7 +142,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
   public static CxxPreprocessAndCompile preprocessAndCompile(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      ImmutableSortedSet<BuildRule> buildDeps,
       PreprocessorDelegate preprocessorDelegate,
       CompilerDelegate compilerDelegate,
       Path output,
@@ -150,7 +154,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
     return new CxxPreprocessAndCompile(
         buildTarget,
         projectFilesystem,
-        params,
+        buildDeps,
         Optional.of(preprocessorDelegate),
         compilerDelegate,
         output,
@@ -246,6 +250,15 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
+    preprocessDelegate.ifPresent(
+        delegate -> {
+          try {
+            CxxHeaders.checkConflictingHeaders(delegate.getCxxIncludePaths().getIPaths());
+          } catch (CxxHeaders.ConflictingHeadersException e) {
+            throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
+          }
+        });
+
     buildableContext.recordArtifact(output);
 
     for (String flag :
@@ -277,7 +290,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
   private static boolean hasGcno(Path output) {
     return !MorePaths.getNameWithoutExtension(output).endsWith(".S");
   }
-    
+
   @VisibleForTesting
   static Path getGcnoPath(Path output) {
     String basename = MorePaths.getNameWithoutExtension(output);
@@ -382,5 +395,10 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
     inputs.add(getOriginalInput(context.getSourcePathResolver()));
 
     return inputs.build();
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDeps;
   }
 }

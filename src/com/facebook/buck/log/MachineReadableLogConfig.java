@@ -23,7 +23,6 @@ public final class MachineReadableLogConfig {
   public static final String PREFIX_INVOCATION_INFO = "InvocationInfo";
   public static final String PREFIX_EXIT_CODE = "ExitCode";
   public static final String PREFIX_CACHE_STATS = "Cache.Stats";
-  public static final String PREFIX_PERFTIMES_UPDATE = "PertTimesStats.Update";
-  public static final String PREFIX_PERFTIMES_COMPLETE = "PertTimesStats.Complete";
+  public static final String PREFIX_PERFTIMES = "PertTimesStats";
   public static final String PREFIX_BUILD_RULE_FINISHED = "BuildRuleEvent.Finished";
 }

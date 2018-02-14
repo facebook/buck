@@ -16,12 +16,9 @@
 
 package com.facebook.buck.android;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -52,6 +49,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import org.junit.Test;
 
@@ -69,11 +67,21 @@ public class GenAidlTest {
     final String pathToAidlExecutable = Paths.get("/usr/local/bin/aidl").toString();
     final String pathToFrameworkAidl =
         Paths.get("/home/root/android/platforms/android-16/framework.aidl").toString();
-    final AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
-    expect(androidPlatformTarget.getAidlExecutable()).andReturn(Paths.get(pathToAidlExecutable));
-    expect(androidPlatformTarget.getAndroidFrameworkIdlFile())
-        .andReturn(Paths.get(pathToFrameworkAidl));
-    replay(androidPlatformTarget);
+    final AndroidPlatformTarget androidPlatformTarget =
+        AndroidPlatformTarget.of(
+            "android",
+            Paths.get(""),
+            Collections.emptyList(),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(pathToAidlExecutable),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(pathToFrameworkAidl),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""));
 
     BuildTarget target =
         BuildTargetFactory.newInstance(
@@ -88,7 +96,9 @@ public class GenAidlTest {
         new GenAidl(
             target,
             stubFilesystem,
-            TestAndroidLegacyToolchainFactory.create(androidPlatformTarget),
+            new ToolchainProviderBuilder()
+                .withToolchain(AndroidPlatformTarget.DEFAULT_NAME, androidPlatformTarget)
+                .build(),
             params,
             pathToAidl,
             importPath);
@@ -130,7 +140,5 @@ public class GenAidlTest {
         aidlStep.getDescription(TestExecutionContext.newBuilder().build()));
 
     assertEquals(7, steps.size());
-
-    verify(androidPlatformTarget);
   }
 }

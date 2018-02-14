@@ -224,7 +224,7 @@ public class MacroFinderAutomaton extends UnmodifiableIterator<MacroMatchResult>
       case READING_ARGS:
         switch (c) {
           case ' ':
-            currentResultBuilder.addMacroInput(takeBuffer().trim());
+            currentResultBuilder.addMacroInput(takeBuffer());
             return State.READING_ARGS;
           case '\\':
             returnState = State.READING_ARGS;
@@ -232,7 +232,6 @@ public class MacroFinderAutomaton extends UnmodifiableIterator<MacroMatchResult>
           case '\'':
           case '"':
             startQuote = c;
-            buffer.append(c);
             return State.READING_QUOTED_ARGS;
           case '(':
             parenthesesDepth += 1;
@@ -241,7 +240,7 @@ public class MacroFinderAutomaton extends UnmodifiableIterator<MacroMatchResult>
           case ')':
             parenthesesDepth -= 1;
             if (parenthesesDepth == 0) {
-              currentResultBuilder.addMacroInput(takeBuffer().trim()).setEndIndex(index + 1);
+              currentResultBuilder.addMacroInput(takeBuffer()).setEndIndex(index + 1);
               return State.FOUND_MACRO;
             } else {
               buffer.append(c);
@@ -258,11 +257,11 @@ public class MacroFinderAutomaton extends UnmodifiableIterator<MacroMatchResult>
             return State.IN_ESCAPE_ARG_SEQUENCE;
           case '"':
           case '\'':
-            buffer.append(c);
             if (c == startQuote) {
               startQuote = '\0';
               return State.READING_ARGS;
             } else {
+              buffer.append(c);
               return State.READING_QUOTED_ARGS;
             }
           default:

@@ -24,8 +24,9 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.maven.TestPublisher;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.FluentIterable;
@@ -59,7 +60,7 @@ public class PublishCommandIntegrationTest {
 
   @Test
   public void testDependenciesTriggerPomGeneration() throws IOException {
-    ProjectWorkspace.ProcessResult result = runValidBuckPublish("publish_fatjar");
+    ProcessResult result = runValidBuckPublish("publish_fatjar");
     result.assertSuccess();
     List<String> putRequestsPaths = publisher.getPutRequestsHandler().getPutRequestsPaths();
     assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + POM));
@@ -68,18 +69,16 @@ public class PublishCommandIntegrationTest {
 
   @Test
   public void testBasicCase() throws IOException {
-    ProjectWorkspace.ProcessResult result = runValidBuckPublish("publish");
+    ProcessResult result = runValidBuckPublish("publish");
     result.assertSuccess();
   }
 
-  private ProjectWorkspace.ProcessResult runValidBuckPublish(String workspaceName)
-      throws IOException {
+  private ProcessResult runValidBuckPublish(String workspaceName) throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, workspaceName, tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
-        runBuckPublish(workspace, PublishCommand.INCLUDE_SOURCE_LONG_ARG);
+    ProcessResult result = runBuckPublish(workspace, PublishCommand.INCLUDE_SOURCE_LONG_ARG);
     result.assertSuccess();
     List<String> putRequestsPaths = publisher.getPutRequestsHandler().getPutRequestsPaths();
     assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + JAR));
@@ -95,7 +94,7 @@ public class PublishCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "publish", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("publish", "//:foo");
+    ProcessResult result = workspace.runBuckCommand("publish", "//:foo");
     result.assertExitCode("url is required", ExitCode.COMMANDLINE_ERROR);
     assertTrue(result.getStderr().contains(PublishCommand.REMOTE_REPO_LONG_ARG));
   }
@@ -106,7 +105,7 @@ public class PublishCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "publish", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         runBuckPublish(
             workspace, PublishCommand.INCLUDE_SOURCE_LONG_ARG, PublishCommand.DRY_RUN_LONG_ARG);
     result.assertSuccess();
@@ -122,8 +121,8 @@ public class PublishCommandIntegrationTest {
     assertTrue(stdOut, stdOut.contains(getMockRepoUrl()));
   }
 
-  private ProjectWorkspace.ProcessResult runBuckPublish(
-      ProjectWorkspace workspace, String... extraArgs) throws IOException {
+  private ProcessResult runBuckPublish(ProjectWorkspace workspace, String... extraArgs)
+      throws IOException {
     return workspace.runBuckCommand(
         FluentIterable.from(new String[] {"publish"})
             .append(extraArgs)

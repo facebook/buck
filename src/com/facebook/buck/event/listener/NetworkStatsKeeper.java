@@ -16,34 +16,36 @@
 
 package com.facebook.buck.event.listener;
 
-import com.facebook.buck.event.NetworkEvent.BytesReceivedEvent;
-import com.facebook.buck.model.Pair;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.unit.SizeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class NetworkStatsKeeper {
 
-  private final AtomicLong bytesDownloaded;
-  private final AtomicLong artifactDownloaded;
+  /** remote: For caches out of the local machine. */
+  private final AtomicInteger remoteDownloadedArtifactsCount;
 
-  public NetworkStatsKeeper() {
-    this.bytesDownloaded = new AtomicLong(0);
-    this.artifactDownloaded = new AtomicLong(0);
+  private final AtomicLong remoteDownloadedArtifactsBytes;
+
+  NetworkStatsKeeper() {
+    remoteDownloadedArtifactsCount = new AtomicInteger(0);
+    remoteDownloadedArtifactsBytes = new AtomicLong(0);
   }
 
-  public void bytesReceived(BytesReceivedEvent bytesReceivedEvent) {
-    bytesDownloaded.getAndAdd(bytesReceivedEvent.getBytesReceived());
+  public long getRemoteDownloadedArtifactsCount() {
+    return remoteDownloadedArtifactsCount.get();
   }
 
-  public Pair<Long, SizeUnit> getBytesDownloaded() {
-    return new Pair<>(bytesDownloaded.get(), SizeUnit.BYTES);
+  public Pair<Long, SizeUnit> getRemoteDownloadedArtifactsBytes() {
+    return new Pair<>(remoteDownloadedArtifactsBytes.get(), SizeUnit.BYTES);
   }
 
-  public long getDownloadedArtifactDownloaded() {
-    return artifactDownloaded.get();
+  public void incrementRemoteDownloadedArtifactsCount() {
+    remoteDownloadedArtifactsCount.incrementAndGet();
   }
 
-  public void artifactDownloadFinished() {
-    artifactDownloaded.incrementAndGet();
+  public void addRemoteDownloadedArtifactsBytes(long bytes) {
+    remoteDownloadedArtifactsBytes.addAndGet(bytes);
   }
 }

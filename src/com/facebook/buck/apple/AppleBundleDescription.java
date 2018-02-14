@@ -148,6 +148,7 @@ public class AppleBundleDescription
               buildTarget.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR));
     }
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+
     return AppleDescriptions.createAppleBundle(
         cxxPlatformsProvider.getCxxPlatforms(),
         cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor(),
@@ -173,6 +174,7 @@ public class AppleBundleDescription
         appleConfig.cacheBundlesAndPackages(),
         appleConfig.shouldVerifyBundleResources(),
         appleConfig.assetCatalogValidation(),
+        args.getAssetCatalogsCompilationOptions(),
         args.getCodesignFlags(),
         args.getCodesignIdentity(),
         args.getIbtoolModuleFlag());

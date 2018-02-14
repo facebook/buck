@@ -10,7 +10,7 @@ java_library(
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/zip:zip",
+        "//src/com/facebook/buck/util/unarchive:unarchive",
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jsr:jsr305",
@@ -23,7 +23,7 @@ java_library(
         "JavaPackageFinder.java",
     ],
     visibility = [
-        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:build_context",
         "//src/com/facebook/buck/step:step",
     ],
     deps = ["//src/com/facebook/buck/model:model"],

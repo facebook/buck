@@ -50,9 +50,6 @@ public interface BuildEngine {
    */
   boolean isRuleBuilt(BuildTarget buildTarget) throws InterruptedException;
 
-  /** This is a temporary hack to expose a build rule's rule key to the associated buildable. */
-  RuleKey getRuleKey(BuildTarget buildTarget);
-
   /**
    * Marks build as failed with the given Throwable. If keepGoing == false, any pending steps will
    * be terminated before starting.

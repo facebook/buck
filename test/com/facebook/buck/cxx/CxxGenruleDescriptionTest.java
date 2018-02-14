@@ -20,11 +20,9 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
-import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -36,18 +34,30 @@ import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.macros.CcFlagsMacro;
+import com.facebook.buck.rules.macros.CcMacro;
+import com.facebook.buck.rules.macros.CppFlagsMacro;
+import com.facebook.buck.rules.macros.CxxFlagsMacro;
+import com.facebook.buck.rules.macros.CxxMacro;
+import com.facebook.buck.rules.macros.CxxppFlagsMacro;
+import com.facebook.buck.rules.macros.LdMacro;
+import com.facebook.buck.rules.macros.LdflagsSharedFilterMacro;
+import com.facebook.buck.rules.macros.LdflagsSharedMacro;
+import com.facebook.buck.rules.macros.LdflagsStaticFilterMacro;
+import com.facebook.buck.rules.macros.LdflagsStaticPicFilterMacro;
+import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.MacroContainer;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.testutil.OptionalMatchers;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.Optionals;
-import com.facebook.buck.versions.FixedTargetNodeTranslator;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.NaiveVersionSelector;
-import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.VersionPropagatorBuilder;
 import com.facebook.buck.versions.VersionedAliasBuilder;
 import com.facebook.buck.versions.VersionedTargetGraphBuilder;
-import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -55,7 +65,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import java.util.concurrent.ForkJoinPool;
+import java.util.function.BiFunction;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -65,10 +77,10 @@ public class CxxGenruleDescriptionTest {
 
   @Test
   public void toolPlatformParseTimeDeps() {
-    for (String macro : ImmutableSet.of("ld", "cc", "cxx")) {
+    for (Macro macro : ImmutableList.of(LdMacro.of(), CcMacro.of(), CxxMacro.of())) {
       CxxGenruleBuilder builder =
           new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:rule#default"))
-              .setCmd(String.format("$(%s)", macro))
+              .setCmd(StringWithMacrosUtils.format("%s", macro))
               .setOut("foo");
       assertThat(
           ImmutableSet.copyOf(builder.findImplicitDeps()),
@@ -80,7 +92,11 @@ public class CxxGenruleDescriptionTest {
 
   @Test
   public void ldFlagsFilter() throws Exception {
-    for (Linker.LinkableDepType style : Linker.LinkableDepType.values()) {
+    for (BiFunction<Optional<Pattern>, ImmutableList<BuildTarget>, Macro> macro :
+        ImmutableList.<BiFunction<Optional<Pattern>, ImmutableList<BuildTarget>, Macro>>of(
+            LdflagsSharedFilterMacro::of,
+            LdflagsStaticFilterMacro::of,
+            LdflagsStaticPicFilterMacro::of)) {
       CxxLibraryBuilder bBuilder =
           new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:b"))
               .setExportedLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-b")));
@@ -94,9 +110,11 @@ public class CxxGenruleDescriptionTest {
                       "//:rule#" + CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()))
               .setOut("out")
               .setCmd(
-                  String.format(
-                      "$(ldflags-%s-filter //:a //:a)",
-                      CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, style.toString())));
+                  StringWithMacrosUtils.format(
+                      "%s",
+                      macro.apply(
+                          Optional.of(Pattern.compile("//:a")),
+                          ImmutableList.of(aBuilder.getTarget()))));
       TargetGraph targetGraph =
           TargetGraphFactory.newInstance(bBuilder.build(), aBuilder.build(), builder.build());
       BuildRuleResolver resolver =
@@ -128,7 +146,11 @@ public class CxxGenruleDescriptionTest {
                 new FlavorDomain<>(
                     "C/C++ Platform", ImmutableMap.of(cxxPlatform.getFlavor(), cxxPlatform)))
             .setOut("out")
-            .setCmd("$(cppflags) $(cxxppflags)");
+            .setCmd(
+                StringWithMacrosUtils.format(
+                    "%s %s",
+                    CppFlagsMacro.of(Optional.empty(), ImmutableList.of()),
+                    CxxppFlagsMacro.of(Optional.empty(), ImmutableList.of())));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
@@ -154,7 +176,7 @@ public class CxxGenruleDescriptionTest {
                 new FlavorDomain<>(
                     "C/C++ Platform", ImmutableMap.of(cxxPlatform.getFlavor(), cxxPlatform)))
             .setOut("out")
-            .setCmd("$(cflags) $(cxxflags)");
+            .setCmd(StringWithMacrosUtils.format("%s %s", CcFlagsMacro.of(), CxxFlagsMacro.of()));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
@@ -171,35 +193,17 @@ public class CxxGenruleDescriptionTest {
   }
 
   @Test
-  public void targetTranslateConstructorArg() throws NoSuchBuildTargetException {
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
-    BuildTarget original = BuildTargetFactory.newInstance("//hello:world");
-    BuildTarget translated = BuildTargetFactory.newInstance("//something:else");
-    CxxGenruleBuilder builder =
-        new CxxGenruleBuilder(target)
-            .setCmd(String.format("$(cppflags %s) $(cxxppflags)", original))
-            .setOut("foo");
-    TargetNode<CxxGenruleDescriptionArg, CxxGenruleDescription> node = builder.build();
-    TargetNodeTranslator translator =
-        new FixedTargetNodeTranslator(
-            new DefaultTypeCoercerFactory(), ImmutableMap.of(original, translated));
-    Optional<CxxGenruleDescriptionArg> translatedArg =
-        node.getDescription()
-            .translateConstructorArg(
-                target, node.getCellNames(), translator, node.getConstructorArg());
-    assertThat(
-        translatedArg.get().getCmd().get(),
-        Matchers.equalTo("$(cppflags //something:else) $(cxxppflags)"));
-  }
-
-  @Test
   public void versionedTargetReferenceIsTranslatedInVersionedGraph() throws Exception {
     VersionPropagatorBuilder dep = new VersionPropagatorBuilder("//:dep");
     VersionedAliasBuilder versionedDep =
         new VersionedAliasBuilder("//:versioned").setVersions("1.0", "//:dep");
     CxxGenruleBuilder genruleBuilder =
         new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
-            .setCmd("$(ldflags-shared //:versioned)")
+            .setCmd(
+                StringWithMacrosUtils.format(
+                    "%s",
+                    LdflagsSharedMacro.of(
+                        Optional.empty(), ImmutableList.of(versionedDep.getTarget()))))
             .setOut("foo");
     TargetGraph graph =
         TargetGraphFactory.newInstance(dep.build(), versionedDep.build(), genruleBuilder.build());
@@ -214,7 +218,12 @@ public class CxxGenruleDescriptionTest {
             transformed.getTargetGraph().get(genruleBuilder.getTarget()),
             CxxGenruleDescriptionArg.class);
     assertThat(
-        arg.getCmd(), OptionalMatchers.present(Matchers.equalTo("$(ldflags-shared //:dep)")));
+        arg.getCmd(),
+        OptionalMatchers.present(
+            Matchers.equalTo(
+                StringWithMacrosUtils.format(
+                    "%s",
+                    LdflagsSharedMacro.of(Optional.empty(), ImmutableList.of(dep.getTarget()))))));
   }
 
   @Test
@@ -225,7 +234,10 @@ public class CxxGenruleDescriptionTest {
     VersionPropagatorBuilder dep = new VersionPropagatorBuilder("//:dep").setDeps("//:versioned");
     CxxGenruleBuilder genruleBuilder =
         new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
-            .setCmd("$(ldflags-shared //:dep)")
+            .setCmd(
+                StringWithMacrosUtils.format(
+                    "%s",
+                    LdflagsSharedMacro.of(Optional.empty(), ImmutableList.of(dep.getTarget()))))
             .setOut("foo");
     TargetGraph graph =
         TargetGraphFactory.newInstance(
@@ -241,10 +253,13 @@ public class CxxGenruleDescriptionTest {
             transformed.getTargetGraph().get(genruleBuilder.getTarget()),
             CxxGenruleDescriptionArg.class);
     assertThat(
-        arg.getCmd(),
-        OptionalMatchers.present(
-            Matchers.matchesPattern(
-                Pattern.quote("$(ldflags-shared //:dep#v") + "[a-zA-Z0-9]*" + Pattern.quote(")"))));
+        RichStream.from(arg.getCmd().orElseThrow(AssertionError::new).getMacros())
+            .map(MacroContainer::getMacro)
+            .filter(LdflagsSharedMacro.class)
+            .flatMap(m -> m.getTargets().stream())
+            .map(BuildTarget::getFullyQualifiedName)
+            .collect(Collectors.toList()),
+        Matchers.contains(Matchers.matchesPattern(Pattern.quote("//:dep#v") + "[a-zA-Z0-9]*")));
   }
 
   @Test
@@ -253,7 +268,7 @@ public class CxxGenruleDescriptionTest {
         new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:dep")).setOut("out");
     CxxGenruleBuilder builder =
         new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
-            .setCmd("$(location //:dep)")
+            .setCmd(StringWithMacrosUtils.format("%s", LocationMacro.of(depBuilder.getTarget())))
             .setOut("out");
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depBuilder.build(), builder.build());
     BuildRuleResolver resolver =

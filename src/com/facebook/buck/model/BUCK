@@ -12,26 +12,11 @@ java_library(
     ],
 )
 
-SIMPLE_TYPES_SRCS = [
-    "Either.java",
-    "Pair.java",
-]
-
-java_library(
-    name = "simple_types",
-    srcs = SIMPLE_TYPES_SRCS,
-    visibility = ["PUBLIC"],
-    deps = [
-        "//third-party/java/guava:guava",
-        "//third-party/java/jsr:jsr305",
-    ],
-)
-
 java_immutables_library(
     name = "model",
     srcs = glob(
         ["*.java"],
-        exclude = BUILD_ID_SRCS + SIMPLE_TYPES_SRCS,
+        exclude = BUILD_ID_SRCS,
     ),
     tests = [
         "//test/com/facebook/buck/model:model",

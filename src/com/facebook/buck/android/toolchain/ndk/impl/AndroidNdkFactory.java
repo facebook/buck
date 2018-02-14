@@ -17,8 +17,6 @@
 package com.facebook.buck.android.toolchain.ndk.impl;
 
 import com.facebook.buck.android.AndroidBuckConfig;
-import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
@@ -34,38 +32,35 @@ public class AndroidNdkFactory implements ToolchainFactory<AndroidNdk> {
   @Override
   public Optional<AndroidNdk> createToolchain(
       ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
-    AndroidLegacyToolchain androidLegacyToolchain =
-        toolchainProvider.getByName(
-            AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
-
-    AndroidDirectoryResolver androidDirectoryResolver =
-        androidLegacyToolchain.getAndroidDirectoryResolver();
-
-    Path ndkRoot;
-
-    try {
-      ndkRoot = androidDirectoryResolver.getNdkOrThrow();
-    } catch (HumanReadableException e) {
-      throw new ToolchainInstantiationException(e, e.getHumanReadableErrorMessage());
-    }
 
     AndroidBuckConfig androidBuckConfig =
         new AndroidBuckConfig(context.getBuckConfig(), Platform.detect());
 
+    AndroidNdkResolver ndkResolver =
+        new AndroidNdkResolver(
+            context.getFilesystem().getRootPath().getFileSystem(),
+            context.getEnvironment(),
+            androidBuckConfig);
+
+    Path ndkRoot;
+
+    try {
+      ndkRoot = ndkResolver.getNdkOrThrow();
+    } catch (HumanReadableException e) {
+      throw new ToolchainInstantiationException(e, e.getHumanReadableErrorMessage());
+    }
+
     return Optional.of(
         AndroidNdk.of(
-            detectNdkVersion(androidBuckConfig, androidDirectoryResolver),
+            detectNdkVersion(androidBuckConfig, ndkResolver),
             ndkRoot,
             context.getExecutableFinder()));
   }
 
   private String detectNdkVersion(
-      AndroidBuckConfig androidBuckConfig, AndroidDirectoryResolver androidDirectoryResolver) {
+      AndroidBuckConfig androidBuckConfig, AndroidNdkResolver ndkResolver) {
     Optional<String> ndkVersion =
-        androidBuckConfig
-            .getNdkVersion()
-            .map(Optional::of)
-            .orElseGet(androidDirectoryResolver::getNdkVersion);
+        androidBuckConfig.getNdkVersion().map(Optional::of).orElseGet(ndkResolver::getNdkVersion);
     if (!ndkVersion.isPresent()) {
       throw new ToolchainInstantiationException("Cannot detect NDK version");
     }

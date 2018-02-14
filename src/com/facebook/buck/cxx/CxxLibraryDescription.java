@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -160,6 +161,7 @@ public class CxxLibraryDescription
    * building the library.
    */
   static ImmutableList<CxxPreprocessorInput> getPreprocessorInputsForBuildingLibrarySources(
+      CxxBuckConfig cxxBuckConfig,
       BuildRuleResolver ruleResolver,
       CellPathResolver cellRoots,
       BuildTarget target,
@@ -193,6 +195,7 @@ public class CxxLibraryDescription
                     deps,
                     // Also add private deps if we are _not_ reexporting all deps.
                     args.isReexportAllHeaderDependencies()
+                            .orElse(cxxBuckConfig.getDefaultReexportAllHeaderDependencies())
                         ? CxxDeps.of()
                         : args.getPrivateCxxDeps()))
             .toOnceIterable(),
@@ -354,7 +357,7 @@ public class CxxLibraryDescription
     }
 
     /**
-     * Retrieve the transtiive {@link CxxPreprocessorInput} from an explicitly specified deps list.
+     * Retrieve the transitive {@link CxxPreprocessorInput} from an explicitly specified deps list.
      *
      * <p>This is used by AppleTest, which doesn't generate a CxxLibrary rule that computes this.
      */
@@ -439,6 +442,8 @@ public class CxxLibraryDescription
 
     Optional<String> getSoname();
 
+    Optional<String> getStaticLibraryBasename();
+
     Optional<Boolean> getForceStatic();
 
     Optional<Boolean> getLinkWhole();
@@ -467,10 +472,7 @@ public class CxxLibraryDescription
      * Controls whether the headers of dependencies in "deps" is re-exported for compiling targets
      * that depend on this one.
      */
-    @Value.Default
-    default boolean isReexportAllHeaderDependencies() {
-      return true;
-    }
+    Optional<Boolean> isReexportAllHeaderDependencies();
 
     /**
      * These fields are passed through to SwiftLibrary for mixed C/Swift targets; they are not used

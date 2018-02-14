@@ -17,27 +17,23 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.CacheStatsEvent;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
-import com.google.common.cache.CacheStats;
+import com.facebook.buck.util.cache.CacheStats;
 
 /** A {@link RuleKeyCacheScope} which logs stats on close. */
 public class EventPostingRuleKeyCacheScope<V> implements RuleKeyCacheScope<V> {
 
   private final BuckEventBus buckEventBus;
-  private final RuleKeyCache<V> cache;
+  private final TrackedRuleKeyCache<V> cache;
 
-  private final CacheStats startStats;
-
-  public EventPostingRuleKeyCacheScope(BuckEventBus buckEventBus, RuleKeyCache<V> cache) {
+  public EventPostingRuleKeyCacheScope(BuckEventBus buckEventBus, TrackedRuleKeyCache<V> cache) {
     this.buckEventBus = buckEventBus;
     this.cache = cache;
 
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(buckEventBus, PerfEventId.of("rule_key_cache_setup"))) {
-
-      // Record the initial stats.
-      startStats = cache.getStats();
 
       // Run additional setup.
       setup(scope);
@@ -51,7 +47,7 @@ public class EventPostingRuleKeyCacheScope<V> implements RuleKeyCacheScope<V> {
   protected void cleanup(@SuppressWarnings("unused") SimplePerfEvent.Scope scope) {}
 
   @Override
-  public final RuleKeyCache<V> getCache() {
+  public final TrackedRuleKeyCache<V> getCache() {
     return cache;
   }
 
@@ -61,13 +57,13 @@ public class EventPostingRuleKeyCacheScope<V> implements RuleKeyCacheScope<V> {
         SimplePerfEvent.scope(buckEventBus, PerfEventId.of("rule_key_cache_cleanup"))) {
 
       // Log stats.
-      CacheStats stats = cache.getStats().minus(startStats);
-      buckEventBus.post(RuleKeyCacheStatsEvent.create(stats));
+      CacheStats stats = cache.getStats();
+      buckEventBus.post(new CacheStatsEvent("rule_key_cache", stats));
       scope.update("hitRate", stats.hitRate());
-      scope.update("hits", stats.hitCount());
-      scope.update("misses", stats.missCount());
-      scope.update("requests", stats.requestCount());
-      scope.update("load_time_ns", stats.totalLoadTime());
+      scope.update("hits", stats.getHitCount());
+      scope.update("misses", stats.getMissCount());
+      scope.update("requests", stats.getRequestCount());
+      scope.update("load_time_ms", stats.getTotalLoadTime());
 
       // Run additional cleanup.
       cleanup(scope);

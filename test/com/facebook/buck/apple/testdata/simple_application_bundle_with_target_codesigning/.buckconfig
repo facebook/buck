@@ -6,3 +6,7 @@
   provisioning_profile_search_path = provisioning_profiles
   codesign = //codesign:codesign
   provisioning_profile_read_command = cat
+  iphoneos_target_sdk_version = 10.0
+  iphonesimulator_target_sdk_version = 10.0
+
+

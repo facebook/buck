@@ -32,7 +32,13 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-/** An {@link Arg} which contains macros that need to be expanded. */
+/**
+ * An {@link Arg} which contains macros that need to be expanded.
+ *
+ * <p>Deprecated: Use {@link StringWithMacros} in constructor args and {@link
+ * StringWithMacrosConverter} instead.
+ */
+@Deprecated
 public class MacroArg implements Arg, RuleKeyAppendable {
 
   protected final MacroHandler expander;
@@ -107,14 +113,15 @@ public class MacroArg implements Arg, RuleKeyAppendable {
       final CellPathResolver cellNames,
       final BuildRuleResolver resolver) {
     return unexpanded -> {
+      MacroArg arg = new MacroArg(handler, target, cellNames, resolver, unexpanded);
       try {
         if (containsWorkerMacro(handler, unexpanded)) {
-          return new WorkerMacroArg(handler, target, cellNames, resolver, unexpanded);
+          return WorkerMacroArg.fromMacroArg(arg, handler, target, cellNames, resolver, unexpanded);
         }
       } catch (MacroException e) {
         throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
       }
-      return new MacroArg(handler, target, cellNames, resolver, unexpanded);
+      return arg;
     };
   }
 

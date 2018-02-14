@@ -25,7 +25,7 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.BuckConfigTestUtils;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.TargetDeviceOptions;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.base.Joiner;
 import java.io.IOException;
 import java.io.Reader;

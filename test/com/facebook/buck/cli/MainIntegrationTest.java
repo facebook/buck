@@ -21,8 +21,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
@@ -42,7 +43,7 @@ public class MainIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "empty_project", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand();
+    ProcessResult result = workspace.runBuckCommand();
 
     result.assertExitCode("nothing specified", ExitCode.COMMANDLINE_ERROR);
     assertThat(
@@ -57,7 +58,7 @@ public class MainIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "empty_project", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand();
+    ProcessResult result = workspace.runBuckCommand();
 
     result.assertExitCode("nothing specified", ExitCode.COMMANDLINE_ERROR);
     assertThat(
@@ -135,7 +136,7 @@ public class MainIntegrationTest {
             "  build          builds the specified target",
             "  cache          makes calls to the artifact cache",
             "  cachedelete    Delete artifacts from the local and remote cache",
-            "  clean          deletes any generated files",
+            "  clean          deletes any generated files and caches",
             "  distbuild      attaches to a distributed build (experimental)",
             "  doctor         debug and fix issues of Buck commands",
             "  fetch          downloads remote resources to your local machine",
@@ -144,6 +145,7 @@ public class MainIntegrationTest {
                 + "shows this screen (or the help page of the specified command) and exits.",
             "  install        builds and installs an application",
             "  kill           kill buckd for the current project",
+            "  killall        kill all buckd processes",
             "  machoutils     provides some utils for Mach O binary files",
             "  parser-cache   Load and save state of the parser cache",
             "  project        generates project configuration files for an IDE",

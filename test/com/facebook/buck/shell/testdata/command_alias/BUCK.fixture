@@ -8,3 +8,39 @@ command_alias(
     env = {"ENV_B": "2"},
     exe = "//alias:inner",
 )
+
+command_alias(
+    name = "platform_specific",
+    platform_exe = {
+        "linux": ":linux",
+        "macos": ":macos",
+        "windows": ":windows",
+        "freebsd": ":freebsd",
+        "unknown": ":unknown",
+    },
+)
+
+export_file(
+    name = "linux",
+    src = "//scripts:echo.sh",
+)
+
+export_file(
+    name = "macos",
+    src = "//scripts:echo.sh",
+)
+
+export_file(
+    name = "windows",
+    src = "//scripts:echo.bat",
+)
+
+export_file(
+    name = "freebsd",
+    src = "//scripts:echo.sh",
+)
+
+export_file(
+    name = "unknown",
+    src = "//scripts:echo.sh",
+)

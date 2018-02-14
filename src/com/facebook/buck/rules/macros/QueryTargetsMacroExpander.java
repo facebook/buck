@@ -19,16 +19,18 @@ package com.facebook.buck.rules.macros;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.query.QueryBuildTarget;
-import com.facebook.buck.query.QueryTarget;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.query.Query;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
+import com.google.common.collect.ImmutableList;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -42,7 +44,6 @@ import java.util.stream.Collectors;
  * </pre>
  */
 public class QueryTargetsMacroExpander extends QueryMacroExpander<QueryTargetsMacro> {
-
   public QueryTargetsMacroExpander(Optional<TargetGraph> targetGraph) {
     super(targetGraph);
   }
@@ -58,44 +59,44 @@ public class QueryTargetsMacroExpander extends QueryMacroExpander<QueryTargetsMa
   }
 
   @Override
-  public String expandFrom(
+  public Arg expandFrom(
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
       QueryTargetsMacro input,
       QueryResults precomputedQueryResults)
       throws MacroException {
-    return precomputedQueryResults
-        .results
-        .stream()
-        .map(
-            queryTarget -> {
-              Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-              BuildRule rule = resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
-              return rule.getBuildTarget().toString();
-            })
-        .sorted()
-        .collect(Collectors.joining(" "));
-  }
-
-  @Override
-  public Object extractRuleKeyAppendablesFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      final BuildRuleResolver resolver,
-      QueryTargetsMacro input,
-      QueryResults precomputedQueryResults)
-      throws MacroException {
-    // Return the set of targets which matched the query
-    return precomputedQueryResults
-        .results
-        .stream()
-        .map(QueryTarget::toString)
-        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+    return new QueriedTargetsArg(
+        precomputedQueryResults
+            .results
+            .stream()
+            .map(
+                queryTarget -> {
+                  Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
+                  BuildRule rule =
+                      resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
+                  return rule.getBuildTarget();
+                })
+            .sorted()
+            .collect(ImmutableList.toImmutableList()));
   }
 
   @Override
   boolean detectsTargetGraphOnlyDeps() {
     return true;
+  }
+
+  private class QueriedTargetsArg implements Arg {
+    @AddToRuleKey private final ImmutableList<BuildTarget> queriedTargets;
+
+    public QueriedTargetsArg(ImmutableList<BuildTarget> queriedTargets) {
+      this.queriedTargets = queriedTargets;
+    }
+
+    @Override
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+      consumer.accept(
+          queriedTargets.stream().map(Object::toString).collect(Collectors.joining(" ")));
+    }
   }
 }

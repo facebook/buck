@@ -173,13 +173,9 @@ public class Main {
       return ReturnCode.TARGET_STRESS_DIR_CREATE_FAILED;
     }
     try {
-      Path targetsFile = tempDirectory.resolve("targets-list");
-      targetsStressRunner.writeTargetsListToFile(targetsFile);
       List<BuckRunner> buckCommands =
           targetsStressRunner.getBuckRunners(
-              args.runCount,
-              targetsFile,
-              Optional.ofNullable(args.repositoryDirectory).map(Paths::get));
+              args.runCount, Optional.ofNullable(args.repositoryDirectory).map(Paths::get));
       List<Path> outputFiles = stressRunner.run(buckCommands, tempDirectory, args.parallelism);
       targetsStressRunner.verifyNoChanges(
           outputFiles.get(0), outputFiles.subList(1, outputFiles.size()));

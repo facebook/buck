@@ -30,6 +30,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -42,7 +43,8 @@ public class MacroArgTest {
   @Test
   public void stringify() {
     MacroHandler macroHandler =
-        new MacroHandler(ImmutableMap.of("macro", new StringExpander("expanded")));
+        new MacroHandler(
+            ImmutableMap.of("macro", new StringExpander<>(Macro.class, StringArg.of("expanded"))));
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());

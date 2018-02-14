@@ -1,0 +1,53 @@
+if 'macosx' in read_config('cxx', 'default_platform'):
+  default_frameworks = ["$SDKROOT/System/Library/Frameworks/AppKit.framework"]
+else:
+  default_frameworks = ["$SDKROOT/System/Library/Frameworks/UIKit.framework"]
+
+apple_library(
+    name = "dep",
+    srcs = [
+        "dep.swift",
+    ],
+)
+
+apple_binary(
+    name = "binary",
+    srcs = [
+        "main.m",
+    ],
+    deps = [
+        ":dep",
+    ],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ] + default_frameworks,
+)
+
+apple_bundle(
+    name = "bundle",
+    binary = ":binary",
+    extension = "app",
+    info_plist = "Bundle.plist",
+    info_plist_substitutions = {
+        "PRODUCT_BUNDLE_IDENTIFIER": "com.uber.test1",
+        "EXECUTABLE_NAME": "bundle",
+    },
+    product_name = "bundle",
+)
+
+
+apple_test(
+    name = "swifttest",
+    test_host_app = ":bundle",
+    srcs = [
+        "test.swift",
+    ],
+    frameworks = [
+        "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    info_plist = "Test.plist",
+    info_plist_substitutions = {
+        "PRODUCT_BUNDLE_IDENTIFIER": "com.ubercab.swiftunittest",
+    },
+)

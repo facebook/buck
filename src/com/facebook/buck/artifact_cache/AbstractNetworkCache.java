@@ -201,7 +201,8 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
                   .getStoreBuilder()
                   .setArtifactContentHash(result.getArtifactContentHash())
                   .setRequestSizeBytes(result.getRequestSizeBytes())
-                  .setWasStoreSuccessful(result.getWasStoreSuccessful());
+                  .setWasStoreSuccessful(result.getWasStoreSuccessful())
+                  .setWasStoreForManifest(info.isManifest());
               dispatcher.post(finishedEventBuilder.build());
             }
 

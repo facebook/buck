@@ -5,6 +5,22 @@ apple_bundle(
     info_plist = "Info.plist",
 )
 
+apple_bundle(
+    name = "DemoAppWithAssetCatalogCompilationOptions",
+    asset_catalogs_compilation_options = {
+        "notices": False,
+        "warnings": False,
+        "errors": False,
+        "compress_pngs": False,
+        "optimization": "time",
+        "output_format": "xml1",
+        "extra_flags": ["--print-contents"],
+    },
+    binary = ":DemoAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+)
+
 apple_binary(
     name = "DemoAppBinary",
     srcs = glob([

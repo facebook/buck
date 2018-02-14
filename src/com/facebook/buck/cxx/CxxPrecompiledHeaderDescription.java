@@ -56,8 +56,10 @@ public class CxxPrecompiledHeaderDescription
     return new CxxPrecompiledHeaderTemplate(
         buildTarget,
         projectFilesystem,
-        params.copyAppendingExtraDeps(ruleResolver.getAllRules(args.getDeps())),
+        ruleResolver.getAllRules(args.getDeps()),
+        ruleResolver,
         pathResolver,
+        ruleFinder,
         args.getSrc());
   }
 

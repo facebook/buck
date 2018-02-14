@@ -20,6 +20,7 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.redex.ReDexStep;
 import com.facebook.buck.android.redex.RedexOptions;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -112,13 +113,13 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   private final ProjectFilesystem filesystem;
   private final BuildTarget buildTarget;
   private final AndroidSdkLocation androidSdkLocation;
-  private final AndroidLegacyToolchain androidLegacyToolchain;
+  private final AndroidPlatformTarget androidPlatformTarget;
 
   AndroidBinaryBuildable(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
       AndroidSdkLocation androidSdkLocation,
-      AndroidLegacyToolchain androidLegacyToolchain,
+      AndroidPlatformTarget androidPlatformTarget,
       SourcePath keystorePath,
       SourcePath keystorePropertiesPath,
       Optional<RedexOptions> redexOptions,
@@ -138,7 +139,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
     this.androidSdkLocation = androidSdkLocation;
-    this.androidLegacyToolchain = androidLegacyToolchain;
+    this.androidPlatformTarget = androidPlatformTarget;
     this.keystorePath = keystorePath;
     this.keystorePropertiesPath = keystorePropertiesPath;
     this.redexOptions = redexOptions;
@@ -311,9 +312,9 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
     steps.add(
         new ZipalignStep(
-            androidLegacyToolchain,
             getBuildTarget(),
             getProjectFilesystem().getRootPath(),
+            androidPlatformTarget,
             apkToAlign,
             apkPath));
 

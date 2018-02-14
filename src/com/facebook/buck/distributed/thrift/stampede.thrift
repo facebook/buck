@@ -66,7 +66,6 @@ enum BuildStatus {
 struct BuildSlaveInfo {
   1: optional BuildSlaveRunId buildSlaveRunId;
   2: optional string hostname;
-  3: optional string command;
 
   // TODO(ruibm): Fields [4-7] have fallen out of sync and should not be used anymore however
   //              the buck client code otherwise we get compile errors.
@@ -76,7 +75,6 @@ struct BuildSlaveInfo {
   7: optional i32 stdErrCurrentBatchLineCount;
 
   8: optional bool logDirZipWritten;
-  9: optional i32 exitCode;
   10: optional BuildStatus status = BuildStatus.UNKNOWN;
 }
 
@@ -156,8 +154,6 @@ struct BuildJob {
   1: optional StampedeId stampedeId;
   3: optional BuildStatus status = BuildStatus.UNKNOWN;
   4: optional BuckVersion buckVersion;
-  # TODO(alisdair): split BuildSlaveInfo out from the main BuildJob
-  5: optional map<string, BuildSlaveInfo> slaveInfoByRunId;
   6: optional list<PathInfo> dotFiles;
   7: optional BuildModeInfo buildModeInfo;
   8: optional string repository;
@@ -168,6 +164,7 @@ struct BuildJob {
   11: optional string buckBuildUuid;
   // The user that created the build.
   12: optional string username;
+  13: optional list<BuildSlaveInfo> buildSlaves;
 }
 
 struct Announcement {
@@ -219,6 +216,8 @@ struct CreateBuildRequest {
   5: optional string tenantId;
   6: optional string buckBuildUuid;
   7: optional string username;
+  8: optional list<string> buildTargets;
+  9: optional string buildLabel;
 }
 
 struct CreateBuildResponse {

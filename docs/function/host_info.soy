@@ -1,0 +1,58 @@
+{namespace buck.host_info}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'host_info()' /}
+    {param navid: 'function_host_info' /}
+    {param prettify: true /}
+    {param description}
+      The host_info() function is used to get processor and OS information about the host machine
+    {/param}
+    {param content}
+
+    {call buck.function}
+    {param status: 'UNFROZEN' /}
+    {param overview}
+    The <code>host_info()</code> function is used to get the current OS and processor architecture on the host. This will likely change as better cross compilation tooling comes to Buck.
+
+    The structure returned is laid out thusly:
+    {literal}
+    <pre class="prettyprint lang-py">
+  struct(
+      os=struct(
+          is_linux=True|False,
+          is_macos=True|False,
+          is_windows=True|False,
+          is_freebsd=True|False,
+          is_unknown=True|False,
+      ),
+      arch=struct(
+          is_aarch64=True|False,
+          is_arm=True|False,
+          is_armeb=True|False,
+          is_i386=True|False,
+          is_mips=True|False,
+          is_mips64=True|False,
+          is_mipsel=True|False,
+          is_mipsel64=True|False,
+          is_powerpc=True|False,
+          is_ppc64=True|False,
+          is_unknown=True|False,
+          is_x86_64=True|False,
+      ),
+  )</pre>
+    {/literal}
+    {/param}
+    {param args}
+{call buck.functionArg}
+  {param desc}
+  No arguments.
+  {/param}
+{/call}
+
+    {/param}
+{/call} // buck.function
+    {/param} // content
+  {/call}
+{/template}

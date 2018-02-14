@@ -20,7 +20,6 @@ buck_module(
         "//src/com/facebook/buck/python:rules",
         "//src/com/facebook/buck/python/toolchain:toolchain",
         "//src/com/facebook/buck/rules:build_rule",
-        "//src/com/facebook/buck/rules:command_tool",
         "//src/com/facebook/buck/rules:interfaces",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules:source_path",

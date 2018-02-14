@@ -5,6 +5,6 @@
     ".buckd",
     "build",
     "test/com/facebook/buck/testutil/integration/testlibs/buck-out",
-    "test/com/facebook/buck/testutil/integration/testlibs/.buckd",
+    "test/com/facebook/buck/testutil/integration/testlibs/.buckd"
   ]
 }

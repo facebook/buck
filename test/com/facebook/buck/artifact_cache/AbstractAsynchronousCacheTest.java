@@ -38,6 +38,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import org.junit.Test;
 
 public class AbstractAsynchronousCacheTest {
@@ -93,6 +94,51 @@ public class AbstractAsynchronousCacheTest {
       // multiFetch().
       MoreAsserts.assertIterablesEquals(ImmutableList.of(keys.get(5)), requestedRuleKeys.get(8));
       MoreAsserts.assertIterablesEquals(ImmutableList.of(keys.get(1)), requestedRuleKeys.get(9));
+    }
+  }
+
+  @Test
+  public void testSkipPendingAsyncFetchRequests() throws ExecutionException, InterruptedException {
+    ExplicitRunExecutorService service = new ExplicitRunExecutorService();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    List<ImmutableList<RuleKey>> requestedRuleKeys = new ArrayList<>();
+
+    try (AbstractAsynchronousCache cache =
+        new RequestedKeyRecordingAsynchronousCache(
+            service, filesystem, requestedRuleKeys, 3, 3); ) {
+
+      // Make an async fetch request and allow it to run on the Executor
+      ListenableFuture<CacheResult> fetchRequestOne =
+          cache.fetchAsync(
+              new RuleKey(HashCode.fromInt(1)),
+              LazyPath.ofInstance(filesystem.getPath("path_one")));
+
+      service.runOnce();
+      CacheResult cacheResultOne = fetchRequestOne.get();
+      assertTrue(cacheResultOne.getType().isSuccess());
+
+      // Make an async fetch request, tell the cache to skip all pending requests, then
+      // run the request on the Executor => it should be skipped
+      ListenableFuture<CacheResult> fetchRequestTwo =
+          cache.fetchAsync(
+              new RuleKey(HashCode.fromInt(2)),
+              LazyPath.ofInstance(filesystem.getPath("path_two")));
+      cache.skipPendingAndFutureAsyncFetches();
+
+      service.runOnce();
+      CacheResult cacheResultTwo = fetchRequestTwo.get();
+      assertEquals(CacheResultType.SKIPPED, cacheResultTwo.getType());
+
+      // Make a further request and ensure it also gets skipped.
+      ListenableFuture<CacheResult> fetchRequestThree =
+          cache.fetchAsync(
+              new RuleKey(HashCode.fromInt(3)),
+              LazyPath.ofInstance(filesystem.getPath("path_three")));
+
+      service.runOnce();
+      CacheResult cacheResultThree = fetchRequestThree.get();
+      assertEquals(CacheResultType.SKIPPED, cacheResultThree.getType());
     }
   }
 

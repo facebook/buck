@@ -21,7 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.Map;
 
-class FakeAndroidBuckConfig {
+public class FakeAndroidBuckConfig {
 
   private Map<String, String> androidSection;
   private Map<String, String> ndkSection;

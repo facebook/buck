@@ -49,7 +49,14 @@ produce APKs, so commands like <code>buck install</code> or
 
 {call genrule_common.type_arg /}
 
-{call genrule_common.out_arg /}
+{call buck.arg}
+  {param name: 'out' /}
+  {param default: 'None' /}
+  {param desc}
+  This argument only exists for historical reasons and it does not have any
+  effect. It will be deprecated and removed in the future.
+  {/param}
+{/call}
 
 {call genrule_common.environment_expansion_separator /}
 

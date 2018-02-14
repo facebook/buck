@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
@@ -41,7 +42,12 @@ public class AndroidLibraryBuilder
       language ->
           new JavaConfiguredCompilerFactory(
               DEFAULT_JAVA_CONFIG,
-              new AndroidClasspathProvider(TestAndroidLegacyToolchainFactory.create()));
+              new AndroidClasspathProvider(
+                  new ToolchainProviderBuilder()
+                      .withToolchain(
+                          AndroidPlatformTarget.DEFAULT_NAME,
+                          TestAndroidPlatformTargetFactory.create())
+                      .build()));
 
   private AndroidLibraryBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
     super(

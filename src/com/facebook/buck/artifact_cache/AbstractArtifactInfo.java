@@ -26,12 +26,17 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-interface AbstractArtifactInfo {
-  ImmutableSet<RuleKey> getRuleKeys();
+abstract class AbstractArtifactInfo {
+  abstract ImmutableSet<RuleKey> getRuleKeys();
 
-  ImmutableMap<String, String> getMetadata();
+  abstract ImmutableMap<String, String> getMetadata();
 
-  Optional<BuildTarget> getBuildTarget();
+  abstract Optional<BuildTarget> getBuildTarget();
 
-  Optional<String> getRepository();
+  abstract Optional<String> getRepository();
+
+  @Value.Default
+  boolean isManifest() {
+    return false;
+  }
 }

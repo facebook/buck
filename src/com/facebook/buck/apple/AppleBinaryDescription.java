@@ -39,7 +39,6 @@ import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
@@ -57,10 +56,12 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.types.Either;
 import com.facebook.buck.versions.Version;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -380,6 +381,7 @@ public class AppleBinaryDescription
         appleConfig.cacheBundlesAndPackages(),
         appleConfig.shouldVerifyBundleResources(),
         appleConfig.assetCatalogValidation(),
+        AppleAssetCatalogsCompilationOptions.builder().build(),
         ImmutableList.of(),
         Optional.empty(),
         Optional.empty());
@@ -501,6 +503,29 @@ public class AppleBinaryDescription
                 CxxBinaryDescriptionArg.builder().from(args);
             AppleDescriptions.populateCxxBinaryDescriptionArg(
                 pathResolver, delegateArg, args, buildTarget);
+
+            Optional<ApplePlatform> applePlatform =
+                getApplePlatformForTarget(buildTarget, appleCxxPlatformsFlavorDomain);
+            if (applePlatform.isPresent()
+                && ApplePlatform.needsEntitlementsInBinary(applePlatform.get().getName())) {
+              Optional<SourcePath> entitlements = args.getEntitlementsFile();
+              if (entitlements.isPresent()) {
+                ImmutableList<String> flags =
+                    ImmutableList.of(
+                        "-Xlinker",
+                        "-sectcreate",
+                        "-Xlinker",
+                        "__TEXT",
+                        "-Xlinker",
+                        "__entitlements",
+                        "-Xlinker",
+                        pathResolver.getAbsolutePath(entitlements.get()).toString());
+                delegateArg.addAllLinkerFlags(
+                    Iterables.transform(
+                        flags, flag -> StringWithMacros.of(ImmutableList.of(Either.ofLeft(flag)))));
+              }
+            }
+
             return cxxBinaryFactory.createBuildRule(
                 buildTarget,
                 projectFilesystem,
@@ -532,6 +557,24 @@ public class AppleBinaryDescription
     return stubBinaryPath;
   }
 
+  private Optional<ApplePlatform> getApplePlatformForTarget(
+      BuildTarget buildTarget, FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain) {
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
+    Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor();
+    CxxPlatform cxxPlatform =
+        cxxPlatforms.getValue(buildTarget).orElse(cxxPlatforms.getValue(defaultCxxFlavor));
+
+    if (!appleCxxPlatformsFlavorDomain.contains(cxxPlatform.getFlavor())) {
+      return Optional.empty();
+    }
+    return Optional.of(
+        appleCxxPlatformsFlavorDomain
+            .getValue(cxxPlatform.getFlavor())
+            .getAppleSdk()
+            .getApplePlatform());
+  }
+
   private Optional<AppleCxxPlatform> getAppleCxxPlatformFromParams(
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain, BuildTarget buildTarget) {
     return appleCxxPlatformsFlavorDomain.getValue(buildTarget);
@@ -554,6 +597,10 @@ public class AppleBinaryDescription
           buildTarget);
       return cxxBinaryMetadataFactory.createMetadata(
           buildTarget, resolver, delegateArg.build().getDeps(), metadataClass);
+    }
+
+    if (metadataClass.isAssignableFrom(HasEntitlementsFile.class)) {
+      return Optional.of(metadataClass.cast(args));
     }
 
     Optional<Flavor> cxxPlatformFlavor =
@@ -617,7 +664,8 @@ public class AppleBinaryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractAppleBinaryDescriptionArg extends AppleNativeTargetDescriptionArg {
+  interface AbstractAppleBinaryDescriptionArg
+      extends AppleNativeTargetDescriptionArg, HasEntitlementsFile {
     Optional<SourcePath> getInfoPlist();
 
     ImmutableMap<String, String> getInfoPlistSubstitutions();

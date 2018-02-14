@@ -24,6 +24,7 @@ import com.facebook.buck.android.AndroidBinaryDescription.AbstractAndroidBinaryD
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -32,6 +33,7 @@ import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
@@ -62,7 +64,7 @@ public class AndroidBinaryBuilder
   private static ToolchainProvider createToolchainProvider() {
     return new ToolchainProviderBuilder()
         .withToolchain(
-            AndroidLegacyToolchain.DEFAULT_NAME, TestAndroidLegacyToolchainFactory.create())
+            AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
         .withDefaultNdkCxxPlatforms()
         .withToolchain(
             DxToolchain.DEFAULT_NAME, DxToolchain.of(MoreExecutors.newDirectExecutorService()))
@@ -166,12 +168,12 @@ public class AndroidBinaryBuilder
     return this;
   }
 
-  public AndroidBinaryBuilder setPostFilterResourcesCmd(Optional<String> command) {
+  public AndroidBinaryBuilder setPostFilterResourcesCmd(Optional<StringWithMacros> command) {
     getArgForPopulating().setPostFilterResourcesCmd(command);
     return this;
   }
 
-  public AndroidBinaryBuilder setPreprocessJavaClassesBash(String command) {
+  public AndroidBinaryBuilder setPreprocessJavaClassesBash(StringWithMacros command) {
     getArgForPopulating().setPreprocessJavaClassesBash(command);
     return this;
   }

@@ -23,6 +23,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/jvm/java:config",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/log:log",
+        "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
         "//third-party/java/guava:guava",
     ],

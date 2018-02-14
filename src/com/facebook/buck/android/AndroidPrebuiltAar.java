@@ -26,6 +26,7 @@ import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.facebook.buck.jvm.java.ZipArchiveDependencySupplier;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildDeps;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
@@ -63,10 +64,11 @@ public class AndroidPrebuiltAar extends AndroidLibrary
     super(
         androidLibraryBuildTarget,
         projectFilesystem,
-        ImmutableSortedSet.copyOf(
-            Iterables.concat(
-                androidLibraryParams.getBuildDeps(),
-                ruleFinder.filterBuildRuleInputs(abiClasspath.get()))),
+        new BuildDeps(
+            ImmutableSortedSet.copyOf(
+                Iterables.concat(
+                    androidLibraryParams.getBuildDeps(),
+                    ruleFinder.filterBuildRuleInputs(abiClasspath.get())))),
         resolver,
         new JarBuildStepsFactory(
             projectFilesystem,
@@ -94,6 +96,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
             .build(),
         /* providedDeps */ ImmutableSortedSet.of(),
         HasJavaAbi.getClassAbiJar(androidLibraryBuildTarget),
+        /* sourceOnlyAbiJar */ null,
         /* mavenCoords */ Optional.empty(),
         Optional.of(
             ExplicitBuildTargetSourcePath.of(

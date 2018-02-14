@@ -29,8 +29,8 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.unarchive.UnzipStep;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
-import com.facebook.buck.zip.UnzipStep;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -127,7 +127,7 @@ public class IntraDexReorderStep implements Step {
               BuildCellRelativePath.fromCellRelativePath(
                   context.getBuildCellRootPath(), filesystem, temp)));
       // un-zip
-      steps.add(new UnzipStep(filesystem, inputPath, temp));
+      steps.add(new UnzipStep(filesystem, inputPath, temp, Optional.empty()));
       // run reorder tool
       steps.add(
           new DefaultShellStep(
@@ -145,7 +145,7 @@ public class IntraDexReorderStep implements Step {
               outputPath,
               /* paths */ ImmutableSet.of(),
               /* junkPaths */ false,
-              ZipCompressionLevel.MAX_COMPRESSION_LEVEL,
+              ZipCompressionLevel.MAX,
               temp));
     } else {
       // copy dex

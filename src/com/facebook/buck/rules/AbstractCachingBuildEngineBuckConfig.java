@@ -42,7 +42,7 @@ abstract class AbstractCachingBuildEngineBuckConfig implements ConfigView<BuckCo
   public CachingBuildEngine.DepFiles getBuildDepFiles() {
     return getDelegate()
         .getEnum("build", "depfiles", CachingBuildEngine.DepFiles.class)
-        .orElse(CachingBuildEngine.DepFiles.ENABLED);
+        .orElse(CachingBuildEngine.DepFiles.CACHE);
   }
 
   /**

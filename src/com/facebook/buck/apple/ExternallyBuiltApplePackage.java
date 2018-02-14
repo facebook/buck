@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.android.AndroidLegacyToolchain;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
@@ -45,7 +45,6 @@ public class ExternallyBuiltApplePackage extends Genrule {
   public ExternallyBuiltApplePackage(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      AndroidLegacyToolchain androidLegacyToolchain,
       SandboxExecutionStrategy sandboxExecutionStrategy,
       BuildRuleResolver resolver,
       BuildRuleParams params,
@@ -53,12 +52,12 @@ public class ExternallyBuiltApplePackage extends Genrule {
       SourcePath bundle,
       boolean cacheable,
       Optional<String> environmentExpansionSeparator,
+      Optional<AndroidPlatformTarget> androidPlatformTarget,
       Optional<AndroidNdk> androidNdk,
       Optional<AndroidSdkLocation> androidSdkLocation) {
     super(
         buildTarget,
         projectFilesystem,
-        androidLegacyToolchain,
         resolver,
         params,
         sandboxExecutionStrategy,
@@ -71,6 +70,7 @@ public class ExternallyBuiltApplePackage extends Genrule {
         false,
         cacheable,
         environmentExpansionSeparator,
+        androidPlatformTarget,
         androidNdk,
         androidSdkLocation);
     this.packageConfigAndPlatformInfo = packageConfigAndPlatformInfo;

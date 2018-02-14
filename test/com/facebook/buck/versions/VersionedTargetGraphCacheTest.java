@@ -37,7 +37,7 @@ import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.cache.CacheStats;
-import com.facebook.buck.util.cache.CacheStatsTracker;
+import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -61,7 +61,7 @@ public class VersionedTargetGraphCacheTest {
   public void testEmpty() throws Exception {
     InstrumentedVersionedTargetGraphCache cache =
         new InstrumentedVersionedTargetGraphCache(
-            new VersionedTargetGraphCache(), new CacheStatsTracker());
+            new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker());
     TargetGraphAndBuildTargets graph = createSimpleGraph("foo");
     VersionedTargetGraphCacheResult result =
         cache.getVersionedTargetGraph(
@@ -78,7 +78,7 @@ public class VersionedTargetGraphCacheTest {
   public void testHit() throws Exception {
     InstrumentedVersionedTargetGraphCache cache =
         new InstrumentedVersionedTargetGraphCache(
-            new VersionedTargetGraphCache(), new CacheStatsTracker());
+            new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker());
     TargetGraphAndBuildTargets graph = createSimpleGraph("foo");
     VersionedTargetGraphCacheResult firstResult =
         cache.getVersionedTargetGraph(
@@ -99,7 +99,7 @@ public class VersionedTargetGraphCacheTest {
   public void testPoolChangeCausesHit() throws Exception {
     InstrumentedVersionedTargetGraphCache cache =
         new InstrumentedVersionedTargetGraphCache(
-            new VersionedTargetGraphCache(), new CacheStatsTracker());
+            new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker());
     TargetGraphAndBuildTargets graph = createSimpleGraph("foo");
     VersionedTargetGraphCacheResult firstResult =
         cache.getVersionedTargetGraph(
@@ -119,7 +119,7 @@ public class VersionedTargetGraphCacheTest {
   public void testGraphChangeCausesMiss() throws Exception {
     InstrumentedVersionedTargetGraphCache cache =
         new InstrumentedVersionedTargetGraphCache(
-            new VersionedTargetGraphCache(), new CacheStatsTracker());
+            new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker());
     TargetGraphAndBuildTargets firstGraph = createSimpleGraph("foo");
     VersionedTargetGraphCacheResult firstResult =
         cache.getVersionedTargetGraph(
@@ -142,7 +142,7 @@ public class VersionedTargetGraphCacheTest {
   public void testVersionUniverseChangeCausesMiss() throws Exception {
     InstrumentedVersionedTargetGraphCache cache =
         new InstrumentedVersionedTargetGraphCache(
-            new VersionedTargetGraphCache(), new CacheStatsTracker());
+            new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker());
     TargetGraphAndBuildTargets graph = createSimpleGraph("foo");
     ImmutableMap<String, VersionUniverse> firstVersionUniverses = ImmutableMap.of();
     VersionedTargetGraphCacheResult firstResult =
@@ -167,7 +167,7 @@ public class VersionedTargetGraphCacheTest {
   public void testDifferentInstrumentedCacheDoesNotInterfere() throws Exception {
     VersionedTargetGraphCache baseCache = new VersionedTargetGraphCache();
     InstrumentedVersionedTargetGraphCache cache1 =
-        new InstrumentedVersionedTargetGraphCache(baseCache, new CacheStatsTracker());
+        new InstrumentedVersionedTargetGraphCache(baseCache, new InstrumentingCacheStatsTracker());
     TargetGraphAndBuildTargets graph = createSimpleGraph("foo");
     VersionedTargetGraphCacheResult firstResult =
         cache1.getVersionedTargetGraph(
@@ -180,7 +180,7 @@ public class VersionedTargetGraphCacheTest {
     assertTimingsNotEmpty(stats);
 
     InstrumentedVersionedTargetGraphCache cache2 =
-        new InstrumentedVersionedTargetGraphCache(baseCache, new CacheStatsTracker());
+        new InstrumentedVersionedTargetGraphCache(baseCache, new InstrumentingCacheStatsTracker());
     VersionedTargetGraphCacheResult secondResult =
         cache2.getVersionedTargetGraph(
             BUS, new DefaultTypeCoercerFactory(), graph, ImmutableMap.of(), POOL);

@@ -35,6 +35,7 @@ public class JavaDescriptionsProvider implements DescriptionProvider {
     JavaBuckConfig javaConfig = config.getView(JavaBuckConfig.class);
 
     return Arrays.asList(
+        new JarGenruleDescription(toolchainProvider, context.getSandboxExecutionStrategy()),
         new JavaBinaryDescription(toolchainProvider, javaConfig),
         new JavaAnnotationProcessorDescription(),
         new JavaLibraryDescription(toolchainProvider, javaConfig),

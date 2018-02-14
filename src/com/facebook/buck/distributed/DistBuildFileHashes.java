@@ -126,6 +126,8 @@ public class DistBuildFileHashes {
             new CacheLoader<ProjectFilesystem, DefaultRuleKeyFactory>() {
               @Override
               public DefaultRuleKeyFactory load(ProjectFilesystem key) throws Exception {
+                // Create a new RuleKeyCache to make computation visit the
+                // RecordingProjectFileHashCache
                 return new DefaultRuleKeyFactory(
                     new RuleKeyFieldLoader(ruleKeyConfiguration),
                     fileHashCache,
@@ -225,5 +227,10 @@ public class DistBuildFileHashes {
                     projectFilesystem.resolve(
                         MorePaths.pathWithPlatformSeparators(input.getPath().getPath())),
                     Paths.get(input.getArchiveMemberPath())));
+  }
+
+  public void cancel() {
+    this.fileHashes.cancel(true);
+    this.ruleKeys.cancel(true);
   }
 }

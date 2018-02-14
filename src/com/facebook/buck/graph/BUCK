@@ -5,5 +5,8 @@ java_library(
         "//test/com/facebook/buck/graph:graph",
     ],
     visibility = ["PUBLIC"],
-    deps = ["//third-party/java/guava:guava"],
+    deps = [
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/guava:guava",
+    ],
 )

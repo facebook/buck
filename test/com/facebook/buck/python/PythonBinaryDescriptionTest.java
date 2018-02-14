@@ -65,6 +65,7 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.ShBinary;
@@ -95,7 +96,7 @@ public class PythonBinaryDescriptionTest {
   private static final BuildTarget PYTHON2_DEP_TARGET =
       BuildTargetFactory.newInstance("//:python2_dep");
   private static final PythonPlatform PY2 =
-      PythonPlatform.of(
+      new TestPythonPlatform(
           InternalFlavor.of("py2"),
           new PythonEnvironment(Paths.get("python2"), PythonVersion.of("CPython", "2.6")),
           Optional.of(PYTHON2_DEP_TARGET));
@@ -259,12 +260,12 @@ public class PythonBinaryDescriptionTest {
   @Test
   public void explicitPythonHome() throws Exception {
     PythonPlatform platform1 =
-        PythonPlatform.of(
+        new TestPythonPlatform(
             InternalFlavor.of("pyPlat1"),
             new PythonEnvironment(Paths.get("python2.6"), PythonVersion.of("CPython", "2.6.9")),
             Optional.empty());
     PythonPlatform platform2 =
-        PythonPlatform.of(
+        new TestPythonPlatform(
             InternalFlavor.of("pyPlat2"),
             new PythonEnvironment(Paths.get("python2.7"), PythonVersion.of("CPython", "2.7.11")),
             Optional.empty());
@@ -678,7 +679,7 @@ public class PythonBinaryDescriptionTest {
     PythonBinaryBuilder binaryBuilder =
         PythonBinaryBuilder.create(
             BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS);
-    binaryBuilder.setLinkerFlags(ImmutableList.of("-flag"));
+    binaryBuilder.setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-flag")));
     binaryBuilder.setMainModule("main");
     binaryBuilder.setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()));
 

@@ -32,6 +32,8 @@ import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.macros.ClasspathMacro;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
@@ -56,7 +58,7 @@ public class ApkGenruleDescriptionTest {
     TargetNode<?, ?> genruleNode =
         ApkGenruleBuilder.create(BuildTargetFactory.newInstance("//:rule"))
             .setOut("out")
-            .setCmd("$(classpath //exciting:target)")
+            .setCmd(StringWithMacrosUtils.format("%s", ClasspathMacro.of(depNode.getBuildTarget())))
             .setApk(installableApkTarget)
             .build();
 

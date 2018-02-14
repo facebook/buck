@@ -30,10 +30,10 @@ import com.facebook.buck.python.toolchain.PythonVersion;
 import com.facebook.buck.python.toolchain.impl.PythonPlatformsProviderFactoryUtils;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.ParameterizedTests;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;
@@ -144,8 +144,7 @@ public class PythonTestIntegrationTest {
   @Test
   public void testPythonSetupClassFailure() throws IOException, InterruptedException {
     assumePythonVersionIsAtLeast("2.7", "`setUpClass` support was added in Python-2.7");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("test", "//:test-setup-class-failure");
+    ProcessResult result = workspace.runBuckCommand("test", "//:test-setup-class-failure");
     result.assertSpecialExitCode(
         "Tests should execute successfully but fail.", ExitCode.TEST_ERROR);
     assertThat(
@@ -171,7 +170,7 @@ public class PythonTestIntegrationTest {
   @Test
   public void testPythonSetupClassFailureWithTestSuite() throws IOException, InterruptedException {
     assumePythonVersionIsAtLeast("2.7", "`setUpClass` support was added in Python-2.7");
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("test", "//:test-setup-class-failure-with-test-suite");
     result.assertSpecialExitCode(
         "Tests should execute successfully but fail.", ExitCode.TEST_ERROR);
@@ -190,7 +189,7 @@ public class PythonTestIntegrationTest {
     workspace.runBuckBuild("//:test-success").assertSuccess();
 
     // Clean buck-out.
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
 
     // Run the tests, which should get cache hits for everything.
     workspace.runBuckCommand("test", "//:test-success").assertSuccess();

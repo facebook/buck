@@ -52,14 +52,10 @@ public class GenAidlDescription implements Description<GenAidlDescriptionArg> {
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       GenAidlDescriptionArg args) {
-    AndroidLegacyToolchain androidLegacyToolchain =
-        toolchainProvider.getByName(
-            AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
-
     return new GenAidl(
         buildTarget,
         projectFilesystem,
-        androidLegacyToolchain,
+        toolchainProvider,
         params,
         args.getAidl(),
         args.getImportPath());

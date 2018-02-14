@@ -29,11 +29,14 @@ import java.nio.file.Path;
 
 public class SymlinkTreeStep implements Step {
 
+  private final String name;
   private final ProjectFilesystem filesystem;
   private final Path root;
   private final ImmutableMap<Path, Path> links;
 
-  public SymlinkTreeStep(ProjectFilesystem filesystem, Path root, ImmutableMap<Path, Path> links) {
+  public SymlinkTreeStep(
+      String category, ProjectFilesystem filesystem, Path root, ImmutableMap<Path, Path> links) {
+    this.name = category + "_link_tree";
     this.filesystem = filesystem;
     this.root = root;
     this.links = links;
@@ -41,12 +44,12 @@ public class SymlinkTreeStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return "link tree @ " + root.toString();
+    return getShortName() + " @ " + root.toString();
   }
 
   @Override
   public String getShortName() {
-    return "link_tree";
+    return name;
   }
 
   @Override
@@ -74,7 +77,9 @@ public class SymlinkTreeStep implements Step {
       return false;
     }
     SymlinkTreeStep that = (SymlinkTreeStep) obj;
-    return Objects.equal(this.root, that.root) && Objects.equal(this.links, that.links);
+    return Objects.equal(this.name, that.name)
+        && Objects.equal(this.root, that.root)
+        && Objects.equal(this.links, that.links);
   }
 
   @Override

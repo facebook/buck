@@ -25,6 +25,7 @@ import com.facebook.buck.event.FileHashCacheEvent;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.httpserver.WebServer;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.WatchmanCursor;
 import com.facebook.buck.io.WatchmanWatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -51,7 +52,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.EventBus;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -82,6 +82,7 @@ final class Daemon implements Closeable {
   Daemon(
       Cell rootCell,
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
+      ExecutableFinder executableFinder,
       Optional<WebServer> webServerToReuse) {
     this.rootCell = rootCell;
     this.fileEventBus = new EventBus("file-change-events");
@@ -116,7 +117,8 @@ final class Daemon implements Closeable {
             rootCell.getBuckConfig().getView(ParserConfig.class),
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
-            knownBuildRuleTypesProvider);
+            knownBuildRuleTypesProvider,
+            executableFinder);
     fileEventBus.register(parser);
 
     // Build the the rule key cache recycler.
@@ -231,20 +233,17 @@ final class Daemon implements Closeable {
     return defaultRuleKeyFactoryCacheRecycler;
   }
 
-  void interruptOnClientExit(PrintStream err) throws InterruptedException {
+  void interruptOnClientExit(Thread threadToInterrupt) {
     // Synchronize on parser object so that the main command processing thread is not
     // interrupted mid way through a Parser cache update by the Thread.interrupt() call
     // triggered by System.exit(). The Parser cache will be reused by subsequent commands
     // so needs to be left in a consistent state even if the current command is interrupted
     // due to a client disconnection.
     synchronized (parser) {
-      LOG.info("Nailgun server detects that client was disconnected");
-      // Client should no longer be connected, but printing helps detect false disconnections.
-      err.println(
-          "Server detected that Buck client has disconnected. If you see"
-              + " this message then it is probably false detection.");
+      LOG.debug("Nailgun server is shutting down");
 
-      throw new InterruptedException("Client disconnected");
+      // signal to the main thread that we want to exit
+      threadToInterrupt.interrupt();
     }
   }
 

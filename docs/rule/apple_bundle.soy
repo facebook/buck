@@ -20,6 +20,21 @@ catalogs in the rule's transitive dependencies and generates a bundle containing
 Optionally the generated bundle can also be signed using specified provisioning profiles.
 </p>
 <p>
+Code signing will embed entitlements pointed to by the <code>entitlements_file</code> arg in
+the bundle's <code>apple_binary</code>.  This is the preferred way to specify entitlements
+when building with Buck.
+</p>
+<p>If the entitlements file is not present, it falls back to the <code>CODE_SIGN_ENTITLEMENTS</code> entry in
+   <code>info_plist_substitutions</code>.
+</p>
+<p>
+If after these checks, an entitlements file is still not specified, it will be derived based
+on the entitlements of the selected provisioning profile. Provisioning profiles will be selected
+from profiles pointed to by <code>apple.provisioning_profile_search_path</code>, based on a
+non-expired profile that matches the bundle id and entitlements.
+</p>
+
+<p>
 Code signing will embed entitlements pointed to by the <code>CODE_SIGN_ENTITLEMENTS</code> entry in
 <code>info_plist_substitutions</code>. If an entitlements file is omitted, it will be derived based
 on the entitlements of the selected provisioning profile. Provisioning profiles will be selected
@@ -84,6 +99,22 @@ non-expired profile that matches the bundle id and entitlements.
 {call apple_common.info_plist_substitutions_arg /}
 
 {call buck.tests_apple_arg /}
+
+{call buck.arg}
+  {param name: 'asset_catalogs_compilation' /}
+  {param desc}
+  A dict holding parameters for asset catalogs compiler (actool). Its options include:
+  <ul>
+    <li><code>notices</code> (defaults to <code>True</code>)</li>
+    <li><code>warnings</code> (defaults to <code>True</code>)</li>
+    <li><code>errors</code> (defaults to <code>True</code>)</li>
+    <li><code>compress_pngs</code> (defaults to <code>True</code>)</li>
+    <li><code>optimization</code> (defaults to <code>'space'</code>)</li>
+    <li><code>output_format</code> (defaults to <code>'human-readable-text'</code>)</li>
+    <li><code>extra_flags</code> (defaults to <code>[]</code>)</li>
+  </ul>
+  {/param}
+{/call}
 
 {/param} // args
 

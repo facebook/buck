@@ -39,7 +39,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
@@ -66,6 +65,7 @@ import com.facebook.buck.step.fs.MoveStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.types.Either;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -111,6 +111,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final SourcePath infoPlist;
 
   @AddToRuleKey private final ImmutableMap<String, String> infoPlistSubstitutions;
+
+  @AddToRuleKey private final Optional<SourcePath> entitlementsFile;
 
   @AddToRuleKey private final Optional<BuildRule> binary;
 
@@ -209,6 +211,17 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.infoPlist = infoPlist;
     this.infoPlistSubstitutions = ImmutableMap.copyOf(infoPlistSubstitutions);
     this.binary = binary;
+    Optional<SourcePath> entitlementsFile = Optional.empty();
+    if (binary.isPresent()) {
+      Optional<HasEntitlementsFile> hasEntitlementsFile =
+          buildRuleResolver.requireMetadata(
+              binary.get().getBuildTarget(), HasEntitlementsFile.class);
+      if (hasEntitlementsFile.isPresent()) {
+        entitlementsFile = hasEntitlementsFile.get().getEntitlementsFile();
+      }
+    }
+    this.entitlementsFile = entitlementsFile;
+
     this.appleDsym = appleDsym;
     this.extraBinaries = extraBinaries;
     this.destinations = destinations;
@@ -530,37 +543,45 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       } else {
         // Copy the .mobileprovision file if the platform requires it, and sign the executable.
         Optional<Path> entitlementsPlist = Optional.empty();
-        final Path srcRoot =
-            getProjectFilesystem().getRootPath().resolve(getBuildTarget().getBasePath());
-        Optional<String> entitlementsPlistString =
-            InfoPlistSubstitution.getVariableExpansionForPlatform(
-                CODE_SIGN_ENTITLEMENTS,
-                platform.getName(),
-                withDefaults(
-                    infoPlistSubstitutions,
-                    ImmutableMap.of(
-                        "SOURCE_ROOT", srcRoot.toString(),
-                        "SRCROOT", srcRoot.toString())));
+
+        // Try to use the entitlements file specified in the bundle's binary first.
         entitlementsPlist =
-            entitlementsPlistString.map(
-                entitlementsPlistName -> {
-                  ProjectFilesystem filesystem = getProjectFilesystem();
-                  Path originalEntitlementsPlist =
-                      srcRoot.resolve(Paths.get(entitlementsPlistName));
-                  Path entitlementsPlistWithSubstitutions =
-                      BuildTargets.getScratchPath(
-                          filesystem, getBuildTarget(), "%s-Entitlements.plist");
+            entitlementsFile.map(p -> context.getSourcePathResolver().getAbsolutePath(p));
 
-                  stepsBuilder.add(
-                      new FindAndReplaceStep(
-                          filesystem,
-                          originalEntitlementsPlist,
-                          entitlementsPlistWithSubstitutions,
-                          InfoPlistSubstitution.createVariableExpansionFunction(
-                              infoPlistSubstitutions)));
+        // Fall back to getting CODE_SIGN_ENTITLEMENTS from info_plist_substitutions.
+        if (!entitlementsPlist.isPresent()) {
+          final Path srcRoot =
+              getProjectFilesystem().getRootPath().resolve(getBuildTarget().getBasePath());
+          Optional<String> entitlementsPlistString =
+              InfoPlistSubstitution.getVariableExpansionForPlatform(
+                  CODE_SIGN_ENTITLEMENTS,
+                  platform.getName(),
+                  withDefaults(
+                      infoPlistSubstitutions,
+                      ImmutableMap.of(
+                          "SOURCE_ROOT", srcRoot.toString(),
+                          "SRCROOT", srcRoot.toString())));
+          entitlementsPlist =
+              entitlementsPlistString.map(
+                  entitlementsPlistName -> {
+                    ProjectFilesystem filesystem = getProjectFilesystem();
+                    Path originalEntitlementsPlist =
+                        srcRoot.resolve(Paths.get(entitlementsPlistName));
+                    Path entitlementsPlistWithSubstitutions =
+                        BuildTargets.getScratchPath(
+                            filesystem, getBuildTarget(), "%s-Entitlements.plist");
 
-                  return filesystem.resolve(entitlementsPlistWithSubstitutions);
-                });
+                    stepsBuilder.add(
+                        new FindAndReplaceStep(
+                            filesystem,
+                            originalEntitlementsPlist,
+                            entitlementsPlistWithSubstitutions,
+                            InfoPlistSubstitution.createVariableExpansionFunction(
+                                infoPlistSubstitutions)));
+
+                    return filesystem.resolve(entitlementsPlistWithSubstitutions);
+                  });
+        }
 
         signingEntitlementsTempPath =
             Optional.of(
@@ -681,14 +702,13 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return stepsBuilder.build();
   }
 
-  private void verifyResourceConflicts(AppleBundleResources resources,
-                                       SourcePathResolver resolver) {
+  private void verifyResourceConflicts(
+      AppleBundleResources resources, SourcePathResolver resolver) {
     // Ensure there are no resources that will overwrite each other
     // TODO: handle ResourceDirsContainingResourceDirs
     Set<Path> resourcePaths = new HashSet<>();
-    for (SourcePath path : Iterables.concat(
-        resources.getResourceDirs(),
-        resources.getResourceFiles())) {
+    for (SourcePath path :
+        Iterables.concat(resources.getResourceDirs(), resources.getResourceFiles())) {
       Path pathInBundle = resolver.getRelativePath(path).getFileName();
       if (resourcePaths.contains(pathInBundle)) {
         throw new HumanReadableException(

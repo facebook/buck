@@ -38,19 +38,19 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
   private final MinionWorkloadAllocator allocator;
   private final CompletableFuture<ExitState> exitCodeFuture;
   private final DistBuildTraceTracker chromeTraceTracker;
-  private final BuildRuleFinishedPublisher buildRuleFinishedPublisher;
+  private final CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher;
   private final MinionHealthTracker minionHealthTracker;
 
   public ActiveCoordinatorService(
       MinionWorkloadAllocator allocator,
       CompletableFuture<ExitState> exitCodeFuture,
       DistBuildTraceTracker chromeTraceTracker,
-      BuildRuleFinishedPublisher buildRuleFinishedPublisher,
+      CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher,
       MinionHealthTracker minionHealthTracker) {
     this.allocator = allocator;
     this.exitCodeFuture = exitCodeFuture;
     this.chromeTraceTracker = chromeTraceTracker;
-    this.buildRuleFinishedPublisher = buildRuleFinishedPublisher;
+    this.coordinatorBuildRuleEventsPublisher = coordinatorBuildRuleEventsPublisher;
     this.minionHealthTracker = minionHealthTracker;
   }
 
@@ -61,7 +61,7 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
     response.setContinueBuilding(true);
     response.setWorkUnits(new ArrayList<>());
 
-    buildRuleFinishedPublisher.createBuildRuleCompletionEvents(
+    coordinatorBuildRuleEventsPublisher.createBuildRuleCompletionEvents(
         ImmutableList.copyOf(request.getFinishedTargets()));
 
     if (exitCodeFuture.isDone()) {
@@ -88,6 +88,18 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
         allocator.dequeueZeroDependencyNodes(
             request.getMinionId(), request.getFinishedTargets(), request.getMaxWorkUnitsToFetch());
 
+    // TODO(alisdair): experiment with only sending started event for first node in chain,
+    // and then send events for later nodes in the chain as their children finish.
+    ImmutableList.Builder<String> startedTargetsBuilder = ImmutableList.<String>builder();
+    for (WorkUnit workUnit : newWorkUnitsForMinion) {
+      startedTargetsBuilder.addAll(workUnit.getBuildTargets());
+    }
+    coordinatorBuildRuleEventsPublisher.createBuildRuleStartedEvents(startedTargetsBuilder.build());
+
+    if (allocator.haveMostBuildRulesCompleted()) {
+      coordinatorBuildRuleEventsPublisher.createMostBuildRulesCompletedEvent();
+    }
+
     chromeTraceTracker.updateWork(
         request.getMinionId(), request.getFinishedTargets(), newWorkUnitsForMinion);
 
@@ -105,6 +117,8 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
       response.setWorkUnits(newWorkUnitsForMinion);
     }
 
+    coordinatorBuildRuleEventsPublisher.updateCoordinatorBuildProgress(
+        allocator.getBuildProgress());
     return response;
   }
 

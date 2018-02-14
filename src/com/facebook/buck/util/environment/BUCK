@@ -3,6 +3,7 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 PLATFORM_SRCS = [
     "Architecture.java",
     "Platform.java",
+    "PlatformType.java",
 ]
 
 java_library(
@@ -39,7 +40,6 @@ java_immutables_library(
         "//src/com/facebook/buck/io:transport",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:build_id",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/rules:relative_cell_name",
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/util:io",

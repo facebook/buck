@@ -18,8 +18,9 @@ package com.facebook.buck.shell;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
@@ -227,7 +228,7 @@ public class GenruleDescriptionIntegrationTest {
   }
 
   private void expectGenruleOutput(String genrule, List<String> expectedOutputs) throws Exception {
-    ProjectWorkspace.ProcessResult buildResult = workspace.runBuckCommand("build", genrule);
+    ProcessResult buildResult = workspace.runBuckCommand("build", genrule);
     buildResult.assertSuccess();
 
     String outputFileContents = workspace.getFileContents(getOutputFile(genrule));
@@ -240,7 +241,7 @@ public class GenruleDescriptionIntegrationTest {
 
   private Path getOutputFile(String targetName) {
     try {
-      ProjectWorkspace.ProcessResult buildResult =
+      ProcessResult buildResult =
           workspace.runBuckCommand("targets", targetName, "--show-full-output", "--json");
       buildResult.assertSuccess();
       JsonNode jsonNode = ObjectMappers.READER.readTree(buildResult.getStdout()).get(0);

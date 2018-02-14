@@ -84,6 +84,8 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
     builder.append(queryString.substring(lastEnd, queryString.length()));
     String newQuery = builder.toString();
 
-    return queryString.equals(newQuery) ? Optional.empty() : Optional.of(Query.of(newQuery));
+    return queryString.equals(newQuery)
+        ? Optional.empty()
+        : Optional.of(Query.of(newQuery, query.getBaseName(), query.getResolvedQuery()));
   }
 }

@@ -29,7 +29,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -43,7 +42,6 @@ import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
@@ -58,6 +56,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -111,9 +110,6 @@ public class CxxCompilationDatabaseTest {
             .build();
 
     ImmutableSortedSet.Builder<CxxPreprocessAndCompile> rules = ImmutableSortedSet.naturalOrder();
-    BuildRuleParams compileBuildRuleParams =
-        TestBuildRuleParams.create()
-            .withDeclaredDeps(ImmutableSortedSet.of(privateSymlinkTree, exportedSymlinkTree));
     class FrameworkPathAppendableFunction
         implements RuleKeyAppendableFunction<FrameworkPath, Path> {
       @Override
@@ -131,7 +127,7 @@ public class CxxCompilationDatabaseTest {
             CxxPreprocessAndCompile.preprocessAndCompile(
                 compileTarget,
                 filesystem,
-                compileBuildRuleParams,
+                ImmutableSortedSet.of(privateSymlinkTree, exportedSymlinkTree),
                 new PreprocessorDelegate(
                     testSourcePathResolver,
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
@@ -181,7 +177,8 @@ public class CxxCompilationDatabaseTest {
 
     CxxCompilationDatabase.GenerateCompilationCommandsJson step =
         (CxxCompilationDatabase.GenerateCompilationCommandsJson) buildSteps.get(1);
-    Iterable<CxxCompilationDatabaseEntry> observedEntries = step.createEntries();
+    Iterable<CxxCompilationDatabaseEntry> observedEntries =
+        step.createEntries().collect(Collectors.toList());
     Iterable<CxxCompilationDatabaseEntry> expectedEntries =
         ImmutableList.of(
             CxxCompilationDatabaseEntry.of(

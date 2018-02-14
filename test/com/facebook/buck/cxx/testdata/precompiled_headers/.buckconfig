@@ -1,4 +1,9 @@
 [cxx]
-pch_enabled = true
+  pch_enabled = true
+
 [build]
-depfiles = enabled
+  depfiles = enabled
+
+[repositories]
+  primary = .
+  secondary = secondary

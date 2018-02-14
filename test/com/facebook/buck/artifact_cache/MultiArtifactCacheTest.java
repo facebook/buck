@@ -27,7 +27,7 @@ import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -260,6 +260,11 @@ public class MultiArtifactCacheTest {
     @Override
     public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
       return Futures.immediateFuture(fetch(ruleKey, output));
+    }
+
+    @Override
+    public void skipPendingAndFutureAsyncFetches() {
+      // Async requests are not supported by SimpleArtifactCache, so do nothing
     }
 
     private CacheResult fetch(RuleKey ruleKey, LazyPath output) {

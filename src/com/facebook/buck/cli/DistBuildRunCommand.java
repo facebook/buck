@@ -24,28 +24,34 @@ import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.FileContentsProvider;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
-import com.facebook.buck.distributed.build_slave.BuildRuleFinishedPublisher;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker.SlaveEvents;
+import com.facebook.buck.distributed.build_slave.CoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.distributed.build_slave.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.build_slave.HealthCheckStatsTracker;
-import com.facebook.buck.distributed.build_slave.NoOpUnexpectedSlaveCacheMissTracker;
-import com.facebook.buck.distributed.build_slave.UnexpectedSlaveCacheMissTracker;
+import com.facebook.buck.distributed.build_slave.MinionBuildProgressTracker;
+import com.facebook.buck.distributed.build_slave.NoOpMinionBuildProgressTracker;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.listener.DistBuildSlaveEventBusListener;
-import com.facebook.buck.event.listener.NoOpBuildRuleFinishedPublisher;
+import com.facebook.buck.event.listener.NoOpCoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.Pair;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
+import com.facebook.buck.rules.keys.EventPostingRuleKeyCacheScope;
+import com.facebook.buck.rules.keys.RuleKeyCacheScope;
+import com.facebook.buck.rules.keys.TrackedRuleKeyCache;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.timing.DefaultClock;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -99,11 +105,11 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
 
   @Nullable private DistBuildSlaveEventBusListener slaveEventListener;
 
-  private BuildRuleFinishedPublisher buildRuleFinishedPublisher =
-      new NoOpBuildRuleFinishedPublisher();
+  private CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher =
+      new NoOpCoordinatorBuildRuleEventsPublisher();
 
-  private UnexpectedSlaveCacheMissTracker unexpectedSlaveCacheMissTracker =
-      new NoOpUnexpectedSlaveCacheMissTracker();
+  private MinionBuildProgressTracker minionBuildProgressTracker =
+      new NoOpMinionBuildProgressTracker();
 
   private final FileMaterializationStatsTracker fileMaterializationStatsTracker =
       new FileMaterializationStatsTracker();
@@ -173,7 +179,12 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
             getConcurrencyLimit(state.getRootCell().getBuckConfig());
 
         try (CommandThreadManager pool =
-            new CommandThreadManager(getClass().getName(), concurrencyLimit)) {
+                new CommandThreadManager(getClass().getName(), concurrencyLimit);
+            RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
+                new EventPostingRuleKeyCacheScope<>(
+                    params.getBuckEventBus(),
+                    new TrackedRuleKeyCache<>(
+                        new DefaultRuleKeyCache<>(), new InstrumentingCacheStatsTracker()))) {
           // Note that we cannot use the same pool of build threads for file materialization
           // because usually all build threads are waiting for files to be materialized, and
           // there is no thread left for the FileContentsProvider(s) to use.
@@ -201,8 +212,9 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   multiSourceFileContentsProvider,
                   healthCheckStatsTracker,
                   timeStatsTracker,
-                  getBuildRuleFinishedPublisher(),
-                  getUnexpectedSlaveCacheMissTracker());
+                  getCoordinatorBuildRuleEventsPublisher(),
+                  getMinionBuildProgressTracker(),
+                  ruleKeyCacheScope);
 
           distBuildExecutor.onBuildSlavePreparationCompleted(
               () -> timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_PREPARATION_TIME));
@@ -323,17 +335,17 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
               healthCheckStatsTracker,
               scheduledExecutorService);
 
-      buildRuleFinishedPublisher = slaveEventListener;
-      unexpectedSlaveCacheMissTracker = slaveEventListener;
+      coordinatorBuildRuleEventsPublisher = slaveEventListener;
+      minionBuildProgressTracker = slaveEventListener;
     }
   }
 
-  private BuildRuleFinishedPublisher getBuildRuleFinishedPublisher() {
-    return Preconditions.checkNotNull(buildRuleFinishedPublisher);
+  private CoordinatorBuildRuleEventsPublisher getCoordinatorBuildRuleEventsPublisher() {
+    return Preconditions.checkNotNull(coordinatorBuildRuleEventsPublisher);
   }
 
-  private UnexpectedSlaveCacheMissTracker getUnexpectedSlaveCacheMissTracker() {
-    return Preconditions.checkNotNull(unexpectedSlaveCacheMissTracker);
+  private MinionBuildProgressTracker getMinionBuildProgressTracker() {
+    return Preconditions.checkNotNull(minionBuildProgressTracker);
   }
 
   @Override

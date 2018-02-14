@@ -16,8 +16,7 @@
 
 package com.facebook.buck.tools.consistency;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.tools.consistency.BuckStressRunner.StressorException;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.tools.consistency.DifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
 import com.facebook.buck.tools.consistency.TargetsStressRunner.TargetsStressRunException;
@@ -26,10 +25,10 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -61,79 +60,7 @@ public class TargetsStressRunnerTest {
   }
 
   @Test
-  public void returnsErrorIfWritingTargetsFails() throws IOException, StressorException {
-    expectedException.expect(StressorException.class);
-    expectedException.expectMessage("Got a non-zero return code: 1");
-    binWriter.writeArgEchoer(1);
-
-    List<String> expectedCommand =
-        ImmutableList.of(
-            System.getProperty("user.dir"),
-            tempBinPath.toAbsolutePath().toString(),
-            "query",
-            "deps(%s)",
-            "//:target1",
-            "//:target2",
-            "Random hashes configured");
-
-    Path targetsFile = temporaryPaths.newFile("targets_list");
-    try {
-      TargetsStressRunner runner =
-          new TargetsStressRunner(
-              differFactory,
-              Optional.of("python"),
-              tempBinPath.toAbsolutePath().toString(),
-              ImmutableList.of(),
-              ImmutableList.of("//:target1", "//:target2"));
-      runner.writeTargetsListToFile(targetsFile);
-    } catch (Exception e) {
-      Assert.assertEquals(expectedCommand, Files.readAllLines(targetsFile));
-      throw e;
-    }
-  }
-
-  @Test
-  public void returnsErrorIfFileCouldNotBeWritten() throws IOException, StressorException {
-    expectedException.expect(StressorException.class);
-    expectedException.expectMessage("Could not write query results");
-    binWriter.writeArgEchoer(0);
-
-    Path targetsFile = temporaryPaths.getRoot().resolve("nonexistent").resolve("path");
-    binWriter.writeLineEchoer(new String[] {"//:target1", "//:target2", "//:target3"}, 0);
-    TargetsStressRunner runner =
-        new TargetsStressRunner(
-            differFactory,
-            Optional.of("python"),
-            tempBinPath.toAbsolutePath().toString(),
-            ImmutableList.of(),
-            ImmutableList.of("//:target1", "//:target2"));
-    runner.writeTargetsListToFile(targetsFile);
-  }
-
-  @Test
-  public void writesTargetListsToFile() throws IOException, StressorException {
-    Path targetsFile = temporaryPaths.newFile("targets_list");
-    binWriter.writeLineEchoer(new String[] {"//:target1", "//:target2", "//:target3"}, 0);
-    TargetsStressRunner runner =
-        new TargetsStressRunner(
-            differFactory,
-            Optional.of("python"),
-            tempBinPath.toAbsolutePath().toString(),
-            ImmutableList.of(),
-            ImmutableList.of("//:target1", "//:target2"));
-
-    runner.writeTargetsListToFile(targetsFile);
-
-    List<String> lines = Files.readAllLines(targetsFile);
-    Assert.assertEquals(3, lines.size());
-    Assert.assertEquals("//:target1", lines.get(0));
-    Assert.assertEquals("//:target2", lines.get(1));
-    Assert.assertEquals("//:target3", lines.get(2));
-  }
-
-  @Test
   public void getsCorrectBuckRunners() throws IOException, InterruptedException {
-    Path targetsFile = temporaryPaths.newFile("targets_list");
     TestPrintStream testStream1 = TestPrintStream.create();
     TestPrintStream testStream2 = TestPrintStream.create();
     binWriter.writeArgEchoer(0);
@@ -153,16 +80,47 @@ public class TargetsStressRunnerTest {
             "-c",
             "config=value",
             "--show-target-hash",
-            String.format("@%s", targetsFile.toAbsolutePath().toString()),
-            "Random hashes configured");
+            "--show-transitive-target-hashes",
+            "--target-hash-file-mode=PATHS_ONLY",
+            "@",
+            "Random hashes configured",
+            "Reading arguments from @",
+            "//:target1",
+            "//:target2");
 
-    List<BuckRunner> runners = runner.getBuckRunners(2, targetsFile, Optional.empty());
+    List<BuckRunner> runners = runner.getBuckRunners(2, Optional.empty());
 
     Assert.assertEquals(2, runners.size());
     runners.get(0).run(testStream1);
     runners.get(1).run(testStream2);
-    Assert.assertEquals(expectedCommand, Arrays.asList(testStream1.getOutputLines()));
-    Assert.assertEquals(expectedCommand, Arrays.asList(testStream2.getOutputLines()));
+    ImmutableList<String> outputLines1 = ImmutableList.copyOf(testStream1.getOutputLines());
+    ImmutableList<String> outputLines2 = ImmutableList.copyOf(testStream2.getOutputLines());
+
+    assertAllStartWithPrefix(outputLines1, expectedCommand, 11);
+    assertAllStartWithPrefix(outputLines2, expectedCommand, 11);
+  }
+
+  private void assertAllStartWithPrefix(
+      List<String> lines, List<String> expectedPrefixes, int randomStartIdx) {
+    Assert.assertEquals(expectedPrefixes.size(), lines.size());
+    int partition = randomStartIdx == -1 ? lines.size() : randomStartIdx;
+    Assert.assertThat(
+        lines.subList(0, partition),
+        Matchers.contains(
+            expectedPrefixes
+                .subList(0, partition)
+                .stream()
+                .map(prefix -> Matchers.startsWith(prefix))
+                .collect(ImmutableList.toImmutableList())));
+
+    Assert.assertThat(
+        lines.subList(partition, lines.size()),
+        Matchers.containsInAnyOrder(
+            expectedPrefixes
+                .subList(partition, expectedPrefixes.size())
+                .stream()
+                .map(prefix -> Matchers.startsWith(prefix))
+                .collect(ImmutableList.toImmutableList())));
   }
 
   @Test

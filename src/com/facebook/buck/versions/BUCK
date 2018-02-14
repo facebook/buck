@@ -22,11 +22,13 @@ TRANSLATOR_SRCS = [
 java_library(
     name = "translator",
     srcs = TRANSLATOR_SRCS,
+    exported_deps = [
+        "//src/com/facebook/buck/util/types:types",
+    ],
     visibility = ["PUBLIC"],
     deps = [
         ":types",
         "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:interfaces",
@@ -65,6 +67,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/rules/query:query",
         "//src/com/facebook/buck/rules/query:types",
+        "//src/com/facebook/buck/rules/query:utils",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/cache:cache",

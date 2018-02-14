@@ -39,7 +39,7 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
@@ -515,7 +515,8 @@ public class ServedCacheIntegrationTest {
             Optional.empty(),
             DIRECT_EXECUTOR_SERVICE,
             DIRECT_EXECUTOR_SERVICE,
-            Optional.empty())
+            DIRECT_EXECUTOR_SERVICE,
+            DIRECT_EXECUTOR_SERVICE)
         .newInstance();
   }
 }

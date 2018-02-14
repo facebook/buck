@@ -16,21 +16,28 @@
 
 package com.facebook.buck.graph;
 
+import com.facebook.buck.util.Escaper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class Dot<T> {
+
+  private static Pattern VALID_ID_PATTERN = Pattern.compile("[a-zA-Z\200-\377_0-9]+");
 
   private final DirectedAcyclicGraph<T> graph;
   private final String graphName;
   private final Function<T, String> nodeToName;
   private final Function<T, String> nodeToTypeName;
+  private final Function<T, ImmutableSortedMap<String, String>> nodeToAttributes;
   private final boolean bfsSorted;
   private final Predicate<T> shouldContainNode;
   private static final Map<String, String> typeColors;
@@ -64,6 +71,7 @@ public class Dot<T> {
     private final String graphName;
     private Function<T, String> nodeToName;
     private Function<T, String> nodeToTypeName;
+    private Function<T, ImmutableSortedMap<String, String>> nodeToAttributes;
     private boolean bfsSorted;
     private Predicate<T> shouldContainNode;
 
@@ -74,6 +82,7 @@ public class Dot<T> {
       nodeToTypeName = Object::toString;
       bfsSorted = false;
       shouldContainNode = node -> true;
+      nodeToAttributes = node -> ImmutableSortedMap.of();
     }
 
     public Builder<T> setNodeToName(Function<T, String> func) {
@@ -96,6 +105,19 @@ public class Dot<T> {
       return this;
     }
 
+    /**
+     * Configures a function to be used to extract additional attributes to include when rendering
+     * graph nodes.
+     *
+     * <p>In order ot prevent collisions, all attribute names are prefixed with {@code buck_}. They
+     * are also escaped in order to be compatible with the <a
+     * href="https://graphviz.gitlab.io/_pages/doc/info/lang.html">Dot format</a>.
+     */
+    public Builder<T> setNodeToAttributes(Function<T, ImmutableSortedMap<String, String>> func) {
+      nodeToAttributes = func;
+      return this;
+    }
+
     public Dot<T> build() {
       return new Dot<>(this);
     }
@@ -108,6 +130,7 @@ public class Dot<T> {
     this.nodeToTypeName = builder.nodeToTypeName;
     this.bfsSorted = builder.bfsSorted;
     this.shouldContainNode = builder.shouldContainNode;
+    this.nodeToAttributes = builder.nodeToAttributes;
   }
 
   /** Writes out the graph in dot format to the given output */
@@ -125,7 +148,7 @@ public class Dot<T> {
             if (!shouldContainNode.test(node)) {
               return ImmutableSet.<T>of();
             }
-            builder.add(printNode(node, nodeToName, nodeToTypeName));
+            builder.add(printNode(node, nodeToName, nodeToTypeName, nodeToAttributes));
             ImmutableSortedSet<T> nodes =
                 ImmutableSortedSet.copyOf(
                     Sets.filter(graph.getOutgoingNodesFor(node), shouldContainNode::test));
@@ -145,7 +168,7 @@ public class Dot<T> {
           if (!shouldContainNode.test(node)) {
             return;
           }
-          sortedSetBuilder.add(printNode(node, nodeToName, nodeToTypeName));
+          sortedSetBuilder.add(printNode(node, nodeToName, nodeToTypeName, nodeToAttributes));
           for (T sink : Sets.filter(graph.getOutgoingNodesFor(node), shouldContainNode::test)) {
             sortedSetBuilder.add(printEdge(node, sink, nodeToName));
           }
@@ -165,15 +188,13 @@ public class Dot<T> {
     // decide if node name should be escaped according to DOT specification
     // https://en.wikipedia.org/wiki/DOT_(graph_description_language)
     boolean needEscape =
-        str.startsWith("#")
-            || str.contains("//") // May occur within string due to cross-cell.
-            || str.contains(" ")
-            || str.contains("\"")
-            || str.contains("/*");
+        !VALID_ID_PATTERN.matcher(str).matches()
+            || str.isEmpty()
+            || Character.isDigit(str.charAt(0));
     if (!needEscape) {
       return str;
     }
-    return "\"" + str.replace("\"", "\\\"") + "\"";
+    return Escaper.Quoter.DOUBLE.quote(str);
   }
 
   public static String colorFromType(String type) {
@@ -187,11 +208,26 @@ public class Dot<T> {
   }
 
   private static <T> String printNode(
-      T node, Function<T, String> nodeToName, Function<T, String> nodeToTypeName) {
+      T node,
+      Function<T, String> nodeToName,
+      Function<T, String> nodeToTypeName,
+      Function<T, ImmutableSortedMap<String, String>> nodeToAttributes) {
     String source = nodeToName.apply(node);
     String sourceType = nodeToTypeName.apply(node);
+    String extraAttributes = "";
+    ImmutableSortedMap<String, String> nodeAttributes = nodeToAttributes.apply(node);
+    if (!nodeAttributes.isEmpty()) {
+      extraAttributes =
+          ","
+              + nodeAttributes
+                  .entrySet()
+                  .stream()
+                  .map(entry -> escape("buck_" + entry.getKey()) + "=" + escape(entry.getValue()))
+                  .collect(Collectors.joining(","));
+    }
     return String.format(
-        "  %s [style=filled,color=%s];\n", escape(source), Dot.colorFromType(sourceType));
+        "  %s [style=filled,color=%s%s];\n",
+        escape(source), Dot.colorFromType(sourceType), extraAttributes);
   }
 
   private static <T> String printEdge(T sourceN, T sinkN, Function<T, String> nodeToName) {

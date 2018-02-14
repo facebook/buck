@@ -18,12 +18,13 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.MoreStringsForTests;
 import java.io.IOException;
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -132,6 +133,29 @@ public class AuditRulesCommandIntegrationTest {
     result1.assertSuccess();
     assertThat(
         result1.getStdout(),
+        MoreStringsForTests.equalToIgnoringPlatformNewlines(
+            workspace.getFileContents("stdout.all")));
+  }
+
+  @Test
+  public void printsErrorMessagesWhenSuperConsoleRunning() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_rules_prints_failures", tmp);
+    workspace.setUp();
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "audit",
+            "rules",
+            "example/BUCK",
+            "wat/BUCK",
+            "-c",
+            "test.config=bar",
+            "-c",
+            "ui.superconsole=enabled");
+    result.assertSuccess();
+    assertThat(result.getStderr(), Matchers.containsString("WAT"));
+    assertThat(
+        result.getStdout(),
         MoreStringsForTests.equalToIgnoringPlatformNewlines(
             workspace.getFileContents("stdout.all")));
   }

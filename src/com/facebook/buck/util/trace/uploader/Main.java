@@ -16,8 +16,9 @@
 
 package com.facebook.buck.util.trace.uploader;
 
-import com.facebook.buck.util.BestCompressionGZIPOutputStream;
 import com.facebook.buck.util.network.MacIpv6BugWorkaround;
+import com.facebook.buck.util.trace.uploader.types.CompressionType;
+import com.facebook.buck.util.zip.BestCompressionGZIPOutputStream;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Stopwatch;
@@ -29,6 +30,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -55,6 +57,10 @@ public final class Main {
 
   @Option(name = "--log", required = true)
   private File logFile;
+
+  @Option(name = "--compressionType", required = true)
+  @Nullable
+  private CompressionType compressionType;
 
   private PrintWriter log;
 
@@ -95,13 +101,35 @@ public final class Main {
               .addQueryParameter("uuid", this.uuid)
               .addQueryParameter("trace_file_kind", this.traceFileKind)
               .build();
-      Path compressedTracePath = gzip(traceFilePath);
+      Path fileToUpload = traceFilePath;
+      String mediaType = "application/data";
+      String traceName = traceFilePath.getFileName().toString();
+      boolean compressionEnabled = false;
+      if (compressionType != null) {
+        switch (compressionType) {
+          case GZIP:
+            fileToUpload = gzip(traceFilePath);
+            mediaType = "application/json+gzip";
+            traceName = traceName + ".gz";
+            compressionEnabled = true;
+            break;
+          case NONE:
+            break;
+        }
+      }
 
       log.format("Build ID: %s\n", uuid);
       log.format("Trace file: %s (%d) bytes\n", traceFilePath, Files.size(traceFilePath));
-      log.format("Compressed size: %d bytes\n", Files.size(compressedTracePath));
+      if (compressionEnabled) {
+        log.format("Compressed size: %d bytes\n", Files.size(fileToUpload));
+      }
       log.format("Upload URL: %s\n", url);
-      log.format("Uploading compressed trace...");
+      if (compressionEnabled) {
+        log.format("Uploading compressed trace...");
+      } else {
+        log.format("Uploading trace...");
+      }
+
       Request request =
           new Request.Builder()
               .url(url)
@@ -110,10 +138,8 @@ public final class Main {
                       .setType(MultipartBody.FORM)
                       .addFormDataPart(
                           "trace_file",
-                          traceFilePath.getFileName().toString() + ".gz",
-                          RequestBody.create(
-                              MediaType.parse("application/json+gzip"),
-                              compressedTracePath.toFile()))
+                          traceName,
+                          RequestBody.create(MediaType.parse(mediaType), fileToUpload.toFile()))
                       .build())
               .build();
 

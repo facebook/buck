@@ -19,9 +19,10 @@ package com.facebook.buck.dotnet;
 import static com.facebook.buck.dotnet.DotnetAssumptions.assumeCscIsAvailable;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -60,7 +61,7 @@ public class CsharpLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "csc-tests", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(env, "build", "//src:simple");
+    ProcessResult result = workspace.runBuckCommand(env, "build", "//src:simple");
     result.assertSuccess();
   }
 
@@ -70,8 +71,7 @@ public class CsharpLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "csc-tests", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand(env, "build", "//src:prebuilt");
+    ProcessResult result = workspace.runBuckCommand(env, "build", "//src:prebuilt");
     result.assertSuccess();
   }
 
@@ -81,7 +81,7 @@ public class CsharpLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "csc-tests", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(env, "build", "//src:embed");
+    ProcessResult result = workspace.runBuckCommand(env, "build", "//src:embed");
     result.assertSuccess();
   }
 
@@ -91,8 +91,7 @@ public class CsharpLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "csc-tests", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand(env, "build", "//src:dependent");
+    ProcessResult result = workspace.runBuckCommand(env, "build", "//src:dependent");
     result.assertSuccess();
   }
 

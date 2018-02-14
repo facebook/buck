@@ -55,12 +55,12 @@ public class MinionLocalBuildStateTracker {
   // Targets for which build hasn't started yet
   private final List<WorkUnit> workUnitsToBuild = new ArrayList<>();
 
-  private final UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker;
+  private final MinionBuildProgressTracker minionBuildProgressTracker;
 
   public MinionLocalBuildStateTracker(
-      int maxWorkUnitBuildCapacity, UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker) {
+      int maxWorkUnitBuildCapacity, MinionBuildProgressTracker minionBuildProgressTracker) {
     availableWorkUnitCapacity = maxWorkUnitBuildCapacity;
-    this.unexpectedCacheMissTracker = unexpectedCacheMissTracker;
+    this.minionBuildProgressTracker = minionBuildProgressTracker;
   }
 
   /** @return True if this minion has free capacity to build more targets */
@@ -127,6 +127,7 @@ public class MinionLocalBuildStateTracker {
     }
 
     knownTargets.addAll(targetsToBuild);
+    minionBuildProgressTracker.updateTotalRuleCount(knownTargets.size());
 
     LOG.debug(
         String.format(
@@ -147,6 +148,7 @@ public class MinionLocalBuildStateTracker {
     Preconditions.checkArgument(!finishedTargets.contains(target));
 
     finishedTargets.add(target);
+    minionBuildProgressTracker.updateFinishedRuleCount(finishedTargets.size());
     increaseCapacityIfTerminalNode(target);
     detectUnexpectedCacheMisses(buildResult);
   }
@@ -178,7 +180,7 @@ public class MinionLocalBuildStateTracker {
         LOG.warn(
             "Got [%d] cache misses for direct dependencies of target [%s], built them locally.",
             depsWithCacheMisses.size(), target);
-        unexpectedCacheMissTracker.onUnexpectedCacheMiss(depsWithCacheMisses.size());
+        minionBuildProgressTracker.onUnexpectedCacheMiss(depsWithCacheMisses.size());
 
         // Make sure we don't record these targets again.
         locallyBuiltDirectDeps.addAll(depsWithCacheMisses);

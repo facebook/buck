@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageMode;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -50,7 +51,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       AndroidSdkLocation androidSdkLocation,
-      AndroidLegacyToolchain androidLegacyToolchain,
+      AndroidPlatformTarget androidPlatformTarget,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       AndroidBinary apkUnderTest,
@@ -65,7 +66,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         buildTarget,
         projectFilesystem,
         androidSdkLocation,
-        androidLegacyToolchain,
+        androidPlatformTarget,
         buildRuleParams,
         ruleFinder,
         apkUnderTest.getProguardJvmArgs(),

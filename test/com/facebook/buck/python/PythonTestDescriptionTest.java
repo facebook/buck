@@ -231,12 +231,12 @@ public class PythonTestDescriptionTest {
   public void explicitPythonHome() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PythonPlatform platform1 =
-        PythonPlatform.of(
+        new TestPythonPlatform(
             InternalFlavor.of("pyPlat1"),
             new PythonEnvironment(Paths.get("python2.6"), PythonVersion.of("CPython", "2.6")),
             Optional.empty());
     PythonPlatform platform2 =
-        PythonPlatform.of(
+        new TestPythonPlatform(
             InternalFlavor.of("pyPlat2"),
             new PythonEnvironment(Paths.get("python2.7"), PythonVersion.of("CPython", "2.7")),
             Optional.empty());

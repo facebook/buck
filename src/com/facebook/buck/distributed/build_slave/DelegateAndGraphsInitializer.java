@@ -40,6 +40,7 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.PathTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
@@ -49,6 +50,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -83,7 +85,8 @@ public class DelegateAndGraphsInitializer {
   }
 
   public ListenableFuture<ActionGraphAndResolver> getActionGraphAndResolver() {
-    return Futures.transform(delegateAndGraphs, x -> x.getActionGraphAndResolver());
+    return Futures.transform(
+        delegateAndGraphs, x -> x.getActionGraphAndResolver(), MoreExecutors.directExecutor());
   }
 
   private DelegateAndGraphs createDelegateAndGraphs() throws IOException, InterruptedException {
@@ -151,7 +154,13 @@ public class DelegateAndGraphsInitializer {
                   args.getRuleKeyConfiguration(),
                   ActionGraphParallelizationMode.DISABLED,
                   Optional.empty(),
-                  args.getShouldInstrumentActionGraph());
+                  args.getShouldInstrumentActionGraph(),
+                  CloseableMemoizedSupplier.of(
+                      () -> {
+                        throw new IllegalStateException(
+                            "should not use parallel executor for action graph construction in distributed slave build");
+                      },
+                      ignored -> {}));
       return actionGraphAndResolver;
     } finally {
       args.getTimingStatsTracker().stopTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
@@ -173,7 +182,8 @@ public class DelegateAndGraphsInitializer {
               DefaultSourcePathResolver.from(ruleFinder),
               ruleFinder,
               caches.remoteStateCache,
-              caches.materializingCache);
+              caches.materializingCache,
+              this.args.getRuleKeyConfiguration());
     } else {
       cachingBuildEngineDelegate = new LocalCachingBuildEngineDelegate(caches.remoteStateCache);
     }

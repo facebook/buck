@@ -16,9 +16,9 @@
 
 package com.facebook.buck.js;
 
-import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -52,12 +52,13 @@ public class JsBundleGenrule extends Genrule
 
   @AddToRuleKey final SourcePath jsBundleSourcePath;
   @AddToRuleKey final boolean rewriteSourcemap;
+  @AddToRuleKey final boolean rewriteMisc;
+  @AddToRuleKey final boolean skipResources;
   private final JsBundleOutputs jsBundle;
 
   public JsBundleGenrule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      AndroidLegacyToolchain androidLegacyToolchain,
       SandboxExecutionStrategy sandboxExecutionStrategy,
       BuildRuleResolver resolver,
       BuildRuleParams params,
@@ -67,12 +68,12 @@ public class JsBundleGenrule extends Genrule
       Optional<Arg> cmdExe,
       JsBundleOutputs jsBundle,
       Optional<String> environmentExpansionSeparator,
+      Optional<AndroidPlatformTarget> androidPlatformTarget,
       Optional<AndroidNdk> androidNdk,
       Optional<AndroidSdkLocation> androidSdkLocation) {
     super(
         buildTarget,
         projectFilesystem,
-        androidLegacyToolchain,
         resolver,
         params,
         sandboxExecutionStrategy,
@@ -85,11 +86,14 @@ public class JsBundleGenrule extends Genrule
         false,
         true,
         environmentExpansionSeparator,
+        androidPlatformTarget,
         androidNdk,
         androidSdkLocation);
     this.jsBundle = jsBundle;
-    jsBundleSourcePath = jsBundle.getSourcePathToOutput();
+    this.jsBundleSourcePath = jsBundle.getSourcePathToOutput();
     this.rewriteSourcemap = args.getRewriteSourcemap();
+    this.rewriteMisc = args.getRewriteMisc();
+    this.skipResources = args.getSkipResources();
   }
 
   @Override
@@ -119,11 +123,16 @@ public class JsBundleGenrule extends Genrule
       environmentVariablesBuilder.put(
           "SOURCEMAP_OUT", pathResolver.getAbsolutePath(getSourcePathToSourceMap()).toString());
     }
+    if (rewriteMisc) {
+      environmentVariablesBuilder.put(
+          "MISC_OUT", pathResolver.getAbsolutePath(getSourcePathToMisc()).toString());
+    }
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
+    SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
     ImmutableList<Step> buildSteps = super.getBuildSteps(context, buildableContext);
     OptionalInt lastRmStep =
         IntStream.range(0, buildSteps.size())
@@ -146,24 +155,34 @@ public class JsBundleGenrule extends Genrule
                     BuildCellRelativePath.fromCellRelativePath(
                         context.getBuildCellRootPath(),
                         getProjectFilesystem(),
-                        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()))));
+                        sourcePathResolver.getRelativePath(getSourcePathToOutput()))));
 
     if (rewriteSourcemap) {
-      // If the genrule rewrites the source map, too, we have to create the parent dir, and record
+      // If the genrule rewrites the source map, we have to create the parent dir, and record
       // the build artifact
 
       SourcePath sourcePathToSourceMap = getSourcePathToSourceMap();
-      buildableContext.recordArtifact(
-          context.getSourcePathResolver().getRelativePath(sourcePathToSourceMap));
+      buildableContext.recordArtifact(sourcePathResolver.getRelativePath(sourcePathToSourceMap));
       builder.add(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
                   context.getBuildCellRootPath(),
                   getProjectFilesystem(),
-                  context
-                      .getSourcePathResolver()
-                      .getRelativePath(sourcePathToSourceMap)
-                      .getParent())));
+                  sourcePathResolver.getRelativePath(sourcePathToSourceMap).getParent())));
+    }
+
+    if (rewriteMisc) {
+      // If the genrule rewrites the misc folder, we have to create the corresponding dir, and
+      // record its contents
+
+      SourcePath miscDirPath = getSourcePathToMisc();
+      buildableContext.recordArtifact(sourcePathResolver.getRelativePath(miscDirPath));
+      builder.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  sourcePathResolver.getRelativePath(miscDirPath))));
     }
 
     // Last, we add all remaining genrule commands after the last RmStep
@@ -184,12 +203,14 @@ public class JsBundleGenrule extends Genrule
 
   @Override
   public SourcePath getSourcePathToMisc() {
-    return jsBundle.getSourcePathToMisc();
+    return rewriteMisc
+        ? JsBundleOutputs.super.getSourcePathToMisc()
+        : jsBundle.getSourcePathToMisc();
   }
 
   @Override
   public Iterable<AndroidPackageable> getRequiredPackageables() {
-    return jsBundle instanceof AndroidPackageable
+    return !this.skipResources && jsBundle instanceof AndroidPackageable
         ? ((AndroidPackageable) jsBundle).getRequiredPackageables()
         : ImmutableList.of();
   }

@@ -16,17 +16,23 @@
 
 package com.facebook.buck.rules.macros;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.WriteToFileArg;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 
 public interface MacroExpander {
 
-  /** Expand the input given for the this macro to some string. */
-  String expand(
+  /** Expand the input given for the this macro to an Arg. */
+  Arg expand(
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
@@ -38,14 +44,28 @@ public interface MacroExpander {
    * Expand the input given for the this macro to some string, which is intended to be written to a
    * file.
    */
-  default String expandForFile(
+  default Arg expandForFile(
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
       ImmutableList<String> input,
       Object precomputedWork)
       throws MacroException {
-    return expand(target, cellNames, resolver, input, precomputedWork);
+    // "prefix" should give a stable name, so that the same delegate with the same input can output
+    // the same file. We won't optimise for this case, since it's actually unlikely to happen within
+    // a single run, but using a random name would cause 'buck-out' to expand in an uncontrolled
+    // manner.
+    Hasher hasher = Hashing.sha1().newHasher();
+    hasher.putString(getClass().getName(), UTF_8);
+    input.forEach(s -> hasher.putString(s, UTF_8));
+    return makeExpandToFileArg(
+        target,
+        hasher.hash().toString(),
+        expand(target, cellNames, resolver, input, precomputedWork));
+  }
+
+  default Arg makeExpandToFileArg(BuildTarget target, String prefix, Arg delegate) {
+    return new WriteToFileArg(target, prefix, delegate);
   }
 
   /**

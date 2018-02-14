@@ -19,8 +19,9 @@ package com.facebook.buck.cxx;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
@@ -52,7 +53,7 @@ public class CxxErrorsIntegrationTest {
 
   @Test
   public void compilerError() throws IOException {
-    ProjectWorkspace.ProcessResult runResult =
+    ProcessResult runResult =
         workspace.runBuckCommand(
             "build", "//:not_compilable#static," + CxxPlatforms.getHostFlavor().getName());
     runResult.assertFailure();
@@ -61,12 +62,12 @@ public class CxxErrorsIntegrationTest {
 
   @Test
   public void linkError() throws IOException {
-    ProjectWorkspace.ProcessResult staticBuildResult =
+    ProcessResult staticBuildResult =
         workspace.runBuckCommand(
             "build", "//:not_linkable#static," + CxxPlatforms.getHostFlavor().getName());
     staticBuildResult.assertSuccess();
 
-    ProjectWorkspace.ProcessResult sharedBuildResult =
+    ProcessResult sharedBuildResult =
         workspace.runBuckCommand(
             "build", "//:not_linkable#shared," + CxxPlatforms.getHostFlavor().getName());
     sharedBuildResult.assertFailure();

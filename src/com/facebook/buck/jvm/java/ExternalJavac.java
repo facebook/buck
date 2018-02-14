@@ -21,7 +21,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.NonHashableSourcePathContainer;
@@ -37,7 +36,9 @@ import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.zip.Unzip;
+import com.facebook.buck.util.types.Either;
+import com.facebook.buck.util.unarchive.ArchiveFormat;
+import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -283,11 +284,13 @@ public class ExternalJavac implements Javac {
       } else if (pathString.endsWith(SRC_ZIP) || pathString.endsWith(SRC_JAR)) {
         // For a Zip of .java files, create a JavaFileObject for each .java entry.
         ImmutableList<Path> zipPaths =
-            Unzip.extractZipFile(
-                projectFilesystemFactory,
-                projectFilesystem.resolve(path),
-                projectFilesystem.resolve(workingDirectory),
-                Unzip.ExistingFileMode.OVERWRITE);
+            ArchiveFormat.ZIP
+                .getUnarchiver()
+                .extractArchive(
+                    projectFilesystemFactory,
+                    projectFilesystem.resolve(path),
+                    projectFilesystem.resolve(workingDirectory),
+                    ExistingFileMode.OVERWRITE);
         sources.addAll(
             zipPaths.stream().filter(input -> input.toString().endsWith(".java")).iterator());
       }

@@ -228,6 +228,8 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
             'command_alias',
             'export_file',
             'genrule',
+            'http_archive',
+            'http_file',
             'remote_file',
             'worker_tool',
             'zip_file',
@@ -546,6 +548,7 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
         'glob',
         'get_base_path',
         'get_cell_name',
+        'host_info',
         'include_defs',
         'load',
         'read_config',
@@ -867,9 +870,16 @@ docsearch({
 {/template}
 
 
-/** @param name */
+/**
+ * @param name
+ * @param? section
+ */
 {template .ruleLink}
-<a href="{ROOT}rule/{$name}.html"><code>{$name}</code></a>
+  {if not $section}
+    <a href="{ROOT}rule/{$name}.html"><code>{$name}</code></a>
+  {else}
+    <a href="{ROOT}rule/{$name}.html#{$section}"><code>{$section}</code></a>
+  {/if}
 {/template}
 
 /***/
@@ -1058,6 +1068,14 @@ docsearch({
 {/template}
 
 /***/
+{template .reexport_all_header_dependencies}
+{call .ruleLink}
+  {param name : 'cxx_library' /}
+  {param section : 'reexport_all_header_dependencies' /}
+{/call}
+{/template}
+
+/***/
 {template .fn_add_build_file_dep}
 <a href="{ROOT}function/add_build_file_dep.html"><code>add_build_file_dep()</code></a>
 {/template}
@@ -1080,6 +1098,11 @@ docsearch({
 /***/
 {template .fn_read_config}
 <a href="{ROOT}function/read_config.html"><code>read_config()</code></a>
+{/template}
+
+/***/
+{template .fn_host_info}
+<a href="{ROOT}function/host_info.html"><code>host_info()</code></a>
 {/template}
 
 /***/
@@ -1419,13 +1442,19 @@ docsearch({
 {literal}<pre>
 git clone https://github.com/facebook/buck.git
 cd buck
-ant{/literal}{\n}
+ant{/literal}
 {if $withAlias and not $isWindows}
 sudo ln -s ${lb}PWD{rb}/bin/buck /usr/bin/buck
 {elseif not $isWindows}
-./bin/buck --help
+{literal}
+./bin/buck build --show-output buck
+buck-out/gen/programs/buck.pex --help
+{/literal}
 {else}
-.\bin\buck --help
+{literal}
+.\bin\buck build --show-output buck
+buck-out\gen\programs\buck.pex --help
+{/literal}
 {/if}
 </pre>
 {/template}

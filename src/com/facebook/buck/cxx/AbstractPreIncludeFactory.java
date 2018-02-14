@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -23,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
@@ -51,6 +53,12 @@ abstract class AbstractPreIncludeFactory {
 
   @Value.Parameter
   protected abstract SourcePathResolver getPathResolver();
+
+  @Value.Parameter
+  protected abstract SourcePathRuleFinder getRuleFinder();
+
+  @Value.Parameter
+  protected abstract CxxPlatform getCxxPlatform();
 
   /** NOTE: {@code prefix_header} is incompatible with {@code precompiled_header}. */
   @Value.Parameter
@@ -87,9 +95,12 @@ abstract class AbstractPreIncludeFactory {
                               prefixTarget,
                               getProjectFilesystem(),
                               ImmutableSortedSet.of(),
+                              getRuleResolver(),
                               getPathResolver(),
+                              getRuleFinder(),
                               getPrefixHeader().get())));
     }
+
     if (getPrecompiledHeader().isPresent()) {
       Preconditions.checkState(getPrecompiledHeader().get() instanceof BuildTargetSourcePath);
       BuildTargetSourcePath headerPath = (BuildTargetSourcePath) getPrecompiledHeader().get();
@@ -97,6 +108,7 @@ abstract class AbstractPreIncludeFactory {
       Preconditions.checkArgument(rule instanceof CxxPrecompiledHeaderTemplate);
       return Optional.of((CxxPrecompiledHeaderTemplate) rule);
     }
+
     return Optional.empty();
   }
 }

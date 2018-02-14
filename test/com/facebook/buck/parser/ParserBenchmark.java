@@ -21,6 +21,7 @@ import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
@@ -32,8 +33,8 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.caliper.AfterExperiment;
 import com.google.caliper.BeforeExperiment;
@@ -131,7 +132,8 @@ public class ParserBenchmark {
             config.getView(ParserConfig.class),
             typeCoercerFactory,
             marshaller,
-            knownBuildRuleTypesProvider);
+            knownBuildRuleTypesProvider,
+            new ExecutableFinder());
   }
 
   @After

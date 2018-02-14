@@ -23,8 +23,10 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -44,6 +46,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * Represents a precompilable header file, along with dependencies.
@@ -57,6 +60,10 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   private static final Flavor AGGREGATED_PREPROCESS_DEPS_FLAVOR =
       InternalFlavor.of("preprocessor-deps");
+
+  protected final BuildRuleResolver ruleResolver;
+  protected final SourcePathResolver pathResolver;
+  protected final SourcePathRuleFinder ruleFinder;
 
   /**
    * The source path which was expressed as either: (1) the `prefix_header` attribute in a
@@ -77,10 +84,15 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
   PreInclude(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
+      ImmutableSortedSet<BuildRule> deps,
+      BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       SourcePath sourcePath) {
-    super(buildTarget, projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, makeBuildRuleParams(deps));
+    this.ruleResolver = ruleResolver;
+    this.pathResolver = pathResolver;
+    this.ruleFinder = ruleFinder;
     this.sourcePath = sourcePath;
     this.absoluteHeaderPath = pathResolver.getAbsolutePath(sourcePath);
   }
@@ -103,7 +115,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
     return relativizedTo.relativize(getAbsoluteHeaderPath());
   }
 
-  protected static BuildRuleParams makeBuildRuleParams(ImmutableSortedSet<BuildRule> deps) {
+  private static BuildRuleParams makeBuildRuleParams(ImmutableSortedSet<BuildRule> deps) {
     return new BuildRuleParams(() -> deps, () -> ImmutableSortedSet.of(), ImmutableSortedSet.of());
   }
 
@@ -203,8 +215,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
         .collect(ImmutableSet.toImmutableSet());
   }
 
-  private ImmutableSortedSet<BuildRule> getPreprocessDeps(
-      BuildRuleResolver ruleResolver, SourcePathRuleFinder ruleFinder, CxxPlatform cxxPlatform) {
+  private ImmutableSortedSet<BuildRule> getPreprocessDeps(CxxPlatform cxxPlatform) {
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
     for (CxxPreprocessorInput input : getCxxPreprocessorInputs(cxxPlatform)) {
       builder.addAll(input.getDeps(ruleResolver, ruleFinder));
@@ -231,30 +242,18 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
    * Find or create a {@link DependencyAggregation} rule, representing a grouping of dependencies:
    * generally, those deps from the current {@link CxxPlatform}.
    */
-  protected DependencyAggregation requireAggregatedDepsRule(
-      BuildRuleResolver ruleResolver, SourcePathRuleFinder ruleFinder, CxxPlatform cxxPlatform) {
+  protected DependencyAggregation requireAggregatedDepsRule(CxxPlatform cxxPlatform) {
     return (DependencyAggregation)
         ruleResolver.computeIfAbsent(
             createAggregatedDepsTarget(cxxPlatform),
             depAggTarget ->
                 new DependencyAggregation(
-                    depAggTarget,
-                    getProjectFilesystem(),
-                    getPreprocessDeps(ruleResolver, ruleFinder, cxxPlatform)));
+                    depAggTarget, getProjectFilesystem(), getPreprocessDeps(cxxPlatform)));
   }
 
   /** @return newly-built delegate for this PCH build (if precompiling enabled) */
   protected PreprocessorDelegate buildPreprocessorDelegate(
-      SourcePathResolver pathResolver,
-      CxxPlatform cxxPlatform,
-      Preprocessor preprocessor,
-      CxxToolFlags preprocessorFlags) {
-    ImmutableList<CxxHeaders> includes = getIncludes(cxxPlatform);
-    try {
-      CxxHeaders.checkConflictingHeaders(includes);
-    } catch (CxxHeaders.ConflictingHeadersException e) {
-      throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
-    }
+      CxxPlatform cxxPlatform, Preprocessor preprocessor, CxxToolFlags preprocessorFlags) {
     return new PreprocessorDelegate(
         pathResolver,
         cxxPlatform.getCompilerDebugPathSanitizer(),
@@ -262,12 +261,80 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
         getProjectFilesystem().getRootPath(),
         preprocessor,
         PreprocessorFlags.of(
-            /* getPrefixHeader() */ Optional.empty(),
+            Optional.of(getHeaderSourcePath()),
             preprocessorFlags,
             getIncludes(cxxPlatform),
             getFrameworks(cxxPlatform)),
         CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver),
         /* getSandboxTree() */ Optional.empty(),
         /* leadingIncludePaths */ Optional.empty());
+  }
+
+  public abstract CxxPrecompiledHeader getPrecompiledHeader(
+      boolean canPrecompile,
+      PreprocessorDelegate preprocessorDelegateForCxxRule,
+      DependencyAggregation aggregatedPreprocessDepsRule,
+      CxxToolFlags computedCompilerFlags,
+      Function<CxxToolFlags, String> getHash,
+      Function<CxxToolFlags, String> getBaseHash,
+      CxxPlatform cxxPlatform,
+      CxxSource.Type sourceType,
+      ImmutableList<String> sourceFlags);
+
+  /**
+   * Look up or build a precompiled header build rule which this build rule is requesting.
+   *
+   * <p>This method will first try to determine whether a matching PCH was already created; if so,
+   * it will be reused. This is done by searching the cache in the {@link BuildRuleResolver} owned
+   * by this class. If this ends up building a new instance of {@link CxxPrecompiledHeader}, it will
+   * be added to the resolver cache.
+   */
+  protected CxxPrecompiledHeader requirePrecompiledHeader(
+      boolean canPrecompile,
+      PreprocessorDelegate preprocessorDelegate,
+      CxxPlatform cxxPlatform,
+      CxxSource.Type sourceType,
+      CxxToolFlags compilerFlags,
+      DepsBuilder depsBuilder,
+      UnflavoredBuildTarget templateTarget,
+      ImmutableSortedSet<Flavor> flavors) {
+    return (CxxPrecompiledHeader)
+        ruleResolver.computeIfAbsent(
+            BuildTarget.of(templateTarget, flavors),
+            target -> {
+              // Give the PCH a filename that looks like a header file with .gch appended to it,
+              // GCC-style.
+              // GCC accepts an "-include" flag with the .h file as its arg, and auto-appends
+              // ".gch" to
+              // automagically use the precompiled header in place of the original header.  Of
+              // course in
+              // our case we'll only have the ".gch" file, which is alright; the ".h" isn't
+              // truly needed.
+              Path output = BuildTargets.getGenPath(getProjectFilesystem(), target, "%s.h.gch");
+
+              CompilerDelegate compilerDelegate =
+                  new CompilerDelegate(
+                      cxxPlatform.getCompilerDebugPathSanitizer(),
+                      CxxSourceTypes.getCompiler(
+                              cxxPlatform, CxxSourceTypes.getPreprocessorOutputType(sourceType))
+                          .resolve(ruleResolver),
+                      compilerFlags);
+              depsBuilder.add(compilerDelegate);
+
+              depsBuilder.add(getHeaderSourcePath());
+
+              return new CxxPrecompiledHeader(
+                  canPrecompile,
+                  target,
+                  getProjectFilesystem(),
+                  depsBuilder.build(),
+                  output,
+                  preprocessorDelegate,
+                  compilerDelegate,
+                  compilerFlags,
+                  getHeaderSourcePath(),
+                  sourceType,
+                  cxxPlatform.getCompilerDebugPathSanitizer());
+            });
   }
 }

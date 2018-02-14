@@ -117,6 +117,26 @@ public class JavaLibraryRules {
     return abiRules.build();
   }
 
+  public static ImmutableSortedSet<BuildRule> getSourceOnlyAbiRules(
+      BuildRuleResolver resolver, Iterable<BuildRule> inputs) {
+    ImmutableSortedSet.Builder<BuildRule> abiRules = ImmutableSortedSet.naturalOrder();
+    for (BuildRule input : inputs) {
+      if (input instanceof HasJavaAbi) {
+        HasJavaAbi hasAbi = (HasJavaAbi) input;
+        Optional<BuildTarget> abiJarTarget = hasAbi.getSourceOnlyAbiJar();
+        if (!abiJarTarget.isPresent()) {
+          abiJarTarget = hasAbi.getAbiJar();
+        }
+
+        if (abiJarTarget.isPresent()) {
+          BuildRule abiJarRule = resolver.requireRule(abiJarTarget.get());
+          abiRules.add(abiJarRule);
+        }
+      }
+    }
+    return abiRules.build();
+  }
+
   public static ZipArchiveDependencySupplier getAbiClasspath(
       BuildRuleResolver resolver, Iterable<BuildRule> inputs) {
     return new ZipArchiveDependencySupplier(

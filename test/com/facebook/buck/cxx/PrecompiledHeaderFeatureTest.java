@@ -345,10 +345,6 @@ public class PrecompiledHeaderFeatureTest {
         // TODO(steveo): windows support in the near future.
         // (This case is not hit; parameters at top of this test class don't include WINDOWS.)
         throw new IllegalStateException();
-
-      case DEFAULT:
-        // default not used in test.
-        throw new IllegalStateException();
     }
 
     return false;
@@ -380,10 +376,6 @@ public class PrecompiledHeaderFeatureTest {
       case WINDOWS:
         // TODO(steveo): windows support in the near future.
         // (This case is not hit; parameters at top of this test class don't include WINDOWS.)
-        throw new IllegalStateException();
-
-      case DEFAULT:
-        // default not used in test.
         throw new IllegalStateException();
     }
 

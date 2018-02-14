@@ -28,6 +28,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import org.hamcrest.Matchers;
@@ -50,11 +51,13 @@ public class CxxLocationMacroExpanderTest {
     CxxLocationMacroExpander expander =
         new CxxLocationMacroExpander(CxxPlatformUtils.DEFAULT_PLATFORM);
     String expanded =
-        expander.expandFrom(
-            node.getBuildTarget(),
-            node.getCellNames(),
-            resolver,
-            LocationMacro.of(node.getBuildTarget()));
+        Arg.stringify(
+            expander.expandFrom(
+                node.getBuildTarget(),
+                node.getCellNames(),
+                resolver,
+                LocationMacro.of(node.getBuildTarget())),
+            pathResolver);
     assertThat(
         expanded,
         Matchers.equalTo(

@@ -54,13 +54,13 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
   }
 
   @Override
-  public void traverse(FrameworkPath object, Traversal traversal) {
+  public void traverse(CellPathResolver cellRoots, FrameworkPath object, Traversal traversal) {
     switch (object.getType()) {
       case SOURCE_TREE_PATH:
         traversal.traverse(object.getSourceTreePath().get());
         break;
       case SOURCE_PATH:
-        sourcePathTypeCoercer.traverse(object.getSourcePath().get(), traversal);
+        sourcePathTypeCoercer.traverse(cellRoots, object.getSourcePath().get(), traversal);
         break;
       default:
         throw new RuntimeException("Unhandled type: " + object.getType());

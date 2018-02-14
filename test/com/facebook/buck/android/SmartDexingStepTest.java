@@ -16,12 +16,12 @@
 
 package com.facebook.buck.android;
 
-import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.SmartDexingStep.DxPseudoRule;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -45,16 +45,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import org.easymock.EasyMockSupport;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class SmartDexingStepTest extends EasyMockSupport {
+public class SmartDexingStepTest {
   @Rule public TemporaryFolder tmpDir = new TemporaryFolder();
 
   /** Tests whether pseudo rule cache detection is working properly. */
@@ -78,7 +78,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
     DxPseudoRule rule =
         new DxPseudoRule(
             BuildTargetFactory.newInstance("//dummy:target"),
-            TestAndroidLegacyToolchainFactory.create(createAndroidPlatformTarget()),
+            createAndroidPlatformTarget(),
             FakeBuildContext.NOOP_CONTEXT,
             filesystem,
             ImmutableMap.of(testIn.toPath(), actualHashCode),
@@ -112,7 +112,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
         BuildTargetFactory.newInstance("//dummy:target"),
-        TestAndroidLegacyToolchainFactory.create(createAndroidPlatformTarget()),
+        createAndroidPlatformTarget(),
         steps,
         FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(filesystem.getRootPath()),
         filesystem,
@@ -142,8 +142,6 @@ public class SmartDexingStepTest extends EasyMockSupport {
             "xz -z -4 --check=crc32 classes.dex.jar"),
         steps.build(),
         TestExecutionContext.newBuilder().build());
-
-    verifyAll();
   }
 
   @Test
@@ -157,7 +155,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
         BuildTargetFactory.newInstance("//dummy:target"),
-        TestAndroidLegacyToolchainFactory.create(createAndroidPlatformTarget()),
+        createAndroidPlatformTarget(),
         steps,
         FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(filesystem.getRootPath()),
         filesystem,
@@ -187,8 +185,6 @@ public class SmartDexingStepTest extends EasyMockSupport {
             "xz -z -9 --check=crc32 classes.dex.jar"),
         steps.build(),
         TestExecutionContext.newBuilder().build());
-
-    verifyAll();
   }
 
   @Test
@@ -202,7 +198,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
         BuildTargetFactory.newInstance("//dummy:target"),
-        TestAndroidLegacyToolchainFactory.create(createAndroidPlatformTarget()),
+        createAndroidPlatformTarget(),
         steps,
         FakeBuildContext.NOOP_CONTEXT,
         filesystem,
@@ -226,7 +222,6 @@ public class SmartDexingStepTest extends EasyMockSupport {
                 filesystem.resolve("bar.dex.jar") + ")"),
         Iterables.getOnlyElement(steps.build())
             .getDescription(TestExecutionContext.newBuilder().build()));
-    verifyAll();
   }
 
   @Test
@@ -240,7 +235,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
         BuildTargetFactory.newInstance("//dummy:target"),
-        TestAndroidLegacyToolchainFactory.create(createAndroidPlatformTarget()),
+        createAndroidPlatformTarget(),
         steps,
         FakeBuildContext.NOOP_CONTEXT,
         filesystem,
@@ -268,7 +263,6 @@ public class SmartDexingStepTest extends EasyMockSupport {
             "zip-scrub " + filesystem.resolve("classes.dex.jar")),
         steps.build(),
         TestExecutionContext.newBuilder().build());
-    verifyAll();
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -282,7 +276,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     SmartDexingStep.createDxStepForDxPseudoRule(
         BuildTargetFactory.newInstance("//dummy:target"),
-        TestAndroidLegacyToolchainFactory.create(createAndroidPlatformTarget()),
+        createAndroidPlatformTarget(),
         new ImmutableList.Builder<>(),
         FakeBuildContext.NOOP_CONTEXT,
         filesystem,
@@ -295,10 +289,21 @@ public class SmartDexingStepTest extends EasyMockSupport {
   }
 
   private AndroidPlatformTarget createAndroidPlatformTarget() throws IOException {
-    AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
-    expect(androidPlatformTarget.getDxExecutable()).andStubReturn(Paths.get("/usr/bin/dx"));
-    replayAll();
-
+    AndroidPlatformTarget androidPlatformTarget =
+        AndroidPlatformTarget.of(
+            "android",
+            Paths.get(""),
+            Collections.emptyList(),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get("/usr/bin/dx"),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""));
     return androidPlatformTarget;
   }
 }

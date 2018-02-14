@@ -18,12 +18,12 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.exopackage.AndroidDevice;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -75,9 +75,9 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
           System.getProperty(
               "buck.testrunner_classes", new File("build/testrunner/classes").getAbsolutePath()));
 
-  private final AndroidLegacyToolchain androidLegacyToolchain;
+  private final AndroidPlatformTarget androidPlatformTarget;
 
-  @AddToRuleKey private final Tool javaRuntimeLauncher;
+  private final Tool javaRuntimeLauncher;
 
   private final ImmutableSet<String> labels;
 
@@ -94,7 +94,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   protected AndroidInstrumentationTest(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      AndroidLegacyToolchain androidLegacyToolchain,
+      AndroidPlatformTarget androidPlatformTarget,
       BuildRuleParams params,
       HasInstallableApk apk,
       Set<String> labels,
@@ -106,7 +106,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       PackagedResource guavaJar,
       PackagedResource toolsCommonJar) {
     super(buildTarget, projectFilesystem, params);
-    this.androidLegacyToolchain = androidLegacyToolchain;
+    this.androidPlatformTarget = androidPlatformTarget;
     this.apk = apk;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.labels = ImmutableSet.copyOf(labels);
@@ -193,7 +193,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     steps.add(
         getInstrumentationStep(
             buildContext.getSourcePathResolver(),
-            androidLegacyToolchain.getAndroidPlatformTarget().getAdbExecutable().toString(),
+            androidPlatformTarget.getAdbExecutable().toString(),
             Optional.of(getProjectFilesystem().resolve(pathToTestOutput)),
             Optional.of(device.getSerialNumber()),
             Optional.empty(),
@@ -361,7 +361,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     InstrumentationStep step =
         getInstrumentationStep(
             buildContext.getSourcePathResolver(),
-            androidLegacyToolchain.getAndroidPlatformTarget().getAdbExecutable().toString(),
+            androidPlatformTarget.getAdbExecutable().toString(),
             Optional.empty(),
             Optional.empty(),
             Optional.of(

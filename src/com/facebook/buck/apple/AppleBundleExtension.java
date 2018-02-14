@@ -25,7 +25,8 @@ public enum AppleBundleExtension {
   BUNDLE,
   XCTEST,
   DSYM,
-  XPC;
+  XPC,
+  PREFPANE;
 
   public String toFileExtension() {
     switch (this) {
@@ -45,6 +46,8 @@ public enum AppleBundleExtension {
         return "dSYM";
       case XPC:
         return "xpc";
+      case PREFPANE:
+        return "prefPane";
       default:
         throw new IllegalStateException("Invalid bundle extension value: " + this.toString());
     }

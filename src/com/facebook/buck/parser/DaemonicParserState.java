@@ -291,6 +291,7 @@ public class DaemonicParserState {
   private final DaemonicRawCacheView rawNodeCache;
 
   private final int parsingThreads;
+  private final boolean shouldIgnoreEnvironmentVariablesChanges;
 
   private final LoadingCache<Cell, BuildFileTree> buildFileTrees;
 
@@ -309,8 +310,10 @@ public class DaemonicParserState {
   public DaemonicParserState(
       BroadcastEventListener broadcastEventListener,
       TypeCoercerFactory typeCoercerFactory,
-      int parsingThreads) {
+      int parsingThreads,
+      boolean shouldIgnoreEnvironmentVariablesChanges) {
     this.parsingThreads = parsingThreads;
+    this.shouldIgnoreEnvironmentVariablesChanges = shouldIgnoreEnvironmentVariablesChanges;
     this.typeCoercerFactory = typeCoercerFactory;
     this.cacheInvalidatedByEnvironmentVariableChangeCounter =
         new TagSetCounter(
@@ -599,6 +602,10 @@ public class DaemonicParserState {
         return false;
       }
 
+      if (shouldIgnoreEnvironmentVariablesChanges) {
+        return false;
+      }
+
       // Keep track of any invalidations.
       boolean hasInvalidated = false;
 
@@ -721,8 +728,10 @@ public class DaemonicParserState {
     ImmutableMap.Builder<String, List<String>> cachedIncludesBuilder = ImmutableMap.builder();
     try (AutoCloseableLock readLock = cachedStateLock.readLock()) {
       cachedIncludes.forEach(
-          (path, iterable) ->
-              cachedIncludesBuilder.put(path.toString(), Lists.newArrayList(iterable)));
+          (path, iterable) -> {
+            Path relPath = rootCell.getRoot().relativize(path);
+            cachedIncludesBuilder.put(relPath.toString(), Lists.newArrayList(iterable));
+          });
     }
     remote.setCachedIncludes(cachedIncludesBuilder.build());
     remote.setCellPathToDaemonicState(cellPathToDaemonicStateBuilder.build());
@@ -758,7 +767,8 @@ public class DaemonicParserState {
     remote.cachedIncludes.forEach(
         (k, v) -> {
           Path path = Paths.get(k);
-          cachedIncludes.put(path, v);
+          Path absolutePath = rootCell.getRoot().resolve(path).normalize();
+          cachedIncludes.put(absolutePath, v);
         });
     return this;
   }

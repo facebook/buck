@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AdbHelper;
-import com.facebook.buck.android.AndroidLegacyToolchain;
 import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
@@ -34,6 +33,7 @@ import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
@@ -44,6 +44,7 @@ import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ForkJoinPool;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
@@ -97,8 +98,11 @@ public class UninstallCommand extends AbstractCommand {
     // Parse all of the build targets specified by the user.
     BuildRuleResolver resolver;
     ImmutableSet<BuildTarget> buildTargets;
+
     try (CommandThreadManager pool =
-        new CommandThreadManager("Uninstall", getConcurrencyLimit(params.getBuckConfig()))) {
+            new CommandThreadManager("Uninstall", getConcurrencyLimit(params.getBuckConfig()));
+        CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier =
+            getForkJoinPoolSupplier(params.getBuckConfig())) {
       TargetGraphAndBuildTargets result =
           params
               .getParser()
@@ -116,7 +120,8 @@ public class UninstallCommand extends AbstractCommand {
                   params.getBuckEventBus(),
                   result.getTargetGraph(),
                   params.getBuckConfig(),
-                  params.getRuleKeyConfiguration())
+                  params.getRuleKeyConfiguration(),
+                  poolSupplier)
               .getResolver();
     } catch (BuildFileParseException e) {
       params
@@ -162,10 +167,7 @@ public class UninstallCommand extends AbstractCommand {
     return super.getExecutionContextBuilder(params)
         .setAndroidDevicesHelper(
             AndroidDevicesHelperFactory.get(
-                params
-                    .getCell()
-                    .getToolchainProvider()
-                    .getByName(AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class),
+                params.getCell().getToolchainProvider(),
                 this::getExecutionContext,
                 params.getBuckConfig(),
                 adbOptions(params.getBuckConfig()),

@@ -19,6 +19,7 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.distributed.DistBuildCreatedEvent;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
+import com.facebook.buck.distributed.StampedeLocalBuildStatusEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.event.ActionGraphEvent;
@@ -33,7 +34,6 @@ import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.rules.TestStatusMessageEvent;
@@ -48,7 +48,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.timing.Clock;
-import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -154,6 +153,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   @GuardedBy("distBuildSlaveTrackerLock")
   private final Map<BuildSlaveRunId, BuildSlaveStatus> distBuildSlaveTracker;
+
+  @GuardedBy("distBuildStatusLock")
+  private String stampedeLocalBuildStatus = "init";
 
   private Optional<String> stampedeIdLogLine = Optional.empty();
 
@@ -309,25 +311,22 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     // Synchronize on the DirtyPrintStreamDecorator to prevent interlacing of output.
     // We don't log immediately so we avoid locking the console handler to avoid deadlocks.
-    boolean stdoutDirty;
     boolean stderrDirty;
-    synchronized (console.getStdOut()) {
-      synchronized (console.getStdErr()) {
-        // If another source has written to stderr or stdout, stop rendering with the SuperConsole.
-        // We need to do this to keep our updates consistent.
-        stdoutDirty = console.getStdOut().isDirty();
-        stderrDirty = console.getStdErr().isDirty();
-        if (stdoutDirty || stderrDirty) {
-          stopRenderScheduler();
-        } else if (previousNumLinesPrinted != 0 || !lines.isEmpty() || !logLines.isEmpty()) {
-          String fullFrame = renderFullFrame(logLines, lines, previousNumLinesPrinted);
-          console.getStdErr().getRawStream().print(fullFrame);
-        }
+    synchronized (console.getStdErr()) {
+      // If another source has written to stderr, stop rendering with the SuperConsole.
+      // We need to do this to keep our updates consistent. We don't do this with stdout
+      // because we don't use it directly except in a couple of cases, where the
+      // synchronization in DirtyPrintStreamDecorator should be sufficient
+      stderrDirty = console.getStdErr().isDirty();
+      if (stderrDirty) {
+        stopRenderScheduler();
+      } else if (previousNumLinesPrinted != 0 || !lines.isEmpty() || !logLines.isEmpty()) {
+        String fullFrame = renderFullFrame(logLines, lines, previousNumLinesPrinted);
+        console.getStdErr().getRawStream().print(fullFrame);
       }
     }
-    if (stdoutDirty || stderrDirty) {
-      LOG.debug(
-          "Stopping console output (stdout dirty %s, stderr dirty %s).", stdoutDirty, stderrDirty);
+    if (stderrDirty) {
+      LOG.debug("Stopping console output (stderr was dirty).");
     }
   }
 
@@ -476,8 +475,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
 
     // TODO(shivanker): Add a similar source file upload line for distributed build.
-    Pair<Long, SizeUnit> bytesDownloaded = networkStatsKeeper.getBytesDownloaded();
-    if (bytesDownloaded.getFirst() > 0 || !this.hideEmptyDownload) {
+    if (networkStatsKeeper.getRemoteDownloadedArtifactsCount() > 0 || !this.hideEmptyDownload) {
       lines.add(getNetworkStatsLine(buildFinished));
     }
 
@@ -602,18 +600,16 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     synchronized (distBuildStatusLock) {
       if (!distBuildStatus.isPresent()) {
-        columns.add("status: init");
+        columns.add("remote status: init");
       } else {
-        columns.add("status: " + distBuildStatus.get().getStatus().toLowerCase());
+        columns.add("remote status: " + distBuildStatus.get().getStatus().toLowerCase());
 
         int totalUploadErrorsCount = 0;
-        int totalFilesMaterialized = 0;
         ImmutableList.Builder<CacheRateStatsKeeper.CacheRateStatsUpdateEvent> slaveCacheStats =
             new ImmutableList.Builder<>();
 
         for (BuildSlaveStatus slaveStatus : distBuildStatus.get().getSlaveStatuses()) {
           totalUploadErrorsCount += slaveStatus.getHttpArtifactUploadsFailureCount();
-          totalFilesMaterialized += slaveStatus.getFilesMaterializedCount();
 
           if (slaveStatus.isSetCacheRateStats()) {
             slaveCacheStats.add(
@@ -622,15 +618,16 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           }
         }
 
+        if (distBuildTotalRulesCount > 0) {
+          columns.add(
+              String.format("%d/%d jobs", distBuildFinishedRulesCount, distBuildTotalRulesCount));
+        }
+
         CacheRateStatsKeeper.CacheRateStatsUpdateEvent aggregatedCacheStats =
             CacheRateStatsKeeper.getAggregatedCacheRateStats(slaveCacheStats.build());
 
         if (aggregatedCacheStats.getTotalRulesCount() != 0) {
-          columns.add(
-              String.format(
-                  "%d [%.1f%%] cache miss",
-                  aggregatedCacheStats.getCacheMissCount(),
-                  aggregatedCacheStats.getCacheMissRate()));
+          columns.add(String.format("%.1f%% cache miss", aggregatedCacheStats.getCacheMissRate()));
 
           if (aggregatedCacheStats.getCacheErrorCount() != 0) {
             columns.add(
@@ -644,14 +641,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         if (totalUploadErrorsCount > 0) {
           columns.add(String.format("%d upload errors", totalUploadErrorsCount));
         }
-
-        if (totalFilesMaterialized > 0) {
-          columns.add(String.format("%d files materialized", totalFilesMaterialized));
-        }
       }
     }
 
-    parseLine = Joiner.on(", ").join(columns);
+    String localStatus = String.format("local status: %s", stampedeLocalBuildStatus);
+    parseLine = localStatus + "; " + Joiner.on(", ").join(columns);
     return Strings.isNullOrEmpty(parseLine) ? Optional.empty() : Optional.of(parseLine);
   }
 
@@ -794,6 +788,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   }
 
   @Subscribe
+  public void onStampedeLocalBuildStatusEvent(StampedeLocalBuildStatusEvent event) {
+    synchronized (distBuildStatusLock) {
+      this.stampedeLocalBuildStatus = event.getStatus();
+    }
+  }
+
+  @Subscribe
   public void onDistBuildCreatedEvent(DistBuildCreatedEvent event) {
     stampedeIdLogLine = Optional.of(event.getConsoleLogLine());
   }
@@ -861,9 +862,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
     // We're about to write to stdout, so make sure we render the final frame before we do.
     render();
-    synchronized (console.getStdOut()) {
-      console.getStdOut().println(testOutput);
-    }
+    console.getStdOut().println(testOutput);
   }
 
   @Subscribe

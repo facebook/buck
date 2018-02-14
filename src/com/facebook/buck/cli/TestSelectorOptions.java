@@ -38,7 +38,9 @@ public class TestSelectorOptions {
     usage =
         "Select tests to run using <class>, #<method> or <class>#<method>.  "
             + "Selectors are interpreted as java.util.regex regular expressions.  "
-            + "If selectors are given, test result caching is disabled.  "
+            + "Not every language supports these selectors. Notably, C++ and python do "
+            + "not respect these filters. Note also that if an external test runner is used, "
+            + "this filter also ignored. "
             + "If the class (or method) part is omitted, all classes (or methods) will match.  "
             + "If both the class and method is omitted (the string '#') then all tests will match.  "
             + "Prefix a selector with '!' to exclude a class or method.  "

@@ -9,5 +9,5 @@ cxx_binary(
 cxx_library(
     name = "bar",
     srcs = ["bar.cpp"],
-    headers = ["bar.h"],
+    exported_headers = ["bar.h"],
 )

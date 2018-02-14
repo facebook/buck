@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import with_statement
 
+import copy
 import json
 
 
@@ -32,7 +33,10 @@ class Struct(object):
 
     def __getattr__(self, item):
         """Handles retrieval of attributes not explicitly defined in this instance."""
-        return dict.__getitem__(self._get_kwargs(), item)
+        try:
+            return dict.__getitem__(self._get_kwargs(), item)
+        except KeyError as e:
+            raise AttributeError(e)
 
     def __setattr__(self, key, value):
         """Handles attribute writes on this instance.
@@ -43,11 +47,23 @@ class Struct(object):
 
     def to_json(self):
         """Creates a JSON string representation of this struct instance."""
-        return json.dumps(self, cls=StructEncoder, separators=(",", ":"))
+        return json.dumps(self, cls=StructEncoder, separators=(",", ":"), sort_keys=True)
 
     def _asdict(self):
         """Converts this struct into dict."""
         return self._get_kwargs()
+
+    def __deepcopy__(self, memodict=None):
+        """Returns a deep copy of this instance."""
+        return Struct(**copy.deepcopy(self._get_kwargs(), memo=memodict or {}))
+
+    def __eq__(self, other):
+        return isinstance(other, Struct) and self._get_kwargs() == other._get_kwargs()
+
+    def __repr__(self):
+        return "struct(" + ".".join(
+            [str(key) + "=" + repr(value) for key, value in self._get_kwargs().iteritems()]
+        ) + ")"
 
 
 def struct(**kwargs):

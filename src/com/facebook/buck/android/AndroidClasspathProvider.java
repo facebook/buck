@@ -16,22 +16,27 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import java.nio.file.Path;
 
 public class AndroidClasspathProvider implements ExtraClasspathProvider {
 
-  private final AndroidLegacyToolchain androidLegacyToolchain;
+  private final ToolchainProvider toolchainProvider;
 
   @AddToRuleKey private final String classpath = "android";
 
-  public AndroidClasspathProvider(AndroidLegacyToolchain androidLegacyToolchain) {
-    this.androidLegacyToolchain = androidLegacyToolchain;
+  public AndroidClasspathProvider(ToolchainProvider toolchainProvider) {
+    this.toolchainProvider = toolchainProvider;
   }
 
   @Override
   public Iterable<Path> getExtraClasspath() {
-    return androidLegacyToolchain.getAndroidPlatformTarget().getBootclasspathEntries();
+    AndroidPlatformTarget androidPlatformTarget =
+        toolchainProvider.getByName(
+            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+    return androidPlatformTarget.getBootclasspathEntries();
   }
 }

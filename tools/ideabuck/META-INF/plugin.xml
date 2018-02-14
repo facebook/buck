@@ -22,6 +22,8 @@
   <change-notes><![CDATA[
 <h3>3.5</h3>
 <ul>
+  <li>Moved "Go to Buck file" action to Navigate menu and "Go To" popup menu.</li>
+  <li>Show warning about missing Buck server as a balloon.</li>
 </ul>
 
 <h3>3.4</h3>
@@ -237,6 +239,7 @@
         serviceImplementation="com.facebook.buck.intellij.ideabuck.build.BuckBuildManager"/>
     <projectService
         serviceImplementation="com.facebook.buck.intellij.ideabuck.ui.BuckUIManager"/>
+    <projectService serviceImplementation="com.facebook.buck.intellij.ideabuck.notification.BuckNotification"/>
     <configurationType
             implementation="com.facebook.buck.intellij.ideabuck.configurations.TestConfigurationType"/>
     <programRunner
@@ -253,12 +256,23 @@
       <action
           id="buck.GoToBuckFile"
           class="com.facebook.buck.intellij.ideabuck.actions.GoToBuckFile"
-          text="Go to Buck file"
+          text="Buck file"
           description="Go to Buck file for this source file.">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift P"/>
       </action>
-      <add-to-group anchor="first" group-id="BuildMenu"/>
-      <add-to-group anchor="first" group-id="EditorPopupMenu"/>
+      <add-to-group anchor="first" group-id="EditorPopupMenu.GoTo"/>
+      <add-to-group group-id="GoToMenu" anchor="after" relative-to-action="GoToCodeGroup"/>
+    </group>
+
+    <group id="buck.ToolbarActions">
+      <action
+        id="buck.GoToBuckFileToolbarAction"
+        class="com.facebook.buck.intellij.ideabuck.actions.GoToBuckFile"
+        text="Go to Buck file"
+        icon="/icons/actions/GoTo.png"
+        description="Go to Buck file for this source file.">
+        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift P"/>
+      </action>
       <add-to-group anchor="last" group-id="MainToolBar"/>
     </group>
 

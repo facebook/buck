@@ -30,6 +30,7 @@ import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.BuildDeps;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -77,7 +78,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   AndroidLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      ImmutableSortedSet<BuildRule> buildDeps,
+      BuildDeps buildDeps,
       SourcePathResolver resolver,
       JarBuildStepsFactory jarBuildStepsFactory,
       Optional<SourcePath> proguardConfig,
@@ -85,6 +86,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       ImmutableSortedSet<BuildRule> fullJarExportedDeps,
       ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
       @Nullable BuildTarget abiJar,
+      @Nullable BuildTarget sourceOnlyAbiJar,
       Optional<String> mavenCoords,
       Optional<SourcePath> manifestFile,
       ImmutableSortedSet<BuildTarget> tests,
@@ -100,6 +102,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         fullJarExportedDeps,
         fullJarProvidedDeps,
         abiJar,
+        sourceOnlyAbiJar,
         mavenCoords,
         tests,
         requiredForSourceOnlyAbi);
@@ -146,7 +149,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
             public DefaultJavaLibrary newInstance(
                 BuildTarget buildTarget,
                 ProjectFilesystem projectFilesystem,
-                ImmutableSortedSet<BuildRule> buildDeps,
+                BuildDeps buildDeps,
                 SourcePathResolver resolver,
                 JarBuildStepsFactory jarBuildStepsFactory,
                 Optional<SourcePath> proguardConfig,
@@ -154,6 +157,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                 ImmutableSortedSet<BuildRule> fullJarExportedDeps,
                 ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
                 @Nullable BuildTarget abiJar,
+                @Nullable BuildTarget sourceOnlyAbiJar,
                 Optional<String> mavenCoords,
                 ImmutableSortedSet<BuildTarget> tests,
                 boolean requiredForSourceOnlyAbi) {
@@ -168,6 +172,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   fullJarExportedDeps,
                   fullJarProvidedDeps,
                   abiJar,
+                  sourceOnlyAbiJar,
                   mavenCoords,
                   args.getManifest(),
                   tests,

@@ -128,7 +128,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
                 httpResponse.statusMessage(),
                 httpResponse.requestUrl(),
                 ruleKey.toString());
-        LOG.error(message);
+        LOG.warn(message);
         return resultBuilder
             .setCacheResult(CacheResult.error(getName(), getMode(), message))
             .build();
@@ -223,7 +223,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
                 String.format(
                     "The artifact fetched from cache is corrupted. ExpectedMD5=[%s] ActualMD5=[%s]",
                     fetchResponse.getMetadata().getArtifactPayloadMd5(), readResult.getMd5Hash());
-            LOG.error(msg);
+            LOG.warn(msg);
             return resultBuilder
                 .setCacheResult(CacheResult.error(getName(), getMode(), msg))
                 .build();
@@ -278,7 +278,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     MultiContainsResult.Builder resultBuilder = MultiContainsResult.builder();
 
     if (httpResponse.statusCode() != 200) {
-      LOG.error(
+      LOG.warn(
           String.format(
               "Failed to multi-contains request for [%d] cache artifacts "
                   + "with HTTP status code [%d:%s] to url [%s].",
@@ -437,7 +437,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
               httpResponse.statusMessage(),
               httpResponse.requestUrl(),
               joinedKeys);
-      LOG.error(message);
+      LOG.warn(message);
       CacheResult cacheResult = CacheResult.error(getName(), getMode(), message);
       return keys.stream().map(k -> FetchResult.builder().setCacheResult(cacheResult).build())
           ::iterator;
@@ -615,7 +615,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
           String.format(
               "The artifact fetched from cache is corrupted. ExpectedMD5=[%s] ActualMD5=[%s]",
               fetchResponse.getMetadata().getArtifactPayloadMd5(), readResult.getMd5Hash());
-      LOG.error(msg);
+      LOG.warn(msg);
       builder.setCacheResult(CacheResult.error(getName(), getMode(), msg));
       return;
     }

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.log;
 
-import com.facebook.buck.util.BestCompressionGZIPOutputStream;
+import com.facebook.buck.util.zip.BestCompressionGZIPOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.logging.FileHandler;

@@ -47,7 +47,7 @@ public class DexWithClassesTest {
         new DexProducedFromJavaLibrary(
             buildTarget,
             new FakeProjectFilesystem(),
-            TestAndroidLegacyToolchainFactory.create(),
+            TestAndroidPlatformTargetFactory.create(),
             params,
             javaLibrary,
             DxStep.DX);
@@ -79,7 +79,7 @@ public class DexWithClassesTest {
         new DexProducedFromJavaLibrary(
             buildTarget,
             new FakeProjectFilesystem(),
-            TestAndroidLegacyToolchainFactory.create(),
+            TestAndroidPlatformTargetFactory.create(),
             params,
             javaLibrary,
             DxStep.DX);

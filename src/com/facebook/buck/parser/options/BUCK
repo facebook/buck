@@ -12,7 +12,7 @@ java_immutables_library(
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io:watchman",
         "//src/com/facebook/buck/io/filesystem:filesystem",
-        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:rules",
         "//third-party/java/guava:guava",
     ],
 )

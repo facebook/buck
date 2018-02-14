@@ -1,0 +1,11 @@
+android_binary(
+    name = "binary",
+    keystore = ":debug_keystore",
+    manifest = "AndroidManifest.xml",
+)
+
+keystore(
+    name = "debug_keystore",
+    properties = "debug.keystore.properties",
+    store = "debug.keystore",
+)

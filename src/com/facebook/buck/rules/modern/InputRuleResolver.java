@@ -17,11 +17,9 @@
 package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.SourcePath;
 import java.util.Optional;
 
-/** Created by cjhopman on 8/21/17. */
 public interface InputRuleResolver {
-  Optional<BuildRule> resolve(InputPath path);
-
-  Optional<BuildRule> resolve(InputData data);
+  Optional<BuildRule> resolve(SourcePath path);
 }

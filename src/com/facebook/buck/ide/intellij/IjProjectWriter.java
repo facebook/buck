@@ -121,9 +121,7 @@ public class IjProjectWriter {
     contents.add("jdk15", getJdk15FromLanguageLevel(languageLevelInIjFormat));
     contents.add("jdkName", sdkName.get());
     contents.add("jdkType", sdkType.get());
-    if (projectConfig.getOutputUrl().isPresent()) {
-      contents.add("outputUrl", projectConfig.getOutputUrl().get());
-    }
+    contents.add("outputUrl", projectConfig.getOutputUrl().orElse(null));
 
     StringTemplateFile.writeToFile(
         projectFilesystem, contents, path, projectConfig.getProjectPaths().getIdeaConfigDir());

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
@@ -169,15 +170,15 @@ public class AndroidPrebuiltAarDescription
           args.getRequiredForSourceOnlyAbi());
     }
 
-    AndroidLegacyToolchain androidLegacyToolchain =
-        toolchainProvider.getByName(
-            AndroidLegacyToolchain.DEFAULT_NAME, AndroidLegacyToolchain.class);
-
     if (flavors.contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
+      AndroidPlatformTarget androidPlatformTarget =
+          toolchainProvider.getByName(
+              AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+
       return new Aapt2Compile(
           buildTarget,
           projectFilesystem,
-          androidLegacyToolchain,
+          androidPlatformTarget,
           ImmutableSortedSet.of(unzipAarRule),
           unzipAar.getResDirectory());
     }
@@ -223,7 +224,7 @@ public class AndroidPrebuiltAarDescription
             toolchainProvider
                 .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                 .getJavacOptions(),
-            new AndroidClasspathProvider(androidLegacyToolchain)),
+            new AndroidClasspathProvider(toolchainProvider)),
         /* exportedDeps */ javaDeps,
         JavaLibraryRules.getAbiClasspath(buildRuleResolver, androidLibraryParams.getBuildDeps()),
         args.getRequiredForSourceOnlyAbi());

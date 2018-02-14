@@ -46,6 +46,8 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
@@ -86,7 +88,9 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   private final OwnersReport.Builder ownersReportBuilder;
   private final ListeningExecutorService executor;
   private final TargetPatternEvaluator targetPatternEvaluator;
+  private final Console console;
   private final QueryEnvironment.TargetEvaluator queryTargetEvaluator;
+  private final TypeCoercerFactory typeCoercerFactory;
 
   private final ImmutableMap<Cell, BuildFileTree> buildFileTrees;
   private final Map<BuildTarget, QueryTarget> buildTargetToQueryTarget = new HashMap<>();
@@ -101,7 +105,9 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       OwnersReport.Builder ownersReportBuilder,
       PerBuildState parserState,
       ListeningExecutorService executor,
-      TargetPatternEvaluator targetPatternEvaluator) {
+      TargetPatternEvaluator targetPatternEvaluator,
+      Console console,
+      TypeCoercerFactory typeCoercerFactory) {
     this.parserState = parserState;
     this.rootCell = rootCell;
     this.ownersReportBuilder = ownersReportBuilder;
@@ -117,7 +123,9 @@ public class BuckQueryEnvironment implements QueryEnvironment {
                             cell.getFilesystem(), cell.getBuildFileName())));
     this.executor = executor;
     this.targetPatternEvaluator = targetPatternEvaluator;
+    this.console = console;
     this.queryTargetEvaluator = new TargetEvaluator(targetPatternEvaluator, executor);
+    this.typeCoercerFactory = typeCoercerFactory;
   }
 
   public static BuckQueryEnvironment from(
@@ -125,9 +133,17 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       OwnersReport.Builder ownersReportBuilder,
       PerBuildState parserState,
       ListeningExecutorService executor,
-      TargetPatternEvaluator targetPatternEvaluator) {
+      TargetPatternEvaluator targetPatternEvaluator,
+      Console console,
+      TypeCoercerFactory typeCoercerFactory) {
     return new BuckQueryEnvironment(
-        rootCell, ownersReportBuilder, parserState, executor, targetPatternEvaluator);
+        rootCell,
+        ownersReportBuilder,
+        parserState,
+        executor,
+        targetPatternEvaluator,
+        console,
+        typeCoercerFactory);
   }
 
   public static BuckQueryEnvironment from(
@@ -145,7 +161,9 @@ public class BuckQueryEnvironment implements QueryEnvironment {
             params.getBuckConfig(),
             params.getParser(),
             params.getBuckEventBus(),
-            enableProfiling));
+            enableProfiling),
+        params.getConsole(),
+        params.getTypeCoercerFactory());
   }
 
   public DirectedAcyclicGraph<TargetNode<?, ?>> getTargetGraph() {
@@ -458,6 +476,15 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   public ImmutableSet<QueryTarget> getFileOwners(ImmutableList<String> files)
       throws QueryException {
     OwnersReport report = ownersReportBuilder.build(buildFileTrees, executor, files);
+    report
+        .getInputsWithNoOwners()
+        .forEach(path -> console.printErrorText(String.format("No owner was found for %s", path)));
+    report
+        .getNonExistentInputs()
+        .forEach(path -> console.printErrorText(String.format("File %s does not exist", path)));
+    report
+        .getNonFileInputs()
+        .forEach(path -> console.printErrorText(String.format("%s is not a regular file", path)));
     return getTargetsFromTargetNodes(report.owners.keySet());
   }
 
@@ -469,14 +496,16 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   @Override
   public ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, String attribute)
       throws QueryException {
-    return QueryTargetAccessor.getTargetsInAttribute(getNode(target), attribute);
+    return QueryTargetAccessor.getTargetsInAttribute(
+        typeCoercerFactory, getNode(target), attribute);
   }
 
   @Override
   public ImmutableSet<Object> filterAttributeContents(
       QueryTarget target, String attribute, final Predicate<Object> predicate)
       throws QueryException {
-    return QueryTargetAccessor.filterAttributeContents(getNode(target), attribute, predicate);
+    return QueryTargetAccessor.filterAttributeContents(
+        typeCoercerFactory, getNode(target), attribute, predicate);
   }
 
   @Override

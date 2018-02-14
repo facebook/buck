@@ -52,7 +52,6 @@ import com.facebook.buck.rules.TestSummaryEvent;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.test.external.ExternalTestRunEvent;
 import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
-import com.facebook.buck.util.BestCompressionGZIPOutputStream;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProcessResourceConsumption;
@@ -62,7 +61,9 @@ import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.util.perf.ProcessTracker;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.trace.uploader.launcher.UploaderLauncher;
+import com.facebook.buck.util.trace.uploader.types.CompressionType;
 import com.facebook.buck.util.unit.SizeUnit;
+import com.facebook.buck.util.zip.BestCompressionGZIPOutputStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
@@ -934,7 +935,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   }
 
   private void uploadTraceIfConfigured(BuildId buildId) {
-    Optional<URI> traceUploadUri = config.getTraceUploadUri();
+    Optional<URI> traceUploadUri = config.getTraceUploadUriIfEnabled();
     if (!traceUploadUri.isPresent()) {
       return;
     }
@@ -943,7 +944,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     Path logFile = projectFilesystem.resolve(logDirectoryPath.resolve("upload-build-trace.log"));
 
     UploaderLauncher.uploadInBackground(
-        buildId, fullPath, "default", traceUploadUri.get(), logFile);
+        buildId, fullPath, "default", traceUploadUri.get(), logFile, CompressionType.GZIP);
   }
 
   private static class TracePathAndStream {

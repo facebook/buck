@@ -20,8 +20,9 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -49,7 +50,7 @@ public class GraphqlLibraryIntegrationTest {
 
   @Test
   public void testBuckQueryForGraphqlLibrarySrcs() throws Exception {
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "query", "kind(\'graphql_library\', \'//...\')", "--output-attributes", "srcs");
     result.assertSuccess();
@@ -60,8 +61,7 @@ public class GraphqlLibraryIntegrationTest {
 
   @Test
   public void testBuckQueryForGraphqlLibraryDeps() throws Exception {
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("query", "--json", "deps(//:AppGraphQl)");
+    ProcessResult result = workspace.runBuckCommand("query", "--json", "deps(//:AppGraphQl)");
     result.assertSuccess();
     assertThat(
         parseJSON(result.getStdout()),

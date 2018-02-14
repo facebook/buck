@@ -15,17 +15,21 @@ include "stampede.thrift"
 enum BuildSlaveEventType {
     UNKNOWN = 0,
     CONSOLE_EVENT = 1,
-    BUILD_RULE_FINISHED_EVENT = 2,
-    ALL_BUILD_RULES_FINISHED_EVENT = 3,
+    BUILD_RULE_STARTED_EVENT = 2,
+    BUILD_RULE_FINISHED_EVENT = 3,
+    ALL_BUILD_RULES_FINISHED_EVENT = 4,
+    MOST_BUILD_RULES_FINISHED_EVENT = 5,
+    COORDINATOR_BUILD_PROGRESS_EVENT = 6,
 }
 
 struct BuildSlaveEvent {
     1: optional BuildSlaveEventType eventType = BuildSlaveEventType.UNKNOWN;
-    2: optional stampede.StampedeId stampedeId;
-    3: optional stampede.BuildSlaveRunId buildSlaveRunId;
+    4: optional i64 timestampMillis;
 
     10: optional BuildSlaveConsoleEvent consoleEvent;
-    11: optional BuildRuleFinishedEvent buildRuleFinishedEvent;
+    11: optional BuildRuleStartedEvent buildRuleStartedEvent;
+    12: optional BuildRuleFinishedEvent buildRuleFinishedEvent;
+    13: optional CoordinatorBuildProgressEvent coordinatorBuildProgressEvent;
 }
 
 enum ConsoleEventSeverity {
@@ -37,11 +41,18 @@ enum ConsoleEventSeverity {
 struct BuildSlaveConsoleEvent {
     1: optional string message;
     2: optional ConsoleEventSeverity severity;
-    3: optional i64 timestampMillis;
+}
+
+struct BuildRuleStartedEvent {
+    1: optional string buildTarget;
 }
 
 struct BuildRuleFinishedEvent {
     1: optional string buildTarget;
+}
+
+struct CoordinatorBuildProgressEvent {
+    1: optional CoordinatorBuildProgress buildProgress;
 }
 
 ##############################################################################
@@ -65,9 +76,8 @@ struct BuildSlaveStatus {
     2: optional stampede.BuildSlaveRunId buildSlaveRunId;
 
     10: optional i32 totalRulesCount;
-    11: optional i32 rulesStartedCount;
+    11: optional i32 rulesBuildingCount;
     12: optional i32 rulesFinishedCount;
-    13: optional i32 rulesSuccessCount;
     14: optional i32 rulesFailureCount;
 
     20: optional CacheRateStats cacheRateStats;
@@ -78,6 +88,12 @@ struct BuildSlaveStatus {
     25: optional i32 httpArtifactUploadsFailureCount;
 
     30: optional i32 filesMaterializedCount;
+}
+
+struct CoordinatorBuildProgress {
+    1: optional i32 totalRulesCount;
+    2: optional i32 builtRulesCount;
+    3: optional i32 skippedRulesCount;
 }
 
 struct HealthCheckStats {

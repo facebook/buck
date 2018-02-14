@@ -26,8 +26,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.testutil.ParameterizedTests;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -179,7 +180,7 @@ public class CxxDependencyFileIntegrationTest {
         Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
   }
 
-  private ProjectWorkspace.ProcessResult runCommand(String... args) throws IOException {
+  private ProcessResult runCommand(String... args) throws IOException {
     if (buckd) {
       return workspace.runBuckdCommand(args);
     } else {

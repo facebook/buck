@@ -48,13 +48,14 @@ public class SourceWithFlagsListTypeCoercer implements TypeCoercer<SourceWithFla
   }
 
   @Override
-  public void traverse(SourceWithFlagsList object, Traversal traversal) {
+  public void traverse(
+      CellPathResolver cellRoots, SourceWithFlagsList object, Traversal traversal) {
     switch (object.getType()) {
       case UNNAMED:
-        unnamedSourcesTypeCoercer.traverse(object.getUnnamedSources().get(), traversal);
+        unnamedSourcesTypeCoercer.traverse(cellRoots, object.getUnnamedSources().get(), traversal);
         break;
       case NAMED:
-        namedSourcesTypeCoercer.traverse(object.getNamedSources().get(), traversal);
+        namedSourcesTypeCoercer.traverse(cellRoots, object.getNamedSources().get(), traversal);
         break;
       default:
         throw new RuntimeException("Unhandled type: " + object.getType());

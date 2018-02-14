@@ -28,8 +28,8 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.environment.Platform;
@@ -263,5 +263,11 @@ public class JsRulesIntegrationTest {
   @Test
   public void genruleSourcemapCanBeAccessedWithoutDependingOnBundle() throws IOException {
     workspace.runBuckBuild("//js:genrule-using-only-sourcemap-of-bundle-genrule").assertSuccess();
+  }
+
+  @Test
+  public void genruleAllowsToRewriteMiscDir() throws IOException {
+    workspace.runBuckBuild("//js:misc-genrule").assertSuccess();
+    workspace.verify(Paths.get("misc_genrule.expected"), genPath);
   }
 }

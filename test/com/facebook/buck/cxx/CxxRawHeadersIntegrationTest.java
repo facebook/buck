@@ -27,8 +27,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.testutil.ParameterizedTests;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -120,19 +121,19 @@ public class CxxRawHeadersIntegrationTest {
 
   @Test
   public void listedRawHeadersPassVerification() throws IOException {
-    ProjectWorkspace.ProcessResult result = runCommand("build", "//lib1");
+    ProcessResult result = runCommand("build", "//lib1");
     result.assertSuccess();
   }
 
   @Test
   public void listedRawHeadersInDepPassVerification() throws IOException {
-    ProjectWorkspace.ProcessResult result = runCommand("build", "//lib4");
+    ProcessResult result = runCommand("build", "//lib4");
     result.assertSuccess();
   }
 
   @Test
   public void unlistedRawHeadersDoNotPassVerification() throws IOException {
-    ProjectWorkspace.ProcessResult result = runCommand("build", "//lib2");
+    ProcessResult result = runCommand("build", "//lib2");
     result.assertFailure();
     assertThat(result.getStderr(), containsString("included an untracked header"));
   }
@@ -257,7 +258,7 @@ public class CxxRawHeadersIntegrationTest {
         containsString("Cannot use `headers` and `raw_headers` in the same rule"));
   }
 
-  private ProjectWorkspace.ProcessResult runCommand(String... args) throws IOException {
+  private ProcessResult runCommand(String... args) throws IOException {
     if (useBuckd) {
       return workspace.runBuckdCommand(args);
     } else {

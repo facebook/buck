@@ -27,9 +27,10 @@ java_immutables_library(
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/log:api",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/util/types:types",
+        "//src/com/facebook/buck/util/unarchive:unarchive",
         "//src/com/facebook/buck/util/zip:zip",
     ],
 )

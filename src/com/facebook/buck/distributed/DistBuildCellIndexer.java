@@ -22,6 +22,7 @@ import com.facebook.buck.distributed.thrift.BuildJobStateCell;
 import com.facebook.buck.distributed.thrift.OrderedStringMapEntry;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.util.config.Config;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
@@ -42,12 +43,30 @@ public class DistBuildCellIndexer {
   final Map<Integer, ProjectFilesystem> localFilesystemsByCellIndex;
 
   public DistBuildCellIndexer(Cell rootCell) {
-    this.rootCell = rootCell;
+    this.rootCell = withCanonicalNameIfExists(rootCell);
     this.index = new HashMap<>();
     this.state = new HashMap<>();
     this.localFilesystemsByCellIndex = new HashMap<>();
     // Make sure root cell is at index 0.
     Preconditions.checkState(ROOT_CELL_INDEX == this.getCellIndex(rootCell.getRoot()));
+  }
+
+  private Cell withCanonicalNameIfExists(Cell rootCell) {
+    if (rootCell.getCanonicalName().isPresent()) {
+      return rootCell;
+    }
+
+    // CellPathResolver.getCanonicalName(..) exists however that tries to hide the fact that the
+    // main cell has a canonical name, by return always empty string so in order to get the actual
+    // canonical name we need to look at the buckconfig. By using
+    // DefaultCellPathResolver.getCanonicalNames() we avoid duplicating the parsing code.
+    DefaultCellPathResolver resolver =
+        DefaultCellPathResolver.of(rootCell.getRoot(), rootCell.getBuckConfig().getConfig());
+    if (resolver.getCanonicalNames().containsKey(rootCell.getRoot())) {
+      return rootCell.withCanonicalName(resolver.getCanonicalNames().get(rootCell.getRoot()));
+    }
+
+    return rootCell;
   }
 
   public Map<Integer, ProjectFilesystem> getLocalFilesystemsByCellIndex() {
@@ -65,7 +84,7 @@ public class DistBuildCellIndexer {
       i = index.size();
       index.put(input, i);
 
-      Cell cell = rootCell.getCellIgnoringVisibilityCheck(input);
+      Cell cell = withCanonicalNameIfExists(rootCell.getCellIgnoringVisibilityCheck(input));
       state.put(i, dumpCell(cell));
       localFilesystemsByCellIndex.put(i, cell.getFilesystem());
     }

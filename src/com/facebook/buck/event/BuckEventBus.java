@@ -26,5 +26,18 @@ import java.io.Closeable;
 public interface BuckEventBus extends Closeable, EventDispatcher {
   BuildId getBuildId();
 
+  /** Register a listener to process events */
   void register(Object object);
+
+  /** Remove a listener previously specified with {@code register()} */
+  void unregister(Object object);
+
+  /**
+   * Wait for all currently running events to dispatch and finish executing
+   *
+   * @param timeout Time in milliseconds to wait for completion, if timeout is not greater than 0
+   *     then it will wait indefinitely
+   * @return true if all events were handled and false if timeout was hit
+   */
+  boolean waitEvents(long timeout);
 }

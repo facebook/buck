@@ -147,8 +147,8 @@ def buck_build_target(args, cwd, targets, log_as_perftest=True):
         # root logger and file handler both need to be reconfigured
         # to enable verbose logging.
         bucklogging_properties.write(
-            '''.level=FINER
-            java.util.logging.FileHandler.level=FINER''')
+            """.level=FINER
+            java.util.logging.FileHandler.level=FINER""")
     env = os.environ.copy()
     # Force buck to pretend it's repo is clean.
     env.update({
@@ -225,9 +225,9 @@ def build_maps(cwd, tmpFile):
                 rule_name = match.group('rule_name')
                 rule_key = match.group('rule_key')
                 if not rule_key in rule_debug_map:
-                    raise Exception('''ERROR: build.log contains an entry
+                    raise Exception("""ERROR: build.log contains an entry
                         which was not found in buck build -v 5 output.
-                        Rule: {0}, rule key: {1}'''.format(rule_name, rule_key))
+                        Rule: {0}, rule key: {1}""".format(rule_name, rule_key))
                 cache_results[match.group('cache_result')].append({
                     'rule_name': rule_name,
                     'rule_key': rule_key,
@@ -242,7 +242,7 @@ def set_cache_settings(
         cache_mode,
         dir_cache_only=True):
     log('Reconfiguring cache settings:')
-    buckconfig_contents = '''[cache]
+    buckconfig_contents = """[cache]
     %s
     dir = buck-cache
     dir_mode = %s
@@ -250,7 +250,7 @@ def set_cache_settings(
     # Some repositories set this to a lower value, which breaks an assumption
     # in this test: that all rules with correct rule keys will get hits.
     artifact_cache_size_limit = 2000000000
-  ''' % ('mode = dir' if dir_cache_only else '', cache_mode)
+  """ % ('mode = dir' if dir_cache_only else '', cache_mode)
     log(buckconfig_contents)
     buckconfig_path = os.path.join(cwd, '.buckconfig.local')
     with open(buckconfig_path, 'w') as buckconfig:

@@ -386,7 +386,7 @@ def _format_test_name(test_class, attrname):
 
 
 class StderrLogHandler(logging.StreamHandler):
-    '''
+    """
     This class is very similar to logging.StreamHandler, except that it
     always uses the current sys.stderr object.
 
@@ -394,7 +394,7 @@ class StderrLogHandler(logging.StreamHandler):
     This makes it behave poorly in unit tests, which may replace sys.stderr
     with a StringIO buffer during tests.  The StreamHandler will continue using
     the old sys.stderr object instead of the desired StringIO buffer.
-    '''
+    """
     def __init__(self):
         logging.Handler.__init__(self)
 
@@ -468,11 +468,11 @@ class Loader(object):
 
 
 class MainProgram(object):
-    '''
+    """
     This class implements the main program.  It can be subclassed by
     users who wish to customize some parts of the main program.
     (Adding additional command line options, customizing test loading, etc.)
-    '''
+    """
     DEFAULT_VERBOSITY = 2
 
     def __init__(self, argv):

@@ -73,7 +73,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
 
   @AddToRuleKey private final Optional<String> launchImage;
 
-  @AddToRuleKey private final AppleAssetCatalogDescription.Optimization optimization;
+  @AddToRuleKey private final AppleAssetCatalogsCompilationOptions compilationOptions;
 
   private final Supplier<SortedSet<BuildRule>> buildDepsSupplier;
 
@@ -103,7 +103,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
       ImmutableSortedSet<SourcePath> assetCatalogDirs,
       Optional<String> appIcon,
       Optional<String> launchImage,
-      AppleAssetCatalogDescription.Optimization optimization,
+      AppleAssetCatalogsCompilationOptions compilationOptions,
       String bundleName) {
     super(buildTarget, projectFilesystem);
     this.applePlatformName = applePlatformName;
@@ -117,7 +117,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
         BuildTargets.getScratchPath(getProjectFilesystem(), buildTarget, "%s-output.plist");
     this.appIcon = appIcon;
     this.launchImage = launchImage;
-    this.optimization = optimization;
+    this.compilationOptions = compilationOptions;
     this.buildDepsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
   }
 
@@ -149,7 +149,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
             getProjectFilesystem().resolve(outputPlist),
             appIcon,
             launchImage,
-            optimization));
+            compilationOptions));
 
     buildableContext.recordArtifact(getOutputDir());
     buildableContext.recordArtifact(outputPlist);

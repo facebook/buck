@@ -21,6 +21,7 @@ import static java.lang.Integer.parseInt;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ConfigView;
+import com.facebook.buck.event.LogUploadMode;
 import com.facebook.buck.util.environment.NetworkInfo;
 import java.net.URI;
 import java.util.Optional;
@@ -54,11 +55,24 @@ public class ChromeTraceBuckConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(LOG_SECTION, "compress_traces", false);
   }
 
-  public Optional<URI> getTraceUploadUri() {
+  /** Get URL to upload trace if the config is enabled. */
+  public Optional<URI> getTraceUploadUriIfEnabled() {
     if (!getShouldUploadBuildTraces()) {
       return Optional.empty();
     }
+    return getTraceUploadUri();
+  }
+
+  /** Get URL to upload trace. */
+  public Optional<URI> getTraceUploadUri() {
     return delegate.getUrl(LOG_SECTION, "trace_upload_uri");
+  }
+
+  /** Returns whether and when to upload logs. */
+  public LogUploadMode getLogUploadMode() {
+    return delegate
+        .getEnum("log", "log_upload_mode", LogUploadMode.class)
+        .orElse(LogUploadMode.NEVER);
   }
 
   private boolean getShouldUploadBuildTraces() {

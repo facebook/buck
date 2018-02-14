@@ -66,6 +66,7 @@ public class AuditIncludesCommand extends AbstractCommand {
             new DefaultTypeCoercerFactory(),
             params.getConsole(),
             params.getBuckEventBus(),
+            params.getExecutableFinder(),
             params.getKnownBuildRuleTypesProvider().get(params.getCell()).getDescriptions())) {
       PrintStream out = params.getConsole().getStdOut();
       for (String pathToBuildFile : getArguments()) {

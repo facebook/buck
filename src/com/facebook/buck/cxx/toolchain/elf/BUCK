@@ -5,7 +5,6 @@ java_immutables_library(
     srcs = glob(["*.java"]),
     visibility = ["PUBLIC"],
     deps = [
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",
     ],

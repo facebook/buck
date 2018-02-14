@@ -51,7 +51,6 @@ import com.facebook.buck.halide.HalideLibraryBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
@@ -67,7 +66,9 @@ import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -968,7 +969,13 @@ public class WorkspaceAndProjectGeneratorTest {
                 BuckEventBusForTests.newInstance(),
                 targetGraph.getSubgraph(ImmutableSet.of(input)),
                 ActionGraphParallelizationMode.DISABLED,
-                false)
+                false,
+                CloseableMemoizedSupplier.of(
+                    () -> {
+                      throw new IllegalStateException(
+                          "should not use parallel executor for single threaded action graph construction in test");
+                    },
+                    ignored -> {}))
             .getResolver();
   }
 }

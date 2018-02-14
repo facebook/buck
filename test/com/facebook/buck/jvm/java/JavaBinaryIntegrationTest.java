@@ -27,8 +27,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ExitCode;
@@ -69,7 +70,7 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
     setUpProjectWorkspaceForScenario("fat_jar");
     workspace.enableDirCache();
     workspace.runBuckCommand("build", "//:bin-fat").assertSuccess();
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
     Path path = workspace.buildAndReturnOutput("//:bin-fat");
     workspace.getBuildLog().assertTargetWasFetchedFromCache("//:bin-fat");
     assertTrue(workspace.asCell().getFilesystem().exists(path));
@@ -91,7 +92,7 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
     workspace
         .runBuckBuild("-c", "java.cache_binaries=false", "//:bin-no-blacklist")
         .assertSuccess();
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace
         .runBuckBuild("-c", "java.cache_binaries=false", "//:bin-no-blacklist")
         .assertSuccess();
@@ -193,7 +194,7 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
     }
     Files.write(jarPath, bytes);
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:wrapper_01").assertFailure();
+    ProcessResult result = workspace.runBuckBuild("//:wrapper_01").assertFailure();
     // Should show the rule that failed.
     assertThat(result.getStderr(), containsString("//:simple-lib"));
     // Should show the jar we were operating on.
@@ -207,7 +208,7 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
     String systemBootclasspath = System.getProperty("sun.boot.class.path");
     setUpProjectWorkspaceForScenario("fat_jar");
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckBuild(
             "//:bin-output",
             "--config",

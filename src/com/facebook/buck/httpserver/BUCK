@@ -60,7 +60,6 @@ java_library(
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:build_id",
         "//src/com/facebook/buck/parser:parser",
-        "//src/com/facebook/buck/rules:build_event",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/trace:trace",

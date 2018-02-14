@@ -40,7 +40,6 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
@@ -65,13 +64,15 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.swift.SwiftLibraryDescription;
+import com.facebook.buck.swift.SwiftRuntimeNativeLinkable;
 import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.unarchive.UnzipStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.util.types.Either;
 import com.facebook.buck.versions.Version;
-import com.facebook.buck.zip.UnzipStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -304,6 +305,7 @@ public class AppleTestDescription
             appleConfig.cacheBundlesAndPackages(),
             appleConfig.shouldVerifyBundleResources(),
             appleConfig.assetCatalogValidation(),
+            args.getAssetCatalogsCompilationOptions(),
             args.getCodesignFlags(),
             args.getCodesignIdentity(),
             Optional.empty());
@@ -397,7 +399,8 @@ public class AppleTestDescription
                                 .getAbsolutePath(
                                     Preconditions.checkNotNull(
                                         xctoolZipBuildRule.getSourcePathToOutput())),
-                            outputDirectory))
+                            outputDirectory,
+                            Optional.empty()))
                     .build();
               }
 
@@ -536,8 +539,14 @@ public class AppleTestDescription
     // ignored.
     ImmutableSet.Builder<BuildTarget> blacklistBuilder = ImmutableSet.builder();
     for (CxxPlatform platform : cxxPlatforms) {
-      blacklistBuilder.addAll(
-          NativeLinkables.getTransitiveNativeLinkables(platform, roots.values()).keySet());
+      ImmutableSet<BuildTarget> blacklistables =
+          NativeLinkables.getTransitiveNativeLinkables(platform, roots.values())
+              .entrySet()
+              .stream()
+              .filter(x -> !(x.getValue() instanceof SwiftRuntimeNativeLinkable))
+              .map(x -> x.getKey())
+              .collect(ImmutableSet.toImmutableSet());
+      blacklistBuilder.addAll(blacklistables);
     }
 
     if (!uiTestTargetAppBuildTarget.isPresent()) {
@@ -622,6 +631,7 @@ public class AppleTestDescription
           HasAppleBundleFields,
           HasAppleCodesignFields,
           HasContacts,
+          HasEntitlementsFile,
           HasTestTimeout {
     @Value.Default
     default boolean getRunTestSeparately() {

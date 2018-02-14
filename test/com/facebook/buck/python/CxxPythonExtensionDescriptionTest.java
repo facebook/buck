@@ -75,19 +75,25 @@ public class CxxPythonExtensionDescriptionTest {
 
   private static final BuildTarget PYTHON2_DEP_TARGET =
       BuildTargetFactory.newInstance("//:python2_dep");
-  private static final PythonPlatform PY2 =
-      PythonPlatform.of(
-          InternalFlavor.of("py2"),
-          new PythonEnvironment(Paths.get("python2"), PythonVersion.of("CPython", "2.6")),
-          Optional.empty());
+  private static final PythonPlatform PY2 = createPy2Platform(Optional.empty());
 
   private static final BuildTarget PYTHON3_DEP_TARGET =
       BuildTargetFactory.newInstance("//:python3_dep");
-  private static final PythonPlatform PY3 =
-      PythonPlatform.of(
-          InternalFlavor.of("py3"),
-          new PythonEnvironment(Paths.get("python3"), PythonVersion.of("CPython", "3.5")),
-          Optional.empty());
+  private static final PythonPlatform PY3 = createPy3Platform(Optional.empty());
+
+  private static PythonPlatform createPy2Platform(Optional<BuildTarget> cxxLibrary) {
+    return new TestPythonPlatform(
+        InternalFlavor.of("py2"),
+        new PythonEnvironment(Paths.get("python2"), PythonVersion.of("CPython", "2.6")),
+        cxxLibrary);
+  }
+
+  private static PythonPlatform createPy3Platform(Optional<BuildTarget> cxxLibrary) {
+    return new TestPythonPlatform(
+        InternalFlavor.of("py3"),
+        new PythonEnvironment(Paths.get("python3"), PythonVersion.of("CPython", "3.5")),
+        cxxLibrary);
+  }
 
   @Test
   public void createBuildRuleBaseModule() throws Exception {
@@ -238,8 +244,8 @@ public class CxxPythonExtensionDescriptionTest {
                 target,
                 FlavorDomain.of(
                     "Python Platform",
-                    PY2.withCxxLibrary(PYTHON2_DEP_TARGET),
-                    PY3.withCxxLibrary(PYTHON3_DEP_TARGET)),
+                    createPy2Platform(Optional.of(PYTHON2_DEP_TARGET)),
+                    createPy3Platform(Optional.of(PYTHON3_DEP_TARGET))),
                 new CxxBuckConfig(FakeBuckConfig.builder().build()),
                 CxxTestUtils.createDefaultPlatforms())
             .build()
@@ -269,8 +275,8 @@ public class CxxPythonExtensionDescriptionTest {
             .setHeaderOnly(true)
             .setExportedLinkerFlags(ImmutableList.of("-lpython3"));
 
-    PythonPlatform py2 = PY2.withCxxLibrary(PYTHON2_DEP_TARGET);
-    PythonPlatform py3 = PY3.withCxxLibrary(PYTHON3_DEP_TARGET);
+    PythonPlatform py2 = createPy2Platform(Optional.of(PYTHON2_DEP_TARGET));
+    PythonPlatform py3 = createPy3Platform(Optional.of(PYTHON3_DEP_TARGET));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     CxxPythonExtensionBuilder builder =
@@ -351,7 +357,7 @@ public class CxxPythonExtensionDescriptionTest {
   public void nativeLinkTargetDepsIncludePlatformCxxLibrary() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxLibraryBuilder python2Builder = new CxxLibraryBuilder(PYTHON2_DEP_TARGET);
-    PythonPlatform platform = PY2.withCxxLibrary(PYTHON2_DEP_TARGET);
+    PythonPlatform platform = createPy2Platform(Optional.of(PYTHON2_DEP_TARGET));
     CxxPythonExtensionBuilder builder =
         new CxxPythonExtensionBuilder(
             BuildTargetFactory.newInstance("//:rule"),

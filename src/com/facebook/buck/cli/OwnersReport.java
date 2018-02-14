@@ -49,6 +49,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/** Used to determine owners of specific files */
 final class OwnersReport {
   final ImmutableSetMultimap<TargetNode<?, ?>, Path> owners;
   final ImmutableSet<Path> inputsWithNoOwners;
@@ -66,14 +67,45 @@ final class OwnersReport {
     this.nonFileInputs = ImmutableSet.copyOf(nonFileInputs);
   }
 
+  /** Get the set of files that were requested that did not have an owning rule */
+  public ImmutableSet<Path> getInputsWithNoOwners() {
+    return inputsWithNoOwners;
+  }
+
+  /** Get the set of inputs specified in a build rule that do not exist on disk */
+  public ImmutableSet<String> getNonExistentInputs() {
+    return nonExistentInputs;
+  }
+
+  /** Get inputs to a build rule that do not appear to be regular files */
+  public ImmutableSet<String> getNonFileInputs() {
+    return nonFileInputs;
+  }
+
   @VisibleForTesting
   static OwnersReport emptyReport() {
     return new OwnersReport(
         ImmutableSetMultimap.of(), new HashSet<>(), new HashSet<>(), new HashSet<>());
   }
 
+  private boolean isEmpty() {
+    return owners.size() == 0
+        && inputsWithNoOwners.size() == 0
+        && nonExistentInputs.size() == 0
+        && nonFileInputs.size() == 0;
+  }
+
   @VisibleForTesting
   OwnersReport updatedWith(OwnersReport other) {
+    // If either this or other are empty, the intersection below for missing files will get
+    // screwed up. This mostly is just so that when we do a fold elsewhere in the class against
+    // a default empty object, we don't obliterate inputsWithNoOwners
+    if (this.isEmpty()) {
+      return other;
+    } else if (other.isEmpty()) {
+      return this;
+    }
+
     SetMultimap<TargetNode<?, ?>, Path> updatedOwners = TreeMultimap.create(owners);
     updatedOwners.putAll(other.owners);
 
@@ -214,10 +246,13 @@ final class OwnersReport {
                               .stream()
                               .filter(cell -> path.startsWith(cell.getRoot()))
                               .findFirst()));
+      Set<String> missingFiles =
+          RichStream.from(arguments)
+              .filter(f -> !Files.exists(rootCellFilesystem.getPathForRelativePath(f)))
+              .collect(Collectors.toSet());
 
       ImmutableSet.Builder<Path> inputWithNoOwners = ImmutableSet.builder();
       OwnersReport report = OwnersReport.emptyReport();
-
       // Process every cell's files independently.
       for (Map.Entry<Optional<Cell>, List<Path>> entry : argumentsByCell.entrySet()) {
         if (!entry.getKey().isPresent()) {
@@ -255,7 +290,7 @@ final class OwnersReport {
           new OwnersReport(
               ImmutableSetMultimap.of(),
               /* inputWithNoOwners */ inputWithNoOwners.build(),
-              new HashSet<>(),
+              /* nonExistentInputs */ missingFiles,
               new HashSet<>()));
     }
   }

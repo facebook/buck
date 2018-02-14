@@ -21,8 +21,9 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.log.LogFormatter;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
@@ -193,8 +194,8 @@ public class DiffRuleKeysScriptIntegrationTest {
     assertThat(
         runRuleKeyDiffer(workspace),
         Matchers.stringContainsInOrder(
-            "Change details for [//:java_lib_2]",
-            "  (buck.deps):",
+            "Change details for [//:java_lib_2->buck.deps]",
+            "  (additionalDeps):",
             "    -[<missing>]",
             "    +[\"//:java_lib_3\"@ruleKey(sha1=", /* some rulekey */
             ")]",
@@ -256,8 +257,7 @@ public class DiffRuleKeysScriptIntegrationTest {
     String expectedFileContent = new String(Files.readAllBytes(logPath), UTF_8);
     assertThat(
         expectedFileContent,
-        Matchers.containsString(
-            "string(\"-I$SDKROOT/usr/include/libxml2\"):container(LIST,len=1):key(macros):"));
+        Matchers.containsString("string(\"-I$SDKROOT/usr/include/libxml2\"):key(sanitized):"));
   }
 
   private void writeBuckConfig(ProjectWorkspace projectWorkspace, String javaVersion)
@@ -299,7 +299,7 @@ public class DiffRuleKeysScriptIntegrationTest {
   private void invokeBuckCommand(
       ProjectWorkspace workspace, ImmutableList<String> targets, String logOut) throws IOException {
     ImmutableList<String> args = ImmutableList.of("targets", "--show-rulekey");
-    ProjectWorkspace.ProcessResult buckCommandResult =
+    ProcessResult buckCommandResult =
         workspace.runBuckCommand(
             Stream.concat(args.stream(), targets.stream()).toArray(String[]::new));
 

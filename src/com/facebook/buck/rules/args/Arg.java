@@ -65,9 +65,18 @@ public interface Arg extends AddsToRuleKey {
       Iterable<? extends Arg> args, SourcePathResolver pathResolver) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     for (Arg arg : args) {
+      // TODO(cjhopman): This should probably use the single-Arg stringify below such that each Arg
+      // expands to one entry in the final list.
       arg.appendToCommandLine(builder::add, pathResolver);
     }
     return builder.build();
+  }
+
+  /** Converts an Arg to a String by concatting all the command-line appended strings. */
+  static String stringify(Arg arg, SourcePathResolver pathResolver) {
+    StringBuilder builder = new StringBuilder();
+    arg.appendToCommandLine(builder::append, pathResolver);
+    return builder.toString();
   }
 
   static <K> ImmutableMap<K, String> stringify(

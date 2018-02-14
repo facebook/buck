@@ -17,8 +17,8 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.util.types.Pair;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
@@ -46,9 +46,10 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, S
   }
 
   @Override
-  public void traverse(Pair<FIRST, SECOND> object, Traversal traversal) {
-    firstTypeCoercer.traverse(object.getFirst(), traversal);
-    secondTypeCoercer.traverse(object.getSecond(), traversal);
+  public void traverse(
+      CellPathResolver cellRoots, Pair<FIRST, SECOND> object, Traversal traversal) {
+    firstTypeCoercer.traverse(cellRoots, object.getFirst(), traversal);
+    secondTypeCoercer.traverse(cellRoots, object.getSecond(), traversal);
   }
 
   @Override

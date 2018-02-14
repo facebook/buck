@@ -33,7 +33,7 @@ public final class Escaper {
   private Escaper() {}
 
   /** The quoting style to use when escaping. */
-  public static enum Quoter {
+  public enum Quoter {
     SINGLE {
       @Override
       public String quote(String str) {

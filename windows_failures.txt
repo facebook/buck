@@ -34,6 +34,8 @@
 !com.facebook.buck.python.PythonSrcZipIntegrationTest#testDependingOnSrcZipWorks
 !com.facebook.buck.python.PythonTestIntegrationTest
 !com.facebook.buck.step.fs.SymCopyStepTest#testSymCopyStep
+!com.facebook.buck.testutil.endtoend.EndToEndRunnerTest
+!com.facebook.buck.testutil.endtoend.EndToEndWorkspaceTest
 !com.facebook.buck.thrift.ThriftLibraryIntegrationTest#shouldBeAbleToConstructACxxLibraryFromThrift
 !com.facebook.buck.util.ListeningProcessExecutorTest#clearsEnvWhenExplicitlySet
 !com.facebook.buck.intellij.ideabuck.config.BuckExecutableDetectorTest

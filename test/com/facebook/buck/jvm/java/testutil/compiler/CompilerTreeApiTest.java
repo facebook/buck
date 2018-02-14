@@ -35,6 +35,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
+import javax.lang.model.element.Parameterizable;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
@@ -173,6 +174,17 @@ public abstract class CompilerTreeApiTest {
 
     throw new IllegalArgumentException(
         String.format("No such parameter on %s: %s", method.getSimpleName(), name));
+  }
+
+  protected TypeParameterElement findTypeParameter(String name, Parameterizable element) {
+    for (TypeParameterElement parameter : element.getTypeParameters()) {
+      if (parameter.getSimpleName().contentEquals(name)) {
+        return parameter;
+      }
+    }
+
+    throw new IllegalArgumentException(
+        String.format("No such parameter on %s: %s", element.getSimpleName(), name));
   }
 
   protected void assertNameEquals(String expected, Name actual) {

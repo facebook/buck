@@ -49,16 +49,21 @@ import java.util.stream.Stream;
 
 public class SymlinkTree implements BuildRule, HasRuntimeDeps, SupportsInputBasedRuleKey {
 
+  private final String category;
   private final Path root;
   private final ImmutableSortedMap<Path, SourcePath> links;
   private final BuildTarget target;
   private final ProjectFilesystem filesystem;
 
+  private final String type;
+
   public SymlinkTree(
+      String category,
       BuildTarget target,
       ProjectFilesystem filesystem,
       Path root,
       final ImmutableMap<Path, SourcePath> links) {
+    this.category = category;
     this.target = target;
     this.filesystem = filesystem;
 
@@ -67,6 +72,8 @@ public class SymlinkTree implements BuildRule, HasRuntimeDeps, SupportsInputBase
 
     this.root = root;
     this.links = ImmutableSortedMap.copyOf(links);
+
+    this.type = category + "_symlink_tree";
   }
 
   @Override
@@ -138,7 +145,7 @@ public class SymlinkTree implements BuildRule, HasRuntimeDeps, SupportsInputBase
 
   @Override
   public String getType() {
-    return "symlink_tree";
+    return type;
   }
 
   /**
@@ -166,6 +173,7 @@ public class SymlinkTree implements BuildRule, HasRuntimeDeps, SupportsInputBase
                     context.getBuildCellRootPath(), getProjectFilesystem(), root)))
         .add(
             new SymlinkTreeStep(
+                category,
                 getProjectFilesystem(),
                 root,
                 context.getSourcePathResolver().getMappedPaths(links)))

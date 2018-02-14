@@ -141,6 +141,9 @@ abstract class GoDescriptors {
           .addAll(ruleFinder.filterBuildRuleInputs(lib.getGeneratedGoSource()));
     }
 
+    ImmutableSet<SourcePath> compileSrcs = compileSrcBuilder.build();
+    ImmutableList<BuildRule> srcDependencies = getDependenciesFromSources(ruleFinder, compileSrcs);
+
     LOG.verbose("Symlink tree for compiling %s: %s", buildTarget, symlinkTree.getLinks());
 
     return new GoCompile(
@@ -148,7 +151,8 @@ abstract class GoDescriptors {
         projectFilesystem,
         params
             .copyAppendingExtraDeps(linkableDepsBuilder.build())
-            .copyAppendingExtraDeps(ImmutableList.of(symlinkTree)),
+            .copyAppendingExtraDeps(ImmutableList.of(symlinkTree))
+            .copyAppendingExtraDeps(srcDependencies),
         symlinkTree,
         packageName,
         getPackageImportMap(
@@ -380,6 +384,19 @@ abstract class GoDescriptors {
     return linkables.build();
   }
 
+  /**
+   * Make sure that if any srcs elements are a build rule, we add it as a dependency, so we wait for
+   * it to finish running before using the source
+   */
+  private static ImmutableList<BuildRule> getDependenciesFromSources(
+      SourcePathRuleFinder ruleFinder, ImmutableSet<SourcePath> srcs) {
+    return srcs.stream()
+        .map(ruleFinder::getRule)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .collect(ImmutableList.toImmutableList());
+  }
+
   private static SymlinkTree makeSymlinkTree(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -406,7 +423,7 @@ abstract class GoDescriptors {
 
     Path root = BuildTargets.getScratchPath(projectFilesystem, buildTarget, "__%s__tree");
 
-    return new SymlinkTree(buildTarget, projectFilesystem, root, treeMap);
+    return new SymlinkTree("go_linkable", buildTarget, projectFilesystem, root, treeMap);
   }
 
   /**

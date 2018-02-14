@@ -521,7 +521,13 @@ public class RealAndroidDevice implements AndroidDevice {
       if (installViaSd) {
         reason = deviceInstallPackageViaSd(apk.getAbsolutePath());
       } else {
-        device.installPackage(apk.getAbsolutePath(), true);
+        // Always pass -d if it's supported. The duplication is unfortunate
+        // but there's no easy way to conditionally pass varargs in Java.
+        if (supportsInstallDowngrade()) {
+          device.installPackage(apk.getAbsolutePath(), true, "-d");
+        } else {
+          device.installPackage(apk.getAbsolutePath(), true);
+        }
       }
       if (reason != null) {
         console.printBuildFailure(String.format("Failed to install apk on %s: %s.", name, reason));
@@ -533,6 +539,23 @@ public class RealAndroidDevice implements AndroidDevice {
       ex.printStackTrace(console.getStdErr());
       return false;
     }
+  }
+
+  /**
+   * The -d flag is only recognized on API level 17 and above. It was added to android/base in
+   * 7767eac3232ba2fb9828766813cdb481d6a97584. The next release was jb-mr1-release,
+   * b361b3043bb351ab175ae1ff3dae4de9fe31d42b.
+   */
+  private boolean supportsInstallDowngrade() {
+    String value = device.getProperty("ro.build.version.sdk");
+    try {
+      if (Integer.valueOf(value) >= 17) {
+        return true;
+      }
+    } catch (NumberFormatException exn) {
+      return false;
+    }
+    return false;
   }
 
   @Override

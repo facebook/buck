@@ -93,6 +93,10 @@ class InterfaceScanner {
         // scanning the package name because it is not needed.
         scan(node.getImports(), aVoid);
         scan(node.getPackageAnnotations(), aVoid);
+
+        // getTypeDecls has a bug whereby it can return some imports in addition to types, but
+        // since getImports returns all of the imports in that case we can still iterate this last
+        // like the superclass does.
         scan(node.getTypeDecls(), aVoid);
         return null;
       }
@@ -212,8 +216,13 @@ class InterfaceScanner {
           if (variableElement.getConstantValue() != null) {
             reportConstant();
           } else {
-            // Could be an enum constant, which is not considered a compile-time constant. Keep
-            // looking for the type reference.
+            if (variableElement.getKind() == ElementKind.ENUM_CONSTANT) {
+              // Not technically a compile-time constant, but still needs to be present for
+              // stuff to resolve properly.
+              reportConstant();
+            }
+
+            // Keep looking for the type reference.
             return super.visitMemberSelect(node, aVoid);
           }
         }
@@ -241,7 +250,8 @@ class InterfaceScanner {
         } else if (kind == ElementKind.FIELD) {
           // Identifier is a field name. Check if it's a constant and report if so.
           VariableElement variableElement = (VariableElement) currentElement;
-          if (variableElement.getConstantValue() != null) {
+          if (variableElement.getConstantValue() != null
+              || variableElement.getKind() == ElementKind.ENUM_CONSTANT) {
             reportConstant();
           }
         }

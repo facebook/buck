@@ -22,7 +22,17 @@ import com.google.common.util.concurrent.ListenableFuture;
 public class NoOpRemoteBuildRuleCompletionWaiter implements RemoteBuildRuleCompletionWaiter {
 
   @Override
+  public boolean shouldWaitForRemoteCompletionOfBuildRule(String buildTarget) {
+    return false;
+  }
+
+  @Override
   public ListenableFuture<Void> waitForBuildRuleToFinishRemotely(BuildRule buildRule) {
+    return Futures.immediateFuture(null);
+  }
+
+  @Override
+  public ListenableFuture<Void> waitForMostBuildRulesToFinishRemotely() {
     return Futures.immediateFuture(null);
   }
 }

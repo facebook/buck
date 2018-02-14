@@ -522,6 +522,7 @@ public class LuaBinaryDescription
       ImmutableMap<String, SourcePath> components) {
     return resolver.addToIndex(
         new SymlinkTree(
+            "lua_binary",
             linkTreeTarget,
             filesystem,
             root,

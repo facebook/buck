@@ -16,12 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.facebook.buck.versions.TargetNodeTranslator;
-import java.util.Optional;
 import org.immutables.value.Value;
 
 /**
@@ -33,12 +28,4 @@ import org.immutables.value.Value;
 abstract class AbstractOutputMacro implements Macro {
 
   public abstract String getOutputName();
-
-  @Override
-  public Optional<Macro> translateTargets(
-      CellPathResolver cellPathResolver,
-      BuildTargetPatternParser<BuildTargetPattern> pattern,
-      TargetNodeTranslator translator) {
-    return Optional.empty();
-  }
 }

@@ -27,6 +27,7 @@ import com.facebook.buck.distributed.DistBuildCellIndexer;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildCreatedEvent;
 import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.DistBuildService.DistBuildRejectedException;
 import com.facebook.buck.distributed.build_slave.CacheOptimizedBuildTargetsQueueFactory;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJob;
@@ -38,11 +39,11 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.ActionAndTargetGraphs;
 import com.facebook.buck.rules.ParallelRuleKeyCalculator;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
@@ -53,6 +54,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /** Phase before the build. */
 public class PreBuildPhase {
@@ -66,6 +68,7 @@ public class PreBuildPhase {
   private final BuildExecutorArgs buildExecutorArgs;
   private final ImmutableSet<BuildTarget> topLevelTargets;
   private final ActionAndTargetGraphs actionAndTargetGraphs;
+  private final String buildLabel;
 
   public PreBuildPhase(
       DistBuildService distBuildService,
@@ -75,7 +78,8 @@ public class PreBuildPhase {
       BuckVersion buckVersion,
       BuildExecutorArgs buildExecutorArgs,
       ImmutableSet<BuildTarget> topLevelTargets,
-      ActionAndTargetGraphs buildGraphs) {
+      ActionAndTargetGraphs buildGraphs,
+      String buildLabel) {
     this.distBuildService = distBuildService;
     this.distBuildClientStats = distBuildClientStats;
     this.asyncJobState = asyncJobState;
@@ -84,6 +88,7 @@ public class PreBuildPhase {
     this.buildExecutorArgs = buildExecutorArgs;
     this.topLevelTargets = topLevelTargets;
     this.actionAndTargetGraphs = buildGraphs;
+    this.buildLabel = buildLabel;
   }
 
   /** Run all steps required before the build. */
@@ -97,22 +102,29 @@ public class PreBuildPhase {
       int numberOfMinions,
       String repository,
       String tenantId,
-      ListenableFuture<Optional<ParallelRuleKeyCalculator<RuleKey>>> localRuleKeyCalculatorFuture)
-      throws IOException, InterruptedException {
-    EventSender eventSender = new EventSender(eventBus);
+      ListenableFuture<ParallelRuleKeyCalculator<RuleKey>> localRuleKeyCalculatorFuture)
+      throws IOException, DistBuildRejectedException {
+    ConsoleEventsDispatcher consoleEventsDispatcher = new ConsoleEventsDispatcher(eventBus);
 
     distBuildClientStats.startTimer(CREATE_DISTRIBUTED_BUILD);
+    List<String> buildTargets =
+        topLevelTargets
+            .stream()
+            .map(x -> x.getFullyQualifiedName())
+            .sorted()
+            .collect(Collectors.toList());
     BuildJob job =
-        distBuildService.createBuild(buildId, buildMode, numberOfMinions, repository, tenantId);
+        distBuildService.createBuild(
+            buildId, buildMode, numberOfMinions, repository, tenantId, buildTargets, buildLabel);
     distBuildClientStats.stopTimer(CREATE_DISTRIBUTED_BUILD);
 
     final StampedeId stampedeId = job.getStampedeId();
     eventBus.post(new DistBuildCreatedEvent(stampedeId));
 
-    distBuildClientStats.setStampedeId(stampedeId.getId());
     LOG.info("Created job. Build id = " + stampedeId.getId());
 
-    eventSender.postDistBuildStatusEvent(job, ImmutableList.of(), "SERIALIZING AND UPLOADING DATA");
+    consoleEventsDispatcher.postDistBuildStatusEvent(
+        job, ImmutableList.of(), "SERIALIZING AND UPLOADING DATA");
 
     List<ListenableFuture<?>> asyncJobs = new LinkedList<>();
 
@@ -174,13 +186,13 @@ public class PreBuildPhase {
                     new DistBuildArtifactCacheImpl(
                         actionAndTargetGraphs.getActionGraphAndResolver().getResolver(),
                         networkExecutorService,
-                        buildExecutorArgs.getArtifactCacheFactory().remoteOnlyInstance(true),
+                        buildExecutorArgs.getArtifactCacheFactory().remoteOnlyInstance(true, false),
                         eventBus,
-                        fileHashCache,
-                        buildExecutorArgs.getRuleKeyConfiguration(),
                         localRuleKeyCalculator,
                         Optional.of(
-                            buildExecutorArgs.getArtifactCacheFactory().localOnlyInstance(true)))) {
+                            buildExecutorArgs
+                                .getArtifactCacheFactory()
+                                .localOnlyInstance(true, false)))) {
 
                   return new CacheOptimizedBuildTargetsQueueFactory(
                           actionAndTargetGraphs.getActionGraphAndResolver().getResolver(),
@@ -201,7 +213,7 @@ public class PreBuildPhase {
             Futures.allAsList(asyncJobs),
             results -> {
               LOG.info("Finished async preparation of stampede job.");
-              eventSender.postDistBuildStatusEvent(
+              consoleEventsDispatcher.postDistBuildStatusEvent(
                   job, ImmutableList.of(), "STARTING REMOTE BUILD");
 
               // Everything is now setup remotely to run the distributed build. No more local prep.

@@ -59,7 +59,7 @@ public class BuckUncheckedExecutionException extends RuntimeException
     StringBuilder builder = new StringBuilder();
     builder.append(context);
     String parentMessage = super.getLocalizedMessage();
-    if (!parentMessage.isEmpty()) {
+    if (parentMessage != null && !parentMessage.isEmpty()) {
       builder.append(": ");
       builder.append(parentMessage);
     }

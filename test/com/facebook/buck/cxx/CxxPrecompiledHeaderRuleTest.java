@@ -20,10 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.Compiler;
@@ -32,7 +32,6 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
-import com.facebook.buck.cxx.toolchain.PchUnavailableException;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -68,12 +67,11 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
@@ -103,14 +101,13 @@ public class CxxPrecompiledHeaderRuleTest {
 
   private PreprocessorProvider preprocessorSupportingPch;
   private CxxPlatform platformSupportingPch;
-  private CxxBuckConfig cxxConfigPchDisabledGenerateError;
-  private CxxPlatform platformNotSupportingPchError;
-  private CxxBuckConfig cxxConfigPchDisabledGenerateWarning;
-  private CxxPlatform platformNotSupportingPchWarning;
+  private CxxBuckConfig cxxConfigPchDisabled;
+  private CxxPlatform platformNotSupportingPch;
 
   @Before
   public void setUp() throws InterruptedException, IOException {
-    assumeTrue(platformOkForPCHTests());
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_precompiled_header_rule", tmp);
@@ -124,25 +121,12 @@ public class CxxPrecompiledHeaderRuleTest {
     platformSupportingPch =
         CxxPlatformUtils.build(CXX_CONFIG_PCH_ENABLED).withCpp(preprocessorSupportingPch);
 
-    cxxConfigPchDisabledGenerateError =
+    cxxConfigPchDisabled =
         new CxxBuckConfig(
-            FakeBuckConfig.builder()
-                .setSections("[cxx]\n" + "pch_enabled=false\n" + "pch_unavailable=error\n")
-                .build());
+            FakeBuckConfig.builder().setSections("[cxx]\n" + "pch_enabled=false\n").build());
 
-    platformNotSupportingPchError =
-        CxxPlatformUtils.build(cxxConfigPchDisabledGenerateError)
-            .withCpp(preprocessorSupportingPch);
-
-    cxxConfigPchDisabledGenerateWarning =
-        new CxxBuckConfig(
-            FakeBuckConfig.builder()
-                .setSections("[cxx]\n" + "pch_enabled=false\n" + "pch_unavailable=warn\n")
-                .build());
-
-    platformNotSupportingPchWarning =
-        CxxPlatformUtils.build(cxxConfigPchDisabledGenerateWarning)
-            .withCpp(preprocessorSupportingPch);
+    platformNotSupportingPch =
+        CxxPlatformUtils.build(cxxConfigPchDisabled).withCpp(preprocessorSupportingPch);
   }
 
   public final TargetNodeToBuildRuleTransformer transformer =
@@ -169,8 +153,10 @@ public class CxxPrecompiledHeaderRuleTest {
     return new CxxPrecompiledHeaderTemplate(
         target,
         new FakeProjectFilesystem(),
-        newParams().copyAppendingExtraDeps(deps),
+        deps,
+        ruleResolver,
         pathResolver,
+        ruleFinder,
         headerSourcePath);
   }
 
@@ -226,10 +212,6 @@ public class CxxPrecompiledHeaderRuleTest {
       }
     }
     return list.subList(i, list.size());
-  }
-
-  private boolean platformOkForPCHTests() {
-    return Platform.detect() != Platform.WINDOWS;
   }
 
   /** @return exit code from that process */
@@ -366,6 +348,7 @@ public class CxxPrecompiledHeaderRuleTest {
     assertNotNull(pchInstance);
     ImmutableList<String> pchCmd =
         pchInstance.makeMainStep(pathResolver, Paths.get("/tmp/x")).getCommand();
+
     assertTrue(seek(pchCmd, "-flag-for-source").size() > 0);
     assertTrue(seek(pchCmd, "-flag-for-factory").size() > 0);
   }
@@ -501,42 +484,28 @@ public class CxxPrecompiledHeaderRuleTest {
   }
 
   @Test
-  public void pchDisabledWithErrorModeShouldThrow() throws Exception {
+  public void pchDisabledShouldIncludeAsRegularHeader() throws Exception {
     BuildTarget pchTarget = newTarget("//test:pch");
     CxxPrecompiledHeaderTemplate pch =
         newPCH(pchTarget, FakeSourcePath.of("header.h"), ImmutableSortedSet.of());
     ruleResolver.addToIndex(pch);
-    PchUnavailableException caught = null;
-    try {
-      newFactoryBuilder(newTarget("//test:lib"), new FakeProjectFilesystem())
-          .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
-          .setCxxPlatform(platformNotSupportingPchError)
-          .setCxxBuckConfig(cxxConfigPchDisabledGenerateError)
-          .build()
-          .requirePreprocessAndCompileBuildRule("lib.cpp", newSource("lib.cpp"));
-      throw new Error("`requirePreprocessAndCompileBuildRule` should have failed");
-    } catch (PchUnavailableException e) {
-      caught = e;
-    }
-    assertNotNull(caught);
-  }
+    CxxPreprocessAndCompile compileLibRule =
+        newFactoryBuilder(newTarget("//test:lib"), new FakeProjectFilesystem())
+            .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
+            .setCxxPlatform(platformNotSupportingPch)
+            .setCxxBuckConfig(cxxConfigPchDisabled)
+            .build()
+            .requirePreprocessAndCompileBuildRule("lib.cpp", newSource("lib.cpp"));
 
-  @Test
-  public void pchDisabledWithWarnModeShouldNotThrow() throws Exception {
-    BuildTarget pchTarget = newTarget("//test:pch");
-    CxxPrecompiledHeaderTemplate pch =
-        newPCH(pchTarget, FakeSourcePath.of("header.h"), ImmutableSortedSet.of());
-    ruleResolver.addToIndex(pch);
-    try {
-      newFactoryBuilder(newTarget("//test:lib"), new FakeProjectFilesystem())
-          .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
-          .setCxxPlatform(platformNotSupportingPchWarning)
-          .setCxxBuckConfig(cxxConfigPchDisabledGenerateWarning)
-          .build()
-          .requirePreprocessAndCompileBuildRule("lib.cpp", newSource("lib.cpp"));
-    } catch (PchUnavailableException e) {
-      throw new Error("This exception should not have been thrown: " + e);
-    }
+    ruleResolver.addToIndex(compileLibRule);
+    ImmutableList<String> compileLibCmd =
+        compileLibRule.makeMainStep(pathResolver, Paths.get("/tmp/x"), false).getCommand();
+
+    assertSame(seek(compileLibCmd, "-include-pch").size(), 0);
+
+    List<String> flag = seek(compileLibCmd, "-include");
+    assertTrue(flag.size() >= 2);
+    assertTrue(flag.get(1).endsWith(".h"));
   }
 
   @Test

@@ -22,7 +22,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.HumanReadableException;
@@ -41,10 +40,13 @@ public class CxxPlatforms {
   private static final ImmutableList<String> DEFAULT_CXXFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_CPPFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_CXXPPFLAGS = ImmutableList.of();
+  private static final ImmutableList<String> DEFAULT_CUDAFLAGS = ImmutableList.of();
+  private static final ImmutableList<String> DEFAULT_CUDAPPFLAGS = ImmutableList.of();
+  private static final ImmutableList<String> DEFAULT_ASMFLAGS = ImmutableList.of();
+  private static final ImmutableList<String> DEFAULT_ASMPPFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_LDFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_ARFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_RANLIBFLAGS = ImmutableList.of();
-  private static final ImmutableList<String> DEFAULT_COMPILER_ONLY_FLAGS = ImmutableList.of();
 
   // Utility class, do not instantiate.
   private CxxPlatforms() {}
@@ -59,7 +61,7 @@ public class CxxPlatforms {
           sharedLibraryInterfaceParams =
               Optional.of(
                   ElfSharedLibraryInterfaceParams.of(
-                      config.getToolProvider("objcopy").get(),
+                      config.getObjcopy().get(),
                       type == SharedLibraryInterfaceParams.Type.DEFINED_ONLY));
           break;
           // $CASES-OMITTED$
@@ -83,7 +85,7 @@ public class CxxPlatforms {
       Iterable<String> ldFlags,
       Tool strip,
       final ArchiverProvider ar,
-      final ToolProvider ranlib,
+      final Optional<ToolProvider> ranlib,
       final SymbolNameTool nm,
       ImmutableList<String> asflags,
       ImmutableList<String> asppflags,
@@ -104,21 +106,21 @@ public class CxxPlatforms {
 
     builder
         .setFlavor(flavor)
-        .setAs(config.getCompilerProvider("as").orElse(as))
-        .setAspp(config.getPreprocessorProvider("aspp").orElse(aspp))
-        .setCc(config.getCompilerProvider("cc").orElse(cc))
-        .setCxx(config.getCompilerProvider("cxx").orElse(cxx))
-        .setCpp(config.getPreprocessorProvider("cpp").orElse(cpp))
-        .setCxxpp(config.getPreprocessorProvider("cxxpp").orElse(cxxpp))
-        .setCuda(config.getCompilerProvider("cuda"))
-        .setCudapp(config.getPreprocessorProvider("cudapp"))
-        .setAsm(config.getCompilerProvider("asm"))
-        .setAsmpp(config.getPreprocessorProvider("asmpp"))
-        .setLd(config.getLinkerProvider("ld", ld.getType()).orElse(ld))
+        .setAs(config.getAs().orElse(as))
+        .setAspp(config.getAspp().orElse(aspp))
+        .setCc(config.getCc().orElse(cc))
+        .setCxx(config.getCxx().orElse(cxx))
+        .setCpp(config.getCpp().orElse(cpp))
+        .setCxxpp(config.getCxxpp().orElse(cxxpp))
+        .setCuda(config.getCuda())
+        .setCudapp(config.getCudapp())
+        .setAsm(config.getAsm())
+        .setAsmpp(config.getAsmpp())
+        .setLd(config.getLinkerProvider(ld.getType()).orElse(ld))
         .addAllLdflags(ldFlags)
         .setAr(config.getArchiverProvider(platform).orElse(ar))
-        .setRanlib(config.getToolProvider("ranlib").orElse(ranlib))
-        .setStrip(getTool("strip", config).orElse(strip))
+        .setRanlib(config.getRanlib().isPresent() ? config.getRanlib() : ranlib)
+        .setStrip(config.getStrip().orElse(strip))
         .setSharedLibraryExtension(sharedLibraryExtension)
         .setSharedLibraryVersionedExtensionFormat(sharedLibraryVersionedExtensionFormat)
         .setStaticLibraryExtension(staticLibraryExtension)
@@ -135,7 +137,7 @@ public class CxxPlatforms {
     builder.setSymbolNameTool(
         new LazyDelegatingSymbolNameTool(
             () -> {
-              Optional<Tool> configNm = getTool("nm", config);
+              Optional<Tool> configNm = config.getNm();
               if (configNm.isPresent()) {
                 return new PosixNmSymbolNameTool(configNm.get());
               } else {
@@ -218,28 +220,20 @@ public class CxxPlatforms {
   }
 
   public static void addToolFlagsFromConfig(CxxBuckConfig config, CxxPlatform.Builder builder) {
-    ImmutableList<String> asflags = config.getFlags("asflags").orElse(DEFAULT_ASFLAGS);
-    ImmutableList<String> cflags = config.getFlags("cflags").orElse(DEFAULT_CFLAGS);
-    ImmutableList<String> cxxflags = config.getFlags("cxxflags").orElse(DEFAULT_CXXFLAGS);
-    ImmutableList<String> compilerOnlyFlags =
-        config.getFlags("compiler_only_flags").orElse(DEFAULT_COMPILER_ONLY_FLAGS);
-
     builder
-        .addAllAsflags(asflags)
-        .addAllAsppflags(config.getFlags("asppflags").orElse(DEFAULT_ASPPFLAGS))
-        .addAllCflags(cflags)
-        .addAllCflags(compilerOnlyFlags)
-        .addAllCxxflags(cxxflags)
-        .addAllCxxflags(compilerOnlyFlags)
-        .addAllCppflags(config.getFlags("cppflags").orElse(DEFAULT_CPPFLAGS))
-        .addAllCxxppflags(config.getFlags("cxxppflags").orElse(DEFAULT_CXXPPFLAGS))
-        .addAllCudaflags(config.getFlags("cudaflags").orElse(ImmutableList.of()))
-        .addAllCudappflags(config.getFlags("cudappflags").orElse(ImmutableList.of()))
-        .addAllAsmflags(config.getFlags("asmflags").orElse(ImmutableList.of()))
-        .addAllAsmppflags(config.getFlags("asmppflags").orElse(ImmutableList.of()))
-        .addAllLdflags(config.getFlags("ldflags").orElse(DEFAULT_LDFLAGS))
-        .addAllArflags(config.getFlags("arflags").orElse(DEFAULT_ARFLAGS))
-        .addAllRanlibflags(config.getFlags("ranlibflags").orElse(DEFAULT_RANLIBFLAGS));
+        .addAllAsflags(config.getAsflags().orElse(DEFAULT_ASFLAGS))
+        .addAllAsppflags(config.getAsppflags().orElse(DEFAULT_ASPPFLAGS))
+        .addAllCflags(config.getCflags().orElse(DEFAULT_CFLAGS))
+        .addAllCxxflags(config.getCxxflags().orElse(DEFAULT_CXXFLAGS))
+        .addAllCppflags(config.getCppflags().orElse(DEFAULT_CPPFLAGS))
+        .addAllCxxppflags(config.getCxxppflags().orElse(DEFAULT_CXXPPFLAGS))
+        .addAllCudaflags(config.getCudaflags().orElse(DEFAULT_CUDAFLAGS))
+        .addAllCudappflags(config.getCudappflags().orElse(DEFAULT_CUDAPPFLAGS))
+        .addAllAsmflags(config.getAsmflags().orElse(DEFAULT_ASMFLAGS))
+        .addAllAsmppflags(config.getAsmppflags().orElse(DEFAULT_ASMPPFLAGS))
+        .addAllLdflags(config.getLdflags().orElse(DEFAULT_LDFLAGS))
+        .addAllArflags(config.getArflags().orElse(DEFAULT_ARFLAGS))
+        .addAllRanlibflags(config.getRanlibflags().orElse(DEFAULT_RANLIBFLAGS));
   }
 
   public static CxxPlatform getConfigDefaultCxxPlatform(
@@ -265,10 +259,6 @@ public class CxxPlatforms {
     return systemDefaultCxxPlatform;
   }
 
-  private static Optional<Tool> getTool(String name, CxxBuckConfig config) {
-    return config.getPath(name).map(config::getSourcePath).map(HashedFileTool::new);
-  }
-
   public static Iterable<BuildTarget> getParseTimeDeps(CxxPlatform cxxPlatform) {
     ImmutableList.Builder<BuildTarget> deps = ImmutableList.builder();
     deps.addAll(cxxPlatform.getAspp().getParseTimeDeps());
@@ -291,7 +281,9 @@ public class CxxPlatforms {
     }
     deps.addAll(cxxPlatform.getLd().getParseTimeDeps());
     deps.addAll(cxxPlatform.getAr().getParseTimeDeps());
-    deps.addAll(cxxPlatform.getRanlib().getParseTimeDeps());
+    if (cxxPlatform.getRanlib().isPresent()) {
+      deps.addAll(cxxPlatform.getRanlib().get().getParseTimeDeps());
+    }
     cxxPlatform.getSharedLibraryInterfaceParams().ifPresent(f -> deps.addAll(f.getParseTimeDeps()));
     return deps.build();
   }

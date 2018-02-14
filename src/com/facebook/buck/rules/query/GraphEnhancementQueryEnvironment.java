@@ -40,6 +40,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -77,16 +78,19 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
 
   private final Optional<BuildRuleResolver> resolver;
   private final Optional<TargetGraph> targetGraph;
+  private final TypeCoercerFactory typeCoercerFactory;
   private final QueryEnvironment.TargetEvaluator targetEvaluator;
 
   public GraphEnhancementQueryEnvironment(
       Optional<BuildRuleResolver> resolver,
       Optional<TargetGraph> targetGraph,
+      TypeCoercerFactory typeCoercerFactory,
       CellPathResolver cellNames,
       BuildTargetPatternParser<BuildTargetPattern> context,
       Set<BuildTarget> declaredDeps) {
     this.resolver = resolver;
     this.targetGraph = targetGraph;
+    this.typeCoercerFactory = typeCoercerFactory;
     this.targetEvaluator = new TargetEvaluator(cellNames, context, declaredDeps);
   }
 
@@ -158,13 +162,15 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
 
   @Override
   public ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, String attribute) {
-    return QueryTargetAccessor.getTargetsInAttribute(getNode(target), attribute);
+    return QueryTargetAccessor.getTargetsInAttribute(
+        typeCoercerFactory, getNode(target), attribute);
   }
 
   @Override
   public ImmutableSet<Object> filterAttributeContents(
       QueryTarget target, String attribute, Predicate<Object> predicate) {
-    return QueryTargetAccessor.filterAttributeContents(getNode(target), attribute, predicate);
+    return QueryTargetAccessor.filterAttributeContents(
+        typeCoercerFactory, getNode(target), attribute, predicate);
   }
 
   private TargetNode<?, ?> getNode(QueryTarget target) {

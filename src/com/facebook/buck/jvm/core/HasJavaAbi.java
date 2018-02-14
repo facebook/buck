@@ -24,7 +24,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.zip.Unzip;
+import com.facebook.buck.util.unarchive.Unzip;
 import com.facebook.infer.annotation.Assertions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -106,6 +106,10 @@ public interface HasJavaAbi {
   /** @return the {@link SourcePath} representing the ABI Jar for this rule. */
   default Optional<BuildTarget> getAbiJar() {
     return Optional.of(getBuildTarget().withAppendedFlavors(CLASS_ABI_FLAVOR));
+  }
+
+  default Optional<BuildTarget> getSourceOnlyAbiJar() {
+    return Optional.empty();
   }
 
   class JarContentsSupplier {

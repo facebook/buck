@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.element.TypeElement;
@@ -663,6 +664,21 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
   }
 
   @Test
+  public void testFindsEnumConstants() throws IOException {
+    findTypeReferences(
+        "@interface Foo {",
+        "  Constants value() default Constants.CONSTANT;",
+        "}",
+        "enum Constants {",
+        "  CONSTANT;",
+        "}");
+
+    assertThat(
+        constantReferences,
+        Matchers.containsInAnyOrder(createSymbolicReference("CONSTANT", 2, 29)));
+  }
+
+  @Test
   public void testFindsSimpleNameInstanceConstants() throws IOException {
     withClasspath(
         ImmutableMap.of(
@@ -826,7 +842,14 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
     @Override
     public void onConstantReferenceFound(
         VariableElement constant, TreePath path, Element referencingElement) {
-      constantReferences.add(createSymbolicReference(constant.getConstantValue().toString(), path));
+      String value;
+      if (constant.getKind() == ElementKind.ENUM_CONSTANT) {
+        value = constant.getSimpleName().toString();
+      } else {
+        value = constant.getConstantValue().toString();
+      }
+
+      constantReferences.add(createSymbolicReference(value, path));
     }
   }
 }

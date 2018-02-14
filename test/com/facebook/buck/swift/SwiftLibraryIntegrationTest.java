@@ -51,9 +51,10 @@ import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -210,8 +211,7 @@ public class SwiftLibraryIntegrationTest {
     workspace.addBuckConfigLocalOption("cxx", "untracked_headers", "error");
 
     BuildTarget target = workspace.newBuildTarget("//:BigLib#iphonesimulator-x86_64,static");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
   }
 
@@ -226,8 +226,7 @@ public class SwiftLibraryIntegrationTest {
 
     BuildTarget target =
         workspace.newBuildTarget("//:BigLibTransitive#iphonesimulator-x86_64,static");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
   }
 
@@ -240,8 +239,7 @@ public class SwiftLibraryIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = workspace.newBuildTarget("//:hello#iphonesimulator-x86_64,swift-compile");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
     workspace
         .getBuildLog()

@@ -20,7 +20,6 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -57,8 +56,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -70,7 +71,7 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   private static final Pattern TEST_START_PATTERN = Pattern.compile("^=== RUN\\s+(?<name>.*)$");
   private static final Pattern TEST_FINISHED_PATTERN =
       Pattern.compile(
-          "^--- (?<status>PASS|FAIL|SKIP): (?<name>.+) \\((?<duration>\\d+\\.\\d+)(?: seconds|s)\\)$");
+          "^\\s*--- (?<status>PASS|FAIL|SKIP): (?<name>.+) \\((?<duration>\\d+\\.\\d+)(?: seconds|s)\\)$");
   // Extra time to wait for the process to exit on top of the test timeout
   private static final int PROCESS_TIMEOUT_EXTRA_MS = 5000;
 
@@ -79,8 +80,8 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSet<String> labels;
   private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<String> contacts;
-  @AddToRuleKey private final boolean runTestsSeparately;
-  @AddToRuleKey private final ImmutableSortedSet<SourcePath> resources;
+  private final boolean runTestsSeparately;
+  private final ImmutableSortedSet<SourcePath> resources;
 
   public GoTest(
       BuildTarget buildTarget,
@@ -135,6 +136,7 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
                     getPathToTestWorkingDirectory())))
         .add(
             new SymlinkTreeStep(
+                "go_test",
                 getProjectFilesystem(),
                 getPathToTestWorkingDirectory(),
                 ImmutableMap.copyOf(
@@ -167,19 +169,19 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
     try (BufferedReader reader =
         Files.newBufferedReader(
             getProjectFilesystem().resolve(getPathToTestResults()), Charsets.UTF_8)) {
-      Optional<String> currentTest = Optional.empty();
+      Set<String> currentTests = new HashSet<>();
       List<String> stdout = new ArrayList<>();
       String line;
       while ((line = reader.readLine()) != null) {
         Matcher matcher;
         if ((matcher = TEST_START_PATTERN.matcher(line)).matches()) {
-          currentTest = Optional.of(matcher.group("name"));
+          currentTests.add(matcher.group("name"));
         } else if ((matcher = TEST_FINISHED_PATTERN.matcher(line)).matches()) {
-          if (!currentTest.orElse("").equals(matcher.group("name"))) {
+          if (!currentTests.contains(matcher.group("name"))) {
             throw new RuntimeException(
                 String.format(
-                    "Error parsing test output: test case end '%s' does not match start '%s'",
-                    matcher.group("name"), currentTest.orElse("")));
+                    "Error parsing test output: test case end '%s' does not match any start in [%s]",
+                    matcher.group("name"), Joiner.on(", ").join(currentTests)));
           }
 
           ResultType result = ResultType.FAILURE;
@@ -207,19 +209,19 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
                   Joiner.on(System.lineSeparator()).join(stdout),
                   ""));
 
-          currentTest = Optional.empty();
+          currentTests.remove(matcher.group("name"));
           stdout.clear();
         } else {
           stdout.add(line);
         }
       }
 
-      if (currentTest.isPresent()) {
+      for (String testName : currentTests) {
         // This can happen in case of e.g. a panic.
         summariesBuilder.add(
             new TestResultSummary(
                 "go_test",
-                currentTest.get(),
+                testName,
                 ResultType.FAILURE,
                 0,
                 "incomplete",

@@ -558,6 +558,31 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'ipa_compression_level' /}
+  {param example_value: 'min' /}
+  {param description}
+    Specify a compression level used when creating ipa. The possible values are:
+    <ul>
+      <li>
+        <code>none</code>: Do not compress ipa.
+      </li>
+      <li>
+        <code>min</code>: Use minimum compression level.
+      </li>
+      <li>
+        <code>default</code> (default): Use medium compression level.
+      </li>
+      <li>
+        <code>max</code>: Use maximum compression level.
+      </li>
+    </ul>
+
+    If omitted, the <code>default</code> value will be used.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'build' /}
   {param description}
@@ -589,17 +614,17 @@ $ buck targets --resolve-alias app#src_jar
 {call buckconfig.entry}
   {param section: 'build' /}
   {param name: 'depfiles' /}
-  {param example_value: 'enabled' /}
+  {param example_value: 'cache' /}
   {param description}
     Configures the use of dependency files for rules that support them.  This is an optimization
     that is useful when dependencies are over-specified and the rule can dynamically determine the
     subset of dependencies it actually needs.  The possible values are:
     <ul>
       <li>
-        <code>enabled</code> (default): Use dependency files to avoid unnecessary rebuilds.
+        <code>enabled</code>: Use dependency files to avoid unnecessary rebuilds.
       </li>
       <li>
-        <code>cache</code>: Use dependency files to avoid unnecessary rebuilds and to store/fetch
+        <code>cache</code> (default): Use dependency files to avoid unnecessary rebuilds and to store/fetch
         artifacts to/from the cache.
       </li>
       <li>
@@ -952,6 +977,24 @@ $ buck targets --resolve-alias app#src_jar
     This setting allows for the customization of how http cache errors appear to the user.  If the
     text <code>{lb}cache_name{rb}</code> is present, it will be replaced with the name of the cache.
     If the text {sp}<code>{lb}error_message{rb}</code>, it will be replaced with the error message.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'http_max_store_attempts' /}
+  {param example_value: '1' /}
+  {param description}
+    Maximum number of times to attempt to store item to the cache before giving up.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'http_store_retry_interval_millis' /}
+  {param example_value: '1000' /}
+  {param description}
+    Interval to wait if previous cache store request failed.
   {/param}
 {/call}
 
@@ -1404,6 +1447,18 @@ $ buck build //big:expensive-rule            # Action Graph is reused.</pre>
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'download' /}
+  {param name: 'in_build' /}
+  {param example_value: 'true' /}
+  {param description}
+    If true, allow downloads to be part of the build process. If false, buck build / run / test
+    will require the user to run 'buck fetch' first. This generally should not be changed, to
+    avoid surprising users with unexpected build times, when the cause is mostly download times.
+    By default this set to false.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'cxx' /}
   {param description}
@@ -1723,6 +1778,16 @@ cxx_library(
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'default_reexport_all_header_dependencies' /}
+  {param example_value: 'true' /}
+  {param description}
+    Default value used for {call buck.reexport_all_header_dependencies /}, when
+    it's undefined on the build rule.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'doctor' /}
   {param description}
@@ -2021,6 +2086,16 @@ cxx_library(
   {param example_value: '1.8' /}
   {param description}
     SDK name for Java modules.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'intellij' /}
+  {param name: 'default_min_android_sdk_version' /}
+  {param example_value: '9' /}
+  {param description}
+    Default minimum Android SDK version supported for this project. Overwritten by min SDK version if
+    specified in target's AndroidManifest.xml.
   {/param}
 {/call}
 
@@ -2788,19 +2863,6 @@ your <code>.buckjavaargs</code> file</a>:
 
 {call buckconfig.entry}
   {param section: 'parser' /}
-  {param name: 'freeze_globals' /}
-  {param example_value: 'false' /}
-  {param description}
-    Indicates whether globals imported by {call buck.fn_load /} and{sp}
-    {call buck.fn_include_defs /} should be "frozen", which means they will be converted into
-    their read-only counterparts. This can be used to detect
-    accidental attempts to modify global variables causing non-determinism and hard to debug bugs.
-    By default, this is not enabled (<code>false</code>).
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'parser' /}
   {param name: 'polyglot_parsing_enabled' /}
   {param example_value: 'true' /}
   {param description}
@@ -2820,6 +2882,30 @@ your <code>.buckjavaargs</code> file</a>:
     marker (<code># BUILD FILE SYNTAX: </code>). This flag is only applicable when
     <code>parser.polyglot_parsing_enabled</code> configuration is set to <code>true</code>.
     By default it's value is set to <code>PYTHON_DSL</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'parser' /}
+  {param name: 'disable_implicit_native_rules' /}
+  {param example_value: 'true' /}
+  {param description}
+    If set, native rules (cxx_library, android_library, etc) cannot be used in BUCK files. This
+    can be useful if your team has a common set of macros that should be loaded, and one desires
+    a fast-feedback way to make sure that Buck's native rules are not inadvertently used. If set,
+    native rules can only be accessed via the 'native' object within an extension file that is
+    evaluated with {call buck.fn_load /} or {call buck.fn_include_defs /}.
+    This flag is disabled by default (native rules can be used in build files).
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'parser' /}
+  {param name: 'warn_about_deprecated_syntax' /}
+  {param example_value: 'false' /}
+  {param description}
+    If set, warnings about deprecated syntax in BUCK files will be issued.
+    This flag is enabled by default.
   {/param}
 {/call}
 
@@ -2983,6 +3069,16 @@ your <code>.buckjavaargs</code> file</a>:
   {param example_value: 'math, Foo' /}
   {param description}
     A comma-separated list that configures which Python modules can be imported in build files.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'project' /}
+  {param name: 'motd' /}
+  {param example_value: '"DO NOT BREAK THE BUILD"' /}
+  {param description}
+    A plain text message that will be printed first when a user interacts with buck. This supports
+    simple special characters like newlines (\n).
   {/param}
 {/call}
 
@@ -3395,7 +3491,7 @@ your <code>.buckjavaargs</code> file</a>:
         <li><code>target</code>: The {call buck.build_target /} of the test rule.</li>
         <li><code>type</code>: A string describing the type of the test.</li>
         <li>
-          <code>command</code>: An array of command line arguemtns the test runner should invoke to
+          <code>command</code>: An array of command line arguments the test runner should invoke to
           run the test.
         </li>
         <li>
@@ -3409,6 +3505,17 @@ your <code>.buckjavaargs</code> file</a>:
         </li>
       </ul>
     </p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'test' /}
+  {param name: 'thread_utilization_ratio' /}
+  {param example_value: '0.5' /}
+  {param description}
+    Sets the maximum number of threads to use for testing as a ratio of the number of threads
+    used for building. By default(<code>1.0</code>), buck uses runs tests on all threads that
+    were used for building.
   {/param}
 {/call}
 
@@ -3581,6 +3688,18 @@ your <code>.buckjavaargs</code> file</a>:
     during building and testing after an error is reported. Only effective
     when the super console is used. The value has to be a positive number.
     Defaults to the value of {call buckconfig.ui_thread_line_limit /}.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ui' /}
+  {param name: 'superconsole' /}
+  {param example_value: 'ENABLED' /}
+  {param description}
+    Whether the super console is enabled. If so, a more reactive UI will be shown.
+    Valid values are ENABLED, DISABLED, and AUTO. By default, this is set to AUTO
+    which will take OS, terminal settings and other things into account. In most 
+    interactive cases, it will be enabled.
   {/param}
 {/call}
 

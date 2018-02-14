@@ -29,10 +29,11 @@ import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -45,6 +46,8 @@ import java.util.stream.Stream;
 public abstract class QueryMacroExpander<T extends QueryMacro>
     extends AbstractMacroExpander<T, QueryMacroExpander.QueryResults> {
 
+  private static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
+
   private Optional<TargetGraph> targetGraph;
 
   public QueryMacroExpander(Optional<TargetGraph> targetGraph) {
@@ -56,16 +59,16 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
       CellPathResolver cellNames,
       Optional<BuildRuleResolver> resolver,
       T input) {
-    String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.getQuery().getQuery());
     final GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(
             resolver,
             targetGraph,
+            TYPE_COERCER_FACTORY,
             cellNames,
             BuildTargetPatternParser.forBaseName(target.getBaseName()),
             ImmutableSet.of());
     try {
-      QueryExpression parsedExp = QueryExpression.parse(queryExpression, env);
+      QueryExpression parsedExp = QueryExpression.parse(input.getQuery().getQuery(), env);
       return parsedExp
           .getTargets(env)
           .stream()
@@ -93,6 +96,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
         new GraphEnhancementQueryEnvironment(
             Optional.of(resolver),
             targetGraph,
+            TYPE_COERCER_FACTORY,
             cellNames,
             BuildTargetPatternParser.forBaseName(target.getBaseName()),
             ImmutableSet.of());
@@ -119,8 +123,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
   public QueryResults precomputeWorkFrom(
       BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, T input)
       throws MacroException {
-    String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.getQuery().getQuery());
-    return new QueryResults(resolveQuery(target, cellNames, resolver, queryExpression));
+    return new QueryResults(resolveQuery(target, cellNames, resolver, input.getQuery().getQuery()));
   }
 
   abstract T fromQuery(Query query);
@@ -131,7 +134,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
     if (input.size() != 1) {
       throw new MacroException("One quoted query expression is expected");
     }
-    return fromQuery(Query.of(input.get(0)));
+    return fromQuery(Query.of(input.get(0), target.getBaseName()));
   }
 
   abstract boolean detectsTargetGraphOnlyDeps();

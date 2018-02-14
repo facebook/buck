@@ -19,6 +19,7 @@ package com.facebook.buck.util.trace.uploader.launcher;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.env.BuckClasspath;
+import com.facebook.buck.util.trace.uploader.types.CompressionType;
 import com.google.common.base.Strings;
 import java.io.IOException;
 import java.net.URI;
@@ -30,7 +31,12 @@ public class UploaderLauncher {
 
   /** Upload chrome trace in background process which runs even after current process dies. */
   public static void uploadInBackground(
-      BuildId buildId, Path traceFilePath, String traceFileKind, URI traceUploadUri, Path logFile) {
+      BuildId buildId,
+      Path traceFilePath,
+      String traceFileKind,
+      URI traceUploadUri,
+      Path logFile,
+      CompressionType compressionType) {
 
     LOG.debug("Uploading build trace in the background. Upload will log to %s", logFile);
 
@@ -56,7 +62,9 @@ public class UploaderLauncher {
         "--baseUrl",
         traceUploadUri.toString(),
         "--log",
-        logFile.toString()
+        logFile.toString(),
+        "--compressionType",
+        compressionType.name(),
       };
 
       Runtime.getRuntime().exec(args);

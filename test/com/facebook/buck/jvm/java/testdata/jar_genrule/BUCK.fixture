@@ -1,0 +1,22 @@
+java_library(
+    name = "lib",
+    srcs = ["Main.java"],
+)
+
+java_binary(
+    name = "bin",
+    main_class = "Main",
+    deps = [":lib"],
+)
+
+jar_genrule(
+    name = "jar-genrule",
+    srcs = ["resource.txt"],
+    cmd = "cp $(location :bin) $OUT && jar uf $OUT resource.txt",
+)
+
+genrule(
+    name = "execute-jar-genrule",
+    out = "result.txt",
+    cmd = "$(exe :jar-genrule) > $OUT",
+)

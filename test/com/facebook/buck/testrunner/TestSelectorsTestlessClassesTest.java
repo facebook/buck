@@ -21,9 +21,10 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.RegexMatcher;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import org.junit.Before;
@@ -51,7 +52,7 @@ public class TestSelectorsTestlessClassesTest {
 
   @Test
   public void shouldNotFailWhenNotUsingAFilter() throws IOException {
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "--all");
+    ProcessResult result = workspace.runBuckCommand("test", "--all");
     result.assertSuccess(
         "Testless classes should not cause NoTestsRemainException, "
             + "when filtering is *NOT* used!");
@@ -67,8 +68,7 @@ public class TestSelectorsTestlessClassesTest {
 
   @Test
   public void shouldNotFailWhenUsingAFilterThatIncludesNothing() throws IOException {
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("test", "--all", "--filter", "XYZ");
+    ProcessResult result = workspace.runBuckCommand("test", "--all", "--filter", "XYZ");
     result.assertSuccess(
         "Testless classes should not cause NoTestsRemainException, "
             + "even when filtering *IS* used, but it includes no actual tests!");
@@ -80,8 +80,7 @@ public class TestSelectorsTestlessClassesTest {
 
   @Test
   public void shouldNotFailWhenUsingAFilterThatIncludesSomething() throws IOException {
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("test", "--all", "--filter", "com.example.+");
+    ProcessResult result = workspace.runBuckCommand("test", "--all", "--filter", "com.example.+");
     result.assertSuccess(
         "Testless classes should not cause NoTestsRemainException, "
             + "even when filtering *IS* used, and it includes real tests!");

@@ -52,12 +52,12 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
   }
 
   @Override
-  public void traverse(NeededCoverageSpec object, Traversal traversal) {
-    floatTypeCoercer.traverse(object.getNeededCoverageRatio(), traversal);
-    buildTargetTypeCoercer.traverse(object.getBuildTarget(), traversal);
+  public void traverse(CellPathResolver cellRoots, NeededCoverageSpec object, Traversal traversal) {
+    floatTypeCoercer.traverse(cellRoots, object.getNeededCoverageRatio(), traversal);
+    buildTargetTypeCoercer.traverse(cellRoots, object.getBuildTarget(), traversal);
     Optional<String> pathName = object.getPathName();
     if (pathName.isPresent()) {
-      pathNameTypeCoercer.traverse(pathName.get(), traversal);
+      pathNameTypeCoercer.traverse(cellRoots, pathName.get(), traversal);
     }
   }
 

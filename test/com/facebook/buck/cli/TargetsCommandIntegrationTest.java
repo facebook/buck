@@ -31,9 +31,9 @@ import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
@@ -43,10 +43,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -734,7 +736,7 @@ public class TargetsCommandIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult runBuckResult =
+    ProcessResult runBuckResult =
         workspace.runBuckBuild(
             "--show-rulekey", "--rulekeys-log-path", logFile.toAbsolutePath().toString(), "//:bar");
     runBuckResult.assertSuccess();
@@ -761,5 +763,63 @@ public class TargetsCommandIntegrationTest {
             "--show-rulekey",
             "--show-transitive-rulekeys")
         .assertSuccess();
+  }
+
+  @Test
+  public void printsTransitiveTargetHashes() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "print_recursive_target_hashes", tmp);
+    workspace.setUp();
+
+    ProcessResult nontransitiveResult =
+        workspace.runBuckCommand("targets", "--show-target-hash", "//foo:main", "//bar:main");
+    ProcessResult transitiveResult =
+        workspace.runBuckCommand(
+            "targets",
+            "--show-target-hash",
+            "--show-transitive-target-hashes",
+            "//foo:main",
+            "//bar:main");
+
+    nontransitiveResult.assertSuccess();
+    transitiveResult.assertSuccess();
+
+    ImmutableList<String> foundNonTransitiveTargets =
+        Arrays.stream(nontransitiveResult.getStdout().split(System.lineSeparator()))
+            .map(line -> line.split("\\s+")[0])
+            .collect(ImmutableList.toImmutableList());
+    ImmutableList<String> foundTransitiveTargets =
+        Arrays.stream(transitiveResult.getStdout().split(System.lineSeparator()))
+            .map(line -> line.split("\\s+")[0])
+            .collect(ImmutableList.toImmutableList());
+
+    ImmutableMap<String, String> foundNonTransitiveTargetsAndHashes =
+        Arrays.stream(nontransitiveResult.getStdout().split(System.lineSeparator()))
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    line -> line.split("\\s+")[0], line -> line.split("\\s+")[1]));
+    ImmutableMap<String, String> foundTransitiveTargetsAndHashes =
+        Arrays.stream(transitiveResult.getStdout().split(System.lineSeparator()))
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    line -> line.split("\\s+")[0], line -> line.split("\\s+")[1]));
+
+    assertThat(foundNonTransitiveTargets, Matchers.containsInAnyOrder("//foo:main", "//bar:main"));
+    assertThat(
+        foundTransitiveTargets,
+        Matchers.containsInAnyOrder(
+            "//foo:main",
+            "//deps:dep3",
+            "//deps:dep2",
+            "//deps:dep1",
+            "//bar:main",
+            "//deps:dep4"));
+    assertEquals(
+        foundNonTransitiveTargetsAndHashes.get("//foo:main"),
+        foundTransitiveTargetsAndHashes.get("//foo:main"));
+    assertEquals(
+        foundNonTransitiveTargetsAndHashes.get("//bar:main"),
+        foundTransitiveTargetsAndHashes.get("//bar:main"));
   }
 }

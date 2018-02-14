@@ -42,6 +42,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -80,7 +81,8 @@ public class CxxLuaExtensionDescription
     implements Description<CxxLuaExtensionDescriptionArg>,
         ImplicitDepsInferringDescription<
             CxxLuaExtensionDescription.AbstractCxxLuaExtensionDescriptionArg>,
-        VersionPropagator<CxxLuaExtensionDescriptionArg> {
+        VersionPropagator<CxxLuaExtensionDescriptionArg>,
+        Flavored {
 
   private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
@@ -368,6 +370,11 @@ public class CxxLuaExtensionDescription
       targetGraphOnlyDepsBuilder.addAll(
           CxxPlatforms.getParseTimeDeps(luaPlatform.getCxxPlatform()));
     }
+  }
+
+  @Override
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+    return Optional.of(ImmutableSet.of(getLuaPlatformsProvider().getLuaPlatforms()));
   }
 
   private LuaPlatformsProvider getLuaPlatformsProvider() {

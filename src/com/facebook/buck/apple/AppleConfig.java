@@ -33,6 +33,7 @@ import com.facebook.buck.util.ProcessExecutor.Option;
 import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.google.common.base.Splitter;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -221,6 +222,12 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean linkAllObjC() {
     return delegate.getBooleanValue(APPLE_SECTION, "always_link_with_objc_flag", true);
+  }
+
+  public ZipCompressionLevel getZipCompressionLevel() {
+    return delegate
+        .getEnum(AppleConfig.APPLE_SECTION, "ipa_compression_level", ZipCompressionLevel.class)
+        .orElse(ZipCompressionLevel.DEFAULT);
   }
 
   public Optional<Path> getAppleDeviceHelperAbsolutePath() {

@@ -21,8 +21,9 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import java.io.IOException;
@@ -120,7 +121,7 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
   @Test
   public void testCxxLibraryDepClang() throws IOException {
     String target = "//apps/sample:app_cxx_lib_dep";
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "build", "-c", "ndk.compiler=clang", "-c", "ndk.cxx_runtime=libcxx", target);
     result.assertSuccess();

@@ -16,16 +16,16 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.android.WriteAppModuleMetadataStep.ITEM_INDENTATION;
 import static com.facebook.buck.android.WriteAppModuleMetadataStep.CLASS_SECTION_HEADER;
-import static com.facebook.buck.android.WriteAppModuleMetadataStep.MODULE_INDENTATION;
 import static com.facebook.buck.android.WriteAppModuleMetadataStep.DEPS_SECTION_HEADER;
+import static com.facebook.buck.android.WriteAppModuleMetadataStep.ITEM_INDENTATION;
+import static com.facebook.buck.android.WriteAppModuleMetadataStep.MODULE_INDENTATION;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import java.nio.file.Path;

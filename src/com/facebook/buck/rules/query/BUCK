@@ -15,11 +15,45 @@ java_immutables_library(
     ],
 )
 
+UTILS_SRCS = [
+    "QueryUtils.java",
+]
+
+java_immutables_library(
+    name = "utils",
+    srcs = UTILS_SRCS,
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":query",
+        ":types",
+        "//src/com/facebook/buck/event:event",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/event/external:external_lib",
+        "//src/com/facebook/buck/graph:graph",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/jvm/core:core",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/query:query",
+        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:interfaces",
+        "//src/com/facebook/buck/rules:source_path",
+        "//src/com/facebook/buck/rules/coercer:coercer",
+        "//src/com/facebook/buck/rules/coercer:interface",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/guava:guava",
+    ],
+)
+
 java_library(
     name = "query",
     srcs = glob(
         ["*.java"],
-        exclude = TYPES_SRCS,
+        exclude = TYPES_SRCS + UTILS_SRCS,
     ),
     tests = [
         "//test/com/facebook/buck/rules/query:query",
@@ -34,13 +68,11 @@ java_library(
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/jvm/core:core",
         "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/query:query",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:interfaces",
         "//src/com/facebook/buck/rules:source_path",
-        "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:process_executor",

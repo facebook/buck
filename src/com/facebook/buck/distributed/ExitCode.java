@@ -17,6 +17,24 @@ package com.facebook.buck.distributed;
 
 /** Distributed build exit codes used by Stampede. */
 public enum ExitCode {
+  /** Build finished successfully */
+  SUCCESSFUL(0),
+
+  /** Generic failure code for either local or remote build */
+  FAILURE(1),
+
+  /** Real exit code hasn't been generated yet */
+  DISTRIBUTED_PENDING_EXIT_CODE(10),
+
+  /** Real exit code hasn't been generated yet */
+  LOCAL_PENDING_EXIT_CODE(11),
+
+  /** Exception was thrown before local build finished */
+  LOCAL_BUILD_EXCEPTION_CODE(12),
+
+  /** Local build finished before the remote build */
+  LOCAL_BUILD_FINISHED_FIRST(20),
+
   /** Forced coordinator shutdown */
   UNEXPECTED_STOP_EXIT_CODE(42),
 
@@ -29,8 +47,8 @@ public enum ExitCode {
   /** Coordinator found dead minion and failed the build */
   DEAD_MINION_FOUND_EXIT_CODE(46),
 
-  /** Coordinator detected that build had been externally set to terminal state */
-  BUILD_TERMINATED_REMOTELY_EXIT_CODE(47),
+  /** Coordinator detected that build had been externally set to terminal failed state */
+  BUILD_FAILED_EXTERNALLY_EXIT_CODE(47),
 
   /** Preparation step threw an Exception during sync steps */
   PREPARATION_STEP_FAILED(200),
@@ -42,7 +60,10 @@ public enum ExitCode {
   DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION(205),
 
   /** Distributed build failed because of a remote issue (e.g. minion died) */
-  DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE(206);
+  DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE(206),
+
+  /** Signals that rule keys were inconsistent between Stampede client and servers */
+  RULE_KEY_CONSISTENCY_CHECK_FAILED(301);
 
   private final int code;
 

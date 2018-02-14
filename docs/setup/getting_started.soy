@@ -125,7 +125,7 @@ You can find a more detailed explanation about each step in the development proc
     <a href="https://developer.apple.com/xcode/features/">Command Line Tools</a>
   </li>
   <li>
-    <a href="https://java.com/en/download/">Java Runtime Environment</a>
+    <a href="https://java.com/en/download/">Java Runtime Environment</a> (version 8, Java 9 support is in the works)
   </li>
 </ul>
 
@@ -133,9 +133,10 @@ You can find a more detailed explanation about each step in the development proc
 # Install command line tools. NOTE: If you have Xcode installed, these may
 # already be installed.
 xcode-select --install
-# Install Java - this installs the JDK, a superset of the JRE
+# Install Java - this installs the JDK 8, a superset of the JRE
 brew tap caskroom/cask
-brew cask install java
+brew tap caskroom/versions
+brew cask install java8
 </pre>{/literal}
 
 <span><block class="mac ios" /></span>
@@ -179,7 +180,7 @@ brew install --HEAD buck
   </li>
   <li>
     <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Oracle Java
-    Development Kit</a>
+    Development Kit</a> version 8 (Java 9 support is in the works)
   </li>
   <li>
     <a href="http://ant.apache.org/">Apache Ant 1.9 (or newer)</a>
@@ -210,7 +211,8 @@ xcode-select --install
 # Then the JDK (superset of the JRE)
 brew update
 brew tap caskroom/cask
-brew install java
+brew tap caskroom/versions
+brew cask install java8
 # Then...
 brew install ant python git watchman
 </pre>{/literal}
@@ -222,7 +224,7 @@ brew install ant python git watchman
 <h3>Build</h3>
 
 <p>
-  Once you have the above tools installed, you can install Buck as follows:
+  Once you have the above tools installed, you can build Buck as follows:
 </p>
 
 {call buck.installationInstructions /}
@@ -245,6 +247,7 @@ available commands:
   fetch       downloads remote resources to your local machine
   install     builds and installs an application
   kill        kill buckd for the current project
+  killall     kill all buckd processes
   project     generates project configuration files for an IDE
   query       provides facilities to query information about the target nodes graph
   root        prints the absolute path to the root of the current buck project
@@ -337,7 +340,7 @@ For some distros, the default packages may be older than what you would like. In
 <h3>Build</h3>
 
 <p>
-  Once you have the above tools installed, you can install Buck as follows:
+  Once you have the above tools installed, you can build Buck as follows:
 </p>
 
 <span><block class="windows android java other" /></span>
@@ -368,6 +371,7 @@ available commands:
   fetch       downloads remote resources to your local machine
   install     builds and installs an application
   kill        kill buckd for the current project
+  killall     kill all buckd processes
   project     generates project configuration files for an IDE
   query       provides facilities to query information about the target nodes graph
   root        prints the absolute path to the root of the current buck project
@@ -404,7 +408,7 @@ options:
 
 {literal}
 <pre>
-git clone git@github.com:fbsamples/bucksamples.git
+git clone https://github.com/fbsamples/bucksamples.git
 cd bucksamples/cross-platform-scale-2015-demo/
 </pre>
 {/literal}
@@ -502,7 +506,7 @@ If all goes well, you should see something similar to:
 
 {literal}
 <pre>
-git clone git@github.com:fbsamples/bucksamples.git
+git clone https://github.com/fbsamples/bucksamples.git
 cd bucksamples/cross-platform-scale-2015-demo/
 </pre>
 {/literal}
@@ -651,7 +655,7 @@ If all goes well, you should see something similar to:
 
 {literal}
 <pre>
-git clone git@github.com:fbsamples/bucksamples.git
+git clone https://github.com/fbsamples/bucksamples.git
 cd bucksamples/hello-buck-java/
 </pre>
 {/literal}

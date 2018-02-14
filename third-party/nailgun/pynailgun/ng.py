@@ -24,18 +24,20 @@ import select
 import socket
 import struct
 import sys
-from threading import Condition, Event, Thread
+from threading import Condition, Event, Thread, RLock
 
 # @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
 # @author Pete Kirkham (Win32 port)
-# @author Ben Hamilton (Python port)
+# @author Sergey Balabanov, Ben Hamilton (Python port)
 #
 # Please try to keep this working on Python 2.6.
 
-NAILGUN_VERSION = '0.9.0'
+NAILGUN_VERSION = '0.9.3'
 BUFSIZE = 2048
 NAILGUN_PORT_DEFAULT = 2113
 CHUNK_HEADER_LEN = 5
+THREAD_TERMINATION_TIMEOUT_SEC = 0.5
+STDIN_BUFFER_LINE_SIZE = 10
 
 CHUNKTYPE_STDIN = '0'
 CHUNKTYPE_STDOUT = '1'
@@ -51,10 +53,8 @@ CHUNKTYPE_SENDINPUT = 'S'
 CHUNKTYPE_HEARTBEAT = 'H'
 
 NSEC_PER_SEC = 1000000000
-
-# 500 ms heartbeat timeout
-HEARTBEAT_TIMEOUT_NANOS = NSEC_PER_SEC / 2
-HEARTBEAT_TIMEOUT_SECS = HEARTBEAT_TIMEOUT_NANOS / (NSEC_PER_SEC * 1.0)
+DEFAULT_HEARTBEAT_INTERVAL_SEC = 0.5
+SELECT_MAX_BLOCK_TIME_SEC = 1.0
 
 # We need to support Python 2.6 hosts which lack memoryview().
 import __builtin__
@@ -374,7 +374,7 @@ class WindowsNamedPipeTransport(Transport):
 
 
 class NailgunConnection(object):
-    '''Stateful object holding the connection to the Nailgun server.'''
+    """Stateful object holding the connection to the Nailgun server."""
 
     def __init__(
             self,
@@ -383,7 +383,8 @@ class NailgunConnection(object):
             stdin=sys.stdin,
             stdout=sys.stdout,
             stderr=sys.stderr,
-            cwd=None):
+            cwd=None,
+            heartbeat_interval_sec = DEFAULT_HEARTBEAT_INTERVAL_SEC):
         self.transport = make_nailgun_transport(server_name, server_port, cwd)
         self.stdin = stdin
         self.stdout = stdout
@@ -392,15 +393,29 @@ class NailgunConnection(object):
         self.send_flags = 0
         self.header_buf = ctypes.create_string_buffer(CHUNK_HEADER_LEN)
         self.buf = ctypes.create_string_buffer(BUFSIZE)
-        self.ready_to_send_condition = Condition()
-        self.sendtime_nanos = 0
+
         self.exit_code = None
-        self.stdin_queue = Queue.Queue()
+        
         self.shutdown_event = Event()
-        self.stdin_thread = Thread(
-            target=stdin_thread_main,
-            args=(self.stdin, self.stdin_queue, self.shutdown_event, self.ready_to_send_condition))
+
+        self.error_lock = RLock()
+        self.error = None
+        
+        self.stdin_condition = Condition()
+        self.stdin_thread = Thread(target=stdin_thread_main, args=(self,))
         self.stdin_thread.daemon = True
+
+        self.send_queue = Queue.Queue()
+        self.send_condition = Condition()
+        self.send_thread = Thread(target=send_thread_main, args=(self,))
+        self.send_thread.daemon = True
+
+        self.heartbeat_interval_sec = heartbeat_interval_sec
+        self.heartbeat_condition = Condition()
+        self.heartbeat_thread = None
+        if heartbeat_interval_sec > 0:
+            self.heartbeat_thread = Thread(target=heartbeat_thread_main, args=(self,))
+            self.heartbeat_thread.daemon = True
 
     def send_command(
             self,
@@ -409,12 +424,12 @@ class NailgunConnection(object):
             filearg=None,
             env=os.environ,
             cwd=os.getcwd()):
-        '''
+        """
         Sends the command and environment to the nailgun server, then loops forever
         reading the response until the server sends an exit chunk.
 
         Returns the exit value, or raises NailgunException on error.
-        '''
+        """
         try:
             return self._send_command_and_read_response(cmd, cmd_args, filearg, env, cwd)
         except socket.error as e:
@@ -423,58 +438,209 @@ class NailgunConnection(object):
                 NailgunException.CONNECTION_BROKEN)
 
     def _send_command_and_read_response(self, cmd, cmd_args, filearg, env, cwd):
-        if filearg:
-            send_file_arg(filearg, self)
-        for cmd_arg in cmd_args:
-            send_chunk(cmd_arg, CHUNKTYPE_ARG, self)
-        send_env_var('NAILGUN_FILESEPARATOR', os.sep, self)
-        send_env_var('NAILGUN_PATHSEPARATOR', os.pathsep, self)
-        send_tty_format(self.stdin, self)
-        send_tty_format(self.stdout, self)
-        send_tty_format(self.stderr, self)
-        for k, v in env.iteritems():
-            send_env_var(k, v, self)
-        send_chunk(cwd, CHUNKTYPE_DIR, self)
-        send_chunk(cmd, CHUNKTYPE_CMD, self)
         self.stdin_thread.start()
-        while self.exit_code is None:
-            self._process_next_chunk()
-            self._check_stdin_queue()
-        self.shutdown_event.set()
-        with self.ready_to_send_condition:
-            self.ready_to_send_condition.notify()
-        # We can't really join on self.stdin_thread, since
-        # there's no way to interrupt its call to sys.stdin.readline.
+        self.send_thread.start()
+
+        try:
+
+            if filearg:
+                self._send_file_arg(filearg)
+            for cmd_arg in cmd_args:
+                self._send_chunk(cmd_arg, CHUNKTYPE_ARG)
+            self._send_env_var('NAILGUN_FILESEPARATOR', os.sep)
+            self._send_env_var('NAILGUN_PATHSEPARATOR', os.pathsep)
+            self._send_tty_format(self.stdin)
+            self._send_tty_format(self.stdout)
+            self._send_tty_format(self.stderr)
+            for k, v in env.iteritems():
+                self._send_env_var(k, v)
+            self._send_chunk(cwd, CHUNKTYPE_DIR)
+            self._send_chunk(cmd, CHUNKTYPE_CMD)
+
+            if self.heartbeat_thread is not None:
+                self.heartbeat_thread.start()
+
+            while self.exit_code is None:
+                self._process_next_chunk()
+
+        finally:
+
+            self.shutdown_event.set()
+
+            with self.stdin_condition:
+                self.stdin_condition.notify()
+            with self.send_condition:
+                self.send_condition.notify()
+            if self.heartbeat_thread is not None:
+                with self.heartbeat_condition:
+                    self.heartbeat_condition.notify()
+                self.heartbeat_thread.join(THREAD_TERMINATION_TIMEOUT_SEC)
+            self.stdin_thread.join(THREAD_TERMINATION_TIMEOUT_SEC)
+            self.send_thread.join(THREAD_TERMINATION_TIMEOUT_SEC)
+
         return self.exit_code
 
     def _process_next_chunk(self):
-        '''
+        """
         Processes the next chunk from the nailgun server.
-        '''
-        readable, exceptional = self.transport.select(HEARTBEAT_TIMEOUT_SECS)
+        """
+        readable, exceptional = self.transport.select(SELECT_MAX_BLOCK_TIME_SEC)
         if readable:
-            process_nailgun_stream(self)
-        now = monotonic_time_nanos()
-        if now - self.sendtime_nanos > HEARTBEAT_TIMEOUT_NANOS:
-            send_heartbeat(self)
+            self._process_nailgun_stream()
         if exceptional:
             raise NailgunException(
                 'Server disconnected in select',
                 NailgunException.CONNECTION_BROKEN)
 
-    def _check_stdin_queue(self):
-        '''Check if the stdin thread has read anything.'''
-        while not self.stdin_queue.empty():
-            try:
-                (event_type, event_arg) = self.stdin_queue.get_nowait()
-                if event_type == EVENT_STDIN_CHUNK:
-                    send_chunk(event_arg, CHUNKTYPE_STDIN, self)
-                elif event_type == EVENT_STDIN_CLOSED:
-                    send_chunk('', CHUNKTYPE_STDIN_EOF, self)
-                elif event_type == EVENT_STDIN_EXCEPTION:
-                    raise event_arg
-            except Queue.Empty:
-                break
+        # if daemon thread threw, rethrow here
+        if self.shutdown_event.is_set():
+            e = None
+            with self.error_lock:
+                e = self.error
+            if e is not None:
+                raise e
+
+
+    def _send_chunk(self, buf, chunk_type):
+        """
+        Send chunk to the server asynchronously
+        """
+        self.send_queue.put((chunk_type, buf))
+        with self.send_condition:
+            self.send_condition.notify()
+
+
+    def _send_env_var(self, name, value):
+        """
+        Sends an environment variable in KEY=VALUE format.
+        """
+        self._send_chunk('='.join((name, value)), CHUNKTYPE_ENV)
+
+
+    def _send_tty_format(self, f):
+        """
+        Sends a NAILGUN_TTY_# environment variable.
+        """
+        if not f or not hasattr(f, 'fileno'):
+            return
+        fileno = f.fileno()
+        isatty = os.isatty(fileno)
+        self._send_env_var('NAILGUN_TTY_' + str(fileno), str(int(isatty)))
+
+
+    def _send_file_arg(self, filename):
+        """
+        Sends the contents of a file to the server.
+        """
+        with open(filename) as f:
+            while True:
+                num_bytes = f.readinto(self.buf)
+                if not num_bytes:
+                    break
+                self._send_chunk(self.buf.raw[:num_bytes], CHUNKTYPE_LONGARG)
+
+
+    def _recv_to_fd(self, dest_file, num_bytes):
+        """
+        Receives num_bytes bytes from the nailgun socket and copies them to the specified file
+        object. Used to route data to stdout or stderr on the client.
+        """
+        bytes_read = 0
+
+        while bytes_read < num_bytes:
+            bytes_to_read = min(len(self.buf), num_bytes - bytes_read)
+            bytes_received = self.transport.recv_into(
+                self.buf,
+                bytes_to_read)
+            if dest_file:
+                dest_file.write(self.buf[:bytes_received])
+            bytes_read += bytes_received
+
+
+    def _recv_to_buffer(self, num_bytes, buf):
+        """
+        Receives num_bytes from the nailgun socket and writes them into the specified buffer.
+        """
+        # We'd love to use socket.recv_into() everywhere to avoid
+        # unnecessary copies, but we need to support Python 2.6. The
+        # only way to provide an offset to recv_into() is to use
+        # memoryview(), which doesn't exist until Python 2.7.
+        if HAS_MEMORYVIEW:
+            self._recv_into_memoryview(num_bytes, memoryview(buf))
+        else:
+            self._recv_to_buffer_with_copy(num_bytes, buf)
+
+
+    def _recv_into_memoryview(self, num_bytes, buf_view):
+        """
+        Receives num_bytes from the nailgun socket and writes them into the specified memoryview
+        to avoid an extra copy.
+        """
+        bytes_read = 0
+        while bytes_read < num_bytes:
+            bytes_received = self.transport.recv_into(
+                buf_view[bytes_read:],
+                num_bytes - bytes_read)
+            if not bytes_received:
+                raise NailgunException(
+                    'Server unexpectedly disconnected in recv_into()',
+                    NailgunException.CONNECTION_BROKEN)
+            bytes_read += bytes_received
+
+
+    def _recv_to_buffer_with_copy(self, num_bytes, buf):
+        """
+        Receives num_bytes from the nailgun socket and writes them into the specified buffer.
+        """
+        bytes_read = 0
+        while bytes_read < num_bytes:
+            recv_buf = self.transport.recv(
+                num_bytes - bytes_read)
+            if not len(recv_buf):
+                raise NailgunException(
+                    'Server unexpectedly disconnected in recv()',
+                    NailgunException.CONNECTION_BROKEN)
+            buf[bytes_read:bytes_read + len(recv_buf)] = recv_buf
+            bytes_read += len(recv_buf)
+
+
+    def _process_exit(self, exit_len):
+        """
+        Receives an exit code from the nailgun server and sets nailgun_connection.exit_code
+        to indicate the client should exit.
+        """
+        num_bytes = min(len(self.buf), exit_len)
+        self._recv_to_buffer(num_bytes, self.buf)
+        self.exit_code = int(''.join(self.buf.raw[:num_bytes]))
+
+
+    def _send_heartbeat(self):
+        """
+        Sends a heartbeat to the nailgun server to indicate the client is still alive.
+        """
+        self._send_chunk('', CHUNKTYPE_HEARTBEAT)
+
+    def _process_nailgun_stream(self):
+         """
+         Processes a single chunk from the nailgun server.
+         """
+         self._recv_to_buffer(len(self.header_buf), self.header_buf)
+         (chunk_len, chunk_type) = struct.unpack_from('>ic', self.header_buf.raw)
+
+         if chunk_type == CHUNKTYPE_STDOUT:
+             self._recv_to_fd(self.stdout, chunk_len)
+         elif chunk_type == CHUNKTYPE_STDERR:
+             self._recv_to_fd(self.stderr, chunk_len)
+         elif chunk_type == CHUNKTYPE_EXIT:
+             self._process_exit(chunk_len)
+         elif chunk_type == CHUNKTYPE_SENDINPUT:
+             # signal stdin thread to get and send more data
+             with self.stdin_condition:
+                self.stdin_condition.notify()
+         else:
+             raise NailgunException(
+                 'Unexpected chunk type: {0}'.format(chunk_type),
+                 NailgunException.UNEXPECTED_CHUNKTYPE)
 
     def __enter__(self):
         return self
@@ -487,11 +653,11 @@ class NailgunConnection(object):
 
 
 def monotonic_time_nanos():
-    '''Returns a monotonically-increasing timestamp value in nanoseconds.
+    """Returns a monotonically-increasing timestamp value in nanoseconds.
 
     The epoch of the return value is undefined. To use this, you must call
     it more than once and calculate the delta between two calls.
-    '''
+    """
     # This function should be overwritten below on supported platforms.
     raise Exception('Unsupported platform: ' + platform.system())
 
@@ -551,183 +717,94 @@ elif sys.platform == 'cygwin':
         return perf_counter.value * NSEC_PER_SEC / perf_frequency.value
     monotonic_time_nanos = _monotonic_time_nanos_cygwin
 
-
-def send_chunk(buf, chunk_type, nailgun_connection):
-    '''
-    Sends a chunk noting the specified payload size and chunk type.
-    '''
-    struct.pack_into('>ic', nailgun_connection.header_buf, 0, len(buf), chunk_type)
-    nailgun_connection.sendtime_nanos = monotonic_time_nanos()
-    nailgun_connection.transport.sendall(nailgun_connection.header_buf.raw)
-    nailgun_connection.transport.sendall(buf)
-
-
-def send_env_var(name, value, nailgun_connection):
-    '''
-    Sends an environment variable in KEY=VALUE format.
-    '''
-    send_chunk('='.join((name, value)), CHUNKTYPE_ENV, nailgun_connection)
-
-
-def send_tty_format(f, nailgun_connection):
-    '''
-    Sends a NAILGUN_TTY_# environment variable.
-    '''
-    if not f or not hasattr(f, 'fileno'):
-        return
-    fileno = f.fileno()
-    isatty = os.isatty(fileno)
-    send_env_var('NAILGUN_TTY_' + str(fileno), str(int(isatty)), nailgun_connection)
-
-
-def send_file_arg(filename, nailgun_connection):
-    '''
-    Sends the contents of a file to the server.
-    '''
-    with open(filename) as f:
+def send_thread_main(conn):
+    """
+    Sending thread worker function
+    Waits for data and transmits it to server
+    """
+    try:
+        header_buf = ctypes.create_string_buffer(CHUNK_HEADER_LEN)
         while True:
-            num_bytes = f.readinto(nailgun_connection.buf)
-            if not num_bytes:
-                break
-            send_chunk(
-                nailgun_connection.buf.raw[:num_bytes], CHUNKTYPE_LONGARG, nailgun_connection)
+            while not conn.send_queue.empty():
+                # only this thread can deplete the queue, so it is safe to use blocking get()
+                (chunk_type, buf) = conn.send_queue.get()
+                struct.pack_into('>ic', header_buf, 0, len(buf), chunk_type)
+                conn.transport.sendall(header_buf.raw)
+                conn.transport.sendall(buf)
 
-
-def recv_to_fd(dest_file, num_bytes, nailgun_connection):
-    '''
-    Receives num_bytes bytes from the nailgun socket and copies them to the specified file
-    object. Used to route data to stdout or stderr on the client.
-    '''
-    bytes_read = 0
-
-    while bytes_read < num_bytes:
-        bytes_to_read = min(len(nailgun_connection.buf), num_bytes - bytes_read)
-        bytes_received = nailgun_connection.transport.recv_into(
-            nailgun_connection.buf,
-            bytes_to_read)
-        if dest_file:
-            dest_file.write(nailgun_connection.buf[:bytes_received])
-        bytes_read += bytes_received
-
-
-def recv_to_buffer(num_bytes, buf, nailgun_connection):
-    '''
-    Receives num_bytes from the nailgun socket and writes them into the specified buffer.
-    '''
-    # We'd love to use socket.recv_into() everywhere to avoid
-    # unnecessary copies, but we need to support Python 2.6. The
-    # only way to provide an offset to recv_into() is to use
-    # memoryview(), which doesn't exist until Python 2.7.
-    if HAS_MEMORYVIEW:
-        recv_into_memoryview(num_bytes, memoryview(buf), nailgun_connection)
-    else:
-        recv_to_buffer_with_copy(num_bytes, buf, nailgun_connection)
-
-
-def recv_into_memoryview(num_bytes, buf_view, nailgun_connection):
-    '''
-    Receives num_bytes from the nailgun socket and writes them into the specified memoryview
-    to avoid an extra copy.
-    '''
-    bytes_read = 0
-    while bytes_read < num_bytes:
-        bytes_received = nailgun_connection.transport.recv_into(
-            buf_view[bytes_read:],
-            num_bytes - bytes_read)
-        if not bytes_received:
-            raise NailgunException(
-                'Server unexpectedly disconnected in recv_into()',
-                NailgunException.CONNECTION_BROKEN)
-        bytes_read += bytes_received
-
-
-def recv_to_buffer_with_copy(num_bytes, buf, nailgun_connection):
-    '''
-    Receives num_bytes from the nailgun socket and writes them into the specified buffer.
-    '''
-    bytes_read = 0
-    while bytes_read < num_bytes:
-        recv_buf = nailgun_connection.transport.recv(
-            num_bytes - bytes_read)
-        if not len(recv_buf):
-            raise NailgunException(
-                'Server unexpectedly disconnected in recv()',
-                NailgunException.CONNECTION_BROKEN)
-        buf[bytes_read:bytes_read + len(recv_buf)] = recv_buf
-        bytes_read += len(recv_buf)
-
-
-def process_exit(exit_len, nailgun_connection):
-    '''
-    Receives an exit code from the nailgun server and sets nailgun_connection.exit_code
-    to indicate the client should exit.
-    '''
-    num_bytes = min(len(nailgun_connection.buf), exit_len)
-    recv_to_buffer(num_bytes, nailgun_connection.buf, nailgun_connection)
-    nailgun_connection.exit_code = int(''.join(nailgun_connection.buf.raw[:num_bytes]))
-
-
-def send_heartbeat(nailgun_connection):
-    '''
-    Sends a heartbeat to the nailgun server to indicate the client is still alive.
-    '''
-    try:
-        send_chunk('', CHUNKTYPE_HEARTBEAT, nailgun_connection)
-    except IOError as e:
-        # The Nailgun C client ignores SIGPIPE etc. on heartbeats,
-        # so we do too. (This typically happens when shutting down.)
-        pass
-
-
-def stdin_thread_main(stdin, queue, shutdown_event, ready_to_send_condition):
-    if not stdin:
-        return
-    try:
-        while not shutdown_event.is_set():
-            with ready_to_send_condition:
-                ready_to_send_condition.wait()
-            if shutdown_event.is_set():
-                break
-            # This is a bit cheesy, but there isn't a great way to
-            # portably tell Python to read as much as possible on
-            # stdin without blocking.
-            buf = stdin.readline()
-            if buf == '':
-                queue.put((EVENT_STDIN_CLOSED, None))
-                break
-            queue.put((EVENT_STDIN_CHUNK, buf))
+            with conn.send_condition:
+                if conn.shutdown_event.is_set():
+                    return
+                conn.send_condition.wait()
+                if conn.shutdown_event.is_set():
+                    return
     except Exception as e:
-        queue.put((EVENT_STDIN_EXCEPTION, e))
+        # save exception to rethrow on main thread
+        with conn.error_lock:
+            conn.error = e
+        conn.shutdown_event.set()
 
 
-def process_nailgun_stream(nailgun_connection):
-    '''
-    Processes a single chunk from the nailgun server.
-    '''
-    recv_to_buffer(
-        len(nailgun_connection.header_buf), nailgun_connection.header_buf, nailgun_connection)
-    (chunk_len, chunk_type) = struct.unpack_from('>ic', nailgun_connection.header_buf.raw)
+def stdin_thread_main(conn):
+    """
+    Stdin thread reading worker function
+    If stdin is available, read it to internal buffer and send to server
+    """
+    try:
+        eof = False
+        while True:
+            # wait for signal to read new line from stdin or shutdown
+            # we  do not start reading from stdin before server actually requests that
+            with conn.stdin_condition:
+                if conn.shutdown_event.is_set():
+                    return
+                conn.stdin_condition.wait()
+                if conn.shutdown_event.is_set():
+                    return
 
-    if chunk_type == CHUNKTYPE_STDOUT:
-        recv_to_fd(nailgun_connection.stdout, chunk_len, nailgun_connection)
-    elif chunk_type == CHUNKTYPE_STDERR:
-        recv_to_fd(nailgun_connection.stderr, chunk_len, nailgun_connection)
-    elif chunk_type == CHUNKTYPE_EXIT:
-        process_exit(chunk_len, nailgun_connection)
-    elif chunk_type == CHUNKTYPE_SENDINPUT:
-        with nailgun_connection.ready_to_send_condition:
-            # Wake up the stdin thread and tell it to read as much data as possible.
-            nailgun_connection.ready_to_send_condition.notify()
-    else:
-        raise NailgunException(
-            'Unexpected chunk type: {0}'.format(chunk_type),
-            NailgunException.UNEXPECTED_CHUNKTYPE)
+            if not conn.stdin or eof:
+                conn._send_chunk(buf, CHUNKTYPE_STDIN_EOF)
+                continue
+
+            buf = conn.stdin.readline()
+            if buf == '':
+                eof = True
+                conn._send_chunk(buf, CHUNKTYPE_STDIN_EOF)
+                continue
+            conn._send_chunk(buf, CHUNKTYPE_STDIN)
+    except Exception as e:
+        # save exception to rethrow on main thread
+        with conn.error_lock:
+            conn.error = e
+        conn.shutdown_event.set()
+
+
+def heartbeat_thread_main(conn):
+    """
+    Heartbeat thread worker function
+    Periodically sends heartbeats to server as long as command is running
+    """
+    try:
+        while True:
+            conn._send_heartbeat()
+
+            with conn.heartbeat_condition:
+                if conn.shutdown_event.is_set():
+                    return
+                conn.heartbeat_condition.wait(conn.heartbeat_interval_sec)
+                if conn.shutdown_event.is_set():
+                    return
+    except Exception as e:
+        # save exception to rethrow on main thread
+        with conn.error_lock:
+            conn.error = e
+        conn.shutdown_event.set()
 
 
 def make_nailgun_transport(nailgun_server, nailgun_port=None, cwd=None):
-    '''
+    """
     Creates and returns a socket connection to the nailgun server.
-    '''
+    """
     transport = None
     if nailgun_server.startswith('local:'):
         if platform.system() == 'Windows':
@@ -780,9 +857,9 @@ def make_nailgun_transport(nailgun_server, nailgun_port=None, cwd=None):
 
 
 def main():
-    '''
+    """
     Main entry point to the nailgun client.
-    '''
+    """
     default_nailgun_server = os.environ.get('NAILGUN_SERVER', '127.0.0.1')
     default_nailgun_port = int(os.environ.get('NAILGUN_PORT', NAILGUN_PORT_DEFAULT))
 

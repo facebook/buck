@@ -20,6 +20,7 @@ import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
 import com.facebook.buck.cli.parameter_extractors.ProjectViewParameters;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ProjectTestsMode;
+import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
@@ -48,11 +49,13 @@ import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Preconditions;
@@ -64,6 +67,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.ForkJoinPool;
 import java.util.function.Function;
 
 public class IjProjectCommandHelper {
@@ -209,8 +213,16 @@ public class IjProjectCommandHelper {
   }
 
   private ActionGraphAndResolver getActionGraph(TargetGraph targetGraph) {
-    return actionGraphCache.getActionGraph(
-        buckEventBus, targetGraph, buckConfig, ruleKeyConfiguration);
+    try (CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> forkJoinPoolSupplier =
+        CloseableMemoizedSupplier.of(
+            () ->
+                MostExecutors.forkJoinPoolWithThreadLimit(
+                    buckConfig.getView(ResourcesConfig.class).getDefaultResourceAmounts().getCpu(),
+                    16),
+            ForkJoinPool::shutdownNow)) {
+      return actionGraphCache.getActionGraph(
+          buckEventBus, targetGraph, buckConfig, ruleKeyConfiguration, forkJoinPoolSupplier);
+    }
   }
 
   private TargetGraph getProjectGraphForIde(

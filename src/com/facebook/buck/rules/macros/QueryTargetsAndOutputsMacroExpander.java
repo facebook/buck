@@ -19,23 +19,23 @@ package com.facebook.buck.rules.macros;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.query.Query;
-import com.google.common.base.CharMatcher;
+import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Used to expand the macro {@literal $(query_targets_and_outputs "some(query(:expression))")} to
@@ -74,62 +74,26 @@ public class QueryTargetsAndOutputsMacroExpander
   }
 
   @Override
-  public String expandFrom(
+  public Arg expandFrom(
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
       QueryTargetsAndOutputsMacro input,
       QueryResults precomputedWork)
       throws MacroException {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-    return precomputedWork
-        .results
-        .stream()
-        .map(
-            queryTarget -> {
-              Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-              return resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
-            })
-        .map(
-            rule -> {
-              SourcePath sourcePath = rule.getSourcePathToOutput();
-              if (sourcePath == null) {
-                return null;
-              }
-              return String.format(
-                  "%s%s%s",
-                  rule.getBuildTarget().getFullyQualifiedName(),
-                  input.getSeparator(),
-                  pathResolver.getAbsolutePath(sourcePath));
-            })
-        .filter(Objects::nonNull)
-        .sorted()
-        .collect(Collectors.joining(input.getSeparator()));
-  }
-
-  @Override
-  public Object extractRuleKeyAppendablesFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      final BuildRuleResolver resolver,
-      QueryTargetsAndOutputsMacro input,
-      QueryResults precomputedWork)
-      throws MacroException {
-
-    // Return a list of SourcePaths to the outputs of our query results. This enables input-based
-    // rule key hits.
-    return precomputedWork
-        .results
-        .stream()
-        .map(
-            queryTarget -> {
-              Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-              return resolver.requireRule(((QueryBuildTarget) queryTarget).getBuildTarget());
-            })
-        .map(BuildRule::getSourcePathToOutput)
-        .filter(Objects::nonNull)
-        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+    return new QueriedTargestAndOutputsArg(
+        precomputedWork
+            .results
+            .stream()
+            .map(
+                queryTarget -> {
+                  Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
+                  return resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
+                })
+            .filter(rule -> rule.getSourcePathToOutput() != null)
+            .sorted()
+            .collect(Collectors.toList()),
+        input.getSeparator());
   }
 
   @Override
@@ -141,11 +105,10 @@ public class QueryTargetsAndOutputsMacroExpander
   protected QueryTargetsAndOutputsMacro parse(
       BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
       throws MacroException {
-
     String separator = " ";
     String query;
     if (input.size() == 2) {
-      separator = CharMatcher.anyOf("\"'").trimFrom(input.get(0));
+      separator = input.get(0);
       query = input.get(1);
     } else if (input.size() == 1) {
       query = input.get(0);
@@ -153,6 +116,41 @@ public class QueryTargetsAndOutputsMacroExpander
       throw new MacroException(
           "One quoted query expression is expected, or a separator and a query");
     }
-    return QueryTargetsAndOutputsMacro.of(separator, Query.of(query));
+    return QueryTargetsAndOutputsMacro.of(separator, Query.of(query, target.getBaseName()));
+  }
+
+  private class QueriedTargestAndOutputsArg implements Arg {
+    @AddToRuleKey private final ImmutableList<BuildTarget> targets;
+    @AddToRuleKey private final ImmutableList<SourcePath> outputs;
+    @AddToRuleKey private final String separator;
+
+    public QueriedTargestAndOutputsArg(Iterable<BuildRule> queriedRules, String separator) {
+      this.targets =
+          RichStream.from(queriedRules)
+              .map(BuildRule::getBuildTarget)
+              .collect(ImmutableList.toImmutableList());
+      this.outputs =
+          RichStream.from(queriedRules)
+              .map(BuildRule::getSourcePathToOutput)
+              .collect(ImmutableList.toImmutableList());
+      this.separator = separator;
+    }
+
+    @Override
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+      Stream.Builder<String> items = Stream.builder();
+      MoreIterables.forEachPair(
+          targets,
+          outputs,
+          (target, output) -> {
+            items.add(
+                String.format(
+                    "%s%s%s",
+                    target.getFullyQualifiedName(),
+                    separator,
+                    pathResolver.getAbsolutePath(output)));
+          });
+      consumer.accept(items.build().collect(Collectors.joining(separator)));
+    }
   }
 }

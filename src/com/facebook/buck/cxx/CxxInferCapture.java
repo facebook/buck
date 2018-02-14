@@ -18,14 +18,15 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
+import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
@@ -43,21 +44,25 @@ import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.SortedSet;
 import java.util.function.Predicate;
 
 /** Generate the CFG for a source file */
-class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements SupportsDependencyFileRuleKey {
+class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFileRuleKey {
+
+  private final ImmutableSortedSet<BuildRule> buildDeps;
 
   @AddToRuleKey private final InferBuckConfig inferConfig;
   @AddToRuleKey private final CxxToolFlags preprocessorFlags;
   @AddToRuleKey private final CxxToolFlags compilerFlags;
   @AddToRuleKey private final SourcePath input;
   private final CxxSource.Type inputType;
+  private final Optional<PreInclude> preInclude;
 
   @AddToRuleKey(stringify = true)
   private final Path output;
@@ -69,24 +74,32 @@ class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
   CxxInferCapture(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
+      ImmutableSortedSet<BuildRule> buildDeps,
       CxxToolFlags preprocessorFlags,
       CxxToolFlags compilerFlags,
       SourcePath input,
       AbstractCxxSource.Type inputType,
+      Optional<PreInclude> preInclude,
       Path output,
       PreprocessorDelegate preprocessorDelegate,
       InferBuckConfig inferConfig) {
-    super(buildTarget, projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem);
+    this.buildDeps = buildDeps;
     this.preprocessorFlags = preprocessorFlags;
     this.compilerFlags = compilerFlags;
     this.input = input;
     this.inputType = inputType;
+    this.preInclude = preInclude;
     this.output = output;
     this.preprocessorDelegate = preprocessorDelegate;
     this.inferConfig = inferConfig;
     this.resultsDir =
         BuildTargets.getGenPath(getProjectFilesystem(), this.getBuildTarget(), "infer-out-%s");
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDeps;
   }
 
   private CxxToolFlags getSearchPathFlags() {
@@ -109,6 +122,12 @@ class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
+    try {
+      CxxHeaders.checkConflictingHeaders(preprocessorDelegate.getCxxIncludePaths().getIPaths());
+    } catch (CxxHeaders.ConflictingHeadersException e) {
+      throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
+    }
+
     ImmutableList<String> frontendCommand = getFrontendCommand();
 
     buildableContext.recordArtifact(
@@ -228,10 +247,21 @@ class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
       return "Write argfile for clang";
     }
 
+    private ImmutableList<String> getPreIncludeArgs() {
+      ImmutableList.Builder<String> builder = ImmutableList.builder();
+      if (preInclude.isPresent()) {
+        Preprocessor pp = preprocessorDelegate.getPreprocessor();
+        PreInclude pre = preInclude.get();
+        builder.addAll(pp.prefixHeaderArgs(pre.getAbsoluteHeaderPath()));
+      }
+      return builder.build();
+    }
+
     private ImmutableList<String> getCompilerArgs() {
       ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
       return commandBuilder
           .add("-MD", "-MF", getDepFilePath().toString())
+          .addAll(getPreIncludeArgs())
           .addAll(
               Arg.stringify(
                   CxxToolFlags.concat(preprocessorFlags, getSearchPathFlags(), compilerFlags)

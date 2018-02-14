@@ -17,8 +17,9 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
@@ -35,8 +36,7 @@ public class AuditOwnerCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_owner", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("audit", "owner", "example/1.txt");
+    ProcessResult result = workspace.runBuckCommand("audit", "owner", "example/1.txt");
     result.assertSuccess();
     assertEquals(workspace.getFileContents("stdout-one"), result.getStdout());
   }
@@ -49,7 +49,7 @@ public class AuditOwnerCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_owner", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "audit",
             "owner",

@@ -32,17 +32,22 @@ import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionWaiter;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
+import com.facebook.buck.rules.keys.EventPostingRuleKeyCacheScope;
+import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
+import com.facebook.buck.rules.keys.TrackedRuleKeyCache;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -118,31 +123,39 @@ final class JavaBuildGraphProcessor {
       BuildRuleResolver buildRuleResolver =
           new SingleThreadedBuildRuleResolver(
               graph, new DefaultTargetNodeToBuildRuleTransformer(), params.getBuckEventBus());
+      SourcePathRuleFinder sourcePathRuleFinder = new SourcePathRuleFinder(buildRuleResolver);
       CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
           params.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
       LocalCachingBuildEngineDelegate cachingBuildEngineDelegate =
           new LocalCachingBuildEngineDelegate(params.getFileHashCache());
-      try (CachingBuildEngine buildEngine =
-          new CachingBuildEngine(
-              cachingBuildEngineDelegate,
-              pool.getWeightedListeningExecutorService(),
-              new DefaultStepRunner(),
-              CachingBuildEngine.BuildMode.SHALLOW,
-              cachingBuildEngineBuckConfig.getBuildMetadataStorage(),
-              cachingBuildEngineBuckConfig.getBuildDepFiles(),
-              cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
-              cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
-              buildRuleResolver,
-              params.getBuildInfoStoreManager(),
-              cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
-              cachingBuildEngineBuckConfig.getConsoleLogBuildRuleFailuresInline(),
-              RuleKeyFactories.of(
-                  params.getRuleKeyConfiguration(),
-                  cachingBuildEngineDelegate.getFileHashCache(),
+      try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
+              new EventPostingRuleKeyCacheScope<>(
+                  params.getBuckEventBus(),
+                  new TrackedRuleKeyCache<>(
+                      new DefaultRuleKeyCache<>(), new InstrumentingCacheStatsTracker()));
+          CachingBuildEngine buildEngine =
+              new CachingBuildEngine(
+                  cachingBuildEngineDelegate,
+                  pool.getWeightedListeningExecutorService(),
+                  new DefaultStepRunner(),
+                  CachingBuildEngine.BuildMode.SHALLOW,
+                  cachingBuildEngineBuckConfig.getBuildMetadataStorage(),
+                  cachingBuildEngineBuckConfig.getBuildDepFiles(),
+                  cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
+                  cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
                   buildRuleResolver,
-                  params.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
-                  new DefaultRuleKeyCache<>()),
-              new NoOpRemoteBuildRuleCompletionWaiter()); ) {
+                  sourcePathRuleFinder,
+                  DefaultSourcePathResolver.from(sourcePathRuleFinder),
+                  params.getBuildInfoStoreManager(),
+                  cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
+                  cachingBuildEngineBuckConfig.getConsoleLogBuildRuleFailuresInline(),
+                  RuleKeyFactories.of(
+                      params.getRuleKeyConfiguration(),
+                      cachingBuildEngineDelegate.getFileHashCache(),
+                      buildRuleResolver,
+                      params.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
+                      ruleKeyCacheScope.getCache()),
+                  new NoOpRemoteBuildRuleCompletionWaiter())) {
         // Create a BuildEngine because we store symbol information as build artifacts.
         BuckEventBus eventBus = params.getBuckEventBus();
         ExecutionContext executionContext =

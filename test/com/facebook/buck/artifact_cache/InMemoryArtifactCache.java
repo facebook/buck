@@ -55,6 +55,11 @@ public class InMemoryArtifactCache implements ArtifactCache {
     return service.submit(() -> fetch(ruleKey, output));
   }
 
+  @Override
+  public void skipPendingAndFutureAsyncFetches() {
+    // Async requests are not supported by InMemoryArtifactCache, so do nothing
+  }
+
   private CacheResult fetch(RuleKey ruleKey, LazyPath output) {
     Artifact artifact = artifacts.get(ruleKey);
     if (artifact == null) {

@@ -61,6 +61,7 @@ public class AuditOwnerCommand extends AbstractCommand {
             new PerBuildState(
                 params.getParser(),
                 params.getBuckEventBus(),
+                params.getExecutableFinder(),
                 pool.getListeningExecutorService(),
                 params.getCell(),
                 params.getKnownBuildRuleTypesProvider(),

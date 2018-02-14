@@ -63,6 +63,16 @@ public class TestBinWriter {
       output.write(System.lineSeparator());
       output.write("    print(\"Random hashes configured\")");
       output.write(System.lineSeparator());
+      output.write("for arg in sys.argv:");
+      output.write(System.lineSeparator());
+      output.write("    if arg.startswith(\"@\"):");
+      output.write(System.lineSeparator());
+      output.write("        print(\"Reading arguments from \" + arg)");
+      output.write(System.lineSeparator());
+      output.write("        for line in open(arg.lstrip(\"@\")):");
+      output.write(System.lineSeparator());
+      output.write("            print(line.rstrip())");
+      output.write(System.lineSeparator());
       output.write("sys.exit(" + Integer.toString(returnCode) + ")");
       output.write(System.lineSeparator());
     }

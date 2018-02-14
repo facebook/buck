@@ -19,7 +19,7 @@ package com.facebook.buck.util;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.model.Pair;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Set;

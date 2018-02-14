@@ -25,6 +25,7 @@ import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableBiMap;
@@ -60,7 +61,6 @@ public class DefaultCxxPlatforms {
   private static final String DEFAULT_WINDOWS_CXX_FRONTEND = "cl";
   private static final String DEFAULT_WINDOWS_LINK = "link";
   private static final String DEFAULT_WINDOWS_LIB = "lib";
-  private static final String DEFAULT_WINDOWS_RANLIB = "lib";
   private static final String DEFAULT_UNIX_RANLIB = "ranlib";
 
   public static CxxPlatform build(Platform platform, CxxBuckConfig config) {
@@ -77,7 +77,7 @@ public class DefaultCxxPlatforms {
     Optional<String> binaryExtension;
     ImmutableMap<String, String> env = config.getEnvironment();
     Optional<CxxToolProvider.Type> defaultToolType = Optional.empty();
-    String ranlibCommand;
+    Optional<ToolProvider> ranlib;
     PicType picTypeForSharedLinking;
     switch (platform) {
       case LINUX:
@@ -92,7 +92,10 @@ public class DefaultCxxPlatforms {
         archiver = new GnuArchiver(getHashedFileTool(config, "ar", DEFAULT_AR, env));
         compilerSanitizer = new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of());
         binaryExtension = Optional.empty();
-        ranlibCommand = DEFAULT_UNIX_RANLIB;
+        ranlib =
+            Optional.of(
+                new ConstantToolProvider(
+                    getHashedFileTool(config, DEFAULT_UNIX_RANLIB, DEFAULT_RANLIB, env)));
         picTypeForSharedLinking = PicType.PIC;
         break;
       case MACOS:
@@ -107,7 +110,10 @@ public class DefaultCxxPlatforms {
         archiver = new BsdArchiver(getHashedFileTool(config, "ar", DEFAULT_AR, env));
         compilerSanitizer = new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of());
         binaryExtension = Optional.empty();
-        ranlibCommand = DEFAULT_UNIX_RANLIB;
+        ranlib =
+            Optional.of(
+                new ConstantToolProvider(
+                    getHashedFileTool(config, DEFAULT_UNIX_RANLIB, DEFAULT_RANLIB, env)));
         picTypeForSharedLinking = PicType.PIC;
         break;
       case WINDOWS:
@@ -131,7 +137,7 @@ public class DefaultCxxPlatforms {
         compilerSanitizer = new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of());
         binaryExtension = Optional.of("exe");
         defaultToolType = Optional.of(CxxToolProvider.Type.WINDOWS);
-        ranlibCommand = DEFAULT_WINDOWS_RANLIB;
+        ranlib = Optional.empty();
         picTypeForSharedLinking = PicType.PDC;
         break;
       case FREEBSD:
@@ -146,7 +152,10 @@ public class DefaultCxxPlatforms {
         archiver = new BsdArchiver(getHashedFileTool(config, "ar", DEFAULT_AR, env));
         compilerSanitizer = new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of());
         binaryExtension = Optional.empty();
-        ranlibCommand = DEFAULT_UNIX_RANLIB;
+        ranlib =
+            Optional.of(
+                new ConstantToolProvider(
+                    getHashedFileTool(config, DEFAULT_UNIX_RANLIB, DEFAULT_RANLIB, env)));
         picTypeForSharedLinking = PicType.PIC;
         break;
         // $CASES-OMITTED$
@@ -187,7 +196,7 @@ public class DefaultCxxPlatforms {
         ImmutableList.of(),
         getHashedFileTool(config, "strip", DEFAULT_STRIP, env),
         ArchiverProvider.from(archiver),
-        new ConstantToolProvider(getHashedFileTool(config, ranlibCommand, DEFAULT_RANLIB, env)),
+        ranlib,
         new PosixNmSymbolNameTool(getHashedFileTool(config, "nm", DEFAULT_NM, env)),
         ImmutableList.of(),
         ImmutableList.of(),
@@ -205,7 +214,7 @@ public class DefaultCxxPlatforms {
             ImmutableBiMap.of()),
         ImmutableMap.of(),
         binaryExtension,
-        config.getHeaderVerification(),
+        config.getHeaderVerificationOrIgnore(),
         picTypeForSharedLinking);
   }
 

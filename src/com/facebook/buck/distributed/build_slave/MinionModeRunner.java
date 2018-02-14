@@ -96,7 +96,7 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
       int availableWorkUnitBuildCapacity,
       BuildCompletionChecker buildCompletionChecker,
       long minionPollLoopIntervalMillis,
-      UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker,
+      MinionBuildProgressTracker minionBuildProgressTracker,
       int coordinatorConnectionTimeoutMillis) {
     this(
         coordinatorAddress,
@@ -108,7 +108,7 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
         availableWorkUnitBuildCapacity,
         buildCompletionChecker,
         minionPollLoopIntervalMillis,
-        unexpectedCacheMissTracker,
+        minionBuildProgressTracker,
         MostExecutors.newMultiThreadExecutor(
             new CommandThreadFactory("MinionBuilderThread"), availableWorkUnitBuildCapacity));
   }
@@ -124,7 +124,7 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
       int maxWorkUnitBuildCapacity,
       BuildCompletionChecker buildCompletionChecker,
       long minionPollLoopIntervalMillis,
-      UnexpectedSlaveCacheMissTracker unexpectedCacheMissTracker,
+      MinionBuildProgressTracker minionBuildProgressTracker,
       ExecutorService buildExecutorService) {
     this.coordinatorConnectionTimeoutMillis = coordinatorConnectionTimeoutMillis;
     this.minionPollLoopIntervalMillis = minionPollLoopIntervalMillis;
@@ -138,7 +138,7 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
     this.buildCompletionChecker = buildCompletionChecker;
     this.buildExecutorService = buildExecutorService;
     this.buildTracker =
-        new MinionLocalBuildStateTracker(maxWorkUnitBuildCapacity, unexpectedCacheMissTracker);
+        new MinionLocalBuildStateTracker(maxWorkUnitBuildCapacity, minionBuildProgressTracker);
 
     LOG.info(
         String.format(

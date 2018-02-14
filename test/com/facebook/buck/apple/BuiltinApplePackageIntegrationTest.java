@@ -29,16 +29,17 @@ import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.zip.Unzip;
+import com.facebook.buck.util.unarchive.ArchiveFormat;
+import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -86,7 +87,7 @@ public class BuiltinApplePackageIntegrationTest {
 
     workspace.getBuildLog().assertTargetBuiltLocally(appTarget.getFullyQualifiedName());
 
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
 
     BuildTarget packageTarget = BuildTargetFactory.newInstance("//:DemoAppPackage");
     workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
@@ -174,11 +175,14 @@ public class BuiltinApplePackageIntegrationTest {
     workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
 
     Path destination = workspace.getDestPath();
-    Unzip.extractZipFile(
-        new DefaultProjectFilesystemFactory(),
-        workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")),
-        destination,
-        Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+
+    ArchiveFormat.ZIP
+        .getUnarchiver()
+        .extractArchive(
+            new DefaultProjectFilesystemFactory(),
+            workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")),
+            destination,
+            ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
     Path stubOutsideBundle = destination.resolve("WatchKitSupport2/WK");
     assertTrue(Files.isExecutable(stubOutsideBundle));
@@ -205,11 +209,14 @@ public class BuiltinApplePackageIntegrationTest {
     workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
 
     Path destination = workspace.getDestPath();
-    Unzip.extractZipFile(
-        new DefaultProjectFilesystemFactory(),
-        workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")),
-        destination,
-        Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+
+    ArchiveFormat.ZIP
+        .getUnarchiver()
+        .extractArchive(
+            new DefaultProjectFilesystemFactory(),
+            workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")),
+            destination,
+            ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
     Path stub = destination.resolve("WatchKitSupport/WK");
     assertTrue(Files.isExecutable(stub));
@@ -228,11 +235,13 @@ public class BuiltinApplePackageIntegrationTest {
             "//:DemoAppPackage#iphonesimulator-i386,iphonesimulator-x86_64");
     workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
 
-    Unzip.extractZipFile(
-        new DefaultProjectFilesystemFactory(),
-        workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")),
-        workspace.getDestPath(),
-        Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+    ArchiveFormat.ZIP
+        .getUnarchiver()
+        .extractArchive(
+            new DefaultProjectFilesystemFactory(),
+            workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")),
+            workspace.getDestPath(),
+            ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
     ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
 
@@ -275,7 +284,7 @@ public class BuiltinApplePackageIntegrationTest {
     workspace
         .runBuckBuild("-c", "apple.cache_bundles_and_packages=false", "//:DemoAppPackage")
         .assertSuccess();
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
     workspace
         .runBuckBuild("-c", "apple.cache_bundles_and_packages=false", "//:DemoAppPackage")
         .assertSuccess();

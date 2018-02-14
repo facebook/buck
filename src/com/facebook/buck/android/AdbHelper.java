@@ -27,6 +27,7 @@ import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.RealAndroidDevice;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
@@ -39,6 +40,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
@@ -95,7 +97,7 @@ public class AdbHelper implements AndroidDevicesHelper {
 
   private final AdbOptions options;
   private final TargetDeviceOptions deviceOptions;
-  private final AndroidLegacyToolchain androidLegacyToolchain;
+  private final ToolchainProvider toolchainProvider;
   private final Supplier<ExecutionContext> contextSupplier;
   private final boolean restartAdbOnFailure;
   private final ImmutableList<String> rapidInstallTypes;
@@ -106,13 +108,13 @@ public class AdbHelper implements AndroidDevicesHelper {
   public AdbHelper(
       AdbOptions adbOptions,
       TargetDeviceOptions deviceOptions,
-      AndroidLegacyToolchain androidLegacyToolchain,
+      ToolchainProvider toolchainProvider,
       Supplier<ExecutionContext> contextSupplier,
       boolean restartAdbOnFailure,
       ImmutableList<String> rapidInstallTypes) {
     this.options = adbOptions;
     this.deviceOptions = deviceOptions;
-    this.androidLegacyToolchain = androidLegacyToolchain;
+    this.toolchainProvider = toolchainProvider;
     this.contextSupplier = contextSupplier;
     this.restartAdbOnFailure = restartAdbOnFailure;
     this.rapidInstallTypes = rapidInstallTypes;
@@ -488,7 +490,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   @Nullable
   @SuppressWarnings("PMD.EmptyCatchBlock")
   private static AndroidDebugBridge createAdb(
-      AndroidLegacyToolchain androidLegacyToolchain, ExecutionContext context)
+      AndroidPlatformTarget androidPlatformTarget, ExecutionContext context)
       throws InterruptedException {
     DdmPreferences.setTimeOut(60000);
 
@@ -499,8 +501,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     }
 
     AndroidDebugBridge adb =
-        AndroidDebugBridge.createBridge(
-            androidLegacyToolchain.getAndroidPlatformTarget().getAdbExecutable().toString(), false);
+        AndroidDebugBridge.createBridge(androidPlatformTarget.getAdbExecutable().toString(), false);
     if (adb == null) {
       context
           .getConsole()
@@ -526,7 +527,11 @@ public class AdbHelper implements AndroidDevicesHelper {
     // Initialize adb connection.
     AndroidDebugBridge adb;
     try {
-      adb = createAdb(androidLegacyToolchain, contextSupplier.get());
+      adb =
+          createAdb(
+              toolchainProvider.getByName(
+                  AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
+              contextSupplier.get());
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }

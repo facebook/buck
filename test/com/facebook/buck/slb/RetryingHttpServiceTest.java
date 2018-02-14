@@ -64,7 +64,8 @@ public class RetryingHttpServiceTest {
         .once();
     EasyMock.replay(mockService);
 
-    try (RetryingHttpService service = new RetryingHttpService(eventBus, mockService, 1, 1)) {
+    try (RetryingHttpService service =
+        new RetryingHttpService(eventBus, mockService, "counterCategory", 1, 1)) {
       HttpResponse response = service.makeRequest(null, null);
       Assert.assertNull(response);
     }
@@ -110,6 +111,6 @@ public class RetryingHttpServiceTest {
   }
 
   private RetryingHttpService createRetryingService(int retryCount) {
-    return new RetryingHttpService(eventBus, mockService, retryCount);
+    return new RetryingHttpService(eventBus, mockService, "counterCategory", retryCount);
   }
 }

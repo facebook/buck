@@ -68,6 +68,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   // less disruptive.
   private volatile boolean enableMultiFetch = true;
   private final AtomicInteger consecutiveMultiFetchErrorCount = new AtomicInteger();
+  private volatile boolean markAllFetchRequestsAsSkipped = false;
 
   public AbstractAsynchronousCache(
       String name,
@@ -194,6 +195,18 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     }
   }
 
+  @Override
+  public void skipPendingAndFutureAsyncFetches() {
+    if (markAllFetchRequestsAsSkipped) {
+      return; // Avoid log spam
+    }
+    LOG.info(
+        String.format(
+            "All [%d] pending, and future, fetch requests will return skipped results.",
+            pendingFetchRequests.size()));
+    markAllFetchRequestsAsSkipped = true;
+  }
+
   private void doFetch(FetchRequest request) {
     CacheResult result;
     CacheEventListener.FetchRequestEvents requestEvents =
@@ -214,6 +227,22 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
 
   private void processFetch() {
     try {
+      if (markAllFetchRequestsAsSkipped) {
+        // Build is finished/terminated, all pending fetch requests should be set to skipped state.
+        while (true) {
+          ClaimedFetchRequest request = getFetchRequest();
+          if (request == null) {
+            return;
+          }
+          String ruleKey = request.getRequest().getRuleKey().toString();
+          LOG.verbose(
+              String.format(
+                  "Skipping cache fetch for key [%s] as markAllFetchRequestsAsSkipped=true",
+                  ruleKey));
+          request.setResult(CacheResult.skipped());
+        }
+      }
+
       int multiFetchLimit =
           enableMultiFetch ? getMultiFetchBatchSize(pendingFetchRequests.size()) : 0;
       if (multiFetchLimit > 0) {
@@ -301,6 +330,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     return new ClaimedFetchRequest(request);
   }
 
+  @SuppressWarnings("CheckReturnValue")
   private void addFetchRequest(FetchRequest fetchRequest) {
     pendingFetchRequests.add(fetchRequest);
     fetchExecutorService.submit(this::processFetch);

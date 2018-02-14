@@ -59,6 +59,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.junit.Test;
 
 public class ArchiveTest {
@@ -72,8 +73,8 @@ public class ArchiveTest {
   private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
   private final Archiver DEFAULT_ARCHIVER =
       new GnuArchiver(new HashedFileTool(PathSourcePath.of(projectFilesystem, AR)));
-  private final Tool DEFAULT_RANLIB =
-      new HashedFileTool(PathSourcePath.of(projectFilesystem, RANLIB));
+  private final Optional<Tool> DEFAULT_RANLIB =
+      Optional.of(new HashedFileTool(PathSourcePath.of(projectFilesystem, RANLIB)));
 
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {

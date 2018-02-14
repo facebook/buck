@@ -23,10 +23,11 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
@@ -66,7 +67,7 @@ public class FetchCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "fetch_nothing", temp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("fetch", "//:example");
+    ProcessResult result = workspace.runBuckCommand("fetch", "//:example");
 
     result.assertSuccess();
 
@@ -87,7 +88,7 @@ public class FetchCommandIntegrationTest {
     // We don't know the URL of the file beforehand. Fix that.
     addRemoteFileTarget(workspace);
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("fetch", "//:remote");
+    ProcessResult result = workspace.runBuckCommand("fetch", "//:remote");
 
     result.assertSuccess();
 
@@ -108,7 +109,7 @@ public class FetchCommandIntegrationTest {
     // We don't know the URL of the file beforehand. Fix that.
     addRemoteFileTarget(workspace);
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("fetch", "//:no-download");
+    ProcessResult result = workspace.runBuckCommand("fetch", "//:no-download");
 
     result.assertSuccess();
 
@@ -128,7 +129,7 @@ public class FetchCommandIntegrationTest {
     // We don't know the URL of the file beforehand. Fix that.
     addRemoteFileTarget(workspace);
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("fetch", "//:needs-download");
+    ProcessResult result = workspace.runBuckCommand("fetch", "//:needs-download");
 
     result.assertSuccess();
 

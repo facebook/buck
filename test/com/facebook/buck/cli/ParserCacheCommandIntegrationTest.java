@@ -17,10 +17,14 @@
 package com.facebook.buck.cli;
 
 import static org.hamcrest.junit.MatcherAssert.assertThat;
+import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.query.QueryException;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
@@ -39,13 +43,15 @@ public class ParserCacheCommandIntegrationTest {
 
   @Test
   public void testSaveAndLoad() throws IOException, InterruptedException, QueryException {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "parser_with_cell", tmp);
     workspace.setUp();
 
     // Warm the parser cache.
     TestContext context = new TestContext();
-    ProjectWorkspace.ProcessResult runBuckResult =
+    ProcessResult runBuckResult =
         workspace.runBuckdCommand(context, "query", "deps(//Apps:TestAppsLibrary)");
     runBuckResult.assertSuccess();
     assertThat(
@@ -94,7 +100,7 @@ public class ParserCacheCommandIntegrationTest {
 
     // Warm the parser cache.
     TestContext context = new TestContext();
-    ProjectWorkspace.ProcessResult runBuckResult =
+    ProcessResult runBuckResult =
         workspace.runBuckdCommand(context, "query", "deps(//Apps:TestAppsLibrary)");
     runBuckResult.assertSuccess();
     assertThat(

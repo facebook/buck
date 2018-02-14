@@ -83,6 +83,10 @@ public class DistBuildConfig {
   private static final String LOG_MATERIALIZATION_ENABLED = "log_materialization_enabled";
   private static final boolean DEFAULT_LOG_MATERIALIZATION_ENABLED = false;
 
+  private static final String PERFORM_RULE_KEY_CONSISTENCY_CHECK =
+      "perform_rule_key_consistency_check";
+  private static final boolean DEFAULT_PERFORM_RULE_KEY_CONSISTENCY_CHECK = false;
+
   @VisibleForTesting static final String SERVER_BUCKCONFIG_OVERRIDE = "server_buckconfig_override";
 
   private static final String FRONTEND_REQUEST_MAX_RETRIES = "frontend_request_max_retries";
@@ -105,6 +109,10 @@ public class DistBuildConfig {
       "slow_heartbeat_warning_threshold_millis";
   private static final long DEFAULT_SLOW_HEARTBEAT_WARNING_THRESHOLD_MILLIS = 15000;
 
+  // Max number of threads used for fetching build statuses, sending requests to frontend etc.
+  private static final String CONTROLLER_MAX_THREAD_COUNT = "controller_max_thread_count";
+  private static final int DEFAULT_CONTROLLER_MAX_THREAD_COUNT = 20;
+
   private static final String MAX_MINION_SILENCE_MILLIS = "max_minion_silence_millis";
   private static final long DEFAULT_MAX_MINION_SILENCE_MILLIS = TimeUnit.SECONDS.toMillis(30);
 
@@ -113,6 +121,15 @@ public class DistBuildConfig {
 
   private static final String ENABLE_ASYNC_LOGGING = "enable_async_logging";
   private static final boolean DEFAULT_ENABLE_ASYNC_LOGGING = true;
+
+  private static final String ALWAYS_WAIT_FOR_REMOTE_BUILD_BEFORE_PROCEEDING_LOCALLY =
+      "always_wait_for_remote_build_before_proceeding_locally";
+  private static final boolean DEFAULT_ALWAYS_WAIT_FOR_REMOTE_BUILD_BEFORE_PROCEEDING_LOCALLY =
+      true;
+
+  private static final String MOST_BUILD_RULES_FINISHED_PERCENTAGE_THRESHOLD =
+      "most_build_rules_finished_percentage_threshold";
+  private static final int DEFAULT_MOST_BUILD_RULES_FINISHED_PERCENTAGE_THRESHOLD = 80;
 
   private static final String ENABLE_UPLOADS_FROM_LOCAL_CACHE = "enable_uploads_from_local_cache";
   private static final boolean DEFAULT_ENABLE_UPLOADS_FROM_LOCAL_CACHE = false;
@@ -126,6 +143,18 @@ public class DistBuildConfig {
   // Default this to 90% to ensure we never timeout requests to the coordinator.
   private static final String MINION_BUILD_CAPACITY_RATIO = "minion_build_capacity_ratio";
   private static final Double DEFAULT_MINION_BUILD_CAPACITY_RATIO = 0.9;
+
+  // This flag needs to be set to 'true' if automated stampede build is to be attempted. It
+  // allows for a global on/off switch per repository (while the experiments.stampede_beta_test
+  // flag can then be used for a e.g. per user switch).
+  private static final String AUTO_STAMPEDE_BUILD_ENABLED = "auto_stampede_build_enabled";
+  private static final boolean DEFAULT_AUTO_STAMPEDE_BUILD_ENABLED = false;
+
+  private static final String EXPERIMENTS_SECTION = "experiments";
+  private static final String STAMPEDE_BETA_TEST = "stampede_beta_test";
+  private static final boolean DEFAULT_STAMPEDE_BETA_TEST = false;
+
+  private static final String AUTO_STAMPEDE_BUILD_MESSAGE = "auto_stampede_build_message";
 
   private final SlbBuckConfig frontendConfig;
   private final BuckConfig buckConfig;
@@ -238,6 +267,12 @@ public class DistBuildConfig {
         .orElse(DEFAULT_LOG_MATERIALIZATION_ENABLED);
   }
 
+  public boolean getPerformRuleKeyConsistencyCheck() {
+    return buckConfig
+        .getBoolean(STAMPEDE_SECTION, PERFORM_RULE_KEY_CONSISTENCY_CHECK)
+        .orElse(DEFAULT_PERFORM_RULE_KEY_CONSISTENCY_CHECK);
+  }
+
   public long getMinionPollLoopIntervalMillis() {
     return buckConfig
         .getLong(STAMPEDE_SECTION, MINION_POLL_LOOP_INTERVAL_MILLIS)
@@ -252,6 +287,20 @@ public class DistBuildConfig {
   public boolean isAsyncLoggingEnabled() {
     return buckConfig.getBooleanValue(
         STAMPEDE_SECTION, ENABLE_ASYNC_LOGGING, DEFAULT_ENABLE_ASYNC_LOGGING);
+  }
+
+  /**
+   * If true, local Stampede client will wait for remote build of rule to complete before building
+   * locally. If false, it will go ahead building locally if remote build of rule hasn't started
+   * yet.
+   *
+   * @return
+   */
+  public boolean shouldAlwaysWaitForRemoteBuildBeforeProceedingLocally() {
+    return buckConfig.getBooleanValue(
+        STAMPEDE_SECTION,
+        ALWAYS_WAIT_FOR_REMOTE_BUILD_BEFORE_PROCEEDING_LOCALLY,
+        DEFAULT_ALWAYS_WAIT_FOR_REMOTE_BUILD_BEFORE_PROCEEDING_LOCALLY);
   }
 
   public long getHearbeatServiceRateMillis() {
@@ -282,6 +331,18 @@ public class DistBuildConfig {
     return buckConfig
         .getLong(STAMPEDE_SECTION, FRONTEND_REQUEST_RETRY_INTERVAL_MILLIS)
         .orElse(DEFAULT_FRONTEND_REQUEST_RETRY_INTERVAL_MILLIS);
+  }
+
+  public int getControllerMaxThreadCount() {
+    return buckConfig
+        .getInteger(STAMPEDE_SECTION, CONTROLLER_MAX_THREAD_COUNT)
+        .orElse(DEFAULT_CONTROLLER_MAX_THREAD_COUNT);
+  }
+
+  public int getMostBuildRulesFinishedPercentageThreshold() {
+    return buckConfig
+        .getInteger(STAMPEDE_SECTION, MOST_BUILD_RULES_FINISHED_PERCENTAGE_THRESHOLD)
+        .orElse(DEFAULT_MOST_BUILD_RULES_FINISHED_PERCENTAGE_THRESHOLD);
   }
 
   /** @return Ratio of available build capacity that should be used by coordinator */
@@ -316,6 +377,18 @@ public class DistBuildConfig {
   public boolean isUploadFromLocalCacheEnabled() {
     return buckConfig.getBooleanValue(
         STAMPEDE_SECTION, ENABLE_UPLOADS_FROM_LOCAL_CACHE, DEFAULT_ENABLE_UPLOADS_FROM_LOCAL_CACHE);
+  }
+
+  /** Whether a non-distributed build should be automatically turned into a distributed one. */
+  public boolean shouldUseDistributedBuild() {
+    return buckConfig.getBooleanValue(
+            STAMPEDE_SECTION, AUTO_STAMPEDE_BUILD_ENABLED, DEFAULT_AUTO_STAMPEDE_BUILD_ENABLED)
+        && buckConfig.getBooleanValue(
+            EXPERIMENTS_SECTION, STAMPEDE_BETA_TEST, DEFAULT_STAMPEDE_BETA_TEST);
+  }
+
+  public Optional<String> getAutoDistributedBuildMessage() {
+    return buckConfig.getValue(STAMPEDE_SECTION, AUTO_STAMPEDE_BUILD_MESSAGE);
   }
 
   public OkHttpClient createOkHttpClient() {

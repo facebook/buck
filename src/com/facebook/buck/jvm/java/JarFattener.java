@@ -176,7 +176,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
             zipped,
             ImmutableSet.of(),
             false,
-            ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
+            ZipCompressionLevel.NONE,
             fatJarDir);
 
     CompilerParameters compilerParameters =

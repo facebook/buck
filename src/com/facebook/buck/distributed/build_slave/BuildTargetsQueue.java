@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.log.TimedLogger;
@@ -38,12 +39,17 @@ public class BuildTargetsQueue {
   private final Map<String, EnqueuedTarget> allEnqueuedTargets;
   private final Set<String> seenFinishedNodes = new HashSet<>();
   private final Set<EnqueuedTarget> uncachableZeroDependencyTargets = new HashSet<>();
-  private int totalBuilt = 0;
+  private final int totalCacheableNodes;
+  private int finishedCacheableNodes = 0;
+  private final int mostBuildRulesFinishedPercentageThreshold;
+  private int totalBuiltCount = 0;
+  private int skippedUncacheablesCount = 0;
 
   BuildTargetsQueue(
       List<EnqueuedTarget> zeroDependencyTargets,
       Map<String, EnqueuedTarget> allEnqueuedTargets,
-      Set<EnqueuedTarget> uncachableZeroDependencyTargets) {
+      Set<EnqueuedTarget> uncachableZeroDependencyTargets,
+      int mostBuildRulesFinishedPercentageThreshold) {
     LOG.verbose(
         String.format(
             "Constructing queue with [%d] zero dependency targets and [%d] total targets.",
@@ -51,11 +57,30 @@ public class BuildTargetsQueue {
     this.zeroDependencyTargets = zeroDependencyTargets;
     this.allEnqueuedTargets = allEnqueuedTargets;
     this.uncachableZeroDependencyTargets.addAll(uncachableZeroDependencyTargets);
+    this.mostBuildRulesFinishedPercentageThreshold = mostBuildRulesFinishedPercentageThreshold;
     completeUncachableZeroDependencyNodes();
+
+    totalCacheableNodes =
+        (int) allEnqueuedTargets.values().stream().filter(t -> !t.uncachable).count();
+  }
+
+  /** @return True if configured percentage of builds rules have finished. */
+  public boolean haveMostBuildRulesFinished() {
+    if (totalCacheableNodes == 0) {
+      return true;
+    }
+
+    int percentageOfRulesFinished =
+        (int) ((double) finishedCacheableNodes / totalCacheableNodes * 100);
+
+    // Uncomment for debugging:
+    //    LOG.info("Percentage of finished rules: " + percentageOfRulesFinished);
+
+    return percentageOfRulesFinished >= mostBuildRulesFinishedPercentageThreshold;
   }
 
   public static BuildTargetsQueue newEmptyQueue() {
-    return new BuildTargetsQueue(new ArrayList<>(), new HashMap<>(), new HashSet<>());
+    return new BuildTargetsQueue(new ArrayList<>(), new HashMap<>(), new HashSet<>(), 0);
   }
 
   public boolean hasReadyZeroDependencyNodes() {
@@ -95,6 +120,7 @@ public class BuildTargetsQueue {
           String.format(
               "Automatically marking uncachable zero dependency node [%s] as completed.",
               target.buildTarget));
+      skippedUncacheablesCount++;
       processFinishedNode(target);
       zeroDependencyTargets.remove(target);
       uncachableZeroDependencyTargets.remove(target);
@@ -102,7 +128,7 @@ public class BuildTargetsQueue {
   }
 
   private void processFinishedNodes(List<String> finishedNodes) {
-    totalBuilt += finishedNodes.size();
+    totalBuiltCount += finishedNodes.size();
 
     for (String node : finishedNodes) {
       EnqueuedTarget target = Preconditions.checkNotNull(allEnqueuedTargets.get(node));
@@ -114,7 +140,15 @@ public class BuildTargetsQueue {
     LOG.info(
         String.format(
             "Queue Status: Zero dependency nodes [%s]. Total nodes [%s]. Built [%s]",
-            zeroDependencyTargets.size(), allEnqueuedTargets.size(), totalBuilt));
+            zeroDependencyTargets.size(), allEnqueuedTargets.size(), totalBuiltCount));
+  }
+
+  /** Method to publish build progress. */
+  public CoordinatorBuildProgress getBuildProgress() {
+    return new CoordinatorBuildProgress()
+        .setTotalRulesCount(allEnqueuedTargets.size())
+        .setBuiltRulesCount(totalBuiltCount)
+        .setSkippedRulesCount(skippedUncacheablesCount);
   }
 
   private void processFinishedNode(EnqueuedTarget target) {
@@ -124,6 +158,7 @@ public class BuildTargetsQueue {
       throw new RuntimeException(errorMessage);
     }
     seenFinishedNodes.add(target.buildTarget);
+    finishedCacheableNodes += (target.uncachable ? 0 : 1);
 
     ImmutableList<String> dependents = target.getDependentTargets();
     LOG.debug(

@@ -21,11 +21,9 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.util.MoreSuppliers;
-import com.facebook.buck.util.timing.Clock;
-import com.facebook.buck.util.timing.DefaultClock;
+import com.facebook.buck.util.cache.CacheStatsTracker;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.cache.CacheStats;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.AbstractMap;
@@ -33,7 +31,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -47,11 +44,9 @@ import javax.annotation.Nullable;
  *
  * @param <V> The rule key type.
  */
-public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
+public class DefaultRuleKeyCache<V> implements TrackableRuleKeyCache<V> {
 
   private static final Logger LOG = Logger.get(DefaultRuleKeyCache.class);
-
-  private final Clock clock;
 
   /**
    * The underlying rule key cache. We use object identity for indexing.
@@ -66,28 +61,11 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
   private final ConcurrentHashMap<RuleKeyInput, Stream.Builder<Object>> inputsIndex =
       new ConcurrentHashMap<>();
 
-  // Stats.
-  private final LongAdder lookupCount = new LongAdder();
-  private final LongAdder missCount = new LongAdder();
-  private final LongAdder totalLoadTime = new LongAdder();
-  private final LongAdder evictionCount = new LongAdder();
-
-  DefaultRuleKeyCache(Clock clock) {
-    this.clock = clock;
-  }
-
-  public DefaultRuleKeyCache() {
-    this(new DefaultClock());
-  }
-
   private <K> V calculateNode(K node, Function<K, RuleKeyResult<V>> create) {
     Preconditions.checkArgument(
-        node instanceof BuildRule ^ node instanceof AddsToRuleKey,
+        node instanceof BuildRule || node instanceof AddsToRuleKey,
         "%s must be one of either a `BuildRule` or `AddsToRuleKey`",
         node.getClass());
-
-    // Record start time for stats.
-    long start = clock.nanoTime();
 
     RuleKeyResult<V> result = create.apply(node);
     for (Object dependency : result.deps) {
@@ -113,16 +91,12 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
           });
     }
 
-    // Update stats.
-    long end = clock.nanoTime();
-    totalLoadTime.add(end - start);
-    missCount.increment();
-
     return result.result;
   }
 
-  private <K> V getNode(K node, Function<K, RuleKeyResult<V>> create) {
-    lookupCount.increment();
+  private <K> V getNode(
+      K node, Function<K, RuleKeyResult<V>> create, CacheStatsTracker statsTracker) {
+    CacheStatsTracker.CacheRequest request = statsTracker.startRequest();
     Supplier<V> supplier =
         cache.compute(
                 new IdentityWrapper<>(node),
@@ -131,7 +105,11 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
                     value = new Node<>();
                   }
                   if (value.value == null) {
+                    request.recordMiss();
                     value.value = MoreSuppliers.memoize(() -> calculateNode(node, create));
+                    request.recordLoadSuccess();
+                  } else {
+                    request.recordHit();
                   }
                   return value;
                 })
@@ -141,24 +119,31 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
 
   @Nullable
   @Override
-  public V get(BuildRule rule) {
-    lookupCount.increment();
+  public V get(BuildRule rule, CacheStatsTracker statsTracker) {
+    CacheStatsTracker.CacheRequest request = statsTracker.startRequest();
     Node<Object, V> node = cache.get(new IdentityWrapper<Object>(rule));
     if (node != null && node.value != null) {
+      request.recordHit();
       return Preconditions.checkNotNull(node.value).get();
     }
-    missCount.increment();
+    request.recordMiss();
     return null;
   }
 
   @Override
-  public V get(BuildRule rule, Function<? super BuildRule, RuleKeyResult<V>> create) {
-    return getNode(rule, create);
+  public V get(
+      BuildRule rule,
+      Function<? super BuildRule, RuleKeyResult<V>> create,
+      CacheStatsTracker statsTracker) {
+    return getNode(rule, create, statsTracker);
   }
 
   @Override
-  public V get(AddsToRuleKey appendable, Function<? super AddsToRuleKey, RuleKeyResult<V>> create) {
-    return getNode(appendable, create);
+  public V get(
+      AddsToRuleKey appendable,
+      Function<? super AddsToRuleKey, RuleKeyResult<V>> create,
+      CacheStatsTracker statsTracker) {
+    return getNode(appendable, create, statsTracker);
   }
 
   private boolean isCachedNode(Object object) {
@@ -176,7 +161,7 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
   }
 
   /** Recursively invalidate nodes up the dependency tree. */
-  private void invalidateNodes(Stream<Object> nodes) {
+  private void invalidateNodes(Stream<Object> nodes, CacheStatsTracker statsTracker) {
     List<Stream<Object>> dependents = new ArrayList<>();
     nodes.forEach(
         key -> {
@@ -185,17 +170,17 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
           if (node != null) {
             LOG.verbose("invalidating node %s", key);
             dependents.add(node.dependents.build());
-            evictionCount.increment();
+            statsTracker.recordEviction();
           }
         });
     if (!dependents.isEmpty()) {
-      invalidateNodes(dependents.stream().flatMap(x -> x));
+      invalidateNodes(dependents.stream().flatMap(x -> x), statsTracker);
     }
   }
 
   /** Invalidate the given inputs and all their transitive dependents. */
   @Override
-  public void invalidateInputs(Iterable<RuleKeyInput> inputs) {
+  public void invalidateInputs(Iterable<RuleKeyInput> inputs, CacheStatsTracker statsTracker) {
     List<Stream<Object>> nodes = new ArrayList<>();
     for (RuleKeyInput input : inputs) {
       LOG.verbose("invalidating input %s", input);
@@ -205,7 +190,7 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
       }
     }
     if (!nodes.isEmpty()) {
-      invalidateNodes(nodes.stream().flatMap(x -> x));
+      invalidateNodes(nodes.stream().flatMap(x -> x), statsTracker);
     }
   }
 
@@ -214,16 +199,18 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
    * dependents.
    */
   @Override
-  public void invalidateAllExceptFilesystems(ImmutableSet<ProjectFilesystem> filesystems) {
+  public void invalidateAllExceptFilesystems(
+      ImmutableSet<ProjectFilesystem> filesystems, CacheStatsTracker statsTracker) {
     if (filesystems.isEmpty()) {
-      invalidateAll();
+      invalidateAll(statsTracker);
     } else {
       invalidateInputs(
           inputsIndex
               .keySet()
               .stream()
               .filter(input -> !filesystems.contains(input.getFilesystem()))
-              .collect(Collectors.toList()));
+              .collect(Collectors.toList()),
+          statsTracker);
     }
   }
 
@@ -231,33 +218,22 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
    * Invalidate all inputs from a given {@link ProjectFilesystem} and their transitive dependents.
    */
   @Override
-  public void invalidateFilesystem(ProjectFilesystem filesystem) {
+  public void invalidateFilesystem(ProjectFilesystem filesystem, CacheStatsTracker statsTracker) {
     invalidateInputs(
         inputsIndex
             .keySet()
             .stream()
             .filter(input -> filesystem.equals(input.getFilesystem()))
-            .collect(Collectors.toList()));
+            .collect(Collectors.toList()),
+        statsTracker);
   }
 
   /** Invalidate everything in the cache. */
   @Override
-  public void invalidateAll() {
-    evictionCount.add(cache.size());
+  public void invalidateAll(CacheStatsTracker statsTracker) {
+    statsTracker.recordEviction(cache.size());
     cache.clear();
     inputsIndex.clear();
-  }
-
-  @Override
-  public CacheStats getStats() {
-    long missCount = this.missCount.longValue();
-    return new CacheStats(
-        lookupCount.longValue() - missCount,
-        missCount,
-        missCount,
-        0L,
-        totalLoadTime.longValue(),
-        evictionCount.longValue());
   }
 
   @Override

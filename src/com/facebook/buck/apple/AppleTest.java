@@ -21,8 +21,6 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.Either;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -46,6 +44,8 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
+import com.facebook.buck.util.types.Either;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -72,36 +72,36 @@ import java.util.stream.Stream;
 public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule {
 
-  @AddToRuleKey private final Optional<SourcePath> xctool;
+  private final Optional<SourcePath> xctool;
 
-  @AddToRuleKey private Optional<Long> xctoolStutterTimeout;
+  private Optional<Long> xctoolStutterTimeout;
 
-  @AddToRuleKey private final Tool xctest;
+  private final Tool xctest;
 
-  @AddToRuleKey private final boolean useXctest;
+  private final boolean useXctest;
 
-  @AddToRuleKey private final String platformName;
+  private final String platformName;
 
   private final Optional<String> defaultDestinationSpecifier;
   private final Optional<ImmutableMap<String, String>> destinationSpecifier;
 
-  @AddToRuleKey private final AppleBundle testBundle;
+  private final AppleBundle testBundle;
 
   @AddToRuleKey private final Optional<AppleBundle> testHostApp;
 
-  @AddToRuleKey private final Optional<AppleBundle> uiTestTargetApp;
+  private final Optional<AppleBundle> uiTestTargetApp;
 
   private final ImmutableSet<String> contacts;
   private final ImmutableSet<String> labels;
 
-  @AddToRuleKey private final boolean runTestSeparately;
+  private final boolean runTestSeparately;
 
   @AddToRuleKey private final boolean isUiTest;
 
   private final Path testOutputPath;
   private final Path testLogsPath;
 
-  @AddToRuleKey private final Optional<Either<SourcePath, String>> snapshotReferenceImagesPath;
+  private final Optional<Either<SourcePath, String>> snapshotReferenceImagesPath;
 
   private Optional<Long> testRuleTimeoutMs;
 

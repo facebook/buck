@@ -18,6 +18,7 @@ package com.facebook.buck.intellij.ideabuck.ws;
 
 import com.facebook.buck.intellij.ideabuck.config.BuckModule;
 import com.facebook.buck.intellij.ideabuck.config.BuckWSServerPortUtils;
+import com.facebook.buck.intellij.ideabuck.notification.BuckNotification;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.BuckEventsHandlerInterface;
 import com.google.common.annotations.VisibleForTesting;
 import com.intellij.execution.ExecutionException;
@@ -74,6 +75,19 @@ public class BuckClient {
               public void run() {
                 try {
                   int port = BuckWSServerPortUtils.getPort(mProject.getBasePath());
+                  if (port == -1) {
+                    String warning =
+                        "Your buck server may be turned off, since the Buck daemon is on port "
+                            + port
+                            + ".\nTry adding to your '.buckconfig.local' or '.buckconfig' file,"
+                            + " if you don't have it already set:\n"
+                            + "[httpserver]\n"
+                            + "    port = 0\n"
+                            + "After that, restart IntelliJ or reopen your project.\n";
+
+                    BuckNotification.getInstance(mProject).showWarningBalloon(warning);
+                    return;
+                  }
                   // Connect to WebServer
                   connectToWebServer("localhost", port);
                 } catch (NumberFormatException e) {

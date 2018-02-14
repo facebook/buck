@@ -17,12 +17,13 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.model.macros.MacroFinderAutomaton;
 import com.facebook.buck.model.macros.MacroMatchResult;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.MacroContainer;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -68,16 +69,17 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
   }
 
   private <M extends Macro> void traverse(
-      MacroTypeCoercer<M> coercer, Macro macro, Traversal traversal) {
-    coercer.traverse(coercer.getOutputClass().cast(macro), traversal);
+      CellPathResolver cellRoots, MacroTypeCoercer<M> coercer, Macro macro, Traversal traversal) {
+    coercer.traverse(cellRoots, coercer.getOutputClass().cast(macro), traversal);
   }
 
   @Override
-  public void traverse(StringWithMacros stringWithMacros, Traversal traversal) {
-    for (Macro macro : stringWithMacros.getMacros()) {
+  public void traverse(
+      CellPathResolver cellRoots, StringWithMacros stringWithMacros, Traversal traversal) {
+    for (MacroContainer macroContainer : stringWithMacros.getMacros()) {
       MacroTypeCoercer<? extends Macro> coercer =
-          Preconditions.checkNotNull(coercers.get(macro.getClass()));
-      traverse(coercer, macro, traversal);
+          Preconditions.checkNotNull(coercers.get(macroContainer.getMacro().getClass()));
+      traverse(cellRoots, coercer, macroContainer.getMacro(), traversal);
     }
   }
 
@@ -88,7 +90,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
       String blob)
       throws CoerceFailedException {
 
-    ImmutableList.Builder<Either<String, Macro>> parts = ImmutableList.builder();
+    ImmutableList.Builder<Either<String, MacroContainer>> parts = ImmutableList.builder();
 
     // Iterate over all macros found in the string, expanding each found macro.
     int lastEnd = 0;
@@ -101,30 +103,52 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
         parts.add(Either.ofLeft(blob.substring(lastEnd, matchResult.getStartIndex())));
       }
 
-      String macroString = blob.substring(matchResult.getStartIndex(), matchResult.getEndIndex());
-      // Look up the macro coercer that owns this macro name.
-      String name = matchResult.getMacroType();
-      Class<? extends Macro> clazz = macros.get(name);
-      if (clazz == null) {
-        throw new CoerceFailedException(
-            String.format(
-                "Macro '%s' not found when expanding '%s'",
-                matchResult.getMacroType(), macroString));
-      }
-      MacroTypeCoercer<? extends Macro> coercer = Preconditions.checkNotNull(coercers.get(clazz));
-      ImmutableList<String> args = matchResult.getMacroInput();
+      if (matchResult.isEscaped()) {
 
-      // Delegate to the macro coercers to parse the macro..
-      Macro macro;
-      try {
-        macro = coercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, args);
-      } catch (CoerceFailedException e) {
-        throw new CoerceFailedException(
-            String.format("The macro '%s' could not be expanded:\n%s", macroString, e.getMessage()),
-            e);
-      }
+        // If the macro is escaped, add it as-is.
+        parts.add(
+            Either.ofLeft(
+                blob.substring(matchResult.getStartIndex() + 1, matchResult.getEndIndex())));
 
-      parts.add(Either.ofRight(macro));
+      } else {
+
+        MacroContainer.Builder macroContainer = MacroContainer.builder();
+
+        String macroString = blob.substring(matchResult.getStartIndex(), matchResult.getEndIndex());
+
+        // Extract the macro name and hande the `@` prefix.
+        String name = matchResult.getMacroType();
+        if (name.startsWith("@")) {
+          macroContainer.setOutputToFile(true);
+          name = name.substring(1);
+        }
+
+        // Look up the macro coercer that owns this macro name.
+        Class<? extends Macro> clazz = macros.get(name);
+        if (clazz == null) {
+          throw new CoerceFailedException(
+              String.format(
+                  "Macro '%s' not found when expanding '%s'",
+                  matchResult.getMacroType(), macroString));
+        }
+        MacroTypeCoercer<? extends Macro> coercer = Preconditions.checkNotNull(coercers.get(clazz));
+        ImmutableList<String> args = matchResult.getMacroInput();
+
+        // Delegate to the macro coercers to parse the macro..
+        Macro macro;
+        try {
+          macro = coercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, args);
+        } catch (CoerceFailedException e) {
+          throw new CoerceFailedException(
+              String.format(
+                  "The macro '%s' could not be expanded:\n%s", macroString, e.getMessage()),
+              e);
+        }
+
+        macroContainer.setMacro(macro);
+
+        parts.add(Either.ofRight(macroContainer.build()));
+      }
 
       lastEnd = matchResult.getEndIndex();
     }

@@ -19,10 +19,13 @@ package com.facebook.buck.tools.consistency;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ProcessBuilder.Redirect;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
@@ -34,6 +37,7 @@ import java.util.stream.Collectors;
 public class BuckRunner {
 
   private final List<String> fullCommand;
+  private final List<String> argsInTempFile;
   private final Optional<Path> repositoryPath;
   private final boolean randomizeEnvironment;
   private Logger LOG = Logger.getLogger(BuckRunner.class.toString());
@@ -46,6 +50,9 @@ public class BuckRunner {
    * @param extraBuckOptions Any arguments that need to come between the subcommand and the
    *     subcommand's arguments. e.g. -c cxx.cc=/bin/gcc
    * @param buckSubCommandOptions Any options that need to go to the subcommand, like target names
+   * @param argsInTempFile Any arguments that should be written to a temporary file. This is useful
+   *     for long lists of targets that may exceed argument counts on the CLI. No temporary file is
+   *     created if this list is empty.
    * @param repositoryPath The path to run buck from. If not provided, run from the current dir
    * @param randomizeEnvironment If true, try to randomize the parsing environment for buck
    */
@@ -54,6 +61,7 @@ public class BuckRunner {
       String buckSubcommand,
       List<String> extraBuckOptions,
       List<String> buckSubCommandOptions,
+      List<String> argsInTempFile,
       Optional<Path> repositoryPath,
       boolean randomizeEnvironment) {
     this(
@@ -62,6 +70,7 @@ public class BuckRunner {
         buckSubcommand,
         extraBuckOptions,
         buckSubCommandOptions,
+        argsInTempFile,
         repositoryPath,
         randomizeEnvironment);
   }
@@ -77,6 +86,9 @@ public class BuckRunner {
    * @param extraBuckOptions Any arguments that need to come between the subcommand and the
    *     subcommand's arguments. e.g. -c cxx.cc=/bin/gcc
    * @param buckSubCommandOptions Any options that need to go to the subcommand, like target names
+   * @param argsInTempFile Any arguments that should be written to a temporary file. This is useful
+   *     for long lists of targets that may exceed argument counts on the CLI. No temporary file is
+   *     created if this list is empty.
    * @param repositoryPath The path to run buck from. If not provided, run from the current dir
    * @param randomizeEnvironment If true, try to randomize the parsing environment for buck
    */
@@ -87,8 +99,10 @@ public class BuckRunner {
       String buckSubcommand,
       List<String> extraBuckOptions,
       List<String> buckSubCommandOptions,
+      List<String> argsInTempFile,
       Optional<Path> repositoryPath,
       boolean randomizeEnvironment) {
+    this.argsInTempFile = argsInTempFile;
     this.repositoryPath = repositoryPath;
     this.randomizeEnvironment = randomizeEnvironment;
     this.fullCommand =
@@ -113,14 +127,25 @@ public class BuckRunner {
    * @param extraBuckOptions Any arguments that need to come between the subcommand and the
    *     subcommand's arguments. e.g. -c cxx.cc=/bin/gcc
    * @param buckSubCommandOptions Any options that need to go to the subcommand, like target names
+   * @param argsInTempFile Any arguments that should be written to a temporary file. This is useful
+   *     for long lists of targets that may exceed argument counts on the CLI. No temporary file is
+   *     created if this list is empty.
    * @param repositoryPath The path to run buck from. If not provided, run from the current dir
    */
   public BuckRunner(
       String buckSubcommand,
       List<String> extraBuckOptions,
       List<String> buckSubCommandOptions,
+      List<String> argsInTempFile,
       Optional<Path> repositoryPath) {
-    this("buck", buckSubcommand, extraBuckOptions, buckSubCommandOptions, repositoryPath, true);
+    this(
+        "buck",
+        buckSubcommand,
+        extraBuckOptions,
+        buckSubCommandOptions,
+        argsInTempFile,
+        repositoryPath,
+        true);
   }
 
   /**
@@ -133,7 +158,38 @@ public class BuckRunner {
    * @throws InterruptedException Possibly thrown while waiting for the process to complete
    */
   public int run(OutputStream outputStream) throws IOException, InterruptedException {
-    ProcessBuilder builder = new ProcessBuilder(fullCommand).redirectError(Redirect.INHERIT);
+    Optional<Path> tempPath = Optional.empty();
+    try {
+      if (!argsInTempFile.isEmpty()) {
+        File tempFile = File.createTempFile("consistency-checker", "");
+        tempPath = Optional.of(tempFile.toPath());
+        try (BufferedWriter writer = Files.newBufferedWriter(tempPath.get())) {
+          for (String arg : argsInTempFile) {
+            writer.write(arg);
+            writer.newLine();
+          }
+        }
+      }
+      return runProcess(outputStream, tempPath);
+    } finally {
+      if (tempPath.isPresent()) {
+        Files.deleteIfExists(tempPath.get());
+      }
+    }
+  }
+
+  private int runProcess(OutputStream outputStream, Optional<Path> tempPath)
+      throws IOException, InterruptedException {
+    List<String> command = fullCommand;
+    if (tempPath.isPresent()) {
+      command =
+          ImmutableList.<String>builder()
+              .addAll(fullCommand)
+              .add("@" + tempPath.get().toString())
+              .build();
+    }
+    ProcessBuilder builder = new ProcessBuilder(command).redirectError(Redirect.INHERIT);
+
     if (repositoryPath.isPresent()) {
       builder.directory(repositoryPath.get().toFile());
     }

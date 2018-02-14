@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildDeps;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
@@ -54,14 +55,14 @@ public class CalculateSourceAbi extends AbstractBuildRule
   @AddToRuleKey private final JarBuildStepsFactory jarBuildStepsFactory;
   @AddToRuleKey private final int seed = 1;
   // This will be added to the rule key by virtue of being returned from getBuildDeps.
-  private final ImmutableSortedSet<BuildRule> buildDeps;
+  private final BuildDeps buildDeps;
   private final JarContentsSupplier outputJarContents;
   private final BuildOutputInitializer<Object> buildOutputInitializer;
 
   public CalculateSourceAbi(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      ImmutableSortedSet<BuildRule> buildDeps,
+      BuildDeps buildDeps,
       SourcePathRuleFinder ruleFinder,
       JarBuildStepsFactory jarBuildStepsFactory) {
     super(buildTarget, projectFilesystem);

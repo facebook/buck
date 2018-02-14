@@ -17,32 +17,24 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.artifact_cache.ArtifactInfo;
-import com.facebook.buck.artifact_cache.ArtifactUploader;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.RuleKeyCacheResult;
 import com.facebook.buck.artifact_cache.RuleKeyCacheResultEvent;
-import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.LeafEvents;
-import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
-import com.facebook.buck.io.file.BorrowablePath;
-import com.facebook.buck.io.file.LazyPath;
-import com.facebook.buck.io.file.MoreFiles;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildInfo.MetadataKey;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.RuleKeyAndInputs;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.RuleKeyFactoryWithDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyType;
-import com.facebook.buck.rules.keys.SizeLimiter;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.ExecutionContext;
@@ -54,7 +46,6 @@ import com.facebook.buck.util.Discardable;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -62,15 +53,11 @@ import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
-import com.facebook.buck.util.zip.Unzip;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
-import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Atomics;
 import com.google.common.util.concurrent.FutureCallback;
@@ -79,12 +66,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
-import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashSet;
@@ -95,25 +77,17 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
-import java.util.zip.ZipFile;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 class CachingBuildRuleBuilder {
   private static final Logger LOG = Logger.get(CachingBuildRuleBuilder.class);
   private final BuildRuleBuilderDelegate buildRuleBuilderDelegate;
-  private final Optional<Long> artifactCacheSizeLimit;
-  private final BuildInfoStoreManager buildInfoStoreManager;
   private final CachingBuildEngine.BuildMode buildMode;
   private final BuildRuleDurationTracker buildRuleDurationTracker;
   private final boolean consoleLogBuildFailuresInline;
   private final RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics;
-  private final CachingBuildEngine.DepFiles depFiles;
   private final FileHashCache fileHashCache;
-  private final long maxDepFileCacheEntries;
-  private final CachingBuildEngine.MetadataStorage metadataStorage;
   private final SourcePathResolver pathResolver;
   private final ResourceAwareSchedulingInfo resourceAwareSchedulingInfo;
   private final RuleKeyFactories ruleKeyFactories;
@@ -138,6 +112,12 @@ class CachingBuildRuleBuilder {
   private final RuleKey defaultKey;
 
   private final Supplier<Optional<RuleKey>> inputBasedKey;
+
+  private final DependencyFileRuleKeyManager dependencyFileRuleKeyManager;
+  private final BuildCacheArtifactFetcher buildCacheArtifactFetcher;
+  private final InputBasedRuleKeyManager inputBasedRuleKeyManager;
+  private final ManifestRuleKeyManager manifestRuleKeyManager;
+  private final BuildCacheArtifactUploader buildCacheArtifactUploader;
 
   /**
    * This is used to weakly cache the manifest RuleKeyAndInputs. I
@@ -183,16 +163,11 @@ class CachingBuildRuleBuilder {
       BuildRulePipelinesRunner pipelinesRunner,
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
     this.buildRuleBuilderDelegate = buildRuleBuilderDelegate;
-    this.artifactCacheSizeLimit = artifactCacheSizeLimit;
-    this.buildInfoStoreManager = buildInfoStoreManager;
     this.buildMode = buildMode;
     this.buildRuleDurationTracker = buildRuleDurationTracker;
     this.consoleLogBuildFailuresInline = consoleLogBuildFailuresInline;
     this.defaultRuleKeyDiagnostics = defaultRuleKeyDiagnostics;
-    this.depFiles = depFiles;
     this.fileHashCache = fileHashCache;
-    this.maxDepFileCacheEntries = maxDepFileCacheEntries;
-    this.metadataStorage = metadataStorage;
     this.pathResolver = pathResolver;
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
     this.ruleKeyFactories = ruleKeyFactories;
@@ -223,19 +198,56 @@ class CachingBuildRuleBuilder {
                 throw new RuntimeException(e);
               }
             });
+    this.dependencyFileRuleKeyManager =
+        new DependencyFileRuleKeyManager(
+            depFiles, rule, this.buildInfoRecorder, onDiskBuildInfo, ruleKeyFactories, eventBus);
+    this.buildCacheArtifactFetcher =
+        new BuildCacheArtifactFetcher(
+            rule,
+            buildRuleScopeManager,
+            serviceByAdjustingDefaultWeightsTo(CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS),
+            this::onOutputsWillChange,
+            eventBus,
+            buildInfoStoreManager,
+            metadataStorage,
+            onDiskBuildInfo);
+    inputBasedRuleKeyManager =
+        new InputBasedRuleKeyManager(
+            eventBus,
+            ruleKeyFactories,
+            this.buildInfoRecorder,
+            buildCacheArtifactFetcher,
+            artifactCache,
+            onDiskBuildInfo,
+            rule,
+            buildRuleScopeManager,
+            inputBasedKey);
+    manifestRuleKeyManager =
+        new ManifestRuleKeyManager(
+            depFiles,
+            rule,
+            fileHashCache,
+            maxDepFileCacheEntries,
+            pathResolver,
+            ruleKeyFactories,
+            buildCacheArtifactFetcher,
+            artifactCache,
+            manifestBasedKeySupplier);
+    buildCacheArtifactUploader =
+        new BuildCacheArtifactUploader(
+            defaultKey,
+            inputBasedKey,
+            onDiskBuildInfo,
+            rule,
+            manifestRuleKeyManager,
+            eventBus,
+            artifactCache,
+            artifactCacheSizeLimit);
   }
 
   // Return a `BuildResult.Builder` with rule-specific state pre-filled.
   private BuildResult.Builder buildResultBuilder() {
-    BuildResult.Builder builder = BuildResult.builder().setRule(rule);
-    if (manifestFetchResult != null) {
-      builder.setManifestFetchResult(manifestFetchResult);
-    }
-    if (manifestStoreResult != null) {
-      builder.setManifestStoreResult(manifestStoreResult);
-    }
-    builder.setDepsWithCacheMisses(depsWithCacheMiss);
-    return builder;
+    return BuildResult.builder().setRule(rule).setDepsWithCacheMisses(depsWithCacheMiss);
   }
 
   private BuildResult success(BuildRuleSuccessType successType, CacheResult cacheResult) {
@@ -265,8 +277,7 @@ class CachingBuildRuleBuilder {
    */
   private WeightedListeningExecutorService serviceByAdjustingDefaultWeightsTo(
       ResourceAmounts defaultAmounts) {
-    return CachingBuildEngine.serviceByAdjustingDefaultWeightsTo(
-        defaultAmounts, resourceAwareSchedulingInfo, service);
+    return resourceAwareSchedulingInfo.adjustServiceDefaultWeightsTo(defaultAmounts, service);
   }
 
   ListenableFuture<BuildResult> build() {
@@ -488,6 +499,7 @@ class CachingBuildRuleBuilder {
     // input-based rule keys.
     long outputSize =
         Long.parseLong(onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_SIZE).get());
+
     if (shouldWriteOutputHashes(outputSize)) {
       Optional<ImmutableMap<String, String>> hashes =
           onDiskBuildInfo.getMap(BuildInfo.MetadataKey.RECORDED_PATH_HASHES);
@@ -578,7 +590,7 @@ class CachingBuildRuleBuilder {
 
     // If this rule uses dep files, make sure we store the new dep file
     // list and re-calculate the dep file rule key.
-    if (useDependencyFileRuleKey()) {
+    if (dependencyFileRuleKeyManager.useDependencyFileRuleKey()) {
 
       // Query the rule for the actual inputs it used.
       ImmutableList<SourcePath> inputs =
@@ -599,14 +611,15 @@ class CachingBuildRuleBuilder {
 
       // Re-calculate and store the depfile rule key for next time.
       Optional<RuleKeyAndInputs> depFileRuleKeyAndInputs =
-          calculateDepFileRuleKey(Optional.of(inputStrings), /* allowMissingInputs */ false);
+          dependencyFileRuleKeyManager.calculateDepFileRuleKey(
+              Optional.of(inputStrings), /* allowMissingInputs */ false);
       if (depFileRuleKeyAndInputs.isPresent()) {
         RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getRuleKey();
         getBuildInfoRecorder()
             .addBuildMetadata(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY, depFileRuleKey.toString());
 
         // Push an updated manifest to the cache.
-        if (useManifestCaching()) {
+        if (manifestRuleKeyManager.useManifestCaching()) {
           // TODO(cjhopman): This should be able to use manifestKeySupplier.
           Optional<RuleKeyAndInputs> manifestKey = calculateManifestKey(eventBus);
           if (manifestKey.isPresent()) {
@@ -614,7 +627,7 @@ class CachingBuildRuleBuilder {
                 .addBuildMetadata(
                     BuildInfo.MetadataKey.MANIFEST_KEY, manifestKey.get().getRuleKey().toString());
             ManifestStoreResult manifestStoreResult =
-                updateAndStoreManifest(
+                manifestRuleKeyManager.updateAndStoreManifest(
                     depFileRuleKeyAndInputs.get().getRuleKey(),
                     depFileRuleKeyAndInputs.get().getInputs(),
                     manifestKey.get(),
@@ -667,56 +680,9 @@ class CachingBuildRuleBuilder {
   }
 
   private void uploadToCache(BuildRuleSuccessType success) {
-    // Collect up all the rule keys we have index the artifact in the cache with.
-    Set<RuleKey> ruleKeys = new HashSet<>();
-
-    // If the rule key has changed (and is not already in the cache), we need to push
-    // the artifact to cache using the new key.
-    ruleKeys.add(defaultKey);
-
-    // If the input-based rule key has changed, we need to push the artifact to cache
-    // using the new key.
-    if (SupportsInputBasedRuleKey.isSupported(rule)) {
-      Preconditions.checkNotNull(
-          inputBasedKey, "input-based key should have been computed already.");
-      Optional<RuleKey> calculatedRuleKey = inputBasedKey.get();
-      Optional<RuleKey> onDiskRuleKey =
-          onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY);
-      Preconditions.checkState(
-          calculatedRuleKey.equals(onDiskRuleKey),
-          "%s (%s): %s: invalid on-disk input-based rule key: %s != %s",
-          rule.getBuildTarget(),
-          rule.getType(),
-          success,
-          calculatedRuleKey,
-          onDiskRuleKey);
-      if (calculatedRuleKey.isPresent()) {
-        ruleKeys.add(calculatedRuleKey.get());
-      }
-    }
-
-    // If the manifest-based rule key has changed, we need to push the artifact to cache
-    // using the new key.
-    if (useManifestCaching()) {
-      Optional<RuleKey> onDiskRuleKey =
-          onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
-      if (onDiskRuleKey.isPresent()) {
-        ruleKeys.add(onDiskRuleKey.get());
-      }
-    }
-
-    // Do the actual upload.
     try {
       // Push to cache.
-      uploadCompleteFuture =
-          ArtifactUploader.performUploadToArtifactCache(
-              ImmutableSet.copyOf(ruleKeys),
-              artifactCache,
-              eventBus,
-              onDiskBuildInfo.getMetadataForArtifact(),
-              onDiskBuildInfo.getPathsForArtifact(),
-              rule.getBuildTarget(),
-              rule.getProjectFilesystem());
+      uploadCompleteFuture = buildCacheArtifactUploader.uploadToCache(success);
     } catch (Throwable t) {
       eventBus.post(ThrowableConsoleEvent.create(t, "Error uploading to cache for %s.", rule));
     }
@@ -734,21 +700,23 @@ class CachingBuildRuleBuilder {
         successType = Optional.of(success);
 
         // Try get the output size.
-        if (success.shouldUploadResultingArtifact()) {
-          // All rules should have output_size/output_hash in their artifact metadata.
-          outputSize =
-              Optional.of(
-                  Long.parseLong(
-                      onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_SIZE).get()));
-          if (shouldWriteOutputHashes(outputSize.get())) {
-            String hashString = onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_HASH).get();
-            outputHash = Optional.of(HashCode.fromString(hashString));
-          }
+        Optional<String> outputSizeString = onDiskBuildInfo.getValue(MetadataKey.OUTPUT_SIZE);
+        if (outputSizeString.isPresent()) {
+          outputSize = Optional.of(Long.parseLong(outputSizeString.get()));
+        }
+
+        // All rules should have output_size/output_hash in their artifact metadata.
+        if (success.shouldUploadResultingArtifact()
+            && outputSize.isPresent()
+            && shouldWriteOutputHashes(outputSize.get())) {
+          String hashString = onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_HASH).get();
+          outputHash = Optional.of(HashCode.fromString(hashString));
         }
 
         // Determine if this is rule is cacheable.
         shouldUploadToCache =
-            outputSize.isPresent() && shouldUploadToCache(success, outputSize.get());
+            outputSize.isPresent()
+                && buildCacheArtifactUploader.shouldUploadToCache(success, outputSize.get());
 
         // Upload it to the cache.
         if (shouldUploadToCache) {
@@ -784,7 +752,7 @@ class CachingBuildRuleBuilder {
             BuildInfo.MetadataKey.MANIFEST_KEY, manifestKeyAndInputs.get().getRuleKey().toString());
     try (Scope ignored = LeafEvents.scope(eventBus, "checking_cache_depfile_based")) {
       return Futures.transform(
-          performManifestBasedCacheFetch(manifestKeyAndInputs.get()),
+          manifestRuleKeyManager.performManifestBasedCacheFetch(manifestKeyAndInputs.get()),
           (@Nonnull ManifestFetchResult result) -> {
             this.manifestFetchResult = result;
             if (!result.getRuleCacheResult().isPresent()) {
@@ -802,39 +770,19 @@ class CachingBuildRuleBuilder {
   }
 
   private Optional<BuildResult> checkMatchingDepfile() throws IOException {
-    // Try to get the current dep-file rule key.
-    Optional<RuleKeyAndInputs> depFileRuleKeyAndInputs =
-        calculateDepFileRuleKey(
-            onDiskBuildInfo.getValues(BuildInfo.MetadataKey.DEP_FILE),
-            /* allowMissingInputs */ true);
-    if (depFileRuleKeyAndInputs.isPresent()) {
-      RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getRuleKey();
-      getBuildInfoRecorder()
-          .addBuildMetadata(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY, depFileRuleKey.toString());
-
-      // Check the input-based rule key says we're already built.
-      Optional<RuleKey> lastDepFileRuleKey =
-          onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
-      if (lastDepFileRuleKey.isPresent() && depFileRuleKey.equals(lastDepFileRuleKey.get())) {
-        return Optional.of(
+    return dependencyFileRuleKeyManager.checkMatchingDepfile()
+        ? Optional.of(
             success(
                 BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY,
-                CacheResult.localKeyUnchangedHit()));
-      }
-    }
-    return Optional.empty();
+                CacheResult.localKeyUnchangedHit()))
+        : Optional.empty();
   }
 
   private ListenableFuture<Optional<BuildResult>> checkInputBasedCaches() throws IOException {
-    Optional<RuleKey> ruleKey;
-    try (Scope ignored = buildRuleScope()) {
-      // Calculate input-based rule key.
-      ruleKey = inputBasedKey.get();
-    }
-    if (ruleKey.isPresent()) {
-      return performInputBasedCacheFetch(ruleKey.get());
-    }
-    return Futures.immediateFuture(Optional.empty());
+    return Futures.transform(
+        inputBasedRuleKeyManager.checkInputBasedCaches(),
+        optionalResult ->
+            optionalResult.map(result -> success(result.getFirst(), result.getSecond())));
   }
 
   private ListenableFuture<BuildResult> buildOrFetchFromCache() throws IOException {
@@ -854,28 +802,24 @@ class CachingBuildRuleBuilder {
     AtomicReference<CacheResult> rulekeyCacheResult = new AtomicReference<>();
     ListenableFuture<Optional<BuildResult>> buildResultFuture;
 
-    // If this is a distributed build, wait for cachable rules to be marked as
-    // finished by the remote build before attempting to fetch from cache.
-    ListenableFuture<Void> remoteBuildRuleFinishedFuture =
-        remoteBuildRuleCompletionWaiter.waitForBuildRuleToFinishRemotely(rule);
-
     // 2. Rule key cache lookup.
     buildResultFuture =
         // TODO(cjhopman): This should follow the same, simple pattern as everything else. With a
         // large ui.thread_line_limit, SuperConsole tries to redraw more lines than are available.
         // These cache threads make it more likely to hit that problem when SuperConsole is aware
         // of them.
-        Futures.transformAsync(
-            remoteBuildRuleFinishedFuture,
-            (Void v) ->
-                Futures.transform(
-                    performRuleKeyCacheCheck(),
-                    cacheResult -> {
-                      rulekeyCacheResult.set(cacheResult);
-                      return getBuildResultForRuleKeyCacheResult(cacheResult);
-                    }));
+        Futures.transform(
+            performRuleKeyCacheCheck(),
+            cacheResult -> {
+              rulekeyCacheResult.set(cacheResult);
+              return getBuildResultForRuleKeyCacheResult(cacheResult);
+            });
 
-    // 3. Build deps.
+    // 3. Before unlocking dependencies, ensure build rule hasn't started remotely.
+    buildResultFuture =
+        attemptDistributedBuildSynchronization(buildResultFuture, rulekeyCacheResult);
+
+    // 4. Build deps.
     buildResultFuture =
         transformBuildResultAsyncIfNotPresent(
             buildResultFuture,
@@ -893,7 +837,7 @@ class CachingBuildRuleBuilder {
                       CachingBuildEngine.SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
             });
 
-    // 4. Return to the current rule and check if it was (or is being) built in a pipeline with
+    // 5. Return to the current rule and check if it was (or is being) built in a pipeline with
     // one of its dependencies
     if (SupportsPipelining.isSupported(rule)) {
       buildResultFuture =
@@ -907,14 +851,14 @@ class CachingBuildRuleBuilder {
               });
     }
 
-    // 5. Return to the current rule and check caches to see if we can avoid building
+    // 6. Return to the current rule and check caches to see if we can avoid building
     if (SupportsInputBasedRuleKey.isSupported(rule)) {
       buildResultFuture =
           transformBuildResultAsyncIfNotPresent(buildResultFuture, this::checkInputBasedCaches);
     }
 
-    // 6. Then check if the depfile matches.
-    if (useDependencyFileRuleKey()) {
+    // 7. Then check if the depfile matches.
+    if (dependencyFileRuleKeyManager.useDependencyFileRuleKey()) {
       buildResultFuture =
           transformBuildResultIfNotPresent(
               buildResultFuture,
@@ -922,13 +866,13 @@ class CachingBuildRuleBuilder {
               serviceByAdjustingDefaultWeightsTo(CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS));
     }
 
-    // 7. Check for a manifest-based cache hit.
-    if (useManifestCaching()) {
+    // 8. Check for a manifest-based cache hit.
+    if (manifestRuleKeyManager.useManifestCaching()) {
       buildResultFuture =
           transformBuildResultAsyncIfNotPresent(buildResultFuture, this::checkManifestBasedCaches);
     }
 
-    // 8. Fail if populating the cache and cache lookups failed.
+    // 9. Fail if populating the cache and cache lookups failed.
     if (buildMode == CachingBuildEngine.BuildMode.POPULATE_FROM_REMOTE_CACHE) {
       buildResultFuture =
           transformBuildResultIfNotPresent(
@@ -945,7 +889,12 @@ class CachingBuildRuleBuilder {
               MoreExecutors.newDirectExecutorService());
     }
 
-    // 9. Build the current rule locally, if we have to.
+    // 10. Before building locally, do a final check that rule hasn't started building remotely.
+    // (as time has passed due to building of dependencies)
+    buildResultFuture =
+        attemptDistributedBuildSynchronization(buildResultFuture, rulekeyCacheResult);
+
+    // 11. Build the current rule locally, if we have to.
     buildResultFuture =
         transformBuildResultAsyncIfNotPresent(
             buildResultFuture,
@@ -967,6 +916,35 @@ class CachingBuildRuleBuilder {
     return Futures.transform(buildResultFuture, Optional::get);
   }
 
+  private ListenableFuture<Optional<BuildResult>> attemptDistributedBuildSynchronization(
+      ListenableFuture<Optional<BuildResult>> buildResultFuture,
+      AtomicReference<CacheResult> rulekeyCacheResult) {
+    // Check if rule has started being built remotely (i.e. by Stampede). If it has, or if we are
+    // in a 'always wait mode' distributed build, then wait, otherwise proceed immediately.
+    return transformBuildResultAsyncIfNotPresent(
+        buildResultFuture,
+        () -> {
+          if (!remoteBuildRuleCompletionWaiter.shouldWaitForRemoteCompletionOfBuildRule(
+              rule.getFullyQualifiedName())) {
+            // Start building locally right away, as remote build hasn't started yet.
+            // Note: this code path is also used for regular local Buck builds, these use
+            // NoOpRemoteBuildRuleCompletionWaiter that always returns false for above call.
+            return Futures.immediateFuture(Optional.empty());
+          }
+
+          // Once remote build has finished, download artifact from cache using default key
+          return Futures.transformAsync(
+              remoteBuildRuleCompletionWaiter.waitForBuildRuleToFinishRemotely(rule),
+              (Void v) ->
+                  Futures.transform(
+                      performRuleKeyCacheCheck(),
+                      cacheResult -> {
+                        rulekeyCacheResult.set(cacheResult);
+                        return getBuildResultForRuleKeyCacheResult(cacheResult);
+                      }));
+        });
+  }
+
   private <T extends RulePipelineState> void addToPipelinesRunner(
       SupportsPipelining<T> rule, CacheResult cacheResult) {
     pipelinesRunner.addRule(rule, pipeline -> new BuildRuleSteps<T>(cacheResult, pipeline));
@@ -984,11 +962,12 @@ class CachingBuildRuleBuilder {
   private ListenableFuture<CacheResult> performRuleKeyCacheCheck() throws IOException {
     long cacheRequestTimestampMillis = System.currentTimeMillis();
     return Futures.transform(
-        tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-            defaultKey,
-            artifactCache,
-            // TODO(simons): This should be a shared between all tests, not one per cell
-            rule.getProjectFilesystem()),
+        buildCacheArtifactFetcher
+            .tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+                defaultKey,
+                artifactCache,
+                // TODO(simons): This should be a shared between all tests, not one per cell
+                rule.getProjectFilesystem()),
         cacheResult -> {
           RuleKeyCacheResult ruleKeyCacheResult =
               RuleKeyCacheResult.builder()
@@ -1080,56 +1059,6 @@ class CachingBuildRuleBuilder {
     return String.format("When building rule %s.", rule.getBuildTarget());
   }
 
-  private ListenableFuture<CacheResult>
-      tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-          final RuleKey ruleKey,
-          final ArtifactCache artifactCache,
-          final ProjectFilesystem filesystem) {
-    if (!rule.isCacheable()) {
-      return Futures.immediateFuture(CacheResult.ignored());
-    }
-
-    // Create a temp file whose extension must be ".zip" for Filesystems.newFileSystem() to infer
-    // that we are creating a zip-based FileSystem.
-    final LazyPath lazyZipPath =
-        new LazyPath() {
-          @Override
-          protected Path create() throws IOException {
-            return Files.createTempFile(
-                "buck_artifact_" + MoreFiles.sanitize(rule.getBuildTarget().getShortName()),
-                ".zip");
-          }
-        };
-
-    // TODO(mbolin): Change ArtifactCache.fetch() so that it returns a File instead of takes one.
-    // Then we could download directly from the remote cache into the on-disk cache and unzip it
-    // from there.
-    return Futures.transformAsync(
-        fetch(artifactCache, ruleKey, lazyZipPath),
-        cacheResult -> {
-          try (Scope ignored = buildRuleScope()) {
-            // Verify that the rule key we used to fetch the artifact is one of the rule keys
-            // reported in it's metadata.
-            if (cacheResult.getType().isSuccess()) {
-              ImmutableSet<RuleKey> ruleKeys =
-                  RichStream.from(cacheResult.getMetadata().entrySet())
-                      .filter(e -> BuildInfo.RULE_KEY_NAMES.contains(e.getKey()))
-                      .map(Map.Entry::getValue)
-                      .map(RuleKey::new)
-                      .toImmutableSet();
-              if (!ruleKeys.contains(ruleKey)) {
-                LOG.warn(
-                    "%s: rule keys in artifact don't match rule key used to fetch it: %s not in %s",
-                    rule.getBuildTarget(), ruleKey, ruleKeys);
-              }
-            }
-
-            return Futures.immediateFuture(
-                unzipArtifactFromCacheResult(ruleKey, lazyZipPath, filesystem, cacheResult));
-          }
-        });
-  }
-
   /**
    * onOutputsWillChange() should be called once we've determined that the outputs are going to
    * change from their previous state (e.g. because we're about to build locally or unzip an
@@ -1141,116 +1070,6 @@ class CachingBuildRuleBuilder {
     }
     onDiskBuildInfo.deleteExistingMetadata();
     // TODO(cjhopman): Delete old outputs.
-  }
-
-  private ListenableFuture<CacheResult> fetch(
-      ArtifactCache artifactCache, RuleKey ruleKey, LazyPath outputPath) {
-    return Futures.transform(
-        artifactCache.fetchAsync(ruleKey, outputPath),
-        (CacheResult cacheResult) -> {
-          try (Scope ignored = buildRuleScope()) {
-            if (cacheResult.getType() != CacheResultType.HIT) {
-              return cacheResult;
-            }
-            for (String ruleKeyName : BuildInfo.RULE_KEY_NAMES) {
-              if (!cacheResult.getMetadata().containsKey(ruleKeyName)) {
-                continue;
-              }
-              String ruleKeyValue = cacheResult.getMetadata().get(ruleKeyName);
-              try {
-                verify(ruleKeyValue);
-              } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException(
-                    String.format(
-                        "Invalid '%s' rule key in metadata for artifact '%s' returned by cache '%s': '%s'",
-                        ruleKeyName, ruleKey, artifactCache.getClass(), ruleKeyValue),
-                    e);
-              }
-            }
-            return cacheResult;
-          }
-        },
-        serviceByAdjustingDefaultWeightsTo(CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS));
-  }
-
-  /**
-   * Checks that passed rule key value is valid and throws an {@link IllegalArgumentException} if it
-   * is not.
-   *
-   * @param ruleKeyValue rule key to verify.
-   */
-  @SuppressWarnings("CheckReturnValue")
-  private void verify(String ruleKeyValue) {
-    HashCode.fromString(ruleKeyValue);
-  }
-
-  private CacheResult unzipArtifactFromCacheResult(
-      RuleKey ruleKey, LazyPath lazyZipPath, ProjectFilesystem filesystem, CacheResult cacheResult)
-      throws IOException {
-
-    // We only unpack artifacts from hits.
-    if (!cacheResult.getType().isSuccess()) {
-      LOG.debug("Cache miss for '%s' with rulekey '%s'", rule, ruleKey);
-      return cacheResult;
-    }
-    onOutputsWillChange();
-
-    Preconditions.checkState(cacheResult.metadata().isPresent());
-    Preconditions.checkArgument(cacheResult.getType() == CacheResultType.HIT);
-    LOG.debug("Fetched '%s' from cache with rulekey '%s'", rule, ruleKey);
-
-    // It should be fine to get the path straight away, since cache already did it's job.
-    Path zipPath = lazyZipPath.getUnchecked();
-
-    // We unzip the file in the root of the project directory.
-    // Ideally, the following would work:
-    //
-    // Path pathToZip = Paths.get(zipPath.getAbsolutePath());
-    // FileSystem fs = FileSystems.newFileSystem(pathToZip, /* loader */ null);
-    // Path root = Iterables.getOnlyElement(fs.getRootDirectories());
-    // MoreFiles.copyRecursively(root, projectRoot);
-    //
-    // Unfortunately, this does not appear to work, in practice, because MoreFiles fails when trying
-    // to resolve a Path for a zip entry against a file Path on disk.
-    ArtifactCompressionEvent.Started started =
-        ArtifactCompressionEvent.started(
-            ArtifactCompressionEvent.Operation.DECOMPRESS, ImmutableSet.of(ruleKey));
-    eventBus.post(started);
-    try {
-      // First, clear out the pre-existing metadata directory.  We have to do this *before*
-      // unpacking the zipped artifact, as it includes files that will be stored in the metadata
-      // directory.
-      BuildInfoStore buildInfoStore =
-          buildInfoStoreManager.get(rule.getProjectFilesystem(), metadataStorage);
-
-      try (ZipFile artifact = new ZipFile(zipPath.toFile())) {
-        onDiskBuildInfo.validateArtifact(artifact);
-      }
-
-      Preconditions.checkState(
-          cacheResult.getMetadata().containsKey(BuildInfo.MetadataKey.ORIGIN_BUILD_ID),
-          "Cache artifact for rulekey %s is missing metadata %s.",
-          ruleKey,
-          BuildInfo.MetadataKey.ORIGIN_BUILD_ID);
-
-      Unzip.extractZipFile(
-          zipPath.toAbsolutePath(),
-          filesystem,
-          Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
-
-      // We only delete the ZIP file when it has been unzipped successfully. Otherwise, we leave it
-      // around for debugging purposes.
-      Files.delete(zipPath);
-
-      // TODO(cjhopman): This should probably record metadata with the buildInfoRecorder, not
-      // directly into the buildInfoStore.
-      // Also write out the build metadata.
-      buildInfoStore.updateMetadata(rule.getBuildTarget(), cacheResult.getMetadata());
-    } finally {
-      eventBus.post(ArtifactCompressionEvent.finished(started));
-    }
-
-    return cacheResult;
   }
 
   private void executePostBuildSteps(Iterable<Step> postBuildSteps)
@@ -1289,343 +1108,15 @@ class CachingBuildRuleBuilder {
     }
   }
 
-  /** @return whether we should upload the given rules artifacts to cache. */
-  private boolean shouldUploadToCache(BuildRuleSuccessType successType, long outputSize) {
-
-    // The success type must allow cache uploading.
-    if (!successType.shouldUploadResultingArtifact()) {
-      return false;
-    }
-
-    // The cache must be writable.
-    if (!artifactCache.getCacheReadMode().isWritable()) {
-      return false;
-    }
-
-    // If the rule is explicitly marked uncacheable, don't cache it.
-    if (!rule.isCacheable()) {
-      return false;
-    }
-
-    // If the rule's outputs are bigger than the preset size limit, don't cache it.
-    if (artifactCacheSizeLimit.isPresent() && outputSize > artifactCacheSizeLimit.get()) {
-      return false;
-    }
-
-    return true;
-  }
-
-  private boolean useDependencyFileRuleKey() {
-    return depFiles != CachingBuildEngine.DepFiles.DISABLED
-        && rule instanceof SupportsDependencyFileRuleKey
-        && ((SupportsDependencyFileRuleKey) rule).useDependencyFileRuleKeys();
-  }
-
-  private boolean useManifestCaching() {
-    return depFiles == CachingBuildEngine.DepFiles.CACHE
-        && rule instanceof SupportsDependencyFileRuleKey
-        && rule.isCacheable()
-        && ((SupportsDependencyFileRuleKey) rule).useDependencyFileRuleKeys();
-  }
-
-  private Optional<RuleKeyAndInputs> calculateDepFileRuleKey(
-      Optional<ImmutableList<String>> depFile, boolean allowMissingInputs) throws IOException {
-
-    Preconditions.checkState(useDependencyFileRuleKey());
-
-    // Extract the dep file from the last build.  If we don't find one, abort.
-    if (!depFile.isPresent()) {
-      return Optional.empty();
-    }
-
-    // Build the dep-file rule key.  If any inputs are no longer on disk, this means something
-    // changed and a dep-file based rule key can't be calculated.
-    ImmutableList<DependencyFileEntry> inputs =
-        depFile
-            .get()
-            .stream()
-            .map(ObjectMappers.fromJsonFunction(DependencyFileEntry.class))
-            .collect(ImmutableList.toImmutableList());
-
-    try (Scope ignored =
-        RuleKeyCalculationEvent.scope(eventBus, RuleKeyCalculationEvent.Type.DEP_FILE)) {
-      return Optional.of(
-          ruleKeyFactories
-              .getDepFileRuleKeyFactory()
-              .build(((SupportsDependencyFileRuleKey) rule), inputs));
-    } catch (SizeLimiter.SizeLimitException ex) {
-      return Optional.empty();
-    } catch (Exception e) {
-      // TODO(plamenko): fix exception propagation in RuleKeyBuilder
-      if (allowMissingInputs && Throwables.getRootCause(e) instanceof NoSuchFileException) {
-        return Optional.empty();
-      }
-      throw e;
-    }
-  }
-
-  @VisibleForTesting
-  protected static Path getManifestPath(BuildRule rule) {
-    return BuildInfo.getPathToOtherMetadataDirectory(
-            rule.getBuildTarget(), rule.getProjectFilesystem())
-        .resolve(BuildInfo.MANIFEST);
-  }
-
-  // Update the on-disk manifest with the new dep-file rule key and push it to the cache.
-  private ManifestStoreResult updateAndStoreManifest(
-      RuleKey key,
-      ImmutableSet<SourcePath> inputs,
-      RuleKeyAndInputs manifestKey,
-      ArtifactCache cache)
-      throws IOException {
-
-    Preconditions.checkState(useManifestCaching());
-
-    ManifestStoreResult.Builder resultBuilder = ManifestStoreResult.builder();
-
-    final Path manifestPath = getManifestPath(rule);
-    Manifest manifest = new Manifest(manifestKey.getRuleKey());
-    resultBuilder.setDidCreateNewManifest(true);
-
-    // If we already have a manifest downloaded, use that.
-    if (rule.getProjectFilesystem().exists(manifestPath)) {
-      ManifestLoadResult existingManifest = loadManifest(manifestKey.getRuleKey());
-      existingManifest.getError().ifPresent(resultBuilder::setManifestLoadError);
-      if (existingManifest.getManifest().isPresent()
-          && existingManifest.getManifest().get().getKey().equals(manifestKey.getRuleKey())) {
-        manifest = existingManifest.getManifest().get();
-        resultBuilder.setDidCreateNewManifest(false);
-      }
-    } else {
-      // Ensure the path to manifest exist
-      rule.getProjectFilesystem().createParentDirs(manifestPath);
-    }
-
-    // If the manifest is larger than the max size, just truncate it.  It might be nice to support
-    // some sort of LRU management here to avoid evicting everything, but it'll take some care to do
-    // this efficiently and it's not clear how much benefit this will give us.
-    if (manifest.size() >= maxDepFileCacheEntries) {
-      manifest = new Manifest(manifestKey.getRuleKey());
-      resultBuilder.setDidCreateNewManifest(true);
-    }
-
-    // Update the manifest with the new output rule key.
-    manifest.addEntry(fileHashCache, key, pathResolver, manifestKey.getInputs(), inputs);
-
-    // Record the current manifest stats settings now that we've finalized the manifest we're going
-    // to store.
-    resultBuilder.setManifestStats(manifest.getStats());
-
-    // Serialize the manifest to disk.
-    try (OutputStream outputStream =
-        rule.getProjectFilesystem().newFileOutputStream(manifestPath)) {
-      manifest.serialize(outputStream);
-    }
-
-    final Path tempFile = Files.createTempFile("buck.", ".manifest");
-    // Upload the manifest to the cache.  We stage the manifest into a temp file first since the
-    // `ArtifactCache` interface uses raw paths.
-    try (InputStream inputStream = rule.getProjectFilesystem().newFileInputStream(manifestPath);
-        OutputStream outputStream =
-            new GZIPOutputStream(new BufferedOutputStream(Files.newOutputStream(tempFile)))) {
-      ByteStreams.copy(inputStream, outputStream);
-    }
-
-    // Queue the upload operation and save a future wrapping it.
-    resultBuilder.setStoreFuture(
-        MoreFutures.addListenableCallback(
-            cache.store(
-                ArtifactInfo.builder().addRuleKeys(manifestKey.getRuleKey()).build(),
-                BorrowablePath.borrowablePath(tempFile)),
-            MoreFutures.finallyCallback(
-                () -> {
-                  try {
-                    Files.deleteIfExists(tempFile);
-                  } catch (IOException e) {
-                    LOG.warn(
-                        e,
-                        "Error occurred while deleting temporary manifest file for %s",
-                        manifestPath);
-                  }
-                }),
-            MoreExecutors.directExecutor()));
-
-    return resultBuilder.build();
-  }
-
   private Optional<RuleKeyAndInputs> calculateManifestKey(BuckEventBus eventBus)
       throws IOException {
     Preconditions.checkState(depsAreAvailable);
-    return CachingBuildEngine.calculateManifestKey(
-        (SupportsDependencyFileRuleKey) rule, eventBus, ruleKeyFactories);
-  }
-
-  private ListenableFuture<CacheResult> fetchManifest(RuleKey key) throws IOException {
-    Preconditions.checkState(useManifestCaching());
-
-    Path path = getManifestPath(rule);
-
-    // Use a temp path to store the downloaded artifact.  We'll rename it into place on success to
-    // make the process more atomic.
-    LazyPath tempPath =
-        new LazyPath() {
-          @Override
-          protected Path create() throws IOException {
-            return Files.createTempFile("buck.", ".manifest");
-          }
-        };
-
-    return Futures.transformAsync(
-        fetch(artifactCache, key, tempPath),
-        (@Nonnull CacheResult cacheResult) -> {
-          if (!cacheResult.getType().isSuccess()) {
-            LOG.verbose("%s: cache miss on manifest %s", rule.getBuildTarget(), key);
-            return Futures.immediateFuture(cacheResult);
-          }
-
-          // Download is successful, so move the manifest into place.
-          rule.getProjectFilesystem().createParentDirs(path);
-          rule.getProjectFilesystem().deleteFileAtPathIfExists(path);
-          rule.getProjectFilesystem().move(tempPath.get(), path);
-
-          LOG.verbose("%s: cache hit on manifest %s", rule.getBuildTarget(), key);
-
-          return Futures.immediateFuture(cacheResult);
-        });
-  }
-
-  private ManifestLoadResult loadManifest(RuleKey key) {
-    Preconditions.checkState(useManifestCaching());
-
-    Path path = getManifestPath(rule);
-
-    // Deserialize the manifest.
-    Manifest manifest;
-    // Keep the file input stream in a separate variable so that it gets closed if the
-    // GZIPInputStream constructor throws.
-    try (InputStream manifestFile = rule.getProjectFilesystem().newFileInputStream(path);
-        InputStream input = new GZIPInputStream(manifestFile)) {
-      manifest = new Manifest(input);
-    } catch (Exception e) {
-      LOG.warn(
-          e,
-          "Failed to deserialize fetched-from-cache manifest for rule %s with key %s",
-          rule,
-          key);
-      return ManifestLoadResult.error("corrupted manifest path");
-    }
-
-    return ManifestLoadResult.success(manifest);
-  }
-
-  // Fetch an artifact from the cache using manifest-based caching.
-  private ListenableFuture<ManifestFetchResult> performManifestBasedCacheFetch(
-      RuleKeyAndInputs originalRuleKeyAndInputs) throws IOException {
-    Preconditions.checkArgument(useManifestCaching());
-
-    // Explicitly drop the input list from the caller, as holding this in the closure below until
-    // the future eventually runs can potentially consume a lot of memory.
-    RuleKey manifestRuleKey = originalRuleKeyAndInputs.getRuleKey();
-    originalRuleKeyAndInputs = null;
-
-    // Fetch the manifest from the cache.
-    return Futures.transformAsync(
-        fetchManifest(manifestRuleKey),
-        (@Nonnull CacheResult manifestCacheResult) -> {
-          ManifestFetchResult.Builder manifestFetchResult = ManifestFetchResult.builder();
-          manifestFetchResult.setManifestCacheResult(manifestCacheResult);
-          if (!manifestCacheResult.getType().isSuccess()) {
-            return Futures.immediateFuture(manifestFetchResult.build());
-          }
-
-          // Re-calculate the rule key and the input list.  While we do already have the input list
-          // above in `originalRuleKeyAndInputs`, we intentionally don't pass it in and use it here
-          // to avoid holding on to significant memory until this future runs.
-          RuleKeyAndInputs keyAndInputs =
-              manifestBasedKeySupplier.get().orElseThrow(IllegalStateException::new);
-
-          // Load the manifest from disk.
-          ManifestLoadResult loadResult = loadManifest(keyAndInputs.getRuleKey());
-          if (!loadResult.getManifest().isPresent()) {
-            manifestFetchResult.setManifestLoadError(loadResult.getError().get());
-            return Futures.immediateFuture(manifestFetchResult.build());
-          }
-          Manifest manifest = loadResult.getManifest().get();
-          Preconditions.checkState(
-              manifest.getKey().equals(keyAndInputs.getRuleKey()),
-              "%s: found incorrectly keyed manifest: %s != %s",
-              rule.getBuildTarget(),
-              keyAndInputs.getRuleKey(),
-              manifest.getKey());
-          manifestFetchResult.setManifestStats(manifest.getStats());
-
-          // Lookup the dep file rule key matching the current state of our inputs.
-          Optional<RuleKey> depFileRuleKey =
-              manifest.lookup(fileHashCache, pathResolver, keyAndInputs.getInputs());
-          if (!depFileRuleKey.isPresent()) {
-            return Futures.immediateFuture(manifestFetchResult.build());
-          }
-          manifestFetchResult.setDepFileRuleKey(depFileRuleKey.get());
-
-          // Fetch the rule outputs from cache using the found dep file rule key.
-          return Futures.transform(
-              tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-                  depFileRuleKey.get(), artifactCache, rule.getProjectFilesystem()),
-              (@Nonnull CacheResult ruleCacheResult) -> {
-                manifestFetchResult.setRuleCacheResult(ruleCacheResult);
-                return manifestFetchResult.build();
-              });
-        });
+    return manifestRuleKeyManager.calculateManifestKey(eventBus);
   }
 
   private Optional<RuleKey> calculateInputBasedRuleKey() {
     Preconditions.checkState(depsAreAvailable);
-    try (Scope ignored =
-        RuleKeyCalculationEvent.scope(eventBus, RuleKeyCalculationEvent.Type.INPUT)) {
-      return Optional.of(ruleKeyFactories.getInputBasedRuleKeyFactory().build(rule));
-    } catch (SizeLimiter.SizeLimitException ex) {
-      return Optional.empty();
-    }
-  }
-
-  private ListenableFuture<Optional<BuildResult>> performInputBasedCacheFetch(RuleKey inputRuleKey)
-      throws IOException {
-    Preconditions.checkArgument(SupportsInputBasedRuleKey.isSupported(rule));
-
-    getBuildInfoRecorder()
-        .addBuildMetadata(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY, inputRuleKey.toString());
-
-    // Check the input-based rule key says we're already built.
-    if (checkMatchingInputBasedKey(inputRuleKey)) {
-      return Futures.immediateFuture(
-          Optional.of(
-              success(
-                  BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY,
-                  CacheResult.localKeyUnchangedHit())));
-    }
-
-    // Try to fetch the artifact using the input-based rule key.
-    return Futures.transform(
-        tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-            inputRuleKey,
-            artifactCache,
-            // TODO(simons): Share this between all tests, not one per cell.
-            rule.getProjectFilesystem()),
-        cacheResult -> {
-          if (cacheResult.getType().isSuccess()) {
-            try (Scope ignored = LeafEvents.scope(eventBus, "handling_cache_result")) {
-              return Optional.of(
-                  success(BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED, cacheResult));
-            }
-          }
-          return Optional.empty();
-        });
-  }
-
-  private boolean checkMatchingInputBasedKey(RuleKey inputRuleKey) {
-    Optional<RuleKey> lastInputRuleKey =
-        onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY);
-    return inputRuleKey.equals(lastInputRuleKey.orElse(null));
+    return inputBasedRuleKeyManager.calculateInputBasedRuleKey();
   }
 
   private ResourceAmounts getRuleResourceAmounts() {
@@ -1823,7 +1314,7 @@ class CachingBuildRuleBuilder {
    *
    * <p>Once the rule has been marked as finished, any further scope() calls will fail.
    */
-  private class BuildRuleScopeManager {
+  class BuildRuleScopeManager {
     private final RuleKeyFactoryWithDiagnostics<RuleKey> ruleKeyFactory;
 
     private volatile @Nullable Thread currentBuildRuleScopeThread = null;
@@ -1833,7 +1324,7 @@ class CachingBuildRuleBuilder {
       ruleKeyFactory = ruleKeyFactories.getDefaultRuleKeyFactory();
     }
 
-    private Scope scope() {
+    Scope scope() {
       synchronized (this) {
         Preconditions.checkState(
             finishedData == null, "RuleScope started after rule marked as finished.");

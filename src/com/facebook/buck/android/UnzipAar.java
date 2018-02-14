@@ -42,8 +42,8 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
+import com.facebook.buck.unarchive.UnzipStep;
 import com.facebook.buck.util.zip.JarBuilder;
-import com.facebook.buck.zip.UnzipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -95,7 +95,9 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         new UnzipStep(
             getProjectFilesystem(),
             context.getSourcePathResolver().getAbsolutePath(aarFile),
-            unpackDirectory));
+            unpackDirectory,
+            Optional.empty()));
+
     steps.add(new TouchStep(getProjectFilesystem(), getProguardConfig()));
     steps.add(
         MkdirStep.of(

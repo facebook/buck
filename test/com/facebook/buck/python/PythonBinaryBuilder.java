@@ -34,6 +34,7 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -200,7 +201,7 @@ public class PythonBinaryBuilder
     return this;
   }
 
-  public PythonBinaryBuilder setLinkerFlags(ImmutableList<String> linkerFlags) {
+  public PythonBinaryBuilder setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
     getArgForPopulating().setLinkerFlags(linkerFlags);
     return this;
   }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.log.Logger;
 import java.util.ArrayList;
@@ -63,5 +64,13 @@ public class MinionWorkloadAllocator {
             queue.hasReadyZeroDependencyNodes()));
 
     return workUnits;
+  }
+
+  public boolean haveMostBuildRulesCompleted() {
+    return queue.haveMostBuildRulesFinished();
+  }
+
+  public CoordinatorBuildProgress getBuildProgress() {
+    return queue.getBuildProgress();
   }
 }

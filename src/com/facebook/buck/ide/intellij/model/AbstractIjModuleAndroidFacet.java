@@ -16,10 +16,12 @@
 
 package com.facebook.buck.ide.intellij.model;
 
+import com.facebook.buck.ide.intellij.lang.android.AndroidManifestParser;
 import com.facebook.buck.ide.intellij.lang.android.AndroidProjectType;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Ordering;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -63,6 +65,45 @@ abstract class AbstractIjModuleAndroidFacet {
   public abstract Optional<String> getPackageName();
 
   public abstract boolean autogenerateSources();
+
+  /** @return The minimum Android SDK version supported. */
+  @Value.Lazy
+  public Optional<String> getMinSdkVersion() {
+    Ordering<String> byIntegerValue = Ordering.natural().onResultOf(Integer::valueOf);
+    return getMinSdkVersions().stream().min(byIntegerValue);
+  }
+
+  /** @return either the package name from facet or package name from the first manifest */
+  @Value.Lazy
+  public Optional<String> discoverPackageName(AndroidManifestParser androidManifestParser) {
+    Optional<String> packageName = getPackageName();
+    if (packageName.isPresent()) {
+      return packageName;
+    } else {
+      return getPackageFromFirstManifest(androidManifestParser);
+    }
+  }
+
+  public Optional<Path> getFirstManifestPath() {
+    ImmutableSet<Path> androidManifestPaths = getManifestPaths();
+    if (androidManifestPaths.isEmpty()) {
+      return Optional.empty();
+    } else {
+      return Optional.of(androidManifestPaths.iterator().next());
+    }
+  }
+
+  private Optional<String> getPackageFromFirstManifest(
+      AndroidManifestParser androidManifestParser) {
+    Optional<Path> firstManifest = getFirstManifestPath();
+    if (firstManifest.isPresent()) {
+      return androidManifestParser.parsePackage(firstManifest.get());
+    } else {
+      return Optional.empty();
+    }
+  }
+
+  public abstract ImmutableSet<String> getMinSdkVersions();
 
   public abstract Path getGeneratedSourcePath();
 

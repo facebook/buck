@@ -17,7 +17,6 @@
 package com.facebook.buck.intellij.ideabuck.actions;
 
 import com.facebook.buck.intellij.ideabuck.file.BuckFileUtil;
-import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
@@ -35,7 +34,7 @@ public class GoToBuckFile extends DumbAwareAction {
   public static final String ACTION_TITLE = "Go To Buck file";
 
   public GoToBuckFile() {
-    super(ACTION_TITLE, ACTION_TITLE, BuckIcons.ACTION_GOTO);
+    super(ACTION_TITLE);
   }
 
   @Override

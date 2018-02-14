@@ -16,10 +16,12 @@
 
 package com.facebook.buck.skylark.parser;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.Matchers.stringContainsInOrder;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -48,6 +50,7 @@ import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
 import com.google.devtools.build.lib.syntax.Type;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -83,21 +86,29 @@ public class SkylarkProjectBuildFileParserTest {
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
   }
 
-  private SkylarkProjectBuildFileParser createParser(EventHandler eventHandler) {
+  private ProjectBuildFileParserOptions.Builder getDefaultParserOptions() {
+    return ProjectBuildFileParserOptions.builder()
+        .setProjectRoot(cell.getRoot())
+        .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
+        .setIgnorePaths(ImmutableSet.of())
+        .setBuildFileName("BUCK")
+        .setDescriptions(knownBuildRuleTypesProvider.get(cell).getDescriptions())
+        .setBuildFileImportWhitelist(ImmutableList.of())
+        .setPythonInterpreter("skylark");
+  }
+
+  private SkylarkProjectBuildFileParser createParserWithOptions(
+      EventHandler eventHandler, ProjectBuildFileParserOptions options) {
     return SkylarkProjectBuildFileParser.using(
-        ProjectBuildFileParserOptions.builder()
-            .setProjectRoot(cell.getRoot())
-            .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
-            .setIgnorePaths(ImmutableSet.of())
-            .setBuildFileName("BUCK")
-            .setDescriptions(knownBuildRuleTypesProvider.get(cell).getDescriptions())
-            .setBuildFileImportWhitelist(ImmutableList.of())
-            .setPythonInterpreter("skylark")
-            .build(),
+        options,
         BuckEventBusForTests.newInstance(),
         SkylarkFilesystem.using(projectFilesystem),
         new DefaultTypeCoercerFactory(),
         eventHandler);
+  }
+
+  private SkylarkProjectBuildFileParser createParser(EventHandler eventHandler) {
+    return createParserWithOptions(eventHandler, getDefaultParserOptions().build());
   }
 
   @Test
@@ -426,6 +437,34 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
+  public void extensionFileEvaluationErrorIsReported() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    Files.write(buildFile, Arrays.asList("load('//src/test:build_rules.bzl', 'guava_jar')"));
+    Files.write(extensionFile, Arrays.asList("error"));
+
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage("Cannot evaluate extension file //src/test:build_rules.bzl");
+
+    parser.getAll(buildFile, new AtomicLong());
+  }
+
+  @Test
+  public void extensionFileIoEvaluationErrorIsReported() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Files.write(buildFile, Arrays.asList("load('//src/test:build_rule.bzl', 'guava_jar')"));
+
+    thrown.expect(FileNotFoundException.class);
+    thrown.expectMessage(Matchers.endsWith("build_rule.bzl (No such file or directory)"));
+
+    parser.getAll(buildFile, new AtomicLong());
+  }
+
+  @Test
   public void canUseBuiltInListFunctionInExtension() throws Exception {
     Path directory = projectFilesystem.resolve("src").resolve("test");
     Files.createDirectories(directory);
@@ -572,6 +611,147 @@ public class SkylarkProjectBuildFileParserTest {
     assertThat(configsMetadataRule.get("__configs"), equalTo(ImmutableMap.of()));
     Map<String, Object> envsMetadataRule = allRulesAndMetaRules.get(3);
     assertThat(envsMetadataRule.get("__env"), equalTo(ImmutableMap.of()));
+  }
+
+  @Test
+  public void cannotUseNativeRulesImplicitlyInBuildFilesIfDisabled()
+      throws IOException, InterruptedException {
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Files.write(buildFile, Arrays.asList("prebuilt_jar(name='foo', binary_jar='guava.jar')"));
+
+    ProjectBuildFileParserOptions options =
+        getDefaultParserOptions().setDisableImplicitNativeRules(true).build();
+
+    parser = createParserWithOptions(eventCollector, options);
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage("Cannot evaluate build file");
+
+    try {
+      parser.getAll(projectFilesystem.resolve(buildFile), new AtomicLong());
+    } catch (BuildFileParseException e) {
+      Event event = eventCollector.iterator().next();
+      assertEquals(EventKind.ERROR, event.getKind());
+      assertThat(event.getMessage(), containsString("name 'prebuilt_jar' is not defined"));
+      throw e;
+    }
+  }
+
+  @Test
+  public void cannotUseNativeRulesImplicitlyInExtensionFilesIfDisabled()
+      throws IOException, InterruptedException {
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("extension.bzl");
+    Files.write(
+        buildFile,
+        Arrays.asList(
+            "load('//src/test:extension.bzl', 'make_jar')",
+            "make_jar(name='foo', binary_jar='guava.jar')"));
+    Files.write(
+        extensionFile,
+        Arrays.asList("def make_jar(*args, **kwargs):", "    prebuilt_jar(*args, **kwargs)"));
+
+    ProjectBuildFileParserOptions options =
+        getDefaultParserOptions().setDisableImplicitNativeRules(true).build();
+
+    parser = createParserWithOptions(eventCollector, options);
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage("Cannot evaluate build file");
+
+    try {
+      parser.getAll(projectFilesystem.resolve(buildFile), new AtomicLong());
+    } catch (BuildFileParseException e) {
+      Event event = eventCollector.iterator().next();
+      assertEquals(EventKind.ERROR, event.getKind());
+      assertThat(event.getMessage(), containsString("name 'prebuilt_jar' is not defined"));
+      assertThat(event.getMessage(), containsString("extension.bzl\", line 2, in make_jar"));
+      throw e;
+    }
+  }
+
+  @Test
+  public void canUseNativeRulesViaNativeModuleInExtensionFilesIfDisabled()
+      throws IOException, InterruptedException {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("extension.bzl");
+    Files.write(
+        buildFile,
+        Arrays.asList(
+            "load('//src/test:extension.bzl', 'make_jar')",
+            "make_jar(name='foo', binary_jar='guava.jar')"));
+    Files.write(
+        extensionFile,
+        Arrays.asList(
+            "def make_jar(*args, **kwargs):", "    native.prebuilt_jar(*args, **kwargs)"));
+
+    ProjectBuildFileParserOptions options =
+        getDefaultParserOptions().setDisableImplicitNativeRules(true).build();
+
+    parser = createParserWithOptions(new PrintingEventHandler(EventKind.ALL_EVENTS), options);
+
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(rule.get("name"), equalTo("foo"));
+    assertThat(rule.get("binaryJar"), equalTo("guava.jar"));
+  }
+
+  @Test
+  public void canUseNativeRulesImplicitlyInBuildFilesIfNotDisabled()
+      throws IOException, InterruptedException {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Files.write(buildFile, Arrays.asList("prebuilt_jar(name='foo', binary_jar='guava.jar')"));
+
+    ProjectBuildFileParserOptions options =
+        getDefaultParserOptions().setDisableImplicitNativeRules(false).build();
+
+    parser = createParserWithOptions(new PrintingEventHandler(EventKind.ALL_EVENTS), options);
+
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(rule.get("name"), equalTo("foo"));
+    assertThat(rule.get("binaryJar"), equalTo("guava.jar"));
+  }
+
+  @Test
+  public void cannotUseNativeRulesImplicitlyInExtensionFilesIfNotDisabled()
+      throws IOException, InterruptedException {
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("extension.bzl");
+    Files.write(
+        buildFile,
+        Arrays.asList(
+            "load('//src/test:extension.bzl', 'make_jar')",
+            "make_jar(name='foo', binary_jar='guava.jar')"));
+    Files.write(
+        extensionFile,
+        Arrays.asList("def make_jar(*args, **kwargs):", "    prebuilt_jar(*args, **kwargs)"));
+
+    ProjectBuildFileParserOptions options =
+        getDefaultParserOptions().setDisableImplicitNativeRules(false).build();
+
+    parser = createParserWithOptions(eventCollector, options);
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage("Cannot evaluate build file");
+
+    try {
+      parser.getAll(projectFilesystem.resolve(buildFile), new AtomicLong());
+    } catch (BuildFileParseException e) {
+      Event event = eventCollector.iterator().next();
+      assertEquals(EventKind.ERROR, event.getKind());
+      assertThat(event.getMessage(), containsString("name 'prebuilt_jar' is not defined"));
+      assertThat(event.getMessage(), containsString("extension.bzl\", line 2, in make_jar"));
+      throw e;
+    }
   }
 
   private Map<String, Object> getSingleRule(Path buildFile)

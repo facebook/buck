@@ -16,20 +16,25 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.model.Either;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import java.util.Arrays;
 import java.util.List;
 
 public class StringWithMacrosUtils {
 
   private StringWithMacrosUtils() {}
 
+  public static StringWithMacros format(String format) {
+    return StringWithMacros.of(ImmutableList.of(Either.ofLeft(format)));
+  }
+
   /** @return a {@link StringWithMacros} object built with the given format strings and macros. */
-  public static StringWithMacros format(String format, Macro... macros) {
-    ImmutableList.Builder<Either<String, Macro>> partsBuilder = ImmutableList.builder();
+  public static StringWithMacros format(String format, MacroContainer... macros) {
+    ImmutableList.Builder<Either<String, MacroContainer>> partsBuilder = ImmutableList.builder();
 
     List<String> stringParts = Splitter.on("%s").splitToList(format);
     Preconditions.checkState(stringParts.size() == macros.length + 1);
@@ -48,7 +53,13 @@ public class StringWithMacrosUtils {
     return StringWithMacros.of(partsBuilder.build());
   }
 
+  public static StringWithMacros format(String format, Macro... macros) {
+    return format(
+        format,
+        Arrays.stream(macros).map(m -> MacroContainer.of(m, false)).toArray(MacroContainer[]::new));
+  }
+
   public static ImmutableList<StringWithMacros> fromStrings(Iterable<String> flags) {
-    return RichStream.from(flags).map(f -> format(f)).toImmutableList();
+    return RichStream.from(flags).map(StringWithMacrosUtils::format).toImmutableList();
   }
 }

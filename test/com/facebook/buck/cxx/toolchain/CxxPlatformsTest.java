@@ -18,9 +18,7 @@ package com.facebook.buck.cxx.toolchain;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.BuckConfig;
@@ -111,29 +109,6 @@ public class CxxPlatformsTest {
         CxxPlatforms.getConfigDefaultCxxPlatform(
             new CxxBuckConfig(buckConfig), ImmutableMap.of(), CxxPlatformUtils.DEFAULT_PLATFORM),
         equalTo(CxxPlatformUtils.DEFAULT_PLATFORM));
-  }
-
-  @Test
-  public void compilerOnlyFlagsNotAddedToPreprocessor() {
-    ImmutableMap<String, ImmutableMap<String, String>> sections =
-        ImmutableMap.of(
-            "cxx",
-            ImmutableMap.of(
-                "compiler_only_flags", "-Wtest",
-                "cppflags", "-Wp",
-                "cxxppflags", "-Wxp"));
-
-    CxxBuckConfig buckConfig =
-        new CxxBuckConfig(FakeBuckConfig.builder().setSections(sections).build());
-
-    CxxPlatform platform = CxxPlatformUtils.build(buckConfig);
-
-    assertThat(platform.getCflags(), hasItem("-Wtest"));
-    assertThat(platform.getCxxflags(), hasItem("-Wtest"));
-    assertThat(platform.getCppflags(), hasItem("-Wp"));
-    assertThat(platform.getCppflags(), not(hasItem("-Wtest")));
-    assertThat(platform.getCxxppflags(), hasItem("-Wxp"));
-    assertThat(platform.getCxxppflags(), not(hasItem("-Wtest")));
   }
 
   public LinkerProvider getPlatformLinker(LinkerProvider.Type linkerType) {

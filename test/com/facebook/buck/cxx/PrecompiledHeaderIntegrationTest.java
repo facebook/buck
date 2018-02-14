@@ -19,16 +19,15 @@ package com.facebook.buck.cxx;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.file.ProjectFilesystemMatchers;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -48,14 +47,16 @@ public class PrecompiledHeaderIntegrationTest {
 
   @Test
   public void compilesWithPrecompiledHeaders() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     workspace.runBuckBuild("//:some_library#default,static").assertSuccess();
     findPchTarget();
   }
 
   @Test
   public void pchDepFileHasReferencedHeaders() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     workspace.runBuckBuild("//:some_library#default,static").assertSuccess();
     BuildTarget target = findPchTarget();
     String depFileContents =
@@ -66,7 +67,8 @@ public class PrecompiledHeaderIntegrationTest {
 
   @Test
   public void changingPrefixHeaderCausesRecompile() throws Exception {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     workspace.resetBuildLogFile();
     workspace.writeContentsToPath(
@@ -84,7 +86,8 @@ public class PrecompiledHeaderIntegrationTest {
 
   @Test
   public void changingPchReferencedHeaderFromSameTargetCausesLibraryToRecompile() throws Exception {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     workspace.resetBuildLogFile();
     workspace.writeContentsToPath(
@@ -97,7 +100,8 @@ public class PrecompiledHeaderIntegrationTest {
 
   @Test
   public void changingPchReferencedHeaderFromDependencyCausesLibraryToRecompile() throws Exception {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     workspace.resetBuildLogFile();
     workspace.writeContentsToPath(
@@ -111,7 +115,8 @@ public class PrecompiledHeaderIntegrationTest {
 
   @Test
   public void touchingPchReferencedHeaderShouldNotCauseClangToRejectPch() throws Exception {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     workspace.resetBuildLogFile();
     // Change this file (not in the pch) to trigger recompile.
@@ -128,10 +133,11 @@ public class PrecompiledHeaderIntegrationTest {
 
   @Test
   public void changingCodeUsingPchWhenPchIsCachedButNotBuiltShouldBuildPch() throws Exception {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     workspace.enableDirCache();
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
     workspace.writeContentsToPath("int lib_func() { return 0; }", "lib.c");
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
@@ -142,6 +148,15 @@ public class PrecompiledHeaderIntegrationTest {
             workspace.getPath(
                 "buck-out/gen/" + findPchTarget().getShortNameAndFlavorPostfix() + ".h.gch")));
     buildLog.assertTargetBuiltLocally("//:some_library#default,static");
+  }
+
+  @Test
+  public void testBuildUsingPrecompiledHeaderInOtherCell() throws Exception {
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
+    BuildTarget target = workspace.newBuildTarget("//:library_multicell_pch#default");
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
   }
 
   private BuildTarget findPchTarget() throws IOException {

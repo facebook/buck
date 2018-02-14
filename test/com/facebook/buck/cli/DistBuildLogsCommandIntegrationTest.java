@@ -26,9 +26,9 @@ import com.facebook.buck.distributed.thrift.FrontendResponse;
 import com.facebook.buck.distributed.thrift.LogDir;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveLogDirResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.FakeFrontendHttpServer;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.Lists;
 import java.io.IOException;
@@ -58,8 +58,8 @@ public class DistBuildLogsCommandIntegrationTest {
     BuildSlaveInfo slave2 =
         new BuildSlaveInfo().setBuildSlaveRunId(new BuildSlaveRunId().setId("build_slave_2"));
     BuildJob buildJob = new BuildJob().setStampedeId(STAMPEDE_ID);
-    buildJob.putToSlaveInfoByRunId(slave1.getBuildSlaveRunId().getId(), slave1);
-    buildJob.putToSlaveInfoByRunId(slave2.getBuildSlaveRunId().getId(), slave2);
+    buildJob.addToBuildSlaves(slave1);
+    buildJob.addToBuildSlaves(slave2);
 
     LogDir logDir1 =
         new LogDir().setBuildSlaveRunId(slave1.getBuildSlaveRunId()).setData(getZipContents());

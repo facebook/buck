@@ -24,6 +24,7 @@ import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.keys.RuleKeyFactory;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.timing.ClockDuration;
@@ -378,7 +379,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
    * Marks the start of processing a rule to calculate its rule key. We overload this as both a rule
    * start and rule key calc start event to generate less events and be more efficient.
    */
-  private static class StartedRuleKeyCalc extends Started
+  public static class StartedRuleKeyCalc extends Started
       implements RuleKeyCalculationEvent.Started {
 
     private StartedRuleKeyCalc(
@@ -390,13 +391,18 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     public Type getType() {
       return Type.NORMAL;
     }
+
+    @Override
+    public BuildTarget getTarget() {
+      return getBuildRule().getBuildTarget();
+    }
   }
 
   /**
    * Marks the completion of processing a rule to calculate its rule key. We overload this as both a
    * rule suspend and rule key calc finish event to generate less events and be more efficient.
    */
-  private static class FinishedRuleKeyCalc extends Suspended
+  public static class FinishedRuleKeyCalc extends Suspended
       implements RuleKeyCalculationEvent.Finished {
 
     private FinishedRuleKeyCalc(
@@ -407,6 +413,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     @Override
     public Type getType() {
       return Type.NORMAL;
+    }
+
+    @Override
+    public BuildTarget getTarget() {
+      return getBuildRule().getBuildTarget();
     }
   }
 
@@ -439,15 +450,5 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     StartedRuleKeyCalc started = ruleKeyCalculationStarted(rule, tracker);
     eventBus.post(started);
     return () -> eventBus.post(ruleKeyCalculationFinished(started, ruleKeyFactory));
-  }
-
-  public static Scope resumeSuspendScope(
-      BuckEventBus eventBus,
-      BuildRule rule,
-      BuildRuleDurationTracker tracker,
-      RuleKeyFactory<RuleKey> ruleKeyFactory) {
-    Resumed resumed = resumed(rule, tracker, ruleKeyFactory);
-    eventBus.post(resumed);
-    return () -> eventBus.post(suspended(resumed, ruleKeyFactory));
   }
 }

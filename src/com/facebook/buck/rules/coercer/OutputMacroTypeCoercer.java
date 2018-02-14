@@ -46,7 +46,7 @@ public class OutputMacroTypeCoercer implements MacroTypeCoercer<OutputMacro> {
   }
 
   @Override
-  public void traverse(OutputMacro macro, Traversal traversal) {
+  public void traverse(CellPathResolver cellRoots, OutputMacro macro, Traversal traversal) {
     traversal.traverse(macro);
   }
 

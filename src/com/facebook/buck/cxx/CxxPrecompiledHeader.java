@@ -21,10 +21,10 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
@@ -40,17 +40,20 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.SortedSet;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 
@@ -78,14 +81,17 @@ import java.util.function.Predicate;
  * (effectively) random unique IDs, they are not amenable to the InputBasedRuleKey optimization when
  * used to compile another file.
  */
-class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraDeps
+class CxxPrecompiledHeader extends AbstractBuildRule
     implements SupportsDependencyFileRuleKey, SupportsInputBasedRuleKey {
+
+  private final ImmutableSortedSet<BuildRule> buildDeps;
 
   // Fields that are added to rule key as is.
   @AddToRuleKey private final PreprocessorDelegate preprocessorDelegate;
   @AddToRuleKey private final CompilerDelegate compilerDelegate;
   @AddToRuleKey private final SourcePath input;
   @AddToRuleKey private final CxxSource.Type inputType;
+  @AddToRuleKey private final boolean canPrecompileFlag;
 
   // Fields that added to the rule key with some processing.
   @AddToRuleKey private final CxxToolFlags compilerFlags;
@@ -102,9 +108,10 @@ class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraDeps
       CacheBuilder.newBuilder().weakKeys().weakValues().build();
 
   public CxxPrecompiledHeader(
+      boolean canPrecompile,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
+      ImmutableSortedSet<BuildRule> buildDeps,
       Path output,
       PreprocessorDelegate preprocessorDelegate,
       CompilerDelegate compilerDelegate,
@@ -112,9 +119,11 @@ class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraDeps
       SourcePath input,
       CxxSource.Type inputType,
       DebugPathSanitizer compilerSanitizer) {
-    super(buildTarget, projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem);
     Preconditions.checkArgument(
         !inputType.isAssembly(), "Asm files do not use precompiled headers.");
+    this.buildDeps = buildDeps;
+    this.canPrecompileFlag = canPrecompile;
     this.preprocessorDelegate = preprocessorDelegate;
     this.compilerDelegate = compilerDelegate;
     this.compilerFlags = compilerFlags;
@@ -122,6 +131,20 @@ class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.input = input;
     this.inputType = inputType;
     this.compilerSanitizer = compilerSanitizer;
+  }
+
+  /** @return whether this should be precompiled, or treated as a regular uncompiled header. */
+  public boolean canPrecompile() {
+    return canPrecompileFlag;
+  }
+
+  /**
+   * @return the path to the file suitable for inclusion on the command line. If this PCH is to be
+   *     precompiled (see {@link #canPrecompile()}) this will correspond to {@link
+   *     #getSourcePathToOutput()}, otherwise it'll be the input header file.
+   */
+  public Path getIncludeFilePath(SourcePathResolver pathResolver) {
+    return pathResolver.getAbsolutePath(canPrecompile() ? getSourcePathToOutput() : input);
   }
 
   @Override
@@ -132,6 +155,12 @@ class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
+    try {
+      CxxHeaders.checkConflictingHeaders(preprocessorDelegate.getCxxIncludePaths().getIPaths());
+    } catch (CxxHeaders.ConflictingHeadersException e) {
+      throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
+    }
+
     Path scratchDir =
         BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s_tmp");
 
@@ -146,6 +175,11 @@ class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir)))
         .add(makeMainStep(context.getSourcePathResolver(), scratchDir))
         .build();
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDeps;
   }
 
   public SourcePath getInput() {
@@ -247,10 +281,15 @@ class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @VisibleForTesting
   CxxPreprocessAndCompileStep makeMainStep(SourcePathResolver resolver, Path scratchDir) {
+    Path pchOutput =
+        canPrecompile()
+            ? resolver.getRelativePath(getSourcePathToOutput())
+            : Platform.detect().getNullDevicePath();
+
     return new CxxPreprocessAndCompileStep(
         getProjectFilesystem(),
         CxxPreprocessAndCompileStep.Operation.GENERATE_PCH,
-        resolver.getRelativePath(getSourcePathToOutput()),
+        pchOutput,
         Optional.of(getDepFilePath(resolver)),
         // TODO(10194465): This uses relative path so as to get relative paths in the dep file
         getRelativeInputPath(resolver),

@@ -24,7 +24,8 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.NamedTemporaryFile;
-import com.facebook.buck.util.zip.Unzip;
+import com.facebook.buck.util.unarchive.ArchiveFormat;
+import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
@@ -33,6 +34,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -154,11 +156,14 @@ public class BuildSlaveLogsMaterializer {
 
     try (NamedTemporaryFile zipFile = new NamedTemporaryFile("remoteBuckLog", "zip")) {
       Files.write(zipFile.get(), logDir.getData());
-      Unzip.extractZipFile(
-          zipFile.get(),
-          filesystem,
-          buckLogUnzipPath,
-          Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+      ArchiveFormat.ZIP
+          .getUnarchiver()
+          .extractArchive(
+              zipFile.get(),
+              filesystem,
+              buckLogUnzipPath,
+              Optional.empty(),
+              ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
     }
 
     materializedRunIds.add(logDir.buildSlaveRunId);

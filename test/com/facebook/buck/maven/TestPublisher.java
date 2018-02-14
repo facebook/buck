@@ -16,8 +16,8 @@
 
 package com.facebook.buck.maven;
 
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.HttpdForTests;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import java.nio.file.Path;
 import java.util.Optional;
 

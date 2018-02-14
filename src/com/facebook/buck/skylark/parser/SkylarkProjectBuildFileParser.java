@@ -28,6 +28,7 @@ import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.skylark.function.Glob;
+import com.facebook.buck.skylark.function.HostInfo;
 import com.facebook.buck.skylark.function.ReadConfig;
 import com.facebook.buck.skylark.function.SkylarkExtensionFunctions;
 import com.facebook.buck.skylark.function.SkylarkNativeModule;
@@ -35,7 +36,9 @@ import com.facebook.buck.skylark.io.impl.SimpleGlobber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.packages.PackageFactory;
 import com.facebook.buck.util.MoreSuppliers;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.CaseFormat;
+import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -44,6 +47,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.cmdline.RepositoryName;
@@ -74,6 +78,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import org.immutables.value.Value;
 
 /**
  * Parser for build files written using Skylark syntax.
@@ -103,8 +108,9 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private final EventHandler eventHandler;
   private final Supplier<ImmutableList<BuiltinFunction>> buckRuleFunctionsSupplier;
   private final Supplier<ClassObject> nativeModuleSupplier;
-  private final Supplier<Environment.Frame> buckGlobalsSupplier;
-  private final LoadingCache<SkylarkImport, ExtensionData> extensionDataCache;
+  private final Supplier<Environment.Frame> buckLoadContextGlobalsSupplier;
+  private final Supplier<Environment.Frame> buckBuildFileContextGlobalsSupplier;
+  private final LoadingCache<LoadImport, ExtensionData> extensionDataCache;
 
   private SkylarkProjectBuildFileParser(
       ProjectBuildFileParserOptions options,
@@ -122,16 +128,28 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     // TODO(ttsugrii): replace suppliers with eager loading once Skylark parser is on by default
     this.buckRuleFunctionsSupplier = MoreSuppliers.memoize(this::getBuckRuleFunctions);
     this.nativeModuleSupplier = MoreSuppliers.memoize(this::newNativeModule);
-    this.buckGlobalsSupplier = MoreSuppliers.memoize(this::getBuckGlobals);
+    this.buckLoadContextGlobalsSupplier = MoreSuppliers.memoize(this::getBuckLoadContextGlobals);
+    this.buckBuildFileContextGlobalsSupplier =
+        MoreSuppliers.memoize(this::getBuckBuildFileContextGlobals);
     this.extensionDataCache =
         CacheBuilder.newBuilder()
             .build(
-                new CacheLoader<SkylarkImport, ExtensionData>() {
+                new CacheLoader<LoadImport, ExtensionData>() {
                   @Override
-                  public ExtensionData load(@Nonnull SkylarkImport skylarkImport) throws Exception {
-                    return loadExtension(skylarkImport);
+                  public ExtensionData load(@Nonnull LoadImport loadImport) throws Exception {
+                    return loadExtension(loadImport);
                   }
                 });
+  }
+
+  /** Always disable implicit native imports in skylark rules, they should utilize native.foo */
+  private Environment.Frame getBuckLoadContextGlobals() {
+    return getBuckGlobals(true);
+  }
+
+  /** Disable implicit native rules depending on configuration */
+  private Environment.Frame getBuckBuildFileContextGlobals() {
+    return getBuckGlobals(options.getDisableImplicitNativeRules());
   }
 
   /** Create an instance of Skylark project build file parser using provided options. */
@@ -248,12 +266,13 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private EnvironmentData createBuildFileEvaluationEnvironment(
       Path buildFile, BuildFileAST buildFileAst, Mutability mutability, ParseContext parseContext)
       throws IOException, InterruptedException, BuildFileParseException {
-    ImmutableList<ExtensionData> dependencies = loadExtensions(buildFileAst.getImports());
+    ImmutableList<ExtensionData> dependencies =
+        loadExtensions(EMPTY_LABEL, buildFileAst.getImports());
     ImmutableMap<String, Environment.Extension> importMap = toImportMap(dependencies);
     Environment env =
         Environment.builder(mutability)
             .setImportedExtensions(importMap)
-            .setGlobals(buckGlobalsSupplier.get())
+            .setGlobals(buckBuildFileContextGlobalsSupplier.get())
             .setPhase(Environment.Phase.LOADING)
             .useDefaultSemantics()
             .setEventHandler(eventHandler)
@@ -287,11 +306,48 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   /** Loads all extensions identified by corresponding {@link SkylarkImport}s. */
-  private ImmutableList<ExtensionData> loadExtensions(ImmutableList<SkylarkImport> skylarkImports) {
-    return skylarkImports
-        .stream()
-        .map(extensionDataCache::getUnchecked)
-        .collect(ImmutableList.toImmutableList());
+  private ImmutableList<ExtensionData> loadExtensions(
+      Label containingLabel, ImmutableList<SkylarkImport> skylarkImports)
+      throws BuildFileParseException, IOException, InterruptedException {
+    try {
+      return skylarkImports
+          .stream()
+          .map(
+              skylarkImport ->
+                  LoadImport.builder()
+                      .setContainingLabel(containingLabel)
+                      .setImport(skylarkImport)
+                      .build())
+          .map(extensionDataCache::getUnchecked)
+          .collect(ImmutableList.toImmutableList());
+    } catch (UncheckedExecutionException e) {
+      return propagateRootCause(e);
+    }
+  }
+
+  /**
+   * Propagates underlying parse exception from {@link UncheckedExecutionException}.
+   *
+   * <p>This is an unfortunate consequence of having to use {@link
+   * LoadingCache#getUnchecked(Object)} in when using stream transformations :(
+   *
+   * <p>TODO(ttsugrii): the logic of extracting root causes to make them user-friendly should be
+   * happening somewhere in {@link com.facebook.buck.cli.Main#main(String[])}, since this behavior
+   * is not unique to parsing.
+   */
+  private ImmutableList<ExtensionData> propagateRootCause(UncheckedExecutionException e)
+      throws IOException, InterruptedException {
+    Throwable rootCause = Throwables.getRootCause(e);
+    if (rootCause instanceof BuildFileParseException) {
+      throw (BuildFileParseException) rootCause;
+    }
+    if (rootCause instanceof IOException) {
+      throw (IOException) rootCause;
+    }
+    if (rootCause instanceof InterruptedException) {
+      throw (InterruptedException) rootCause;
+    }
+    throw e;
   }
 
   /**
@@ -307,25 +363,31 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
                 ExtensionData::getImportString, ExtensionData::getExtension));
   }
 
-  /** Creates an extension from a {@code path}. */
-  private ExtensionData loadExtension(SkylarkImport skylarkImport)
+  /**
+   * Creates an extension from a {@code path}.
+   *
+   * @param loadImport an import label representing an extension to load.
+   */
+  private ExtensionData loadExtension(LoadImport loadImport)
       throws IOException, BuildFileParseException, InterruptedException {
-    com.google.devtools.build.lib.vfs.Path extensionPath = getImportPath(skylarkImport);
-    Extension extension;
+    Label label = loadImport.getLabel();
+    com.google.devtools.build.lib.vfs.Path extensionPath =
+        getImportPath(label, loadImport.getImport());
     ImmutableList<ExtensionData> dependencies = ImmutableList.of();
+    Extension extension;
     try (Mutability mutability = Mutability.create("importing extension")) {
       BuildFileAST extensionAst =
           BuildFileAST.parseSkylarkFile(createInputSource(extensionPath), eventHandler);
       if (extensionAst.containsErrors()) {
         throw BuildFileParseException.createForUnknownParseError(
-            "Cannot parse extension file " + skylarkImport.getImportString());
+            "Cannot parse extension file " + loadImport.getImport().getImportString());
       }
       Environment.Builder envBuilder =
           Environment.builder(mutability)
               .setEventHandler(eventHandler)
-              .setGlobals(buckGlobalsSupplier.get());
+              .setGlobals(buckLoadContextGlobalsSupplier.get());
       if (!extensionAst.getImports().isEmpty()) {
-        dependencies = loadExtensions(extensionAst.getImports());
+        dependencies = loadExtensions(label, extensionAst.getImports());
         envBuilder.setImportedExtensions(toImportMap(dependencies));
       }
       Environment extensionEnv = envBuilder.useDefaultSemantics().build();
@@ -334,7 +396,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       boolean success = extensionAst.exec(extensionEnv, eventHandler);
       if (!success) {
         throw BuildFileParseException.createForUnknownParseError(
-            "Cannot evaluate extension file " + skylarkImport.getImportString());
+            "Cannot evaluate extension file " + loadImport.getImport().getImportString());
       }
       extension = new Extension(extensionEnv);
     }
@@ -342,15 +404,16 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         .setExtension(extension)
         .setPath(extensionPath)
         .setDependencies(dependencies)
-        .setImportString(skylarkImport.getImportString())
+        .setImportString(loadImport.getImport().getImportString())
         .build();
   }
 
   /**
    * @return The environment frame with configured buck globals. This includes built-in rules like
    *     {@code java_library}.
+   * @param disableImplicitNativeRules If true, do not export native rules into the provided context
    */
-  private Environment.Frame getBuckGlobals() {
+  private Environment.Frame getBuckGlobals(boolean disableImplicitNativeRules) {
     Environment.Frame buckGlobals;
     try (Mutability mutability = Mutability.create("global")) {
       Environment globalEnv =
@@ -361,8 +424,10 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
 
       BuiltinFunction readConfigFunction = ReadConfig.create();
       globalEnv.setup(readConfigFunction.getName(), readConfigFunction);
-      for (BuiltinFunction buckRuleFunction : buckRuleFunctionsSupplier.get()) {
-        globalEnv.setup(buckRuleFunction.getName(), buckRuleFunction);
+      if (!disableImplicitNativeRules) {
+        for (BuiltinFunction buckRuleFunction : buckRuleFunctionsSupplier.get()) {
+          globalEnv.setup(buckRuleFunction.getName(), buckRuleFunction);
+        }
       }
       buckGlobals = globalEnv.getGlobals();
     }
@@ -375,11 +440,10 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    *     load("@repo//pkg:foo.bzl", "foo")} it would return {@code /repo/pkg/foo.bzl} assuming that
    *     {@code repo} is located at {@code /repo}.
    */
-  private com.google.devtools.build.lib.vfs.Path getImportPath(SkylarkImport skylarkImport)
-      throws BuildFileParseException {
-    Label extensionLabel = skylarkImport.getLabel(EMPTY_LABEL);
-    PathFragment relativeExtensionPath = extensionLabel.toPathFragment();
-    RepositoryName repository = extensionLabel.getPackageIdentifier().getRepository();
+  private com.google.devtools.build.lib.vfs.Path getImportPath(
+      Label containingLabel, SkylarkImport skylarkImport) throws BuildFileParseException {
+    PathFragment relativeExtensionPath = containingLabel.toPathFragment();
+    RepositoryName repository = containingLabel.getPackageIdentifier().getRepository();
     if (repository.isMain()) {
       return fileSystem.getPath(
           options.getProjectRoot().resolve(relativeExtensionPath.toString()).toString());
@@ -535,6 +599,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     for (BuiltinFunction ruleFunction : buckRuleFunctionsSupplier.get()) {
       builder.put(ruleFunction.getName(), ruleFunction);
     }
+    builder.put("host_info", HostInfo.create());
     return NativeProvider.STRUCT.create(builder.build(), "no native function or rule '%s'");
   }
 
@@ -551,5 +616,25 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
               + "Wrap the function in a macro and call it from a BUCK file");
     }
     return value;
+  }
+
+  /**
+   * A value object for information about load function import, since {@link SkylarkImport} does not
+   * provide enough context. For instance, the same {@link SkylarkImport} can represent different
+   * logical imports depending on which repository it is resolved in.
+   */
+  @Value.Immutable
+  @BuckStyleImmutable
+  abstract static class AbstractLoadImport {
+    /** Returns a label of the file containing this import. */
+    abstract Label getContainingLabel();
+
+    /** Returns a Skylark import. */
+    abstract SkylarkImport getImport();
+
+    /** Returns a label of current import file. */
+    Label getLabel() {
+      return getImport().getLabel(getContainingLabel());
+    }
   }
 }

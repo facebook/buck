@@ -21,8 +21,9 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import org.junit.Rule;
@@ -38,7 +39,7 @@ public class LoggingIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_logging", temp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:logging");
+    ProcessResult result = workspace.runBuckCommand("test", "//:logging");
     result.assertTestFailure();
 
     // stdout should get all debug messages and up when a test fails.

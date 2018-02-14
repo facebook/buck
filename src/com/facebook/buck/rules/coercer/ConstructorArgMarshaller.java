@@ -18,11 +18,11 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.rules.visibility.VisibilityPatternParser;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -99,6 +99,7 @@ public class ConstructorArgMarshaller {
     ParamInfo deps = allParamInfo.get("deps");
     if (deps != null && deps.isDep()) {
       deps.traverse(
+          cellRoots,
           object -> {
             if (!(object instanceof BuildTarget)) {
               return;

@@ -31,7 +31,6 @@ import okhttp3.Request;
 public class RetryingHttpService implements HttpService {
   private static final Logger LOG = Logger.get(RetryingHttpService.class);
 
-  public static final String COUNTER_CATEGORY = "buck_retry_service_counters";
   private static final int NO_RETRY_INTERVAL = -1;
 
   private final HttpService decoratedService;
@@ -43,8 +42,11 @@ public class RetryingHttpService implements HttpService {
   private final IntegerCounter failAfterAllRetriesCountCounter;
 
   public RetryingHttpService(
-      BuckEventBus eventBus, HttpService decoratedService, int maxNumberOfRetries) {
-    this(eventBus, decoratedService, maxNumberOfRetries, NO_RETRY_INTERVAL);
+      BuckEventBus eventBus,
+      HttpService decoratedService,
+      String counterCategory,
+      int maxNumberOfRetries) {
+    this(eventBus, decoratedService, counterCategory, maxNumberOfRetries, NO_RETRY_INTERVAL);
   }
 
   // Currently when there's a cache miss, all the children nodes get immediately retried without
@@ -53,6 +55,7 @@ public class RetryingHttpService implements HttpService {
   public RetryingHttpService(
       BuckEventBus eventBus,
       HttpService decoratedService,
+      String counterCategory,
       int maxNumberOfRetries,
       long retryRequestIntervalMillis) {
     Preconditions.checkArgument(
@@ -64,12 +67,12 @@ public class RetryingHttpService implements HttpService {
     this.retryRequestIntervalMillis = retryRequestIntervalMillis;
 
     failAfterAllRetriesCountCounter =
-        new IntegerCounter(COUNTER_CATEGORY, "fail_after_all_retries_count", ImmutableMap.of());
+        new IntegerCounter(counterCategory, "fail_after_all_retries_count", ImmutableMap.of());
 
     successAfterRetryCountCounter =
-        new IntegerCounter(COUNTER_CATEGORY, "success_after_retry_count", ImmutableMap.of());
+        new IntegerCounter(counterCategory, "success_after_retry_count", ImmutableMap.of());
 
-    retryCountCounter = new IntegerCounter(COUNTER_CATEGORY, "retry_count", ImmutableMap.of());
+    retryCountCounter = new IntegerCounter(counterCategory, "retry_count", ImmutableMap.of());
 
     eventBus.post(
         new CounterRegistry.AsyncCounterRegistrationEvent(

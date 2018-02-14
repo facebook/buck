@@ -17,10 +17,13 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
+import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
+import com.facebook.buck.rules.keys.TrackedRuleKeyCache;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.testutil.DummyFileHashCache;
+import com.facebook.buck.util.cache.NoOpCacheStatsTracker;
 import com.facebook.buck.util.concurrent.FakeWeightedListeningExecutorService;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -108,8 +111,9 @@ public class CachingBuildEngineFactory {
   }
 
   public CachingBuildEngine build() {
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     if (ruleKeyFactories.isPresent()) {
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
       return new CachingBuildEngine(
           cachingBuildEngineDelegate,
           executorService,
@@ -122,10 +126,11 @@ public class CachingBuildEngineFactory {
           buildRuleResolver,
           buildInfoStoreManager,
           ruleFinder,
-          DefaultSourcePathResolver.from(ruleFinder),
+          sourcePathResolver,
           ruleKeyFactories.get(),
           remoteBuildRuleCompletionWaiter,
           resourceAwareSchedulingInfo,
+          RuleKeyDiagnostics.nop(),
           logBuildRuleFailuresInline);
     }
 
@@ -139,6 +144,8 @@ public class CachingBuildEngineFactory {
         maxDepFileCacheEntries,
         artifactCacheSizeLimit,
         buildRuleResolver,
+        ruleFinder,
+        sourcePathResolver,
         buildInfoStoreManager,
         resourceAwareSchedulingInfo,
         logBuildRuleFailuresInline,
@@ -147,7 +154,7 @@ public class CachingBuildEngineFactory {
             cachingBuildEngineDelegate.getFileHashCache(),
             buildRuleResolver,
             inputFileSizeLimit,
-            new DefaultRuleKeyCache<>()),
+            new TrackedRuleKeyCache<>(new DefaultRuleKeyCache<>(), new NoOpCacheStatsTracker())),
         remoteBuildRuleCompletionWaiter);
   }
 

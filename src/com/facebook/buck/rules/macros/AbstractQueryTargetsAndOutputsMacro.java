@@ -30,5 +30,5 @@ abstract class AbstractQueryTargetsAndOutputsMacro extends QueryMacro {
   abstract String getSeparator();
 
   @Override
-  abstract Query getQuery();
+  public abstract Query getQuery();
 }

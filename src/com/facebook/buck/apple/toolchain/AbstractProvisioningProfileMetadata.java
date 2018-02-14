@@ -18,10 +18,10 @@ package com.facebook.buck.apple.toolchain;
 
 import com.dd.plist.NSArray;
 import com.dd.plist.NSObject;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -101,21 +101,17 @@ abstract class AbstractProvisioningProfileMetadata implements AddsToRuleKey {
   }
 
   public ImmutableMap<String, NSObject> getMergeableEntitlements() {
-    final ImmutableSet<String> excludedKeys =
-        ImmutableSet.of(
-            "com.apple.developer.restricted-resource-mode",
-            "inter-app-audio",
-            "com.apple.developer.icloud-container-development-container-identifiers",
-            "com.apple.developer.homekit",
-            "com.apple.developer.healthkit",
-            "com.apple.developer.in-app-payments",
-            "com.apple.developer.maps",
-            "com.apple.external-accessory.wireless-configuration");
+    final ImmutableSet<String> includedKeys = ImmutableSet.of(
+        "application-identifier",
+        "beta-reports-active",
+        "get-task-allow",
+        "com.apple.developer.aps-environment",
+        "com.apple.developer.team-identifier");
 
     ImmutableMap<String, NSObject> allEntitlements = getEntitlements();
     ImmutableMap.Builder<String, NSObject> filteredEntitlementsBuilder = ImmutableMap.builder();
     for (String key : allEntitlements.keySet()) {
-      if (!excludedKeys.contains(key)) {
+      if (includedKeys.contains(key)) {
         filteredEntitlementsBuilder.put(key, allEntitlements.get(key));
       }
     }
