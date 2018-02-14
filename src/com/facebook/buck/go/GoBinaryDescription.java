@@ -18,6 +18,8 @@ package com.facebook.buck.go;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -32,22 +34,26 @@ import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.Optional;
 import org.immutables.value.Value;
 
 public class GoBinaryDescription
     implements Description<GoBinaryDescriptionArg>,
         ImplicitDepsInferringDescription<GoBinaryDescription.AbstractGoBinaryDescriptionArg>,
+        VersionRoot<GoBinaryDescriptionArg>,
         Flavored {
 
   private final GoBuckConfig goBuckConfig;
+  private final ToolchainProvider toolchainProvider;
 
-  public GoBinaryDescription(GoBuckConfig goBuckConfig) {
+  public GoBinaryDescription(GoBuckConfig goBuckConfig, ToolchainProvider toolchainProvider) {
     this.goBuckConfig = goBuckConfig;
+    this.toolchainProvider = toolchainProvider;
   }
 
   @Override
@@ -57,7 +63,7 @@ public class GoBinaryDescription
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return goBuckConfig.getPlatformFlavorDomain().containsAnyOf(flavors);
+    return getGoToolchain().getPlatformFlavorDomain().containsAnyOf(flavors);
   }
 
   @Override
@@ -69,11 +75,12 @@ public class GoBinaryDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       GoBinaryDescriptionArg args) {
+    GoToolchain goToolchain = getGoToolchain();
     GoPlatform platform =
-        goBuckConfig
+        goToolchain
             .getPlatformFlavorDomain()
             .getValue(buildTarget)
-            .orElse(goBuckConfig.getDefaultPlatform());
+            .orElse(goToolchain.getDefaultPlatform());
 
     return GoDescriptors.createGoBinaryRule(
         buildTarget,
@@ -81,11 +88,14 @@ public class GoBinaryDescription
         params,
         resolver,
         goBuckConfig,
+        goToolchain,
+        getCxxPlatform(!args.getCgoDeps().isEmpty()),
         args.getSrcs(),
         args.getCompilerFlags(),
         args.getAssemblerFlags(),
         args.getLinkerFlags(),
-        platform);
+        platform,
+        args.getCgoDeps());
   }
 
   @Override
@@ -96,20 +106,31 @@ public class GoBinaryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add the C/C++ linker parse time deps.
-    GoPlatform goPlatform =
-        goBuckConfig
-            .getPlatformFlavorDomain()
-            .getValue(buildTarget)
-            .orElse(goBuckConfig.getDefaultPlatform());
-    Optional<CxxPlatform> cxxPlatform = goPlatform.getCxxPlatform();
-    if (cxxPlatform.isPresent()) {
-      extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform.get()));
+    CxxPlatform cxxPlatform = getCxxPlatform(!constructorArg.getCgoDeps().isEmpty());
+    targetGraphOnlyDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
+  }
+
+  private CxxPlatform getCxxPlatform(boolean withCgo) {
+    CxxPlatformsProvider cxxPlatformsProviderFactory =
+        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+
+    if (withCgo) {
+      return cxxPlatformsProviderFactory.getDefaultCxxPlatform();
     }
+    return cxxPlatformsProviderFactory
+        .getCxxPlatforms()
+        .getValue(ImmutableSet.of(DefaultCxxPlatforms.FLAVOR))
+        .get();
+  }
+
+  private GoToolchain getGoToolchain() {
+    return toolchainProvider.getByName(GoToolchain.DEFAULT_NAME, GoToolchain.class);
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractGoBinaryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs {
+  interface AbstractGoBinaryDescriptionArg
+      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasCgo {
     ImmutableList<String> getCompilerFlags();
 
     ImmutableList<String> getAssemblerFlags();

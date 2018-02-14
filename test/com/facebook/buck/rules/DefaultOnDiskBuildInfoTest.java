@@ -31,11 +31,11 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class DefaultOnDiskBuildInfoTest {
-
   @Test
   public void whenMetadataEmptyStringThenGetValueReturnsEmptyString() throws IOException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    projectFilesystem.writeContentsToPath("", Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
+    projectFilesystem.writeContentsToPath(
+        "", Paths.get("buck-out/bin/foo/bar/.baz/metadata/artifact/KEY"));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -48,7 +48,7 @@ public class DefaultOnDiskBuildInfoTest {
   public void whenMetaDataJsonListThenGetValuesReturnsList() throws IOException {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     projectFilesystem.writeContentsToPath(
-        "[\"bar\",\"biz\",\"baz\"]", Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
+        "[\"bar\",\"biz\",\"baz\"]", Paths.get("buck-out/bin/foo/bar/.baz/metadata/artifact/KEY"));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -63,7 +63,7 @@ public class DefaultOnDiskBuildInfoTest {
   public void whenMetaDataEmptyJsonListThenGetValuesReturnsEmptyList() throws IOException {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     projectFilesystem.writeContentsToPath(
-        "[]", Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
+        "[]", Paths.get("buck-out/bin/foo/bar/.baz/metadata/artifact/KEY"));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -77,7 +77,8 @@ public class DefaultOnDiskBuildInfoTest {
   @Test
   public void whenMetadataEmptyStringThenGetValuesReturnsAbsent() throws IOException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    projectFilesystem.writeContentsToPath("", Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
+    projectFilesystem.writeContentsToPath(
+        "", Paths.get("buck-out/bin/foo/bar/.baz/metadata/artifact/KEY"));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -90,7 +91,7 @@ public class DefaultOnDiskBuildInfoTest {
   public void whenMetadataInvalidJsonThenGetValuesReturnsAbsent() throws IOException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     projectFilesystem.writeContentsToPath(
-        "Some Invalid Json", Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
+        "Some Invalid Json", Paths.get("buck-out/bin/foo/bar/.baz/metadata/artifact/KEY"));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -104,7 +105,7 @@ public class DefaultOnDiskBuildInfoTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     String hash = "fac0fac1fac2fac3fac4fac5fac6fac7fac8fac9";
     projectFilesystem.writeContentsToPath(
-        hash, Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
+        hash, Paths.get("buck-out/bin/foo/bar/.baz/metadata/artifact/KEY"));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -117,7 +118,8 @@ public class DefaultOnDiskBuildInfoTest {
   @Test
   public void whenMetadataEmptyStringThenGetHashReturnsAbsent() throws IOException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    projectFilesystem.writeContentsToPath("", Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
+    projectFilesystem.writeContentsToPath(
+        "", Paths.get("buck-out/bin/foo/bar/.baz/metadata/artifact/KEY"));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -130,7 +132,7 @@ public class DefaultOnDiskBuildInfoTest {
   public void whenMetadataInvalidHashThenGetHashReturnsAbsent() throws IOException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     projectFilesystem.writeContentsToPath(
-        "Not A Valid Hash", Paths.get("buck-out/bin/foo/bar/.baz/metadata/KEY"));
+        "Not A Valid Hash", Paths.get("buck-out/bin/foo/bar/.baz/metadata/artifact/KEY"));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -144,7 +146,7 @@ public class DefaultOnDiskBuildInfoTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     String key = "fa";
     projectFilesystem.writeContentsToPath(
-        key, Paths.get("buck-out/bin/foo/bar/.baz/metadata/" + BuildInfo.MetadataKey.RULE_KEY));
+        key, Paths.get("buck-out/bin/foo/bar/.baz/metadata/build", BuildInfo.MetadataKey.RULE_KEY));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -159,7 +161,7 @@ public class DefaultOnDiskBuildInfoTest {
   public void whenMetadataEmptyStringThenGetRuleKeyReturnsAbsent() throws IOException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     projectFilesystem.writeContentsToPath(
-        "", Paths.get("buck-out/bin/foo/bar/.baz/metadata/" + BuildInfo.MetadataKey.RULE_KEY));
+        "", Paths.get("buck-out/bin/foo/bar/.baz/metadata/build", BuildInfo.MetadataKey.RULE_KEY));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -175,7 +177,7 @@ public class DefaultOnDiskBuildInfoTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     projectFilesystem.writeContentsToPath(
         "Not A Valid Rule Key",
-        Paths.get("buck-out/bin/foo/bar/.baz/metadata/" + BuildInfo.MetadataKey.RULE_KEY));
+        Paths.get("buck-out/bin/foo/bar/.baz/metadata/build", BuildInfo.MetadataKey.RULE_KEY));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =

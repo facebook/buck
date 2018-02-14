@@ -19,6 +19,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.zip.ZipEntry;
@@ -60,7 +61,7 @@ class DexJarAnalysisStep implements Step {
           String.format("jar:%s dex:%s", filesystem.getFileSize(dexPath), uncompressedSize),
           dexMetaPath);
 
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
   }
 

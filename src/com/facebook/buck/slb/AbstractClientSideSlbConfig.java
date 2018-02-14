@@ -17,8 +17,8 @@
 package com.facebook.buck.slb;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.timing.Clock;
 import com.google.common.collect.ImmutableList;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;

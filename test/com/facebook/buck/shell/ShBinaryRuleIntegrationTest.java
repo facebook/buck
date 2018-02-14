@@ -24,9 +24,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
@@ -151,5 +151,30 @@ public class ShBinaryRuleIntegrationTest {
             "//:pwd");
     buildResult.assertSuccess();
     assertThat(buildResult.getStdout(), Matchers.equalTo(alteredPwd));
+  }
+
+  @Test
+  public void testShBinaryWithCells() throws IOException {
+    // sh_binary is not available on Windows. Ignore this test on Windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sh_binary_with_cells", temporaryFolder);
+    workspace.setUp();
+
+    workspace.buildAndReturnOutput("//:create_output_using_node");
+  }
+
+  @Test
+  public void testShBinaryWithEmbeddedCells() throws IOException {
+    // sh_binary is not available on Windows. Ignore this test on Windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sh_binary_with_cells", temporaryFolder);
+    workspace.setUp();
+
+    workspace.buildAndReturnOutput(
+        "--config", "project.embedded_cell_buck_out_enabled=true", "//:create_output_using_node");
   }
 }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.plugin.api;
 
+import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Set;
@@ -23,7 +24,6 @@ import java.util.function.Consumer;
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaCompiler;
@@ -77,7 +77,7 @@ public interface BuckJavacTaskProxy extends JavaCompiler.CompilationTask {
 
   void addPostEnterCallback(Consumer<Set<Element>> callback);
 
-  Elements getElements();
+  ElementsExtended getElements();
 
   Types getTypes();
 

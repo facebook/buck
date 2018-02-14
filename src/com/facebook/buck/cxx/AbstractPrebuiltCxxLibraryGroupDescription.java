@@ -24,7 +24,6 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.model.macros.MacroFinder;
 import com.facebook.buck.model.macros.MacroMatchResult;
@@ -47,6 +46,7 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
@@ -66,7 +66,6 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
     implements Description<PrebuiltCxxLibraryGroupDescriptionArg>,
         VersionPropagator<PrebuiltCxxLibraryGroupDescriptionArg> {
 
-  private static final MacroFinder FINDER = new MacroFinder();
   private static final String LIB_MACRO = "lib";
   private static final String REL_LIB_MACRO = "rel-lib";
 
@@ -74,7 +73,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
   private Optional<Pair<String, String>> getLibRef(ImmutableSet<String> macros, String arg) {
     Optional<MacroMatchResult> result;
     try {
-      result = FINDER.match(macros, arg);
+      result = MacroFinder.match(macros, arg);
     } catch (MacroException e) {
       throw new HumanReadableException(e, e.getMessage());
     }

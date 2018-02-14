@@ -20,6 +20,9 @@ import com.facebook.buck.rules.query.Query;
 import java.util.Optional;
 
 public interface HasProvidedDepsQuery extends HasProvidedDeps {
+
+  // TODO: Remove this and fix descriptions to work with implicit deps.
+  @Hint(isDep = false)
   Optional<Query> getProvidedDepsQuery();
 
   HasProvidedDepsQuery withProvidedDepsQuery(Query query);

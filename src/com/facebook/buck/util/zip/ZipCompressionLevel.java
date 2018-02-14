@@ -17,9 +17,10 @@
 package com.facebook.buck.util.zip;
 
 public enum ZipCompressionLevel {
-  MIN_COMPRESSION_LEVEL(0),
-  DEFAULT_COMPRESSION_LEVEL(6),
-  MAX_COMPRESSION_LEVEL(9),
+  NONE(0),
+  MIN(1),
+  DEFAULT(6),
+  MAX(9),
   ;
 
   private final int value;

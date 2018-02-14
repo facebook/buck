@@ -93,7 +93,7 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
   }
 
   @Override
-  protected Scheduler scheduler() {
+  protected AbstractScheduledService.Scheduler scheduler() {
     return Scheduler.newFixedRateSchedule(1L, 1L, TimeUnit.SECONDS);
   }
 

@@ -1,5 +1,5 @@
 buck_py_function(name, params, typePropName) ::= <<
-@provide_for_build
+@provide_as_native_rule
 def <name>(name, <params:param();separator=", ">, build_env=None):
     add_rule({
         <typePropName:quote()>: <name:quote()>,

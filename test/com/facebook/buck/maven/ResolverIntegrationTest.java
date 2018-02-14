@@ -27,8 +27,9 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.file.ExplodingDownloader;
 import com.facebook.buck.file.RemoteFileDescription;
+import com.facebook.buck.file.downloader.Downloader;
+import com.facebook.buck.file.downloader.impl.ExplodingDownloader;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -38,13 +39,16 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.python.PythonBuckConfig;
+import com.facebook.buck.python.toolchain.impl.PythonInterpreterFromConfig;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.HttpdForTests;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -101,17 +105,23 @@ public class ResolverIntegrationTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
-    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(buckConfig, new ExecutableFinder());
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(buckConfig);
 
+    ToolchainProvider toolchainProvider =
+        new ToolchainProviderBuilder()
+            .withToolchain(Downloader.DEFAULT_NAME, new ExplodingDownloader())
+            .build();
     ImmutableSet<Description<?>> descriptions =
-        ImmutableSet.of(
-            new RemoteFileDescription(new ExplodingDownloader()), new PrebuiltJarDescription());
+        ImmutableSet.of(new RemoteFileDescription(toolchainProvider), new PrebuiltJarDescription());
 
     buildFileParser =
         new PythonDslProjectBuildFileParser(
             ProjectBuildFileParserOptions.builder()
                 .setProjectRoot(filesystem.getRootPath())
-                .setPythonInterpreter(pythonBuckConfig.getPythonInterpreter().toString())
+                .setPythonInterpreter(
+                    new PythonInterpreterFromConfig(pythonBuckConfig, new ExecutableFinder())
+                        .getPythonInterpreterPath()
+                        .toString())
                 .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
                 .setIgnorePaths(filesystem.getIgnorePaths())
                 .setBuildFileName(parserConfig.getBuildFileName())

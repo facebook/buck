@@ -31,6 +31,22 @@ android_library(
   srcs = ['Java3.java'],
 )
 
+# Modular Deps
+android_library(
+  name = 'java_module1',
+  srcs = ['JavaModule1.java'],
+)
+
+android_library(
+  name = 'java_module2',
+  srcs = ['JavaModule2.java'],
+)
+
+android_library(
+  name = 'java_module3',
+  srcs = ['JavaModule3.java'],
+)
+
 cxx_library(
   name = 'cxx1',
   soname = 'libcxx1.so',
@@ -82,15 +98,19 @@ android_binary(
   # in generate.py can be tweaked to get the right behavior.
   linear_alloc_hard_limit = 2000,
   use_split_dex = True,
+  application_module_configs = {
+    dep[1:]: [ dep ] for dep in config['module_deps']
+  },
   exopackage_modes = [
     'native_library',
     'secondary_dex',
     'resources',
+    'modules',
   ] if config['exopackage'] else [],
   primary_dex_patterns = [
     '^mainapk/',
   ],
-  deps = [ ':mainjava', ':mainresources'] + config['resources_deps'] + config['java_deps'] + config['cxx_deps'],
+  deps = [ ':mainjava', ':mainresources'] + config['resources_deps'] + config['java_deps'] + config['cxx_deps'] + config['module_deps'],
 )
 
 keystore(

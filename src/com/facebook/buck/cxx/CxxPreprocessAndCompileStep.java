@@ -177,7 +177,7 @@ class CxxPreprocessAndCompileStep implements Step {
     if (useArgfile) {
       filesystem.writeLinesToPath(
           Iterables.transform(
-              getArguments(context.getAnsi().isAnsiTerminal()), Escaper.ARGFILE_ESCAPER),
+              getArguments(context.getAnsi().isAnsiTerminal()), Escaper.ARGFILE_ESCAPER::apply),
           getArgfile());
       builder.setCommand(
           ImmutableList.<String>builder()
@@ -318,7 +318,7 @@ class CxxPreprocessAndCompileStep implements Step {
   public String getDescription(ExecutionContext context) {
     if (context.getVerbosity().shouldPrintCommand()) {
       return Stream.concat(command.getCommandPrefix().stream(), getArguments(false).stream())
-          .map(Escaper.SHELL_ESCAPER::apply)
+          .map(Escaper.SHELL_ESCAPER)
           .collect(Collectors.joining(" "));
     }
     return "(verbosity level disables command output)";

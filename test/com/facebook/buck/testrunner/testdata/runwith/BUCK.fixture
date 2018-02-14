@@ -1,52 +1,52 @@
 java_library(
-  name = 'SubTests',
-  srcs = glob(['*Subtest*.java']),
-  deps = [
-    ':junit',
-  ],
+    name = "SubTests",
+    srcs = glob(["*Subtest*.java"]),
+    deps = [
+        ":junit",
+    ],
 )
 
 java_test(
-  name = 'SimpleSuiteTest',
-  srcs = ['SimpleSuiteTest.java'],
-  deps = [
-    ':junit',
-    ':SubTests',
-  ],
+    name = "SimpleSuiteTest",
+    srcs = ["SimpleSuiteTest.java"],
+    deps = [
+        ":SubTests",
+        ":junit",
+    ],
 )
 
 java_test(
-  name = 'FailingSuiteTest',
-  srcs = ['FailingSuiteTest.java'],
-  deps = [
-    ':junit',
-    ':SubTests',
-  ],
+    name = "FailingSuiteTest",
+    srcs = ["FailingSuiteTest.java"],
+    deps = [
+        ":SubTests",
+        ":junit",
+    ],
 )
 
 java_test(
-  name = 'ParametrizedTest',
-  srcs = ['ParametrizedTest.java'],
-  deps = [
-    ':junit',
-  ],
+    name = "ParametrizedTest",
+    srcs = ["ParametrizedTest.java"],
+    deps = [
+        ":junit",
+    ],
 )
 
 prebuilt_jar(
-  name = 'junit',
-  binary_jar = 'junit-4.11.jar',
-  deps = [
-    ':hamcrest-core',
-    ':hamcrest-library',
-  ],
+    name = "junit",
+    binary_jar = "junit-4.11.jar",
+    deps = [
+        ":hamcrest-core",
+        ":hamcrest-library",
+    ],
 )
 
 prebuilt_jar(
-  name = 'hamcrest-core',
-  binary_jar = 'hamcrest-core-1.3.jar',
+    name = "hamcrest-core",
+    binary_jar = "hamcrest-core-1.3.jar",
 )
 
 prebuilt_jar(
-  name = 'hamcrest-library',
-  binary_jar = 'hamcrest-library-1.3.jar',
+    name = "hamcrest-library",
+    binary_jar = "hamcrest-library-1.3.jar",
 )

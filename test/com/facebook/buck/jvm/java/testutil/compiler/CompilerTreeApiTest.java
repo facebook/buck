@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.google.common.collect.ImmutableMap;
 import com.sun.source.tree.CompilationUnitTree;
@@ -34,13 +35,13 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
+import javax.lang.model.element.Parameterizable;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.ElementFilter;
-import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
@@ -59,7 +60,7 @@ public abstract class CompilerTreeApiTest {
 
   @Rule public TestCompiler testCompiler = new TestCompiler();
 
-  protected Elements elements;
+  protected ElementsExtended elements;
   protected Trees trees;
   protected Types types;
 
@@ -173,6 +174,17 @@ public abstract class CompilerTreeApiTest {
 
     throw new IllegalArgumentException(
         String.format("No such parameter on %s: %s", method.getSimpleName(), name));
+  }
+
+  protected TypeParameterElement findTypeParameter(String name, Parameterizable element) {
+    for (TypeParameterElement parameter : element.getTypeParameters()) {
+      if (parameter.getSimpleName().contentEquals(name)) {
+        return parameter;
+      }
+    }
+
+    throw new IllegalArgumentException(
+        String.format("No such parameter on %s: %s", element.getSimpleName(), name));
   }
 
   protected void assertNameEquals(String expected, Name actual) {

@@ -31,6 +31,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
@@ -43,7 +44,13 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory implements AddsToR
   @AddToRuleKey private final JavacOptions javacOptions;
 
   public GroovycToJarStepFactory(
-      Tool groovyc, Optional<ImmutableList<String>> extraArguments, JavacOptions javacOptions) {
+      SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
+      ProjectFilesystem projectFilesystem,
+      Tool groovyc,
+      Optional<ImmutableList<String>> extraArguments,
+      JavacOptions javacOptions) {
+    super(resolver, ruleFinder, projectFilesystem);
     this.groovyc = groovyc;
     this.extraArguments = extraArguments;
     this.javacOptions = javacOptions;
@@ -53,11 +60,9 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory implements AddsToR
   public void createCompileStep(
       BuildContext buildContext,
       BuildTarget invokingRule,
-      SourcePathResolver resolver,
-      ProjectFilesystem filesystem,
       CompilerParameters parameters,
       /* output params */
-      ImmutableList.Builder<Step> steps,
+      Builder<Step> steps,
       BuildableContext buildableContext) {
 
     ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();
@@ -75,7 +80,7 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory implements AddsToR
             sourceFilePaths,
             pathToSrcsList,
             declaredClasspathEntries,
-            filesystem));
+            projectFilesystem));
   }
 
   @Override

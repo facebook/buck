@@ -37,7 +37,7 @@ import com.facebook.buck.rules.macros.QueryOutputsMacroExpander;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.HashMapWithStats;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
@@ -68,7 +68,7 @@ public class QueryOutputsMacroExpanderTest {
   public void setUp() throws Exception {
     cache = new HashMapWithStats<>();
     expander = new QueryOutputsMacroExpander(Optional.empty());
-    handler = new MacroHandler(ImmutableMap.of("query", expander));
+    handler = new MacroHandler(ImmutableMap.of("query_outputs", expander));
     filesystem = new FakeProjectFilesystem(tmp.getRoot());
     cellNames = TestCellBuilder.createCellRoots(filesystem);
     TargetNode<?, ?> depNode =
@@ -98,7 +98,7 @@ public class QueryOutputsMacroExpanderTest {
   @Test
   public void classpathFunction() throws Exception {
     assertExpandsTo(
-        "$(query 'classpath(//exciting:target)')",
+        "$(query_outputs 'classpath(//exciting:target)')",
         rule,
         String.format(
             "%s %s",
@@ -109,7 +109,7 @@ public class QueryOutputsMacroExpanderTest {
   @Test
   public void literals() throws Exception {
     assertExpandsTo(
-        "$(query 'set(//exciting:target //exciting:dep)')",
+        "$(query_outputs 'set(//exciting:target //exciting:dep)')",
         rule,
         String.format(
             "%s %s",
@@ -119,34 +119,22 @@ public class QueryOutputsMacroExpanderTest {
 
   @Test
   public void extractBuildTimeDeps() throws Exception {
-    Object precomputed =
-        expander.precomputeWork(
-            dep.getBuildTarget(),
-            cellNames,
-            ruleResolver,
-            ImmutableList.of("'set(//exciting:dep)'"));
     assertEquals(
         ImmutableList.of(dep),
-        expander.extractBuildTimeDeps(
-            dep.getBuildTarget(),
-            cellNames,
-            ruleResolver,
-            ImmutableList.of("'set(//exciting:dep)'"),
-            precomputed));
-    Object precomputed2 =
-        expander.precomputeWork(
-            dep.getBuildTarget(),
-            cellNames,
-            ruleResolver,
-            ImmutableList.of("'classpath(//exciting:target)'"));
+        new MacroHandler(ImmutableMap.of("query_outputs", expander))
+            .extractBuildTimeDeps(
+                dep.getBuildTarget(),
+                cellNames,
+                ruleResolver,
+                "$(query_outputs 'set(//exciting:dep)')"));
     assertEquals(
         ImmutableList.of(dep, rule),
-        expander.extractBuildTimeDeps(
-            dep.getBuildTarget(),
-            cellNames,
-            ruleResolver,
-            ImmutableList.of("'classpath(//exciting:target)'"),
-            precomputed2));
+        new MacroHandler(ImmutableMap.of("query_outputs", expander))
+            .extractBuildTimeDeps(
+                dep.getBuildTarget(),
+                cellNames,
+                ruleResolver,
+                "$(query_outputs 'classpath(//exciting:target)')"));
   }
 
   @Test
@@ -157,7 +145,7 @@ public class QueryOutputsMacroExpanderTest {
             dep.getBuildTarget(),
             cellNames,
             ruleResolver,
-            "$(query 'classpath(//exciting:target)')",
+            "$(query_outputs 'classpath(//exciting:target)')",
             cache));
     // Cache should be populated at this point
     assertThat(cache.values(), Matchers.hasSize(1));
@@ -165,7 +153,7 @@ public class QueryOutputsMacroExpanderTest {
 
     int getsSoFar = cache.numGets();
     assertExpandsTo(
-        "$(query 'classpath(//exciting:target)')",
+        "$(query_outputs 'classpath(//exciting:target)')",
         rule,
         String.format(
             "%s %s",
@@ -180,9 +168,7 @@ public class QueryOutputsMacroExpanderTest {
 
   private void assertExpandsTo(String input, BuildRule rule, String expected)
       throws MacroException {
-
     String results = handler.expand(rule.getBuildTarget(), cellNames, ruleResolver, input, cache);
-
     assertEquals(expected, results);
   }
 

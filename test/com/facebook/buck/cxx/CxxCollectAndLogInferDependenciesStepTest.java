@@ -30,7 +30,6 @@ import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -42,17 +41,17 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -69,23 +68,24 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
   private CxxInferCapture createCaptureRule(
       BuildTarget buildTarget,
-      BuildRuleParams buildRuleParams,
       SourcePathResolver sourcePathResolver,
       ProjectFilesystem filesystem,
       InferBuckConfig inferBuckConfig)
       throws Exception {
-    RuleKeyAppendableFunction<FrameworkPath, Path> defaultFrameworkPathSearchPathFunction =
-        new RuleKeyAppendableFunction<FrameworkPath, Path>() {
-          @Override
-          public void appendToRuleKey(RuleKeyObjectSink sink) {
-            // Do nothing.
-          }
+    class FrameworkPathAppendableFunction
+        implements RuleKeyAppendableFunction<FrameworkPath, Path> {
+      @Override
+      public void appendToRuleKey(RuleKeyObjectSink sink) {
+        // Do nothing.
+      }
 
-          @Override
-          public Path apply(FrameworkPath input) {
-            return Paths.get("test", "framework", "path", input.toString());
-          }
-        };
+      @Override
+      public Path apply(FrameworkPath input) {
+        return Paths.get("test", "framework", "path", input.toString());
+      }
+    }
+    RuleKeyAppendableFunction<FrameworkPath, Path> defaultFrameworkPathSearchPathFunction =
+        new FrameworkPathAppendableFunction();
 
     SourcePath preprocessor = FakeSourcePath.of(filesystem, "preprocessor");
     Tool preprocessorTool = new CommandTool.Builder().addInput(preprocessor).build();
@@ -105,11 +105,12 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     return new CxxInferCapture(
         buildTarget,
         filesystem,
-        buildRuleParams,
+        ImmutableSortedSet.of(),
         CxxToolFlags.of(),
         CxxToolFlags.of(),
         FakeSourcePath.of("src.c"),
         AbstractCxxSource.Type.C,
+        Optional.empty(),
         Paths.get("src.o"),
         preprocessorDelegate,
         inferBuckConfig);
@@ -140,7 +141,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     int exitCode = step.execute(executionContext).getExitCode();
-    assertThat(exitCode, is(StepExecutionResult.SUCCESS.getExitCode()));
+    assertThat(exitCode, is(StepExecutionResults.SUCCESS.getExitCode()));
 
     String expectedOutput =
         InferLogLine.fromBuildTarget(testBuildTarget, analyzeRule.getAbsolutePathToResultsDir())
@@ -175,7 +176,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     int exitCode = step.execute(executionContext).getExitCode();
-    assertThat(exitCode, is(StepExecutionResult.SUCCESS.getExitCode()));
+    assertThat(exitCode, is(StepExecutionResults.SUCCESS.getExitCode()));
 
     String expectedOutput =
         InferLogLine.fromBuildTarget(testBuildTarget, analyzeRule.getAbsolutePathToResultsDir())
@@ -203,7 +204,6 @@ public class CxxCollectAndLogInferDependenciesStepTest {
             UnflavoredBuildTarget.of(
                 filesystem2.getRootPath(), Optional.of("cell2"), "//target/in_cell_two", "short2"),
             ImmutableSet.of(CxxInferEnhancer.INFER_CAPTURE_FLAVOR));
-    BuildRuleParams buildRuleParams2 = TestBuildRuleParams.create();
 
     BuildRuleResolver testBuildRuleResolver =
         new SingleThreadedBuildRuleResolver(
@@ -214,8 +214,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
 
     CxxInferCapture captureRule =
-        createCaptureRule(
-            buildTarget2, buildRuleParams2, testSourcePathResolver, filesystem2, inferBuckConfig);
+        createCaptureRule(buildTarget2, testSourcePathResolver, filesystem2, inferBuckConfig);
 
     CxxInferAnalyze analyzeRule =
         new CxxInferAnalyze(
@@ -231,7 +230,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     int exitCode = step.execute(executionContext).getExitCode();
-    assertThat(exitCode, is(StepExecutionResult.SUCCESS.getExitCode()));
+    assertThat(exitCode, is(StepExecutionResults.SUCCESS.getExitCode()));
 
     String expectedOutput =
         InferLogLine.fromBuildTarget(buildTarget1, analyzeRule.getAbsolutePathToResultsDir())
@@ -262,7 +261,6 @@ public class CxxCollectAndLogInferDependenciesStepTest {
             UnflavoredBuildTarget.of(
                 filesystem2.getRootPath(), Optional.of("cell2"), "//target/in_cell_two", "short2"),
             ImmutableSet.of(CxxInferEnhancer.INFER_CAPTURE_FLAVOR));
-    BuildRuleParams buildRuleParams2 = TestBuildRuleParams.create();
 
     BuildRuleResolver testBuildRuleResolver =
         new SingleThreadedBuildRuleResolver(
@@ -273,8 +271,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
 
     CxxInferCapture captureRule =
-        createCaptureRule(
-            buildTarget2, buildRuleParams2, testSourcePathResolver, filesystem2, inferBuckConfig);
+        createCaptureRule(buildTarget2, testSourcePathResolver, filesystem2, inferBuckConfig);
 
     CxxInferAnalyze analyzeRule =
         new CxxInferAnalyze(
@@ -290,7 +287,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     int exitCode = step.execute(executionContext).getExitCode();
-    assertThat(exitCode, is(StepExecutionResult.SUCCESS.getExitCode()));
+    assertThat(exitCode, is(StepExecutionResults.SUCCESS.getExitCode()));
 
     String expectedOutput =
         InferLogLine.fromBuildTarget(buildTarget1, analyzeRule.getAbsolutePathToResultsDir())

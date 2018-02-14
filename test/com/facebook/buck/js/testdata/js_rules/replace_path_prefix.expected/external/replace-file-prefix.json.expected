@@ -1,5 +1,0 @@
-library --root @
-transform --filename js/node_modules/tropical-fruit/mango.js
-var mango;
-transform --filename js/node_modules/tropical-fruit/papaya.js
-var papaya;

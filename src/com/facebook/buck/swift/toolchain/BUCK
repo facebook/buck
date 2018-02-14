@@ -1,14 +1,17 @@
-java_library(
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
     name = "toolchain",
     srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/toolchain:toolchain",
+    ],
     visibility = [
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/apple:platform",
-        "//src/com/facebook/buck/apple/toolchain:toolchain",
         "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/swift:platform",
+        "//src/com/facebook/buck/rules:build_rule",
         "//third-party/java/guava:guava",
     ],
 )

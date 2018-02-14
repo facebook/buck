@@ -24,6 +24,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -33,12 +34,27 @@ public class HaskellLibraryBuilder
         HaskellLibraryDescription, HaskellLibrary> {
 
   public HaskellLibraryBuilder(
-      BuildTarget target, FlavorDomain<HaskellPlatform> platforms, CxxBuckConfig cxxBuckConfig) {
-    super(new HaskellLibraryDescription(platforms, cxxBuckConfig), target);
+      BuildTarget target,
+      HaskellPlatform defaultPlatform,
+      FlavorDomain<HaskellPlatform> platforms,
+      CxxBuckConfig cxxBuckConfig) {
+    super(
+        new HaskellLibraryDescription(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    HaskellPlatformsProvider.DEFAULT_NAME,
+                    HaskellPlatformsProvider.of(defaultPlatform, platforms))
+                .build(),
+            cxxBuckConfig),
+        target);
   }
 
   public HaskellLibraryBuilder(BuildTarget target) {
-    this(target, HaskellTestUtils.DEFAULT_PLATFORMS, CxxPlatformUtils.DEFAULT_CONFIG);
+    this(
+        target,
+        HaskellTestUtils.DEFAULT_PLATFORM,
+        HaskellTestUtils.DEFAULT_PLATFORMS,
+        CxxPlatformUtils.DEFAULT_CONFIG);
   }
 
   public HaskellLibraryBuilder setSrcs(SourceList srcs) {

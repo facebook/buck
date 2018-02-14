@@ -19,8 +19,9 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -62,7 +63,7 @@ public class NdkLibraryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_deps", tmp1);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "targets", "//jni:foo", "--show-target-hash", "--target-hash-file-mode=PATHS_ONLY");
     result.assertSuccess();
@@ -70,7 +71,7 @@ public class NdkLibraryIntegrationTest {
     assertEquals("//jni:foo", targetAndHash[0]);
     String hashBefore = targetAndHash[1];
 
-    ProjectWorkspace.ProcessResult result2 =
+    ProcessResult result2 =
         workspace.runBuckCommand(
             "targets",
             "//jni:foo",
@@ -93,7 +94,7 @@ public class NdkLibraryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_deps", tmp1);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "query", String.format("owner(%s)", workspace.resolve("jni/foo.cpp")));
     result.assertSuccess();

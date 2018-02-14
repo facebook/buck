@@ -19,10 +19,11 @@ package com.facebook.buck.cli;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Joiner;
 import java.io.IOException;
 import org.junit.Rule;
@@ -41,12 +42,12 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("build");
-    result.assertFailure("buck build should exit with an error.");
+    result.assertExitCode("buck build should exit with an error.", ExitCode.COMMANDLINE_ERROR);
 
     assertThat(
         "`buck build` should display an error message if no targets are provided.",
         result.getStderr(),
-        containsString("BUILD FAILED: Must specify at least one build target.\n"));
+        containsString("Must specify at least one build target.\n"));
   }
 
   @Test
@@ -57,7 +58,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("build");
-    result.assertFailure("buck build should exit with an error.");
+    result.assertExitCode("buck build should exit with an error.", ExitCode.COMMANDLINE_ERROR);
 
     assertThat(
         "`buck build` should suggest the alias found in .buckconfig as a target.",
@@ -65,7 +66,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
         containsString(
             Joiner.on('\n')
                     .join(
-                        "BUILD FAILED: Must specify at least one build target.",
+                        "Must specify at least one build target.",
                         "Try building one of the following targets:",
                         "myapp")
                 + '\n'));
@@ -83,7 +84,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("build");
-    result.assertFailure("buck build should exit with an error.");
+    result.assertExitCode("buck build should exit with an error.", ExitCode.COMMANDLINE_ERROR);
 
     assertThat(
         Joiner.on(' ')
@@ -94,7 +95,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
         containsString(
             Joiner.on('\n')
                     .join(
-                        "BUILD FAILED: Must specify at least one build target.",
+                        "Must specify at least one build target.",
                         "Try building one of the following targets:",
                         "myapp my_app mi_app mon_app mein_app")
                 + '\n'));
@@ -112,7 +113,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("build");
-    result.assertFailure("buck build should exit with an error.");
+    result.assertExitCode("buck build should exit with an error.", ExitCode.COMMANDLINE_ERROR);
 
     assertThat(
         Joiner.on(' ')
@@ -123,7 +124,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
         containsString(
             Joiner.on('\n')
                     .join(
-                        "BUILD FAILED: Must specify at least one build target.",
+                        "Must specify at least one build target.",
                         "Try building one of the following targets:",
                         "myapp my_app mi_app mon_app mein_app alias0 alias1 alias2 alias3 alias4")
                 + '\n'));

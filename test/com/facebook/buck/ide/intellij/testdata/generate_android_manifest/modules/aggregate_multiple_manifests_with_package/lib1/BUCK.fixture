@@ -1,9 +1,9 @@
 android_library(
-  name = "lib1",
-  manifest = "AndroidManifest.xml"
+    name = "lib1",
+    manifest = "AndroidManifest.xml",
 )
 
 android_resource(
-  name = "res",
-  package = "com.test",
+    name = "res",
+    package = "com.test",
 )

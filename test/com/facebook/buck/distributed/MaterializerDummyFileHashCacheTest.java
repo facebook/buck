@@ -205,7 +205,11 @@ public class MaterializerDummyFileHashCacheTest {
     replay(mockFileHashCache);
 
     MaterializerDummyFileHashCache fileMaterializer =
-        new MaterializerDummyFileHashCache(mockFileHashCache, fileHashes, inlineProvider);
+        new MaterializerDummyFileHashCache(
+            mockFileHashCache,
+            fileHashes,
+            inlineProvider,
+            MoreExecutors.newDirectExecutorService());
 
     assertFalse(pathDirA.toFile().exists());
     assertFalse(pathDirAb.toFile().exists());
@@ -314,7 +318,11 @@ public class MaterializerDummyFileHashCacheTest {
         .atLeastOnce();
     replay(mockFileHashCache);
     MaterializerDummyFileHashCache fileMaterializer =
-        new MaterializerDummyFileHashCache(mockFileHashCache, fileHashes, inlineProvider);
+        new MaterializerDummyFileHashCache(
+            mockFileHashCache,
+            fileHashes,
+            inlineProvider,
+            MoreExecutors.newDirectExecutorService());
     materializeFunction.execute(fileMaterializer, relativeRealFile);
 
     return realFileAbsPath;
@@ -416,7 +424,11 @@ public class MaterializerDummyFileHashCacheTest {
     replay(mockFileHashCache);
 
     MaterializerDummyFileHashCache fileMaterializer =
-        new MaterializerDummyFileHashCache(mockFileHashCache, fileHashes, mockFileProvider);
+        new MaterializerDummyFileHashCache(
+            mockFileHashCache,
+            fileHashes,
+            mockFileProvider,
+            MoreExecutors.newDirectExecutorService());
 
     assertFalse(symlink.toFile().exists());
 

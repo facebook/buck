@@ -26,7 +26,6 @@ import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -37,10 +36,10 @@ import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -51,7 +50,6 @@ public class CxxPrecompiledHeaderTest {
   @Test
   public void generatesPchStepShouldUseCorrectLang() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = TestBuildRuleParams.create();
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
@@ -67,9 +65,10 @@ public class CxxPrecompiledHeaderTest {
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     CxxPrecompiledHeader precompiledHeader =
         new CxxPrecompiledHeader(
+            /* canPrecompile */ true,
             target,
             new FakeProjectFilesystem(),
-            params,
+            ImmutableSortedSet.of(),
             Paths.get("dir/foo.hash1.hash2.gch"),
             new PreprocessorDelegate(
                 sourcePathResolver,
@@ -83,7 +82,6 @@ public class CxxPrecompiledHeaderTest {
                 Optional.empty(),
                 /* leadingIncludePaths */ Optional.empty()),
             new CompilerDelegate(
-                sourcePathResolver,
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                 compiler,
                 CxxToolFlags.of()),

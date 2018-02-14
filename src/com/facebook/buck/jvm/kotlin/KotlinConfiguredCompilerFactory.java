@@ -16,47 +16,59 @@
 
 package com.facebook.buck.jvm.kotlin;
 
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.ConfiguredCompiler;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
-import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
+import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.google.common.base.Preconditions;
 import javax.annotation.Nullable;
 
 public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
   private final KotlinBuckConfig kotlinBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
-  private final ExtraClasspathFromContextFunction extraClasspathFromContextFunction;
+  private final ExtraClasspathProvider extraClasspathProvider;
 
   public KotlinConfiguredCompilerFactory(
       KotlinBuckConfig kotlinBuckConfig, JavaBuckConfig javaBuckConfig) {
-    this(kotlinBuckConfig, javaBuckConfig, ExtraClasspathFromContextFunction.EMPTY);
+    this(kotlinBuckConfig, javaBuckConfig, ExtraClasspathProvider.EMPTY);
   }
 
   public KotlinConfiguredCompilerFactory(
       KotlinBuckConfig kotlinBuckConfig,
       JavaBuckConfig javaBuckConfig,
-      ExtraClasspathFromContextFunction extraClasspathFromContextFunction) {
+      ExtraClasspathProvider extraClasspathProvider) {
     super();
     this.kotlinBuckConfig = kotlinBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
-    this.extraClasspathFromContextFunction = extraClasspathFromContextFunction;
+    this.extraClasspathProvider = extraClasspathProvider;
   }
 
   @Override
   public ConfiguredCompiler configure(
-      @Nullable JvmLibraryArg args, JavacOptions javacOptions, BuildRuleResolver resolver) {
+      SourcePathResolver sourcePathResolver,
+      SourcePathRuleFinder ruleFinder,
+      ProjectFilesystem projectFilesystem,
+      @Nullable JvmLibraryArg args,
+      JavacOptions javacOptions,
+      BuildRuleResolver buildRuleResolver) {
     return new KotlincToJarStepFactory(
+        sourcePathResolver,
+        ruleFinder,
+        projectFilesystem,
         kotlinBuckConfig.getKotlinc(),
-        ((KotlinLibraryDescription.CoreArg) args).getExtraKotlincArguments(),
-        extraClasspathFromContextFunction,
-        getJavac(resolver, args),
+        Preconditions.checkNotNull((KotlinLibraryDescription.CoreArg) args)
+            .getExtraKotlincArguments(),
+        extraClasspathProvider,
+        getJavac(buildRuleResolver, args),
         javacOptions);
   }
 

@@ -1,9 +1,9 @@
-cxx_library (
+cxx_library(
     name = "lib",
     exported_headers = ["lib.h"],
 )
 
-cxx_precompiled_header (
+cxx_precompiled_header(
     name = "pch",
     src = "pch.h",
     deps = [
@@ -12,8 +12,8 @@ cxx_precompiled_header (
     ],
 )
 
-cxx_binary (
+cxx_binary(
     name = "bin",
-    precompiled_header = ":pch",
     srcs = ["bin.cpp"],
+    precompiled_header = ":pch",
 )

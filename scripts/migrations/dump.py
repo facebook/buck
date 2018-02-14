@@ -12,7 +12,10 @@ from typing import List
 
 
 class StoreKeyValuePair(argparse.Action):
-    """Parser action that populates a dictionary with '=' separated key-value pairs."""
+    """
+    Parser action that populates a dictionary with '=' separated key-value
+    pairs.
+    """
 
     def __call__(self, parser, namespace, values, option_string=None):
         key, value = values.split('=')
@@ -36,7 +39,10 @@ def dump_exported_symbols(args):
 
 
 def dump_export_map(args):
-    """Prints export map that includes all included definitions and symbols they export."""
+    """
+    Prints export map that includes all included definitions and symbols they
+    export.
+    """
     logging.debug('Dumping export map for ' + args.build_file)
     bf = build_file.from_path(args.build_file)
     repo = repository.Repository(args.repository, args.cell_roots)
@@ -49,17 +55,19 @@ def dump_export_map(args):
         file_name = pkg.split('/')[-1]
         # and it's prefix - which is the new package
         pkg = '/'.join(pkg.split('/')[:-1])
-        load_fn_cell = args.cell_prefix + import_label.cell if import_label.cell else ''
+        load_fn_cell = args.cell_prefix + import_label.cell \
+            if import_label.cell else ''
         return load_fn_cell + '//' + pkg + ':' + file_name
 
     if args.use_load_function_import_string_format:
         new_export_map = {}
         for import_string, exported_symbols in export_map.items():
-            new_export_map[
-                to_load_import_string(label.from_string(import_string))] = exported_symbols
+            new_export_map[to_load_import_string(
+                label.from_string(import_string))] = exported_symbols
         export_map = new_export_map
 
     if args.print_as_load_functions:
+
         def to_load_function(import_label: label, symbols: List[str]):
             import_string = to_load_import_string(import_label)
             function_args = map(lambda s: '"%s"' % s, symbols)
@@ -68,7 +76,8 @@ def dump_export_map(args):
         load_functions = []
         for import_string, exported_symbols in export_map.items():
             load_functions.append(
-                to_load_function(label.from_string(import_string), exported_symbols))
+                to_load_function(
+                    label.from_string(import_string), exported_symbols))
         if args.json:
             print(json.dumps(load_functions))
         else:
@@ -83,7 +92,8 @@ def dump_export_map(args):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Dumps requested build file information.')
+    parser = argparse.ArgumentParser(
+        description='Dumps requested build file information.')
     subparsers = parser.add_subparsers()
 
     exported_symbols_parser = subparsers.add_parser('exported_symbols')
@@ -93,27 +103,41 @@ def main():
     export_map_parser.add_argument(
         '--print_as_load_functions',
         action='store_true',
-        help='Print export map as a series of load functions which import all symbols exported by '
-             'respective imported files.')
-    export_map_parser.add_argument('--cell_prefix', default='',
-                                   help='The prefix to use for cells in import strings.')
-    export_map_parser.add_argument('--use_load_function_import_string_format', action='store_true',
-                                   help='Use load function import string syntax instead of '
-                                        'include_defs.')
+        help='Print export map as a series of load functions which import all '
+        'symbols exported by respective imported files.')
+    export_map_parser.add_argument(
+        '--cell_prefix',
+        default='',
+        help='The prefix to use for cells in import strings.')
+    export_map_parser.add_argument(
+        '--use_load_function_import_string_format',
+        action='store_true',
+        help='Use load function import string syntax instead of include_defs.')
     export_map_parser.set_defaults(func=dump_export_map)
 
     parser.add_argument('build_file', metavar='FILE')
     parser.add_argument('--json', action='store_true')
-    parser.add_argument('--cell_root', action=StoreKeyValuePair, metavar='CELL=PATH',
-                        dest='cell_roots')
-    parser.add_argument('--repository', metavar='PATH',
-                        help='Path to the repository managed by Buck.')
-    parser.add_argument('-v', '--verbose', action='store_true', help='Enabled verbose diagnostic.')
+    parser.add_argument(
+        '--cell_root',
+        action=StoreKeyValuePair,
+        metavar='CELL=PATH',
+        dest='cell_roots')
+    parser.add_argument(
+        '--repository',
+        metavar='PATH',
+        help='Path to the repository managed by Buck.')
+    parser.add_argument(
+        '-v',
+        '--verbose',
+        action='store_true',
+        help='Enabled verbose diagnostic.')
     args = parser.parse_args()
     logging_level = logging.DEBUG if args.verbose else logging.INFO
-    logging.basicConfig(level=logging_level, format=(
-        '%(asctime)s [%(levelname)s][%(filename)s:%(lineno)d] %(message)s'
-    ))
+    logging.basicConfig(
+        level=logging_level,
+        format=(
+            '%(asctime)s [%(levelname)s][%(filename)s:%(lineno)d] %(message)s'
+        ))
     args.func(args)
 
 

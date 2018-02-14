@@ -36,6 +36,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MoreFiles;
@@ -50,10 +51,11 @@ import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.InferHelper;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
@@ -124,7 +126,7 @@ public class CxxBinaryIntegrationTest {
     /*
      * Check that building after clean will use the cache
      */
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     for (BuildTarget buildTarget : buildLog.getAllTargets()) {
@@ -137,7 +139,7 @@ public class CxxBinaryIntegrationTest {
      */
     String sourceName = "src_with_deps.c";
     workspace.replaceFileContents("foo/" + sourceName, "10", "30");
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
     buildLog = workspace.getBuildLog();
 
@@ -201,7 +203,7 @@ public class CxxBinaryIntegrationTest {
     /*
      * Check that building after clean will use the cache
      */
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     for (BuildTarget buildTarget : buildLog.getAllTargets()) {
@@ -214,7 +216,7 @@ public class CxxBinaryIntegrationTest {
      */
     workspace.resetBuildLogFile();
     workspace.replaceFileContents("fake-infer/fake-bin/infer", "0.12345", "9.9999");
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
     buildLog = workspace.getBuildLog();
 
@@ -739,7 +741,7 @@ public class CxxBinaryIntegrationTest {
             .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
 
     // run from primary workspace
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         primary.runBuckBuild(
             InferHelper.getCxxCLIConfigurationArgs(
                 rootWorkspacePath.resolve("fake-infer"), Optional.empty(), inputBuildTarget));
@@ -778,7 +780,7 @@ public class CxxBinaryIntegrationTest {
     /*
      * Check that building after clean will use the cache
      */
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckCommand("build", buildTargetName).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     ImmutableSet<BuildTarget> allInvolvedTargets = buildLog.getAllTargets();
@@ -897,7 +899,7 @@ public class CxxBinaryIntegrationTest {
     /*
      * Check that building after clean will use the cache
      */
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckCommand("build", buildTargetName).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     ImmutableSet<BuildTarget> allInvolvedTargets = buildLog.getAllTargets();
@@ -983,7 +985,7 @@ public class CxxBinaryIntegrationTest {
     /*
      * Check that building after clean will use the cache
      */
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     for (BuildTarget buildTarget : buildLog.getAllTargets()) {
@@ -1070,7 +1072,7 @@ public class CxxBinaryIntegrationTest {
      */
     workspace.resetBuildLogFile();
     workspace.replaceFileContents("foo/unused_header.h", "int* input", "int* input, int* input2");
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
 
@@ -1086,7 +1088,7 @@ public class CxxBinaryIntegrationTest {
      */
     workspace.resetBuildLogFile();
     workspace.replaceFileContents("foo/used_header.h", "int* input", "int* input, int* input2");
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
     buildLog = workspace.getBuildLog();
 
@@ -1301,7 +1303,7 @@ public class CxxBinaryIntegrationTest {
     /*
      * Check that building after clean will use the cache
      */
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckCommand("build", inputBuildTarget.getFullyQualifiedName()).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     for (BuildTarget buildTarget : buildLog.getAllTargets()) {
@@ -1316,7 +1318,7 @@ public class CxxBinaryIntegrationTest {
      */
     String sourceName = "top_chain.c";
     workspace.replaceFileContents("foo/" + sourceName, "*p += 1", "*p += 10");
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckCommand("build", inputBuildTarget.getFullyQualifiedName()).assertSuccess();
 
     // Check all the buildrules were fetched from the cache (and there's the specs file)
@@ -1371,7 +1373,7 @@ public class CxxBinaryIntegrationTest {
         BuildTargetFactory.newInstance("//foo:binary_with_chain_deps")
             .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
 
-    //Build the given target and check that it succeeds.
+    // Build the given target and check that it succeeds.
     workspace.runBuckCommand("build", inputBuildTarget.getFullyQualifiedName()).assertSuccess();
 
     String specsPathList =
@@ -1499,10 +1501,10 @@ public class CxxBinaryIntegrationTest {
     /*
      * Check that building after clean will use the cache
      */
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetWasFetchedFromCache(target.toString());
+    buildLog.assertTargetBuiltLocally(target.toString());
     assertThat(Files.exists(Paths.get(outputPath.toString() + "-LinkMap.txt")), is(true));
   }
 
@@ -1728,7 +1730,7 @@ public class CxxBinaryIntegrationTest {
         CxxDescriptionEnhancer.createSandboxSymlinkTreeTarget(depTarget, cxxPlatform.getFlavor());
     BuildTarget depArchiveTarget =
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
-            depTarget, cxxPlatform.getFlavor(), CxxSourceRuleFactory.PicType.PDC);
+            depTarget, cxxPlatform.getFlavor(), PicType.PDC);
     BuildTarget depAggregatedDepsTarget =
         depCxxSourceRuleFactory.createAggregatedPreprocessDepsBuildTarget();
 
@@ -1854,7 +1856,7 @@ public class CxxBinaryIntegrationTest {
     workspace.setUp();
     workspace.setupCxxSandboxing(sandboxSources);
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//:bin");
+    ProcessResult result = workspace.runBuckCommand("build", "//:bin");
     result.assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
@@ -1885,7 +1887,7 @@ public class CxxBinaryIntegrationTest {
     workspace.setUp();
     workspace.setupCxxSandboxing(sandboxSources);
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//:bin");
+    ProcessResult result = workspace.runBuckCommand("build", "//:bin");
     result.assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
@@ -1895,7 +1897,7 @@ public class CxxBinaryIntegrationTest {
 
     workspace.resetBuildLogFile();
 
-    workspace.replaceFileContents("BUCK", "['lib1.h']", "['lib1.h', 'lib2.h']");
+    workspace.replaceFileContents("BUCK", "[\"lib1.h\"]", "[\"lib1.h\", \"lib2.h\"]");
 
     result = workspace.runBuckCommand("build", "//:bin");
     result.assertSuccess();
@@ -1937,7 +1939,7 @@ public class CxxBinaryIntegrationTest {
     workspace.writeContentsToPath("#invalid_pragma", "lib2.h");
 
     BuildTarget target = BuildTargetFactory.newInstance("//:bin");
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", target.toString());
+    ProcessResult result = workspace.runBuckCommand("build", target.toString());
     result.assertFailure();
 
     // Verify that the preprocessed source contains no references to the symlink tree used to
@@ -2006,7 +2008,7 @@ public class CxxBinaryIntegrationTest {
   private void platformLinkerFlags(ProjectWorkspace workspace, String target) throws IOException {
     workspace.runBuckBuild("//:binary_matches_default_exactly_" + target).assertSuccess();
     workspace.runBuckBuild("//:binary_matches_default_" + target).assertSuccess();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:binary_no_match_" + target);
+    ProcessResult result = workspace.runBuckBuild("//:binary_no_match_" + target);
     result.assertFailure();
     assertThat(result.getStderr(), Matchers.containsString("reference"));
     workspace.runBuckBuild("//:binary_with_library_matches_default_" + target).assertSuccess();
@@ -2044,7 +2046,7 @@ public class CxxBinaryIntegrationTest {
     workspace.setUp();
     workspace.setupCxxSandboxing(sandboxSources);
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:bin");
+    ProcessResult result = workspace.runBuckBuild("//:bin");
     result.assertSuccess();
   }
 
@@ -2055,7 +2057,7 @@ public class CxxBinaryIntegrationTest {
     workspace.setUp();
     workspace.setupCxxSandboxing(sandboxSources);
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:working-bin");
+    ProcessResult result = workspace.runBuckBuild("//:working-bin");
     result.assertSuccess();
   }
 
@@ -2066,7 +2068,7 @@ public class CxxBinaryIntegrationTest {
     workspace.setUp();
     workspace.setupCxxSandboxing(sandboxSources);
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:broken-bin");
+    ProcessResult result = workspace.runBuckBuild("//:broken-bin");
     result.assertFailure();
   }
 
@@ -2078,7 +2080,7 @@ public class CxxBinaryIntegrationTest {
     workspace.setupCxxSandboxing(sandboxSources);
     workspace.runBuckBuild("//:binary_matches_default_exactly").assertSuccess();
     workspace.runBuckBuild("//:binary_matches_default").assertSuccess();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:binary_no_match");
+    ProcessResult result = workspace.runBuckBuild("//:binary_no_match");
     result.assertFailure();
     assertThat(result.getStderr(), Matchers.containsString("#error"));
     workspace.runBuckBuild("//:binary_with_library_matches_default").assertSuccess();
@@ -2093,7 +2095,7 @@ public class CxxBinaryIntegrationTest {
     workspace.writeContentsToPath("[cxx]\n  cxxflags = -Wall -Werror", ".buckconfig");
     workspace.runBuckBuild("//:binary_matches_default_exactly").assertSuccess();
     workspace.runBuckBuild("//:binary_matches_default").assertSuccess();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:binary_no_match");
+    ProcessResult result = workspace.runBuckBuild("//:binary_no_match");
     result.assertFailure();
     assertThat(
         result.getStderr(),
@@ -2110,7 +2112,7 @@ public class CxxBinaryIntegrationTest {
     workspace.writeContentsToPath("[cxx]\n  cxxflags = -Wall -Werror", ".buckconfig");
     workspace.runBuckBuild("//:binary_matches_default_exactly").assertSuccess();
     workspace.runBuckBuild("//:binary_matches_default").assertSuccess();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:binary_no_match");
+    ProcessResult result = workspace.runBuckBuild("//:binary_no_match");
     result.assertFailure();
     assertThat(result.getStderr(), Matchers.containsString("header.hpp"));
     workspace.runBuckBuild("//:binary_with_library_matches_default").assertSuccess();
@@ -2125,7 +2127,7 @@ public class CxxBinaryIntegrationTest {
     workspace.writeContentsToPath("[cxx]\n  cxxflags = -Wall -Werror", ".buckconfig");
     workspace.runBuckBuild("//:binary_matches_default_exactly").assertSuccess();
     workspace.runBuckBuild("//:binary_matches_default").assertSuccess();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:binary_no_match");
+    ProcessResult result = workspace.runBuckBuild("//:binary_no_match");
     result.assertFailure();
     assertThat(result.getStderr(), Matchers.containsString("answer()"));
     workspace.runBuckBuild("//:binary_with_library_matches_default").assertSuccess();
@@ -2138,7 +2140,7 @@ public class CxxBinaryIntegrationTest {
     workspace.setUp();
     workspace.setupCxxSandboxing(sandboxSources);
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:binary");
+    ProcessResult result = workspace.runBuckBuild("//:binary");
 
     result.assertSuccess();
   }
@@ -2150,7 +2152,7 @@ public class CxxBinaryIntegrationTest {
     workspace.setUp();
     workspace.setupCxxSandboxing(sandboxSources);
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:transitive");
+    ProcessResult result = workspace.runBuckBuild("//:transitive");
     System.out.println(result.getStdout());
     System.err.println(result.getStderr());
 
@@ -2176,7 +2178,7 @@ public class CxxBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "per_file_flags", tmp);
     workspace.setUp();
     workspace.setupCxxSandboxing(sandboxSources);
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:binary");
+    ProcessResult result = workspace.runBuckBuild("//:binary");
     result.assertSuccess();
   }
 
@@ -2287,7 +2289,7 @@ public class CxxBinaryIntegrationTest {
         .runBuckCommand(
             "build", "--config", "cxx.cxxflags=-g", strippedTarget.getFullyQualifiedName())
         .assertSuccess();
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace
         .runBuckCommand(
             "build", "--config", "cxx.cxxflags=-g", strippedTarget.getFullyQualifiedName())
@@ -2317,12 +2319,12 @@ public class CxxBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "header_namespace", tmp);
     workspace.setUp();
     workspace.setupCxxSandboxing(sandboxSources);
-    ProjectWorkspace.ProcessResult strippedResult =
+    ProcessResult strippedResult =
         workspace.runBuckCommand(
             "targets", "--show-output", strippedTarget.getFullyQualifiedName());
     strippedResult.assertSuccess();
 
-    ProjectWorkspace.ProcessResult unstrippedResult =
+    ProcessResult unstrippedResult =
         workspace.runBuckCommand(
             "targets", "--show-output", unstrippedTarget.getFullyQualifiedName());
     unstrippedResult.assertSuccess();
@@ -2360,7 +2362,7 @@ public class CxxBinaryIntegrationTest {
     assertThat(Files.exists(binaryWithLinkerMapPath), Matchers.equalTo(true));
     assertThat(Files.exists(linkerMapPath), Matchers.equalTo(true));
 
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
 
     workspace
         .runBuckCommand(
@@ -2386,7 +2388,7 @@ public class CxxBinaryIntegrationTest {
     workspace.enableDirCache();
     workspace.setupCxxSandboxing(sandboxSources);
     workspace.runBuckBuild("-c", "cxx.cache_links=false", "//foo:simple").assertSuccess();
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
     workspace.runBuckBuild("-c", "cxx.cache_links=false", "//foo:simple").assertSuccess();
     workspace
         .getBuildLog()
@@ -2419,7 +2421,7 @@ public class CxxBinaryIntegrationTest {
         .assertSuccess();
     ImmutableSortedSet<Path> initialObjects =
         findFiles(tmp.getRoot(), tmp.getRoot().getFileSystem().getPathMatcher("glob:**/*.o"));
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
     workspace
         .runBuckBuild(
             "-c",
@@ -2453,11 +2455,44 @@ public class CxxBinaryIntegrationTest {
     workspace.enableDirCache();
     workspace.setupCxxSandboxing(sandboxSources);
     workspace.runBuckBuild("//:bin").assertSuccess();
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
     workspace.copyFile("bin.c.new", "bin.c");
     workspace.runBuckBuild("//:bin").assertSuccess();
     BuckBuildLog log = workspace.getBuildLog();
     log.assertTargetBuiltLocally("//:bin#binary");
+  }
+
+  /** Tests --config cxx.declared_platforms */
+  @Test
+  public void testDeclaredPlatforms() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "declared_platforms", tmp);
+    workspace.setUp();
+    workspace.setupCxxSandboxing(sandboxSources);
+    workspace
+        .runBuckCommand("query", "-c", "cxx.declared_platforms=my-favorite-platform", "//:simple")
+        .assertSuccess();
+  }
+
+  @Test
+  public void targetsInPlatformSpecificFlagsDoNotBecomeDependencies() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "targets_in_platform_specific_flags_do_not_become_dependencies", tmp);
+    workspace.setUp();
+    ProcessResult result = workspace.runBuckBuild(":bin");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void conflictingHeadersBuildFails() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "headers_conflicts", tmp);
+    workspace.setUp();
+    String errorMsg = workspace.runBuckBuild(":main").assertFailure().getStderr();
+    assertTrue(
+        errorMsg.contains(
+            "has dependencies using headers that can be included using the same path"));
   }
 
   private ImmutableSortedSet<Path> findFiles(Path root, final PathMatcher matcher)

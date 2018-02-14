@@ -17,11 +17,11 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.util.sha1.Sha1HashCode;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**

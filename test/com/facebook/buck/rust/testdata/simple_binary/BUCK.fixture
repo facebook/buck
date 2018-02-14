@@ -1,47 +1,47 @@
 rust_binary(
-  name = "xyzzy",
-  srcs = [
-    "main.rs",
-  ],
+    name = "xyzzy",
+    srcs = [
+        "main.rs",
+    ],
 )
 
 rust_binary(
-  name = "xyzzy_flags",
-  rustc_flags = [ '--this-is-a-bad-option' ],
-  srcs = [
-    "main.rs",
-  ],
+    name = "xyzzy_flags",
+    srcs = [
+        "main.rs",
+    ],
+    rustc_flags = ["--this-is-a-bad-option"],
 )
 
 rust_binary(
-  name = "xyzzy_aliased",
-  crate = "xyzzy",
-  srcs = [
-    "main.rs",
-  ],
+    name = "xyzzy_aliased",
+    srcs = [
+        "main.rs",
+    ],
+    crate = "xyzzy",
 )
 
 rust_binary(
-  name = "xyzzy_linkerflags",
-  crate = "xyzzy",
-  linker_flags = [ '--this-is-a-bad-option' ],
-  srcs = [
-    "main.rs",
-  ],
+    name = "xyzzy_linkerflags",
+    srcs = [
+        "main.rs",
+    ],
+    crate = "xyzzy",
+    linker_flags = ["--this-is-a-bad-option"],
 )
 
 rust_binary(
-  name = 'xyzzy_crate_root',
-  crate_root = 'xyzzy-top.rs',
-  srcs = [
-    'xyzzy-top.rs'
-  ],
+    name = "xyzzy_crate_root",
+    srcs = [
+        "xyzzy-top.rs",
+    ],
+    crate_root = "xyzzy-top.rs",
 )
 
 genrule(
-  name = 'generated_linker',
-  srcs = [ 'linker.sh' ],
-  out = 'generated_linker.sh',
-  executable = True,
-  bash = 'cp linker.sh $OUT; chmod +x $OUT',
+    name = "generated_linker",
+    srcs = ["linker.sh"],
+    out = "generated_linker.sh",
+    bash = "cp linker.sh $OUT; chmod +x $OUT",
+    executable = True,
 )

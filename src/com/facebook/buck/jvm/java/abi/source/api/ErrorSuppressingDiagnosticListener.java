@@ -21,6 +21,7 @@ import com.facebook.buck.util.liteinfersupport.Preconditions;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Set;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaCompiler;
@@ -37,11 +38,15 @@ import javax.tools.JavaFileObject;
 public class ErrorSuppressingDiagnosticListener implements DiagnosticListener<JavaFileObject> {
   private final DiagnosticListener<? super JavaFileObject> inner;
   @Nullable private JavaCompiler.CompilationTask task;
-  @Nullable private Object log;
+  @Nullable private Field contextField;
+  @Nullable private Method instanceMethod;
   @Nullable private Field nErrorsField;
+  @Nullable private Field recordedField;
   @Nullable private Enum<?> recoverableError;
   @Nullable private Method isFlagSetMethod;
   @Nullable private Field diagnosticField;
+  @Nullable private Field pairFirstField;
+  @Nullable private Field pairSecondField;
 
   public ErrorSuppressingDiagnosticListener(DiagnosticListener<? super JavaFileObject> inner) {
     this.inner = inner;
@@ -60,6 +65,11 @@ public class ErrorSuppressingDiagnosticListener implements DiagnosticListener<Ja
       // Don't pass the error on to Buck. Also, decrement nerrors in the compiler so that it
       // won't prematurely stop compilation.
       decrementNErrors();
+
+      // Log uses a set of file, offset pairs to prevent reporting the same error twice. Since
+      // we suppressed this error, we should allow other (non-suppressed) errors to be reported
+      // in the same location
+      removeFromRecordedSet(diagnostic);
     }
   }
 
@@ -67,16 +77,69 @@ public class ErrorSuppressingDiagnosticListener implements DiagnosticListener<Ja
     Field nErrorsField = Preconditions.checkNotNull(this.nErrorsField);
 
     try {
-      int nerrors = (Integer) nErrorsField.get(log);
+      int nerrors = (Integer) nErrorsField.get(getLog());
       nerrors -= 1;
-      nErrorsField.set(log, nerrors);
+      nErrorsField.set(getLog(), nerrors);
     } catch (IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void removeFromRecordedSet(Diagnostic<? extends JavaFileObject> diagnostic) {
+    JavaFileObject file = diagnostic.getSource();
+    if (file == null) {
+      return;
+    }
+
+    try {
+      Set<?> recorded = (Set<?>) Preconditions.checkNotNull(recordedField).get(getLog());
+      if (recorded != null) {
+        boolean removed = false;
+        for (Object recordedPair : recorded) {
+          JavaFileObject fst =
+              (JavaFileObject) Preconditions.checkNotNull(pairFirstField).get(recordedPair);
+          Integer snd = (Integer) Preconditions.checkNotNull(pairSecondField).get(recordedPair);
+
+          if (snd == diagnostic.getPosition() && fst.getName().equals(file.getName())) {
+            removed = recorded.remove(recordedPair);
+            break;
+          }
+        }
+        if (!removed) {
+          throw new AssertionError(
+              String.format(
+                  "BUG! Failed to remove %s: %d", file.getName(), diagnostic.getPosition()));
+        }
+      }
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * Gets the current log object, since the Log and the Context change for each round of annotation
+   * processing.
+   */
+  private Object getLog() {
+    try {
+      Object context = Preconditions.checkNotNull(contextField).get(task);
+      return Preconditions.checkNotNull(instanceMethod).invoke(null, context);
+    } catch (IllegalAccessException | InvocationTargetException e) {
       throw new RuntimeException(e);
     }
   }
 
   private boolean isRecoverable(Diagnostic<? extends JavaFileObject> diagnostic) {
     try {
+      // There's a bug in javac whereby under certain circumstances it will assign its default
+      // flag set to a Diagnostic object without copying it first, and then mutate the set
+      // such that it contains the "recoverable" flag. That can cause missing class file errors
+      // to be reported as recoverable, when they're really not.
+      if (diagnostic.getCode().equals("compiler.err.cant.access")
+          || diagnostic.getCode().equals("compiler.err.proc.messager")) {
+        return false;
+      }
+
       return (Boolean)
           Preconditions.checkNotNull(isFlagSetMethod)
               .invoke(
@@ -87,21 +150,23 @@ public class ErrorSuppressingDiagnosticListener implements DiagnosticListener<Ja
   }
 
   private void ensureInitialized() {
-    if (nErrorsField != null && log != null) {
+    if (nErrorsField != null) {
       return;
     }
 
     try {
       Class<? extends JavaCompiler.CompilationTask> compilerClass =
           Preconditions.checkNotNull(task).getClass();
-      Field contextField = compilerClass.getSuperclass().getDeclaredField("context");
+      contextField = compilerClass.getSuperclass().getDeclaredField("context");
       contextField.setAccessible(true);
       Object context = contextField.get(task);
 
       ClassLoader compilerClassLoader = compilerClass.getClassLoader();
       Class<?> logClass = Class.forName("com.sun.tools.javac.util.Log", false, compilerClassLoader);
-      log = logClass.getMethod("instance", context.getClass()).invoke(null, context);
+      instanceMethod = logClass.getMethod("instance", context.getClass());
       nErrorsField = logClass.getField("nerrors");
+      recordedField = logClass.getDeclaredField("recorded");
+      recordedField.setAccessible(true);
 
       Class<?> diagnosticClass =
           Class.forName("com.sun.tools.javac.util.JCDiagnostic", false, compilerClassLoader);
@@ -127,9 +192,13 @@ public class ErrorSuppressingDiagnosticListener implements DiagnosticListener<Ja
               false,
               compilerClassLoader);
       diagnosticField = diagnosticSourceUnwrapperClass.getField("d");
+
+      Class<?> pairClass =
+          Class.forName("com.sun.tools.javac.util.Pair", false, compilerClassLoader);
+      pairFirstField = pairClass.getField("fst");
+      pairSecondField = pairClass.getField("snd");
     } catch (ClassNotFoundException
         | IllegalAccessException
-        | InvocationTargetException
         | NoSuchFieldException
         | NoSuchMethodException e) {
       throw new RuntimeException(e);

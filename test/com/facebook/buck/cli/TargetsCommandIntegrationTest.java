@@ -25,24 +25,34 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.ThriftRuleKeyDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.thrift.TException;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -50,7 +60,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class TargetsCommandIntegrationTest {
-
   private static final String ABSOLUTE_PATH_TO_FILE_OUTSIDE_THE_PROJECT_THAT_EXISTS_ON_THE_FS =
       "/bin/sh";
 
@@ -278,7 +287,8 @@ public class TargetsCommandIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand("targets", "--show-target-hash", "--show-rulekey", "//:test");
-    result.assertFailure();
+    result.assertSpecialExitCode(
+        "--show-target-hash and --show-rulekey should be incompatible", ExitCode.COMMANDLINE_ERROR);
     String stderr = result.getStderr();
     assertTrue(
         stderr,
@@ -295,7 +305,9 @@ public class TargetsCommandIntegrationTest {
         workspace.runBuckCommand(
             "targets", "--show-target-hash", "--show-rulekey", "--show-output", "//:test");
 
-    result.assertFailure();
+    result.assertSpecialExitCode(
+        "--show-target-hash and --show-rulekey and --show-output should be incompatible",
+        ExitCode.COMMANDLINE_ERROR);
     String stderr = result.getStderr();
     assertTrue(
         stderr,
@@ -665,5 +677,149 @@ public class TargetsCommandIntegrationTest {
         ObjectMappers.READER.readTree(ObjectMappers.createParser(normalizeNewlines(expectedJson)));
 
     assertEquals("Output from targets command should match expected JSON.", expected, observed);
+  }
+
+  @Test
+  public void canSerializeSkylarkBuildFileToJson() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "skylark", tmp);
+    workspace.setUp();
+
+    workspace.addBuckConfigLocalOption("parser", "polyglot_parsing_enabled", "true");
+    workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax", "skylark");
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets", "--json", "--show-output", "--output-attributes", "srcs");
+    result.assertSuccess();
+
+    assertThat(result.getStdout(), equalTo("[\n{\n  \"srcs\" : [ \"Foo.java\" ]\n}\n]\n"));
+  }
+
+  @Test
+  public void testRuleKeyDotOutput() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command_dot", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets", "--show-rulekey", "--show-transitive-rulekeys", "--dot", "//:test1");
+    result.assertSuccess();
+    String output = result.getStdout().trim();
+
+    Pattern pattern = Pattern.compile("digraph .* \\{(?<lines>.+)\\}", Pattern.DOTALL);
+    Matcher matcher = pattern.matcher(output);
+
+    assertTrue(matcher.find());
+    List<String> lines =
+        ImmutableList.copyOf(Splitter.on('\n').omitEmptyStrings().split(matcher.group("lines")));
+
+    // make a vague assertion that test1 depends on test2; do not overload the test
+
+    // node test1
+    assertEquals(
+        1, lines.stream().filter(p -> p.contains("test1") && !p.contains("test2")).count());
+
+    // node test2
+    assertEquals(
+        1, lines.stream().filter(p -> p.contains("test2") && !p.contains("test1")).count());
+
+    // edge test1 -> test2
+    Pattern edgePattern = Pattern.compile("test1.+->.+test2");
+    assertEquals(1, lines.stream().filter(p -> edgePattern.matcher(p).find()).count());
+  }
+
+  @Test
+  public void writesBinaryRuleKeysToDisk() throws IOException, TException {
+    Path logFile = tmp.newFile("out.bin");
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+    ProcessResult runBuckResult =
+        workspace.runBuckBuild(
+            "--show-rulekey", "--rulekeys-log-path", logFile.toAbsolutePath().toString(), "//:bar");
+    runBuckResult.assertSuccess();
+
+    List<FullRuleKey> ruleKeys = ThriftRuleKeyDeserializer.readRuleKeys(logFile);
+    // Three rules, they could have any number of sub-rule keys and contributors
+    assertTrue(ruleKeys.size() >= 3);
+    assertTrue(ruleKeys.stream().anyMatch(ruleKey -> ruleKey.name.equals("//:bar")));
+  }
+
+  @Test
+  public void targetsTransitiveRulekeys() throws Exception {
+    assumeTrue(
+        AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "targets_app_bundle_with_embedded_framework", tmp);
+    workspace.setUp();
+
+    workspace
+        .runBuckCommand(
+            "targets",
+            "//:DemoApp#iphonesimulator-x86_64",
+            "--show-rulekey",
+            "--show-transitive-rulekeys")
+        .assertSuccess();
+  }
+
+  @Test
+  public void printsTransitiveTargetHashes() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "print_recursive_target_hashes", tmp);
+    workspace.setUp();
+
+    ProcessResult nontransitiveResult =
+        workspace.runBuckCommand("targets", "--show-target-hash", "//foo:main", "//bar:main");
+    ProcessResult transitiveResult =
+        workspace.runBuckCommand(
+            "targets",
+            "--show-target-hash",
+            "--show-transitive-target-hashes",
+            "//foo:main",
+            "//bar:main");
+
+    nontransitiveResult.assertSuccess();
+    transitiveResult.assertSuccess();
+
+    ImmutableList<String> foundNonTransitiveTargets =
+        Arrays.stream(nontransitiveResult.getStdout().split(System.lineSeparator()))
+            .map(line -> line.split("\\s+")[0])
+            .collect(ImmutableList.toImmutableList());
+    ImmutableList<String> foundTransitiveTargets =
+        Arrays.stream(transitiveResult.getStdout().split(System.lineSeparator()))
+            .map(line -> line.split("\\s+")[0])
+            .collect(ImmutableList.toImmutableList());
+
+    ImmutableMap<String, String> foundNonTransitiveTargetsAndHashes =
+        Arrays.stream(nontransitiveResult.getStdout().split(System.lineSeparator()))
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    line -> line.split("\\s+")[0], line -> line.split("\\s+")[1]));
+    ImmutableMap<String, String> foundTransitiveTargetsAndHashes =
+        Arrays.stream(transitiveResult.getStdout().split(System.lineSeparator()))
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    line -> line.split("\\s+")[0], line -> line.split("\\s+")[1]));
+
+    assertThat(foundNonTransitiveTargets, Matchers.containsInAnyOrder("//foo:main", "//bar:main"));
+    assertThat(
+        foundTransitiveTargets,
+        Matchers.containsInAnyOrder(
+            "//foo:main",
+            "//deps:dep3",
+            "//deps:dep2",
+            "//deps:dep1",
+            "//bar:main",
+            "//deps:dep4"));
+    assertEquals(
+        foundNonTransitiveTargetsAndHashes.get("//foo:main"),
+        foundTransitiveTargetsAndHashes.get("//foo:main"));
+    assertEquals(
+        foundNonTransitiveTargetsAndHashes.get("//bar:main"),
+        foundTransitiveTargetsAndHashes.get("//bar:main"));
   }
 }

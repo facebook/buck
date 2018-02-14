@@ -26,7 +26,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.VisibilityPattern;
+import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.util.Console;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;

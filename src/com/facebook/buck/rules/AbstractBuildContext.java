@@ -16,15 +16,13 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Supplier;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractBuildContext {
 
@@ -36,9 +34,4 @@ abstract class AbstractBuildContext {
   public abstract JavaPackageFinder getJavaPackageFinder();
 
   public abstract BuckEventBus getEventBus();
-
-  @Value.Default
-  public Supplier<AndroidPlatformTarget> getAndroidPlatformTargetSupplier() {
-    return AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
-  }
 }

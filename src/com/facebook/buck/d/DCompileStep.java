@@ -16,12 +16,14 @@
 
 package com.facebook.buck.d;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class DCompileStep extends ShellStep {
 
@@ -32,13 +34,14 @@ public class DCompileStep extends ShellStep {
   private final ImmutableCollection<Path> inputs;
 
   public DCompileStep(
+      BuildTarget buildTarget,
       Path workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> compiler,
       ImmutableList<String> flags,
       Path output,
       ImmutableCollection<Path> inputs) {
-    super(workingDirectory);
+    super(Optional.of(buildTarget), workingDirectory);
     this.environment = environment;
     this.compiler = compiler;
     this.flags = flags;

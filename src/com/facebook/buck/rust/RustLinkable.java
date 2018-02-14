@@ -62,4 +62,7 @@ interface RustLinkable {
    * @return Linkage mode.
    */
   NativeLinkable.Linkage getPreferredLinkage();
+
+  /** Return true if this is a compiler plugin */
+  boolean isProcMacro();
 }

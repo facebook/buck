@@ -18,10 +18,10 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.HasClasspathEntries;
+import com.facebook.buck.jvm.core.HasClasspathEntries;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.jvm.java.JarParameters;
-import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -178,7 +178,7 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
             pathToOutputFile,
             ImmutableSet.of(),
             false,
-            ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
+            ZipCompressionLevel.DEFAULT,
             temp));
 
     buildableContext.recordArtifact(pathToOutputFile);

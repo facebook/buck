@@ -18,10 +18,13 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.python.toolchain.PythonVersion;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.zip.Unzip;
+import com.facebook.buck.util.unarchive.ArchiveFormat;
+import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -69,6 +72,7 @@ public class PexStep extends ShellStep {
   private final boolean zipSafe;
 
   public PexStep(
+      BuildTarget buildTarget,
       ProjectFilesystem filesystem,
       ImmutableMap<String, String> environment,
       ImmutableList<String> commandPrefix,
@@ -83,7 +87,7 @@ public class PexStep extends ShellStep {
       ImmutableSet<Path> prebuiltLibraries,
       ImmutableSet<String> preloadLibraries,
       boolean zipSafe) {
-    super(filesystem.getRootPath());
+    super(Optional.of(buildTarget), filesystem.getRootPath());
 
     this.filesystem = filesystem;
     this.environment = environment;
@@ -189,11 +193,13 @@ public class PexStep extends ShellStep {
         Files.createDirectories(destinationDirectory);
 
         ImmutableList<Path> zipPaths =
-            Unzip.extractZipFile(
-                projectFilesystemFactory,
-                filesystem.resolve(ent.getValue()),
-                destinationDirectory,
-                Unzip.ExistingFileMode.OVERWRITE);
+            ArchiveFormat.ZIP
+                .getUnarchiver()
+                .extractArchive(
+                    projectFilesystemFactory,
+                    filesystem.resolve(ent.getValue()),
+                    destinationDirectory,
+                    ExistingFileMode.OVERWRITE);
         for (Path path : zipPaths) {
           Path modulePath = destinationDirectory.relativize(path);
           sources.put(modulePath, path);

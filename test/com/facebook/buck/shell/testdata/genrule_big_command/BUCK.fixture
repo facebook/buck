@@ -1,23 +1,32 @@
-import os
+include_defs("//DEFS")
 
 STRING_SIZE = 1000
-REPETITIONS = 2500
-STRING = 'X' * STRING_SIZE
-NOOP_BASH_COMMAND = 'echo {0}>/dev/null'.format(STRING)
-NOOP_CMD_COMMAND = 'echo {0}>NUL'.format(STRING)
-FINAL_COMMAND = 'echo {0}>$OUT'.format(STRING)
 
-BASH_COMMAND = os.linesep.join(
-    [NOOP_BASH_COMMAND] * REPETITIONS + [FINAL_COMMAND])
-CMD_COMMAND = os.linesep.join(
-    [NOOP_CMD_COMMAND] * REPETITIONS + [FINAL_COMMAND])
+REPETITIONS = 2500
+
+STRING = "X" * STRING_SIZE
+
+NOOP_BASH_COMMAND = "echo {0}>/dev/null".format(STRING)
+
+NOOP_CMD_COMMAND = "echo {0}>NUL".format(STRING)
+
+FINAL_COMMAND = "echo {0}>$OUT".format(STRING)
+
+BASH_COMMAND = joinlines(
+    [NOOP_BASH_COMMAND] * REPETITIONS + [FINAL_COMMAND],
+)
+
+CMD_COMMAND = joinlines(
+    [NOOP_CMD_COMMAND] * REPETITIONS + [FINAL_COMMAND],
+)
 
 assert len(BASH_COMMAND) >= STRING_SIZE * REPETITIONS
+
 assert len(CMD_COMMAND) >= STRING_SIZE * REPETITIONS
 
 genrule(
-  name = 'big',
-  out = 'file',
-  bash = BASH_COMMAND,
-  cmd_exe = CMD_COMMAND,
+    name = "big",
+    out = "file",
+    bash = BASH_COMMAND,
+    cmd_exe = CMD_COMMAND,
 )

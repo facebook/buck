@@ -1,0 +1,34 @@
+{namespace buck.fix}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'buck fix' /}
+    {param navid: 'command_fix' /}
+    {param prettify: true /}
+    {param description}
+      A command that attempts to fix errors and warnings encountered during the previous command.
+    {/param}
+    {param content}
+
+{call buck.command}
+  {param overview}
+  <p>Attempts to fix errors and warnings encountered during the previous command.</p>
+  <p>Commands such as {call buck.cmd_build /} may fail with errors from Buck itself or another tool
+  (such as a compiler or linker) that is invoked by Buck. In some cases, such errors can be fixed
+  automatically. In such cases, running
+
+  <pre>buck fix</pre>
+
+  may fix the error.</p>
+
+  <p><code>buck fix</code> prints nothing to the console unless a catastrophic failure occurs.</p>
+  <p>
+  Note that <code>buck fix</code> will edit files in place. It is therefore recommended that any
+  pending changes be saved to source control before running this command.
+  </p>
+  {/param}
+{/call}
+    {/param}  // content
+  {/call}  // buck.page
+{/template}

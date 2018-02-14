@@ -20,13 +20,14 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.google.common.base.Function;
+import com.facebook.buck.step.StepExecutionResults;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.file.Path;
+import java.util.function.Function;
 
 public class FindAndReplaceStep implements Step {
 
@@ -57,7 +58,7 @@ public class FindAndReplaceStep implements Step {
         writer.newLine();
       }
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

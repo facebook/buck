@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util.network;
 
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -35,7 +34,7 @@ public class ScribeBatchingLogger extends AbstractBatchingLogger {
   @Override
   protected ListenableFuture<Void> logMultiple(ImmutableCollection<BatchEntry> data) {
     ImmutableList<String> lines =
-        data.stream().map(BatchEntry::getLine).collect(MoreCollectors.toImmutableList());
+        data.stream().map(BatchEntry::getLine).collect(ImmutableList.toImmutableList());
     return scribeLogger.log(category, lines);
   }
 }

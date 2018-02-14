@@ -22,7 +22,7 @@ import com.facebook.buck.rules.CachingBuildEngineDelegate;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.google.common.cache.LoadingCache;
@@ -53,12 +53,16 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
       SourcePathRuleFinder ruleFinder,
       StackedFileHashCache remoteStackedFileHashCache,
       StackedFileHashCache materializingStackedFileHashCache,
+      RuleKeyConfiguration ruleKeyConfiguration,
       long pendingFileMaterializationTimeoutSeconds) {
     this.remoteStackedFileHashCache = remoteStackedFileHashCache;
     this.pendingFileMaterializationTimeoutSeconds = pendingFileMaterializationTimeoutSeconds;
     this.materializingRuleKeyFactories =
         DistBuildFileHashes.createRuleKeyFactories(
-            sourcePathResolver, ruleFinder, materializingStackedFileHashCache, /* keySeed */ 0);
+            sourcePathResolver,
+            ruleFinder,
+            materializingStackedFileHashCache,
+            ruleKeyConfiguration);
 
     this.materializerFileHashCaches =
         materializingStackedFileHashCache
@@ -66,7 +70,7 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
             .stream()
             .filter(cache -> cache instanceof MaterializerDummyFileHashCache)
             .map(cache -> (MaterializerDummyFileHashCache) cache)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
   }
 
   /**
@@ -79,12 +83,14 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
       SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
       StackedFileHashCache remoteStackedFileHashCache,
-      StackedFileHashCache materializingStackedFileHashCache) {
+      StackedFileHashCache materializingStackedFileHashCache,
+      RuleKeyConfiguration ruleKeyConfiguration) {
     this(
         sourcePathResolver,
         ruleFinder,
         remoteStackedFileHashCache,
         materializingStackedFileHashCache,
+        ruleKeyConfiguration,
         DEFAULT_PENDING_FILE_MATERIALIZATION_TIMEOUT_SECONDS);
   }
 

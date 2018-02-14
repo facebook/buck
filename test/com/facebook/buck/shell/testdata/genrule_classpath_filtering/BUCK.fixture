@@ -1,149 +1,163 @@
 genrule(
-  name = 'echo_all',
-  cmd = 'echo $(query_targets "classpath(:lib_a)") > $OUT',
-  out = 'out',
+    name = "echo_all",
+    out = "out",
+    cmd = "echo $(query_targets \"classpath(:lib_a)\") > $OUT",
 )
 
 genrule(
-  name = 'echo_classpath_0',
-  cmd = 'echo $(query_targets "classpath(:lib_a, 0)") > $OUT',
-  out = 'out',
+    name = "echo_classpath_0",
+    out = "out",
+    cmd = "echo $(query_targets \"classpath(:lib_a, 0)\") > $OUT",
 )
 
 genrule(
-  name = 'echo_classpath_1',
-  cmd = 'echo $(query_targets "classpath(:lib_a, 1)") > $OUT',
-  out = 'out',
+    name = "echo_classpath_1",
+    out = "out",
+    cmd = "echo $(query_targets \"classpath(:lib_a, 1)\") > $OUT",
 )
 
 genrule(
-  name = 'echo_with_ap_dep_is_proc',
-  bash = 'echo $(query_targets "attrfilter(annotation_processor_deps, //annotations:proc-lib, classpath(:lib_a))") > $OUT',
-  cmd_exe = 'powershell -Command "echo $(query_targets \"attrfilter(annotation_processor_deps, //annotations:proc-lib, classpath(:lib_a))\") | Out-file -Encoding ascii $env:OUT"',
-  out = 'out',
+    name = "echo_with_ap_dep_is_proc",
+    out = "out",
+    bash = "echo $(query_targets \"attrfilter(annotation_processor_deps, //annotations:proc-lib, classpath(:lib_a))\") > $OUT",
+    cmd_exe = "powershell -Command \"echo $(query_targets \"attrfilter(annotation_processor_deps, //annotations:proc-lib, classpath(:lib_a))\") | Out-file -Encoding ascii $env:OUT\"",
 )
 
 genrule(
-  name = 'echo_with_annotation_processor_is_proc',
-  cmd = 'echo $(query_targets "attrfilter(annotation_processors, com.example.annotations.Proc, classpath(:lib_a))") > $OUT',
-  out = 'out',
+    name = "echo_with_annotation_processor_is_proc",
+    out = "out",
+    cmd = "echo $(query_targets \"attrfilter(annotation_processors, com.example.annotations.Proc, classpath(:lib_a))\") > $OUT",
 )
 
 genrule(
-  name = 'echo_with_plugin_is_proc',
-  cmd = 'echo $(query_targets "attrfilter(plugins, //annotations:proc, classpath(:lib_a))") > $OUT',
-  out = 'out',
+    name = "echo_with_plugin_is_proc",
+    out = "out",
+    cmd = "echo $(query_targets \"attrfilter(plugins, //annotations:proc, classpath(:lib_a))\") > $OUT",
 )
 
 genrule(
-  name = 'echo_with_kind_is_binary',
-  cmd = 'echo $(query_targets "kind(java_binary, set(//:app //:lib_a //:lib_b))") > $OUT',
-  out = 'out',
+    name = "echo_with_kind_is_binary",
+    out = "out",
+    cmd = "echo $(query_targets \"kind(java_binary, set(//:app //:lib_a //:lib_b))\") > $OUT",
 )
 
 genrule(
-  name = 'echo_with_kind_is_library',
-  cmd = 'echo $(query_targets "kind(java_library, set(//:app //:lib_a //:lib_b))") > $OUT',
-  out = 'out',
+    name = "echo_with_kind_is_library",
+    out = "out",
+    cmd = "echo $(query_targets \"kind(java_library, set(//:app //:lib_a //:lib_b))\") > $OUT",
 )
 
 genrule(
-  name = 'echo_with_deps',
-  cmd = 'echo $(query_targets "deps(:app)") > $OUT',
-  out = 'out',
+    name = "echo_with_deps_to_file",
+    out = "out",
+    bash = "echo $(@query_targets \"deps(:app)\") | cut -c 2- | xargs -I % cp % $OUT",
+    cmd_exe = "echo $(@query_targets \"deps(:app)\") | %{cp $_.substring(1) $OUT}",
+    enable_sandbox = True,
 )
 
 genrule(
-  name = 'echo_with_deps_1',
-  cmd = 'echo $(query_outputs "deps(:app, 1)") > $OUT',
-  out = 'out',
+    name = "echo_with_deps",
+    out = "out",
+    cmd = "echo $(query_targets \"deps(:app)\") > $OUT",
 )
 
 genrule(
-  name = 'echo_with_genrule_deps',
-  cmd = 'echo $(query_targets "deps(:echo_with_annotation_processor_is_proc)") > $OUT',
-  out = 'out',
+    name = "echo_with_deps_1",
+    out = "out",
+    cmd = "echo $(query_outputs \"deps(:app, 1)\") > $OUT",
 )
 
 genrule(
-  name = 'echo_from_filtered_set',
-  cmd = 'echo $(query_outputs "filter(a, set(:app :lib_a :lib_b //annotations:proc-lib :echo_with_deps))") > $OUT',
-  out = 'out',
+    name = "echo_with_genrule_deps",
+    out = "out",
+    cmd = "echo $(query_targets \"deps(:echo_with_annotation_processor_is_proc)\") > $OUT",
 )
 
 genrule(
-  name = 'echo_deps_of_a',
-  cmd = 'echo $(query_targets "deps(//:lib_a)") > $OUT',
-  out = 'out',
+    name = "echo_from_filtered_set",
+    out = "out",
+    cmd = "echo $(query_outputs \"filter(a, set(:app :lib_a :lib_b //annotations:proc-lib :echo_with_deps))\") > $OUT",
 )
 
 genrule(
-  name = 'echo_with_has_debug_flag',
-  cmd = 'echo $(query_targets "attrfilter(extra_arguments, \'-g\', deps(:app))") > $OUT',
-  out = 'out',
+    name = "echo_deps_of_a",
+    out = "out",
+    cmd = "echo $(query_targets \"deps(//:lib_a)\") > $OUT",
 )
 
 genrule(
-  name = 'ensure_parsing_if_this_is_only_ref',
-  cmd = 'echo $(query_targets "//other:other") > $OUT',
-  out = 'out',
+    name = "echo_with_has_debug_flag",
+    out = "out",
+    cmd = "echo $(query_targets \"attrfilter(extra_arguments, '-g', deps(:app))\") > $OUT",
 )
 
 genrule(
-  name = 'echo_labels_of',
-  cmd = 'echo $(query_targets "labels(provided_deps, //other:exporter)") > $OUT',
-  out = 'out',
+    name = "ensure_parsing_if_this_is_only_ref",
+    out = "out",
+    cmd = "echo $(query_targets \"//other:other\") > $OUT",
 )
 
 genrule(
-  name = 'echo_labels_of_output',
-  cmd = 'echo $(query_outputs "labels(provided_deps, //other:exporter)") > $OUT',
-  out = 'out',
+    name = "echo_labels_of",
+    out = "out",
+    cmd = "echo $(query_targets \"labels(provided_deps, //other:exporter)\") > $OUT",
+)
+
+genrule(
+    name = "echo_labels_of_output",
+    out = "out",
+    cmd = "echo $(query_outputs \"labels(provided_deps, //other:exporter)\") > $OUT",
+)
+
+genrule(
+    name = "echo_labels_of_targets_and_output",
+    out = "out",
+    cmd = "echo $(query_targets_and_outputs \"labels(provided_deps, //other:exporter)\") > $OUT",
 )
 
 java_library(
-  name = 'lib_a',
-  srcs = ['A.java'],
-  deps = [
-    ':lib_b',
-    ':lib_d',
-    '//annotations:proc-lib',
-    #add_import_to_lib_a ':lib_c',
-  ],
+    name = "lib_a",
+    srcs = ["A.java"],
+    deps = [
+        ":lib_b",
+        ":lib_d",
+        "//annotations:proc-lib",
+        #add_import_to_lib_a ':lib_c',
+    ],
 )
 
 java_library(
-  name = 'lib_b',
-  srcs = ['B.java'],
-  deps = [
-    #add_import_to_lib_b ':lib_c',
-  ],
-  annotation_processors = [
-    'com.example.annotations.Proc',
-  ],
-  annotation_processor_deps = [
-    '//annotations:proc-lib',
-  ],
+    name = "lib_b",
+    srcs = ["B.java"],
+    annotation_processor_deps = [
+        "//annotations:proc-lib",
+    ],
+    annotation_processors = [
+        "com.example.annotations.Proc",
+    ],
+    deps = [
+        #add_import_to_lib_b ':lib_c',
+    ],
 )
 
 java_library(
-  name = 'lib_c',
-  deps = [
-    '//annotations:proc-lib',
-  ],
+    name = "lib_c",
+    deps = [
+        "//annotations:proc-lib",
+    ],
 )
 
 java_library(
-  name = 'lib_d',
-  srcs = ['D.java'],
-  plugins = [
-    '//annotations:proc',
-  ],
+    name = "lib_d",
+    srcs = ["D.java"],
+    plugins = [
+        "//annotations:proc",
+    ],
 )
 
 java_binary(
-  name = 'app',
-  deps = [
-    ':lib_a',
-  ],
+    name = "app",
+    deps = [
+        ":lib_a",
+    ],
 )

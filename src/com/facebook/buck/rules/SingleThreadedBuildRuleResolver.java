@@ -18,13 +18,13 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.concurrent.Parallelizer;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -126,6 +126,8 @@ public class SingleThreadedBuildRuleResolver implements BuildRuleResolver {
     return metadataCache.requireMetadata(target, metadataClass);
   }
 
+  /** Please use {@code computeIfAbsent} instead */
+  @Deprecated
   @Override
   @VisibleForTesting
   public <T extends BuildRule> T addToIndex(T buildRule) {
@@ -146,7 +148,7 @@ public class SingleThreadedBuildRuleResolver implements BuildRuleResolver {
   }
 
   @Override
-  public <T> Stream<T> maybeParallelize(Stream<T> stream) {
-    return stream;
+  public Parallelizer getParallelizer() {
+    return Parallelizer.SERIAL;
   }
 }

@@ -1,7 +1,7 @@
 apple_binary(
-  name = 'TestApp',
-  info_plist = 'Info.plist',
-  srcs = ['main.c'],
-  deps = ['//Apps/TestLibrary:TestLibrary'],
-  thin_lto = True,
+    name = "TestApp",
+    srcs = ["main.c"],
+    info_plist = "Info.plist",
+    thin_lto = True,
+    deps = ["//Apps/TestLibrary:TestLibrary"],
 )

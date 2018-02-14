@@ -15,13 +15,17 @@
  */
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.rules.RuleKey;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
+import java.util.List;
 
 /**
  * Decorator for wrapping a {@link ArtifactCache} to log a {@link ArtifactCacheEvent} for the start
@@ -50,6 +54,11 @@ public class LoggingArtifactCacheDecorator implements ArtifactCache, CacheDecora
   }
 
   @Override
+  public void skipPendingAndFutureAsyncFetches() {
+    delegate.skipPendingAndFutureAsyncFetches();
+  }
+
+  @Override
   public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
     ArtifactCacheEvent.Started started =
         eventFactory.newStoreStartedEvent(info.getRuleKeys(), info.getMetadata());
@@ -57,6 +66,26 @@ public class LoggingArtifactCacheDecorator implements ArtifactCache, CacheDecora
     ListenableFuture<Void> storeFuture = delegate.store(info, output);
     eventBus.post(eventFactory.newStoreFinishedEvent(started));
     return storeFuture;
+  }
+
+  @Override
+  public ListenableFuture<ImmutableMap<RuleKey, CacheResult>> multiContainsAsync(
+      ImmutableSet<RuleKey> ruleKeys) {
+    ArtifactCacheEvent.Started started = eventFactory.newContainsStartedEvent(ruleKeys);
+    eventBus.post(started);
+
+    return Futures.transform(
+        delegate.multiContainsAsync(ruleKeys),
+        results -> {
+          eventBus.post(eventFactory.newContainsFinishedEvent(started, results));
+          return results;
+        },
+        MoreExecutors.directExecutor());
+  }
+
+  @Override
+  public ListenableFuture<CacheDeleteResult> deleteAsync(List<RuleKey> ruleKeys) {
+    return delegate.deleteAsync(ruleKeys);
   }
 
   @Override

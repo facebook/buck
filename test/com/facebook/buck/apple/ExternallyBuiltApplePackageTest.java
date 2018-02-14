@@ -25,6 +25,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.android.TestAndroidPlatformTargetFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -42,18 +43,21 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
+import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
 import java.nio.file.Paths;
+import java.util.Optional;
+import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -86,10 +90,16 @@ public class ExternallyBuiltApplePackageTest {
         new ExternallyBuiltApplePackage(
             buildTarget,
             projectFilesystem,
+            new NoSandboxExecutionStrategy(),
+            resolver,
             params,
             config,
             FakeSourcePath.of(bundleLocation),
-            true);
+            true,
+            Optional.empty(),
+            Optional.of(TestAndroidPlatformTargetFactory.create()),
+            Optional.empty(),
+            Optional.empty());
     resolver.addToIndex(rule);
     ShellStep step =
         Iterables.getOnlyElement(
@@ -112,10 +122,16 @@ public class ExternallyBuiltApplePackageTest {
         new ExternallyBuiltApplePackage(
             buildTarget,
             projectFilesystem,
+            new NoSandboxExecutionStrategy(),
+            resolver,
             params,
             config,
             FakeSourcePath.of("Fake/Bundle/Location"),
-            true);
+            true,
+            Optional.empty(),
+            Optional.of(TestAndroidPlatformTargetFactory.create()),
+            Optional.empty(),
+            Optional.empty());
     resolver.addToIndex(rule);
     assertThat(
         pathResolver
@@ -132,10 +148,16 @@ public class ExternallyBuiltApplePackageTest {
         new ExternallyBuiltApplePackage(
             buildTarget,
             projectFilesystem,
+            new NoSandboxExecutionStrategy(),
+            resolver,
             params,
             config,
             FakeSourcePath.of("Fake/Bundle/Location"),
-            true);
+            true,
+            Optional.empty(),
+            Optional.of(TestAndroidPlatformTargetFactory.create()),
+            Optional.empty(),
+            Optional.empty());
     resolver.addToIndex(rule);
     AbstractGenruleStep step =
         Iterables.getOnlyElement(
@@ -156,10 +178,16 @@ public class ExternallyBuiltApplePackageTest {
             new ExternallyBuiltApplePackage(
                 buildTarget,
                 projectFilesystem,
+                new NoSandboxExecutionStrategy(),
+                resolver,
                 params,
                 config.withPlatform(config.getPlatform().withBuildVersion(input)),
                 FakeSourcePath.of("Fake/Bundle/Location"),
-                true);
+                true,
+                Optional.empty(),
+                Optional.of(TestAndroidPlatformTargetFactory.create()),
+                Optional.empty(),
+                Optional.empty());
     assertNotEquals(
         newRuleKeyFactory().build(packageWithVersion.apply("real")),
         newRuleKeyFactory().build(packageWithVersion.apply("fake")));
@@ -172,13 +200,19 @@ public class ExternallyBuiltApplePackageTest {
             new ExternallyBuiltApplePackage(
                 buildTarget,
                 projectFilesystem,
+                new NoSandboxExecutionStrategy(),
+                resolver,
                 params,
                 config.withPlatform(
                     config
                         .getPlatform()
                         .withAppleSdk(config.getPlatform().getAppleSdk().withVersion(input))),
                 FakeSourcePath.of("Fake/Bundle/Location"),
-                true);
+                true,
+                Optional.empty(),
+                Optional.of(TestAndroidPlatformTargetFactory.create()),
+                Optional.empty(),
+                Optional.empty());
     assertNotEquals(
         newRuleKeyFactory().build(packageWithSdkVersion.apply("real")),
         newRuleKeyFactory().build(packageWithSdkVersion.apply("fake")));
@@ -186,8 +220,7 @@ public class ExternallyBuiltApplePackageTest {
 
   private DefaultRuleKeyFactory newRuleKeyFactory() {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    return new DefaultRuleKeyFactory(
-        0,
+    return new TestDefaultRuleKeyFactory(
         new FakeFileHashCache(
             ImmutableMap.of(Paths.get(bundleLocation).toAbsolutePath(), HashCode.fromInt(5))),
         DefaultSourcePathResolver.from(ruleFinder),

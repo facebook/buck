@@ -20,8 +20,10 @@ import static com.facebook.buck.util.Verbosity.COMMANDS_AND_SPECIAL_OUTPUT;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.DxStep.Option;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.cli.VerbosityParser;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -29,21 +31,19 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Optional;
-import org.easymock.EasyMock;
-import org.easymock.EasyMockSupport;
 import org.junit.Before;
 import org.junit.Test;
 
-public class DxStepTest extends EasyMockSupport {
+public class DxStepTest {
 
   private static final String BASE_DX_PREFIX = Paths.get("/usr/bin/dx").toString();
 
@@ -59,9 +59,21 @@ public class DxStepTest extends EasyMockSupport {
 
   @Before
   public void setUp() {
-    androidPlatformTarget = createMock(AndroidPlatformTarget.class);
-    EasyMock.expect(androidPlatformTarget.getDxExecutable()).andReturn(Paths.get("/usr/bin/dx"));
-    replayAll();
+    androidPlatformTarget =
+        AndroidPlatformTarget.of(
+            "android",
+            Paths.get(""),
+            Collections.emptyList(),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get("/usr/bin/dx"),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""));
   }
 
   @Test
@@ -72,7 +84,13 @@ public class DxStepTest extends EasyMockSupport {
 
       DxStep dx =
           new DxStep(
-              filesystem, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX, EnumSet.of(Option.NO_OPTIMIZE));
+              BuildTargetFactory.newInstance("//dummy:target"),
+              filesystem,
+              androidPlatformTarget,
+              SAMPLE_OUTPUT_PATH,
+              SAMPLE_FILES_TO_DEX,
+              EnumSet.of(Option.NO_OPTIMIZE),
+              DxStep.DX);
 
       String expected =
           String.format(
@@ -85,7 +103,6 @@ public class DxStepTest extends EasyMockSupport {
           ImmutableList.of(expected),
           ImmutableList.of(dx),
           context);
-      verifyAll();
     }
   }
 
@@ -95,7 +112,13 @@ public class DxStepTest extends EasyMockSupport {
     try (ExecutionContext context = createExecutionContext(2)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-      DxStep dx = new DxStep(filesystem, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
+      DxStep dx =
+          new DxStep(
+              BuildTargetFactory.newInstance("//dummy:target"),
+              filesystem,
+              androidPlatformTarget,
+              SAMPLE_OUTPUT_PATH,
+              SAMPLE_FILES_TO_DEX);
 
       String expected =
           String.format(
@@ -108,7 +131,6 @@ public class DxStepTest extends EasyMockSupport {
           ImmutableList.of(expected),
           ImmutableList.of(dx),
           context);
-      verifyAll();
     }
   }
 
@@ -120,10 +142,13 @@ public class DxStepTest extends EasyMockSupport {
 
       DxStep dx =
           new DxStep(
+              BuildTargetFactory.newInstance("//dummy:target"),
               filesystem,
+              androidPlatformTarget,
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
-              EnumSet.of(DxStep.Option.NO_OPTIMIZE, DxStep.Option.FORCE_JUMBO));
+              EnumSet.of(DxStep.Option.NO_OPTIMIZE, DxStep.Option.FORCE_JUMBO),
+              DxStep.DX);
 
       String expected =
           String.format(
@@ -136,7 +161,6 @@ public class DxStepTest extends EasyMockSupport {
           ImmutableList.of(expected),
           ImmutableList.of(dx),
           context);
-      verifyAll();
     }
   }
 
@@ -146,7 +170,13 @@ public class DxStepTest extends EasyMockSupport {
     try (ExecutionContext context = createExecutionContext(COMMANDS_AND_SPECIAL_OUTPUT.ordinal())) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-      DxStep dx = new DxStep(filesystem, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
+      DxStep dx =
+          new DxStep(
+              BuildTargetFactory.newInstance("//dummy:target"),
+              filesystem,
+              androidPlatformTarget,
+              SAMPLE_OUTPUT_PATH,
+              SAMPLE_FILES_TO_DEX);
 
       String expected =
           String.format(
@@ -164,7 +194,6 @@ public class DxStepTest extends EasyMockSupport {
           "Should print stdout to show statistics.", dx.shouldPrintStdout(context.getVerbosity()));
       assertTrue(
           "Should print stderr to show statistics.", dx.shouldPrintStderr(context.getVerbosity()));
-      verifyAll();
     }
   }
 
@@ -174,7 +203,13 @@ public class DxStepTest extends EasyMockSupport {
     try (ExecutionContext context = createExecutionContext(10)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-      DxStep dx = new DxStep(filesystem, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
+      DxStep dx =
+          new DxStep(
+              BuildTargetFactory.newInstance("//dummy:target"),
+              filesystem,
+              androidPlatformTarget,
+              SAMPLE_OUTPUT_PATH,
+              SAMPLE_FILES_TO_DEX);
 
       String expected =
           String.format(
@@ -194,7 +229,6 @@ public class DxStepTest extends EasyMockSupport {
       assertTrue(
           "Should print stdout since `dx --verbose` is enabled.",
           dx.shouldPrintStderr(context.getVerbosity()));
-      verifyAll();
     }
   }
 
@@ -205,11 +239,15 @@ public class DxStepTest extends EasyMockSupport {
 
       DxStep dx =
           new DxStep(
+              BuildTargetFactory.newInstance("//dummy:target"),
               filesystem,
+              androidPlatformTarget,
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
               EnumSet.noneOf(DxStep.Option.class),
-              Optional.of("2g"));
+              Optional.of("2g"),
+              DxStep.DX,
+              false);
 
       String expected =
           String.format(
@@ -222,17 +260,12 @@ public class DxStepTest extends EasyMockSupport {
           ImmutableList.of(expected),
           ImmutableList.of(dx),
           context);
-
-      verifyAll();
     }
   }
 
   private ExecutionContext createExecutionContext(int verbosityLevel) throws IOException {
     Verbosity verbosity = VerbosityParser.getVerbosityForLevel(verbosityLevel);
     TestConsole console = new TestConsole(verbosity);
-    return TestExecutionContext.newBuilder()
-        .setConsole(console)
-        .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
-        .build();
+    return TestExecutionContext.newBuilder().setConsole(console).build();
   }
 }

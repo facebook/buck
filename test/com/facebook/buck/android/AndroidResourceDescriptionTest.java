@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
@@ -36,7 +37,9 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -95,7 +98,10 @@ public class AndroidResourceDescriptionTest {
     tmpFolder.newFolder("res", "dirs", "_dir");
     tmpFolder.newFile("res/dirs/_dir/ignore");
 
-    AndroidResourceDescription description = new AndroidResourceDescription(false);
+    AndroidResourceDescription description =
+        new AndroidResourceDescription(
+            new ToolchainProviderBuilder().build(),
+            new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()));
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot().toPath());
     Map<Path, SourcePath> inputs = description.collectInputFiles(filesystem, Paths.get("res"));

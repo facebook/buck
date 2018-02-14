@@ -27,17 +27,16 @@ import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.io.windowsfs.WindowsFS;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -83,6 +82,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import javax.annotation.Nullable;
@@ -170,8 +171,8 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
                   }
                   return Iterables.getOnlyElement(filtered);
                 })
-            // TODO(#10068334) So we claim to ignore this path to preserve existing behaviour, but we
-            // really don't end up ignoring it in reality (see extractIgnorePaths).
+            // TODO(#10068334) So we claim to ignore this path to preserve existing behaviour, but
+            // we really don't end up ignoring it in reality (see extractIgnorePaths).
             .append(ImmutableSet.of(buckPaths.getBuckOut()))
             .transform(PathOrGlobMatcher::new)
             .append(
@@ -179,7 +180,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
                     this.blackListedPaths, input -> input.getType() == PathOrGlobMatcher.Type.GLOB))
             .toSet();
     this.tmpDir =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () -> {
               Path relativeTmpDir = DefaultProjectFilesystem.this.buckPaths.getTmpDir();
               try {
@@ -212,9 +213,8 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
     return projectRoot;
   }
 
-  /** @return details about the delegate suitable for writing to a log file. */
   @Override
-  public String getDelegateDetails() {
+  public ImmutableMap<String, ? extends Object> getDelegateDetails() {
     return delegate.getDetailsForLogging();
   }
 
@@ -272,7 +272,10 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   public Optional<Path> getPathRelativeToProjectRoot(Path path) {
     path = MorePaths.normalize(path);
     if (path.isAbsolute()) {
-      if (path.startsWith(projectRoot)) {
+      Path configuredBuckOut =
+          MorePaths.normalize(projectRoot.resolve(buckPaths.getConfiguredBuckOut()));
+      // If the path is in the configured buck-out, it's also part of the filesystem.
+      if (path.startsWith(configuredBuckOut) || path.startsWith(projectRoot)) {
         return Optional.of(MorePaths.relativize(projectRoot, path));
       } else {
         return Optional.empty();
@@ -489,7 +492,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
         new SimpleFileVisitor<Path>() {
           @Override
           public FileVisitResult visitFile(Path path, BasicFileAttributes attributes) {
-            if (predicate.apply(path)) {
+            if (predicate.test(path)) {
               paths.add(path);
             }
             return FileVisitResult.CONTINUE;
@@ -826,7 +829,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   public void createSymLink(Path symLink, Path realFile, boolean force) throws IOException {
     symLink = resolve(symLink);
     if (force) {
-      Files.deleteIfExists(symLink);
+      MoreFiles.deleteRecursivelyIfExists(symLink);
     }
     if (Platform.detect() == Platform.WINDOWS) {
       if (windowsSymlinks) {

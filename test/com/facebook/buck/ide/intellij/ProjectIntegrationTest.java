@@ -18,16 +18,21 @@ package com.facebook.buck.ide.intellij;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.xml.XmlDomParser;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.io.IOException;
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
+import org.w3c.dom.Node;
 
 public class ProjectIntegrationTest {
 
@@ -36,6 +41,11 @@ public class ProjectIntegrationTest {
   @Test
   public void testAndroidLibraryProject() throws InterruptedException, IOException {
     runBuckProjectAndVerify("android_library");
+  }
+
+  @Test
+  public void testAndroidBinaryProject() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("android_binary");
   }
 
   @Test
@@ -153,6 +163,11 @@ public class ProjectIntegrationTest {
   @Test
   public void testPrebuiltJarWithJavadoc() throws InterruptedException, IOException {
     runBuckProjectAndVerify("project_with_prebuilt_jar");
+  }
+
+  @Test
+  public void testZipFile() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("project_with_zipfile");
   }
 
   @Test
@@ -279,6 +294,30 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testGeneratingAndroidManifestWithMinSdkWithDifferentVersionsFromManifest()
+      throws InterruptedException, IOException {
+    runBuckProjectAndVerify("min_sdk_version_different_from_manifests");
+  }
+
+  @Test
+  public void testGeneratingAndroidManifestWithMinSdkFromBinaryManifest()
+      throws InterruptedException, IOException {
+    runBuckProjectAndVerify("min_sdk_version_from_binary_manifest");
+  }
+
+  @Test
+  public void testGeneratingAndroidManifestWithMinSdkFromBuckConfig()
+      throws InterruptedException, IOException {
+    runBuckProjectAndVerify("min_sdk_version_from_buck_config");
+  }
+
+  @Test
+  public void testGeneratingAndroidManifestWithNoMinSdkConfig()
+      throws InterruptedException, IOException {
+    runBuckProjectAndVerify("min_sdk_version_with_no_config");
+  }
+
+  @Test
   public void testPreprocessScript() throws InterruptedException, IOException {
     ProcessResult result = runBuckProjectAndVerify("preprocess_script_test");
 
@@ -293,6 +332,62 @@ public class ProjectIntegrationTest {
   @Test
   public void testIgnoredPathAddedToExcludedFolders() throws InterruptedException, IOException {
     runBuckProjectAndVerify("ignored_excluded");
+  }
+
+  @Test
+  public void testCrossCellIntelliJProject() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+
+    ProjectWorkspace primary =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "inter-cell/primary", temporaryFolder.newFolder());
+    primary.setUp();
+
+    ProjectWorkspace secondary =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "inter-cell/secondary", temporaryFolder.newFolder());
+    secondary.setUp();
+
+    TestDataHelper.overrideBuckconfig(
+        primary,
+        ImmutableMap.of(
+            "repositories",
+            ImmutableMap.of("secondary", secondary.getPath(".").normalize().toString())));
+
+    // First try with cross-cell enabled
+    String target = "//apps/sample:app_with_cross_cell_android_lib";
+    ProcessResult result =
+        primary.runBuckCommand(
+            "project",
+            "--config",
+            "project.embedded_cell_buck_out_enabled=true",
+            "--ide",
+            "intellij",
+            target);
+    result.assertSuccess();
+
+    final String libImlPath = ".idea/libraries/secondary__java_com_crosscell_crosscell.xml";
+    Node doc = XmlDomParser.parse(primary.getFileContents(libImlPath));
+    final String urlXpath = "/component/library/CLASSES/root/@url";
+    // Assert that the library URL is inside the project root
+    assertThat(
+        doc,
+        Matchers.hasXPath(
+            urlXpath, Matchers.startsWith("jar://$PROJECT_DIR$/buck-out/cells/secondary/gen/")));
+
+    result =
+        primary.runBuckCommand(
+            "project",
+            "--config",
+            "project.embedded_cell_buck_out_enabled=false",
+            "--ide",
+            "intellij",
+            target);
+    result.assertSuccess();
+
+    Node doc2 = XmlDomParser.parse(primary.getFileContents(libImlPath));
+    // Assert that the library URL is outside the project root
+    assertThat(doc2, Matchers.hasXPath(urlXpath, Matchers.startsWith("jar://$PROJECT_DIR$/..")));
   }
 
   private ProcessResult runBuckProjectAndVerify(String folderWithTestData, String... commandArgs)

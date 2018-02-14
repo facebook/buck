@@ -20,39 +20,46 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
+import com.facebook.buck.artifact_cache.config.DirCacheEntry;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.RelativeCellName;
-import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.cache.NoOpCacheStatsTracker;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
+import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -61,6 +68,7 @@ import org.easymock.EasyMockSupport;
 import org.junit.Before;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
+import org.pf4j.PluginManager;
 
 /** Unit test for {@link CleanCommand}. */
 public class CleanCommandTest extends EasyMockSupport {
@@ -80,19 +88,139 @@ public class CleanCommandTest extends EasyMockSupport {
   public void testCleanCommandNoArguments()
       throws CmdLineException, IOException, InterruptedException {
     CleanCommand cleanCommand = createCommandFromArgs();
-    CommandRunnerParams params = createCommandRunnerParams(cleanCommand);
+    CommandRunnerParams params = createCommandRunnerParams(cleanCommand, true);
+
+    ArtifactCacheBuckConfig artifactCacheBuckConfig =
+        ArtifactCacheBuckConfig.of(params.getBuckConfig());
+    ImmutableSet<DirCacheEntry> dirCacheEntries =
+        artifactCacheBuckConfig.getCacheEntries().getDirCacheEntries();
 
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getScratchDir());
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getGenDir());
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getTrashDir());
+    projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getCacheDir());
+    // Create a "local" cache directory.
+    for (DirCacheEntry dirCacheEntry : dirCacheEntries) {
+      projectFilesystem.mkdirs(dirCacheEntry.getCacheDir());
+    }
 
     // Simulate `buck clean`.
-    int exitCode = cleanCommand.run(params);
-    assertEquals(0, exitCode);
+    ExitCode exitCode = cleanCommand.run(params);
+    assertEquals(ExitCode.SUCCESS, exitCode);
 
     assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getScratchDir()));
     assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getGenDir()));
     assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getTrashDir()));
+    assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getCacheDir()));
+    for (DirCacheEntry dirCacheEntry : dirCacheEntries) {
+      assertFalse(projectFilesystem.exists(dirCacheEntry.getCacheDir()));
+    }
+  }
+
+  @Test
+  public void testCleanCommandWithKeepCache()
+      throws CmdLineException, IOException, InterruptedException {
+    CleanCommand cleanCommand = createCommandFromArgs("--keep-cache");
+    CommandRunnerParams params = createCommandRunnerParams(cleanCommand, true);
+
+    ArtifactCacheBuckConfig artifactCacheBuckConfig =
+        ArtifactCacheBuckConfig.of(params.getBuckConfig());
+    ImmutableSet<DirCacheEntry> dirCacheEntries =
+        artifactCacheBuckConfig.getCacheEntries().getDirCacheEntries();
+
+    projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getScratchDir());
+    projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getGenDir());
+    projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getTrashDir());
+    projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getCacheDir());
+    // Create a "local" cache directory.
+    for (DirCacheEntry dirCacheEntry : dirCacheEntries) {
+      projectFilesystem.mkdirs(dirCacheEntry.getCacheDir());
+    }
+
+    // Simulate `buck clean`.
+    ExitCode exitCode = cleanCommand.run(params);
+    assertEquals(ExitCode.SUCCESS, exitCode);
+
+    assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getScratchDir()));
+    assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getGenDir()));
+    assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getTrashDir()));
+    assertTrue(projectFilesystem.exists(projectFilesystem.getBuckPaths().getCacheDir()));
+    for (DirCacheEntry dirCacheEntry : dirCacheEntries) {
+      assertTrue(projectFilesystem.exists(dirCacheEntry.getCacheDir()));
+    }
+  }
+
+  @Test
+  public void testCleanCommandExcludeLocalCache()
+      throws CmdLineException, IOException, InterruptedException {
+    String cacheToKeep = "warmtestcache";
+    CleanCommand cleanCommand =
+        createCommandFromArgs("-c", "clean.excluded_dir_caches=" + cacheToKeep);
+    CommandRunnerParams params = createCommandRunnerParams(cleanCommand, true);
+
+    ArtifactCacheBuckConfig artifactCacheBuckConfig =
+        ArtifactCacheBuckConfig.of(params.getBuckConfig());
+    ImmutableSet<DirCacheEntry> dirCacheEntries =
+        artifactCacheBuckConfig.getCacheEntries().getDirCacheEntries();
+
+    projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getScratchDir());
+    projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getGenDir());
+    projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getTrashDir());
+    projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getCacheDir());
+
+    // Create the local caches.
+    for (DirCacheEntry dirCacheEntry : dirCacheEntries) {
+      projectFilesystem.mkdirs(dirCacheEntry.getCacheDir());
+    }
+
+    // Simulate `buck clean`.
+    ExitCode exitCode = cleanCommand.run(params);
+    assertEquals(ExitCode.SUCCESS, exitCode);
+
+    assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getScratchDir()));
+    assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getGenDir()));
+    assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getTrashDir()));
+    assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getCacheDir()));
+    for (DirCacheEntry dirCacheEntry : dirCacheEntries) {
+      if (dirCacheEntry.getName().get().equals(cacheToKeep)) {
+        assertTrue(projectFilesystem.exists(dirCacheEntry.getCacheDir()));
+      } else {
+        assertFalse(projectFilesystem.exists(dirCacheEntry.getCacheDir()));
+      }
+    }
+  }
+
+  @Test
+  public void testCleanCommandWithDryRun()
+      throws CmdLineException, IOException, InterruptedException {
+    CleanCommand cleanCommand = createCommandFromArgs("--dry-run");
+    CommandRunnerParams params = createCommandRunnerParams(cleanCommand, true);
+
+    ArtifactCacheBuckConfig artifactCacheBuckConfig =
+        ArtifactCacheBuckConfig.of(params.getBuckConfig());
+    ImmutableSet<DirCacheEntry> dirCacheEntries =
+        artifactCacheBuckConfig.getCacheEntries().getDirCacheEntries();
+
+    projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getScratchDir());
+    projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getGenDir());
+    projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getTrashDir());
+    projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getCacheDir());
+    // Create a "local" cache directory.
+    for (DirCacheEntry dirCacheEntry : dirCacheEntries) {
+      projectFilesystem.mkdirs(dirCacheEntry.getCacheDir());
+    }
+
+    // Simulate `buck clean`.
+    ExitCode exitCode = cleanCommand.run(params);
+    assertEquals(ExitCode.SUCCESS, exitCode);
+
+    assertTrue(projectFilesystem.exists(projectFilesystem.getBuckPaths().getScratchDir()));
+    assertTrue(projectFilesystem.exists(projectFilesystem.getBuckPaths().getGenDir()));
+    assertTrue(projectFilesystem.exists(projectFilesystem.getBuckPaths().getTrashDir()));
+    assertTrue(projectFilesystem.exists(projectFilesystem.getBuckPaths().getCacheDir()));
+    for (DirCacheEntry dirCacheEntry : dirCacheEntries) {
+      assertTrue(projectFilesystem.exists(dirCacheEntry.getCacheDir()));
+    }
   }
 
   @Test
@@ -101,15 +229,15 @@ public class CleanCommandTest extends EasyMockSupport {
     Path additionalPath = projectFilesystem.getPath("foo");
     CleanCommand cleanCommand =
         createCommandFromArgs("-c", "clean.additional_paths=" + additionalPath);
-    CommandRunnerParams params = createCommandRunnerParams(cleanCommand);
+    CommandRunnerParams params = createCommandRunnerParams(cleanCommand, false);
 
     // Set up mocks.
     projectFilesystem.mkdirs(additionalPath);
     assertTrue(projectFilesystem.exists(additionalPath));
 
     // Simulate `buck clean --project`.
-    int exitCode = cleanCommand.run(params);
-    assertEquals(0, exitCode);
+    ExitCode exitCode = cleanCommand.run(params);
+    assertEquals(ExitCode.SUCCESS, exitCode);
 
     assertFalse(projectFilesystem.exists(additionalPath));
   }
@@ -120,12 +248,29 @@ public class CleanCommandTest extends EasyMockSupport {
     return command;
   }
 
-  private CommandRunnerParams createCommandRunnerParams(AbstractCommand command)
+  private CommandRunnerParams createCommandRunnerParams(
+      AbstractCommand command, boolean enableCacheSection)
       throws InterruptedException, IOException {
-    BuckConfig buckConfig =
-        FakeBuckConfig.builder()
-            .setSections(command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME))
-            .build();
+    FakeBuckConfig.Builder buckConfigBuilder = FakeBuckConfig.builder();
+
+    if (enableCacheSection) {
+      ImmutableMap.Builder<String, ImmutableMap<String, String>> mergeConfigBuilder =
+          ImmutableMap.builder();
+      mergeConfigBuilder.putAll(
+          command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME).getValues());
+      mergeConfigBuilder.put(
+          "cache", ImmutableMap.of("dir_cache_names", "testcache, warmtestcache"));
+      mergeConfigBuilder.put(
+          "cache#testcache", ImmutableMap.of("dir", "~/dir-cache", "dir_mode", "readonly"));
+      mergeConfigBuilder.put(
+          "cache#warmtestcache",
+          ImmutableMap.of("dir", "~/warm-dir-cache", "dir_mode", "readonly"));
+      buckConfigBuilder.setSections(mergeConfigBuilder.build());
+    } else {
+      buckConfigBuilder.setSections(
+          command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME));
+    }
+    BuckConfig buckConfig = buckConfigBuilder.build();
     Cell cell =
         new TestCellBuilder().setFilesystem(projectFilesystem).setBuckConfig(buckConfig).build();
     return createCommandRunnerParams(buckConfig, cell);
@@ -133,43 +278,44 @@ public class CleanCommandTest extends EasyMockSupport {
 
   private CommandRunnerParams createCommandRunnerParams(BuckConfig buckConfig, Cell cell)
       throws InterruptedException, IOException {
-    Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
-        AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
     ProcessExecutor processExecutor = new FakeProcessExecutor();
-    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
-    SdkEnvironment sdkEnvironment =
-        SdkEnvironment.create(buckConfig, processExecutor, toolchainProvider);
 
-    return CommandRunnerParams.builder()
-        .setConsole(new TestConsole())
-        .setBuildInfoStoreManager(new BuildInfoStoreManager())
-        .setStdIn(new ByteArrayInputStream("".getBytes("UTF-8")))
-        .setCell(cell)
-        .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)
-        .setArtifactCacheFactory(new SingletonArtifactCacheFactory(new NoopArtifactCache()))
-        .setBuckEventBus(BuckEventBusForTests.newInstance())
-        .setTypeCoercerFactory(createMock(TypeCoercerFactory.class))
-        .setParser(createMock(Parser.class))
-        .setPlatform(Platform.detect())
-        .setEnvironment(ImmutableMap.copyOf(System.getenv()))
-        .setJavaPackageFinder(new FakeJavaPackageFinder())
-        .setClock(new DefaultClock())
-        .setProcessManager(Optional.empty())
-        .setWebServer(Optional.empty())
-        .setBuckConfig(buckConfig)
-        .setFileHashCache(new StackedFileHashCache(ImmutableList.of()))
-        .setExecutors(ImmutableMap.of())
-        .setScheduledExecutor(new FakeExecutor())
-        .setBuildEnvironmentDescription(CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION)
-        .setVersionControlStatsGenerator(
-            new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()))
-        .setVersionedTargetGraphCache(new VersionedTargetGraphCache())
-        .setActionGraphCache(new ActionGraphCache())
-        .setKnownBuildRuleTypesFactory(
-            new KnownBuildRuleTypesFactory(processExecutor, sdkEnvironment, toolchainProvider))
-        .setSdkEnvironment(sdkEnvironment)
-        .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
-        .setToolchainProvider(toolchainProvider)
-        .build();
+    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
+
+    return CommandRunnerParams.of(
+        new TestConsole(),
+        new ByteArrayInputStream("".getBytes("UTF-8")),
+        cell,
+        new InstrumentedVersionedTargetGraphCache(
+            new VersionedTargetGraphCache(), new NoOpCacheStatsTracker()),
+        new SingletonArtifactCacheFactory(new NoopArtifactCache()),
+        createMock(TypeCoercerFactory.class),
+        createMock(Parser.class),
+        BuckEventBusForTests.newInstance(),
+        Platform.detect(),
+        ImmutableMap.copyOf(System.getenv()),
+        new FakeJavaPackageFinder(),
+        new DefaultClock(),
+        new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        buckConfig,
+        new StackedFileHashCache(ImmutableList.of()),
+        ImmutableMap.of(),
+        new FakeExecutor(),
+        CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION,
+        new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries()),
+        KnownBuildRuleTypesProvider.of(
+            DefaultKnownBuildRuleTypesFactory.of(
+                processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory())),
+        new BuildInfoStoreManager(),
+        Optional.empty(),
+        Optional.empty(),
+        new DefaultProjectFilesystemFactory(),
+        TestRuleKeyConfigurationFactory.create(),
+        processExecutor,
+        new ExecutableFinder(),
+        pluginManager);
   }
 }

@@ -24,6 +24,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.UncachedRuleKeyBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -126,7 +127,7 @@ public class CommandToolRuleKeyTest {
   }
 
   private DefaultRuleKeyFactory ruleKeyFactory(FileHashCache hashCache) {
-    return new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder);
+    return new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder);
   }
 
   private static FakeFileHashCache fakeHashCache(String file, String hash) {

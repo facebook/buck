@@ -19,7 +19,7 @@ package com.facebook.buck.util;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.model.Pair;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Set;
@@ -69,6 +69,26 @@ public class MoreIterablesTest {
     String[] onlyDupsDedupExpected = new String[] {"a"};
     Set<String> onlydupsDedupActual = MoreIterables.dedupKeepLast(onlyDups);
     assertArrayAndSetEqual("onlyDups", onlyDupsDedupExpected, onlydupsDedupActual);
+  }
+
+  @Test
+  public void testForEachPair() {
+    StringBuilder builder = new StringBuilder();
+    MoreIterables.forEachPair(
+        lstV("l1", "l2"),
+        lstV("r1", "r2"),
+        (left, right) -> builder.append("|" + left + "," + right));
+    assertEquals("|l1,r1|l2,r2", builder.toString());
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void testForEachPairLeftSmaller() {
+    MoreIterables.forEachPair(lstV("l1"), lstV("r1", "r2"), (left, right) -> {});
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void testForEachPairRightSmaller() {
+    MoreIterables.forEachPair(lstV("l1", "l2"), lstV("r1"), (left, right) -> {});
   }
 
   @Test

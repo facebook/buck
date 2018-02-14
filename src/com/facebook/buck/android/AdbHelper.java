@@ -27,7 +27,7 @@ import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.RealAndroidDevice;
-import com.facebook.buck.annotations.SuppressForbidden;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
@@ -40,17 +40,17 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
@@ -68,6 +68,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
@@ -78,6 +79,9 @@ public class AdbHelper implements AndroidDevicesHelper {
 
   /** Pattern that matches safe package names. (Must be a full string match). */
   public static final Pattern PACKAGE_NAME_PATTERN = Pattern.compile("[\\w.-]+");
+
+  private static Optional<Supplier<ImmutableList<AndroidDevice>>> devicesSupplierForTests =
+      Optional.empty();
 
   /**
    * If this environment variable is set, the device with the specified serial number is targeted.
@@ -93,23 +97,28 @@ public class AdbHelper implements AndroidDevicesHelper {
 
   private final AdbOptions options;
   private final TargetDeviceOptions deviceOptions;
+  private final ToolchainProvider toolchainProvider;
   private final Supplier<ExecutionContext> contextSupplier;
   private final boolean restartAdbOnFailure;
+  private final ImmutableList<String> rapidInstallTypes;
   private final Supplier<ImmutableList<AndroidDevice>> devicesSupplier;
 
-  private static Optional<Supplier<ImmutableList<AndroidDevice>>> devicesSupplierForTests =
-      Optional.empty();
+  @Nullable private ListeningExecutorService executorService = null;
 
   public AdbHelper(
       AdbOptions adbOptions,
       TargetDeviceOptions deviceOptions,
+      ToolchainProvider toolchainProvider,
       Supplier<ExecutionContext> contextSupplier,
-      boolean restartAdbOnFailure) {
+      boolean restartAdbOnFailure,
+      ImmutableList<String> rapidInstallTypes) {
     this.options = adbOptions;
     this.deviceOptions = deviceOptions;
+    this.toolchainProvider = toolchainProvider;
     this.contextSupplier = contextSupplier;
     this.restartAdbOnFailure = restartAdbOnFailure;
-    this.devicesSupplier = Suppliers.memoize(this::getDevicesImpl);
+    this.rapidInstallTypes = rapidInstallTypes;
+    this.devicesSupplier = MoreSuppliers.memoize(this::getDevicesImpl);
   }
 
   @VisibleForTesting
@@ -141,7 +150,6 @@ public class AdbHelper implements AndroidDevicesHelper {
    * be used to install the apk if needed.
    */
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  @SuppressForbidden
   @Override
   public synchronized boolean adbCall(String description, AdbDeviceCallable func, boolean quiet)
       throws InterruptedException {
@@ -155,31 +163,22 @@ public class AdbHelper implements AndroidDevicesHelper {
       }
     }
 
-    int adbThreadCount = options.getAdbThreadCount();
-    if (adbThreadCount <= 0) {
-      adbThreadCount = devices.size();
-    }
-
     // Start executions on all matching devices.
     List<ListenableFuture<Boolean>> futures = new ArrayList<>();
-    ListeningExecutorService executorService =
-        listeningDecorator(
-            newMultiThreadExecutor(
-                new CommandThreadFactory(getClass().getSimpleName()), adbThreadCount));
-
     for (final AndroidDevice device : devices) {
       futures.add(
-          executorService.submit(
-              () -> {
-                try (SimplePerfEvent.Scope ignored =
-                    SimplePerfEvent.scope(
-                        getBuckEventBus(),
-                        PerfEventId.of("adbCall " + description),
-                        "device_serial",
-                        device.getSerialNumber())) {
-                  return func.apply(device);
-                }
-              }));
+          getExecutorService()
+              .submit(
+                  () -> {
+                    try (SimplePerfEvent.Scope ignored =
+                        SimplePerfEvent.scope(
+                            getBuckEventBus(),
+                            PerfEventId.of("adbCall " + description),
+                            "device_serial",
+                            device.getSerialNumber())) {
+                      return func.apply(device);
+                    }
+                  }));
     }
 
     // Wait for all executions to complete or fail.
@@ -198,12 +197,6 @@ public class AdbHelper implements AndroidDevicesHelper {
       }
       Threads.interruptCurrentThread();
       throw e;
-    } finally {
-      MostExecutors.shutdownOrThrow(
-          executorService,
-          10,
-          TimeUnit.MINUTES,
-          new InterruptionFailedException("Failed to shutdown ExecutorService."));
     }
 
     int successCount = 0;
@@ -223,6 +216,28 @@ public class AdbHelper implements AndroidDevicesHelper {
     }
 
     return failureCount == 0;
+  }
+
+  private synchronized ListeningExecutorService getExecutorService() {
+    if (executorService != null) {
+      return executorService;
+    }
+    int deviceCount;
+    try {
+      deviceCount = getDevices(true).size();
+    } catch (InterruptedException e) {
+      throw new BuckUncheckedExecutionException(e);
+    }
+    int adbThreadCount = options.getAdbThreadCount();
+    if (adbThreadCount <= 0) {
+      adbThreadCount = deviceCount;
+    }
+    adbThreadCount = Math.min(deviceCount, adbThreadCount);
+    executorService =
+        listeningDecorator(
+            newMultiThreadExecutor(
+                new CommandThreadFactory(getClass().getSimpleName()), adbThreadCount));
+    return executorService;
   }
 
   private void printMessage(String message) {
@@ -245,7 +260,6 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   @Override
-  @SuppressForbidden
   public boolean installApk(
       SourcePathResolver pathResolver,
       HasInstallableApk hasInstallableApk,
@@ -280,8 +294,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   @Override
-  @SuppressForbidden
-  public int startActivity(
+  public void startActivity(
       SourcePathResolver pathResolver,
       HasInstallableApk hasInstallableApk,
       @Nullable String activity,
@@ -301,11 +314,9 @@ public class AdbHelper implements AndroidDevicesHelper {
 
       // Sanity check.
       if (launcherActivities.isEmpty()) {
-        printError("No launchable activities found.");
-        return 1;
+        throw new HumanReadableException("No launchable activities found.");
       } else if (launcherActivities.size() > 1) {
-        printError("Default activity is ambiguous.");
-        return 1;
+        throw new HumanReadableException("Default activity is ambiguous.");
       }
 
       // Construct a component for the '-n' argument of 'adb shell am start'.
@@ -322,17 +333,18 @@ public class AdbHelper implements AndroidDevicesHelper {
     StartActivityEvent.Started started =
         StartActivityEvent.started(hasInstallableApk.getBuildTarget(), activityToRun);
     getBuckEventBus().post(started);
-    boolean success =
-        adbCall(
-            "start activity",
-            (device) -> {
-              ((RealAndroidDevice) device).deviceStartActivity(activityToRun, waitForDebugger);
-              return true;
-            },
-            false);
-    getBuckEventBus().post(StartActivityEvent.finished(started, success));
-
-    return success ? 0 : 1;
+    try {
+      adbCallOrThrow(
+          "start activity",
+          (device) -> {
+            ((RealAndroidDevice) device).deviceStartActivity(activityToRun, waitForDebugger);
+            return true;
+          },
+          false);
+      getBuckEventBus().post(StartActivityEvent.finished(started, true));
+    } catch (Exception e) {
+      getBuckEventBus().post(StartActivityEvent.finished(started, false));
+    }
   }
 
   /**
@@ -390,7 +402,6 @@ public class AdbHelper implements AndroidDevicesHelper {
    */
   @Nullable
   @VisibleForTesting
-  @SuppressForbidden
   List<IDevice> filterDevices(IDevice[] allDevices) {
     if (allDevices.length == 0) {
       printError("No devices are found.");
@@ -464,7 +475,8 @@ public class AdbHelper implements AndroidDevicesHelper {
         device,
         getConsole(),
         getApkFilePathFromProperties().orElse(null),
-        nextAgentPort.incrementAndGet());
+        nextAgentPort.incrementAndGet(),
+        rapidInstallTypes);
   }
 
   private static boolean isAdbInitialized(AndroidDebugBridge adb) {
@@ -477,7 +489,8 @@ public class AdbHelper implements AndroidDevicesHelper {
    */
   @Nullable
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  private static AndroidDebugBridge createAdb(ExecutionContext context)
+  private static AndroidDebugBridge createAdb(
+      AndroidPlatformTarget androidPlatformTarget, ExecutionContext context)
       throws InterruptedException {
     DdmPreferences.setTimeOut(60000);
 
@@ -488,7 +501,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     }
 
     AndroidDebugBridge adb =
-        AndroidDebugBridge.createBridge(context.getPathToAdbExecutable(), false);
+        AndroidDebugBridge.createBridge(androidPlatformTarget.getAdbExecutable().toString(), false);
     if (adb == null) {
       context
           .getConsole()
@@ -507,7 +520,6 @@ public class AdbHelper implements AndroidDevicesHelper {
     return isAdbInitialized(adb) ? adb : null;
   }
 
-  @SuppressForbidden
   private ImmutableList<AndroidDevice> getDevicesImpl() {
     if (devicesSupplierForTests.isPresent()) {
       return devicesSupplierForTests.get().get();
@@ -515,7 +527,11 @@ public class AdbHelper implements AndroidDevicesHelper {
     // Initialize adb connection.
     AndroidDebugBridge adb;
     try {
-      adb = createAdb(contextSupplier.get());
+      adb =
+          createAdb(
+              toolchainProvider.getByName(
+                  AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
+              contextSupplier.get());
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
@@ -544,7 +560,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     if (devices == null) {
       return ImmutableList.of();
     }
-    return devices.stream().map(this::createDevice).collect(MoreCollectors.toImmutableList());
+    return devices.stream().map(this::createDevice).collect(ImmutableList.toImmutableList());
   }
 
   private Console getConsole() {
@@ -556,8 +572,21 @@ public class AdbHelper implements AndroidDevicesHelper {
     return Optional.ofNullable(apkFileName).map(Paths::get);
   }
 
+  @Override
+  public synchronized void close() {
+    // getExecutorService() requires the context for lazy initialization, so explicitly check if it
+    // has been initialized.
+    if (executorService != null) {
+      MostExecutors.shutdownOrThrow(
+          executorService,
+          10,
+          TimeUnit.MINUTES,
+          new InterruptionFailedException("Failed to shutdown ExecutorService."));
+      executorService = null;
+    }
+  }
+
   /** An exception that indicates that an executed command returned an unsuccessful exit code. */
-  @SuppressWarnings("serial")
   public static class CommandFailedException extends IOException {
     public final String command;
     public final int exitCode;

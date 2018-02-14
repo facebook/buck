@@ -16,10 +16,10 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
+import java.util.function.Function;
 
 public class Optionals {
 

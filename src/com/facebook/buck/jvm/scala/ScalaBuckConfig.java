@@ -82,15 +82,16 @@ public class ScalaBuckConfig {
     Optional<Path> externalScalac =
         new ExecutableFinder()
             .getOptionalExecutable(Paths.get("scalac"), delegate.getEnvironment());
+
     if (externalScalac.isPresent()) {
-      return new HashedFileTool(externalScalac.get());
+      return new HashedFileTool(() -> delegate.getPathSourcePath(externalScalac.get()));
     }
 
     String scalaHome = delegate.getEnvironment().get("SCALA_HOME");
     if (scalaHome != null) {
       Path scalacInHomePath = Paths.get(scalaHome, "bin", "scalac");
       if (scalacInHomePath.toFile().exists()) {
-        return new HashedFileTool(scalacInHomePath);
+        return new HashedFileTool(() -> delegate.getPathSourcePath(scalacInHomePath));
       }
       throw new HumanReadableException("Could not find scalac at $SCALA_HOME/bin/scalac.");
     }

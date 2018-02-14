@@ -23,7 +23,7 @@ import java.util.List;
 import org.immutables.value.Value;
 
 /** Simple type representing a {@link SourcePath} and a list of file-specific flags. */
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractSourceWithFlags implements Comparable<AbstractSourceWithFlags> {
 

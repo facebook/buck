@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -54,7 +55,7 @@ public class OutputToFileExpanderUtilsTest {
 
     String text = "cheese" + File.pathSeparator + "peas";
 
-    StringExpander source = new StringExpander(text);
+    StringExpander source = new StringExpander<>(Macro.class, StringArg.of(text));
     BuildTarget target = BuildTargetFactory.newInstance("//some:example");
     JavaLibraryBuilder builder = JavaLibraryBuilder.createBuilder(target);
     TargetNode<?, ?> node = builder.build();

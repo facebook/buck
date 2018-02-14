@@ -17,10 +17,12 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.StubJar;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -29,14 +31,17 @@ public class CalculateClassAbiStep implements Step {
   private final ProjectFilesystem filesystem;
   private final Path binaryJar;
   private final Path abiJar;
-  private final boolean sourceAbiCompatible;
+  private final AbiGenerationMode compatibilityMode;
 
   public CalculateClassAbiStep(
-      ProjectFilesystem filesystem, Path binaryJar, Path abiJar, boolean sourceAbiCompatible) {
+      ProjectFilesystem filesystem,
+      Path binaryJar,
+      Path abiJar,
+      AbiGenerationMode compatibilityMode) {
     this.filesystem = filesystem;
     this.binaryJar = binaryJar;
     this.abiJar = abiJar;
-    this.sourceAbiCompatible = sourceAbiCompatible;
+    this.compatibilityMode = compatibilityMode;
   }
 
   @Override
@@ -44,13 +49,13 @@ public class CalculateClassAbiStep implements Step {
       throws IOException, InterruptedException {
     try {
       Path binJar = filesystem.resolve(binaryJar);
-      new StubJar(binJar).setSourceAbiCompatible(sourceAbiCompatible).writeTo(filesystem, abiJar);
+      new StubJar(binJar).setCompatibilityMode(compatibilityMode).writeTo(filesystem, abiJar);
     } catch (IllegalArgumentException e) {
       context.logError(e, "Failed to calculate ABI for %s.", binaryJar);
-      return StepExecutionResult.ERROR;
+      return StepExecutionResults.ERROR;
     }
 
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

@@ -1,5 +1,5 @@
 apple_test(
-  name = 'Test',
-  info_plist = 'Test.plist',
-  headers = ['Header.h'],
+    name = "Test",
+    headers = ["Header.h"],
+    info_plist = "Test.plist",
 )

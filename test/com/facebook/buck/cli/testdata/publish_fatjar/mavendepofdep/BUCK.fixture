@@ -1,12 +1,12 @@
 java_library(
-  name = 'mavendepofdep',
-  maven_coords = 'com.example:mavendepofdep:1.0',
-  srcs = glob(['*.java']),
-  resources = [
-  ],
-  deps = [
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "mavendepofdep",
+    srcs = glob(["*.java"]),
+    maven_coords = "com.example:mavendepofdep:1.0",
+    resources = [
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+    ],
 )

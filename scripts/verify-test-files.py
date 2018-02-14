@@ -23,8 +23,9 @@ IGNORE_PREFIXES = [
   'buck-out',
   'build-ij',
   'src/com/facebook/buck/testrunner',
+  'test/com/facebook/buck/testutil/endtoend/EndToEndRunner',
   # t13833822
-  'src/com/facebook/buck/intellij/ideabuck/tests/integration',
+  'tools/ideabuck/tests/integration',
 ]
 # Due to path length issues during build on Windows the apple test target is
 # only created on OSx.

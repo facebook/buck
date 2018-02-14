@@ -35,12 +35,13 @@ public class AbstractBatchingLoggerTest {
       super(minBatchSize);
     }
 
-    public List<ImmutableCollection<BatchEntry>> getUploadedBatches() {
+    public List<ImmutableCollection<AbstractBatchingLogger.BatchEntry>> getUploadedBatches() {
       return uploadedBatches;
     }
 
     @Override
-    protected ListenableFuture<Void> logMultiple(ImmutableCollection<BatchEntry> data) {
+    protected ListenableFuture<Void> logMultiple(
+        ImmutableCollection<AbstractBatchingLogger.BatchEntry> data) {
       uploadedBatches.add(data);
       return Futures.immediateFuture(null);
     }

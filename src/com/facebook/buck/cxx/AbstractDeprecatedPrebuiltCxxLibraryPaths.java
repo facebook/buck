@@ -21,14 +21,15 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
-import com.facebook.buck.model.macros.MacroFinder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.StringExpander;
 import com.facebook.buck.util.HumanReadableException;
@@ -46,8 +47,6 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractDeprecatedPrebuiltCxxLibraryPaths implements PrebuiltCxxLibraryPaths {
-
-  private static final MacroFinder MACRO_FINDER = new MacroFinder();
 
   abstract BuildTarget getTarget();
 
@@ -70,17 +69,14 @@ abstract class AbstractDeprecatedPrebuiltCxxLibraryPaths implements PrebuiltCxxL
                 .<LocationMacroExpander>map(CxxLocationMacroExpander::new)
                 .orElseGet(LocationMacroExpander::new),
             "platform",
-            new StringExpander(flav)));
+            new StringExpander<>(Macro.class, StringArg.of(flav))));
   }
 
   private String expandMacros(
       BuildRuleResolver resolver, CellPathResolver cellRoots, CxxPlatform cxxPlatform, String str) {
     try {
-      return MACRO_FINDER.replace(
-          getMacroHandler(Optional.of(cxxPlatform))
-              .getMacroReplacers(getTarget(), cellRoots, resolver),
-          str,
-          true);
+      return getMacroHandler(Optional.of(cxxPlatform))
+          .expand(getTarget(), cellRoots, resolver, str);
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s in \"%s\"", getTarget(), e.getMessage(), str);
     }

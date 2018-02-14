@@ -17,11 +17,10 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.rules.BuildRule;
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Objects;
 import java.util.SortedSet;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 public class AndroidResourceHelper {
@@ -35,8 +34,8 @@ public class AndroidResourceHelper {
    * <p>
    */
   public static ImmutableSortedSet<BuildRule> androidResOnly(SortedSet<BuildRule> deps) {
-    return FluentIterable.from(deps)
-        .transform(
+    return deps.stream()
+        .map(
             new Function<BuildRule, BuildRule>() {
               @Override
               @Nullable
@@ -48,6 +47,6 @@ public class AndroidResourceHelper {
               }
             })
         .filter(Objects::nonNull)
-        .toSortedSet(deps.comparator());
+        .collect(ImmutableSortedSet.toImmutableSortedSet(deps.comparator()));
   }
 }

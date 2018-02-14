@@ -4,12 +4,31 @@
 {template .manifest_apk_arg}
 {call buck.arg}
   {param name: 'manifest' /}
+  {param default: 'None' /}
   {param desc}
     Relative path to the Android manifest for the APK.  The common
     case is that the manifest will be in the same directory as the
     rule, in which case this will simply be
     {sp}<code>'AndroidManifest.xml'</code>, but it can also reference
     an {call buck.android_manifest /} rule.
+
+    Prefer using <code>manifest_skeleton</code>, which performs merging automatically.
+    Exactly one of <code>manifest</code> and <code>manifest_skeleton</code> must be set.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'manifest_skeleton' /}
+  {param default: 'None' /}
+  {param desc}
+    Relative path to the skeleton Android manifest for the APK.
+    An {call buck.android_manifest /} will be created automatically to merge
+    all manifests from libraries and resources going into the app.
+    The common case is that the manifest will be in the same directory as the
+    rule, in which case this will simply be
+    {sp}<code>'AndroidManifest.xml'</code>.
+
+    Exactly one of <code>manifest</code> and <code>manifest_skeleton</code> must be set.
   {/param}
 {/call}
 {/template}

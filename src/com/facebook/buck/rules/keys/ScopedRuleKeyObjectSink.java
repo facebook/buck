@@ -45,7 +45,6 @@ public class ScopedRuleKeyObjectSink implements RuleKeyObjectSink {
   }
 
   @Override
-  @SuppressWarnings("deprecation")
   public RuleKeyObjectSink setPath(Path absolutePath, Path ideallyRelative) throws IOException {
     try (Scope ignored = scope.elementScope()) {
       delegate.setPath(absolutePath, ideallyRelative);

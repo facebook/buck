@@ -20,11 +20,13 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.python.toolchain.PythonEnvironment;
+import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -36,12 +38,12 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.RichStream;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps {
@@ -53,11 +55,12 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   @AddToRuleKey private final PythonEnvironment pythonEnvironment;
   @AddToRuleKey private final ImmutableSet<String> preloadLibraries;
   private final boolean cache;
+  private final ImmutableSortedSet<BuildRule> buildDeps;
 
-  private PythonPackagedBinary(
+  PythonPackagedBinary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      SourcePathRuleFinder ruleFinder,
       Supplier<? extends SortedSet<BuildRule>> originalDeclareDeps,
       PythonPlatform pythonPlatform,
       Tool builder,
@@ -73,7 +76,6 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
     super(
         buildTarget,
         projectFilesystem,
-        params,
         originalDeclareDeps,
         pythonPlatform,
         mainModule,
@@ -88,46 +90,11 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
     this.mainModule = mainModule;
     this.preloadLibraries = preloadLibraries;
     this.cache = cache;
-  }
-
-  static PythonPackagedBinary from(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
-      SourcePathRuleFinder ruleFinder,
-      PythonPlatform pythonPlatform,
-      Tool builder,
-      ImmutableList<String> buildArgs,
-      Tool pathToPexExecuter,
-      String pexExtension,
-      PythonEnvironment pythonEnvironment,
-      String mainModule,
-      PythonPackageComponents components,
-      ImmutableSet<String> preloadLibraries,
-      boolean cache,
-      boolean legacyOutputPath) {
-    return new PythonPackagedBinary(
-        buildTarget,
-        projectFilesystem,
-        params
-            .withDeclaredDeps(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(components.getDeps(ruleFinder))
-                    .addAll(builder.getDeps(ruleFinder))
-                    .build())
-            .withoutExtraDeps(),
-        params.getDeclaredDeps(),
-        pythonPlatform,
-        builder,
-        buildArgs,
-        pathToPexExecuter,
-        pexExtension,
-        pythonEnvironment,
-        mainModule,
-        components,
-        preloadLibraries,
-        cache,
-        legacyOutputPath);
+    this.buildDeps =
+        ImmutableSortedSet.<BuildRule>naturalOrder()
+            .addAll(components.getDeps(ruleFinder))
+            .addAll(BuildableSupport.getDepsCollection(builder, ruleFinder))
+            .build();
   }
 
   @Override
@@ -171,6 +138,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
     // Generate and return the PEX build step.
     steps.add(
         new PexStep(
+            getBuildTarget(),
             getProjectFilesystem(),
             builder.getEnvironment(resolver),
             ImmutableList.<String>builder()
@@ -200,11 +168,19 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return RichStream.<BuildTarget>empty()
         .concat(super.getRuntimeDeps(ruleFinder))
-        .concat(pathToPexExecuter.getDeps(ruleFinder).stream().map(BuildRule::getBuildTarget));
+        .concat(
+            BuildableSupport.getDepsCollection(pathToPexExecuter, ruleFinder)
+                .stream()
+                .map(BuildRule::getBuildTarget));
   }
 
   @Override
   public boolean isCacheable() {
     return cache;
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDeps;
   }
 }

@@ -17,10 +17,10 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.parser.ProjectBuildFileParserFactory;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
-import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Preconditions;
@@ -57,13 +57,17 @@ public class AuditIncludesCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
     try (ProjectBuildFileParser parser =
-        params
-            .getCell()
-            .createBuildFileParser(
-                new DefaultTypeCoercerFactory(), params.getConsole(), params.getBuckEventBus())) {
+        ProjectBuildFileParserFactory.createBuildFileParser(
+            params.getCell(),
+            new DefaultTypeCoercerFactory(),
+            params.getConsole(),
+            params.getBuckEventBus(),
+            params.getExecutableFinder(),
+            params.getKnownBuildRuleTypesProvider().get(params.getCell()).getDescriptions())) {
       PrintStream out = params.getConsole().getStdOut();
       for (String pathToBuildFile : getArguments()) {
         if (!json) {
@@ -83,21 +87,18 @@ public class AuditIncludesCommand extends AbstractCommand {
         int includesMetadataEntryIndex = 3;
         Preconditions.checkState(
             includesMetadataEntryIndex <= rawRules.size(), "__includes metadata entry is missing.");
+        // __includes meta rule is the 3rd one from the end
         Map<String, Object> includesMetaRule =
-            rawRules.get(
-                rawRules.size()
-                    - includesMetadataEntryIndex); // __includes meta rule is the 3rd one from the end
+            rawRules.get(rawRules.size() - includesMetadataEntryIndex);
         @SuppressWarnings("unchecked")
         @Nullable
         Iterable<String> includes = (Iterable<String>) includesMetaRule.get("__includes");
         printIncludesToStdout(
             params, Preconditions.checkNotNull(includes, "__includes metadata entry is missing"));
       }
-    } catch (BuildFileParseException e) {
-      throw new HumanReadableException(e, "Unable to parse build file.");
     }
 
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   @Override

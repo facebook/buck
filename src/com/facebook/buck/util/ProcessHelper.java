@@ -18,7 +18,6 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.Kernel32;
@@ -31,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import javax.lang.model.SourceVersion;
 import oshi.SystemInfo;
@@ -183,7 +183,7 @@ public class ProcessHelper {
     if (IS_JDK9) {
       try {
         // Invoking via reflection to avoid a strong dependency on JDK 9
-        Method getPid = Process.class.getMethod("getPid");
+        Method getPid = Process.class.getMethod("pid");
         return (Long) getPid.invoke(process);
       } catch (Exception e) {
         LOG.warn(e, "Cannot get process id!");

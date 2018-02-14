@@ -17,8 +17,8 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ComparisonChain;
 import java.util.Objects;
 import org.immutables.value.Value;
@@ -54,7 +54,11 @@ public abstract class AbstractForwardingBuildTargetSourcePath implements BuildTa
 
   @Override
   public String toString() {
-    return String.valueOf(new Pair<>(getTarget(), getDelegate()));
+    return toString(getDelegate());
+  }
+
+  private String toString(Object delegateRepresentation) {
+    return String.valueOf(new Pair<>(getTarget(), delegateRepresentation));
   }
 
   @Override
@@ -74,5 +78,16 @@ public abstract class AbstractForwardingBuildTargetSourcePath implements BuildTa
         .compare(getTarget(), that.getTarget())
         .compare(getDelegate(), that.getDelegate())
         .result();
+  }
+
+  /**
+   * @return a string that is safe to use for rule key calculations, i.e. does not include absolute
+   *     paths.
+   */
+  @Override
+  public String representationForRuleKey() {
+    return getDelegate() instanceof AbstractPathSourcePath
+        ? toString(((AbstractPathSourcePath) getDelegate()).getRelativePath())
+        : toString();
   }
 }

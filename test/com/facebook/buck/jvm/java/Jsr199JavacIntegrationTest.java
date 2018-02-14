@@ -22,19 +22,24 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.jvm.java.Javac.Invocation;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.MockClassLoader;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -127,22 +132,27 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getJavaPackageFinder(),
             createProjectFilesystem(),
             executionContext.getProjectFilesystemFactory(),
-            NoOpClassUsageFileWriter.instance(),
             executionContext.getEnvironment(),
-            executionContext.getProcessExecutor(),
-            ImmutableList.of(),
-            Optional.empty());
+            executionContext.getProcessExecutor());
 
     int exitCode =
         javac
             .newBuildInvocation(
                 javacExecutionContext,
+                DefaultSourcePathResolver.from(
+                    new SourcePathRuleFinder(
+                        new SingleThreadedBuildRuleResolver(
+                            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
                 BuildTargetFactory.newInstance("//some:example"),
                 ImmutableList.of(),
                 ImmutableList.of(),
                 SOURCE_PATHS,
                 pathToSrcsList,
                 Paths.get("working"),
+                false,
+                null,
+                null,
+                AbiGenerationMode.CLASS,
                 AbiGenerationMode.CLASS,
                 null)
             .buildClasses();
@@ -180,22 +190,27 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getJavaPackageFinder(),
             createProjectFilesystem(),
             executionContext.getProjectFilesystemFactory(),
-            NoOpClassUsageFileWriter.instance(),
             executionContext.getEnvironment(),
-            executionContext.getProcessExecutor(),
-            ImmutableList.of(),
-            Optional.empty());
+            executionContext.getProcessExecutor());
 
     int exitCode =
         javac
             .newBuildInvocation(
                 javacExecutionContext,
+                DefaultSourcePathResolver.from(
+                    new SourcePathRuleFinder(
+                        new SingleThreadedBuildRuleResolver(
+                            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
                 BuildTargetFactory.newInstance("//some:example"),
                 ImmutableList.of(),
                 ImmutableList.of(),
                 SOURCE_PATHS,
                 pathToSrcsList,
                 Paths.get("working"),
+                false,
+                null,
+                null,
+                AbiGenerationMode.CLASS,
                 AbiGenerationMode.CLASS,
                 null)
             .buildClasses();
@@ -280,11 +295,8 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getJavaPackageFinder(),
             createProjectFilesystem(),
             executionContext.getProjectFilesystemFactory(),
-            NoOpClassUsageFileWriter.instance(),
             executionContext.getEnvironment(),
-            executionContext.getProcessExecutor(),
-            ImmutableList.of(fakeJavacJar),
-            Optional.empty());
+            executionContext.getProcessExecutor());
 
     boolean caught = false;
 
@@ -292,12 +304,20 @@ public class Jsr199JavacIntegrationTest {
       javac
           .newBuildInvocation(
               javacExecutionContext,
+              DefaultSourcePathResolver.from(
+                  new SourcePathRuleFinder(
+                      new SingleThreadedBuildRuleResolver(
+                          TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
               BuildTargetFactory.newInstance("//some:example"),
               ImmutableList.of(),
               ImmutableList.of(),
               SOURCE_PATHS,
               pathToSrcsList,
               Paths.get("working"),
+              false,
+              null,
+              null,
+              AbiGenerationMode.CLASS,
               AbiGenerationMode.CLASS,
               null)
           .buildClasses();
@@ -340,5 +360,65 @@ public class Jsr199JavacIntegrationTest {
 
   private ProjectFilesystem createProjectFilesystem() throws InterruptedException {
     return TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+  }
+
+  /**
+   * Behaves like {@link com.facebook.buck.jvm.java.JdkProvidedInMemoryJavac} when JDK is not
+   * present
+   */
+  private static class JdkNotFoundJavac extends Jsr199Javac {
+    @Override
+    protected JavaCompiler createCompiler(
+        JavacExecutionContext context, SourcePathResolver resolver) {
+      throw new RuntimeException("JDK is not found");
+    }
+  }
+
+  @Test
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  public void jdkNotFound() throws Exception {
+    Jsr199Javac javac = new JdkNotFoundJavac();
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    JavacExecutionContext javacExecutionContext =
+        JavacExecutionContext.of(
+            new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
+            executionContext.getStdErr(),
+            executionContext.getClassLoaderCache(),
+            executionContext.getVerbosity(),
+            executionContext.getCellPathResolver(),
+            executionContext.getJavaPackageFinder(),
+            createProjectFilesystem(),
+            executionContext.getProjectFilesystemFactory(),
+            executionContext.getEnvironment(),
+            executionContext.getProcessExecutor());
+
+    Invocation buildInvocation =
+        javac.newBuildInvocation(
+            javacExecutionContext,
+            DefaultSourcePathResolver.from(
+                new SourcePathRuleFinder(
+                    new SingleThreadedBuildRuleResolver(
+                        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
+            BuildTargetFactory.newInstance("//some:example"),
+            ImmutableList.of(),
+            ImmutableList.of(),
+            SOURCE_PATHS,
+            pathToSrcsList,
+            Paths.get("working"),
+            false,
+            null,
+            null,
+            AbiGenerationMode.CLASS,
+            AbiGenerationMode.CLASS,
+            null);
+    try {
+      buildInvocation.buildClasses();
+      fail();
+    } catch (Exception e) {
+      // expected
+    }
+
+    // Make sure `close` works properly
+    buildInvocation.close();
   }
 }

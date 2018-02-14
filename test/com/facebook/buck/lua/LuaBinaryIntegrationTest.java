@@ -17,6 +17,7 @@
 package com.facebook.buck.lua;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
@@ -40,11 +41,13 @@ import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.ParameterizedTests;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -165,8 +168,7 @@ public class LuaBinaryIntegrationTest {
   @Test
   public void stdout() throws Exception {
     workspace.writeContentsToPath("require 'os'; io.stdout:write('hello world')", "simple.lua");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("run", "//:simple").assertSuccess();
+    ProcessResult result = workspace.runBuckCommand("run", "//:simple").assertSuccess();
     assertThat(
         result.getStdout() + result.getStderr(),
         result.getStdout().trim(),
@@ -188,8 +190,8 @@ public class LuaBinaryIntegrationTest {
   public void errorCode() throws Exception {
     workspace.writeContentsToPath("require 'os'\nos.exit(5)", "simple.lua");
     workspace.runBuckBuild("//:simple").assertSuccess();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("run", "//:simple");
-    assertThat(result.getExitCode(), Matchers.equalTo(5));
+    ProcessResult result = workspace.runBuckCommand("run", "//:simple");
+    assertEquals(result.getExitCode(), ExitCode.BUILD_ERROR);
   }
 
   @Test
@@ -205,8 +207,7 @@ public class LuaBinaryIntegrationTest {
     Path arg0 = workspace.buildAndReturnOutput("//:simple");
 
     // no args...
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("run", "//:simple").assertSuccess();
+    ProcessResult result = workspace.runBuckCommand("run", "//:simple").assertSuccess();
     assertThat(
         result.getStdout() + result.getStderr(),
         Splitter.on(System.lineSeparator()).splitToList(result.getStdout().trim()),
@@ -231,8 +232,7 @@ public class LuaBinaryIntegrationTest {
   @Test
   public void nativeExtension() throws Exception {
     assumeTrue(luaDevel);
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("run", "//:native").assertSuccess();
+    ProcessResult result = workspace.runBuckCommand("run", "//:native").assertSuccess();
     assertThat(
         result.getStdout() + result.getStderr(),
         result.getStdout().trim(),
@@ -243,8 +243,7 @@ public class LuaBinaryIntegrationTest {
   public void nativeExtensionWithDep() throws Exception {
     assumeThat(starterType, Matchers.not(Matchers.equalTo(LuaBinaryDescription.StarterType.PURE)));
     assumeTrue(luaDevel);
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("run", "//:native_with_dep").assertSuccess();
+    ProcessResult result = workspace.runBuckCommand("run", "//:native_with_dep").assertSuccess();
     assertThat(
         result.getStdout() + result.getStderr(),
         result.getStdout().trim(),
@@ -311,10 +310,17 @@ public class LuaBinaryIntegrationTest {
   public void cxxLuaExtensionWithoutIncludeDirs() throws IOException {
     assumeTrue("", sandboxSources && starterType == LuaBinaryDescription.StarterType.NATIVE);
     workspace.replaceFileContents("with_includes/BUCK", "include_dirs", "#");
-    ProjectWorkspace.ProcessResult luaBinaryResult =
-        workspace.runBuckBuild("//with_includes:native_with_extension");
+    ProcessResult luaBinaryResult = workspace.runBuckBuild("//with_includes:native_with_extension");
     luaBinaryResult.assertFailure();
     assertThat(luaBinaryResult.getStderr(), containsString("extension.h"));
+  }
+
+  @Test
+  public void usedInGenruleCommand() throws IOException {
+    assumeTrue(luaDevel);
+    workspace.writeContentsToPath("require 'os'; io.stdout:write('okay')", "simple.lua");
+    Path output = workspace.buildAndReturnOutput("//:genrule");
+    assertEquals("okay", workspace.getFileContents(output));
   }
 
   private LuaBuckConfig getLuaBuckConfig() throws InterruptedException, IOException {

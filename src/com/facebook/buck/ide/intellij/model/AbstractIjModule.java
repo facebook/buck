@@ -45,6 +45,8 @@ abstract class AbstractIjModule implements IjProjectElement {
   @Override
   public abstract ImmutableSet<BuildTarget> getTargets();
 
+  public abstract ImmutableSet<BuildTarget> getNonSourceBuildTargets();
+
   /**
    * @return path to the top-most directory the module is responsible for. This is also where the
    *     corresponding .iml file is located.

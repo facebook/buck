@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Function;
 import org.immutables.value.Value;
 
 /**
@@ -32,10 +33,11 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractSystemToolProvider implements ToolProvider {
-
   abstract ExecutableFinder getExecutableFinder();
 
   abstract ImmutableMap<String, String> getEnvironment();
+
+  abstract Function<Path, SourcePath> getSourcePathConverter();
 
   abstract Path getName();
 
@@ -45,6 +47,7 @@ abstract class AbstractSystemToolProvider implements ToolProvider {
   public Tool resolve() {
     return getExecutableFinder()
         .getOptionalExecutable(getName(), getEnvironment())
+        .map(getSourcePathConverter())
         .map(HashedFileTool::new)
         .orElseThrow(
             () -> {

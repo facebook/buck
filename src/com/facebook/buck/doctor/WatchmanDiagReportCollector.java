@@ -17,7 +17,7 @@
 package com.facebook.buck.doctor;
 
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.ProcessExecutor;
@@ -69,13 +69,14 @@ public class WatchmanDiagReportCollector {
 
     // We only want to gather watchman diagnostics if any of the cells are actually using Watchman.
     ImmutableCollection<Path> allCellRoots = rootCell.getCellPathResolver().getCellPaths().values();
-    boolean watchmanEverUsed = rootCell.getWatchman() != Watchman.NULL_WATCHMAN;
+    boolean watchmanEverUsed = rootCell.getWatchman() != WatchmanFactory.NULL_WATCHMAN;
     for (Path cellRoot : allCellRoots) {
       if (watchmanEverUsed) {
         break;
       }
       watchmanEverUsed =
-          watchmanEverUsed || rootCell.getCell(cellRoot).getWatchman() != Watchman.NULL_WATCHMAN;
+          watchmanEverUsed
+              || rootCell.getCell(cellRoot).getWatchman() != WatchmanFactory.NULL_WATCHMAN;
     }
     if (!watchmanEverUsed) {
       return Optional.empty();

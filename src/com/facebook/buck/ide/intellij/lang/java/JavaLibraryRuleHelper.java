@@ -20,6 +20,7 @@ import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
@@ -67,6 +68,14 @@ public class JavaLibraryRuleHelper {
     }
 
     return Optional.empty();
+  }
+
+  public static <T extends JavaLibraryDescription.CoreArg> void addNonSourceBuildTargets(
+      TargetNode<T, ?> targetNode, ModuleBuildContext context) {
+    T arg = targetNode.getConstructorArg();
+    if (arg.getSrcs().stream().anyMatch(src -> src instanceof BuildTargetSourcePath)) {
+      context.addNonSourceBuildTarget(targetNode.getBuildTarget());
+    }
   }
 
   private JavaLibraryRuleHelper() {}

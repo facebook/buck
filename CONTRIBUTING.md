@@ -52,15 +52,9 @@ Buck's tests use JUnit and are under the test subdirectory. Here are some exampl
 
 To find out more about testing options refer to an article about [test](https://buckbuild.com/command/test.html) command.
 
-### Using the Eclipse IDE
-
-Buck contains the Eclipse project configuration files `.classpath` and `.project` so that Buck can be imported directly into Eclipse as a Java project. The project is configured such that when you save your code, Eclipse automatically overwrites the `.class` files where Buck expects them (assuming you have Build Automatically enabled in Eclipse).
-
-This means that immediately after you save your code in Eclipse, you can switch to the command-line to run buck and you will automatically run Buck with your most recent edits. If your Eclipse build becomes wedged for any reason, selecting the root folder of the Buck project and choosing `File -> Refresh` followed by `Project -> Clean...` should fix everything.
-
 ### Using the IntelliJ IDE
 
-Buck also contains the metadata files so that it can be imported as a project in IntelliJ. Developing Buck in IntelliJ works perfectly fine; however, it does not automatically overwrite the existing `.class` files as Eclipse does. (You could likely add some sort of build step to IntelliJ to make this possible, but we have not.) Therefore, if you elect to develop Buck using IntelliJ, you may want to create an alias for buck that runs ant before running Buck to reduce the friction of developing with IntelliJ.
+Buck contains the project files so that it can be opened in IntelliJ. Developing Buck in IntelliJ works perfectly fine; however, it does not automatically overwrite the existing `.class` files as Eclipse does. (You could likely add some sort of build step to IntelliJ to make this possible, but we have not.) Therefore, if you elect to develop Buck using IntelliJ, you may want to create an alias for buck that runs ant before running Buck to reduce the friction of developing with IntelliJ.
 
 ### Code Style
 

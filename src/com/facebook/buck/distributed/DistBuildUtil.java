@@ -19,6 +19,8 @@ package com.facebook.buck.distributed;
 import static com.facebook.buck.util.BuckConstant.DIST_BUILD_SLAVE_BUCK_OUT_LOG_DIR_NAME;
 
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
+import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
+import com.facebook.buck.distributed.thrift.BuildSlaveEventType;
 import com.facebook.buck.distributed.thrift.ConsoleEventSeverity;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
@@ -36,10 +38,20 @@ public class DistBuildUtil {
 
   private DistBuildUtil() {}
 
-  public static BuildSlaveConsoleEvent createBuildSlaveConsoleEvent(
-      ConsoleEvent event, long timestampMillis) {
+  public static BuildSlaveEvent createBuildSlaveEvent(
+      BuildSlaveEventType eventType, long timeMillis) {
+    return new BuildSlaveEvent().setEventType(eventType).setTimestampMillis(timeMillis);
+  }
+
+  /** Create an empty BuildSlaveConsoleEvent. */
+  public static BuildSlaveEvent createBuildSlaveConsoleEvent(long timeMillis) {
+    return createBuildSlaveEvent(BuildSlaveEventType.CONSOLE_EVENT, timeMillis)
+        .setConsoleEvent(new BuildSlaveConsoleEvent());
+  }
+
+  /** Create a BuildSlaveEvent with an existing ConsoleEvent. */
+  public static BuildSlaveEvent createBuildSlaveConsoleEvent(ConsoleEvent event, long timeMillis) {
     BuildSlaveConsoleEvent buildSlaveConsoleEvent = new BuildSlaveConsoleEvent();
-    buildSlaveConsoleEvent.setTimestampMillis(timestampMillis);
     buildSlaveConsoleEvent.setMessage(event.getMessage());
 
     if (event.getLevel().equals(Level.WARNING)) {
@@ -50,29 +62,33 @@ public class DistBuildUtil {
       buildSlaveConsoleEvent.setSeverity(ConsoleEventSeverity.INFO);
     }
 
-    return buildSlaveConsoleEvent;
+    return createBuildSlaveConsoleEvent(timeMillis).setConsoleEvent(buildSlaveConsoleEvent);
   }
 
-  public static ConsoleEvent createConsoleEvent(BuildSlaveConsoleEvent event) {
-    Preconditions.checkState(event.isSetMessage());
-    Preconditions.checkState(event.isSetSeverity());
-    Preconditions.checkState(event.isSetTimestampMillis());
+  /** Convert a BuildConsoleSlaveEvent into a ConsoleEvent. */
+  public static ConsoleEvent createConsoleEvent(BuildSlaveEvent event) {
+    Preconditions.checkArgument(event.getEventType() == BuildSlaveEventType.CONSOLE_EVENT);
+    Preconditions.checkArgument(event.isSetConsoleEvent());
+
+    BuildSlaveConsoleEvent consoleEvent = event.getConsoleEvent();
+    Preconditions.checkState(consoleEvent.isSetMessage());
+    Preconditions.checkState(consoleEvent.isSetSeverity());
 
     String timestampPrefix = DATE_FORMAT.format(new Date(event.getTimestampMillis())) + " ";
-    switch (event.getSeverity()) {
+    switch (consoleEvent.getSeverity()) {
       case INFO:
-        return ConsoleEvent.create(Level.INFO, timestampPrefix + event.getMessage());
+        return ConsoleEvent.create(Level.INFO, timestampPrefix + consoleEvent.getMessage());
       case WARNING:
-        return ConsoleEvent.create(Level.WARNING, timestampPrefix + event.getMessage());
+        return ConsoleEvent.create(Level.WARNING, timestampPrefix + consoleEvent.getMessage());
       case SEVERE:
-        return ConsoleEvent.create(Level.SEVERE, timestampPrefix + event.getMessage());
+        return ConsoleEvent.create(Level.SEVERE, timestampPrefix + consoleEvent.getMessage());
       default:
         LOG.error(
             String.format(
                 "Unsupported type of ConsoleEventSeverity received in BuildSlaveConsoleEvent: [%d]"
                     + "Defaulting to SEVERE.",
-                event.getSeverity().getValue()));
-        return ConsoleEvent.create(Level.SEVERE, timestampPrefix + event.getMessage());
+                consoleEvent.getSeverity().getValue()));
+        return ConsoleEvent.create(Level.SEVERE, timestampPrefix + consoleEvent.getMessage());
     }
   }
 

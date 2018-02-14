@@ -20,8 +20,9 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -93,7 +94,7 @@ public class HaskellLibraryIntegrationTest {
   @Test
   public void firstOrderDeps() throws IOException {
     workspace.runBuckBuild("//:first_order_a_pass#default," + getLinkFlavor()).assertSuccess();
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckBuild("//:first_order_a_fail#default," + getLinkFlavor()).assertFailure();
     assertThat(
         result.getStderr(),
@@ -106,7 +107,7 @@ public class HaskellLibraryIntegrationTest {
   public void order() throws IOException {
     workspace.writeContentsToPath("module OrderA where\nimport OrderB\n", "OrderA.hs");
     workspace.runBuckBuild("//:order#default," + getLinkFlavor()).assertSuccess();
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
     workspace.writeContentsToPath("module OrderA where\n", "OrderA.hs");
     workspace.writeContentsToPath("module OrderB where\nimport OrderA\n", "OrderB.hs");
     workspace.runBuckBuild("//:order#default," + getLinkFlavor()).assertSuccess();

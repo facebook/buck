@@ -1,65 +1,65 @@
 prebuilt_jar(
-  name = 'spock-core',
-  binary_jar = 'spock-core-1.0-groovy-2.3.jar',
-  visibility = [
-    'PUBLIC'
-  ],
+    name = "spock-core",
+    binary_jar = "spock-core-1.0-groovy-2.3.jar",
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 prebuilt_jar(
-  name = 'junit',
-  binary_jar = 'junit-4.11.jar',
-  deps = [
-    ':hamcrest-core',
-    ':hamcrest-library',
-  ]
+    name = "junit",
+    binary_jar = "junit-4.11.jar",
+    deps = [
+        ":hamcrest-core",
+        ":hamcrest-library",
+    ],
 )
 
 prebuilt_jar(
-  name = 'hamcrest-core',
-  binary_jar = 'hamcrest-core-1.3.jar',
+    name = "hamcrest-core",
+    binary_jar = "hamcrest-core-1.3.jar",
 )
 
 prebuilt_jar(
-  name = 'hamcrest-library',
-  binary_jar = 'hamcrest-library-1.3.jar',
+    name = "hamcrest-library",
+    binary_jar = "hamcrest-library-1.3.jar",
 )
 
 prebuilt_jar(
-  name = 'groovy-all',
-  # indy for 'invokedynamic', see: http://www.groovy-lang.org/indy.html
-  binary_jar = 'groovy-all-2.3.11-indy.jar',
+    name = "groovy-all",
+    # indy for 'invokedynamic', see: http://www.groovy-lang.org/indy.html
+    binary_jar = "groovy-all-2.3.11-indy.jar",
 )
 
 groovy_test(
-  name = 'passing',
-  srcs = [
-    'PassingSpec.groovy',
-  ],
-  deps = [
-    ':groovy-all',
-    ':junit',
-    ':spock-core',
-  ],
-  visibility = [ 'PUBLIC' ]
+    name = "passing",
+    srcs = [
+        "PassingSpec.groovy",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        ":groovy-all",
+        ":junit",
+        ":spock-core",
+    ],
 )
 
 groovy_test(
-  name = 'failing',
-  srcs = [
-    'FailingSpec.groovy',
-  ],
-  deps = [
-    ':groovy-all',
-    ':spock-core',
-    ':junit',
-  ],
-  visibility = [ 'PUBLIC' ]
+    name = "failing",
+    srcs = [
+        "FailingSpec.groovy",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        ":groovy-all",
+        ":junit",
+        ":spock-core",
+    ],
 )
 
 groovy_test(
-  name = 'will_not_compile',
-  srcs = [
-    'WillNotCompile.groovy'
-  ],
+    name = "will_not_compile",
+    srcs = [
+        "WillNotCompile.groovy",
+    ],
 )

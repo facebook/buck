@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JavaProjectCodeInsightSettings">
+    <excluded-names>
+      <name>bazel.shaded.com.google.common</name>
+      <name>com.android.annotations.Nullable</name>
+      <name>com.facebook.buck.util.liteinfersupport</name>
+      <name>com.google.caliper.shaded.monitoring.runtime.instrumentation.common.com.google.common</name>
+      <name>com.google.monitoring.runtime.instrumentation.common.com.google.common</name>
+      <name>com.google.shaded.20</name>
+    </excluded-names>
+  </component>
+</project>

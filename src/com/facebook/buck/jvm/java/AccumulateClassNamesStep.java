@@ -24,6 +24,7 @@ import com.facebook.buck.jvm.java.classes.FileLikes;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSortedMap;
@@ -86,7 +87,7 @@ public class AccumulateClassNamesStep implements Step {
       if (classNamesOptional.isPresent()) {
         classNames = classNamesOptional.get();
       } else {
-        return StepExecutionResult.ERROR;
+        return StepExecutionResults.ERROR;
       }
     } else {
       classNames = ImmutableSortedMap.of();
@@ -98,7 +99,7 @@ public class AccumulateClassNamesStep implements Step {
             entry -> entry.getKey() + CLASS_NAME_HASH_CODE_SEPARATOR + entry.getValue()),
         whereClassNamesShouldBeWritten);
 
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

@@ -98,7 +98,12 @@ public final class Configs {
     for (Path file : configFiles) {
       try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
         ImmutableMap<String, ImmutableMap<String, String>> parsedConfiguration = Inis.read(reader);
-        LOG.debug("Loaded a configuration file %s: %s", file, parsedConfiguration);
+        if (file.equals(configFile)) {
+          LOG.debug("Loaded project configuration file %s", file);
+          LOG.verbose("Contents of %s: %s", file, parsedConfiguration);
+        } else {
+          LOG.debug("Loaded a configuration file %s, %s", file, parsedConfiguration);
+        }
         builder.putAll(parsedConfiguration);
       }
     }

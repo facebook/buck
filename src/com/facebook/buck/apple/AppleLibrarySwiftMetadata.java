@@ -19,7 +19,6 @@ package com.facebook.buck.apple;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.swift.SwiftDescriptions;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Collections;
@@ -58,13 +57,13 @@ public class AppleLibrarySwiftMetadata {
         swiftAndNonSwiftSources
             .getOrDefault(true, Collections.emptyList())
             .stream()
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
     ImmutableSet<SourceWithFlags> nonSwiftSources =
         swiftAndNonSwiftSources
             .getOrDefault(false, Collections.emptyList())
             .stream()
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
     return new AppleLibrarySwiftMetadata(swiftSources, nonSwiftSources);
   }

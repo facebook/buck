@@ -17,18 +17,16 @@
 package exotest;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Process;
 import android.util.Log;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import buck.exotest.R;
-
-import java.util.Scanner;
-import java.io.IOException;
-
 import com.facebook.buck.android.support.exopackage.ExopackageSoLoader;
+import java.io.IOException;
+import java.util.Scanner;
 
 public class LogActivity extends Activity {
 
@@ -48,6 +46,8 @@ public class LogActivity extends Activity {
     Log.i("EXOPACKAGE_TEST", "IMAGE=" + getImageString());
     Log.i("EXOPACKAGE_TEST", "ASSET=" + getAssetString());
     Log.i("EXOPACKAGE_TEST", "ASSET_TWO=" + getExtraAssetString());
+
+    Log.i("EXOPACKAGE_TEST", "MODULE_ONE=" + getModularClassValue());
 
     Log.i("EXOPACKAGE_TEST", "EXITING");
 
@@ -91,5 +91,14 @@ public class LogActivity extends Activity {
   }
 
   public native String stringOneFromJNI();
+
   public native String stringTwoFromJNI();
+
+  public String getModularClassValue() {
+    try {
+      return (String) Class.forName("exotest.Module").getDeclaredField("VALUE").get(null);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
 }

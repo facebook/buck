@@ -18,7 +18,7 @@ package com.facebook.buck.slb;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.timing.Clock;
+import com.facebook.buck.util.timing.Clock;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;

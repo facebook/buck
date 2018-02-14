@@ -43,10 +43,15 @@ class ExopackageAgent {
    * Sets {@link #useNativeAgent} to true on pre-L devices, because our native agent is built
    * without -fPIC. The java agent works fine on L as long as we don't use it for mkdir.
    */
-  private static boolean determineBestAgent(AndroidDevice device) throws Exception {
-    String value = device.getProperty("ro.build.version.sdk");
+  private static boolean determineBestAgent(BuckEventBus eventBus, AndroidDevice device)
+      throws Exception {
+    String value;
+    try (SimplePerfEvent.Scope scope = SimplePerfEvent.scope(eventBus, "get_device_sdk_version")) {
+      value = device.getProperty("ro.build.version.sdk");
+      scope.appendFinishedInfo("sdk_version", value);
+    }
     try {
-      if (Integer.valueOf(value.trim()) > 19) {
+      if (Integer.valueOf(value) > 19) {
         return false;
       }
     } catch (NumberFormatException exn) {
@@ -64,6 +69,9 @@ class ExopackageAgent {
   }
 
   public String getMkDirCommand() {
+    // Kind of a hack here.  The java agent can't force the proper permissions on the
+    // directories it creates, so we use the command-line "mkdir -p" instead of the java agent.
+    // Fortunately, "mkdir -p" seems to work on all devices where we use use the java agent.
     return useNativeAgent ? getAgentCommand() + "mkdir-p" : "mkdir -p";
   }
 
@@ -87,7 +95,9 @@ class ExopackageAgent {
         agentInfo = device.getPackageInfo(AgentUtil.AGENT_PACKAGE_NAME);
       }
       return new ExopackageAgent(
-          determineBestAgent(device), agentInfo.get().apkPath, agentInfo.get().nativeLibPath);
+          determineBestAgent(eventBus, device),
+          agentInfo.get().apkPath,
+          agentInfo.get().nativeLibPath);
     } catch (Exception e) {
       Throwables.throwIfUnchecked(e);
       throw new RuntimeException(e);

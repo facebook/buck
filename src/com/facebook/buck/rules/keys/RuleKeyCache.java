@@ -19,10 +19,7 @@ package com.facebook.buck.rules.keys;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.google.common.cache.CacheStats;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.Map;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -45,11 +42,6 @@ public interface RuleKeyCache<V> {
    */
   V get(AddsToRuleKey appendable, Function<? super AddsToRuleKey, RuleKeyResult<V>> create);
 
-  /** @return the contents of the {@link RuleKeyCache}. */
-  default ImmutableList<Map.Entry<BuildRule, V>> getCachedBuildRules() {
-    throw new UnsupportedOperationException();
-  }
-
   /** Invalidate the given inputs and all their transitive dependents. */
   void invalidateInputs(Iterable<RuleKeyInput> inputs);
 
@@ -66,7 +58,4 @@ public interface RuleKeyCache<V> {
 
   /** Invalidate everything in the cache. */
   void invalidateAll();
-
-  /** @return a snapshot of the current cache statistics. */
-  CacheStats getStats();
 }

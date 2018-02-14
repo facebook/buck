@@ -29,13 +29,10 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -43,6 +40,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.SortedSet;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Buildable responsible for compiling non-english string resources to {@code .fbstr} files stored
@@ -80,7 +79,7 @@ public class PackageStringAssets extends AbstractBuildRule {
     this.rDotTxtPath = pathToRDotTxt;
 
     this.buildDepsSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(ruleFinder.filterBuildRuleInputs(pathToRDotTxt))
@@ -146,15 +145,15 @@ public class PackageStringAssets extends AbstractBuildRule {
             pathToAllLocalesStringAssetsZip,
             ImmutableSet.of(),
             false,
-            ZipCompressionLevel.MAX_COMPRESSION_LEVEL,
+            ZipCompressionLevel.MAX,
             pathToDirContainingAssetsDir));
     steps.add(
         new ZipStep(
             getProjectFilesystem(),
             pathToStringAssetsZip,
-            locales.stream().map(assetPathBuilder::apply).collect(MoreCollectors.toImmutableSet()),
+            locales.stream().map(assetPathBuilder).collect(ImmutableSet.toImmutableSet()),
             false,
-            ZipCompressionLevel.MAX_COMPRESSION_LEVEL,
+            ZipCompressionLevel.MAX,
             pathToDirContainingAssetsDir));
 
     buildableContext.recordArtifact(pathToAllLocalesStringAssetsZip);

@@ -16,11 +16,14 @@
 
 package com.facebook.buck.haskell;
 
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.query.Query;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
@@ -32,12 +35,25 @@ public class HaskellBinaryBuilder
   public HaskellBinaryBuilder(
       BuildTarget target,
       HaskellPlatform defaultPlatform,
-      FlavorDomain<HaskellPlatform> platforms) {
-    super(new HaskellBinaryDescription(defaultPlatform, platforms), target);
+      FlavorDomain<HaskellPlatform> platforms,
+      CxxBuckConfig cxxBuckConfig) {
+    super(
+        new HaskellBinaryDescription(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    HaskellPlatformsProvider.DEFAULT_NAME,
+                    HaskellPlatformsProvider.of(defaultPlatform, platforms))
+                .build(),
+            cxxBuckConfig),
+        target);
   }
 
   public HaskellBinaryBuilder(BuildTarget target) {
-    this(target, HaskellTestUtils.DEFAULT_PLATFORM, HaskellTestUtils.DEFAULT_PLATFORMS);
+    this(
+        target,
+        HaskellTestUtils.DEFAULT_PLATFORM,
+        HaskellTestUtils.DEFAULT_PLATFORMS,
+        CxxPlatformUtils.DEFAULT_CONFIG);
   }
 
   public HaskellBinaryBuilder setCompilerFlags(ImmutableList<String> flags) {

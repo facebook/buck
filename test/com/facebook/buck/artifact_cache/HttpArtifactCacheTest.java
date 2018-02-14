@@ -21,6 +21,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
+import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -32,7 +34,7 @@ import com.facebook.buck.slb.HttpResponse;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.OkHttpResponseWrapper;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.timing.IncrementingFakeClock;
+import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -151,6 +153,7 @@ public class HttpArtifactCacheTest {
                               MediaType.parse("application/octet-stream"), "extraneous"))
                       .protocol(Protocol.HTTP_1_1)
                       .request(requestBuilder.url(SERVER + path).build())
+                      .message("")
                       .build();
               responseList.add(response);
               return new OkHttpResponseWrapper(response);
@@ -189,6 +192,7 @@ public class HttpArtifactCacheTest {
                               ImmutableMap.of(),
                               ByteSource.wrap(data.getBytes(Charsets.UTF_8)),
                               data))
+                      .message("")
                       .build();
               responseList.add(response);
               return new OkHttpResponseWrapper(response);
@@ -225,6 +229,7 @@ public class HttpArtifactCacheTest {
                               ImmutableMap.of(),
                               ByteSource.wrap(new byte[0]),
                               "data"))
+                      .message("")
                       .build());
             }));
     HttpArtifactCache cache = new HttpArtifactCache(argsBuilder.build());
@@ -252,6 +257,7 @@ public class HttpArtifactCacheTest {
                               ImmutableMap.of(),
                               ByteSource.wrap(new byte[0]),
                               "data"))
+                      .message("")
                       .build();
               responseList.add(response);
               return new OkHttpResponseWrapper(response);
@@ -286,6 +292,7 @@ public class HttpArtifactCacheTest {
                               ImmutableMap.of(),
                               ByteSource.wrap("more data than length".getBytes(Charsets.UTF_8)),
                               "small"))
+                      .message("")
                       .build();
               responseList.add(response);
               return new OkHttpResponseWrapper(response);
@@ -362,6 +369,7 @@ public class HttpArtifactCacheTest {
                       .code(HttpURLConnection.HTTP_ACCEPTED)
                       .protocol(Protocol.HTTP_1_1)
                       .request(request)
+                      .message("")
                       .build();
               return new OkHttpResponseWrapper(response);
             })));
@@ -417,6 +425,7 @@ public class HttpArtifactCacheTest {
                       .code(HttpURLConnection.HTTP_ACCEPTED)
                       .protocol(Protocol.HTTP_1_1)
                       .request(request)
+                      .message("")
                       .build();
               return new OkHttpResponseWrapper(response);
             })));
@@ -448,6 +457,7 @@ public class HttpArtifactCacheTest {
                               ImmutableMap.of(),
                               ByteSource.wrap(data.getBytes(Charsets.UTF_8)),
                               data))
+                      .message("")
                       .build();
               return new OkHttpResponseWrapper(response);
             })));
@@ -475,6 +485,7 @@ public class HttpArtifactCacheTest {
                       .request(request)
                       .protocol(Protocol.HTTP_1_1)
                       .code(HttpURLConnection.HTTP_OK)
+                      .message("")
                       .body(
                           createResponseBody(
                               ImmutableSet.of(ruleKey),
@@ -531,6 +542,7 @@ public class HttpArtifactCacheTest {
                                   ImmutableMap.of(),
                                   ByteSource.wrap(data.getBytes(Charsets.UTF_8)),
                                   data))
+                          .message("")
                           .build();
                   return new OkHttpResponseWrapper(response);
                 }));

@@ -21,7 +21,6 @@ package com.facebook.buck.rules.coercer;
  * unexpected null error) or wrap lower level errors (e.g. `CoerceFailedException`) to attach
  * parameter specific information (e.g. parameter name).
  */
-@SuppressWarnings("serial")
 public class ParamInfoException extends Exception {
 
   public ParamInfoException(String parameterName, String message, Throwable throwable) {

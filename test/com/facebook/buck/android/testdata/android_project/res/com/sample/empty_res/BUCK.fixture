@@ -1,11 +1,11 @@
 android_resource(
-  name = 'empty_res',
-  visibility = [
-    'PUBLIC',
-  ],
-  deps = [
-    '//res/com/sample/base:base',
-    '//res/com/sample/top:top',
-    '//res/com/sample/title:title',
-  ],
+    name = "empty_res",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//res/com/sample/base:base",
+        "//res/com/sample/title:title",
+        "//res/com/sample/top:top",
+    ],
 )

@@ -27,10 +27,12 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
@@ -68,7 +70,7 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
     setUpProjectWorkspaceForScenario("fat_jar");
     workspace.enableDirCache();
     workspace.runBuckCommand("build", "//:bin-fat").assertSuccess();
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
     Path path = workspace.buildAndReturnOutput("//:bin-fat");
     workspace.getBuildLog().assertTargetWasFetchedFromCache("//:bin-fat");
     assertTrue(workspace.asCell().getFilesystem().exists(path));
@@ -84,23 +86,13 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testOOPFatJarWithOutput() throws IOException, InterruptedException {
-    setUpProjectWorkspaceForScenario("fat_jar");
-    Path jar =
-        workspace.buildAndReturnOutput("//:bin-output", "--config", "java.location=OUT_OF_PROCESS");
-    ProcessExecutor.Result result = workspace.runJar(jar);
-    assertEquals("output", result.getStdout().get().trim());
-    assertEquals("error", result.getStderr().get().trim());
-  }
-
-  @Test
   public void disableCachingForBinaries() throws IOException {
     setUpProjectWorkspaceForScenario("java_binary_with_blacklist");
     workspace.enableDirCache();
     workspace
         .runBuckBuild("-c", "java.cache_binaries=false", "//:bin-no-blacklist")
         .assertSuccess();
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace
         .runBuckBuild("-c", "java.cache_binaries=false", "//:bin-no-blacklist")
         .assertSuccess();
@@ -125,7 +117,9 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
   public void fatJarWithExitCode() throws IOException {
     setUpProjectWorkspaceForScenario("fat_jar");
 
-    workspace.runBuckCommand("run", "//:bin-exit-code").assertSpecialExitCode("error", 5);
+    workspace
+        .runBuckCommand("run", "//:bin-exit-code")
+        .assertSpecialExitCode("error", ExitCode.BUILD_ERROR);
   }
 
   @Test
@@ -200,7 +194,7 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
     }
     Files.write(jarPath, bytes);
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:wrapper_01").assertFailure();
+    ProcessResult result = workspace.runBuckBuild("//:wrapper_01").assertFailure();
     // Should show the rule that failed.
     assertThat(result.getStderr(), containsString("//:simple-lib"));
     // Should show the jar we were operating on.
@@ -214,11 +208,13 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
     String systemBootclasspath = System.getProperty("sun.boot.class.path");
     setUpProjectWorkspaceForScenario("fat_jar");
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckBuild(
             "//:bin-output",
             "--config",
             "java.source_level=8",
+            "--config",
+            "java.target_level=8",
             "--config",
             String.format("java.bootclasspath-8=clowntown.jar:%s", systemBootclasspath),
             "-v",

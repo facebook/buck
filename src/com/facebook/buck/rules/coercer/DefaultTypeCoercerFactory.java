@@ -19,19 +19,41 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.python.NeededCoverageSpec;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.rules.macros.CcFlagsMacro;
+import com.facebook.buck.rules.macros.CcMacro;
 import com.facebook.buck.rules.macros.ClasspathMacro;
+import com.facebook.buck.rules.macros.CppFlagsMacro;
+import com.facebook.buck.rules.macros.CxxFlagsMacro;
+import com.facebook.buck.rules.macros.CxxMacro;
+import com.facebook.buck.rules.macros.CxxppFlagsMacro;
 import com.facebook.buck.rules.macros.ExecutableMacro;
+import com.facebook.buck.rules.macros.LdMacro;
+import com.facebook.buck.rules.macros.LdflagsSharedFilterMacro;
+import com.facebook.buck.rules.macros.LdflagsSharedMacro;
+import com.facebook.buck.rules.macros.LdflagsStaticFilterMacro;
+import com.facebook.buck.rules.macros.LdflagsStaticMacro;
+import com.facebook.buck.rules.macros.LdflagsStaticPicFilterMacro;
+import com.facebook.buck.rules.macros.LdflagsStaticPicMacro;
 import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MavenCoordinatesMacro;
-import com.facebook.buck.rules.modern.InputPath;
+import com.facebook.buck.rules.macros.OutputMacro;
+import com.facebook.buck.rules.macros.PlatformNameMacro;
+import com.facebook.buck.rules.macros.QueryOutputsMacro;
+import com.facebook.buck.rules.macros.QueryPathsMacro;
+import com.facebook.buck.rules.macros.QueryTargetsAndOutputsMacro;
+import com.facebook.buck.rules.macros.QueryTargetsMacro;
+import com.facebook.buck.rules.macros.WorkerMacro;
+import com.facebook.buck.rules.query.Query;
+import com.facebook.buck.util.Types;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.types.Either;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -93,7 +115,6 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     PathTypeCoercer pathTypeCoercer = new PathTypeCoercer(pathExistenceVerificationMode);
     TypeCoercer<SourcePath> sourcePathTypeCoercer =
         new SourcePathTypeCoercer(buildTargetTypeCoercer, pathTypeCoercer);
-    TypeCoercer<InputPath> inputPathTypeCoercer = new InputPathTypeCoercer(sourcePathTypeCoercer);
     TypeCoercer<SourceWithFlags> sourceWithFlagsTypeCoercer =
         new SourceWithFlagsTypeCoercer(
             sourcePathTypeCoercer, new ListTypeCoercer<>(stringTypeCoercer));
@@ -103,13 +124,15 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     TypeCoercer<NeededCoverageSpec> neededCoverageSpecTypeCoercer =
         new NeededCoverageSpecTypeCoercer(
             floatTypeCoercer, buildTargetTypeCoercer, stringTypeCoercer);
+    TypeCoercer<Query> queryTypeCoercer = new QueryCoercer();
+    TypeCoercer<ImmutableList<BuildTarget>> buildTargetsTypeCoercer =
+        new ListTypeCoercer<>(buildTargetTypeCoercer);
     nonParameterizedTypeCoercers =
         new TypeCoercer<?>[] {
           // special classes
           pathTypeCoercer,
           flavorTypeCoercer,
           sourcePathTypeCoercer,
-          inputPathTypeCoercer,
           buildTargetTypeCoercer,
           buildTargetPatternTypeCoercer,
 
@@ -139,18 +162,100 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
           neededCoverageSpecTypeCoercer,
           new ConstraintTypeCoercer(),
           new VersionTypeCoercer(),
-          new QueryCoercer(),
+          queryTypeCoercer,
           StringWithMacrosTypeCoercer.from(
-              ImmutableMap.of(
-                  "classpath", ClasspathMacro.class,
-                  "exe", ExecutableMacro.class,
-                  "location", LocationMacro.class,
-                  "maven_coords", MavenCoordinatesMacro.class),
+              ImmutableMap.<String, Class<? extends Macro>>builder()
+                  .put("classpath", ClasspathMacro.class)
+                  .put("exe", ExecutableMacro.class)
+                  .put("location", LocationMacro.class)
+                  .put("maven_coords", MavenCoordinatesMacro.class)
+                  .put("output", OutputMacro.class)
+                  .put("query_targets", QueryTargetsMacro.class)
+                  .put("query_outputs", QueryOutputsMacro.class)
+                  .put("query_paths", QueryPathsMacro.class)
+                  .put("query_targets_and_outputs", QueryTargetsAndOutputsMacro.class)
+                  .put("worker", WorkerMacro.class)
+                  .put("cc", CcMacro.class)
+                  .put("cflags", CcFlagsMacro.class)
+                  .put("cppflags", CppFlagsMacro.class)
+                  .put("cxx", CxxMacro.class)
+                  .put("cxxflags", CxxFlagsMacro.class)
+                  .put("cxxppflags", CxxppFlagsMacro.class)
+                  .put("ld", LdMacro.class)
+                  .put("ldflags-shared", LdflagsSharedMacro.class)
+                  .put("ldflags-shared-filter", LdflagsSharedFilterMacro.class)
+                  .put("ldflags-static", LdflagsStaticMacro.class)
+                  .put("ldflags-static-filter", LdflagsStaticFilterMacro.class)
+                  .put("ldflags-static-pic", LdflagsStaticPicMacro.class)
+                  .put("ldflags-static-pic-filter", LdflagsStaticPicFilterMacro.class)
+                  .put("platform-name", PlatformNameMacro.class)
+                  .build(),
               ImmutableList.of(
-                  new ClasspathMacroTypeCoercer(buildTargetTypeCoercer),
-                  new ExecutableMacroTypeCoercer(buildTargetTypeCoercer),
+                  new BuildTargetMacroTypeCoercer<>(
+                      buildTargetTypeCoercer, ClasspathMacro.class, ClasspathMacro::of),
+                  new BuildTargetMacroTypeCoercer<>(
+                      buildTargetTypeCoercer, ExecutableMacro.class, ExecutableMacro::of),
                   new LocationMacroTypeCoercer(buildTargetTypeCoercer),
-                  new MavenCoordinatesMacroTypeCoercer(buildTargetTypeCoercer))),
+                  new BuildTargetMacroTypeCoercer<>(
+                      buildTargetTypeCoercer,
+                      MavenCoordinatesMacro.class,
+                      MavenCoordinatesMacro::of),
+                  new OutputMacroTypeCoercer(),
+                  new QueryMacroTypeCoercer<>(
+                      queryTypeCoercer, QueryTargetsMacro.class, QueryTargetsMacro::of),
+                  new QueryMacroTypeCoercer<>(
+                      queryTypeCoercer, QueryOutputsMacro.class, QueryOutputsMacro::of),
+                  new QueryMacroTypeCoercer<>(
+                      queryTypeCoercer, QueryPathsMacro.class, QueryPathsMacro::of),
+                  new QueryTargetsAndOutputsMacroTypeCoercer(queryTypeCoercer),
+                  new BuildTargetMacroTypeCoercer<>(
+                      buildTargetTypeCoercer, WorkerMacro.class, WorkerMacro::of),
+                  new ZeroArgMacroTypeCoercer<>(CcMacro.class, CcMacro.of()),
+                  new ZeroArgMacroTypeCoercer<>(CcFlagsMacro.class, CcFlagsMacro.of()),
+                  new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
+                      Optional.empty(),
+                      buildTargetsTypeCoercer,
+                      CppFlagsMacro.class,
+                      CppFlagsMacro::of),
+                  new ZeroArgMacroTypeCoercer<>(CxxMacro.class, CxxMacro.of()),
+                  new ZeroArgMacroTypeCoercer<>(CxxFlagsMacro.class, CxxFlagsMacro.of()),
+                  new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
+                      Optional.empty(),
+                      buildTargetsTypeCoercer,
+                      CxxppFlagsMacro.class,
+                      CxxppFlagsMacro::of),
+                  new ZeroArgMacroTypeCoercer<>(LdMacro.class, LdMacro.of()),
+                  new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
+                      Optional.empty(),
+                      buildTargetsTypeCoercer,
+                      LdflagsSharedMacro.class,
+                      LdflagsSharedMacro::of),
+                  new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
+                      Optional.of(patternTypeCoercer),
+                      buildTargetsTypeCoercer,
+                      LdflagsSharedFilterMacro.class,
+                      LdflagsSharedFilterMacro::of),
+                  new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
+                      Optional.empty(),
+                      buildTargetsTypeCoercer,
+                      LdflagsStaticMacro.class,
+                      LdflagsStaticMacro::of),
+                  new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
+                      Optional.of(patternTypeCoercer),
+                      buildTargetsTypeCoercer,
+                      LdflagsStaticFilterMacro.class,
+                      LdflagsStaticFilterMacro::of),
+                  new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
+                      Optional.empty(),
+                      buildTargetsTypeCoercer,
+                      LdflagsStaticPicMacro.class,
+                      LdflagsStaticPicMacro::of),
+                  new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
+                      Optional.of(patternTypeCoercer),
+                      buildTargetsTypeCoercer,
+                      LdflagsStaticPicFilterMacro.class,
+                      LdflagsStaticPicFilterMacro::of),
+                  new ZeroArgMacroTypeCoercer<>(PlatformNameMacro.class, PlatformNameMacro.of()))),
         };
   }
 
@@ -186,6 +291,14 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
             throw new IllegalArgumentException("multiple coercers matched for type: " + type);
           }
         }
+      }
+      if (selectedTypeCoercer == null
+          && Types.getSupertypes(rawClass)
+              .stream()
+              .anyMatch(c -> c.getAnnotation(BuckStyleImmutable.class) != null)) {
+        selectedTypeCoercer =
+            new ImmutableTypeCoercer<>(
+                rawClass, CoercedTypeCache.INSTANCE.getAllParamInfo(this, rawClass).values());
       }
       if (selectedTypeCoercer != null) {
         return selectedTypeCoercer;

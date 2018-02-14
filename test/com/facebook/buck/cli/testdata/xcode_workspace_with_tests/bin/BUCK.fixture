@@ -1,11 +1,11 @@
 apple_binary(
-  name='bin',
-  srcs=glob(['*.m']),
-  deps=['//lib:lib'],
-  visibility=['PUBLIC'],
+    name = "bin",
+    srcs = glob(["*.m"]),
+    visibility = ["PUBLIC"],
+    deps = ["//lib:lib"],
 )
 
 genrule(
-  name='genrule',
-  out='out'
+    name = "genrule",
+    out = "out",
 )

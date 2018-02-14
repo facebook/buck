@@ -17,12 +17,12 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -44,24 +44,43 @@ public class RuleKeyDiagnosticsTest {
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
-    RuleKeyAppendable app0 = sink -> sink.setReflectively("k0", "v0");
-    RuleKeyAppendable app1 = sink -> sink.setReflectively("k1", "v1");
-    RuleKeyAppendable app2 = sink -> sink.setReflectively("k2", "v2").setReflectively("k20", app0);
-    RuleKeyAppendable app3 = sink -> sink.setReflectively("k3", "v3").setReflectively("k30", app0);
-    RuleKeyAppendable app4 = sink -> sink.setReflectively("k42", app2).setReflectively("k43", app3);
+    AddsToRuleKey app0 =
+        new AddsToRuleKey() {
+          @AddToRuleKey String k0 = "v0";
+        };
+    AddsToRuleKey app1 =
+        new AddsToRuleKey() {
+          @AddToRuleKey String k1 = "v1";
+        };
+    AddsToRuleKey app2 =
+        new AddsToRuleKey() {
+          @AddToRuleKey String k2 = "v2";
+          @AddToRuleKey Object k20 = app0;
+        };
+    AddsToRuleKey app3 =
+        new AddsToRuleKey() {
+          @AddToRuleKey String k3 = "v3";
+          @AddToRuleKey Object k30 = app0;
+        };
+    AddsToRuleKey app4 =
+        new AddsToRuleKey() {
+          @AddToRuleKey Object k42 = app2;
+          @AddToRuleKey Object k43 = app3;
+        };
+
     BuildRule dep1 = new FakeBuildRule("//fake:dep1");
     BuildRule dep2 =
         new FakeBuildRule("//fake:dep2") {
-          @AddToRuleKey RuleKeyAppendable a4 = app4;
+          @AddToRuleKey AddsToRuleKey a4 = app4;
         };
     BuildRule rule1 =
         new FakeBuildRule("//fake:rule1", dep1, dep2) {
-          @AddToRuleKey RuleKeyAppendable a1 = app1;
-          @AddToRuleKey RuleKeyAppendable a4 = app4;
+          @AddToRuleKey AddsToRuleKey a1 = app1;
+          @AddToRuleKey AddsToRuleKey a4 = app4;
         };
 
     RuleKeyFactoryWithDiagnostics<RuleKey> factory =
-        new DefaultRuleKeyFactory(0, new DummyFileHashCache(), sourcePathResolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(new DummyFileHashCache(), sourcePathResolver, ruleFinder);
 
     RuleKeyDiagnostics<RuleKey, String> ruleKeyDiagnostics1 =
         new RuleKeyDiagnostics<>(

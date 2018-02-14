@@ -1,10 +1,10 @@
 ndk_library(
-  name = 'foo',
-  flags = [
-    'NDK_APPLICATION_MK=$(env PWD)/foo/Application.mk',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
-  is_asset = True,
+    name = "foo",
+    flags = [
+        "NDK_APPLICATION_MK=$(env PWD)/foo/Application.mk",
+    ],
+    is_asset = True,
+    visibility = [
+        "PUBLIC",
+    ],
 )

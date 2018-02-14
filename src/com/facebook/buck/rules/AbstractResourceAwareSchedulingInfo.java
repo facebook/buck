@@ -17,6 +17,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
+import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -39,10 +40,18 @@ abstract class AbstractResourceAwareSchedulingInfo {
 
   public ResourceAmounts getResourceAmountsForRule(BuildRule rule) {
     if (isRuleResourceFree(rule)) {
-      return ResourceAmounts.ZERO;
+      return ResourceAmounts.zero();
     } else {
       return getResourceAmountsForRuleOrDefaultAmounts(rule);
     }
+  }
+
+  public WeightedListeningExecutorService adjustServiceDefaultWeightsTo(
+      ResourceAmounts defaultAmounts, WeightedListeningExecutorService service) {
+    if (isResourceAwareSchedulingEnabled()) {
+      return service.withDefaultAmounts(defaultAmounts);
+    }
+    return service;
   }
 
   private boolean isRuleResourceFree(BuildRule rule) {

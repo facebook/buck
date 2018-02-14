@@ -1,15 +1,15 @@
 go_binary(
-  name = 'main',
-  srcs = [
-    'main.go',
-  ],
-  deps = [
-    ':a',
-  ],
+    name = "main",
+    srcs = [
+        "main.go",
+    ],
+    deps = [
+        ":a",
+    ],
 )
 
 go_library(
-  name = 'a',
-  package_name = 'a',
-  srcs = [],
+    name = "a",
+    package_name = "a",
+    srcs = [],
 )

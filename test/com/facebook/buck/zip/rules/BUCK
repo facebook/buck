@@ -1,5 +1,8 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
 standard_java_test(
     name = "rules",
+    with_test_data = True,
     deps = [
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/rules:build_rule",
@@ -8,6 +11,7 @@ standard_java_test(
         "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/zip/bundler:bundler",
         "//src/com/facebook/buck/zip/rules:rules",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/rules:testutil",

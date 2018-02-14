@@ -33,9 +33,11 @@ import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -43,8 +45,9 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
+import com.facebook.buck.rules.macros.AbstractMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.Version;
@@ -68,8 +71,8 @@ import java.util.Optional;
 
 public class PythonUtil {
 
-  static final MacroHandler MACRO_HANDLER =
-      new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
+  static final ImmutableList<AbstractMacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
+      ImmutableList.of(new LocationMacroExpander());
 
   private PythonUtil() {}
 
@@ -169,6 +172,7 @@ public class PythonUtil {
   }
 
   static PythonPackageComponents getAllComponents(
+      CellPathResolver cellPathResolver,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
@@ -248,6 +252,7 @@ public class PythonUtil {
               buildTarget,
               projectFilesystem,
               params,
+              cellPathResolver,
               ruleResolver,
               ruleFinder,
               cxxBuckConfig,

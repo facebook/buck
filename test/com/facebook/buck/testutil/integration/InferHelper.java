@@ -17,6 +17,7 @@
 package com.facebook.buck.testutil.integration;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;

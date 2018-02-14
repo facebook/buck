@@ -19,7 +19,6 @@ package com.facebook.buck.rules.modern;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
@@ -27,22 +26,23 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.keys.AlterRuleKeys;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.DefaultInputRuleResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
+import com.facebook.buck.util.MoreSuppliers;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -138,7 +138,7 @@ public class ModernBuildRule<T extends Buildable>
       SourcePathRuleFinder ruleFinder) {
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
-    this.deps = Suppliers.memoize(this::computeDeps);
+    this.deps = MoreSuppliers.memoize(this::computeDeps);
     this.inputRuleResolver = new DefaultInputRuleResolver(ruleFinder);
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
     this.outputPathResolver =
@@ -196,12 +196,6 @@ public class ModernBuildRule<T extends Buildable>
         buildTarget, outputPathResolver.resolvePath(outputPath));
   }
 
-  protected final InputPath toInputPath(OutputPath outputPath) {
-    // TODO(cjhopman): either enforce that this is our own outputPath, or support actually
-    // converting other rule's outputs to our own inputs.
-    return new InputPath(getSourcePath(outputPath));
-  }
-
   @Override
   public final ImmutableSortedSet<BuildRule> getBuildDeps() {
     return deps.get();
@@ -228,10 +222,8 @@ public class ModernBuildRule<T extends Buildable>
 
     stepBuilder.addAll(
         buildable.getBuildSteps(
-            context.getEventBus(),
+            context,
             filesystem,
-            new DefaultInputPathResolver(context.getSourcePathResolver()),
-            getInputDataRetriever(),
             outputPathResolver,
             new DefaultBuildCellRelativePathFactory(
                 context.getBuildCellRootPath(), filesystem, Optional.of(outputPathResolver))));
@@ -246,25 +238,11 @@ public class ModernBuildRule<T extends Buildable>
     // All the outputs are already forced to be within getGenDirectory(), and so this recording
     // isn't actually necessary.
     classInfo.getOutputs(buildable, (name, output) -> recordOutput(buildableContext, output));
-
-    classInfo.getOutputData(buildable, (name, data) -> recordData(buildableContext, name, data));
     return stepBuilder.build();
   }
 
   private void recordOutput(BuildableContext buildableContext, OutputPath output) {
     buildableContext.recordArtifact(outputPathResolver.resolvePath(output));
-  }
-
-  private void recordData(BuildableContext buildableContext, String name, OutputData outputData) {
-    buildableContext.getClass();
-    name.getClass();
-    outputData.getClass();
-    // TODO(cjhopman): implement
-    throw new UnsupportedOperationException();
-  }
-
-  private InputDataRetriever getInputDataRetriever() {
-    return new InputDataRetriever() {};
   }
 
   @Override
@@ -274,11 +252,11 @@ public class ModernBuildRule<T extends Buildable>
 
   @Override
   public final void appendToRuleKey(RuleKeyObjectSink sink) {
-    classInfo.appendToRuleKey(buildable, sink);
+    AlterRuleKeys.amendKey(sink, buildable);
   }
 
   @Override
-  public final DataHolder initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
+  public final DataHolder initializeFromDisk() throws IOException {
     // TODO(cjhopman): implement
     return new DataHolder();
   }

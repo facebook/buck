@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
@@ -33,6 +34,16 @@ public class FilesystemBuildInfoStore implements BuildInfoStore {
   @Override
   public Optional<String> readMetadata(BuildTarget buildTarget, String key) {
     return filesystem.readFileIfItExists(pathToMetadata(buildTarget).resolve(key));
+  }
+
+  @Override
+  public ImmutableMap<String, String> getAllMetadata(BuildTarget buildTarget) throws IOException {
+    return filesystem
+        .getDirectoryContents(pathToMetadata(buildTarget))
+        .stream()
+        .map(path -> path.getFileName().toString())
+        .collect(
+            ImmutableMap.toImmutableMap(key -> key, key -> readMetadata(buildTarget, key).get()));
   }
 
   @Override
@@ -55,6 +66,6 @@ public class FilesystemBuildInfoStore implements BuildInfoStore {
   public void close() {}
 
   private final Path pathToMetadata(BuildTarget target) {
-    return BuildInfo.getPathToMetadataDirectory(target, filesystem);
+    return BuildInfo.getPathToBuildMetadataDirectory(target, filesystem);
   }
 }

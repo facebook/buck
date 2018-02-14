@@ -29,9 +29,11 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.util.JsonBuilder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
@@ -41,15 +43,19 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @AddToRuleKey private final Optional<String> extraArgs;
 
+  @AddToRuleKey private final Optional<Arg> extraJson;
+
   @AddToRuleKey private final WorkerTool worker;
 
   public JsFile(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
+      Optional<Arg> extraJson,
       Optional<String> extraArgs,
       WorkerTool worker) {
     super(buildTarget, projectFilesystem, params);
+    this.extraJson = extraJson;
     this.extraArgs = extraArgs;
     this.worker = worker;
   }
@@ -58,17 +64,25 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   public SourcePath getSourcePathToOutput() {
     return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(),
-        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.json"));
+        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.jsfile"));
   }
 
-  ImmutableList<Step> getBuildSteps(BuildContext context, String jobArgsFormat, Path outputPath) {
+  public Optional<Arg> getExtraJson() {
+    return extraJson;
+  }
+
+  public Optional<String> getExtraArgs() {
+    return extraArgs;
+  }
+
+  ImmutableList<Step> getBuildSteps(BuildContext context, String jobArgs, Path outputPath) {
     return ImmutableList.of(
         RmStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), outputPath)),
         JsUtil.workerShellStep(
             worker,
-            String.format(jobArgsFormat, extraArgs.orElse("")),
+            jobArgs,
             getBuildTarget(),
             context.getSourcePathResolver(),
             getProjectFilesystem()));
@@ -93,9 +107,10 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         SourcePath src,
         Optional<String> subPath,
         Optional<Path> virtualPath,
+        Optional<Arg> extraJson,
         Optional<String> extraArgs,
         WorkerTool worker) {
-      super(buildTarget, projectFilesystem, params, extraArgs, worker);
+      super(buildTarget, projectFilesystem, params, extraJson, extraArgs, worker);
       this.src = src;
       this.subPath = subPath;
       this.virtualPath = virtualPath.map(MorePaths::pathWithUnixSeparators);
@@ -108,16 +123,30 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToOutput()));
 
       final Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
-      final Path srcPath = sourcePathResolver.getAbsolutePath(src);
-      final String jobArgs =
-          String.format(
-              "transform %%s --filename %s --out %s %s",
-              virtualPath.orElseGet(
-                  () -> MorePaths.pathWithUnixSeparators(sourcePathResolver.getRelativePath(src))),
-              outputPath,
-              subPath.map(srcPath::resolve).orElse(srcPath));
+
+      Path srcPath = sourcePathResolver.getAbsolutePath(src);
+      String jobArgs =
+          JsonBuilder.object()
+              .addString("command", "transform")
+              .addString("outputFilePath", outputPath.toString())
+              .addString(
+                  "sourceJsFilePath", subPath.map(srcPath::resolve).orElse(srcPath).toString())
+              .addString(
+                  "sourceJsFileName",
+                  virtualPath.orElseGet(
+                      () ->
+                          MorePaths.pathWithUnixSeparators(
+                              sourcePathResolver.getRelativePath(src))))
+              .addRaw("extraData", getExtraJson().map(a -> Arg.stringify(a, sourcePathResolver)))
+              .addString("extraArgs", getExtraArgs())
+              .toString();
 
       return getBuildSteps(context, jobArgs, outputPath);
+    }
+
+    @VisibleForTesting
+    SourcePath getSource() {
+      return src;
     }
 
     @VisibleForTesting
@@ -135,9 +164,10 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         ProjectFilesystem projectFilesystem,
         BuildRuleParams buildRuleParams,
         SourcePath devFile,
+        Optional<Arg> extraJson,
         Optional<String> extraArgs,
         WorkerTool worker) {
-      super(buildTarget, projectFilesystem, buildRuleParams, extraArgs, worker);
+      super(buildTarget, projectFilesystem, buildRuleParams, extraJson, extraArgs, worker);
       this.devFile = devFile;
     }
 
@@ -147,13 +177,17 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       final SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
       buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToOutput()));
 
-      final Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
-      final String jobArgs =
-          String.format(
-              "optimize %%s %s --out %s %s",
-              JsFlavors.platformArgForRelease(getBuildTarget().getFlavors()),
-              outputPath,
-              sourcePathResolver.getAbsolutePath(devFile).toString());
+      Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
+      String jobArgs =
+          JsonBuilder.object()
+              .addString("command", "optimize")
+              .addString("outputFilePath", outputPath.toString())
+              .addString("platform", JsUtil.getPlatformString(getBuildTarget().getFlavors()))
+              .addString(
+                  "transformedJsFilePath", sourcePathResolver.getAbsolutePath(devFile).toString())
+              .addRaw("extraData", getExtraJson().map(a -> Arg.stringify(a, sourcePathResolver)))
+              .addString("extraArgs", getExtraArgs())
+              .toString();
 
       return getBuildSteps(context, jobArgs, outputPath);
     }

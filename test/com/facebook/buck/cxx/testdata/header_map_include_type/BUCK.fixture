@@ -1,46 +1,58 @@
 prebuilt_cxx_library(
-  name = 'prebuilt',
-  header_only = True,
-  header_namespace = 'prebuilt',
-  exported_headers = [
-    'prebuilt.h',
-  ],
+    name = "prebuilt",
+    exported_headers = [
+        "prebuilt.h",
+    ],
+    header_namespace = "prebuilt",
+    header_only = True,
 )
 
 cxx_library(
-  name = 'lib',
-  header_namespace = 'lib',
-  exported_headers = [
-    'lib.h',
-  ],
+    name = "lib",
+    exported_headers = [
+        "lib.h",
+    ],
+    header_namespace = "lib",
 )
 
 cxx_binary(
-  name = 'test_prebuilt',
-  header_namespace = 'namespace',
-  compiler_flags = [ '-Wdouble-promotion', '-Werror' ],
-  deps = [ ':prebuilt' ],
-  srcs = [
-    'test_prebuilt.cpp',
-  ],
+    name = "test_prebuilt",
+    srcs = [
+        "test_prebuilt.cpp",
+    ],
+    compiler_flags = [
+        "-Wdouble-promotion",
+        "-Werror",
+    ],
+    header_namespace = "namespace",
+    deps = [":prebuilt"],
 )
 
 cxx_binary(
-  name = 'test_lib',
-  header_namespace = 'namespace',
-  compiler_flags = [ '-Wdouble-promotion', '-Werror' ],
-  deps = [ ':lib' ],
-  srcs = [
-    'test_lib.cpp',
-  ],
+    name = "test_lib",
+    srcs = [
+        "test_lib.cpp",
+    ],
+    compiler_flags = [
+        "-Wdouble-promotion",
+        "-Werror",
+    ],
+    header_namespace = "namespace",
+    deps = [":lib"],
 )
 
 cxx_binary(
-  name = 'test_both',
-  header_namespace = 'namespace',
-  compiler_flags = [ '-Wdouble-promotion', '-Werror' ],
-  deps = [ ':prebuilt', ':lib' ],
-  srcs = [
-    'test_both.cpp',
-  ],
+    name = "test_both",
+    srcs = [
+        "test_both.cpp",
+    ],
+    compiler_flags = [
+        "-Wdouble-promotion",
+        "-Werror",
+    ],
+    header_namespace = "namespace",
+    deps = [
+        ":lib",
+        ":prebuilt",
+    ],
 )

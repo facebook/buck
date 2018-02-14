@@ -21,9 +21,9 @@ import com.facebook.buck.command.Build;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
@@ -39,6 +39,8 @@ import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
+import com.facebook.buck.rules.MetadataChecker;
+import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -58,9 +60,11 @@ import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.external.ExternalTestRunEvent;
 import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
+import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.ListeningProcessExecutor;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -89,6 +93,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
@@ -250,7 +255,7 @@ public class TestCommand extends BuildCommand {
     if (isDebugEnabled()) {
       return 1;
     }
-    return buckConfig.getNumThreads();
+    return buckConfig.getNumTestThreads();
   }
 
   public int getNumTestManagedThreads(ResourcesConfig resourcesConfig) {
@@ -292,7 +297,17 @@ public class TestCommand extends BuildCommand {
     return builder.build();
   }
 
-  private int runTestsInternal(
+  private ConcurrencyLimit getTestConcurrencyLimit(CommandRunnerParams params) {
+    ResourcesConfig resourcesConfig = params.getBuckConfig().getView(ResourcesConfig.class);
+    return new ConcurrencyLimit(
+        getNumTestThreads(params.getBuckConfig()),
+        resourcesConfig.getResourceAllocationFairness(),
+        getNumTestManagedThreads(resourcesConfig),
+        resourcesConfig.getDefaultResourceAmounts(),
+        resourcesConfig.getMaximumResourceAmounts());
+  }
+
+  private ExitCode runTestsInternal(
       CommandRunnerParams params,
       BuildEngine buildEngine,
       Build build,
@@ -301,37 +316,29 @@ public class TestCommand extends BuildCommand {
       throws InterruptedException, IOException {
 
     if (!withDashArguments.isEmpty()) {
-      params
-          .getBuckEventBus()
-          .post(
-              ConsoleEvent.severe("Unexpected arguments after \"--\" when using internal runner"));
-      return 1;
+      throw new CommandLineException(
+          "unexpected arguments after \"--\" when using internal runner");
     }
 
-    ResourcesConfig resourcesConfig = params.getBuckConfig().getView(ResourcesConfig.class);
-    ConcurrencyLimit concurrencyLimit =
-        new ConcurrencyLimit(
-            getNumTestThreads(params.getBuckConfig()),
-            resourcesConfig.getResourceAllocationFairness(),
-            getNumTestManagedThreads(resourcesConfig),
-            resourcesConfig.getDefaultResourceAmounts(),
-            resourcesConfig.getMaximumResourceAmounts());
-    try (CommandThreadManager testPool = new CommandThreadManager("Test-Run", concurrencyLimit)) {
+    try (CommandThreadManager testPool =
+        new CommandThreadManager("Test-Run", getTestConcurrencyLimit(params))) {
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(build.getRuleResolver());
-      return TestRunning.runTests(
-          params,
-          testRules,
-          build.getExecutionContext(),
-          getTestRunningOptions(params),
-          testPool.getWeightedListeningExecutorService(),
-          buildEngine,
-          new DefaultStepRunner(),
-          buildContext,
-          ruleFinder);
+      int exitCodeInt =
+          TestRunning.runTests(
+              params,
+              testRules,
+              build.getExecutionContext(),
+              getTestRunningOptions(params),
+              testPool.getWeightedListeningExecutorService(),
+              buildEngine,
+              new DefaultStepRunner(),
+              buildContext,
+              ruleFinder);
+      return ExitCode.map(exitCodeInt);
     }
   }
 
-  private int runTestsExternal(
+  private ExitCode runTestsExternal(
       final CommandRunnerParams params,
       Build build,
       Iterable<String> command,
@@ -350,7 +357,7 @@ public class TestCommand extends BuildCommand {
                   String.format(
                       "Test %s does not support external test running",
                       nonExternalTestRunnerRule.get().getBuildTarget())));
-      return 1;
+      return ExitCode.BUILD_ERROR;
     }
     TestRunningOptions options = getTestRunningOptions(params);
     // Walk the test rules, collecting all the specs.
@@ -373,7 +380,7 @@ public class TestCommand extends BuildCommand {
                         .post(ExternalTestSpecCalculationEvent.finished(rule.getBuildTarget()));
                   }
                 })
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
     StreamSupport.stream(
             testRules.spliterator(),
@@ -408,8 +415,7 @@ public class TestCommand extends BuildCommand {
             .addAllCommand(withDashArguments)
             .setEnvironment(params.getEnvironment())
             .addCommand("--buck-test-info", infoFile.toString())
-            .addCommand(
-                "--jobs", String.valueOf(getConcurrencyLimit(params.getBuckConfig()).threadLimit))
+            .addCommand("--jobs", String.valueOf(getTestConcurrencyLimit(params).threadLimit))
             .setDirectory(params.getCell().getFilesystem().getRootPath())
             .build();
     ForwardingProcessListener processListener =
@@ -419,10 +425,10 @@ public class TestCommand extends BuildCommand {
         StreamSupport.stream(testRules.spliterator(), /* parallel */ false)
             .map(BuildRule::getBuildTarget)
             .map(Object::toString)
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     ListeningProcessExecutor.LaunchedProcess process =
         processExecutor.launchProcess(processExecutorParams, processListener);
-    int exitCode = -1;
+    ExitCode exitCode = ExitCode.FATAL_GENERIC;
     try {
       params
           .getBuckEventBus()
@@ -432,7 +438,7 @@ public class TestCommand extends BuildCommand {
                   options.getTestSelectorList(),
                   options.shouldExplainTestSelectorList(),
                   testTargets));
-      exitCode = processExecutor.waitForProcess(process);
+      exitCode = ExitCode.map(processExecutor.waitForProcess(process));
       return exitCode;
     } finally {
       params.getBuckEventBus().post(ExternalTestRunEvent.finished(testTargets, exitCode));
@@ -442,11 +448,14 @@ public class TestCommand extends BuildCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     LOG.debug("Running with arguments %s", getArguments());
 
     try (CommandThreadManager pool =
-        new CommandThreadManager("Test", getConcurrencyLimit(params.getBuckConfig()))) {
+            new CommandThreadManager("Test", getConcurrencyLimit(params.getBuckConfig()));
+        CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier =
+            getForkJoinPoolSupplier(params.getBuckConfig())) {
       // Post the build started event, setting it to the Parser recorded start time if appropriate.
       BuildEvent.Started started = BuildEvent.started(getArguments());
       if (params.getParser().getParseStartTime().isPresent()) {
@@ -532,11 +541,11 @@ public class TestCommand extends BuildCommand {
           targetGraphAndBuildTargets = toVersionedTargetGraph(params, targetGraphAndBuildTargets);
         }
 
-      } catch (BuildTargetException | BuildFileParseException | VersionException e) {
+      } catch (BuildFileParseException | VersionException e) {
         params
             .getBuckEventBus()
             .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-        return 1;
+        return ExitCode.PARSE_ERROR;
       }
 
       ActionGraphAndResolver actionGraphAndResolver =
@@ -545,7 +554,9 @@ public class TestCommand extends BuildCommand {
               .getActionGraph(
                   params.getBuckEventBus(),
                   targetGraphAndBuildTargets.getTargetGraph(),
-                  params.getBuckConfig());
+                  params.getBuckConfig(),
+                  params.getRuleKeyConfiguration(),
+                  poolSupplier);
       // Look up all of the test rules in the action graph.
       Iterable<TestRule> testRules =
           Iterables.filter(actionGraphAndResolver.getActionGraph().getNodes(), TestRule.class);
@@ -568,9 +579,11 @@ public class TestCommand extends BuildCommand {
                   params.getBuckConfig().getKeySeed(), actionGraphAndResolver.getActionGraph()))) {
         LocalCachingBuildEngineDelegate localCachingBuildEngineDelegate =
             new LocalCachingBuildEngineDelegate(params.getFileHashCache());
+        SourcePathRuleFinder sourcePathRuleFinder =
+            new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
         try (CachingBuildEngine cachingBuildEngine =
                 new CachingBuildEngine(
-                    new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
+                    localCachingBuildEngineDelegate,
                     pool.getWeightedListeningExecutorService(),
                     new DefaultStepRunner(),
                     getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
@@ -579,39 +592,44 @@ public class TestCommand extends BuildCommand {
                     cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
                     cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
                     actionGraphAndResolver.getResolver(),
+                    sourcePathRuleFinder,
+                    DefaultSourcePathResolver.from(sourcePathRuleFinder),
                     params.getBuildInfoStoreManager(),
                     cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
                     cachingBuildEngineBuckConfig.getConsoleLogBuildRuleFailuresInline(),
                     RuleKeyFactories.of(
-                        params.getBuckConfig().getKeySeed(),
+                        params.getRuleKeyConfiguration(),
                         localCachingBuildEngineDelegate.getFileHashCache(),
                         actionGraphAndResolver.getResolver(),
-                        cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
+                        params.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
                         ruleKeyCacheScope.getCache()),
-                    params.getBuckConfig().getFileHashCacheMode());
+                    new NoOpRemoteBuildRuleCompletionWaiter());
             Build build =
-                createBuild(
-                    params.getBuckConfig(),
+                new Build(
                     actionGraphAndResolver.getResolver(),
                     params.getCell(),
                     cachingBuildEngine,
                     params.getArtifactCacheFactory().newInstance(),
-                    params.getConsole(),
+                    params
+                        .getBuckConfig()
+                        .getView(JavaBuckConfig.class)
+                        .createDefaultJavaPackageFinder(),
                     params.getClock(),
-                    getExecutionContext())) {
+                    getExecutionContext(),
+                    isKeepGoing())) {
 
           // Build all of the test rules.
-          int exitCode =
+          int exitCodeInt =
               build.executeAndPrintFailuresToEventBus(
                   RichStream.from(testRules)
                       .map(TestRule::getBuildTarget)
-                      .collect(MoreCollectors.toImmutableList()),
-                  isKeepGoing(),
+                      .collect(ImmutableList.toImmutableList()),
                   params.getBuckEventBus(),
                   params.getConsole(),
                   getPathToBuildReport(params.getBuckConfig()));
+          ExitCode exitCode = ExitCode.map(exitCodeInt);
           params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
-          if (exitCode != 0) {
+          if (exitCode != ExitCode.SUCCESS) {
             return exitCode;
           }
 
@@ -633,7 +651,6 @@ public class TestCommand extends BuildCommand {
                   .setBuildCellRootPath(params.getCell().getRoot())
                   .setJavaPackageFinder(params.getJavaPackageFinder())
                   .setEventBus(params.getBuckEventBus())
-                  .setAndroidPlatformTargetSupplier(params.getAndroidPlatformTargetSupplier())
                   .build();
 
           // Once all of the rules are built, then run the tests.
@@ -655,6 +672,7 @@ public class TestCommand extends BuildCommand {
         .setTargetDevice(getTargetDeviceOptional())
         .setAndroidDevicesHelper(
             AndroidDevicesHelperFactory.get(
+                params.getCell().getToolchainProvider(),
                 this::getExecutionContext,
                 params.getBuckConfig(),
                 getAdbOptions(params.getBuckConfig()),

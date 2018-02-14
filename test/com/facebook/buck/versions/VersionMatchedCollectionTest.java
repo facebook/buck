@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.hamcrest.Matchers;
@@ -70,17 +71,18 @@ public class VersionMatchedCollectionTest {
   @Test
   public void testGetOnlyMatchingValue() {
     assertThat(
-        COLLECTION.getOnlyMatchingValue(ImmutableMap.of(A, V1, B, V1)),
+        COLLECTION.getOnlyMatchingValue("test", ImmutableMap.of(A, V1, B, V1)),
         Matchers.equalTo("a-1.0,b-1.0"));
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test(expected = HumanReadableException.class)
   public void testGetOnlyMatchingValueThrowsOnTooManyValues() {
-    System.out.println(COLLECTION.getOnlyMatchingValue(ImmutableMap.of(A, V1)));
+    System.out.println(COLLECTION.getOnlyMatchingValue("test", ImmutableMap.of(A, V1)));
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test(expected = HumanReadableException.class)
   public void testGetOnlyMatchingValueThrowsOnNoMatches() {
-    System.out.println(COLLECTION.getOnlyMatchingValue(ImmutableMap.of(A, Version.of("3.0"))));
+    System.out.println(
+        COLLECTION.getOnlyMatchingValue("test", ImmutableMap.of(A, Version.of("3.0"))));
   }
 }

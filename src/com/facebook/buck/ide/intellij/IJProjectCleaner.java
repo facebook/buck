@@ -16,12 +16,13 @@
 
 package com.facebook.buck.ide.intellij;
 
-import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
-import com.facebook.buck.artifact_cache.DirCacheEntry;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
+import com.facebook.buck.artifact_cache.config.DirCacheEntry;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.MoreCollectors;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;
@@ -73,7 +74,7 @@ public class IJProjectCleaner {
             .map(Paths::get)
             .map(projectFilesystem::relativize)
             .map(Path::toString)
-            .collect(MoreCollectors.toImmutableSortedSet()));
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
 
   private File convertPathToFile(Path path) {
@@ -98,7 +99,6 @@ public class IJProjectCleaner {
     return limit > 0 ? limit : 1;
   }
 
-  @SuppressWarnings("serial")
   public void clean(
       final BuckConfig buckConfig,
       final Path librariesXmlBase,
@@ -147,7 +147,6 @@ public class IJProjectCleaner {
     }
   }
 
-  @SuppressWarnings("serial")
   private class DirectoryCleaner extends RecursiveAction {
     private File directory;
     private FilenameFilter filenameFilter;
@@ -179,7 +178,6 @@ public class IJProjectCleaner {
     }
   }
 
-  @SuppressWarnings("serial")
   private class CandidateFinder extends RecursiveAction {
     private File directory;
     private FilenameFilter filenameFilter;
@@ -216,7 +214,6 @@ public class IJProjectCleaner {
     }
   }
 
-  @SuppressWarnings("serial")
   private class CandidateFinderWithExclusions extends CandidateFinder {
     Set<File> exclusions;
 

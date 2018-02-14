@@ -1,10 +1,10 @@
 android_library(
-  name = 'dep1',
-  srcs = glob(['src/**/*.java']),
-  deps = [
-    '//modules/dep2:dep2',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "dep1",
+    srcs = glob(["src/**/*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//modules/dep2:dep2",
+    ],
 )

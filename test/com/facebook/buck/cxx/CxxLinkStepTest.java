@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -39,6 +40,7 @@ public class CxxLinkStepTest {
     // Create our CxxLinkStep to test.
     CxxLinkStep cxxLinkStep =
         new CxxLinkStep(
+            BuildTargetFactory.newInstance("//dummy:target"),
             projectFilesystem.getRootPath(),
             ImmutableMap.of(),
             linker,

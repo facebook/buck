@@ -16,12 +16,14 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider;
 import com.facebook.buck.io.TeeInputStream;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.test.selectors.TestDescription;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Console;
@@ -29,13 +31,10 @@ import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.io.ByteStreams;
@@ -57,6 +56,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -87,7 +87,7 @@ class XctoolRunTestsStep implements Step {
   private final Optional<Long> xctoolStutterTimeout;
   private final Path outputPath;
   private final Optional<? extends StdoutReadingCallback> stdoutReadingCallback;
-  private final Supplier<Optional<Path>> xcodeDeveloperDirSupplier;
+  private final AppleDeveloperDirectoryForTestsProvider appleDeveloperDirectoryForTestsProvider;
   private final TestSelectorList testSelectorList;
   private final Optional<String> logDirectoryEnvironmentVariable;
   private final Optional<Path> logDirectory;
@@ -159,9 +159,10 @@ class XctoolRunTestsStep implements Step {
       Optional<String> destinationSpecifier,
       Collection<Path> logicTestBundlePaths,
       Map<Path, Path> appTestBundleToHostAppPaths,
+      Map<Path, Map<Path, Path>> appTestPathsToTestHostAppPathsToTestTargetAppPaths,
       Path outputPath,
       Optional<? extends StdoutReadingCallback> stdoutReadingCallback,
-      Supplier<Optional<Path>> xcodeDeveloperDirSupplier,
+      AppleDeveloperDirectoryForTestsProvider appleDeveloperDirectoryForTestsProvider,
       TestSelectorList testSelectorList,
       boolean waitForDebugger,
       Optional<String> logDirectoryEnvironmentVariable,
@@ -171,10 +172,13 @@ class XctoolRunTestsStep implements Step {
       Optional<Long> timeoutInMs,
       Optional<String> snapshotReferenceImagesPath) {
     Preconditions.checkArgument(
-        !(logicTestBundlePaths.isEmpty() && appTestBundleToHostAppPaths.isEmpty()),
-        "Either logic tests (%s) or app tests (%s) must be present",
+        !(logicTestBundlePaths.isEmpty()
+            && appTestBundleToHostAppPaths.isEmpty()
+            && appTestPathsToTestHostAppPathsToTestTargetAppPaths.isEmpty()),
+        "Either logic tests (%s) or app tests (%s) or uitest (%s) must be present",
         logicTestBundlePaths,
-        appTestBundleToHostAppPaths);
+        appTestBundleToHostAppPaths,
+        appTestPathsToTestHostAppPathsToTestTargetAppPaths);
 
     this.filesystem = filesystem;
 
@@ -185,12 +189,13 @@ class XctoolRunTestsStep implements Step {
             destinationSpecifier,
             logicTestBundlePaths,
             appTestBundleToHostAppPaths,
+            appTestPathsToTestHostAppPathsToTestTargetAppPaths,
             waitForDebugger);
     this.environmentOverrides = environmentOverrides;
     this.xctoolStutterTimeout = xctoolStutterTimeout;
     this.outputPath = outputPath;
     this.stdoutReadingCallback = stdoutReadingCallback;
-    this.xcodeDeveloperDirSupplier = xcodeDeveloperDirSupplier;
+    this.appleDeveloperDirectoryForTestsProvider = appleDeveloperDirectoryForTestsProvider;
     this.testSelectorList = testSelectorList;
     this.logDirectoryEnvironmentVariable = logDirectoryEnvironmentVariable;
     this.logDirectory = logDirectory;
@@ -208,12 +213,9 @@ class XctoolRunTestsStep implements Step {
   public ImmutableMap<String, String> getEnv(ExecutionContext context) {
     Map<String, String> environment = new HashMap<>();
     environment.putAll(context.getEnvironment());
-    Optional<Path> xcodeDeveloperDir = xcodeDeveloperDirSupplier.get();
-    if (xcodeDeveloperDir.isPresent()) {
-      environment.put("DEVELOPER_DIR", xcodeDeveloperDir.get().toString());
-    } else {
-      throw new RuntimeException("Cannot determine xcode developer dir");
-    }
+    Path xcodeDeveloperDir =
+        appleDeveloperDirectoryForTestsProvider.getAppleDeveloperDirectoryForTests();
+    environment.put("DEVELOPER_DIR", xcodeDeveloperDir.toString());
     // xctool will only pass through to the test environment variables whose names
     // start with `XCTOOL_TEST_ENV_`. (It will remove that prefix when passing them
     // to the test.)
@@ -273,7 +275,7 @@ class XctoolRunTestsStep implements Step {
                     Locale.US,
                     "No tests found matching specified filter (%s)",
                     testSelectorList.getExplanation()));
-        return StepExecutionResult.SUCCESS;
+        return StepExecutionResults.SUCCESS;
       }
       processExecutorParamsBuilder.addAllCommand(xctoolFilterParams);
     }
@@ -399,7 +401,7 @@ class XctoolRunTestsStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return Joiner.on(' ').join(Iterables.transform(command, Escaper.SHELL_ESCAPER));
+    return command.stream().map(Escaper.SHELL_ESCAPER).collect(Collectors.joining(" "));
   }
 
   private static int listAndFilterTestsThenFormatXctoolParams(
@@ -482,6 +484,7 @@ class XctoolRunTestsStep implements Step {
       Optional<String> destinationSpecifier,
       Collection<Path> logicTestBundlePaths,
       Map<Path, Path> appTestBundleToHostAppPaths,
+      Map<Path, Map<Path, Path>> appTestPathsToTestHostAppPathsToTestTargetAppPaths,
       boolean waitForDebugger) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add(xctoolPath.toString());
@@ -500,6 +503,20 @@ class XctoolRunTestsStep implements Step {
     for (Map.Entry<Path, Path> appTestBundleAndHostApp : appTestBundleToHostAppPaths.entrySet()) {
       args.add("-appTest");
       args.add(appTestBundleAndHostApp.getKey() + ":" + appTestBundleAndHostApp.getValue());
+    }
+
+    for (Map.Entry<Path, Map<Path, Path>> appTestPathsToTestHostAppPathsToTestTargetApp :
+        appTestPathsToTestHostAppPathsToTestTargetAppPaths.entrySet()) {
+      for (Map.Entry<Path, Path> testHostAppToTestTargetApp :
+          appTestPathsToTestHostAppPathsToTestTargetApp.getValue().entrySet()) {
+        args.add("-uiTest");
+        args.add(
+            appTestPathsToTestHostAppPathsToTestTargetApp.getKey()
+                + ":"
+                + testHostAppToTestTargetApp.getKey()
+                + ":"
+                + testHostAppToTestTargetApp.getValue());
+      }
     }
     if (waitForDebugger) {
       args.add("-waitForDebugger");

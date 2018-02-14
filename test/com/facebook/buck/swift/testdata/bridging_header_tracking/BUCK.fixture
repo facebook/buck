@@ -31,12 +31,12 @@ apple_library(
     srcs = glob([
         "BigLib/**/*.m",
     ]),
-    headers = glob([
-        "BigLib/**/*.h",
-    ]),
     frameworks = [
         "$SDKROOT/System/Library/Frameworks/UIKit.framework",
     ],
+    headers = glob([
+        "BigLib/**/*.h",
+    ]),
     visibility = ["PUBLIC"],
     deps = [
         ":LibSwift",
@@ -64,12 +64,12 @@ apple_library(
     srcs = glob([
         "BigLibTransitive/**/*.m",
     ]),
-    headers = glob([
-        "BigLibTransitive/**/*.h",
-    ]),
     frameworks = [
         "$SDKROOT/System/Library/Frameworks/UIKit.framework",
     ],
+    headers = glob([
+        "BigLibTransitive/**/*.h",
+    ]),
     visibility = ["PUBLIC"],
     deps = [
         ":LibObjCUsesLibSwift",

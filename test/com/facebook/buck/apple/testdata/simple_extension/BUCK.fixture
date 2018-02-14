@@ -1,24 +1,24 @@
 apple_bundle(
-  name = 'DemoExtension',
-  binary = ':DemoExtensionLibrary#shared',
-  extension = 'appex',
-  info_plist = 'Info.plist',
+    name = "DemoExtension",
+    binary = ":DemoExtensionLibrary#shared",
+    extension = "appex",
+    info_plist = "Info.plist",
 )
 
 apple_library(
-  name = 'DemoExtensionLibrary',
-  preprocessor_flags = ['-fobjc-arc'],
-  headers = glob([
-    '*.h',
-  ]),
-  srcs = glob([
-    '*.m',
-  ]),
-  frameworks = [
-    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
-    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-  ],
-  libraries = [
-    '$SDKROOT/usr/lib/libobjc.dylib',
-  ],
+    name = "DemoExtensionLibrary",
+    srcs = glob([
+        "*.m",
+    ]),
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    headers = glob([
+        "*.h",
+    ]),
+    libraries = [
+        "$SDKROOT/usr/lib/libobjc.dylib",
+    ],
+    preprocessor_flags = ["-fobjc-arc"],
 )

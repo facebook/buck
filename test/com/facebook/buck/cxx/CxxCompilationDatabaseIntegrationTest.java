@@ -17,6 +17,7 @@ package com.facebook.buck.cxx;
 
 import static com.facebook.buck.cxx.toolchain.CxxFlavorSanitizer.sanitize;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -33,15 +34,12 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -112,7 +110,7 @@ public class CxxCompilationDatabaseIntegrationTest {
 
     Path rootPath = tmp.getRoot();
     assertEquals(
-        BuildTargets.getGenPath(filesystem, target, "__%s.json"),
+        BuildTargets.getGenPath(filesystem, target, "__%s/compile_commands.json"),
         rootPath.relativize(compilationDatabase));
 
     Path binaryHeaderSymlinkTreeFolder =
@@ -191,7 +189,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
     Path rootPath = tmp.getRoot();
     assertEquals(
-        BuildTargets.getGenPath(filesystem, target, "__%s.json"),
+        BuildTargets.getGenPath(filesystem, target, "__%s/compile_commands.json"),
         rootPath.relativize(compilationDatabase));
 
     Path headerSymlinkTreeFolder =
@@ -271,7 +269,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
     Path rootPath = tmp.getRoot();
     assertEquals(
-        BuildTargets.getGenPath(filesystem, target, "__%s.json"),
+        BuildTargets.getGenPath(filesystem, target, "__%s/compile_commands.json"),
         rootPath.relativize(compilationDatabase));
 
     Path binaryHeaderSymlinkTreeFolder =
@@ -499,7 +497,7 @@ public class CxxCompilationDatabaseIntegrationTest {
         BuildTargetFactory.newInstance("//:binary_with_dep#default,compilation-database");
 
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -526,7 +524,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//dep1:dep1#default,compilation-database");
 
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -575,9 +573,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     String key = tmp.getRoot().toRealPath().resolve(fileName).toString();
     CxxCompilationDatabaseEntry entry = fileToEntry.get(key);
     assertNotNull("There should be an entry for " + key + ".", entry);
-    assertEquals(
-        Joiner.on(' ').join(Iterables.transform(command, Escaper.SHELL_ESCAPER)),
-        entry.getCommand());
+    assertThat(command, equalTo(entry.getArguments()));
   }
 
   private ImmutableList<String> getExtraFlagsForHeaderMaps(ProjectFilesystem filesystem)

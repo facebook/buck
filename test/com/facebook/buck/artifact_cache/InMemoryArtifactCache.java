@@ -16,10 +16,14 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
+import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.rules.RuleKey;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.Futures;
@@ -29,6 +33,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
@@ -48,6 +53,11 @@ public class InMemoryArtifactCache implements ArtifactCache {
   @Override
   public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
     return service.submit(() -> fetch(ruleKey, output));
+  }
+
+  @Override
+  public void skipPendingAndFutureAsyncFetches() {
+    // Async requests are not supported by InMemoryArtifactCache, so do nothing
   }
 
   private CacheResult fetch(RuleKey ruleKey, LazyPath output) {
@@ -77,11 +87,35 @@ public class InMemoryArtifactCache implements ArtifactCache {
   public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
     try (InputStream inputStream = Files.newInputStream(output.getPath())) {
       store(info, ByteStreams.toByteArray(inputStream));
+      if (output.canBorrow()) {
+        Files.delete(output.getPath());
+      }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
 
     return Futures.immediateFuture(null);
+  }
+
+  @Override
+  public ListenableFuture<ImmutableMap<RuleKey, CacheResult>> multiContainsAsync(
+      ImmutableSet<RuleKey> ruleKeys) {
+    return Futures.immediateFuture(
+        Maps.toMap(
+            ruleKeys,
+            ruleKey ->
+                artifacts.containsKey(ruleKey)
+                    ? CacheResult.contains("in-memory", ArtifactCacheMode.dir)
+                    : CacheResult.miss()));
+  }
+
+  @Override
+  public ListenableFuture<CacheDeleteResult> deleteAsync(List<RuleKey> ruleKeys) {
+    ruleKeys.forEach(artifacts::remove);
+
+    ImmutableList<String> cacheNames =
+        ImmutableList.of(InMemoryArtifactCache.class.getSimpleName());
+    return Futures.immediateFuture(CacheDeleteResult.builder().setCacheNames(cacheNames).build());
   }
 
   @Override

@@ -1,36 +1,36 @@
 java_test(
-  name = 'env',
-  srcs = [
-    'EnvTest.java',
-  ],
-  deps = [
-    ':junit',
-  ],
-  env = {
-    "A": "B",
-    "FILE": "$(location :exported_file)"
-  }
+    name = "env",
+    srcs = [
+        "EnvTest.java",
+    ],
+    env = {
+        "A": "B",
+        "FILE": "$(location :exported_file)",
+    },
+    deps = [
+        ":junit",
+    ],
 )
 
 export_file(
-  name = 'exported_file'
+    name = "exported_file",
 )
 
 prebuilt_jar(
-  name = 'junit',
-  binary_jar = 'junit-4.11.jar',
-  deps = [
-    ':hamcrest-core',
-    ':hamcrest-library',
-  ],
+    name = "junit",
+    binary_jar = "junit-4.11.jar",
+    deps = [
+        ":hamcrest-core",
+        ":hamcrest-library",
+    ],
 )
 
 prebuilt_jar(
-  name = 'hamcrest-core',
-  binary_jar = 'hamcrest-core-1.3.jar',
+    name = "hamcrest-core",
+    binary_jar = "hamcrest-core-1.3.jar",
 )
 
 prebuilt_jar(
-  name = 'hamcrest-library',
-  binary_jar = 'hamcrest-library-1.3.jar',
+    name = "hamcrest-library",
+    binary_jar = "hamcrest-library-1.3.jar",
 )

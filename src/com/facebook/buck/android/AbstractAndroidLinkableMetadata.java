@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
-import com.facebook.buck.android.toolchain.TargetCpuType;
+import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 

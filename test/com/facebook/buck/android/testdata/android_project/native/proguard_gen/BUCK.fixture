@@ -1,5 +1,5 @@
 python_binary(
-  name = 'generator',
-  main = 'generator.py',
-  visibility = ['PUBLIC'],
+    name = "generator",
+    main = "generator.py",
+    visibility = ["PUBLIC"],
 )

@@ -26,12 +26,13 @@ import com.facebook.buck.cxx.toolchain.elf.ElfStringTable;
 import com.facebook.buck.cxx.toolchain.elf.ElfSymbolTable;
 import com.facebook.buck.cxx.toolchain.elf.ElfVerDef;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStylePackageVisibleTuple;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -254,7 +255,7 @@ abstract class AbstractElfRewriteDynStrSectionStep implements Step {
           .withSize(dynStrSection.getSection().body.position())
           .write(elf.header.ei_class, buffer);
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

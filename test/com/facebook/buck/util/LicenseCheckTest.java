@@ -46,7 +46,7 @@ public class LicenseCheckTest {
   private static final ImmutableSet<Path> NON_APACHE_LICENSE_DIRS_WHITELIST =
       ImmutableSet.of(
           // Ignore the generated parsing files for the plugin
-          Paths.get("src/com/facebook/buck/intellij/ideabuck/gen/"));
+          Paths.get("tools/ideabuck/gen/"));
 
   @Test
   public void ensureAllSrcFilesHaveTheApacheLicense() throws IOException {

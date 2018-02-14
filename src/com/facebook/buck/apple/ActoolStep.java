@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
@@ -37,9 +39,10 @@ class ActoolStep extends ShellStep {
   private final Path outputPlist;
   private final Optional<String> appIcon;
   private final Optional<String> launchImage;
-  private final AppleAssetCatalogDescription.Optimization optimization;
+  private final AppleAssetCatalogsCompilationOptions compilationOptions;
 
   public ActoolStep(
+      BuildTarget buildTarget,
       Path workingDirectory,
       String applePlatformName,
       String targetSDKVersion,
@@ -50,8 +53,8 @@ class ActoolStep extends ShellStep {
       Path outputPlist,
       Optional<String> appIcon,
       Optional<String> launchImage,
-      AppleAssetCatalogDescription.Optimization optimization) {
-    super(workingDirectory);
+      AppleAssetCatalogsCompilationOptions compilationOptions) {
+    super(Optional.of(buildTarget), workingDirectory);
     this.applePlatformName = applePlatformName;
     this.targetSDKVersion = targetSDKVersion;
     this.environment = environment;
@@ -61,7 +64,7 @@ class ActoolStep extends ShellStep {
     this.outputPlist = outputPlist;
     this.appIcon = appIcon;
     this.launchImage = launchImage;
-    this.optimization = optimization;
+    this.compilationOptions = compilationOptions;
   }
 
   @Override
@@ -70,16 +73,10 @@ class ActoolStep extends ShellStep {
 
     commandBuilder.addAll(actoolCommand);
     commandBuilder.add(
-        "--output-format",
-        "human-readable-text",
-        "--notices",
-        "--warnings",
-        "--errors",
         "--platform",
         applePlatformName,
         "--minimum-deployment-target",
         targetSDKVersion,
-        "--compress-pngs",
         "--compile",
         output.toString(),
         "--output-partial-info-plist",
@@ -94,7 +91,7 @@ class ActoolStep extends ShellStep {
     } else if (applePlatformName.equals(ApplePlatform.MACOSX.getName())) {
       commandBuilder.add("--target-device", "mac");
     } else {
-      //TODO(jakubzika): Let apps decide which device they want to target (iPhone / iPad / both)
+      // TODO(jakubzika): Let apps decide which device they want to target (iPhone / iPad / both)
       commandBuilder.add(
           "--target-device", "iphone",
           "--target-device", "ipad");
@@ -108,7 +105,22 @@ class ActoolStep extends ShellStep {
       commandBuilder.add("--launch-image", launchImage.get());
     }
 
-    commandBuilder.add("--optimization", optimization.toArgument());
+    if (compilationOptions.getNotices()) {
+      commandBuilder.add("--notices");
+    }
+    if (compilationOptions.getWarnings()) {
+      commandBuilder.add("--warnings");
+    }
+    if (compilationOptions.getErrors()) {
+      commandBuilder.add("--errors");
+    }
+    if (compilationOptions.getCompressPngs()) {
+      commandBuilder.add("--compress-pngs");
+    }
+    commandBuilder.add("--optimization", compilationOptions.getOptimization().toArgument());
+    commandBuilder.add("--output-format", compilationOptions.getOutputFormat().toArgument());
+    commandBuilder.addAll(compilationOptions.getExtraFlags());
+
     commandBuilder.addAll(Iterables.transform(assetCatalogDirs, Object::toString));
 
     return commandBuilder.build();

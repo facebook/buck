@@ -39,6 +39,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class HaskellLinkRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
@@ -88,11 +89,13 @@ public class HaskellLinkRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(), getProjectFilesystem(), getOutputDir())))
         .add(
+            // The output path might be a folder, so delete it all
             RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(), getProjectFilesystem(), getOutput())))
+                    BuildCellRelativePath.fromCellRelativePath(
+                        buildContext.getBuildCellRootPath(), getProjectFilesystem(), getOutput()))
+                .withRecursive(true))
         .add(
-            new ShellStep(getProjectFilesystem().getRootPath()) {
+            new ShellStep(Optional.of(getBuildTarget()), getProjectFilesystem().getRootPath()) {
 
               @Override
               public ImmutableMap<String, String> getEnvironmentVariables(

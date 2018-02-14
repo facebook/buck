@@ -16,17 +16,11 @@
 
 package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
-import java.util.Optional;
 
+/** Interface for a c/c++ preprocessor. */
 public interface Preprocessor extends Tool {
-
-  Optional<ImmutableList<String>> getFlagsForColorDiagnostics();
 
   boolean supportsHeaderMaps();
 
@@ -40,7 +34,7 @@ public interface Preprocessor extends Tool {
 
   Iterable<String> precompiledHeaderArgs(Path pchOutputPath);
 
-  Iterable<String> prefixHeaderArgs(SourcePathResolver resolver, SourcePath prefixHeader);
+  Iterable<String> prefixHeaderArgs(Path prefixHeader);
 
   /**
    * @param prefixHeader the {@code prefix_hedaer} param for the rule.
@@ -48,19 +42,7 @@ public interface Preprocessor extends Tool {
    *     {@code prefixHeader}. Not mutually exclusive with {@code prefixHeader}; if both are given,
    *     the precompiled version of it is preferred.
    */
-  default Iterable<String> prefixOrPCHArgs(
-      SourcePathResolver resolver,
-      Optional<SourcePath> prefixHeader,
-      Optional<Path> pchOutputPath) {
-    ImmutableList.Builder<String> builder = ImmutableList.<String>builder();
-    if (pchOutputPath.isPresent()) {
-      Preconditions.checkState(
-          this.supportsPrecompiledHeaders(),
-          "Precompiled header was requested, but is not supported by " + getClass().toString());
-      builder.addAll(precompiledHeaderArgs(pchOutputPath.get()));
-    } else if (prefixHeader.isPresent()) {
-      builder.addAll(prefixHeaderArgs(resolver, prefixHeader.get()));
-    }
-    return builder.build();
+  default Iterable<String> prefixOrPCHArgs(boolean precompiled, Path path) {
+    return precompiled ? precompiledHeaderArgs(path) : prefixHeaderArgs(path);
   }
 }

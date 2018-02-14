@@ -32,8 +32,8 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -44,10 +44,9 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Verbosity;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -57,6 +56,7 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
@@ -70,7 +70,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
 
   @AddToRuleKey ImmutableList<String> linkerFlags;
 
-  private final PreprocessorFlags ppFlags;
+  @AddToRuleKey private final PreprocessorFlags ppFlags;
 
   @AddToRuleKey HaskellSources srcs;
 
@@ -143,10 +143,10 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
     }
 
     Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(haddockTool.getDeps(ruleFinder))
+                    .addAll(BuildableSupport.getDepsCollection(haddockTool, ruleFinder))
                     .addAll(sources.getDeps(ruleFinder))
                     .addAll(ruleFinder.filterBuildRuleInputs(interfaces))
                     .addAll(pkgDeps.build())
@@ -168,12 +168,6 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
         platform,
         preprocessor,
         ppFlags);
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    ppFlags.appendToRuleKey(sink);
-    sink.setReflectively("headers", ppFlags.getIncludes());
   }
 
   private Path getObjectDir() {
@@ -233,8 +227,12 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), dir)));
-    steps.add(new HaddockStep(getProjectFilesystem().getRootPath(), context, Type.HTML));
-    steps.add(new HaddockStep(getProjectFilesystem().getRootPath(), context, Type.HOOGLE));
+    steps.add(
+        new HaddockStep(
+            getBuildTarget(), getProjectFilesystem().getRootPath(), context, Type.HTML));
+    steps.add(
+        new HaddockStep(
+            getBuildTarget(), getProjectFilesystem().getRootPath(), context, Type.HOOGLE));
 
     buildableContext.recordArtifact(dir);
     return steps.build();
@@ -257,8 +255,9 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
     private BuildContext buildContext;
     private Type type;
 
-    public HaddockStep(Path rootPath, BuildContext buildContext, Type type) {
-      super(rootPath);
+    public HaddockStep(
+        BuildTarget buildTarget, Path rootPath, BuildContext buildContext, Type type) {
+      super(Optional.of(buildTarget), rootPath);
       this.buildContext = buildContext;
       this.type = type;
     }

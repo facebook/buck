@@ -22,8 +22,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.timing.SettableFakeClock;
+import com.facebook.buck.util.timing.DefaultClock;
+import com.facebook.buck.util.timing.SettableFakeClock;
 import com.google.common.eventbus.Subscribe;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;

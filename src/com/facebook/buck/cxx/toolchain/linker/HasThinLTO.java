@@ -32,4 +32,5 @@ public interface HasThinLTO {
    * @param output the path of the output binary
    */
   Path thinLTOPath(Path output);
+
 }

@@ -17,22 +17,14 @@
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.io.file.FileScrubber;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.DelegatingTool;
 import com.facebook.buck.rules.Tool;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
-public class WindowsArchiver implements Archiver {
-
-  private final Tool tool;
-
+/** Archiver implementation for the Windows toolchain. */
+public class WindowsArchiver extends DelegatingTool implements Archiver {
   public WindowsArchiver(Tool tool) {
-    this.tool = tool;
+    super(tool);
   }
 
   @Override
@@ -58,31 +50,6 @@ public class WindowsArchiver implements Archiver {
   @Override
   public boolean isRanLibStepRequired() {
     return false;
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return tool.getDeps(ruleFinder);
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return tool.getInputs();
-  }
-
-  @Override
-  public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
-    return tool.getCommandPrefix(resolver);
-  }
-
-  @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
-    return tool.getEnvironment(resolver);
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("tool", tool).setReflectively("type", getClass().getSimpleName());
   }
 
   @Override

@@ -86,7 +86,7 @@ public class WeightedListeningExecutorServiceTest {
               }
             });
     assertFalse(future.isDone());
-    assertThat(semaphore.getAvailableResources(), Matchers.equalTo(ResourceAmounts.ZERO));
+    assertThat(semaphore.getAvailableResources(), Matchers.equalTo(ResourceAmounts.zero()));
     future.cancel(/* mayInterruptIfRunning */ false);
     wrappedService.run();
     assertTrue(future.isCancelled());

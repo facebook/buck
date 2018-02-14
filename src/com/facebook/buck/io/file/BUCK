@@ -7,7 +7,6 @@ java_library(
     deps = [
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/log:api",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",

@@ -16,15 +16,6 @@ namespace java com.facebook.buck.distributed.thrift
 ## DataTypes
 ##############################################################################
 
-struct LogRecord {
-  1: optional string name;
-  2: optional i64 timestampMillis;
-}
-
-struct DebugInfo {
-  1: optional list<LogRecord> logBook;
-}
-
 # Uniquely identifies a stampede distributed build
 struct StampedeId {
   1 : optional string id;
@@ -75,13 +66,15 @@ enum BuildStatus {
 struct BuildSlaveInfo {
   1: optional BuildSlaveRunId buildSlaveRunId;
   2: optional string hostname;
-  3: optional string command;
+
+  // TODO(ruibm): Fields [4-7] have fallen out of sync and should not be used anymore however
+  //              the buck client code otherwise we get compile errors.
   4: optional i32 stdOutCurrentBatchNumber;
   5: optional i32 stdOutCurrentBatchLineCount;
   6: optional i32 stdErrCurrentBatchNumber;
   7: optional i32 stdErrCurrentBatchLineCount;
+
   8: optional bool logDirZipWritten;
-  9: optional i32 exitCode;
   10: optional BuildStatus status = BuildStatus.UNKNOWN;
 }
 
@@ -159,16 +152,19 @@ struct BuildModeInfo {
 
 struct BuildJob {
   1: optional StampedeId stampedeId;
-  # TODO(alisdair): split DebugInfo out from the main BuildJob
-  2: optional DebugInfo debug;
   3: optional BuildStatus status = BuildStatus.UNKNOWN;
   4: optional BuckVersion buckVersion;
-  # TODO(alisdair): split BuildSlaveInfo out from the main BuildJob
-  5: optional map<string, BuildSlaveInfo> slaveInfoByRunId;
   6: optional list<PathInfo> dotFiles;
   7: optional BuildModeInfo buildModeInfo;
   8: optional string repository;
   9: optional string tenantId;
+  10: optional string statusMessage;
+  // The build UUID of a buck client which initiated
+  // remote or distributed build.
+  11: optional string buckBuildUuid;
+  // The user that created the build.
+  12: optional string username;
+  13: optional list<BuildSlaveInfo> buildSlaves;
 }
 
 struct Announcement {
@@ -218,15 +214,22 @@ struct CreateBuildRequest {
   3: optional i32 numberOfMinions;
   4: optional string repository;
   5: optional string tenantId;
+  6: optional string buckBuildUuid;
+  7: optional string username;
+  8: optional list<string> buildTargets;
+  9: optional string buildLabel;
 }
 
 struct CreateBuildResponse {
   1: optional BuildJob buildJob;
+  2: optional bool wasAccepted;
+  3: optional string rejectionMessage;
 }
 
 # Request for the servers to start a distributed build.
 struct StartBuildRequest {
   1: optional StampedeId stampedeId;
+  2: optional bool enqueueJob = true;
 }
 
 struct StartBuildResponse {
@@ -302,8 +305,8 @@ struct MultiGetBuildSlaveLogDirRequest {
 
 # Returns zipped up log directories in the same order as the buildSlaveRunIds
 # that were specified in MultiGetBuildSlaveLogDirRequest. If a particular
-# buildSlaveRunId is missing, then an error will be thrown and no
-# response returned.
+# buildSlaveRunId is missing, then an 'error' is set in the individual LogDir
+# entry and no 'data' will be present in the same entry.
 struct MultiGetBuildSlaveLogDirResponse {
   1: optional list<LogDir> logDirs;
 }
@@ -405,10 +408,10 @@ struct MultiGetBuildSlaveEventsResponse {
 # particular backing store.
 struct RuleKeyStoreLogEntry {
   1: optional string storeId;
-  2: optional i64 slaSeconds;
-  3: optional i64 lastStoredTimestampSeconds;
-  4: optional i64 lastAttemptedStoreTimetampSeconds;
-  5: optional i64 lastCacheHitTimestampSeconds;
+  2: optional i64 storeTTLSeconds;
+  3: optional i64 lastStoreEpochSeconds;
+  4: optional i64 lastAttemptedStoreEpochSeconds;
+  5: optional i64 lastFetchEpochSeconds;
 }
 
 struct RuleKeyLogEntry {
@@ -450,6 +453,22 @@ struct EnqueueMinionsRequest {
 struct EnqueueMinionsResponse {
 }
 
+struct SetFinalBuildStatusRequest {
+  1: optional StampedeId stampedeId;
+  2: optional BuildStatus buildStatus;
+  3: optional string buildStatusMessage;
+}
+
+struct SetFinalBuildStatusResponse {
+}
+
+struct ReportCoordinatorAliveRequest {
+  1: optional StampedeId stampedeId;
+}
+
+struct ReportCoordinatorAliveResponse {
+}
+
 ##############################################################################
 ## Top-Level Buck-Frontend HTTP body thrift Request/Response format
 ##############################################################################
@@ -481,6 +500,8 @@ enum FrontendRequestType {
   FETCH_BUILD_SLAVE_FINISHED_STATS = 24,
   SET_COORDINATOR = 25,
   ENQUEUE_MINIONS = 26,
+  SET_FINAL_BUILD_STATUS = 27,
+  REPORT_COORDINATOR_ALIVE = 28,
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -513,6 +534,8 @@ struct FrontendRequest {
     fetchBuildSlaveFinishedStatsRequest;
   25: optional SetCoordinatorRequest setCoordinatorRequest;
   26: optional EnqueueMinionsRequest enqueueMinionsRequest;
+  27: optional SetFinalBuildStatusRequest setFinalBuildStatusRequest;
+  28: optional ReportCoordinatorAliveRequest reportCoordinatorAliveRequest;
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -545,6 +568,8 @@ struct FrontendResponse {
     fetchBuildSlaveFinishedStatsResponse;
   29: optional SetCoordinatorResponse setCoordinatorResponse;
   30: optional EnqueueMinionsResponse enqueueMinionsResponse;
+  31: optional SetFinalBuildStatusResponse setFinalBuildStatusResponse;
+  32: optional ReportCoordinatorAliveResponse reportCoordinatorAliveResponse;
 
   // [100-199] Values are reserved for the buck cache request types.
 }

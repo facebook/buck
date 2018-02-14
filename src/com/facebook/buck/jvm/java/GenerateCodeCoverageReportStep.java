@@ -26,7 +26,8 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.test.CoverageReportFormat;
-import com.facebook.buck.util.zip.Unzip;
+import com.facebook.buck.util.unarchive.ArchiveFormat;
+import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -68,7 +69,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
       String title,
       Optional<String> coverageIncludes,
       Optional<String> coverageExcludes) {
-    super(filesystem.getRootPath());
+    super(Optional.empty(), filesystem.getRootPath());
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.filesystem = filesystem;
     this.sourceDirectories = ImmutableSet.copyOf(sourceDirectories);
@@ -115,7 +116,8 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   StepExecutionResult executeInternal(
       ExecutionContext context, Set<Path> extractedClassesDirectories)
       throws IOException, InterruptedException {
-    try (OutputStream propertyFileStream = new FileOutputStream(propertyFile.toFile())) {
+    try (OutputStream propertyFileStream =
+        new FileOutputStream(filesystem.resolve(propertyFile).toFile())) {
       saveParametersToPropertyStream(filesystem, extractedClassesDirectories, propertyFileStream);
     }
 
@@ -182,11 +184,13 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
     try {
       Preconditions.checkState(
           filesystem.exists(outputJar), String.valueOf(outputJar) + " does not exist");
-      Unzip.extractZipFile(
-          projectFilesystemFactory,
-          outputJar,
-          classesDir,
-          Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+      ArchiveFormat.ZIP
+          .getUnarchiver()
+          .extractArchive(
+              projectFilesystemFactory,
+              outputJar,
+              classesDir,
+              ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

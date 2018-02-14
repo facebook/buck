@@ -32,14 +32,14 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 
 public class AssembleDirectories extends AbstractBuildRule {
 
@@ -57,10 +57,10 @@ public class AssembleDirectories extends AbstractBuildRule {
     this.destinationDirectory =
         BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "__assembled_%s__");
     this.buildDepsSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 BuildableSupport.deriveDeps(this, ruleFinder)
-                    .collect(MoreCollectors.toImmutableSortedSet()));
+                    .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
 
   @Override

@@ -1,0 +1,109 @@
+{namespace http_archive}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'http_archive()' /}
+    {param navid: 'rule_http_archive' /}
+    {param prettify: true /}
+    {param description}
+      A rule that is used to download and extract archives from the Internet
+      to be used as dependencies of other rules.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+An <code>http_archive()</code> rule is used to download and extract archives
+from the Internet to be used as dependencies for other rules. These rules are
+downloaded by running {call buck.cmd_fetch /}, or can be downloaded as part of
+{call buck.cmd_build /} by setting {call buckconfig.download_in_build /}
+{/param}
+
+{param args}
+
+{call remote_common.name_arg }{param rule: 'http_archive' /}{/call}
+{call remote_common.urls_arg /}
+{call remote_common.sha256_arg /}
+{call buck.arg}
+  {param name: 'out' /}
+  {param example : 'foo' /}
+  {param default: 'None' /}
+  {param desc}
+    An optional name to call the directory that the downloaded artifact is
+    extracted into. Buck will generate a default name if one is not
+    provided that uses the <code>name</code> of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'strip_prefix' /}
+  {param example: 'foobar-0.1.2' /}
+  {param default: 'None' /}
+  {param desc}
+  If set, files under this path will be extracted to the root of the output
+  directory. Siblings or cousins to this prefix will not be extracted at all.<br /><br />
+  For example, if a tarball has the layout:
+  <ul>
+  <li>foo/bar/bar-0.1.2/data.dat</li>
+  <li>foo/baz/baz-0.2.3</li>
+  <li>foo_prime/bar-0.1.2</li>
+  </ul>
+
+  Only <code>data.dat</code> will be extracted, and it will be extracted into the output
+  directory specified in&nbsp;{call buck.ruleLink}{param name: 'http_archive' /}{param section: 'out' /}{/call}.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'type' /}
+  {param example: 'tar.gz' /}
+  {param default: 'None' /}
+  {param desc}
+  Normally, archive type is determined by the file's extension. If <code>type</code> is set,
+  then autodetection is overriden, and the specified type is used instead.<br /><br />
+
+  Supported values are: <code>zip</code>, <code>tar</code>, <code>tar.gz</code>,
+  <code>tar.bz2</code>, and <code>tar.xz</code>
+  {/param}
+{/call}
+{/param} // close args
+
+{param examples}
+<p>
+  Using <code>http_archive()</code>, third party packages can be downloaded from
+  an <code>https</code> URL and used in other library types.
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+http_archive(
+  name = 'thrift-archive',
+  urls = [
+    'https://internal-mirror.example.com/bin/thrift-compiler-0.1.tar.gz.badextension',
+  ],
+  sha256 = '7baa80df284117e5b945b19b98d367a85ea7b7801bd358ff657946c3bd1b6596',
+  type='tar.gz',
+  strip_prefix='thrift-compiler-0.1'
+)
+
+genrule(
+  name = 'thrift-compiler-bin',
+  out = 'thrift',
+  cmd = 'cp $(location :thrift-archive)/bin/thrift $OUT',
+)
+
+genrule(
+  name="my-thrift-lib-cpp2",
+  cmd="$(exe :thrift-compiler-bin) --gen cpp2 -o $OUT $(location //:thrift-file)",
+  out="gen-cpp2",
+)
+</pre>{/literal}
+
+{/param} // close examples
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

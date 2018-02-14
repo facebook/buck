@@ -3,6 +3,7 @@ java_binary(
     visibility = [
         "//programs:bucklib",
         "//programs:bucklib-no-nailgun",
+        "//programs:calculate-buck-binary-hash",
         "//test/com/facebook/buck/cli/bootstrapper:bootstrapper",
     ],
     deps = [
@@ -14,9 +15,9 @@ java_library(
     name = "bootstrapper_lib",
     srcs = glob(["*.java"]),
     visibility = [
-        "//src/com/facebook/buck/intellij/...",
         "//test/...",
         "//third-party/java/aosp:tests",
+        "//tools/...",
     ],
     deps = [
         # Be very careful what is added here, and leave comments justifying
@@ -33,6 +34,10 @@ java_library(
         # This is an internal API used to communicate between Buck and the source-based ABI validator
         # running inside javac.
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
+
+        # This is a set of utility classes for working with javax.lang.model that are useful both
+        # from Buck and the compiler
+        "//src/com/facebook/buck/jvm/java/lang/model:model",
 
         # This is an internal API used to communicate between Buck and the compiler plugin
         "//src/com/facebook/buck/jvm/java/plugin/api:api",

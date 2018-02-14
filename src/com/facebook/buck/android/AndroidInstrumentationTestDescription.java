@@ -16,8 +16,10 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaOptions;
+import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -29,6 +31,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasContacts;
 import com.facebook.buck.rules.HasTestTimeout;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PackagedResource;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -39,15 +42,15 @@ import org.immutables.value.Value;
 public class AndroidInstrumentationTestDescription
     implements Description<AndroidInstrumentationTestDescriptionArg> {
 
-  private final JavaOptions javaOptions;
-  private final Optional<Long> defaultTestRuleTimeoutMs;
+  private final BuckConfig buckConfig;
+  private final ToolchainProvider toolchainProvider;
   private final ConcurrentHashMap<ProjectFilesystem, ConcurrentHashMap<String, PackagedResource>>
       resourceSupplierCache;
 
   public AndroidInstrumentationTestDescription(
-      JavaOptions javaOptions, Optional<Long> defaultTestRuleTimeoutMs) {
-    this.javaOptions = javaOptions;
-    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
+      BuckConfig buckConfig, ToolchainProvider toolchainProvider) {
+    this.buckConfig = buckConfig;
+    this.toolchainProvider = toolchainProvider;
     this.resourceSupplierCache = new ConcurrentHashMap<>();
   }
 
@@ -76,12 +79,19 @@ public class AndroidInstrumentationTestDescription
     return new AndroidInstrumentationTest(
         buildTarget,
         projectFilesystem,
+        toolchainProvider.getByName(
+            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
         params.copyAppendingExtraDeps(BuildRules.getExportedRules(params.getDeclaredDeps().get())),
         (HasInstallableApk) apk,
         args.getLabels(),
         args.getContacts(),
-        javaOptions.getJavaRuntimeLauncher(),
-        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+        toolchainProvider
+            .getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class)
+            .getJavaOptions()
+            .getJavaRuntimeLauncher(),
+        args.getTestRuleTimeoutMs()
+            .map(Optional::of)
+            .orElse(buckConfig.getDefaultTestRuleTimeoutMs()),
         getRelativePackagedResource(projectFilesystem, "ddmlib.jar"),
         getRelativePackagedResource(projectFilesystem, "kxml2.jar"),
         getRelativePackagedResource(projectFilesystem, "guava.jar"),

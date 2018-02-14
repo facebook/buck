@@ -16,6 +16,7 @@
 
 package com.facebook.buck.file;
 
+import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -25,19 +26,26 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.hash.HashCode;
 import java.net.URI;
 import java.util.Optional;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class RemoteFileDescription implements Description<RemoteFileDescriptionArg> {
 
-  private final Downloader downloader;
+  private final Supplier<Downloader> downloaderSupplier;
+
+  public RemoteFileDescription(ToolchainProvider toolchainProvider) {
+    this.downloaderSupplier =
+        () -> toolchainProvider.getByName(Downloader.DEFAULT_NAME, Downloader.class);
+  }
 
   public RemoteFileDescription(Downloader downloader) {
-    this.downloader = downloader;
+    this.downloaderSupplier = () -> downloader;
   }
 
   @Override
@@ -70,10 +78,24 @@ public class RemoteFileDescription implements Description<RemoteFileDescriptionA
     RemoteFile.Type type = args.getType().orElse(RemoteFile.Type.DATA);
     if (type == RemoteFile.Type.EXECUTABLE) {
       return new RemoteFileBinary(
-          buildTarget, projectFilesystem, params, downloader, args.getUrl(), sha1, out, type);
+          buildTarget,
+          projectFilesystem,
+          params,
+          downloaderSupplier.get(),
+          args.getUrl(),
+          sha1,
+          out,
+          type);
     }
     return new RemoteFile(
-        buildTarget, projectFilesystem, params, downloader, args.getUrl(), sha1, out, type);
+        buildTarget,
+        projectFilesystem,
+        params,
+        downloaderSupplier.get(),
+        args.getUrl(),
+        sha1,
+        out,
+        type);
   }
 
   @BuckStyleImmutable

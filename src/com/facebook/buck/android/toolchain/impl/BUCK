@@ -1,21 +1,29 @@
-java_library(
+load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
+
+java_library_with_plugins(
     name = "impl",
     srcs = glob(["*.java"]),
     exported_deps = [
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/android/toolchain:toolchain",
+        "//src/com/facebook/buck/android/toolchain/ndk:ndk",
     ],
     visibility = [
         "PUBLIC",
     ],
     deps = [
         "//src/com/facebook/buck/android:config",
+        "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/android/toolchain:toolchain",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/jvm/java:config",
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/log:log",
+        "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
         "//third-party/java/guava:guava",
     ],

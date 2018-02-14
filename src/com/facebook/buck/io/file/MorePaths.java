@@ -17,11 +17,10 @@
 package com.facebook.buck.io.file;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Function;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -34,6 +33,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**

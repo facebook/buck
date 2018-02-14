@@ -21,8 +21,9 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Joiner;
 import java.io.IOException;
@@ -45,7 +46,7 @@ public class ExternalTestRunnerIntegrationTest {
 
   @Test
   public void runPass() throws IOException {
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "test", "-c", "test.external_runner=" + workspace.getPath("test_runner.py"), "//:pass");
     result.assertSuccess();
@@ -54,7 +55,7 @@ public class ExternalTestRunnerIntegrationTest {
 
   @Test
   public void runCoverage() throws IOException {
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "test",
             "-c",
@@ -72,7 +73,7 @@ public class ExternalTestRunnerIntegrationTest {
 
   @Test
   public void runAdditionalCoverage() throws IOException {
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "test",
             "-c",
@@ -84,7 +85,7 @@ public class ExternalTestRunnerIntegrationTest {
 
   @Test
   public void runFail() throws IOException {
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "test", "-c", "test.external_runner=" + workspace.getPath("test_runner.py"), "//:fail");
     result.assertSuccess();
@@ -93,7 +94,7 @@ public class ExternalTestRunnerIntegrationTest {
 
   @Test
   public void extraArgs() throws IOException {
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "test",
             "-c",
@@ -107,7 +108,7 @@ public class ExternalTestRunnerIntegrationTest {
 
   @Test
   public void runJavaTest() throws IOException {
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "test",
             "-c",
@@ -140,7 +141,7 @@ public class ExternalTestRunnerIntegrationTest {
 
   @Test
   public void numberOfJobsIsPassedToExternalRunner() throws IOException {
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "test",
             "-c",
@@ -150,5 +151,21 @@ public class ExternalTestRunnerIntegrationTest {
             "13");
     result.assertSuccess();
     assertThat(result.getStdout().trim(), is(equalTo("13")));
+  }
+
+  @Test
+  public void numberOfJobsWithUtilizationRatioAppliedIsPassedToExternalRunner() throws IOException {
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "-c",
+            "test.external_runner=" + workspace.getPath("test_runner_echo_jobs.py"),
+            "-c",
+            "test.thread_utilization_ratio=0.5",
+            "//:pass",
+            "-j",
+            "13");
+    result.assertSuccess();
+    assertThat(result.getStdout().trim(), is(equalTo("7")));
   }
 }

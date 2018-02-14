@@ -18,7 +18,6 @@ package com.facebook.buck.ocaml;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TopologicalSort;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -54,7 +53,7 @@ public class OcamlDependencyGraphGenerator {
             sortedDeps
                 .stream()
                 .map(input -> replaceObjExtWithSourceExt(input, true /* isReason */)))
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   private String replaceObjExtWithSourceExt(String name, boolean isReason) {
@@ -90,7 +89,7 @@ public class OcamlDependencyGraphGenerator {
                           Stream.of(
                               Paths.get(replaceObjExtWithSourceExt(input, /* isReason */ false)),
                               Paths.get(replaceObjExtWithSourceExt(input, /* isReason */ true))))
-                  .collect(MoreCollectors.toImmutableList());
+                  .collect(ImmutableList.toImmutableList());
           mapBuilder.put(Paths.get(sourceML), dependencies).put(Paths.get(sourceRE), dependencies);
         }
       }

@@ -32,6 +32,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -39,23 +40,72 @@ import com.google.common.collect.Lists;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /** Provides a base implementation for post compile steps. */
 public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
+  protected final SourcePathResolver resolver;
+  protected final SourcePathRuleFinder ruleFinder;
+  protected final ProjectFilesystem projectFilesystem;
+
+  protected CompileToJarStepFactory(
+      SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
+      ProjectFilesystem projectFilesystem) {
+    this.resolver = resolver;
+    this.ruleFinder = ruleFinder;
+    this.projectFilesystem = projectFilesystem;
+  }
 
   public final void createCompileToJarStep(
       BuildContext context,
       BuildTarget target,
-      SourcePathResolver resolver,
-      SourcePathRuleFinder ruleFinder,
-      ProjectFilesystem projectFilesystem,
       CompilerParameters compilerParameters,
       ResourcesParameters resourcesParameters,
       ImmutableList<String> postprocessClassesCommands,
-      Optional<JarParameters> jarParameters,
+      @Nullable JarParameters abiJarParameters,
+      @Nullable JarParameters libraryJarParameters,
       /* output params */
-      ImmutableList.Builder<Step> steps,
+      Builder<Step> steps,
       BuildableContext buildableContext) {
+    Preconditions.checkArgument(libraryJarParameters != null || abiJarParameters == null);
+
+    addCompilerSetupSteps(context, target, compilerParameters, resourcesParameters, steps);
+
+    JarParameters jarParameters =
+        abiJarParameters != null ? abiJarParameters : libraryJarParameters;
+    if (jarParameters != null) {
+      addJarSetupSteps(context, jarParameters, steps);
+    }
+
+    // Only run javac if there are .java files to compile or we need to shovel the manifest file
+    // into the built jar.
+    if (!compilerParameters.getSourceFilePaths().isEmpty()) {
+      recordDepFileIfNecessary(target, compilerParameters, buildableContext);
+
+      // This adds the javac command, along with any supporting commands.
+      createCompileToJarStepImpl(
+          context,
+          target,
+          compilerParameters,
+          postprocessClassesCommands,
+          abiJarParameters,
+          libraryJarParameters,
+          steps,
+          buildableContext);
+    }
+
+    if (jarParameters != null) {
+      addJarCreationSteps(compilerParameters, steps, buildableContext, jarParameters);
+    }
+  }
+
+  protected void addCompilerSetupSteps(
+      BuildContext context,
+      BuildTarget target,
+      CompilerParameters compilerParameters,
+      ResourcesParameters resourcesParameters,
+      Builder<Step> steps) {
     // Always create the output directory, even if there are no .java files to compile because there
     // might be resources that need to be copied there.
     steps.addAll(
@@ -75,21 +125,7 @@ public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
             resourcesParameters,
             compilerParameters.getOutputDirectory()));
 
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
-                projectFilesystem,
-                CompilerParameters.getOutputJarDirPath(target, projectFilesystem))));
-
-    // Only run javac if there are .java files to compile or we need to shovel the manifest file
-    // into the built jar.
     if (!compilerParameters.getSourceFilePaths().isEmpty()) {
-      if (compilerParameters.shouldTrackClassUsage()) {
-        buildableContext.recordArtifact(compilerParameters.getDepFilePath());
-      }
-
-      // This adds the javac command, along with any supporting commands.
       steps.add(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
@@ -103,62 +139,74 @@ public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
                   context.getBuildCellRootPath(),
                   projectFilesystem,
                   compilerParameters.getWorkingDirectory())));
-
-      createCompileToJarStepImpl(
-          context,
-          target,
-          resolver,
-          ruleFinder,
-          projectFilesystem,
-          compilerParameters,
-          postprocessClassesCommands,
-          jarParameters.get(),
-          steps,
-          buildableContext);
     }
+  }
 
-    if (jarParameters.isPresent()) {
-      // No source files, only resources
-      if (compilerParameters.getSourceFilePaths().isEmpty()) {
-        createJarStep(projectFilesystem, jarParameters.get(), steps);
-      }
-      buildableContext.recordArtifact(jarParameters.get().getJarPath());
+  protected void addJarSetupSteps(
+      BuildContext context, JarParameters jarParameters, Builder<Step> steps) {
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                projectFilesystem,
+                jarParameters.getJarPath().getParent())));
+  }
+
+  protected void recordDepFileIfNecessary(
+      BuildTarget target,
+      CompilerParameters compilerParameters,
+      BuildableContext buildableContext) {
+    if (compilerParameters.shouldTrackClassUsage()) {
+      buildableContext.recordArtifact(CompilerParameters.getDepFilePath(target, projectFilesystem));
     }
+  }
+
+  protected void addJarCreationSteps(
+      CompilerParameters compilerParameters,
+      Builder<Step> steps,
+      BuildableContext buildableContext,
+      JarParameters jarParameters) {
+    // No source files, only resources
+    if (compilerParameters.getSourceFilePaths().isEmpty()) {
+      createJarStep(jarParameters, steps);
+    }
+    buildableContext.recordArtifact(jarParameters.getJarPath());
   }
 
   protected void createCompileToJarStepImpl(
       BuildContext context,
       BuildTarget target,
-      SourcePathResolver resolver,
-      @SuppressWarnings("unused") SourcePathRuleFinder ruleFinder,
-      ProjectFilesystem projectFilesystem,
       CompilerParameters compilerParameters,
       ImmutableList<String> postprocessClassesCommands,
-      JarParameters jarParameters,
+      @Nullable JarParameters abiJarParameters,
+      @Nullable JarParameters libraryJarParameters,
       /* output params */
-      ImmutableList.Builder<Step> steps,
+      Builder<Step> steps,
       BuildableContext buildableContext) {
+    Preconditions.checkArgument(abiJarParameters == null);
     Preconditions.checkArgument(
-        jarParameters.getEntriesToJar().contains(compilerParameters.getOutputDirectory()));
+        libraryJarParameters != null
+            && libraryJarParameters
+                .getEntriesToJar()
+                .contains(compilerParameters.getOutputDirectory()));
 
-    createCompileStep(
-        context, target, resolver, projectFilesystem, compilerParameters, steps, buildableContext);
+    createCompileStep(context, target, compilerParameters, steps, buildableContext);
 
     steps.addAll(
         Lists.newCopyOnWriteArrayList(
             addPostprocessClassesCommands(
+                target,
                 projectFilesystem,
                 postprocessClassesCommands,
                 compilerParameters.getOutputDirectory(),
                 compilerParameters.getClasspathEntries(),
                 getBootClasspath(context))));
 
-    createJarStep(projectFilesystem, jarParameters, steps);
+    createJarStep(libraryJarParameters, steps);
   }
 
-  public void createJarStep(
-      ProjectFilesystem filesystem, JarParameters parameters, ImmutableList.Builder<Step> steps) {
-    steps.add(new JarDirectoryStep(filesystem, parameters));
+  public void createJarStep(JarParameters parameters, Builder<Step> steps) {
+    steps.add(new JarDirectoryStep(projectFilesystem, parameters));
   }
 
   /**
@@ -190,6 +238,7 @@ public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
    */
   @VisibleForTesting
   static ImmutableList<Step> addPostprocessClassesCommands(
+      BuildTarget target,
       ProjectFilesystem filesystem,
       List<String> postprocessClassesCommands,
       Path outputDirectory,
@@ -213,7 +262,7 @@ public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
     for (final String postprocessClassesCommand : postprocessClassesCommands) {
       BashStep bashStep =
           new BashStep(
-              filesystem.getRootPath(), postprocessClassesCommand + " " + outputDirectory) {
+              target, filesystem.getRootPath(), postprocessClassesCommand + " " + outputDirectory) {
             @Override
             public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
               return envVars;
@@ -227,10 +276,8 @@ public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
   public abstract void createCompileStep(
       BuildContext context,
       BuildTarget invokingRule,
-      SourcePathResolver resolver,
-      ProjectFilesystem filesystem,
       CompilerParameters parameters,
       /* output params */
-      ImmutableList.Builder<Step> steps,
+      Builder<Step> steps,
       BuildableContext buildableContext);
 }

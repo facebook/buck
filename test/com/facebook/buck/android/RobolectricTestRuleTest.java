@@ -42,9 +42,9 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -108,7 +108,7 @@ public class RobolectricTestRuleTest {
     for (int i = 0; i < 10; i++) {
       String path = "java/src/com/facebook/base/" + i + "/res";
       filesystem.mkdirs(Paths.get(path).resolve("values"));
-      resDepsBuilder.add(new ResourceRule(FakeSourcePath.of(path)));
+      resDepsBuilder.add(new ResourceRule(FakeSourcePath.of(filesystem, path)));
     }
     ImmutableList<HasAndroidResourceDeps> resDeps = resDepsBuilder.build();
 
@@ -431,7 +431,7 @@ public class RobolectricTestRuleTest {
     assertThat(
         robolectricTest
             .getRuntimeDeps(new SourcePathRuleFinder(resolver))
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItems(resGenRule.getBuildTarget(), assetsGenRule.getBuildTarget()));
   }
 }

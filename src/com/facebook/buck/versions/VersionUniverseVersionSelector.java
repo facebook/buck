@@ -91,8 +91,8 @@ public class VersionUniverseVersionSelector implements VersionSelector {
               root,
               String.format(
                   "%s has no version %s (specified by universe %s) in available versions: %s",
-                  version,
                   ent.getKey(),
+                  version,
                   universe.get().getKey(),
                   Joiner.on(", ").join(ent.getValue())));
         }

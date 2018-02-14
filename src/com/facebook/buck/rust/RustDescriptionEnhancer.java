@@ -18,6 +18,7 @@ package com.facebook.buck.rust;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.InternalFlavor;
@@ -32,6 +33,7 @@ public class RustDescriptionEnhancer {
   public static final Flavor RFRLIB = InternalFlavor.of("rlib");
   public static final Flavor RFRLIB_PIC = InternalFlavor.of("rlib-pic");
   public static final Flavor RFDYLIB = InternalFlavor.of("dylib");
+  public static final Flavor RFPROC_MACRO = InternalFlavor.of("proc-macro");
   public static final Flavor RFCHECK =
       UserFlavor.of(
           "check", "Quickly check code and generate metadata about crate, without generating code");
@@ -50,6 +52,7 @@ public class RustDescriptionEnhancer {
     STATICLIB(CxxDescriptionEnhancer.STATIC_FLAVOR, CrateType.STATIC),
     CDYLIB(CxxDescriptionEnhancer.SHARED_FLAVOR, CrateType.CDYLIB),
     CHECK(RustDescriptionEnhancer.RFCHECK, CrateType.CHECK),
+    PROC_MACRO(RustDescriptionEnhancer.RFPROC_MACRO, CrateType.PROC_MACRO),
     ;
 
     private final Flavor flavor;
@@ -72,6 +75,6 @@ public class RustDescriptionEnhancer {
 
   @FunctionalInterface
   interface FilenameMap {
-    String apply(String name, CxxPlatform cxxPlatform);
+    String apply(BuildTarget target, String name, CxxPlatform cxxPlatform);
   }
 }

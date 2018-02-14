@@ -16,7 +16,8 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.toolchain.NdkCxxRuntime;
+import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -44,8 +45,20 @@ public class AndroidBuckConfig {
     return delegate.getValue("android", "build_tools_version");
   }
 
+  public Optional<String> getSdkPath() {
+    return delegate.getValue("android", "sdk_path");
+  }
+
   public Optional<String> getNdkVersion() {
     return delegate.getValue("ndk", "ndk_version");
+  }
+
+  public Optional<String> getNdkPath() {
+    return delegate.getValue("ndk", "ndk_path");
+  }
+
+  public Optional<String> getNdkRepositoryPath() {
+    return delegate.getValue("ndk", "ndk_repository_path");
   }
 
   public Optional<String> getNdkAppPlatform() {
@@ -56,8 +69,8 @@ public class AndroidBuckConfig {
     return delegate.getOptionalListWithoutComments("ndk", "cpu_abis").map(ImmutableSet::copyOf);
   }
 
-  public Optional<NdkCxxPlatformCompiler.Type> getNdkCompiler() {
-    return delegate.getEnum("ndk", "compiler", NdkCxxPlatformCompiler.Type.class);
+  public Optional<NdkCompilerType> getNdkCompiler() {
+    return delegate.getEnum("ndk", "compiler", NdkCompilerType.class);
   }
 
   public Optional<String> getNdkGccVersion() {
@@ -82,6 +95,10 @@ public class AndroidBuckConfig {
 
   public ImmutableList<String> getExtraNdkLdFlags() {
     return delegate.getListWithoutComments("ndk", "extra_ldflags", ' ');
+  }
+
+  public boolean isGrayscaleImageProcessingEnabled() {
+    return delegate.getBooleanValue("resources", "resource_grayscale_enabled", false);
   }
 
   /**

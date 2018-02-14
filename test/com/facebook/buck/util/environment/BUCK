@@ -1,3 +1,5 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
+
 java_immutables_library(
     name = "testutil",
     srcs = [
@@ -19,6 +21,7 @@ java_test(
     srcs = glob(["*Test.java"]),
     deps = [
         "//src/com/facebook/buck/util/environment:environment",
+        "//src/com/facebook/buck/util/environment:platform",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/junit:junit",

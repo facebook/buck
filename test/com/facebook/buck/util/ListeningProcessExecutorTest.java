@@ -22,7 +22,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.ProcessListeners.CapturingListener;
 import com.facebook.buck.util.ProcessListeners.StdinWritingListener;
 import com.facebook.buck.util.environment.Platform;

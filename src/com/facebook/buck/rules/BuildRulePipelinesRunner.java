@@ -16,8 +16,10 @@
 
 package com.facebook.buck.rules;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
@@ -25,7 +27,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.SortedSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -48,18 +52,36 @@ class BuildRulePipelinesRunner {
       Preconditions.checkState(
           previousRuleInPipeline.getPipelineStateFactory() == rule.getPipelineStateFactory(),
           "To help ensure that rules have pipeline-compatible rule keys, all rules in a pipeline must share a PipelineStateFactory instance.");
+      SortedSet<BuildRule> currentDeps = rule.getBuildDeps();
+      SortedSet<BuildRule> previousDeps = previousRuleInPipeline.getBuildDeps();
       Preconditions.checkState(
-          Sets.difference(rule.getBuildDeps(), previousRuleInPipeline.getBuildDeps())
-              .equals(Collections.singleton(previousRuleInPipeline)),
-          "Each rule in a pipeline cannot depend on rules which are not also dependencies of the previous rule in the pipeline. This ensures that each rule in the pipeline is ready to build as soon as the previous one completes.");
+          currentDeps.contains(previousRuleInPipeline),
+          "Each rule in a pipeline must depend on the previous rule in the pipeline.");
+      SetView<BuildRule> extraDeps =
+          Sets.difference(
+              currentDeps, Sets.union(previousDeps, Collections.singleton(previousRuleInPipeline)));
+      Preconditions.checkState(
+          extraDeps.isEmpty(),
+          "Each rule in a pipeline cannot depend on rules which are not also dependencies of the previous rule in the pipeline. "
+              + "This ensures that each rule in the pipeline is ready to build as soon as the previous one completes. "
+              + "%s has extra deps <%s>.",
+          rule,
+          Joiner.on(", ").join(extraDeps));
       getPipelineStage(previousRuleInPipeline).setNextStage(pipelineStage);
     }
 
     pipelineStage.setRuleStepRunnerFactory(ruleStepRunnerFactory);
   }
 
+  /**
+   * Removes a rule from pipeline eligibility. If a pipeline is already running the rule, waits for
+   * it to complete before returning.
+   */
   public void removeRule(SupportsPipelining<?> rule) {
-    rules.remove(rule);
+    BuildRulePipelineStage<? extends RulePipelineState> pipelineStage = rules.remove(rule);
+    if (pipelineStage != null && pipelineStage.pipelineBuilt()) {
+      pipelineStage.cancelAndWait();
+    }
   }
 
   public boolean runningPipelinesContainRule(SupportsPipelining<?> rule) {
@@ -75,20 +97,21 @@ class BuildRulePipelinesRunner {
 
   public <T extends RulePipelineState>
       ListenableFuture<Optional<BuildResult>> runPipelineStartingAt(
-          SupportsPipelining<T> rootRule, ExecutorService executor) {
-    RunnableWithFuture<Optional<BuildResult>> runner = newPipelineRunner(rootRule);
+          BuildContext context, SupportsPipelining<T> rootRule, ExecutorService executor) {
+    RunnableWithFuture<Optional<BuildResult>> runner = newPipelineRunner(context, rootRule);
     executor.execute(runner);
     return runner.getFuture();
   }
 
   private <T extends RulePipelineState> RunnableWithFuture<Optional<BuildResult>> newPipelineRunner(
-      SupportsPipelining<T> rootRule) {
+      BuildContext context, SupportsPipelining<T> rootRule) {
     BuildRulePipelineStage<T> rootPipelineStage = getPipelineStage(rootRule);
     Preconditions.checkState(!rootPipelineStage.pipelineBuilt());
 
     BuildRulePipeline<T> pipeline =
         new BuildRulePipeline<>(
-            rootPipelineStage, rootRule.getPipelineStateFactory().newInstance());
+            rootPipelineStage,
+            rootRule.getPipelineStateFactory().newInstance(context, rootRule.getBuildTarget()));
     return new RunnableWithFuture<Optional<BuildResult>>() {
       @Override
       public ListenableFuture<Optional<BuildResult>> getFuture() {
@@ -120,7 +143,7 @@ class BuildRulePipelinesRunner {
    * state.
    */
   private static class BuildRulePipeline<T extends RulePipelineState> implements Runnable {
-    private final T state;
+    @Nullable private T state;
     private final List<BuildRulePipelineStage<T>> rules = new ArrayList<>();
 
     public BuildRulePipeline(BuildRulePipelineStage<T> rootRule, T state) {
@@ -140,7 +163,7 @@ class BuildRulePipelinesRunner {
     }
 
     public T getState() {
-      return state;
+      return Preconditions.checkNotNull(state);
     }
 
     @Override
@@ -163,7 +186,9 @@ class BuildRulePipelinesRunner {
           Preconditions.checkState(rule.getFuture().isDone() || rule.getFuture().isCancelled());
         }
       } finally {
-        state.close();
+        Preconditions.checkNotNull(state).close();
+        state = null;
+        rules.clear();
       }
     }
   }
@@ -178,9 +203,10 @@ class BuildRulePipelinesRunner {
     @Nullable private BuildRulePipelineStage<T> nextStage;
     @Nullable private Throwable error = null;
     @Nullable private Function<T, RunnableWithFuture<Optional<BuildResult>>> ruleStepRunnerFactory;
-    @Nullable private T pipelineState;
+    @Nullable private BuildRulePipeline<T> pipeline;
     @Nullable private RunnableWithFuture<Optional<BuildResult>> runner;
 
+    @SuppressWarnings("CheckReturnValue")
     private BuildRulePipelineStage() {
       Futures.catching(future, Throwable.class, throwable -> error = throwable);
     }
@@ -192,8 +218,8 @@ class BuildRulePipelinesRunner {
     }
 
     public void setPipeline(BuildRulePipeline<T> pipeline) {
-      Preconditions.checkState(this.pipelineState == null);
-      this.pipelineState = pipeline.getState();
+      Preconditions.checkState(this.pipeline == null);
+      this.pipeline = pipeline;
     }
 
     public void setNextStage(BuildRulePipelineStage<T> nextStage) {
@@ -207,7 +233,18 @@ class BuildRulePipelinesRunner {
     }
 
     public boolean pipelineBuilt() {
-      return pipelineState != null;
+      return pipeline != null;
+    }
+
+    public void cancelAndWait() {
+      // For now there's no cancel (cuz it's not hooked up at all), but we can at least wait
+      try {
+        getFuture().get();
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      } catch (ExecutionException e) { // NOPMD
+        // Ignore; the future is hooked up elsewhere and that location will handle the exceptions
+      }
     }
 
     @Nullable
@@ -222,10 +259,10 @@ class BuildRulePipelinesRunner {
 
     @Override
     public void run() {
-      Preconditions.checkNotNull(pipelineState);
+      Preconditions.checkNotNull(pipeline);
       Preconditions.checkNotNull(ruleStepRunnerFactory);
 
-      runner = ruleStepRunnerFactory.apply(pipelineState);
+      runner = ruleStepRunnerFactory.apply(pipeline.getState());
       future.setFuture(runner.getFuture());
       runner.run();
     }

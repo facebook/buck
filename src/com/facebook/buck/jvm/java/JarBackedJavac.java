@@ -16,20 +16,17 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.function.Function;
 import javax.tools.JavaCompiler;
 
 public class JarBackedJavac extends Jsr199Javac {
@@ -43,8 +40,8 @@ public class JarBackedJavac extends Jsr199Javac {
         }
       };
 
-  private final String compilerClassName;
-  private final ImmutableSortedSet<SourcePath> classpath;
+  @AddToRuleKey private final String compilerClassName;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> classpath;
 
   public JarBackedJavac(String compilerClassName, Iterable<SourcePath> classpath) {
     this.compilerClassName = compilerClassName;
@@ -52,33 +49,18 @@ public class JarBackedJavac extends Jsr199Javac {
   }
 
   @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ruleFinder.filterBuildRuleInputs(getInputs());
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return classpath;
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("javac", "jar-backed-jsr199")
-        .setReflectively("javac.version", "in-memory")
-        .setReflectively("javac.classname", compilerClassName)
-        .setReflectively("javac.classpath", classpath);
-  }
-
-  @Override
-  protected JavaCompiler createCompiler(JavacExecutionContext context) {
+  protected JavaCompiler createCompiler(
+      JavacExecutionContext context, SourcePathResolver resolver) {
     ClassLoaderCache classLoaderCache = context.getClassLoaderCache();
     ClassLoader compilerClassLoader =
         classLoaderCache.getClassLoaderForClassPath(
             ClassLoader.getSystemClassLoader(),
-            FluentIterable.from(context.getAbsolutePathsForInputs())
-                .transform(PATH_TO_URL)
+            resolver
+                .getAllAbsolutePaths(classpath)
+                .stream()
+                .map(PATH_TO_URL)
                 // Use "toString" since URL.equals does DNS lookups.
-                .toSortedSet(Ordering.usingToString())
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.usingToString()))
                 .asList());
     try {
       return (JavaCompiler) compilerClassLoader.loadClass(compilerClassName).newInstance();

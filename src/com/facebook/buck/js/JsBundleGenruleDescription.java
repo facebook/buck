@@ -16,6 +16,9 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.apple.AppleBundleResources;
 import com.facebook.buck.apple.HasAppleBundleResourcesDescription;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -31,21 +34,33 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.ExportFile;
 import com.facebook.buck.shell.ExportFileDescription;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.SortedSet;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class JsBundleGenruleDescription
     extends AbstractGenruleDescription<JsBundleGenruleDescriptionArg>
-    implements Flavored, HasAppleBundleResourcesDescription<JsBundleGenruleDescriptionArg> {
+    implements Flavored,
+        HasAppleBundleResourcesDescription<JsBundleGenruleDescriptionArg>,
+        JsBundleOutputsDescription<JsBundleGenruleDescriptionArg> {
+
+  public JsBundleGenruleDescription(
+      ToolchainProvider toolchainProvider, SandboxExecutionStrategy sandboxExecutionStrategy) {
+    super(toolchainProvider, sandboxExecutionStrategy, false);
+  }
 
   @Override
   public Class<JsBundleGenruleDescriptionArg> getConstructorArgType() {
@@ -66,18 +81,31 @@ public class JsBundleGenruleDescription
     BuildTarget bundleTarget = args.getJsBundle().withAppendedFlavors(flavors);
     BuildRule jsBundle = resolver.requireRule(bundleTarget);
 
-    if (flavors.contains(JsFlavors.SOURCE_MAP) || flavors.contains(JsFlavors.DEPENDENCY_FILE)) {
+    if (flavors.contains(JsFlavors.SOURCE_MAP)
+        || flavors.contains(JsFlavors.DEPENDENCY_FILE)
+        || flavors.contains(JsFlavors.MISC)) {
       // SOURCE_MAP is a special flavor that allows accessing the written source map, typically
       // via export_file in reference mode
-      // DEPENDENCY_FILE is a special flavor that triggers building a single file (format defined by the worker)
+      // DEPENDENCY_FILE is a special flavor that triggers building a single file (format defined by
+      // the worker)
+      // MISC_DIR allows accessing the "misc" directory that can contain diverse assets not meant
+      // to be part of the app being shipped.
 
-      SourcePath output =
-          args.getRewriteSourcemap() && flavors.contains(JsFlavors.SOURCE_MAP)
-              ? ((JsBundleOutputs)
-                      resolver.requireRule(buildTarget.withoutFlavors(JsFlavors.SOURCE_MAP)))
-                  .getSourcePathToSourceMap()
-              : Preconditions.checkNotNull(
-                  jsBundle.getSourcePathToOutput(), "%s has no output", jsBundle.getBuildTarget());
+      SourcePath output;
+      if (args.getRewriteSourcemap() && flavors.contains(JsFlavors.SOURCE_MAP)) {
+        output =
+            ((JsBundleOutputs)
+                    resolver.requireRule(buildTarget.withoutFlavors(JsFlavors.SOURCE_MAP)))
+                .getSourcePathToSourceMap();
+      } else if (args.getRewriteMisc() && flavors.contains(JsFlavors.MISC)) {
+        output =
+            ((JsBundleOutputs) resolver.requireRule(buildTarget.withoutFlavors(JsFlavors.MISC)))
+                .getSourcePathToMisc();
+      } else {
+        output =
+            Preconditions.checkNotNull(
+                jsBundle.getSourcePathToOutput(), "%s has no output", jsBundle.getBuildTarget());
+      }
 
       Path fileName =
           DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver))
@@ -86,7 +114,7 @@ public class JsBundleGenruleDescription
       return new ExportFile(
           buildTarget,
           projectFilesystem,
-          params,
+          new SourcePathRuleFinder(resolver),
           fileName.toString(),
           ExportFileDescription.Mode.REFERENCE,
           output);
@@ -98,15 +126,30 @@ public class JsBundleGenruleDescription
           buildTarget, bundleTarget);
     }
 
+    Supplier<? extends SortedSet<BuildRule>> originalExtraDeps = params.getExtraDeps();
     return new JsBundleGenrule(
         buildTarget,
         projectFilesystem,
-        params.withExtraDeps(ImmutableSortedSet.of(jsBundle)),
+        sandboxExecutionStrategy,
+        resolver,
+        params.withExtraDeps(
+            MoreSuppliers.memoize(
+                () ->
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(originalExtraDeps.get())
+                        .add(jsBundle)
+                        .build())),
         args,
         cmd,
         bash,
         cmdExe,
-        (JsBundleOutputs) jsBundle);
+        (JsBundleOutputs) jsBundle,
+        args.getEnvironmentExpansionSeparator(),
+        toolchainProvider.getByNameIfPresent(
+            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
+        toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class),
+        toolchainProvider.getByNameIfPresent(
+            AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class));
   }
 
   @Override
@@ -115,9 +158,11 @@ public class JsBundleGenruleDescription
       TargetNode<JsBundleGenruleDescriptionArg, ?> targetNode,
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver) {
-    JsBundleGenrule genrule =
-        resolver.getRuleWithType(targetNode.getBuildTarget(), JsBundleGenrule.class);
-    JsBundleDescription.addAppleBundleResources(builder, genrule);
+    if (!targetNode.getConstructorArg().getSkipResources()) {
+      JsBundleGenrule genrule =
+          resolver.getRuleWithType(targetNode.getBuildTarget(), JsBundleGenrule.class);
+      JsBundleDescription.addAppleBundleResources(builder, genrule);
+    }
   }
 
   @Override
@@ -135,13 +180,22 @@ public class JsBundleGenruleDescription
   interface AbstractJsBundleGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {
     BuildTarget getJsBundle();
 
-    @Override
     default String getOut() {
       return JsBundleOutputs.JS_DIR_NAME;
     }
 
     @Value.Default
     default boolean getRewriteSourcemap() {
+      return false;
+    }
+
+    @Value.Default
+    default boolean getRewriteMisc() {
+      return false;
+    }
+
+    @Value.Default
+    default boolean getSkipResources() {
       return false;
     }
 

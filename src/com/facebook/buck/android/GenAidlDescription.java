@@ -26,10 +26,17 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
 public class GenAidlDescription implements Description<GenAidlDescriptionArg> {
+
+  private final ToolchainProvider toolchainProvider;
+
+  public GenAidlDescription(ToolchainProvider toolchainProvider) {
+    this.toolchainProvider = toolchainProvider;
+  }
 
   @Override
   public Class<GenAidlDescriptionArg> getConstructorArgType() {
@@ -46,7 +53,12 @@ public class GenAidlDescription implements Description<GenAidlDescriptionArg> {
       CellPathResolver cellRoots,
       GenAidlDescriptionArg args) {
     return new GenAidl(
-        buildTarget, projectFilesystem, params, args.getAidl(), args.getImportPath());
+        buildTarget,
+        projectFilesystem,
+        toolchainProvider,
+        params,
+        args.getAidl(),
+        args.getImportPath());
   }
 
   @BuckStyleImmutable

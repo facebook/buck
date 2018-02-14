@@ -19,7 +19,6 @@ package com.facebook.buck.shell;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
@@ -33,23 +32,25 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.args.MacroArg;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ProxyArg;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.MacroArg;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Function;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import org.immutables.value.Value;
 
 public class WorkerToolDescription
@@ -109,9 +110,9 @@ public class WorkerToolDescription
             .stream()
             .map(BuildRule::getSourcePathToOutput)
             .filter(Objects::nonNull)
-            .collect(MoreCollectors.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()));
 
-    Function<String, com.facebook.buck.rules.args.Arg> toArg =
+    Function<String, Arg> toArg =
         MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);
 
     if (args.getArgs().isLeft()) {
@@ -119,12 +120,12 @@ public class WorkerToolDescription
           new ProxyArg(toArg.apply(args.getArgs().getLeft())) {
             @Override
             public void appendToCommandLine(
-                ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
+                Consumer<String> consumer, SourcePathResolver pathResolver) {
               ImmutableList.Builder<String> subBuilder = ImmutableList.builder();
-              super.appendToCommandLine(subBuilder, pathResolver);
+              super.appendToCommandLine(subBuilder::add, pathResolver);
               for (String arg : subBuilder.build()) {
                 for (String splitArg : arg.split("\\s+")) {
-                  builder.add(splitArg);
+                  consumer.accept(splitArg);
                 }
               }
             }
@@ -145,7 +146,7 @@ public class WorkerToolDescription
     return new DefaultWorkerTool(
         buildTarget,
         projectFilesystem,
-        params.copyAppendingExtraDeps(tool.getDeps(new SourcePathRuleFinder(resolver))),
+        new SourcePathRuleFinder(resolver),
         tool,
         maxWorkers,
         args.getPersistent()

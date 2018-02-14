@@ -1,0 +1,18 @@
+genrule(
+    name = "cat_input",
+    srcs = [
+        "input.txt",
+    ],
+    out = "output.txt",
+    bash = "cat `dirname $SRCS`/undeclared_input.txt > $OUT",
+)
+
+genrule(
+    name = "cat_input_with_sandbox",
+    srcs = [
+        "input.txt",
+    ],
+    out = "output.txt",
+    bash = "cat `dirname $SRCS`/undeclared_input.txt > $OUT",
+    enable_sandbox = True,
+)

@@ -25,8 +25,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
@@ -38,6 +39,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -58,8 +60,7 @@ public class QueryCommandIntegrationTest {
     workspace.setUp();
 
     // Print all of the inputs to the rule.
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("query", "deps(//example:one)");
+    ProcessResult result = workspace.runBuckCommand("query", "deps(//example:one)");
     result.assertSuccess();
     assertThat(
         result.getStdout(),
@@ -75,8 +76,7 @@ public class QueryCommandIntegrationTest {
     workspace.setUp();
 
     // Print all of the inputs to the rule.
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("query", "testsof(//example:one)");
+    ProcessResult result = workspace.runBuckCommand("query", "testsof(//example:one)");
     result.assertSuccess();
     assertThat(
         result.getStdout(),
@@ -90,7 +90,7 @@ public class QueryCommandIntegrationTest {
     workspace.setUp();
 
     // Print all of the inputs to the rule.
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("query", "--json", "testsof(deps(//example:two, 1))");
     result.assertSuccess();
     assertThat(
@@ -105,7 +105,7 @@ public class QueryCommandIntegrationTest {
     workspace.setUp();
 
     // Print all of the inputs to the rule.
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("query", "--json", "testsof(deps(//example:two, 2))");
     result.assertSuccess();
     assertThat(
@@ -120,7 +120,7 @@ public class QueryCommandIntegrationTest {
     workspace.setUp();
 
     // Print all of the inputs to the rule.
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("query", "testsof(deps(%s, 1))", "//example:two");
     result.assertSuccess();
     assertThat(
@@ -135,7 +135,7 @@ public class QueryCommandIntegrationTest {
     workspace.setUp();
 
     // Print all of the inputs to the rule.
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("query", "--json", "testsof(deps(%s, 1))", "//example:two");
     result.assertSuccess();
     assertThat(
@@ -150,7 +150,7 @@ public class QueryCommandIntegrationTest {
     workspace.setUp();
 
     // Print all of the inputs to the rule.
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "query",
             "--json",
@@ -174,7 +174,7 @@ public class QueryCommandIntegrationTest {
     workspace.setUp();
 
     // Print all of the inputs to the rule.
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("query", "deps(%s, 1) union testsof(%s)", "//example:one");
     result.assertSuccess();
     assertThat(
@@ -191,8 +191,7 @@ public class QueryCommandIntegrationTest {
     workspace.setUp();
 
     // Print all of the inputs to the rule.
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("query", "testsof(//example:)");
+    ProcessResult result = workspace.runBuckCommand("query", "testsof(//example:)");
     result.assertSuccess();
     assertThat(
         result.getStdout(),
@@ -208,7 +207,7 @@ public class QueryCommandIntegrationTest {
     workspace.setUp();
 
     // Print all of the inputs to the rule.
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("query", "testsof(//...)");
+    ProcessResult result = workspace.runBuckCommand("query", "testsof(//...)");
     result.assertSuccess();
     assertThat(
         result.getStdout(),
@@ -224,7 +223,7 @@ public class QueryCommandIntegrationTest {
     workspace.setUp();
 
     // Print all of the inputs to the rule.
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("query", "--json", "testsof(%s)", "//...", "//example:");
     result.assertSuccess();
     assertThat(
@@ -240,8 +239,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("query", "owner('example/1.txt')");
+    ProcessResult result = workspace.runBuckCommand("query", "owner('example/1.txt')");
 
     result.assertSuccess();
     assertThat(
@@ -255,12 +253,30 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("query", "owner('example/1.txt') + owner('example/2.txt')");
 
     result.assertSuccess();
     assertThat(result.getStdout(), containsString("//example:one"));
     assertThat(result.getStdout(), containsString("//example:two"));
+  }
+
+  @Test
+  public void testOwnersWithInvalidFilesPrintsErrors() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "owner('odd_files/unowned.cpp') + owner('odd_files/missing.cpp') + owner('odd_files/non_file') + owner('example/1.txt')");
+
+    result.assertSuccess();
+    assertThat(result.getStdout(), containsString("//example:one"));
+    assertThat(result.getStderr(), containsString("No owner was found for odd_files/unowned.cpp"));
+    assertThat(result.getStderr(), containsString("File odd_files/missing.cpp does not exist"));
+    assertThat(result.getStderr(), containsString("odd_files/non_file is not a regular file"));
   }
 
   @Test
@@ -285,7 +301,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "query", "--json", "owner('%s')", "example/1.txt", "example/app/7.txt");
 
@@ -296,12 +312,26 @@ public class QueryCommandIntegrationTest {
   }
 
   @Test
+  public void testOwnerOnAbsolutePath() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+
+    Path onePath = workspace.getPath("example/1.txt");
+    ProcessResult result =
+        workspace.runBuckCommand("query", "owner(%s)", onePath.toAbsolutePath().toString());
+
+    result.assertSuccess();
+    assertThat(result.getStdout(), containsString("//example:one"));
+  }
+
+  @Test
   public void testTestsofOwnerOneSevenJSON() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "query", "--json", "testsof(owner('%s'))", "example/1.txt", "example/app/7.txt");
 
@@ -317,8 +347,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("query", "kind('.*_test', '//example/...')");
+    ProcessResult result = workspace.runBuckCommand("query", "kind('.*_test', '//example/...')");
 
     result.assertSuccess();
     assertThat(
@@ -334,7 +363,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("query", "kind('python_library', deps(//example:one))");
 
     result.assertSuccess();
@@ -347,7 +376,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "query",
             "--json",
@@ -368,7 +397,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "query",
             "rdeps(set(//example:one //example/app:seven), set(//example/app:seven //example:five))");
@@ -384,7 +413,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "query",
             "rdeps(set(//example:one //example/app:seven), %Ss)",
@@ -402,7 +431,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "query",
             "--json",
@@ -421,8 +450,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("query", "labels('srcs', '//example:one')");
+    ProcessResult result = workspace.runBuckCommand("query", "labels('srcs', '//example:one')");
     result.assertSuccess();
     assertThat(result.getStdout(), is(equalToIgnoringPlatformNewlines("example/1.txt\n")));
   }
@@ -433,8 +461,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("query", "example/1.txt + example/2.txt");
+    ProcessResult result = workspace.runBuckCommand("query", "example/1.txt + example/2.txt");
     result.assertSuccess();
     assertThat(
         result.getStdout(),
@@ -449,7 +476,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "query",
             "labels('tests', '//example:four') + labels('srcs', '//example:five') "
@@ -468,7 +495,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("query", "--json", "labels('srcs', '%s')", "//example:");
     result.assertSuccess();
     assertThat(
@@ -482,7 +509,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "query", "//example:one + //example:four", "--output-attributes", "name", "deps");
     result.assertSuccess();
@@ -497,7 +524,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "query", "testsof(app)", "--output-attributes", "name", "buck.type");
     result.assertSuccess();
@@ -512,7 +539,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("query", "deps(testsof(deps('%s')))", "//example:one");
     result.assertSuccess();
     assertThat(
@@ -526,8 +553,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("query", "filter('four', '//example/...')");
+    ProcessResult result = workspace.runBuckCommand("query", "filter('four', '//example/...')");
     result.assertSuccess();
     assertThat(
         result.getStdout(),
@@ -540,7 +566,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "query", "allpaths(//example:one, //example:four)", "--output-attributes", "deps");
     result.assertSuccess();
@@ -555,7 +581,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "query",
             "--dot",
@@ -574,7 +600,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "query",
             "--dot",
@@ -595,8 +621,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("query", "--dot", "deps(//example:one)");
+    ProcessResult result = workspace.runBuckCommand("query", "--dot", "deps(//example:one)");
     result.assertSuccess();
     assertThat(
         result.getStdout(),
@@ -607,6 +632,107 @@ public class QueryCommandIntegrationTest {
     assertThat(
         result.getStdout(),
         is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-bfs-deps-one.dot"))));
+  }
+
+  @Test
+  public void testDotOutputWithAttributes() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query", "--dot", "deps(//example:one)", "--output-attributes", "name", "buck.type");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(
+            equalToIgnoringPlatformNewlines(
+                workspace.getFileContents("stdout-deps-one-with-attributes.dot"))));
+  }
+
+  @Test
+  public void testRankOutputForDeps() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand("query", "--output", "minrank", "deps(//example:one)");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-minrank-deps-one"))));
+
+    result = workspace.runBuckCommand("query", "--output", "maxrank", "deps(//example:one)");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-maxrank-deps-one"))));
+  }
+
+  @Test
+  public void testRankOutputWithAttributes() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query", "deps(//example:one)", "--output", "minrank", "--output-attributes", "name");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(
+            equalToIgnoringPlatformNewlines(
+                workspace.getFileContents("stdout-minrank-deps-one-with-attributes.json"))));
+
+    result =
+        workspace.runBuckCommand(
+            "query", "deps(//example:one)", "--output", "maxrank", "--output-attributes", "name");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(
+            equalToIgnoringPlatformNewlines(
+                workspace.getFileContents("stdout-maxrank-deps-one-with-attributes.json"))));
+  }
+
+  @Test
+  public void testRankOutputWithAttributesIgnoresFlavors() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "deps(//example:one#no-linkermap)",
+            "--output",
+            "minrank",
+            "--output-attributes",
+            "name");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(
+            equalToIgnoringPlatformNewlines(
+                workspace.getFileContents("stdout-minrank-deps-one-with-attributes.json"))));
+
+    result =
+        workspace.runBuckCommand(
+            "query",
+            "deps(//example:one#no-linkermap)",
+            "--output",
+            "maxrank",
+            "--output-attributes",
+            "name");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(
+            equalToIgnoringPlatformNewlines(
+                workspace.getFileContents("stdout-maxrank-deps-one-with-attributes.json"))));
   }
 
   class ParserProfileFinder extends SimpleFileVisitor<Path> {
@@ -633,7 +759,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("query", "deps(//example:one)", "--profile-buck-parser");
     result.assertSuccess();
 
@@ -656,7 +782,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "query", "attrfilter(tests, '//example:four-tests', '//example/...')");
     result.assertSuccess();
@@ -669,7 +795,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "query",
             "attrfilter(labels, 'e2e', '//example/...')",
@@ -689,8 +815,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("query", "buildfile(owner('example/1.txt'))");
+    ProcessResult result = workspace.runBuckCommand("query", "buildfile(owner('example/1.txt'))");
 
     result.assertSuccess();
     assertThat(result.getStdout(), is(equalToIgnoringPlatformNewlines("example/BUCK\n")));
@@ -702,7 +827,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "query",
             "--json",
@@ -722,8 +847,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("query", "inputs(//example:four-tests)");
+    ProcessResult result = workspace.runBuckCommand("query", "inputs(//example:four-tests)");
 
     result.assertSuccess();
     assertThat(
@@ -737,7 +861,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("query", "inputs(//example:four-tests + //example:one)");
 
     result.assertSuccess();
@@ -754,7 +878,7 @@ public class QueryCommandIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command_cross_cell", tmp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             workspace.resolve("cell1"), "query", "owner(../cell2/foo/foo.txt)");
     result.assertSuccess();
@@ -766,7 +890,7 @@ public class QueryCommandIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "query",
             "-c",
@@ -785,7 +909,7 @@ public class QueryCommandIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "query",
             "-c",
@@ -795,5 +919,45 @@ public class QueryCommandIntegrationTest {
     assertThat(
         Splitter.on("\n").omitEmptyStrings().trimResults().splitToList(result.getStdout()),
         Matchers.containsInAnyOrder("//owners_violating_package_boundary/inner:lib"));
+  }
+
+  @Test
+  public void testTwoDifferentSetsPassedFromCommandLine() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query", "testsof(deps(%Ss)) union deps(%Ss)", "//example:four", "--", "//example:one");
+    result.assertSuccess();
+
+    List<String> output =
+        Splitter.on("\n").omitEmptyStrings().trimResults().splitToList(result.getStdout());
+    assertThat(output, Matchers.hasItems("//example:one", "//example:four-tests"));
+    assertThat(output, Matchers.not(Matchers.hasItem("//example:one-tests")));
+  }
+
+  @Test
+  public void testThreeDifferentSetsPassedFromCommandLine() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "testsof(deps(%Ss)) union (deps(%Ss) intersect deps(%Ss))",
+            "//example:four",
+            "--",
+            "//example:one",
+            "--",
+            "//example:two");
+    result.assertSuccess();
+
+    List<String> output =
+        Splitter.on("\n").omitEmptyStrings().trimResults().splitToList(result.getStdout());
+    assertThat(output, Matchers.hasItems("//example:two", "//example:four-tests"));
+    assertThat(
+        output,
+        Matchers.not(Matchers.hasItems("//example:one", "//example:one-tests", "//example:four")));
   }
 }

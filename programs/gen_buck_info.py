@@ -24,6 +24,7 @@ def main(argv):
             version = buck_version.get_dirty_buck_version(path)
         else:
             timestamp = buck_version.get_git_revision_timestamp(path)
+        dirty = buck_version.is_dirty(path)
     else:
         # We're building outside a git repo. Check for the special
         # .buckrelease file created by the release process.
@@ -38,9 +39,10 @@ def main(argv):
                 timestamp = int(time.time())
             else:
                 raise e
+        dirty = False
 
     json.dump(
-        {'version': version, 'timestamp': timestamp},
+        {'version': version, 'timestamp': timestamp, 'is_dirty': dirty},
         sys.stdout,
         sort_keys=True,
         indent=2)

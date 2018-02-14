@@ -1,6 +1,6 @@
 java_library(
-    name = 'resources',
-    resources_root = '.',
-    resources = glob( [ '**/*' ] ),
-    visibility = [ 'PUBLIC' ]
+    name = "resources",
+    resources = glob(["**/*"]),
+    resources_root = ".",
+    visibility = ["PUBLIC"],
 )

@@ -1,21 +1,21 @@
-cxx_binary (
+cxx_binary(
     name = "main",
-    precompiled_header = ":pch",
     srcs = [
         "main.cpp",
     ],
+    precompiled_header = ":pch",
 )
 
-cxx_precompiled_header (
+cxx_precompiled_header(
     name = "pch",
     src = "header.h",
     deps = [
-        ":included_by_pch"
+        ":included_by_pch",
     ],
 )
 
-cxx_library (
+cxx_library(
     name = "included_by_pch",
-    exported_headers = ["included_by_pch.h"],
     srcs = [],
+    exported_headers = ["included_by_pch.h"],
 )

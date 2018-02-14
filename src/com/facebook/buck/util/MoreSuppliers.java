@@ -17,8 +17,8 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import java.lang.ref.WeakReference;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 public final class MoreSuppliers {
@@ -28,22 +28,22 @@ public final class MoreSuppliers {
    * Returns a supplier which caches the instance retrieved during the first call to {@code get()}
    * and returns that value on subsequent calls to {@code get()}.
    *
-   * <p>Unlike Guava's {@link com.google.common.base.Suppliers#memoize(Supplier)}, this version
+   * <p>Unlike Guava's {@link
+   * com.google.common.base.Suppliers#memoize(com.google.common.base.Supplier)}, this version
    * removes the reference to the underlying Supplier once the value is computed. This frees up
    * memory used in lambda captures, at the cost of causing the supplier to be not Serializable.
    */
-  public static <T> java.util.function.Supplier<T> memoize(
-      java.util.function.Supplier<T> delegate) {
+  public static <T> Supplier<T> memoize(Supplier<T> delegate) {
     return (delegate instanceof MemoizingSupplier) ? delegate : new MemoizingSupplier<T>(delegate);
   }
 
-  private static class MemoizingSupplier<T> implements java.util.function.Supplier<T> {
+  private static class MemoizingSupplier<T> implements Supplier<T> {
     // This field doubles as a marker of whether the value has been initialized. Once the value is
     // initialized, this field becomes null.
-    @Nullable private volatile java.util.function.Supplier<T> delegate;
+    @Nullable private volatile Supplier<T> delegate;
     @Nullable private T value;
 
-    public MemoizingSupplier(java.util.function.Supplier<T> delegate) {
+    public MemoizingSupplier(Supplier<T> delegate) {
       this.delegate = delegate;
     }
 

@@ -29,7 +29,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -47,6 +47,8 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -56,7 +58,8 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -129,14 +132,18 @@ public class ApkGenruleTest {
             projectFilesystem.getRootPath(), "//src/com/facebook:sign_fb4a");
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
-    ApkGenruleDescription description = new ApkGenruleDescription();
+
+    ToolchainProvider toolchainProvider = new ToolchainProviderBuilder().build();
+
+    ApkGenruleDescription description =
+        new ApkGenruleDescription(toolchainProvider, new NoSandboxExecutionStrategy());
     ApkGenruleDescriptionArg arg =
         ApkGenruleDescriptionArg.builder()
             .setName(buildTarget.getShortName())
             .setApk(new FakeInstallable(apkTarget).getBuildTarget())
-            .setBash("")
-            .setCmd("python signer.py $APK key.properties > $OUT")
-            .setCmdExe("")
+            .setBash(StringWithMacrosUtils.format(""))
+            .setCmd(StringWithMacrosUtils.format("python signer.py $APK key.properties > $OUT"))
+            .setCmdExe(StringWithMacrosUtils.format(""))
             .setOut("signed_fb4a.apk")
             .setSrcs(
                 ImmutableList.of(
@@ -159,13 +166,11 @@ public class ApkGenruleTest {
     ruleResolver.addToIndex(apkGenrule);
 
     // Verify all of the observers of the Genrule.
-    String expectedApkOutput =
-        projectFilesystem
-            .resolve(
-                projectFilesystem.getBuckPaths().getGenDir().toString()
-                    + "/src/com/facebook/sign_fb4a/sign_fb4a.apk")
-            .toString();
-    assertEquals(expectedApkOutput, apkGenrule.getAbsoluteOutputFilePath(pathResolver));
+    Path expectedApkOutput =
+        projectFilesystem.resolve(
+            projectFilesystem.getBuckPaths().getGenDir().toString()
+                + "/src/com/facebook/sign_fb4a/sign_fb4a.apk");
+    assertEquals(expectedApkOutput, apkGenrule.getAbsoluteOutputFilePath());
     assertEquals(
         "The apk that this rule is modifying must have the apk in its deps.",
         ImmutableSet.of(apkTarget.toString()),
@@ -173,7 +178,7 @@ public class ApkGenruleTest {
             .getBuildDeps()
             .stream()
             .map(Object::toString)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(pathResolver)
             .withBuildCellRootPath(projectFilesystem.getRootPath());
@@ -189,7 +194,8 @@ public class ApkGenruleTest {
     List<Step> steps = apkGenrule.getBuildSteps(buildContext, new FakeBuildableContext());
     MoreAsserts.assertStepsNames(
         "",
-        ImmutableList.of("rm", "mkdir", "rm", "mkdir", "rm", "mkdir", "link_tree", "genrule"),
+        ImmutableList.of(
+            "rm", "mkdir", "rm", "mkdir", "rm", "mkdir", "genrule_srcs_link_tree", "genrule"),
         steps);
 
     ExecutionContext executionContext = newEmptyExecutionContext();
@@ -253,6 +259,7 @@ public class ApkGenruleTest {
 
     assertEquals(
         new SymlinkTreeStep(
+            "genrule_srcs",
             projectFilesystem,
             relativePathToSrcDir,
             ImmutableMap.of(
@@ -275,7 +282,7 @@ public class ApkGenruleTest {
                 projectFilesystem
                     .resolve(BuildTargets.getGenPath(projectFilesystem, apkTarget, "%s.apk"))
                     .toString())
-            .put("OUT", expectedApkOutput)
+            .put("OUT", expectedApkOutput.toString())
             .build(),
         environmentVariables);
 

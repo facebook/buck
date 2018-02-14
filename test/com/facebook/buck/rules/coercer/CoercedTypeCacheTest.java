@@ -21,9 +21,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.rules.Hint;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.util.Optional;
 import org.immutables.value.Value;
 import org.junit.Test;
@@ -99,7 +99,7 @@ public class CoercedTypeCacheTest {
             .values()
             .stream()
             .map(ParamInfo::getPythonName)
-            .collect(MoreCollectors.toImmutableSortedSet()));
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
 
   @Test

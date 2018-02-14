@@ -1,7 +1,7 @@
 genrule(
-  name = 'binary',
-  bash = '(echo "#!/bin/sh"; echo "echo hi") > $OUT && chmod +x $OUT',
-  cmd_exe = 'powershell -Command "Out-File -FilePath $env:OUT -Encoding ascii -InputObject \\"exit 0\\""',
-  executable = True,
-  out = 'out.bat',
+    name = "binary",
+    out = "out.bat",
+    bash = "(echo \"#!/bin/sh\"; echo \"echo hi\") > $OUT && chmod +x $OUT",
+    cmd_exe = "powershell -Command \"Out-File -FilePath $env:OUT -Encoding ascii -InputObject \\\"exit 0\\\"\"",
+    executable = True,
 )

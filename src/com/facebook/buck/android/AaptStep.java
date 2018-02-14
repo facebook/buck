@@ -16,7 +16,9 @@
 
 package com.facebook.buck.android;
 
-import com.android.sdklib.build.ApkBuilder;
+import com.android.common.sdklib.build.ApkBuilder;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -25,6 +27,7 @@ import com.facebook.buck.util.MoreStrings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Runs the Android Asset Packaging Tool ({@code aapt}), which creates an {@code .apk} file.
@@ -61,6 +64,7 @@ public class AaptStep extends ShellStep {
         || fileName.endsWith("~");
   }
 
+  private final AndroidPlatformTarget androidPlatformTarget;
   private final Path androidManifest;
   private final ImmutableList<Path> resDirectories;
   private final ImmutableSortedSet<Path> assetsDirectories;
@@ -73,6 +77,8 @@ public class AaptStep extends ShellStep {
   private final ManifestEntries manifestEntries;
 
   public AaptStep(
+      BuildTarget buildTarget,
+      AndroidPlatformTarget androidPlatformTarget,
       Path workingDirectory,
       Path androidManifest,
       ImmutableList<Path> resDirectories,
@@ -83,7 +89,8 @@ public class AaptStep extends ShellStep {
       boolean isCrunchPngFiles,
       boolean includesVectorDrawables,
       ManifestEntries manifestEntries) {
-    super(workingDirectory);
+    super(Optional.of(buildTarget), workingDirectory);
+    this.androidPlatformTarget = androidPlatformTarget;
     this.androidManifest = androidManifest;
     this.resDirectories = resDirectories;
     this.assetsDirectories = assetsDirectories;
@@ -98,7 +105,6 @@ public class AaptStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
-    AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
 
     builder.add(androidPlatformTarget.getAaptExecutable().toString());
     builder.add("package");

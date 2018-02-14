@@ -16,13 +16,15 @@
 
 package com.facebook.buck.util.cache;
 
-import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 /**
@@ -56,6 +58,11 @@ public interface FileHashCache extends FileHashLoader {
   default FileHashCacheVerificationResult verify() throws IOException {
     throw new RuntimeException(
         "FileHashCache class " + getClass().getName() + " does not support verification.");
+  }
+
+  default Stream<Map.Entry<Path, HashCode>> debugDump() {
+    throw new RuntimeException(
+        "FileHashCache class " + getClass().getName() + " does not support debugDump.");
   }
 
   @Value.Immutable

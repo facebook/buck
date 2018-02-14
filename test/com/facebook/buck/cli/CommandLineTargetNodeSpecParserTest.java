@@ -28,10 +28,15 @@ import com.facebook.buck.parser.BuildTargetSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import java.nio.file.Paths;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Optional;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class CommandLineTargetNodeSpecParserTest {
 
@@ -43,45 +48,56 @@ public class CommandLineTargetNodeSpecParserTest {
               .build(),
           new BuildTargetPatternTargetNodeParser());
 
+  @Rule public ExpectedException exception = ExpectedException.none();
+
   @Test
-  public void trailingDotDotDot() {
-    ProjectFilesystem root = new FakeProjectFilesystem();
+  public void trailingDotDotDot() throws Exception {
+    ProjectFilesystem root = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    Path directory = root.getPathForRelativePath("hello");
+    Files.createDirectories(directory);
     assertEquals(
-        BuildFileSpec.fromRecursivePath(Paths.get("hello").toAbsolutePath(), root.getRootPath()),
+        BuildFileSpec.fromRecursivePath(directory.toAbsolutePath(), root.getRootPath()),
         parseOne(createCellRoots(root), "//hello/...").getBuildFileSpec());
     assertEquals(
-        BuildFileSpec.fromRecursivePath(Paths.get("").toAbsolutePath(), root.getRootPath()),
+        BuildFileSpec.fromRecursivePath(root.getRootPath(), root.getRootPath()),
         parseOne(createCellRoots(root), "//...").getBuildFileSpec());
     assertEquals(
-        BuildFileSpec.fromRecursivePath(Paths.get("").toAbsolutePath(), root.getRootPath()),
+        BuildFileSpec.fromRecursivePath(root.getRootPath(), root.getRootPath()),
         parseOne(createCellRoots(root), "...").getBuildFileSpec());
     assertEquals(
-        BuildTargetSpec.from(BuildTargetFactory.newInstance("//hello:...")),
+        BuildTargetSpec.from(BuildTargetFactory.newInstance(root.getRootPath(), "//hello:...")),
         parseOne(createCellRoots(root), "//hello:..."));
   }
 
   @Test
-  public void aliasExpansion() {
+  public void aliasExpansion() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    CellPathResolver cellRoots = createCellRoots(filesystem);
+    Files.createDirectories(
+        cellRoots.getCellPath(Optional.empty()).get().resolve("some").resolve("other"));
     assertEquals(
         ImmutableSet.of(BuildTargetSpec.from(BuildTargetFactory.newInstance("//some:thing"))),
-        PARSER.parse(createCellRoots(null), "foo"));
+        PARSER.parse(cellRoots, "foo"));
     assertEquals(
         ImmutableSet.of(
             BuildTargetSpec.from(BuildTargetFactory.newInstance("//some:thing")),
             BuildTargetSpec.from(BuildTargetFactory.newInstance("//some/other:thing"))),
-        PARSER.parse(createCellRoots(null), "bar"));
+        PARSER.parse(cellRoots, "bar"));
     assertEquals(
         ImmutableSet.of(
             BuildTargetSpec.from(BuildTargetFactory.newInstance("//some:thing#fl")),
             BuildTargetSpec.from(BuildTargetFactory.newInstance("//some/other:thing#fl"))),
-        PARSER.parse(createCellRoots(null), "bar#fl"));
+        PARSER.parse(cellRoots, "bar#fl"));
   }
 
   @Test
-  public void tailingColon() {
+  public void tailingColon() throws Exception {
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    Path packageDirectory = filesystem.getPathForRelativePath("hello");
+    Files.createDirectories(packageDirectory);
     assertEquals(
-        BuildFileSpec.fromPath(Paths.get("hello").toAbsolutePath(), Paths.get("").toAbsolutePath()),
-        parseOne(createCellRoots(null), "//hello:").getBuildFileSpec());
+        BuildFileSpec.fromPath(packageDirectory, filesystem.getRootPath()),
+        parseOne(createCellRoots(filesystem), "//hello:").getBuildFileSpec());
   }
 
   private TargetNodeSpec parseOne(CellPathResolver cellRoots, String arg) {
@@ -101,5 +117,34 @@ public class CommandLineTargetNodeSpecParserTest {
     assertEquals("@other//:", PARSER.normalizeBuildTargetString("@other//:"));
     assertEquals("+other//...", PARSER.normalizeBuildTargetString("+other//..."));
     assertEquals("other//:", PARSER.normalizeBuildTargetString("other//"));
+  }
+
+  @Test
+  public void cannotReferenceNonExistentDirectoryInARecursivelyWildcard() {
+    CellPathResolver cellRoots = createCellRoots(null);
+    Path cellPath = cellRoots.getCellPath(Optional.empty()).get();
+    exception.expectMessage(
+        "does_not_exist/... references non-existent directory "
+            + cellPath.resolve("does_not_exist"));
+    exception.expect(HumanReadableException.class);
+    PARSER.parse(cellRoots, "does_not_exist/...");
+  }
+
+  @Test
+  public void cannotReferenceNonExistentDirectoryWithPackageTargetNames() {
+    CellPathResolver cellRoots = createCellRoots(null);
+    Path cellPath = cellRoots.getCellPath(Optional.empty()).get();
+    exception.expectMessage(
+        "does_not_exist: references non-existent directory " + cellPath.resolve("does_not_exist"));
+    exception.expect(HumanReadableException.class);
+    PARSER.parse(cellRoots, "does_not_exist:");
+  }
+
+  @Test
+  public void cannotReferenceNonExistentDirectoryWithImplicitTargetName() {
+    CellPathResolver cellRoots = createCellRoots(null);
+    exception.expectMessage("does_not_exist references non-existent directory does_not_exist");
+    exception.expect(HumanReadableException.class);
+    PARSER.parse(cellRoots, "does_not_exist");
   }
 }

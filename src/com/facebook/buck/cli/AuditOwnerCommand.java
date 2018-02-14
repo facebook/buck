@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,7 +42,8 @@ public class AuditOwnerCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     if (params.getConsole().getAnsi().isAnsiTerminal()) {
       params
           .getBuckEventBus()
@@ -59,8 +61,10 @@ public class AuditOwnerCommand extends AbstractCommand {
             new PerBuildState(
                 params.getParser(),
                 params.getBuckEventBus(),
+                params.getExecutableFinder(),
                 pool.getListeningExecutorService(),
                 params.getCell(),
+                params.getKnownBuildRuleTypesProvider(),
                 getEnableParserProfiling(),
                 PerBuildState.SpeculativeParsing.ENABLED)) {
       BuckQueryEnvironment env =
@@ -75,7 +79,8 @@ public class AuditOwnerCommand extends AbstractCommand {
       params
           .getBuckEventBus()
           .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
+      // TODO(buck_team): catch specific exceptions and output appropriate code
+      return ExitCode.BUILD_ERROR;
     }
   }
 

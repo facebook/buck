@@ -16,24 +16,19 @@
 
 package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.DelegatingTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.MoreIterables;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
-import java.util.Optional;
 
-public class ClangPreprocessor extends AbstractPreprocessor {
+/** Preprocessor implementation for the Clang toolchain. */
+public class ClangPreprocessor extends DelegatingTool implements Preprocessor {
 
   public ClangPreprocessor(Tool tool) {
     super(tool);
-  }
-
-  @Override
-  public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
-    return Optional.of(ImmutableList.of("-fcolor-diagnostics"));
   }
 
   @Override
@@ -62,13 +57,18 @@ public class ClangPreprocessor extends AbstractPreprocessor {
   }
 
   @Override
-  public final Iterable<String> prefixHeaderArgs(
-      SourcePathResolver resolver, SourcePath prefixHeader) {
-    return ImmutableList.of("-include", resolver.getAbsolutePath(prefixHeader).toString());
+  public final Iterable<String> prefixHeaderArgs(Path prefixHeader) {
+    Preconditions.checkArgument(
+        !prefixHeader.toString().endsWith(".gch"),
+        "Expected non-precompiled file, got a '.gch': " + prefixHeader);
+    return ImmutableList.of("-include", prefixHeader.toString());
   }
 
   @Override
   public Iterable<String> precompiledHeaderArgs(Path pchOutputPath) {
+    Preconditions.checkArgument(
+        pchOutputPath.toString().endsWith(".h.gch"),
+        "Expected a precompiled '.gch' file, got: " + pchOutputPath);
     return ImmutableList.of(
         "-include-pch",
         pchOutputPath.toString(),

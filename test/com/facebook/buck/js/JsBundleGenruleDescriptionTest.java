@@ -42,11 +42,14 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -77,13 +80,19 @@ public class JsBundleGenruleDescriptionTest {
   }
 
   private void setUp(BuildTarget bundleTarget, Flavor... extraFlavors) {
-    setUpWithOptions(JsBundleGenruleBuilder.Options.of(genruleTarget, bundleTarget), extraFlavors);
+    setUpWithOptions(builderOptions(bundleTarget), extraFlavors);
   }
 
   private void setUpWithRewriteSourceMap(Flavor... extraFlavors) {
-    setUpWithOptions(
-        JsBundleGenruleBuilder.Options.of(genruleTarget, defaultBundleTarget).rewriteSourcemap(),
-        extraFlavors);
+    setUpWithOptions(builderOptions().rewriteSourcemap(), extraFlavors);
+  }
+
+  private void setUpWithRewriteMiscDir(Flavor... extraFlavors) {
+    setUpWithOptions(builderOptions().rewriteMisc(), extraFlavors);
+  }
+
+  private void setupWithSkipResources(Flavor... extraFlavors) {
+    setUpWithOptions(builderOptions().skipResources(), extraFlavors);
   }
 
   private void setUpWithOptions(JsBundleGenruleBuilder.Options options, Flavor... extraFlavors) {
@@ -96,7 +105,7 @@ public class JsBundleGenruleDescriptionTest {
 
   @Test
   public void dependsOnSpecifiedJsBundle() {
-    assertEquals(ImmutableSortedSet.of(setup.jsBundle()), setup.genrule().getBuildDeps());
+    assertThat(setup.genrule().getBuildDeps(), hasItem(setup.jsBundle()));
   }
 
   @Test
@@ -133,12 +142,9 @@ public class JsBundleGenruleDescriptionTest {
 
   @Test
   public void addsBundleAndBundleNameAsEnvironmentVariable() {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
-    ExecutionContext context = TestExecutionContext.newBuilder().build();
-
+    SourcePathResolver pathResolver = sourcePathResolver();
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-    setup.genrule().addEnvironmentVariables(pathResolver, context, builder);
+    setup.genrule().addEnvironmentVariables(pathResolver, builder);
     ImmutableMap<String, String> env = builder.build();
 
     assertThat(
@@ -147,6 +153,84 @@ public class JsBundleGenruleDescriptionTest {
             "JS_DIR",
             pathResolver.getAbsolutePath(setup.jsBundle().getSourcePathToOutput()).toString()));
     assertThat(env, hasEntry("JS_BUNDLE_NAME", setup.jsBundle().getBundleName()));
+  }
+
+  @Test
+  public void exposesReleaseFlavorAsEnvironmentVariable() {
+    setUp(JsFlavors.RELEASE);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
+    ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, env);
+    assertThat(env.build(), hasEntry("RELEASE", "1"));
+  }
+
+  @Test
+  public void withoutReleaseFlavorEnvVariableIsEmpty() {
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
+    ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, env);
+    assertThat(env.build(), hasEntry("RELEASE", ""));
+  }
+
+  @Test
+  public void exposesAndroidFlavorAsEnvironmentVariable() {
+    setUp(JsFlavors.ANDROID);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
+    ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, env);
+    assertThat(env.build(), hasEntry("PLATFORM", "android"));
+  }
+
+  @Test
+  public void exposesIosFlavorAsEnvironmentVariable() {
+    setUp(JsFlavors.IOS);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
+    ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, env);
+    assertThat(env.build(), hasEntry("PLATFORM", "ios"));
+  }
+
+  @Test
+  public void withoutPlatformFlavorEnvVariableIsEmpty() {
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
+    ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, env);
+    assertThat(env.build(), hasEntry("PLATFORM", ""));
+  }
+
+  @Test
+  public void addsResourcesDirectoryAsEnvironmentVariable() {
+    setUp();
+
+    SourcePathResolver pathResolver = sourcePathResolver();
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, builder);
+
+    assertThat(
+        builder.build(),
+        hasEntry(
+            "RES_DIR",
+            pathResolver.getAbsolutePath(setup.genrule().getSourcePathToResources()).toString()));
+  }
+
+  @Test
+  public void addsMiscDirectoryAsEnvironmentVariable() {
+    setUp();
+
+    SourcePathResolver pathResolver = sourcePathResolver();
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, builder);
+
+    assertThat(
+        builder.build(),
+        hasEntry(
+            "MISC_DIR",
+            pathResolver.getAbsolutePath(setup.genrule().getSourcePathToMisc()).toString()));
   }
 
   @Test
@@ -163,12 +247,17 @@ public class JsBundleGenruleDescriptionTest {
     assertEquals(
         jsBundleAndroid.getRequiredPackageables(), setup.genrule().getRequiredPackageables());
 
-    AndroidPackageableCollector collector = EasyMock.createMock(AndroidPackageableCollector.class);
-    expect(
-            collector.addAssetsDirectory(
-                setup.rule().getBuildTarget(), setup.rule().getSourcePathToOutput()))
-        .andReturn(collector);
-    replay(collector);
+    AndroidPackageableCollector collector = packageableCollectorMock(setup);
+    setup.genrule().addToCollector(collector);
+    verify(collector);
+  }
+
+  @Test
+  public void doesNotExposePackageablesWithSkipResources() {
+    setupWithSkipResources(JsFlavors.ANDROID);
+
+    assertEquals(ImmutableList.of(), setup.genrule().getRequiredPackageables());
+    AndroidPackageableCollector collector = packageableCollectorMock(setup);
     setup.genrule().addToCollector(collector);
     verify(collector);
   }
@@ -181,7 +270,8 @@ public class JsBundleGenruleDescriptionTest {
   @Test
   public void addAppleBundleResourcesIsDelegatedToUnderlyingBundle() {
     AppleBundleResources.Builder genruleBuilder = AppleBundleResources.builder();
-    new JsBundleGenruleDescription()
+    new JsBundleGenruleDescription(
+            new ToolchainProviderBuilder().build(), new NoSandboxExecutionStrategy())
         .addAppleBundleResources(
             genruleBuilder,
             setup.targetNode(),
@@ -198,32 +288,69 @@ public class JsBundleGenruleDescriptionTest {
   }
 
   @Test
+  public void addAppleBundleResourcesExposesNothingWithSkipResources() {
+    setupWithSkipResources();
+
+    AppleBundleResources.Builder genruleBuilder = AppleBundleResources.builder();
+    new JsBundleGenruleDescription(
+            new ToolchainProviderBuilder().build(), new NoSandboxExecutionStrategy())
+        .addAppleBundleResources(
+            genruleBuilder,
+            setup.targetNode(),
+            setup.rule().getProjectFilesystem(),
+            setup.resolver());
+
+    AppleBundleResources expected = AppleBundleResources.builder().build();
+    assertEquals(expected, genruleBuilder.build());
+  }
+
+  @Test
   public void exportsSourceMapOfJsBundle() {
     assertEquals(
         setup.jsBundle().getSourcePathToSourceMap(), setup.genrule().getSourcePathToSourceMap());
   }
 
   @Test
+  public void exportsMiscOfJsBundle() {
+    assertEquals(setup.jsBundle().getSourcePathToMisc(), setup.genrule().getSourcePathToMisc());
+  }
+
+  @Test
   public void exposesSourceMapOfJsBundleWithSpecialFlavor() {
     setUp(JsFlavors.SOURCE_MAP);
 
-    assertEquals(setup.jsBundle().getSourcePathToSourceMap(), setup.rule().getSourcePathToOutput());
+    DefaultSourcePathResolver pathResolver = sourcePathResolver();
+
+    assertEquals(
+        pathResolver.getRelativePath(setup.jsBundle().getSourcePathToSourceMap()),
+        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
+  }
+
+  @Test
+  public void exposesMiscOfJsBundleWithSpecialFlavor() {
+    setUp(JsFlavors.MISC);
+
+    DefaultSourcePathResolver pathResolver = sourcePathResolver();
+
+    assertEquals(
+        pathResolver.getRelativePath(setup.jsBundle().getSourcePathToMisc()),
+        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
   }
 
   @Test
   public void exposeDepsFileOfJsBundleWithSpecialFlavor() {
     setUp(JsFlavors.DEPENDENCY_FILE);
+    DefaultSourcePathResolver pathResolver = sourcePathResolver();
 
     assertEquals(
-        setup.jsBundleDepsFile().getSourcePathToOutput(), setup.rule().getSourcePathToOutput());
+        pathResolver.getRelativePath(setup.jsBundleDepsFile().getSourcePathToOutput()),
+        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
   }
 
   @Test
   public void createsJsDir() {
     JsBundleGenrule genrule = setup.genrule();
-    BuildContext context =
-        FakeBuildContext.withSourcePathResolver(
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver())));
+    BuildContext context = FakeBuildContext.withSourcePathResolver(sourcePathResolver());
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     ImmutableList<Step> buildSteps =
         ImmutableList.copyOf(genrule.getBuildSteps(context, buildableContext));
@@ -238,6 +365,23 @@ public class JsBundleGenruleDescriptionTest {
 
     int mkJsDirIdx = buildSteps.indexOf(expectedStep);
     assertThat(buildSteps.subList(mkJsDirIdx, buildSteps.size()), not(hasItem(any(RmStep.class))));
+  }
+
+  @Test
+  public void dependsOnTargetsInMacros() {
+    BuildTarget locationTarget = BuildTargetFactory.newInstance("//location:target");
+
+    JsTestScenario scenario =
+        JsTestScenario.builder()
+            .bundleWithDeps(defaultBundleTarget)
+            .arbitraryRule(locationTarget)
+            .bundleGenrule(
+                builderOptions(
+                    StringWithMacrosUtils.format("%s", LocationMacro.of(locationTarget))))
+            .build();
+
+    BuildRule buildRule = scenario.resolver.requireRule(genruleTarget);
+    assertThat(buildRule.getBuildDeps(), hasItem(scenario.resolver.getRule(locationTarget)));
   }
 
   @Test
@@ -257,12 +401,9 @@ public class JsBundleGenruleDescriptionTest {
   public void addsSourceMapAndSourceMapOutAsEnvironmentVariable() {
     setUpWithRewriteSourceMap();
 
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
-    ExecutionContext context = TestExecutionContext.newBuilder().build();
-
+    SourcePathResolver pathResolver = sourcePathResolver();
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-    setup.genrule().addEnvironmentVariables(pathResolver, context, builder);
+    setup.genrule().addEnvironmentVariables(pathResolver, builder);
     ImmutableMap<String, String> env = builder.build();
 
     assertThat(
@@ -281,7 +422,11 @@ public class JsBundleGenruleDescriptionTest {
   public void specialSourceMapTargetPointsToOwnSourceMap() {
     setUpWithRewriteSourceMap(JsFlavors.SOURCE_MAP);
 
-    assertEquals(setup.genrule().getSourcePathToSourceMap(), setup.rule().getSourcePathToOutput());
+    DefaultSourcePathResolver pathResolver = sourcePathResolver();
+
+    assertEquals(
+        pathResolver.getRelativePath(setup.genrule().getSourcePathToSourceMap()),
+        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
   }
 
   @Test
@@ -289,9 +434,7 @@ public class JsBundleGenruleDescriptionTest {
     setUpWithRewriteSourceMap();
 
     JsBundleGenrule genrule = setup.genrule();
-    BuildContext context =
-        FakeBuildContext.withSourcePathResolver(
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver())));
+    BuildContext context = FakeBuildContext.withSourcePathResolver(sourcePathResolver());
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     ImmutableList<Step> buildSteps =
         ImmutableList.copyOf(genrule.getBuildSteps(context, buildableContext));
@@ -316,9 +459,7 @@ public class JsBundleGenruleDescriptionTest {
   public void recordsSourcemapArtifact() {
     setUpWithRewriteSourceMap();
 
-    BuildContext context =
-        FakeBuildContext.withSourcePathResolver(
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver())));
+    BuildContext context = FakeBuildContext.withSourcePathResolver(sourcePathResolver());
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     setup.genrule().getBuildSteps(context, buildableContext);
 
@@ -330,14 +471,131 @@ public class JsBundleGenruleDescriptionTest {
                 .getRelativePath(setup.genrule().getSourcePathToSourceMap())));
   }
 
+  @Test
+  public void exposesRewrittenMiscDir() {
+    setUpWithRewriteMiscDir();
+
+    JsBundleGenrule genrule = setup.genrule();
+    assertEquals(
+        JsUtil.relativeToOutputRoot(
+            genrule.getBuildTarget(), genrule.getProjectFilesystem(), "misc"),
+        genrule.getSourcePathToMisc());
+  }
+
+  @Test
+  public void addsMiscAsEnvironmentVariable() {
+    SourcePathResolver pathResolver = sourcePathResolver();
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, builder);
+    ImmutableMap<String, String> env = builder.build();
+
+    assertThat(
+        env,
+        hasEntry(
+            "MISC_DIR",
+            pathResolver.getAbsolutePath(setup.genrule().getSourcePathToMisc()).toString()));
+  }
+
+  @Test
+  public void addsMiscAndMiscOutAsEnvironmentVariableOnRewrite() {
+    setUpWithRewriteMiscDir();
+
+    SourcePathResolver pathResolver = sourcePathResolver();
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, builder);
+    ImmutableMap<String, String> env = builder.build();
+
+    assertThat(
+        env,
+        hasEntry(
+            "MISC_DIR",
+            pathResolver.getAbsolutePath(setup.jsBundle().getSourcePathToMisc()).toString()));
+    assertThat(
+        env,
+        hasEntry(
+            "MISC_OUT",
+            pathResolver.getAbsolutePath(setup.genrule().getSourcePathToMisc()).toString()));
+  }
+
+  @Test
+  public void specialMiscTargetPointsToOwnMiscDir() {
+    setUpWithRewriteMiscDir(JsFlavors.MISC);
+
+    DefaultSourcePathResolver pathResolver = sourcePathResolver();
+
+    assertEquals(
+        pathResolver.getRelativePath(setup.genrule().getSourcePathToMisc()),
+        pathResolver.getRelativePath(setup.rule().getSourcePathToOutput()));
+  }
+
+  @Test
+  public void createsMiscDir() {
+    setUpWithRewriteMiscDir();
+
+    JsBundleGenrule genrule = setup.genrule();
+    BuildContext context = FakeBuildContext.withSourcePathResolver(sourcePathResolver());
+    FakeBuildableContext buildableContext = new FakeBuildableContext();
+    ImmutableList<Step> buildSteps =
+        ImmutableList.copyOf(genrule.getBuildSteps(context, buildableContext));
+
+    MkdirStep expectedStep =
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                genrule.getProjectFilesystem(),
+                context.getSourcePathResolver().getRelativePath(genrule.getSourcePathToMisc())));
+    assertThat(buildSteps, hasItem(expectedStep));
+
+    int mkMiscDirIdx = buildSteps.indexOf(expectedStep);
+    assertThat(
+        buildSteps.subList(mkMiscDirIdx, buildSteps.size()), not(hasItem(any(RmStep.class))));
+  }
+
+  @Test
+  public void recordsMiscDir() {
+    setUpWithRewriteMiscDir();
+
+    BuildContext context = FakeBuildContext.withSourcePathResolver(sourcePathResolver());
+    FakeBuildableContext buildableContext = new FakeBuildableContext();
+    setup.genrule().getBuildSteps(context, buildableContext);
+
+    assertThat(
+        buildableContext.getRecordedArtifacts(),
+        hasItem(
+            context
+                .getSourcePathResolver()
+                .getRelativePath(setup.genrule().getSourcePathToMisc())));
+  }
+
+  private JsBundleGenruleBuilder.Options builderOptions(
+      BuildTarget bundleTarget, StringWithMacros cmd) {
+    return JsBundleGenruleBuilder.Options.of(genruleTarget, bundleTarget).setCmd(cmd);
+  }
+
+  private JsBundleGenruleBuilder.Options builderOptions(BuildTarget bundleTarget) {
+    return builderOptions(bundleTarget, null);
+  }
+
+  private JsBundleGenruleBuilder.Options builderOptions(StringWithMacros cmd) {
+    return builderOptions(defaultBundleTarget, cmd);
+  }
+
+  private JsBundleGenruleBuilder.Options builderOptions() {
+    return builderOptions(defaultBundleTarget);
+  }
+
+  private DefaultSourcePathResolver sourcePathResolver() {
+    return DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
+  }
+
   private static class TestSetup {
-    private final BuildTarget target;
     private final JsTestScenario scenario;
+    private final BuildTarget target;
     private final BuildTarget bundleTarget;
 
     TestSetup(JsTestScenario scenario, BuildTarget target, BuildTarget bundleTarget) {
-      this.target = target;
       this.scenario = scenario;
+      this.target = target;
       this.bundleTarget = bundleTarget;
     }
 
@@ -348,7 +606,8 @@ public class JsBundleGenruleDescriptionTest {
     JsBundleGenrule genrule() {
       return (JsBundleGenrule)
           scenario.resolver.requireRule(
-              target.withoutFlavors(JsFlavors.DEPENDENCY_FILE, JsFlavors.SOURCE_MAP));
+              target.withoutFlavors(
+                  JsFlavors.DEPENDENCY_FILE, JsFlavors.SOURCE_MAP, JsFlavors.MISC));
     }
 
     @SuppressWarnings("unchecked")
@@ -373,5 +632,15 @@ public class JsBundleGenruleDescriptionTest {
     BuildRuleResolver resolver() {
       return scenario.resolver;
     }
+  }
+
+  private static AndroidPackageableCollector packageableCollectorMock(TestSetup setup) {
+    AndroidPackageableCollector collector = EasyMock.createMock(AndroidPackageableCollector.class);
+    expect(
+            collector.addAssetsDirectory(
+                setup.rule().getBuildTarget(), setup.genrule().getSourcePathToOutput()))
+        .andReturn(collector);
+    replay(collector);
+    return collector;
   }
 }

@@ -35,6 +35,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -48,7 +49,7 @@ public class UnstrippedNativeLibraries extends AbstractBuildRuleWithDeclaredAndE
     implements HasRuntimeDeps, SupportsInputBasedRuleKey {
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> inputs;
 
-  protected UnstrippedNativeLibraries(
+  UnstrippedNativeLibraries(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
@@ -90,7 +91,7 @@ public class UnstrippedNativeLibraries extends AbstractBuildRuleWithDeclaredAndE
                         .map(Object::toString)
                         .collect(Collectors.toList());
                 getProjectFilesystem().writeLinesToPath(lines, getOutputPath());
-                return StepExecutionResult.SUCCESS;
+                return StepExecutionResults.SUCCESS;
               }
             })
         .build();

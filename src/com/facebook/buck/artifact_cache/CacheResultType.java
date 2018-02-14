@@ -31,7 +31,10 @@ public enum CacheResultType {
   IGNORED(/* success */ false),
 
   /** The cache skipped checking this result */
-  SKIPPED(false),
+  SKIPPED(/* success */ false),
+
+  /** The cache contains this artifact, but was not fetched */
+  CONTAINS(/* success */ true),
 
   /** Artifact cache not queried because the local cache key was unchanged. */
   LOCAL_KEY_UNCHANGED_HIT(/* success */ true),

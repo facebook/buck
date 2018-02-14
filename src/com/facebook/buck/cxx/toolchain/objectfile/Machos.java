@@ -293,7 +293,6 @@ public class Machos {
     return MachoHeader.of(commandsCount, is64bit);
   }
 
-  @SuppressWarnings("serial")
   public static class MachoException extends Exception {
     public MachoException(String msg) {
       super(msg);

@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -40,6 +41,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -54,6 +56,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -91,16 +94,16 @@ public class ExportFileTest {
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
-            "mkdir -p " + Paths.get("buck-out/gen"),
             "rm -f -r " + Paths.get("buck-out/gen/example.html"),
+            "mkdir -p " + Paths.get("buck-out/gen/example.html"),
             "cp "
                 + projectFilesystem.resolve("example.html")
                 + " "
-                + Paths.get("buck-out/gen/example.html")),
+                + Paths.get("buck-out/gen/example.html/example.html")),
         steps,
         TestExecutionContext.newInstance());
     assertEquals(
-        projectFilesystem.getBuckPaths().getGenDir().resolve("example.html"),
+        BuildTargets.getGenPath(projectFilesystem, target, "%s").resolve("example.html"),
         pathResolver.getRelativePath(exportFile.getSourcePathToOutput()));
   }
 
@@ -123,16 +126,16 @@ public class ExportFileTest {
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
-            "mkdir -p " + Paths.get("buck-out/gen"),
-            "rm -f -r " + Paths.get("buck-out/gen/fish"),
+            "rm -f -r " + Paths.get("buck-out/gen/example.html"),
+            "mkdir -p " + Paths.get("buck-out/gen/example.html"),
             "cp "
                 + projectFilesystem.resolve("example.html")
                 + " "
-                + Paths.get("buck-out/gen/fish")),
+                + Paths.get("buck-out/gen/example.html/fish")),
         steps,
         TestExecutionContext.newInstance());
     assertEquals(
-        projectFilesystem.getBuckPaths().getGenDir().resolve("fish"),
+        BuildTargets.getGenPath(projectFilesystem, target, "%s").resolve("fish"),
         pathResolver.getRelativePath(exportFile.getSourcePathToOutput()));
   }
 
@@ -158,13 +161,16 @@ public class ExportFileTest {
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
-            "mkdir -p " + Paths.get("buck-out/gen"),
-            "rm -f -r " + Paths.get("buck-out/gen/fish"),
-            "cp " + projectFilesystem.resolve("chips") + " " + Paths.get("buck-out/gen/fish")),
+            "rm -f -r " + Paths.get("buck-out/gen/example.html"),
+            "mkdir -p " + Paths.get("buck-out/gen/example.html"),
+            "cp "
+                + projectFilesystem.resolve("chips")
+                + " "
+                + Paths.get("buck-out/gen/example.html/fish")),
         steps,
         TestExecutionContext.newInstance());
     assertEquals(
-        projectFilesystem.getBuckPaths().getGenDir().resolve("fish"),
+        BuildTargets.getGenPath(projectFilesystem, target, "%s").resolve("fish"),
         pathResolver.getRelativePath(exportFile.getSourcePathToOutput()));
   }
 
@@ -240,7 +246,7 @@ public class ExportFileTest {
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder);
 
     filesystem.writeContentsToPath("I like cheese", temp);
 
@@ -276,7 +282,7 @@ public class ExportFileTest {
             new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     resolver = DefaultSourcePathResolver.from(ruleFinder);
-    ruleKeyFactory = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder);
+    ruleKeyFactory = new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder);
     RuleKey refreshed = ruleKeyFactory.build(rule);
 
     assertNotEquals(original, refreshed);
@@ -326,5 +332,30 @@ public class ExportFileTest {
         .setOut("out")
         .setMode(ExportFileDescription.Mode.REFERENCE)
         .build(resolver, projectFilesystem);
+  }
+
+  @Test
+  public void referenceModeExposesUnderlyingBuildTargetAsRuntimeDep() {
+    BuildRuleResolver resolver =
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+
+    Genrule genrule =
+        GenruleBuilder.newGenruleBuilder(
+                BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:genrule"),
+                projectFilesystem)
+            .setOut("out")
+            .setCmd("")
+            .build(resolver, projectFilesystem);
+    ExportFile exportFile =
+        new ExportFileBuilder(target)
+            .setMode(ExportFileDescription.Mode.REFERENCE)
+            .setSrc(genrule.getSourcePathToOutput())
+            .build(resolver, projectFilesystem);
+
+    assertEquals(
+        ImmutableList.of(genrule.getBuildTarget()),
+        exportFile.getRuntimeDeps(ruleFinder).collect(Collectors.toList()));
   }
 }

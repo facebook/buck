@@ -42,7 +42,7 @@ abstract class AbstractCachingBuildEngineBuckConfig implements ConfigView<BuckCo
   public CachingBuildEngine.DepFiles getBuildDepFiles() {
     return getDelegate()
         .getEnum("build", "depfiles", CachingBuildEngine.DepFiles.class)
-        .orElse(CachingBuildEngine.DepFiles.ENABLED);
+        .orElse(CachingBuildEngine.DepFiles.CACHE);
   }
 
   /**
@@ -65,11 +65,6 @@ abstract class AbstractCachingBuildEngineBuckConfig implements ConfigView<BuckCo
   /** @return the maximum size an artifact can be for the build engine to cache it. */
   public Optional<Long> getBuildArtifactCacheSizeLimit() {
     return getDelegate().getLong("build", "artifact_cache_size_limit");
-  }
-
-  /** @return the maximum size of files input based rule keys will be willing to hash. */
-  public long getBuildInputRuleKeyFileSizeLimit() {
-    return getDelegate().getLong("build", "input_rule_key_file_size_limit").orElse(Long.MAX_VALUE);
   }
 
   public ResourceAwareSchedulingInfo getResourceAwareSchedulingInfo() {

@@ -19,9 +19,11 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,7 +38,7 @@ public class AuditConfigCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "audit",
             "config",
@@ -55,7 +57,7 @@ public class AuditConfigCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "audit",
             "config",
@@ -74,7 +76,7 @@ public class AuditConfigCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "audit", "config", "--json", "missing_section.badvalue", "ignored_section");
     result.assertSuccess();
@@ -87,7 +89,7 @@ public class AuditConfigCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "audit",
             "config",
@@ -102,12 +104,24 @@ public class AuditConfigCommandIntegrationTest {
   }
 
   @Test
+  public void testConfigBuckConfigWithCell() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand("audit", "config", "secondary//second_section.some_property");
+    result.assertSuccess();
+    assertEquals(workspace.getFileContents("stdout-cell-buckconfig"), result.getStdout());
+  }
+
+  @Test
   public void testErrorOnBothTabAndJson() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "audit",
             "config",
@@ -119,7 +133,7 @@ public class AuditConfigCommandIntegrationTest {
             "second_section.some_property",
             "ignored_section.short_value",
             "ignored_section.long_value");
-    result.assertFailure();
+    result.assertExitCode("--json and --tab are incompatible", ExitCode.COMMANDLINE_ERROR);
     assertThat(result.getStderr(), containsString("--json and --tab cannot both be specified"));
   }
 }

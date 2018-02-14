@@ -1,0 +1,13 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "autodeps",
+    srcs = glob(["*.java"]),
+    target = "1.8",
+    deps = [
+        "//third-party/java/intellij:intellij-plugin-sdk",
+        "//third-party/java/junit:junit",
+        "//tools/ideabuck:ideabuck-lib",
+        "//tools/ideabuck:tests-lib",
+    ],
+)

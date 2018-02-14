@@ -39,10 +39,7 @@ org.eclipse.jdt.core.compiler.problem.unusedImport=error
 org.eclipse.jdt.core.compiler.problem.unusedParameter=error
 org.eclipse.jdt.core.compiler.problem.unusedPrivateMember=error
 org.eclipse.jdt.core.compiler.problem.unusederrorToken=ignore
-# Disabled because of a bug in Immutables.
-# dwh has a patch for immutables which hasn't yet been released upstream.
-# When that patch is released, immutables should be updated and this should be re-enabled.
-#org.eclipse.jdt.core.compiler.problem.unusedWarningToken=error
+org.eclipse.jdt.core.compiler.problem.unusedWarningToken=error
 org.eclipse.jdt.core.compiler.source=1.8
 org.eclipse.jdt.core.compiler.taskCaseSensitive=enabled
 org.eclipse.jdt.core.formatter.indentation.size=2

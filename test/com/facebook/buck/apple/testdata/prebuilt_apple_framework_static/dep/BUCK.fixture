@@ -1,7 +1,7 @@
 apple_library(
-    name = 'Dep',
-    exported_headers = ['strings.h'],
-    srcs = ['strings.m'],
-    frameworks = ['$SDKROOT/System/Library/Frameworks/Foundation.framework'],
-    visibility = ['PUBLIC'],
+    name = "Dep",
+    srcs = ["strings.m"],
+    exported_headers = ["strings.h"],
+    frameworks = ["$SDKROOT/System/Library/Frameworks/Foundation.framework"],
+    visibility = ["PUBLIC"],
 )

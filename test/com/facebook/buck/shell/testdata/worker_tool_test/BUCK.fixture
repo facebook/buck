@@ -1,122 +1,141 @@
 sh_binary(
-  name = 'external_tool',
-  main = 'external_tool.sh',
+    name = "external_tool",
+    main = "external_tool.sh",
 )
 
 worker_tool(
-  name = 'worker1',
-  args = ['--num-jobs', '2'],
-  exe = ':external_tool',
+    name = "worker1",
+    args = [
+        "--num-jobs",
+        "2",
+    ],
+    exe = ":external_tool",
 )
 
 worker_tool(
-  name = 'worker2',
-  args = ['--num-jobs', '1'],
-  exe = ':external_tool',
+    name = "worker2",
+    args = [
+        "--num-jobs",
+        "1",
+    ],
+    exe = ":external_tool",
 )
 
 worker_tool(
-  name = 'worker3',
-  args = ['--num-jobs', '2'],
-  exe = ':concurrent_tool',
-  persistent = True,
+    name = "worker3",
+    args = [
+        "--num-jobs",
+        "2",
+    ],
+    exe = ":concurrent_tool",
+    persistent = True,
 )
 
 worker_tool(
-  name = 'worker_location',
-  args = '--num-jobs 2 --loc $(location :external_tool)',
-  exe = ':external_tool',
+    name = "worker_location",
+    args = "--num-jobs 2 --loc $(location :external_tool)",
+    exe = ":external_tool",
 )
 
 worker_tool(
-  name = 'worker_location_args_list',
-  args = ['--num-jobs', '2', '--loc', '$(location :external_tool)'],
-  exe = ':external_tool',
+    name = "worker_location_args_list",
+    args = [
+        "--num-jobs",
+        "2",
+        "--loc",
+        "$(location :external_tool)",
+    ],
+    exe = ":external_tool",
 )
 
 worker_tool(
-  name = 'worker_crash_on_start',
-  args = ['--num-jobs', '2', '--loc', '/doesnotexsist'],
-  exe = ':external_tool',
+    name = "worker_crash_on_start",
+    args = [
+        "--num-jobs",
+        "2",
+        "--loc",
+        "/doesnotexsist",
+    ],
+    exe = ":external_tool",
 )
 
 genrule(
-  name = 'test1',
-  srcs = [],
-  out = 'output.txt',
-  cmd = '$(worker :worker1) $OUT',
+    name = "test1",
+    srcs = [],
+    out = "output.txt",
+    cmd = "$(worker :worker1) $OUT",
 )
 
 genrule(
-  name = 'test2',
-  srcs = [],
-  out = 'output.txt',
-  cmd = '$(worker :worker1) $OUT',
+    name = "test2",
+    srcs = [],
+    out = "output.txt",
+    cmd = "$(worker :worker1) $OUT",
 )
 
 genrule(
-  name = 'test3',
-  srcs = [],
-  out = 'output.txt',
-  cmd = '$(worker :worker2) $OUT',
+    name = "test3",
+    srcs = [],
+    out = "output.txt",
+    cmd = "$(worker :worker2) $OUT",
 )
 
 sh_binary(
-  name = 'concurrent_tool',
-  main = 'concurrent_tool.sh',
+    name = "concurrent_tool",
+    main = "concurrent_tool.sh",
 )
 
 worker_tool(
-  name = 'concurrent_worker',
-  exe = ':concurrent_tool',
-  max_workers = -1,
+    name = "concurrent_worker",
+    exe = ":concurrent_tool",
+    max_workers = -1,
 )
 
 genrule(
-  name = 'test4',
-  srcs = [],
-  out = 'output.txt',
-  cmd = '$(worker :concurrent_worker) $OUT',
+    name = "test4",
+    srcs = [],
+    out = "output.txt",
+    cmd = "$(worker :concurrent_worker) $OUT",
 )
 
 genrule(
-  name = 'test5',
-  srcs = [],
-  out = 'output.txt',
-  cmd = '$(worker :concurrent_worker) $OUT',
+    name = "test5",
+    srcs = [],
+    out = "output.txt",
+    cmd = "$(worker :concurrent_worker) $OUT",
 )
 
 genrule(
-  name = 'test6',
-  srcs = [],
-  out = 'output.txt',
-  cmd = '$(worker :worker3) $OUT',
+    name = "test6",
+    srcs = ["test6.input"],
+    out = "output.txt",
+    cmd = "$(worker :worker3) $OUT",
 )
 
 genrule(
-  name = 'test7',
-  srcs = [],
-  out = 'output.txt',
-  cmd = '$(worker :worker3) $OUT',
+    name = "test7",
+    srcs = [],
+    out = "output.txt",
+    cmd = "$(worker :worker3) $OUT",
 )
 
 genrule(
-  name = 'test8',
-  srcs = [],
-  out = 'output.txt',
-  cmd = '$(worker :worker_location) $OUT',
+    name = "test8",
+    srcs = [],
+    out = "output.txt",
+    cmd = "$(worker :worker_location) $OUT",
 )
 
 genrule(
-  name = 'test9',
-  srcs = [],
-  out = 'output.txt',
-  cmd = '$(worker :worker_location_args_list) $OUT',
+    name = "test9",
+    srcs = [],
+    out = "output.txt",
+    cmd = "$(worker :worker_location_args_list) $OUT",
 )
 
 genrule(
-  name = 'test10',
-  srcs = [],
-  out = 'output.txt',
-  cmd = '$(worker :worker_crash_on_start) $OUT',
+    name = "test10",
+    srcs = [],
+    out = "output.txt",
+    cmd = "$(worker :worker_crash_on_start) $OUT",
 )

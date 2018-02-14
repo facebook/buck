@@ -25,13 +25,13 @@ import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.unarchive.UnzipStep;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
-import com.facebook.buck.zip.UnzipStep;
 import com.facebook.buck.zip.ZipStep;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
@@ -41,6 +41,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * Runs a user supplied reordering tool on all dexes. Deals with both jar-ed and non-jar-ed dexes.
@@ -49,6 +50,7 @@ import java.util.Set;
  */
 public class IntraDexReorderStep implements Step {
 
+  private final BuildTarget target;
   private final BuildContext context;
   private final ProjectFilesystem filesystem;
   private final Path reorderTool;
@@ -61,6 +63,7 @@ public class IntraDexReorderStep implements Step {
   private final String outputSubDir;
 
   IntraDexReorderStep(
+      BuildTarget target,
       BuildContext context,
       ProjectFilesystem filesystem,
       Path reorderTool,
@@ -71,6 +74,7 @@ public class IntraDexReorderStep implements Step {
       final Optional<Supplier<Multimap<Path, Path>>> secondaryDexMap,
       String inputSubDir,
       String outputSubDir) {
+    this.target = target;
     this.context = context;
     this.filesystem = filesystem;
     this.reorderTool = reorderTool;
@@ -94,9 +98,9 @@ public class IntraDexReorderStep implements Step {
       }
     } catch (StepFailedException e) {
       context.logError(e, "There was an error in intra dex reorder step.");
-      return StepExecutionResult.ERROR;
+      return StepExecutionResults.ERROR;
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   private ImmutableList<Step> generateReorderCommands() {
@@ -123,10 +127,11 @@ public class IntraDexReorderStep implements Step {
               BuildCellRelativePath.fromCellRelativePath(
                   context.getBuildCellRootPath(), filesystem, temp)));
       // un-zip
-      steps.add(new UnzipStep(filesystem, inputPath, temp));
+      steps.add(new UnzipStep(filesystem, inputPath, temp, Optional.empty()));
       // run reorder tool
       steps.add(
           new DefaultShellStep(
+              target,
               filesystem.getRootPath(),
               ImmutableList.of(
                   reorderTool.toString(),
@@ -140,7 +145,7 @@ public class IntraDexReorderStep implements Step {
               outputPath,
               /* paths */ ImmutableSet.of(),
               /* junkPaths */ false,
-              ZipCompressionLevel.MAX_COMPRESSION_LEVEL,
+              ZipCompressionLevel.MAX,
               temp));
     } else {
       // copy dex
@@ -148,6 +153,7 @@ public class IntraDexReorderStep implements Step {
       steps.add(CopyStep.forFile(filesystem, inputPrimaryDexPath, outputPrimaryDexPath));
       steps.add(
           new DefaultShellStep(
+              target,
               filesystem.getRootPath(),
               ImmutableList.of(
                   reorderTool.toString(),

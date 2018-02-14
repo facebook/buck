@@ -22,11 +22,10 @@ import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
-import com.facebook.buck.timing.Clock;
-import com.facebook.buck.timing.FakeClock;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
+import com.facebook.buck.util.timing.Clock;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -37,6 +36,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
@@ -223,8 +223,12 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
     return new FakeProjectFilesystem(tempDir);
   }
 
-  public static ProjectFilesystem createJavaOnlyFilesystem() throws InterruptedException {
-    return createJavaOnlyFilesystem("/opt/src/buck");
+  public static ProjectFilesystem createJavaOnlyFilesystem() {
+    try {
+      return createJavaOnlyFilesystem("/opt/src/buck");
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public static ProjectFilesystem createJavaOnlyFilesystem(String rootPath)
@@ -257,7 +261,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
   }
 
   public FakeProjectFilesystem(Path root) {
-    this(FakeClock.DO_NOT_CARE, root, ImmutableSet.of());
+    this(FakeClock.doNotCare(), root, ImmutableSet.of());
   }
 
   public FakeProjectFilesystem(Clock clock) {
@@ -265,7 +269,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
   }
 
   public FakeProjectFilesystem(Set<Path> files) {
-    this(FakeClock.DO_NOT_CARE, DEFAULT_ROOT, files);
+    this(FakeClock.doNotCare(), DEFAULT_ROOT, files);
   }
 
   public FakeProjectFilesystem(Clock clock, Path root, Set<Path> files) {
@@ -447,7 +451,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
                   throw new RuntimeException(e);
                 }
               })
-          .collect(MoreCollectors.toImmutableSortedSet());
+          .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     }
   }
 

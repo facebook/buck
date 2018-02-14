@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.util.ExitCode;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -38,7 +39,8 @@ public class HelpCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     return run(params.getConsole().getStdErr());
   }
 
@@ -48,23 +50,22 @@ public class HelpCommand extends AbstractCommand {
    * <p>Used by {@link BuckCommand#runHelp} to run the help subcommand without initializing {@link
    * CommandRunnerParams}.
    */
-  public int run(PrintStream stream) {
+  public ExitCode run(PrintStream stream) {
     BuckCommand command = new BuckCommand();
     AdditionalOptionsCmdLineParser cmdLineParser = new AdditionalOptionsCmdLineParser(command);
     try {
       cmdLineParser.parseArgument(arguments);
     } catch (CmdLineException e) {
       command.printUsage(stream);
-      return 1;
+      return ExitCode.COMMANDLINE_ERROR;
     }
 
     if (command.getSubcommand().isPresent()) {
       command.getSubcommand().get().printUsage(stream);
     } else {
       command.printUsage(stream);
-      return 1;
     }
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   @Override

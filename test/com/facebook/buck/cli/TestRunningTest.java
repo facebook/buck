@@ -27,8 +27,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
-import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
@@ -42,7 +42,6 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildEngine;
 import com.facebook.buck.rules.FakeTestRule;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -64,6 +63,7 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -370,9 +370,12 @@ public class TestRunningTest {
     NodeList testList = testsEl.getElementsByTagName("test");
     assertEquals(testList.getLength(), 1);
 
+    // Check the target has been set
+    Element testEl = (Element) testList.item(0);
+    assertEquals(testEl.getAttribute("target"), "//foo/bar:baz");
+
     // Check for exactly three <testresult> tags.
     // There should be two failures and one success.
-    Element testEl = (Element) testList.item(0);
     NodeList resultsList = testEl.getElementsByTagName("testresult");
     assertEquals(resultsList.getLength(), 3);
 
@@ -380,6 +383,7 @@ public class TestRunningTest {
     Element passResultEl = (Element) resultsList.item(0);
     assertEquals(passResultEl.getAttribute("name"), "passTest");
     assertEquals(passResultEl.getAttribute("time"), "5000");
+    assertEquals(passResultEl.getAttribute("status"), "PASS");
     checkXmlTextContents(passResultEl, "message", "");
     checkXmlTextContents(passResultEl, "stacktrace", "");
 
@@ -388,6 +392,7 @@ public class TestRunningTest {
     Element failResultEl1 = (Element) resultsList.item(1);
     assertEquals(failResultEl1.getAttribute("name"), "failWithMsg");
     assertEquals(failResultEl1.getAttribute("time"), "7000");
+    assertEquals(failResultEl1.getAttribute("status"), "FAIL");
     checkXmlTextContents(failResultEl1, "message", "Index out of bounds!");
     checkXmlTextContents(failResultEl1, "stacktrace", "Stacktrace");
 
@@ -395,6 +400,7 @@ public class TestRunningTest {
     Element failResultEl2 = (Element) resultsList.item(2);
     assertEquals(failResultEl2.getAttribute("name"), "failNoMsg");
     assertEquals(failResultEl2.getAttribute("time"), "4000");
+    assertEquals(failResultEl2.getAttribute("status"), "PASS");
     checkXmlTextContents(failResultEl2, "message", "");
     checkXmlTextContents(failResultEl2, "stacktrace", "");
   }
@@ -489,11 +495,7 @@ public class TestRunningTest {
                 separateTest2Target,
                 BuildResult.success(separateTest2, BUILT_LOCALLY, CacheResult.miss()),
                 separateTest3Target,
-                BuildResult.success(separateTest3, BUILT_LOCALLY, CacheResult.miss())),
-            ImmutableMap.of(
-                separateTest1Target, new RuleKey("00"),
-                separateTest2Target, new RuleKey("00"),
-                separateTest3Target, new RuleKey("00")));
+                BuildResult.success(separateTest3, BUILT_LOCALLY, CacheResult.miss())));
     ExecutionContext fakeExecutionContext = TestExecutionContext.newInstance();
     DefaultStepRunner stepRunner = new DefaultStepRunner();
     SourcePathRuleFinder ruleFinder =
@@ -654,14 +656,6 @@ public class TestRunningTest {
                 .put(
                     parallelTest3Target,
                     BuildResult.success(parallelTest3, BUILT_LOCALLY, CacheResult.miss()))
-                .build(),
-            ImmutableMap.<BuildTarget, RuleKey>builder()
-                .put(separateTest1Target, new RuleKey("00"))
-                .put(separateTest2Target, new RuleKey("00"))
-                .put(separateTest3Target, new RuleKey("00"))
-                .put(parallelTest1Target, new RuleKey("00"))
-                .put(parallelTest2Target, new RuleKey("00"))
-                .put(parallelTest3Target, new RuleKey("00"))
                 .build());
     ExecutionContext fakeExecutionContext = TestExecutionContext.newInstance();
     DefaultStepRunner stepRunner = new DefaultStepRunner();
@@ -789,8 +783,7 @@ public class TestRunningTest {
         new FakeBuildEngine(
             ImmutableMap.of(
                 failingTestTarget,
-                BuildResult.success(failingTest, BUILT_LOCALLY, CacheResult.miss())),
-            ImmutableMap.of(failingTestTarget, new RuleKey("00")));
+                BuildResult.success(failingTest, BUILT_LOCALLY, CacheResult.miss())));
     ExecutionContext fakeExecutionContext = TestExecutionContext.newInstance();
     DefaultStepRunner stepRunner = new DefaultStepRunner();
     int ret =
@@ -805,6 +798,6 @@ public class TestRunningTest {
             FakeBuildContext.withSourcePathResolver(resolver),
             ruleFinder);
 
-    assertThat(ret, equalTo(TestRunning.TEST_FAILURES_EXIT_CODE));
+    assertThat(ret, equalTo(ExitCode.TEST_ERROR.getCode()));
   }
 }

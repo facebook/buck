@@ -91,6 +91,13 @@ public class TracingTaskListener implements BuckJavacTaskListener {
         tracing.endGenerate();
         break;
       case ANNOTATION_PROCESSING:
+        // Javac considers annotation processing to be done after files generated in the last
+        // round have been parsed, but before they are entered. Our tracing wants to include the
+        // enter (since it would not have happened without annotation processing, we want to
+        // attribute its time to annotation processing), so we just tell the tracer that the
+        // current round is the last one.
+        tracing.setIsLastRound(true);
+        break;
       case COMPILATION:
       default:
         // The tracing doesn't care about these events

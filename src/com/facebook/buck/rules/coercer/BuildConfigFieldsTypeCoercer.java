@@ -19,7 +19,7 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -58,7 +58,7 @@ public class BuildConfigFieldsTypeCoercer extends LeafTypeCoercer<BuildConfigFie
                         "Expected string for build config values but was: %s", input);
                   }
                 })
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     return BuildConfigFields.fromFieldDeclarations(values);
   }
 }

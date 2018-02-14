@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
+/** Interface for a kotlin compiler. */
 public interface Kotlinc extends Tool {
 
   KotlincVersion getVersion();

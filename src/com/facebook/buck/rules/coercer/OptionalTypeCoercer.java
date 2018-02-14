@@ -45,9 +45,9 @@ public class OptionalTypeCoercer<T> implements TypeCoercer<Optional<T>> {
   }
 
   @Override
-  public void traverse(Optional<T> object, Traversal traversal) {
+  public void traverse(CellPathResolver cellRoots, Optional<T> object, Traversal traversal) {
     if (object.isPresent()) {
-      coercer.traverse(object.get(), traversal);
+      coercer.traverse(cellRoots, object.get(), traversal);
     }
   }
 

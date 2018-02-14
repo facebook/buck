@@ -1,10 +1,12 @@
 java_library(
     name = "skylark",
     srcs = glob(["*.java"]),
+    exported_deps = [
+        "//third-party/java/bazel:skylark-lang",
+    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/util:util",
-        "//third-party/java/bazel:skylark-lang",
     ],
 )

@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -40,16 +39,17 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
-import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -170,14 +170,14 @@ public class DirectHeaderMapTest {
                 DefaultFileHashCache.createDefaultFileHashCache(
                     TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()),
                     FileHashCacheMode.DEFAULT)));
-    RuleKey key1 = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(buildRule);
+    RuleKey key1 = new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder).build(buildRule);
     RuleKey key2 =
-        new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(modifiedBuildRule);
+        new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder).build(modifiedBuildRule);
     assertNotEquals(key1, key2);
 
-    key1 = new InputBasedRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(buildRule);
+    key1 = new TestInputBasedRuleKeyFactory(hashCache, resolver, ruleFinder).build(buildRule);
     key2 =
-        new InputBasedRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(modifiedBuildRule);
+        new TestInputBasedRuleKeyFactory(hashCache, resolver, ruleFinder).build(modifiedBuildRule);
     assertNotEquals(key1, key2);
   }
 
@@ -198,17 +198,17 @@ public class DirectHeaderMapTest {
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
 
     RuleKey defaultKey1 =
-        new DefaultRuleKeyFactory(0, hashLoader, resolver, ruleFinder).build(buildRule);
+        new TestDefaultRuleKeyFactory(hashLoader, resolver, ruleFinder).build(buildRule);
     RuleKey inputKey1 =
-        new InputBasedRuleKeyFactory(0, hashLoader, resolver, ruleFinder).build(buildRule);
+        new TestInputBasedRuleKeyFactory(hashLoader, resolver, ruleFinder).build(buildRule);
 
     Files.write(file1, "hello other world".getBytes());
     hashCache.invalidateAll();
 
     RuleKey defaultKey2 =
-        new DefaultRuleKeyFactory(0, hashLoader, resolver, ruleFinder).build(buildRule);
+        new TestDefaultRuleKeyFactory(hashLoader, resolver, ruleFinder).build(buildRule);
     RuleKey inputKey2 =
-        new InputBasedRuleKeyFactory(0, hashLoader, resolver, ruleFinder).build(buildRule);
+        new TestInputBasedRuleKeyFactory(hashLoader, resolver, ruleFinder).build(buildRule);
 
     // When the file content changes, the rulekey should change but the input rulekey should be
     // unchanged. This ensures that a dependent's rulekey changes correctly.

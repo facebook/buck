@@ -1,67 +1,67 @@
 java_test(
-  name = 'no-hamcrest',
-  srcs = [
-    'A.java',
-  ],
-  deps = [
-    ':junit',
-  ],
+    name = "no-hamcrest",
+    srcs = [
+        "A.java",
+    ],
+    deps = [
+        ":junit",
+    ],
 )
 
 java_test(
-  name = 'no-junit',
-  srcs = [
-    'A.java',
-  ],
-  deps = [
-    ':hamcrest',
-  ],
+    name = "no-junit",
+    srcs = [
+        "A.java",
+    ],
+    deps = [
+        ":hamcrest",
+    ],
 )
 
 java_test(
-  name = 'no-testng',
-  test_type = 'testng',
-  srcs = [
-    'A.java',
-  ],
-  deps = [
-    ':hamcrest',
-  ],
+    name = "no-testng",
+    srcs = [
+        "A.java",
+    ],
+    test_type = "testng",
+    deps = [
+        ":hamcrest",
+    ],
 )
 
 java_test(
-  name = 'no-jsr-305',
-  srcs = [
-    'UsesNullable.java',
-  ],
-  annotation_processor_deps = [
-    ':load-jsr-305',
-  ],
+    name = "no-jsr-305",
+    srcs = [
+        "UsesNullable.java",
+    ],
+    annotation_processor_deps = [
+        ":load-jsr-305",
+    ],
 )
 
 java_library(
-  name = 'load-jsr-305',
-  deps = [
-    ':jsr-305',
-  ],
+    name = "load-jsr-305",
+    deps = [
+        ":jsr-305",
+    ],
 )
 
 prebuilt_jar(
-  name = 'hamcrest',
-  binary_jar = 'hamcrest.jar',
+    name = "hamcrest",
+    binary_jar = "hamcrest.jar",
 )
 
 prebuilt_jar(
-  name = 'junit',
-  binary_jar = 'junit.jar',
+    name = "junit",
+    binary_jar = "junit.jar",
 )
 
 prebuilt_jar(
-  name = 'testng',
-  binary_jar = 'testng.jar',
+    name = "testng",
+    binary_jar = "testng.jar",
 )
 
 prebuilt_jar(
-  name = 'jsr-305',
-  binary_jar = 'jsr305.jar',
+    name = "jsr-305",
+    binary_jar = "jsr305.jar",
 )

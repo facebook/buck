@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.base.Charsets;
 import java.io.FileInputStream;

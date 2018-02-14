@@ -17,17 +17,19 @@
 package com.facebook.buck.dotnet;
 
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.model.Either;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Escaper;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class CsharpLibraryCompile extends ShellStep {
   private static final Path CSC = Paths.get("csc");
@@ -38,12 +40,13 @@ public class CsharpLibraryCompile extends ShellStep {
   private final ImmutableListMultimap<Path, String> resources;
 
   public CsharpLibraryCompile(
+      BuildTarget buildTarget,
       Path output,
       ImmutableSortedSet<Path> srcs,
       ImmutableList<Either<Path, String>> references,
       ImmutableListMultimap<Path, String> resources,
       FrameworkVersion version) {
-    super(output.getParent());
+    super(Optional.of(buildTarget), output.getParent());
     this.references = references;
     this.resources = resources;
     this.version = version;
@@ -77,7 +80,7 @@ public class CsharpLibraryCompile extends ShellStep {
     args.addAll(
         srcs.stream()
             .map(input -> Escaper.escapeAsShellString(input.toAbsolutePath().toString()))
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
 
     return args.build();
   }

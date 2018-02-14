@@ -20,12 +20,12 @@ import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.util.Ansi;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 public class BuildThreadStateRenderer implements MultiStateRenderer {
 

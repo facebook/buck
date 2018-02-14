@@ -9,13 +9,21 @@ java_library(
     ],
     visibility = [
         "//src/com/facebook/buck/android:helpers",
-        "//src/com/facebook/buck/android/agent:agent-lib",
+        "//src/com/facebook/buck/android/agent:agent",
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",
-        "//test/com/facebook/buck/android:utils",
+        "//test/com/facebook/buck/android/...",
         "//test/com/facebook/buck/android/agent/util:util",
     ],
     deps = [
         # Do not add other deps here.  The agent should remain very small.
+    ],
+)
+
+export_file(
+    name = "util_src",
+    src = "AgentUtil.java",
+    visibility = [
+        "//android/com/facebook/buck/android/agent/...",
     ],
 )

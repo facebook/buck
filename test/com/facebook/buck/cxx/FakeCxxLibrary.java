@@ -31,11 +31,13 @@ import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.util.types.Either;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -94,10 +96,13 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
         .addIncludes(
             CxxSymlinkTreeHeaders.builder()
                 .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
-                .putNameToPathMap(
-                    Paths.get("header.h"), DefaultBuildTargetSourcePath.of(publicHeaderTarget))
+                .setNameToPathMap(
+                    ImmutableSortedMap.of(
+                        Paths.get("header.h"), DefaultBuildTargetSourcePath.of(publicHeaderTarget)))
                 .setBuildTarget(publicHeaderSymlinkTreeTarget)
                 .setRoot(DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget))
+                .setIncludeRoot(
+                    Either.ofRight(DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget)))
                 .build())
         .build();
   }
@@ -110,8 +115,12 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
                 .setBuildTarget(privateHeaderSymlinkTreeTarget)
                 .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
                 .setRoot(DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget))
-                .putNameToPathMap(
-                    Paths.get("header.h"), DefaultBuildTargetSourcePath.of(privateHeaderTarget))
+                .setIncludeRoot(
+                    Either.ofRight(DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget)))
+                .setNameToPathMap(
+                    ImmutableSortedMap.of(
+                        Paths.get("header.h"),
+                        DefaultBuildTargetSourcePath.of(privateHeaderTarget)))
                 .build())
         .build();
   }
@@ -137,7 +146,7 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
-      ImmutableSet<LanguageExtensions> languageExtensions) {
+      ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions) {
     return type == Linker.LinkableDepType.STATIC
         ? NativeLinkableInput.of(
             ImmutableList.of(SourcePathArg.of(archive.getSourcePathToOutput())),

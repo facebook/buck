@@ -18,18 +18,18 @@ package com.facebook.buck.event;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /** Thin wrapper around guava event bus. */
 public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus {
@@ -116,6 +116,11 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
   }
 
   @Override
+  public void unregister(Object object) {
+    eventBus.unregister(object);
+  }
+
+  @Override
   public void postWithoutConfiguring(BuckEvent event) {
     Preconditions.checkState(event.isConfigured());
     dispatch(event);
@@ -146,28 +151,14 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
    */
   @Override
   public void close() throws IOException {
+    long timeoutTime = System.currentTimeMillis() + shutdownTimeoutMillis;
+
     // it might have happened that executor service is still processing a task which in turn may
     // post new tasks to the executor, in this case if we shutdown executor they won't be processed
     // so first wait for all currently running tasks and their descendants to finish
     // ideally it should be done inside executorService but it only provides shutdown() method
     // which immediately stops accepting new tasks, that's why we have some wrapper on top of it
-    long timeoutTime = System.currentTimeMillis() + shutdownTimeoutMillis;
-    synchronized (lock) {
-      while (activeTasks > 0) {
-
-        long waitTime = timeoutTime - System.currentTimeMillis();
-        if (waitTime <= 0) {
-          break;
-        }
-
-        try {
-          lock.wait(waitTime);
-        } catch (InterruptedException e) {
-          Threads.interruptCurrentThread();
-          break;
-        }
-      }
-    }
+    waitEvents(shutdownTimeoutMillis);
 
     executorService.shutdown();
     try {
@@ -185,6 +176,31 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
     } catch (InterruptedException e) {
       Threads.interruptCurrentThread();
     }
+  }
+
+  @Override
+  public boolean waitEvents(long timeout) {
+    long startWaitTime = System.nanoTime();
+    synchronized (lock) {
+      while (activeTasks > 0) {
+
+        long waitTime = 0;
+        if (timeout > 0) {
+          waitTime = timeout - TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startWaitTime);
+          if (waitTime <= 0) {
+            return false;
+          }
+        }
+
+        try {
+          lock.wait(waitTime);
+        } catch (InterruptedException e) {
+          Threads.interruptCurrentThread();
+          return activeTasks == 0;
+        }
+      }
+    }
+    return true;
   }
 
   /**

@@ -19,30 +19,29 @@ import static com.google.common.collect.Iterables.transform;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Supplier;
 
-public class ExternalKotlinc implements Kotlinc {
+/** kotlinc implemented as a separate binary. */
+public class ExternalKotlinc implements Kotlinc, RuleKeyAppendable {
 
   private static final KotlincVersion DEFAULT_VERSION = KotlincVersion.of("unknown version");
 
@@ -53,13 +52,13 @@ public class ExternalKotlinc implements Kotlinc {
     this.pathToKotlinc = pathToKotlinc;
 
     this.version =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () -> {
               ProcessExecutorParams params =
                   ProcessExecutorParams.builder()
                       .setCommand(ImmutableList.of(pathToKotlinc.toString(), "-version"))
                       .build();
-              ProcessExecutor.Result result;
+              Result result;
               try {
                 result = createProcessExecutor().launchAndExecute(params);
               } catch (InterruptedException | IOException e) {
@@ -83,16 +82,6 @@ public class ExternalKotlinc implements Kotlinc {
     } else {
       sink.setReflectively("kotlinc.version", getVersion().toString());
     }
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ruleFinder.filterBuildRuleInputs(getInputs());
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return ImmutableSortedSet.of();
   }
 
   @Override

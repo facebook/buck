@@ -3,13 +3,6 @@
 
 # IntelliJ build
 /build-ij/
-src/com/facebook/buck/intellij/ideabuck/*.zip
-
-# IntelliJ Plugin
-src/com/facebook/buck/intellij/ideabuck/buck-out
-src/com/facebook/buck/intellij/ideabuck/buck-cache
-src/com/facebook/buck/intellij/ideabuck/.buckd/
-src/com/facebook/buck/intellij/ideabuck/third-party/*.iml
 
 # Buck
 /buck-out
@@ -22,6 +15,8 @@ src/com/facebook/buck/intellij/ideabuck/third-party/*.iml
 
 # Files created during tests
 /test/com/facebook/buck/testutil/integration/testlibs/buck-out/
+/test/**/testdata/**/buck-out/
+/test/**/testdata/**/.buckd/
 
 # Compiled Python
 *.pyc
@@ -35,10 +30,6 @@ src/com/facebook/buck/intellij/ideabuck/third-party/*.iml
 # bootstrapper test is run in the source tree
 /test/com/facebook/buck/cli/bootstrapper/testdata/old_guava/buck-out/
 
-# Eclipse
-/.settings/
-/.apt_generated/
-
 # IntelliJ, based on http://devnet.jetbrains.net/docs/DOC-1186
 /.idea/ant.xml
 /.idea/dictionaries
@@ -48,16 +39,7 @@ src/com/facebook/buck/intellij/ideabuck/third-party/*.iml
 /.idea/workspace.xml
 /.idea/misc.xml
 /.idea/copyright/profiles_settings.xml
-src/com/facebook/buck/intellij/ideabuck/.idea/ant.xml
-src/com/facebook/buck/intellij/ideabuck/.idea/dictionaries
-src/com/facebook/buck/intellij/ideabuck/.idea/inspectionProfiles
-src/com/facebook/buck/intellij/ideabuck/.idea/tasks.xml
-src/com/facebook/buck/intellij/ideabuck/.idea/uiDesigner.xml
-src/com/facebook/buck/intellij/ideabuck/.idea/workspace.xml
-src/com/facebook/buck/intellij/ideabuck/.idea/misc.xml
-src/com/facebook/buck/intellij/ideabuck/.idea/runConfigurations
-src/com/facebook/buck/intellij/ideabuck/.idea/copyright/profiles_settings.xml
-
+/.idea/markdown*
 
 # From building Emma with Ant.
 /third-party/java/emma-2.0.5312/out/
@@ -70,6 +52,9 @@ src/com/facebook/buck/intellij/ideabuck/.idea/copyright/profiles_settings.xml
 /third-party/py/pywatchman/pywatchman.egg-info/
 /third-party/py/pywatchman/dist/
 
+# From building skylib with buck
+/third-party/skylark/bazel-skylib/buck-out
+
 # OS X
 .DS_Store
 
@@ -81,6 +66,6 @@ src/com/facebook/buck/intellij/ideabuck/.idea/copyright/profiles_settings.xml
 \#*
 
 # IntelliJ plugin generated syntax source files
-src/com/facebook/buck/intellij/ideabuck/src/com/facebook/buck/intellij/ideabuck/lang/_BuckLexer.java
-src/com/facebook/buck/intellij/ideabuck/gen
+tools/ideabuck/src/com/facebook/buck/intellij/ideabuck/lang/_BuckLexer.java
+tools/ideabuck/gen
 

@@ -18,7 +18,6 @@ package com.facebook.buck.rules.macros;
 
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -27,26 +26,30 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.macros.MacroException;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.HasSupplementaryOutputs;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.hamcrest.Matchers;
+import java.util.SortedSet;
+import javax.annotation.Nullable;
 import org.junit.Test;
 
 public class LocationMacroExpanderTest {
@@ -124,25 +127,51 @@ public class LocationMacroExpanderTest {
   }
 
   @Test
-  public void extractRuleKeyAppendable() throws Exception {
-    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    String input = "//some/other:rule";
-    TargetNode<?, ?> node =
-        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance(input))
-            .setOut("out")
-            .build();
-    BuildRuleResolver resolver =
+  public void replaceSupplementalOutputLocation() throws Exception {
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem("/some_root");
+    BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar");
+    BuildRuleResolver ruleResolver =
         new SingleThreadedBuildRuleResolver(
-            TargetGraphFactory.newInstance(node), new DefaultTargetNodeToBuildRuleTransformer());
-    BuildRule rule = resolver.requireRule(node.getBuildTarget());
-    LocationMacroExpander macroExpander = new LocationMacroExpander();
-    CellPathResolver cellRoots = createCellRoots(new FakeProjectFilesystem());
-    assertThat(
-        macroExpander.extractRuleKeyAppendablesFrom(
-            target,
-            cellRoots,
-            resolver,
-            macroExpander.parse(target, cellRoots, ImmutableList.of(input))),
-        Matchers.equalTo(rule.getSourcePathToOutput()));
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver.addToIndex(new RuleWithSupplementaryOutput(target, filesystem));
+
+    String input = "$(location //foo:bar[sup])";
+    MacroHandler macroHandler =
+        new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
+    String transformedString =
+        macroHandler.expand(target, createCellRoots(filesystem), ruleResolver, input);
+    assertEquals("/some_root/supplementary-sup", transformedString);
+  }
+
+  private final class RuleWithSupplementaryOutput extends AbstractBuildRule
+      implements HasSupplementaryOutputs {
+
+    public RuleWithSupplementaryOutput(
+        BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
+      super(buildTarget, projectFilesystem);
+    }
+
+    @Override
+    public SourcePath getSourcePathToSupplementaryOutput(String name) {
+      return ExplicitBuildTargetSourcePath.of(
+          getBuildTarget(), getProjectFilesystem().getPath("supplementary-" + name));
+    }
+
+    @Override
+    public SortedSet<BuildRule> getBuildDeps() {
+      return ImmutableSortedSet.of();
+    }
+
+    @Override
+    public ImmutableList<? extends Step> getBuildSteps(
+        BuildContext context, BuildableContext buildableContext) {
+      return ImmutableList.of();
+    }
+
+    @Nullable
+    @Override
+    public SourcePath getSourcePathToOutput() {
+      return null;
+    }
   }
 }

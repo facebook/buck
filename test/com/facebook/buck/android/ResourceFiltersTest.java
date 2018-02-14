@@ -24,7 +24,6 @@ import com.facebook.buck.android.ResourceFilters.Density;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -37,6 +36,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -138,7 +138,6 @@ public class ResourceFiltersTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testMdpiFilterRemovesUnneededResources() {
     Set<Path> mdpi =
         ResourceFilters.filterByDensity(candidates, ImmutableSet.of(Density.MDPI), false);
@@ -168,7 +167,6 @@ public class ResourceFiltersTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testLdpiMdpiFilterRemovesUnneededResources() {
     Set<Path> lmdpi =
         ResourceFilters.filterByDensity(
@@ -199,7 +197,6 @@ public class ResourceFiltersTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testLdpiMdpiFilterWithDownscale() {
     Set<Path> lmdpi =
         ResourceFilters.filterByDensity(
@@ -230,7 +227,6 @@ public class ResourceFiltersTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testHdpiFilterRemovesUnneededResources() {
     Set<Path> hdpi =
         ResourceFilters.filterByDensity(candidates, ImmutableSet.of(Density.HDPI), false);
@@ -260,7 +256,6 @@ public class ResourceFiltersTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testXhdpiFilterRemovesUnneededResources() {
     Set<Path> xhdpi =
         ResourceFilters.filterByDensity(candidates, ImmutableSet.of(Density.XHDPI), false);
@@ -290,7 +285,6 @@ public class ResourceFiltersTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testXxhdpiFilterRemovesUnneededResources() {
     Set<Path> xxhdpi =
         ResourceFilters.filterByDensity(candidates, ImmutableSet.of(Density.XXHDPI), false);
@@ -327,7 +321,7 @@ public class ResourceFiltersTest {
         ResourceFilters.createImageDensityFilter(candidates, ImmutableSet.of(Density.MDPI), false);
     assertFalse(candidates.isEmpty());
     for (Path candidate : candidates) {
-      assertEquals(!filesToRemove.contains(candidate), predicate.apply(candidate));
+      assertEquals(!filesToRemove.contains(candidate), predicate.test(candidate));
     }
   }
 
@@ -337,7 +331,7 @@ public class ResourceFiltersTest {
     Predicate<Path> predicate =
         ResourceFilters.createDensityFilter(
             new FakeProjectFilesystem(), ImmutableSet.of(Density.MDPI));
-    assertThat(predicate.apply(candidate), Matchers.is(true));
+    assertThat(predicate.test(candidate), Matchers.is(true));
   }
 
   @Test
@@ -355,8 +349,8 @@ public class ResourceFiltersTest {
 
       Predicate<Path> predicate =
           ResourceFilters.createDensityFilter(filesystem, ImmutableSet.of(Density.MDPI));
-      assertThat(predicate.apply(exclude), Matchers.is(false));
-      assertThat(predicate.apply(include), Matchers.is(true));
+      assertThat(predicate.test(exclude), Matchers.is(false));
+      assertThat(predicate.test(include), Matchers.is(true));
     }
   }
 
@@ -375,8 +369,8 @@ public class ResourceFiltersTest {
 
       Predicate<Path> predicate =
           ResourceFilters.createDensityFilter(filesystem, ImmutableSet.of(Density.MDPI));
-      assertThat(predicate.apply(exclude), Matchers.is(false));
-      assertThat(predicate.apply(include), Matchers.is(true));
+      assertThat(predicate.test(exclude), Matchers.is(false));
+      assertThat(predicate.test(include), Matchers.is(true));
     }
   }
 }

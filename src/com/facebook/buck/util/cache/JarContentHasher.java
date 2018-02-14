@@ -16,12 +16,13 @@
 package com.facebook.buck.util.cache;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.devtools.build.lib.vfs.PathFragment;
 import java.io.IOException;
 import java.nio.file.Path;
 
 public interface JarContentHasher {
 
-  Path getJarRelativePath();
+  PathFragment getJarRelativePath();
 
   ImmutableMap<Path, HashCodeAndFileType> getContentHashes() throws IOException;
 }

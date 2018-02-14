@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class DelegatingAndroidDevice implements AndroidDevice {
@@ -74,8 +75,8 @@ public class DelegatingAndroidDevice implements AndroidDevice {
   }
 
   @Override
-  public void installFile(Path targetDevicePath, Path source) throws Exception {
-    delegate.installFile(targetDevicePath, source);
+  public void installFiles(String filesType, Map<Path, Path> installPaths) throws Exception {
+    delegate.installFiles(filesType, installPaths);
   }
 
   @Override
@@ -96,6 +97,11 @@ public class DelegatingAndroidDevice implements AndroidDevice {
   @Override
   public void killProcess(String processName) throws Exception {
     delegate.killProcess(processName);
+  }
+
+  @Override
+  public void sendBroadcast(String action, Map<String, String> stringExtras) throws Exception {
+    delegate.sendBroadcast(action, stringExtras);
   }
 
   @Override

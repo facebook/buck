@@ -18,12 +18,8 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -33,7 +29,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
-import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
@@ -41,10 +36,10 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -80,21 +75,8 @@ public class BuildCommandErrorsIntegrationTest {
     workspace.setUp();
     mockDescription = new MockDescription();
     workspace.setKnownBuildRuleTypesFactoryFactory(
-        (processExecutor, sdkEnvironment, toolchainProvider) ->
-            new KnownBuildRuleTypesFactory(
-                new FakeProcessExecutor(), sdkEnvironment, toolchainProvider) {
-              @Override
-              public KnownBuildRuleTypes create(BuckConfig config, ProjectFilesystem filesystem)
-                  throws IOException, InterruptedException {
-                FlavorDomain<CxxPlatform> cxxPlatforms = FlavorDomain.of("C/C++ platform");
-                CxxPlatform defaultPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
-
-                KnownBuildRuleTypes.Builder buildRuleTypesBuilder = KnownBuildRuleTypes.builder();
-                buildRuleTypesBuilder.setCxxPlatforms(cxxPlatforms);
-                buildRuleTypesBuilder.setDefaultCxxPlatform(defaultPlatform);
-                return buildRuleTypesBuilder.register(mockDescription).build();
-              }
-            });
+        (processExecutor, pluginManager, sandboxExecutionStrategyFactory) ->
+            cell -> KnownBuildRuleTypes.builder().addDescriptions(mockDescription).build());
   }
 
   // TODO(cjhopman): Add cases for errors in other phases of the build (watchman, parsing,
@@ -102,7 +84,7 @@ public class BuildCommandErrorsIntegrationTest {
 
   // TODO(cjhopman): Add tests for buck.log.
 
-  private String getStderr(ProjectWorkspace.ProcessResult result) {
+  private String getStderr(ProcessResult result) {
     String stderr = result.getStderr();
     if (DEBUG) {
       System.out.println("=== STDERR ===");
@@ -116,7 +98,7 @@ public class BuildCommandErrorsIntegrationTest {
   public void exceptionWithCauseThrown() throws Exception {
     mockDescription.buildRuleFactory =
         exceptionTargetFactory("failure message", RuntimeException.class, RuntimeException.class);
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
+    ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
         "Buck encountered an internal error\n"
@@ -135,7 +117,7 @@ public class BuildCommandErrorsIntegrationTest {
         stepExceptionTargetFactory(
             "failure message", RuntimeException.class, RuntimeException.class);
     workspace.runBuckBuild(":target_name");
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
+    ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
         "Buck encountered an internal error\n"
@@ -153,7 +135,7 @@ public class BuildCommandErrorsIntegrationTest {
   public void runtimeExceptionThrown() throws Exception {
     mockDescription.buildRuleFactory =
         exceptionTargetFactory("failure message", RuntimeException.class);
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
+    ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
         "Buck encountered an internal error\n"
@@ -168,7 +150,7 @@ public class BuildCommandErrorsIntegrationTest {
   public void runtimeExceptionThrownInStep() throws Exception {
     mockDescription.buildRuleFactory =
         stepExceptionTargetFactory("failure message", RuntimeException.class);
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
+    ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
         "Buck encountered an internal error\n"
@@ -184,7 +166,7 @@ public class BuildCommandErrorsIntegrationTest {
   public void ioExceptionThrownInStep() throws Exception {
     mockDescription.buildRuleFactory =
         stepExceptionTargetFactory("failure message", IOException.class);
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
+    ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
         "Buck encountered an internal error\n"
@@ -199,7 +181,7 @@ public class BuildCommandErrorsIntegrationTest {
   @Test
   public void ioExceptionThrown() throws Exception {
     mockDescription.buildRuleFactory = exceptionTargetFactory("failure message", IOException.class);
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
+    ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
         "Buck encountered an internal error\n"
@@ -214,7 +196,7 @@ public class BuildCommandErrorsIntegrationTest {
   public void ioExceptionWithRuleInMessageThrown() throws Exception {
     mockDescription.buildRuleFactory =
         exceptionTargetFactory("failure message //:target_name", IOException.class);
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
+    ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
         "Buck encountered an internal error\n"
@@ -229,7 +211,7 @@ public class BuildCommandErrorsIntegrationTest {
   public void humanReadableExceptionThrownInStep() throws Exception {
     mockDescription.buildRuleFactory =
         stepExceptionTargetFactory("failure message", HumanReadableException.class);
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
+    ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
         "Build failed: failure message\n"
@@ -242,7 +224,7 @@ public class BuildCommandErrorsIntegrationTest {
   public void humanReadableExceptionThrown() throws Exception {
     mockDescription.buildRuleFactory =
         exceptionTargetFactory("failure message", HumanReadableException.class);
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
+    ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
         "Build failed: failure message\n" + "    When building rule //:target_name.",
@@ -252,7 +234,7 @@ public class BuildCommandErrorsIntegrationTest {
   @Test
   public void withStepReturningFailure() throws Exception {
     mockDescription.buildRuleFactory = exitCodeTargetFactory("failure message", 1);
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
+    ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
         "Build failed: Command failed with exit code 1.\n"
@@ -265,7 +247,7 @@ public class BuildCommandErrorsIntegrationTest {
   @Test
   public void withSuccessfulStep() throws Exception {
     mockDescription.buildRuleFactory = exitCodeTargetFactory("success message", 0);
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
+    ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertSuccess();
     assertEquals("", getError(getStderr(result)));
   }
@@ -273,7 +255,7 @@ public class BuildCommandErrorsIntegrationTest {
   @Test
   public void successWithNoSteps() throws Exception {
     mockDescription.buildRuleFactory = successTargetFactory();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
+    ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertSuccess();
     assertEquals("", getError(getStderr(result)));
   }
@@ -282,11 +264,11 @@ public class BuildCommandErrorsIntegrationTest {
   public void runtimeExceptionThrownKeepGoing() throws Exception {
     mockDescription.buildRuleFactory =
         exceptionTargetFactory("failure message", RuntimeException.class);
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("--keep-going", ":target_name");
+    ProcessResult result = workspace.runBuckBuild("--keep-going", ":target_name");
     result.assertFailure();
     assertEquals(
         " ** Summary of failures encountered during the build **\n"
-            + "Rule //:target_name FAILED because failure message\n"
+            + "Rule //:target_name FAILED because java.lang.RuntimeException: failure message\n"
             + "    When building rule //:target_name.\n"
             + "Not all rules succeeded.",
         getError(getStderr(result)));
@@ -296,11 +278,11 @@ public class BuildCommandErrorsIntegrationTest {
   public void runtimeExceptionThrownInStepKeepGoing() throws Exception {
     mockDescription.buildRuleFactory =
         stepExceptionTargetFactory("failure message", RuntimeException.class);
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("--keep-going", ":target_name");
+    ProcessResult result = workspace.runBuckBuild("--keep-going", ":target_name");
     result.assertFailure();
     assertEquals(
         " ** Summary of failures encountered during the build **\n"
-            + "Rule //:target_name FAILED because failure message\n"
+            + "Rule //:target_name FAILED because java.lang.RuntimeException: failure message\n"
             + "    When running <failing_step>.\n"
             + "    When building rule //:target_name.\n"
             + "Not all rules succeeded.",
@@ -311,11 +293,11 @@ public class BuildCommandErrorsIntegrationTest {
   public void ioExceptionThrownInStepKeepGoing() throws Exception {
     mockDescription.buildRuleFactory =
         stepExceptionTargetFactory("failure message", IOException.class);
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("--keep-going", ":target_name");
+    ProcessResult result = workspace.runBuckBuild("--keep-going", ":target_name");
     result.assertFailure();
     assertEquals(
         " ** Summary of failures encountered during the build **\n"
-            + "Rule //:target_name FAILED because failure message\n"
+            + "Rule //:target_name FAILED because java.io.IOException: failure message\n"
             + "    When running <failing_step>.\n"
             + "    When building rule //:target_name.\n"
             + "Not all rules succeeded.",
@@ -325,11 +307,11 @@ public class BuildCommandErrorsIntegrationTest {
   @Test
   public void ioExceptionThrownKeepGoing() throws Exception {
     mockDescription.buildRuleFactory = exceptionTargetFactory("failure message", IOException.class);
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("--keep-going", ":target_name");
+    ProcessResult result = workspace.runBuckBuild("--keep-going", ":target_name");
     result.assertFailure();
     assertEquals(
         " ** Summary of failures encountered during the build **\n"
-            + "Rule //:target_name FAILED because failure message\n"
+            + "Rule //:target_name FAILED because java.io.IOException: failure message\n"
             + "    When building rule //:target_name.\n"
             + "Not all rules succeeded.",
         getError(getStderr(result)));

@@ -29,7 +29,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.FutureCallback;
@@ -135,7 +134,7 @@ public class OfflineScribeLogger extends ScribeLogger {
         new IntegerCounter(COUNTERS_CATEGORY, "logfiles_resent", ImmutableMap.of());
     buckEventBus.post(
         new CounterRegistry.AsyncCounterRegistrationEvent(
-            ImmutableSet.of(totalLinesResent, totalBytesResent, logfilesResent)));
+            ImmutableList.of(totalLinesResent, totalBytesResent, logfilesResent)));
   }
 
   @Override

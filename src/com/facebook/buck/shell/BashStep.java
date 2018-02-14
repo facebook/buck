@@ -16,10 +16,12 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Command that makes it possible to run an arbitrary command in Bash. Whenever possible, a more
@@ -35,8 +37,8 @@ public class BashStep extends ShellStep {
    * @param bashCommand command to execute. For convenience, multiple arguments are supported and
    *     will be joined with space characters if more than one is present.
    */
-  public BashStep(Path workingDirectory, String... bashCommand) {
-    super(workingDirectory);
+  public BashStep(BuildTarget buildTarget, Path workingDirectory, String... bashCommand) {
+    super(Optional.of(buildTarget), workingDirectory);
     this.bashCommand = Joiner.on(' ').join(bashCommand);
   }
 

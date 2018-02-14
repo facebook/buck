@@ -20,18 +20,17 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.GenerateCodeCoverageReportStep;
 import com.facebook.buck.jvm.java.JacocoConstants;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryWithTests;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildRule;
@@ -58,9 +57,9 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MoreFutures;
+import com.facebook.buck.util.types.Either;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -109,8 +108,6 @@ import org.w3c.dom.Element;
 
 /** Utility class for running tests from {@link TestRule}s which have been built. */
 public class TestRunning {
-
-  public static final int TEST_FAILURES_EXIT_CODE = 42;
 
   private static final Logger LOG = Logger.get(TestRunning.class);
 
@@ -440,7 +437,8 @@ public class TestRunning {
               return !results1.isSuccess();
             });
 
-    return failures ? TEST_FAILURES_EXIT_CODE : 0;
+    // TODO(buck_team): convert to ExitCode
+    return failures ? 32 : 0;
   }
 
   private static ListenableFuture<TestResults> transformTestResults(
@@ -517,7 +515,7 @@ public class TestRunning {
                         .getLabels()
                         .stream()
                         .map(Object::toString)
-                        .collect(MoreCollectors.toImmutableSet()));
+                        .collect(ImmutableSet.toImmutableSet()));
             TestResults newTestResults = postTestResults(testResults);
             transformedTestResults.set(newTestResults);
           }
@@ -600,6 +598,7 @@ public class TestRunning {
           testEl.setAttribute("name", testCase.getTestCaseName());
           testEl.setAttribute("status", testCase.isSuccess() ? "PASS" : "FAIL");
           testEl.setAttribute("time", Long.toString(testCase.getTotalTime()));
+          testEl.setAttribute("target", results.getBuildTarget().getFullyQualifiedName());
           testsEl.appendChild(testEl);
 
           // Loop through the test case and add XML data (name, message, and
@@ -641,11 +640,13 @@ public class TestRunning {
       // Extract the test name and time.
       String name = Strings.nullToEmpty(testResult.getTestName());
       String time = Long.toString(testResult.getTime());
+      String status = testResult.isSuccess() ? "PASS" : "FAIL";
 
       // Create the tag: <testresult name="..." time="...">
       Element testResultEl = doc.createElement("testresult");
       testResultEl.setAttribute("name", name);
       testResultEl.setAttribute("time", time);
+      testResultEl.setAttribute("status", status);
       testEl.appendChild(testResultEl);
 
       // Create the tag: <message>(Error message here)</message>

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSet;
@@ -38,13 +37,13 @@ public class SourcePathRuleFinder {
   public ImmutableSet<BuildRule> filterBuildRuleInputs(Iterable<? extends SourcePath> sources) {
     return RichStream.from(sources)
         .flatMap(FILTER_BUILD_RULE_INPUTS)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   public ImmutableSet<BuildRule> filterBuildRuleInputs(SourcePath... sources) {
     return RichStream.of(sources)
         .flatMap(FILTER_BUILD_RULE_INPUTS)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   /**

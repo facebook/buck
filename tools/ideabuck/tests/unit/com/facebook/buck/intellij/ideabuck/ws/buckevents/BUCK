@@ -1,0 +1,17 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "buckevents",
+    srcs = glob(["*.java"]),
+    target = "1.8",
+    deps = [
+        "//src/com/facebook/buck/event/external:external_lib",
+        "//src/com/facebook/buck/test/result/type:type",
+        "//third-party/java/guava:guava",
+        "//third-party/java/intellij:intellij-plugin-sdk",
+        "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/junit:junit",
+        "//tools/ideabuck:ideabuck-lib",
+        "//tools/ideabuck:tests-lib",
+    ],
+)

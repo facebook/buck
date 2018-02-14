@@ -1,5 +1,0 @@
-java_immutables_library(
-    name = "i18n",
-    srcs = glob(["*.java"]),
-    visibility = ["PUBLIC"],
-)

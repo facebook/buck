@@ -1,24 +1,24 @@
 apple_bundle(
-  name = 'DemoApp',
-  binary = ':DemoAppBinary',
-  extension = 'app',
-  info_plist = 'Info.plist',
+    name = "DemoApp",
+    binary = ":DemoAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
 )
 
 apple_binary(
-  name = 'DemoAppBinary',
-  preprocessor_flags = ['-fobjc-arc'],
-  headers = glob([
-    '*.h',
-  ]),
-  srcs = glob([
-    '*.m',
-  ]),
-  frameworks = [
-    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
-    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-  ],
-  libraries = [
-    '$SDKROOT/usr/lib/libobjc.dylib',
-  ],
+    name = "DemoAppBinary",
+    srcs = glob([
+        "*.m",
+    ]),
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    headers = glob([
+        "*.h",
+    ]),
+    libraries = [
+        "$SDKROOT/usr/lib/libobjc.dylib",
+    ],
+    preprocessor_flags = ["-fobjc-arc"],
 )

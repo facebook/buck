@@ -54,6 +54,10 @@ class TreeBackedAnnotationValue implements ArtificialAnnotationValue {
     this.canonicalizer = canonicalizer;
   }
 
+  /* package */ AnnotationValue getUnderlyingAnnotationValue() {
+    return underlyingAnnotationValue;
+  }
+
   @Override
   public Object getValue() {
     if (value == null) {

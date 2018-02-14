@@ -18,9 +18,11 @@ package com.facebook.buck.d;
 
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -35,8 +37,7 @@ public class DTestIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "test", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("test", "-v", "10", "//:failing_test");
+    ProcessResult result = workspace.runBuckCommand("test", "-v", "10", "//:failing_test");
     result.assertTestFailure();
     assertTrue(
         "test reports correct location on failure. stderr:\n" + result.getStderr(),
@@ -51,8 +52,7 @@ public class DTestIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "test", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("test", "-v", "10", "//:passing_test");
+    ProcessResult result = workspace.runBuckCommand("test", "-v", "10", "//:passing_test");
     result.assertSuccess();
   }
 
@@ -64,9 +64,8 @@ public class DTestIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "test", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("test", "-v", "10", "//:test-spinning");
-    result.assertSpecialExitCode("test should fail", 42);
+    ProcessResult result = workspace.runBuckCommand("test", "-v", "10", "//:test-spinning");
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     String stderr = result.getStderr();
     assertTrue(stderr, stderr.contains("Timed out after 500 ms running test command"));
   }
@@ -79,8 +78,7 @@ public class DTestIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "test", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("test", "-v", "10", "//:with_cxx");
+    ProcessResult result = workspace.runBuckCommand("test", "-v", "10", "//:with_cxx");
     result.assertSuccess();
   }
 }

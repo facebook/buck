@@ -1,29 +1,35 @@
 ocaml_binary(
-    name='test',
-    srcs=['test.ml'],
-    compiler_flags=['-I', '+compiler-libs', 'ocamlcommon.cma'],
-    bytecode_only=True,
+    name = "test",
+    srcs = ["test.ml"],
+    bytecode_only = True,
+    compiler_flags = [
+        "-I",
+        "+compiler-libs",
+        "ocamlcommon.cma",
+    ],
 )
 
 ocaml_library(
-    name='lib',
-    srcs=[
-        'lib.ml',
+    name = "lib",
+    srcs = [
+        "lib.ml",
     ],
-    compiler_flags=[
-        '-ppx', '$(exe :test)',
-    ]
+    compiler_flags = [
+        "-ppx",
+        "$(exe :test)",
+    ],
 )
 
 ocaml_binary(
-    name='main',
-    srcs=[
-        'main.ml'
+    name = "main",
+    srcs = [
+        "main.ml",
     ],
-    deps=[
-        ':lib'
+    compiler_flags = [
+        "-ppx",
+        "$(exe :test)",
     ],
-    compiler_flags=[
-      '-ppx', '$(exe :test)',
+    deps = [
+        ":lib",
     ],
 )

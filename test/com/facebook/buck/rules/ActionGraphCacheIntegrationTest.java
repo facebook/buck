@@ -19,8 +19,8 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.TestWithBuckd;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.trace.ChromeTraceParser;
@@ -123,16 +123,16 @@ public class ActionGraphCacheIntegrationTest {
             if (argsEl == null
                 || !(argsEl instanceof Map)
                 || ((Map<String, Object>) argsEl).get("hit") == null
-                || !((((Map<String, Object>) argsEl)).get("hit") instanceof String)) {
+                || !((((Map<String, Object>) argsEl)).get("hit") instanceof Boolean)) {
               return Optional.empty();
             }
 
             Map<String, Object> args = (Map<String, Object>) argsEl;
-            boolean isHit = Boolean.valueOf((String) args.get("hit"));
+            boolean isHit = (Boolean) args.get("hit");
             if (isHit) {
               return Optional.of(ActionGraphCacheStatus.HIT);
             } else {
-              boolean cacheWasEmpty = Boolean.valueOf((String) args.get("cacheWasEmpty"));
+              boolean cacheWasEmpty = (Boolean) args.get("cacheWasEmpty");
               return Optional.of(
                   cacheWasEmpty
                       ? ActionGraphCacheStatus.MISS_CACHE_EMPTY

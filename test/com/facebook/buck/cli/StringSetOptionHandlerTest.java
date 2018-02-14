@@ -18,8 +18,8 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
+import java.util.function.Supplier;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;

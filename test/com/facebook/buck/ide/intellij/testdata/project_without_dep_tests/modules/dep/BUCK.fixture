@@ -4,9 +4,9 @@ java_library(
         "Test.java",
     ],
     tests = [
-        "//modules/dep_test:dep_test"
+        "//modules/dep_test:dep_test",
     ],
     visibility = [
         "PUBLIC",
-    ]
+    ],
 )

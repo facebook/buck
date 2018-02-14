@@ -16,6 +16,8 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
+import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -46,6 +48,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public class DirArtifactCache implements ArtifactCache {
 
@@ -63,21 +66,21 @@ public class DirArtifactCache implements ArtifactCache {
   private final ProjectFilesystem filesystem;
   private final Path cacheDir;
   private final Optional<Long> maxCacheSizeBytes;
-  private final CacheReadMode cacheMode;
+  private final CacheReadMode cacheReadMode;
   private long bytesSinceLastDeleteOldFiles;
 
   public DirArtifactCache(
       String name,
       ProjectFilesystem filesystem,
       Path cacheDir,
-      CacheReadMode cacheMode,
+      CacheReadMode cacheReadMode,
       Optional<Long> maxCacheSizeBytes)
       throws IOException {
     this.name = name;
     this.filesystem = filesystem;
     this.cacheDir = cacheDir;
     this.maxCacheSizeBytes = maxCacheSizeBytes;
-    this.cacheMode = cacheMode;
+    this.cacheReadMode = cacheReadMode;
     this.bytesSinceLastDeleteOldFiles = 0L;
 
     // Check first, as mkdirs will fail if the path is a symlink.
@@ -89,6 +92,11 @@ public class DirArtifactCache implements ArtifactCache {
   @Override
   public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
     return Futures.immediateFuture(fetch(ruleKey, output));
+  }
+
+  @Override
+  public void skipPendingAndFutureAsyncFetches() {
+    // Async requests are not supported by DirArtifactCache, so do nothing
   }
 
   private CacheResult fetch(RuleKey ruleKey, LazyPath output) {
@@ -197,6 +205,52 @@ public class DirArtifactCache implements ArtifactCache {
     return Futures.immediateFuture(null);
   }
 
+  @Override
+  public ListenableFuture<ImmutableMap<RuleKey, CacheResult>> multiContainsAsync(
+      ImmutableSet<RuleKey> ruleKeys) {
+    return Futures.immediateFuture(multiContains(ruleKeys));
+  }
+
+  private ImmutableMap<RuleKey, CacheResult> multiContains(Set<RuleKey> ruleKeys) {
+    ImmutableMap.Builder<RuleKey, CacheResult> results = new ImmutableMap.Builder<>();
+
+    for (RuleKey ruleKey : ruleKeys) {
+      Path artifactPath = getPathForRuleKey(ruleKey, Optional.empty());
+      Path metadataPath = getPathForRuleKey(ruleKey, Optional.of(".metadata"));
+
+      boolean contains = filesystem.exists(artifactPath) && filesystem.exists(metadataPath);
+      results.put(ruleKey, contains ? CacheResult.contains(name, CACHE_MODE) : CacheResult.miss());
+      LOG.verbose(
+          "Artifact contains request for rulekey [%s] was a cache %s.",
+          ruleKey, (contains ? "hit" : "miss"));
+    }
+
+    return results.build();
+  }
+
+  private void deleteSync(RuleKey ruleKey) {
+    Path artifactPath = getPathForRuleKey(ruleKey, Optional.empty());
+    Path metadataPath = getPathForRuleKey(ruleKey, Optional.of(".metadata"));
+
+    try {
+      filesystem.deleteFileAtPathIfExists(metadataPath);
+      filesystem.deleteFileAtPathIfExists(artifactPath);
+    } catch (IOException e) {
+      String message =
+          String.format("Failed to delete artifact for rule key [%s] from local cache", ruleKey);
+      LOG.warn(e, message);
+      throw new RuntimeException(message, e);
+    }
+  }
+
+  @Override
+  public ListenableFuture<CacheDeleteResult> deleteAsync(List<RuleKey> ruleKeys) {
+    ruleKeys.forEach(this::deleteSync);
+
+    ImmutableList<String> cacheNames = ImmutableList.of(DirArtifactCache.class.getSimpleName());
+    return Futures.immediateFuture(CacheDeleteResult.builder().setCacheNames(cacheNames).build());
+  }
+
   private Path getPathToTempFolder() {
     return cacheDir.resolve("tmp");
   }
@@ -249,7 +303,7 @@ public class DirArtifactCache implements ArtifactCache {
 
   @Override
   public CacheReadMode getCacheReadMode() {
-    return cacheMode;
+    return cacheReadMode;
   }
 
   @Override

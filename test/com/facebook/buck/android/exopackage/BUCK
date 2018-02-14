@@ -1,0 +1,83 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
+
+STANDARD_TEST_SRCS = [
+    "*Test.java",
+]
+
+UTILS_SRCS = [
+    "TestAndroidDevice.java",
+]
+
+java_immutables_library(
+    name = "utils",
+    srcs = UTILS_SRCS,
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/android:helpers",
+        "//src/com/facebook/buck/android:utils",
+        "//src/com/facebook/buck/android/agent/util:util",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/immutables:immutables",
+        "//src/com/facebook/buck/util/sha1:sha1",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/android:ddmlib",
+        "//third-party/java/guava:guava",
+        "//third-party/java/immutables:immutables",
+        "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/junit:junit",
+    ],
+)
+
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = STANDARD_TEST_SRCS + UTILS_SRCS,
+    ),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":utils",
+        "//third-party/java/junit:junit",
+    ],
+)
+
+java_test(
+    name = "unit",
+    srcs = glob(
+        STANDARD_TEST_SRCS,
+    ),
+    deps = [
+        "//src/com/facebook/buck/android:config",
+        "//src/com/facebook/buck/android:helpers",
+        "//src/com/facebook/buck/android:rules",
+        "//src/com/facebook/buck/android:split_dex",
+        "//src/com/facebook/buck/android:steps",
+        "//src/com/facebook/buck/android:utils",
+        "//src/com/facebook/buck/android/aapt:aapt",
+        "//src/com/facebook/buck/android/apkmodule:apkmodule",
+        "//src/com/facebook/buck/android/redex:options",
+        "//src/com/facebook/buck/android/toolchain:toolchain",
+        "//src/com/facebook/buck/android/toolchain/ndk:ndk",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/event/external:external_lib",
+        "//src/com/facebook/buck/event/listener:BroadcastEventListener",
+        "//src/com/facebook/buck/event/listener:listener",
+        "//src/com/facebook/buck/rules:cli",
+        "//src/com/facebook/buck/rules:source_path",
+        "//test/com/facebook/buck/android:testutil",
+        "//test/com/facebook/buck/android:utils",
+        "//test/com/facebook/buck/event:testutil",
+        "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/android:ddmlib",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/junit:junit",
+    ],
+)

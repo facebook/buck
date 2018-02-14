@@ -17,7 +17,6 @@
 package com.facebook.buck.ide.intellij.aggregation;
 
 import com.facebook.buck.ide.intellij.model.IjModuleType;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -234,7 +233,7 @@ class AggregationTreeNode {
                 e.getValue().getModule() != null
                     && moduleType.equals(e.getValue().getModule().getModuleType()))
         .map(Map.Entry::getKey)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   public ImmutableSet<Path> getChildrenPathsByModuleTypeOrTag(
@@ -250,6 +249,6 @@ class AggregationTreeNode {
                   || moduleType.equals(e.getValue().getModule().getModuleType());
             })
         .map(Map.Entry::getKey)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 }

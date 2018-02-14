@@ -15,10 +15,11 @@
  */
 package com.facebook.buck.parser;
 
-import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.Cell;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -68,8 +69,8 @@ class PipelineNodeCache<K, T> {
       ListenableFuture<T> nodeJob =
           Futures.transformAsync(
               jobSupplier.get(),
-              input ->
-                  Futures.immediateFuture(cache.putComputedNodeIfNotPresent(cell, key, input)));
+              input -> Futures.immediateFuture(cache.putComputedNodeIfNotPresent(cell, key, input)),
+              MoreExecutors.directExecutor());
       resultFuture.setFuture(nodeJob);
     } catch (Throwable t) {
       resultFuture.setException(t);

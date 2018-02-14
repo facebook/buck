@@ -26,14 +26,16 @@ import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.ListeningProcessExecutor;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -43,6 +45,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -71,9 +74,9 @@ public final class RunCommand extends AbstractCommand {
   private List<String> withDashArguments = new ArrayList<>();
 
   private final Supplier<ImmutableList<String>> arguments =
-      Suppliers.memoize(
+      MoreSuppliers.memoize(
           () -> {
-            ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
+            Builder<String> builder = new Builder<>();
             builder.addAll(noDashArguments);
             builder.addAll(withDashArguments);
             return builder.build();
@@ -105,19 +108,19 @@ public final class RunCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     if (!hasTargetSpecified()) {
-      params.getBuckEventBus().post(ConsoleEvent.severe("No target given to run"));
-      params.getBuckEventBus().post(ConsoleEvent.severe("buck run <target> <arg1> <arg2>..."));
-      return 1;
+      throw new CommandLineException(
+          "no target given to run\nuse: buck run <target> <arg1> <arg2>...");
     }
 
     // Make sure the target is built.
     BuildCommand buildCommand =
         new BuildCommand(ImmutableList.of(getTarget(params.getBuckConfig())));
     try (Closeable contextCloser = buildCommand.prepareExecutionContext(params)) {
-      int exitCode = buildCommand.runWithoutHelp(params);
-      if (exitCode != 0) {
+      ExitCode exitCode = buildCommand.runWithoutHelp(params);
+      if (exitCode != ExitCode.SUCCESS) {
         return exitCode;
       }
     }
@@ -142,7 +145,7 @@ public final class RunCommand extends AbstractCommand {
                   "target "
                       + targetName
                       + " is not a binary rule (only binary rules can be `run`)"));
-      return 1;
+      return ExitCode.BUILD_ERROR;
     }
 
     // If we're running with buckd, we want to disconnect from NailGun and run the rule in the
@@ -176,7 +179,7 @@ public final class RunCommand extends AbstractCommand {
       ListeningProcessExecutor.LaunchedProcess process =
           processExecutor.launchProcess(processExecutorParams, processListener);
       try {
-        return processExecutor.waitForProcess(process);
+        return ExitCode.map(processExecutor.waitForProcess(process));
       } finally {
         processExecutor.destroyProcess(process, /* force */ false);
         processExecutor.waitForProcess(process);
@@ -198,7 +201,7 @@ public final class RunCommand extends AbstractCommand {
                       .build(),
               "cwd", params.getCell().getFilesystem().getRootPath());
       Files.write(Paths.get(commandArgsFile), ObjectMappers.WRITER.writeValueAsBytes(cmd));
-      return 0;
+      return ExitCode.SUCCESS;
     }
   }
 

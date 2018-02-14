@@ -18,10 +18,12 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
-import javax.tools.StandardJavaFileManager;
+import java.nio.file.Path;
 
 public interface ClassUsageFileWriter {
-  StandardJavaFileManager wrapFileManager(StandardJavaFileManager inner);
-
-  void writeFile(ProjectFilesystem filesystem, CellPathResolver cellPathResolver);
+  void writeFile(
+      ClassUsageTracker tracker,
+      Path relativePath,
+      ProjectFilesystem filesystem,
+      CellPathResolver cellPathResolver);
 }

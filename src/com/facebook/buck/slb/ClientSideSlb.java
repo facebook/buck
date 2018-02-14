@@ -19,7 +19,7 @@ package com.facebook.buck.slb;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.timing.Clock;
+import com.facebook.buck.util.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -152,7 +152,9 @@ public class ClientSideSlb implements HttpLoadBalancer {
       eventBus.post(new LoadBalancerPingEvent(eventData.build()));
       LOG.verbose("all pings complete %s", toString());
     } catch (InterruptedException ex) {
-      LOG.verbose("pings interrupted");
+      LOG.warn(ex, "ClientSideSlb was interrupted");
+      Thread.currentThread().interrupt();
+      throw new RuntimeException(ex);
     } catch (ExecutionException ex) {
       LOG.verbose(ex, "some pings failed");
     }

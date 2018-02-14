@@ -19,11 +19,11 @@ package com.facebook.buck.util;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Iterator;
+import java.util.function.Function;
 
 public final class Escaper {
 
@@ -33,7 +33,7 @@ public final class Escaper {
   private Escaper() {}
 
   /** The quoting style to use when escaping. */
-  public static enum Quoter {
+  public enum Quoter {
     SINGLE {
       @Override
       public String quote(String str) {

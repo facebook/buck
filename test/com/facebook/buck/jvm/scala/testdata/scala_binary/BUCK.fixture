@@ -1,61 +1,67 @@
 scala_library(
-    name='lib',
-    srcs=['Class1.scala'],
+    name = "lib",
+    srcs = ["Class1.scala"],
 )
 
 scala_library(
-    name='main',
-    srcs=['Main.scala'],
-    deps=[':lib'],
+    name = "main",
+    srcs = ["Main.scala"],
+    deps = [":lib"],
 )
 
 java_binary(
-    name='bin',
-    main_class='buck.Main',
-    deps=[
-        ':main',
+    name = "bin",
+    main_class = "buck.Main",
+    deps = [
+        ":main",
     ],
 )
 
 scala_library(
-    name='mixed',
-    srcs=['MainMixed.scala', 'Class2.java'],
+    name = "mixed",
+    srcs = [
+        "Class2.java",
+        "MainMixed.scala",
+    ],
 )
 
 java_binary(
-    name='bin_mixed',
-    main_class='buck.MainMixed',
-    deps=[
-        ':mixed',
+    name = "bin_mixed",
+    main_class = "buck.MainMixed",
+    deps = [
+        ":mixed",
     ],
 )
 
 ###### Compiler
 
 prebuilt_jar(
-    name='scala-library',
-    binary_jar='scala-library-2.11.7.jar',
+    name = "scala-library",
+    binary_jar = "scala-library-2.11.7.jar",
 )
 
 prebuilt_jar(
-    name='scala-reflect',
-    binary_jar='scala-reflect-2.11.7.jar',
-    deps=[':scala-library'],
+    name = "scala-reflect",
+    binary_jar = "scala-reflect-2.11.7.jar",
+    deps = [":scala-library"],
 )
 
 prebuilt_jar(
-    name='scala-compiler-lib',
-    binary_jar='scala-compiler-2.11.7.jar',
-    deps=[':scala-library', ':scala-reflect'],
+    name = "scala-compiler-lib",
+    binary_jar = "scala-compiler-2.11.7.jar",
+    deps = [
+        ":scala-library",
+        ":scala-reflect",
+    ],
 )
 
 java_binary(
-    name='scala-compiler',
-    main_class='scala.tools.nsc.Main',
-    deps=[':scala-compiler-lib'],
+    name = "scala-compiler",
+    main_class = "scala.tools.nsc.Main",
+    deps = [":scala-compiler-lib"],
 )
 
 sh_binary(
-    name='fake-scala-compiler',
-    main='scalac.sh',
+    name = "fake-scala-compiler",
+    main = "scalac.sh",
 )

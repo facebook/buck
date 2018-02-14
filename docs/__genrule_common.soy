@@ -22,9 +22,9 @@
   It will be subject to the following environment variable substitutions:
     <dl>
       <dt><code>SRCS</code><dt>
-      <dd>A space-delimited string expansion of the <code>srcs</code>
-      {sp}argument where each element of <code>srcs</code> will be
-      translated into an absolute path.</dd>
+      <dd>A string expansion of the <code>srcs</code> argument delimited by 
+      the <code>environment_expansion_separator</code> argument where each element
+      of <code>srcs</code> will be translated into an absolute path.</dd>
 
       <dt><code>SRCDIR</code><dt>
       <dd>The absolute path to a directory to which sources are copied
@@ -121,6 +121,18 @@
   {param desc}
    The type of this genrule. This is used for logging and is particularly useful for grouping
    different genrules that share an underlying logical "type".
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .environment_expansion_separator}
+{call buck.arg}
+  {param name: 'environment_expansion_separator' /}
+  {param default: '" "' /}
+  {param desc}
+   The delimiter between paths in environment variables that are populated by buck in genrules,
+   like SRCS, that can contain multiple paths. This can be useful if paths contain spaces.
   {/param}
 {/call}
 {/template}

@@ -26,7 +26,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
@@ -43,6 +43,7 @@ import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
@@ -291,7 +292,7 @@ public class CxxTestDescriptionTest {
                     test.getBuildTarget(), Optional.empty()));
     assertThat(
         Arg.stringify(binary.getArgs(), pathResolver),
-        hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
+        hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
     assertThat(binary.getBuildDeps(), hasItem(dep));
   }
 
@@ -325,7 +326,7 @@ public class CxxTestDescriptionTest {
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
         Arg.stringify(binary.getArgs(), pathResolver),
-        hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
+        hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
     assertThat(binary.getBuildDeps(), hasItem(dep));
   }
 
@@ -364,7 +365,7 @@ public class CxxTestDescriptionTest {
                     test.getBuildTarget(), Optional.empty()));
     assertThat(
         Arg.stringify(binary.getArgs(), pathResolver),
-        hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
+        hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
     assertThat(binary.getBuildDeps(), hasItem(dep));
   }
 
@@ -402,8 +403,7 @@ public class CxxTestDescriptionTest {
     assertThat(
         Arg.stringify(binary.getArgs(), pathResolver),
         Matchers.not(
-            hasItem(
-                String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver)))));
+            hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath()))));
     assertThat(binary.getBuildDeps(), Matchers.not(hasItem(dep)));
   }
 
@@ -463,7 +463,7 @@ public class CxxTestDescriptionTest {
                 DefaultFileHashCache.createDefaultFileHashCache(
                     rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT)));
     DefaultRuleKeyFactory factory =
-        new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(fileHashCache, pathResolver, ruleFinder);
     return factory.build(rule);
   }
 }

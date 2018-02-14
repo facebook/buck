@@ -1,6 +1,13 @@
-java_library(
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
     name = "parser",
     srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/parser/api:api",
+        "//src/com/facebook/buck/parser/exceptions:exceptions",
+        "//src/com/facebook/buck/rules/coercer:interface",
+    ],
     tests = [
         "//test/com/facebook/buck/skylark/parser:parser",
     ],
@@ -10,13 +17,13 @@ java_library(
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/log:api",
-        "//src/com/facebook/buck/parser/api:api",
         "//src/com/facebook/buck/parser/events:events",
-        "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/parser/options:options",
         "//src/com/facebook/buck/rules:build_rule",
-        "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/skylark/function:function",
+        "//src/com/facebook/buck/skylark/io:io",
+        "//src/com/facebook/buck/skylark/io/impl:impl",
+        "//src/com/facebook/buck/skylark/packages:packages",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//third-party/java/bazel:skylark-lang",

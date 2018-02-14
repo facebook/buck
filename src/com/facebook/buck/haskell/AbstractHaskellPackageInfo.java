@@ -15,26 +15,22 @@
  */
 package com.facebook.buck.haskell;
 
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
 
 /** Identifying information for a {@link HaskellPackage}. */
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractHaskellPackageInfo implements RuleKeyAppendable {
+abstract class AbstractHaskellPackageInfo implements AddsToRuleKey {
 
+  @AddToRuleKey
   public abstract String getName();
 
+  @AddToRuleKey
   public abstract String getVersion();
 
+  @AddToRuleKey
   public abstract String getIdentifier();
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("name", getName());
-    sink.setReflectively("version", getVersion());
-    sink.setReflectively("identifier", getIdentifier());
-  }
 }

@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -26,16 +25,18 @@ import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
-import java.util.Collections;
 import org.immutables.value.Value;
 
 public class AndroidManifestDescription implements Description<AndroidManifestDescriptionArg> {
+
+  private final AndroidManifestFactory androidManifestFactory;
+
+  public AndroidManifestDescription(AndroidManifestFactory androidManifestFactory) {
+    this.androidManifestFactory = androidManifestFactory;
+  }
 
   @Override
   public Class<AndroidManifestDescriptionArg> getConstructorArgType() {
@@ -51,33 +52,8 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AndroidManifestDescriptionArg args) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-
-    AndroidTransitiveDependencyGraph transitiveDependencyGraph =
-        new AndroidTransitiveDependencyGraph(resolver.getAllRules(args.getDeps()));
-    ImmutableSet<SourcePath> manifestFiles = transitiveDependencyGraph.findManifestFiles();
-
-    // The only rules that need to be built before this AndroidManifest are those
-    // responsible for generating the AndroidManifest.xml files in the manifestFiles set (and
-    // possibly the skeleton).
-    //
-    // If the skeleton is a BuildTargetSourcePath, then its build rule must also be in the deps.
-    // The skeleton does not appear to be in either params.getDeclaredDeps() or
-    // params.getExtraDeps(), even though the type of Arg.skeleton is SourcePath.
-    // TODO(simons): t4744625 This should happen automagically.
-    ImmutableSortedSet<BuildRule> newDeps =
-        ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(
-                ruleFinder.filterBuildRuleInputs(
-                    Sets.union(manifestFiles, Collections.singleton(args.getSkeleton()))))
-            .build();
-
-    return new AndroidManifest(
-        buildTarget,
-        projectFilesystem,
-        params.withDeclaredDeps(newDeps),
-        args.getSkeleton(),
-        manifestFiles);
+    return androidManifestFactory.createBuildRule(
+        buildTarget, projectFilesystem, resolver, args.getDeps(), args.getSkeleton());
   }
 
   @BuckStyleImmutable

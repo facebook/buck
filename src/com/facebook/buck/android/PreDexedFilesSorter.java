@@ -18,15 +18,15 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
-import com.facebook.buck.dalvik.CanaryFactory;
+import com.facebook.buck.android.dalvik.CanaryFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.classes.FileLike;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -230,7 +230,7 @@ public class PreDexedFilesSorter {
           primaryDexContents
               .stream()
               .map(DexWithClasses::getPathToDexFile)
-              .collect(MoreCollectors.toImmutableSet());
+              .collect(ImmutableSet.toImmutableSet());
 
       return new Result(
           apkModule,
@@ -257,7 +257,7 @@ public class PreDexedFilesSorter {
       throw new HumanReadableException(message.toString());
     }
 
-    /** @see com.facebook.buck.dalvik.CanaryFactory#create(String, int) */
+    /** @see com.facebook.buck.android.dalvik.CanaryFactory#create(String, int) */
     private DexWithClasses createCanary(
         final ProjectFilesystem filesystem,
         String storeName,
@@ -283,7 +283,7 @@ public class PreDexedFilesSorter {
                 filesystem.createParentDirs(classFile);
                 filesystem.copyToPath(inputStream, classFile);
               }
-              return StepExecutionResult.SUCCESS;
+              return StepExecutionResults.SUCCESS;
             }
           });
 

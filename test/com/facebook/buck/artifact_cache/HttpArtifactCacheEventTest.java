@@ -16,6 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.event.listener.ArtifactCacheTestUtils;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;

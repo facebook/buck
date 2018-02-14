@@ -20,12 +20,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
-import com.facebook.buck.apple.ApplePlatform;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -54,7 +56,7 @@ public class ProjectIntegrationTest {
             this, "project_generated_scheme_only_includes_dependencies", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("project", "--without-tests", "//Apps:workspace");
     result.assertSuccess();
 
@@ -68,7 +70,7 @@ public class ProjectIntegrationTest {
             this, "project_generated_scheme_includes_tests_and_dependencies", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("project", "//Apps:workspace");
+    ProcessResult result = workspace.runBuckCommand("project", "//Apps:workspace");
     result.assertSuccess();
 
     workspace.verify();
@@ -84,7 +86,7 @@ public class ProjectIntegrationTest {
             temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("project", "//Apps:workspace");
+    ProcessResult result = workspace.runBuckCommand("project", "//Apps:workspace");
     result.assertSuccess();
 
     workspace.verify();
@@ -97,7 +99,7 @@ public class ProjectIntegrationTest {
             this, "project_generated_schemes_do_not_include_other_tests", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("project");
+    ProcessResult result = workspace.runBuckCommand("project");
     result.assertSuccess();
 
     workspace.verify();
@@ -112,7 +114,7 @@ public class ProjectIntegrationTest {
             temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("project");
+    ProcessResult result = workspace.runBuckCommand("project");
     result.assertSuccess();
 
     workspace.verify();
@@ -125,7 +127,7 @@ public class ProjectIntegrationTest {
             this, "scheme_with_action_config_names", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("project");
+    ProcessResult result = workspace.runBuckCommand("project");
     result.assertSuccess();
 
     workspace.verify();
@@ -138,7 +140,7 @@ public class ProjectIntegrationTest {
             this, "scheme_with_extra_tests", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("project");
+    ProcessResult result = workspace.runBuckCommand("project");
     result.assertSuccess();
 
     workspace.verify();
@@ -151,7 +153,7 @@ public class ProjectIntegrationTest {
             this, "scheme_with_extra_tests_without_src_target", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("project");
+    ProcessResult result = workspace.runBuckCommand("project");
     result.assertSuccess();
 
     workspace.verify();
@@ -164,7 +166,7 @@ public class ProjectIntegrationTest {
             this, "generating_combined_project", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "project", "--combined-project", "--without-tests", "//Apps:workspace");
     result.assertSuccess();
@@ -179,7 +181,7 @@ public class ProjectIntegrationTest {
             this, "generating_root_directory_project", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("project", "//:bundle");
+    ProcessResult result = workspace.runBuckCommand("project", "//:bundle");
     result.assertSuccess();
 
     workspace.verify();
@@ -192,7 +194,7 @@ public class ProjectIntegrationTest {
             this, "generating_combined_project_with_tests", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("project", "--combined-project", "//Apps:workspace");
     result.assertSuccess();
 
@@ -206,7 +208,7 @@ public class ProjectIntegrationTest {
             this, "project_implicit_workspace_generation", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("project", "//bin:app");
+    ProcessResult result = workspace.runBuckCommand("project", "//bin:app");
     result.assertSuccess();
     Files.exists(workspace.resolve("bin/app.xcworkspace/contents.xcworkspacedata"));
     Files.exists(workspace.resolve("bin/bin.xcodeproj/project.pbxproj"));
@@ -219,7 +221,7 @@ public class ProjectIntegrationTest {
             this, "project_implicit_workspace_generation", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("project", "//lib:lib");
+    ProcessResult result = workspace.runBuckCommand("project", "//lib:lib");
     result.assertSuccess();
     Files.exists(workspace.resolve("lib/lib.xcworkspace/contents.xcworkspacedata"));
     Files.exists(workspace.resolve("lib/lib.xcodeproj/project.pbxproj"));
@@ -232,7 +234,7 @@ public class ProjectIntegrationTest {
             this, "project_implicit_workspace_generation", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("project", "//bin:bin");
+    ProcessResult result = workspace.runBuckCommand("project", "//bin:bin");
     result.assertSuccess();
     Files.exists(workspace.resolve("bin/bin.xcworkspace/contents.xcworkspacedata"));
     Files.exists(workspace.resolve("bin/bin.xcodeproj/project.pbxproj"));
@@ -287,7 +289,7 @@ public class ProjectIntegrationTest {
             this, "project_buckconfig_without_tests_generate", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("project", "//Apps:workspace");
+    ProcessResult result = workspace.runBuckCommand("project", "//Apps:workspace");
     result.assertSuccess();
 
     workspace.verify();
@@ -300,8 +302,7 @@ public class ProjectIntegrationTest {
             this, "project_buckconfig_without_tests_generate_with_tests", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("project", "--with-tests", "//Apps:workspace");
+    ProcessResult result = workspace.runBuckCommand("project", "--with-tests", "//Apps:workspace");
     result.assertSuccess();
 
     workspace.verify();
@@ -316,7 +317,7 @@ public class ProjectIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "project_focus", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "project",
             "--focus",
@@ -334,7 +335,7 @@ public class ProjectIntegrationTest {
             this, "project_focus_pattern", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("project", "--focus", "//Libraries/Dep1:", "//Apps:workspace");
     result.assertSuccess();
 
@@ -348,7 +349,7 @@ public class ProjectIntegrationTest {
             this, "project_focus_pattern_cell", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("project", "--focus", "bar//Dep2:", "//Apps:workspace");
     result.assertSuccess();
 
@@ -362,7 +363,7 @@ public class ProjectIntegrationTest {
             this, "project_focus_with_tests", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "project",
             "--config",
@@ -392,7 +393,7 @@ public class ProjectIntegrationTest {
             this, "project_with_unique_library_names", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "project", "-c", "cxx.unique_library_name_enabled=true", "//Apps:workspace");
     result.assertSuccess();
@@ -407,8 +408,7 @@ public class ProjectIntegrationTest {
             this, "target_using_genrule_source", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("project", "--show-full-output", "//lib:lib");
+    ProcessResult result = workspace.runBuckCommand("project", "--show-full-output", "//lib:lib");
     workspace.verify();
 
     assertEquals(
@@ -425,12 +425,114 @@ public class ProjectIntegrationTest {
             this, "target_using_genrule_source", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("project", "--show-output", "//lib:lib");
+    ProcessResult result = workspace.runBuckCommand("project", "--show-output", "//lib:lib");
     workspace.verify();
 
     assertEquals(
         "//lib:lib#default,static " + Paths.get("lib", "lib.xcworkspace") + System.lineSeparator(),
         result.getStdout());
+  }
+
+  @Test
+  public void testBuckProjectWithCell() throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_cell", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("project", "//Apps:workspace");
+    result.assertSuccess();
+
+    runXcodebuild(workspace, "Apps/TestApp.xcworkspace", "TestApp");
+  }
+
+  @Test
+  public void testBuckProjectWithEmbeddedCellBuckout() throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_cell", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "project",
+            "--config",
+            "project.embedded_cell_buck_out_enabled=true",
+            "//Apps:workspace");
+    result.assertSuccess();
+
+    runXcodebuild(workspace, "Apps/TestApp.xcworkspace", "TestApp");
+  }
+
+  @Test
+  public void testBuckProjectWithCellAndMergedHeaderMap() throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_cell", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "project", "--config", "apple.merge_header_maps_in_xcode=true", "//Apps:workspace");
+    result.assertSuccess();
+
+    runXcodebuild(workspace, "Apps/TestApp.xcworkspace", "TestApp");
+  }
+
+  @Test
+  public void testBuckProjectWithEmbeddedCellBuckoutAndMergedHeaderMap()
+      throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_cell", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "project",
+            "--config",
+            "project.embedded_cell_buck_out_enabled=true",
+            "--config",
+            "apple.merge_header_maps_in_xcode=true",
+            "//Apps:workspace");
+    result.assertSuccess();
+
+    runXcodebuild(workspace, "Apps/TestApp.xcworkspace", "TestApp");
+  }
+
+  private void runXcodebuild(ProjectWorkspace workspace, String workspacePath, String schemeName)
+      throws IOException, InterruptedException {
+    ProcessExecutor.Result processResult =
+        workspace.runCommand(
+            "xcodebuild",
+
+            // "json" output.
+            "-json",
+
+            // Make sure the output stays in the temp folder.
+            "-derivedDataPath",
+            "xcode-out/",
+
+            // Build the project that we just generated
+            "-workspace",
+            workspacePath,
+            "-scheme",
+            schemeName,
+
+            // Build for iphonesimulator
+            "-arch",
+            "x86_64",
+            "-sdk",
+            "iphonesimulator");
+    processResult.getStderr().ifPresent(System.err::print);
+    assertEquals("xcodebuild should succeed", 0, processResult.getExitCode());
   }
 }

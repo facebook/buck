@@ -20,10 +20,12 @@ import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -33,28 +35,28 @@ import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.MoreSuppliers;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /** Helper class for handling preprocessing related tasks of a cxx compilation rule. */
-final class PreprocessorDelegate implements RuleKeyAppendable {
+final class PreprocessorDelegate implements AddsToRuleKey {
 
   // Fields that are added to rule key as is.
-  private final Preprocessor preprocessor;
+  @AddToRuleKey private final Preprocessor preprocessor;
+
+  @AddToRuleKey
   private final RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction;
-  private final HeaderVerification headerVerification;
+
+  @AddToRuleKey private final HeaderVerification headerVerification;
 
   // Fields that added to the rule key with some processing.
-  private final PreprocessorFlags preprocessorFlags;
+  @AddToRuleKey private final PreprocessorFlags preprocessorFlags;
 
   // Fields that are not added to the rule key.
   private final DebugPathSanitizer sanitizer;
@@ -134,14 +136,6 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
 
   public Preprocessor getPreprocessor() {
     return preprocessor;
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("preprocessor", preprocessor);
-    sink.setReflectively("frameworkPathSearchPathFunction", frameworkPathSearchPathFunction);
-    sink.setReflectively("headerVerification", headerVerification);
-    preprocessorFlags.appendToRuleKey(sink);
   }
 
   public HeaderPathNormalizer getHeaderPathNormalizer() {
@@ -224,14 +218,19 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
 
   /** @see com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey */
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(Iterable<Path> dependencies) {
-    ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
+    Stream.Builder<SourcePath> inputsBuilder = Stream.builder();
 
     // Add inputs that we always use.
-    inputs.addAll(preprocessor.getInputs());
+    BuildableSupport.deriveInputs(preprocessor).forEach(inputsBuilder);
 
     // Prefix header is not represented in the dep file, so should be added manually.
     if (preprocessorFlags.getPrefixHeader().isPresent()) {
-      inputs.add(preprocessorFlags.getPrefixHeader().get());
+      inputsBuilder.add(preprocessorFlags.getPrefixHeader().get());
+    }
+
+    // Args can contain things like location macros, so extract any inputs we find.
+    for (Arg arg : preprocessorFlags.getOtherFlags().getAllFlags()) {
+      BuildableSupport.deriveInputs(arg).forEach(inputsBuilder);
     }
 
     // Add any header/include inputs that our dependency file said we used.
@@ -245,15 +244,22 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
     HeaderPathNormalizer headerPathNormalizer = getHeaderPathNormalizer();
     for (Path absolutePath : dependencies) {
       Preconditions.checkState(absolutePath.isAbsolute());
-      inputs.add(headerPathNormalizer.getSourcePathForAbsolutePath(absolutePath));
+      inputsBuilder.add(headerPathNormalizer.getSourcePathForAbsolutePath(absolutePath));
     }
 
-    return inputs.build();
+    return inputsBuilder
+        .build()
+        .filter(getCoveredByDepFilePredicate())
+        .collect(ImmutableList.toImmutableList());
   }
 
   public Predicate<SourcePath> getCoveredByDepFilePredicate() {
     // TODO(jkeljo): I didn't know how to implement this, and didn't have time to figure it out.
-    return (SourcePath path) -> true;
+    // TODO(cjhopman): This should only include paths from the headers, not all the tools and other
+    // random things added to the rulekeys.
+    return (SourcePath path) ->
+        !(path instanceof PathSourcePath)
+            || !((PathSourcePath) path).getRelativePath().isAbsolute();
   }
 
   public HeaderVerification getHeaderVerification() {
@@ -264,49 +270,13 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
     return preprocessorFlags.getPrefixHeader();
   }
 
-  /**
-   * Generate a digest of the compiler flags.
-   *
-   * <p>Generated PCH files can only be used when compiling with similar compiler flags. This
-   * guarantees the uniqueness of the generated file.
-   *
-   * <p>Note: when building the hash for identifying the PCH itself, just pass {@code
-   * Optional.empty()}.
-   */
-  public String hashCommand(CxxToolFlags flags, Optional<CxxPrecompiledHeader> pch) {
-    return hashCommand(getCommand(flags, pch));
-  }
-
-  public String hashCommand(ImmutableList<Arg> flags) {
-    Hasher hasher = Hashing.murmur3_128().newHasher();
-    String workingDirString = workingDir.toString();
-    // Skips the executable argument (the first one) as that is not sanitized.
-    //
-    // TODO(#14644005): This currently won't support macros in the input flags.  I think we probably
-    // need to change the hasher here to use `RuleKeyObjectSink` so that it can handle `Arg`s
-    // directly and hash it appropriately.
-    for (Arg flag : flags) {
-      Preconditions.checkArgument(
-          flag.getInputs().isEmpty(), "precompiled header hashing does not support source paths");
-    }
-    for (String part : sanitizer.sanitizeFlags(Iterables.skip(Arg.stringify(flags, resolver), 1))) {
-      // TODO(#10251354): find a better way of dealing with getting a project dir normalized hash
-      if (part.startsWith(workingDirString)) {
-        part = "<WORKINGDIR>" + part.substring(workingDirString.length());
-      }
-      hasher.putString(part, Charsets.UTF_8);
-      hasher.putBoolean(false); // separator
-    }
-    return hasher.hash().toString();
-  }
-
   public PreprocessorFlags getPreprocessorFlags() {
     return preprocessorFlags;
   }
 
   public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     return ImmutableList.<BuildRule>builder()
-        .addAll(getPreprocessor().getDeps(ruleFinder))
+        .addAll(BuildableSupport.getDepsCollection(getPreprocessor(), ruleFinder))
         .addAll(getPreprocessorFlags().getDeps(ruleFinder))
         .build();
   }

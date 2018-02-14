@@ -31,6 +31,30 @@ Note: Buck is currently tested with (and therefore supports) version 1.5 of Go.
 {/template}
 
 /***/
+{template .cgo_compiler_flags_arg}
+{call buck.arg}
+  {param name : 'cgo_compiler_flags_arg' /}
+  {param default : '[]' /}
+  {param desc}
+  <p>
+    The set of additional compiler flags to pass to <code>go tool cgo</code>.
+  </p>
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .cgo_deps_arg}
+{call buck.arg}
+  {param name : 'cgo_deps' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of cgo_library dependencies which gets compiled and linked as cgo extension.
+ {/param}
+{/call}
+{/template}
+
+/***/
 {template .package_name_arg}
 {call buck.arg}
   {param name : 'package_name' /}

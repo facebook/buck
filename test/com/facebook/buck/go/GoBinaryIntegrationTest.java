@@ -18,9 +18,10 @@ package com.facebook.buck.go;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
@@ -64,9 +65,19 @@ public class GoBinaryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "asm", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("run", "//src/asm_test:bin");
+    ProcessResult result = workspace.runBuckCommand("run", "//src/asm_test:bin");
     result.assertSuccess();
     assertThat(result.getStdout(), Matchers.containsString("Sum is 6"));
+  }
+
+  @Test
+  public void binaryWithCgo() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cgo", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("run", "//src/cgo_test:bin");
+    result.assertSuccess();
+    assertThat(result.getStdout(), Matchers.containsString("fmt: Go string"));
   }
 
   @Test
@@ -160,6 +171,14 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
+  public void generatedSourceDir() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "generated_source_dir", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:main").assertSuccess();
+  }
+
+  @Test
   public void emptySources() throws IOException, InterruptedException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "empty_sources", tmp);
@@ -178,7 +197,7 @@ public class GoBinaryIntegrationTest {
     workspace.runBuckBuild("//:main").assertSuccess();
 
     // Clean the build products, as we're going to test that pulling from cache works.
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
 
     // Make a white-space only change -- enough to force a relink of the binary.
     workspace.replaceFileContents("main.go", "a.A()", " a.A()");

@@ -18,10 +18,11 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
@@ -29,7 +30,7 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 
-public class TargetNodeFactory {
+public class TargetNodeFactory implements NodeCopier {
   private final TypeCoercerFactory typeCoercerFactory;
 
   public TargetNodeFactory(TypeCoercerFactory typeCoercerFactory) {
@@ -97,7 +98,7 @@ public class TargetNodeFactory {
           && info.hasElementTypes(BuildTarget.class, SourcePath.class, Path.class)
           && !info.getName().equals("deps")) {
         detectBuildTargetsAndPathsForConstructorArg(
-            extraDepsBuilder, pathsBuilder, info, constructorArg);
+            cellRoots, extraDepsBuilder, pathsBuilder, info, constructorArg);
       }
     }
 
@@ -114,6 +115,11 @@ public class TargetNodeFactory {
                   buildTarget.getUnflavoredBuildTarget(), constructorArg));
     }
 
+    // This method uses the TargetNodeFactory, rather than just calling withBuildTarget,
+    // because
+    // ImplicitDepsInferringDescriptions may give different results for deps based on flavors.
+    //
+    // Note that this method strips away selected versions, and may be buggy because of it.
     return TargetNode.of(
         buildTarget,
         this,
@@ -132,6 +138,7 @@ public class TargetNodeFactory {
   }
 
   private static void detectBuildTargetsAndPathsForConstructorArg(
+      CellPathResolver cellRoots,
       final ImmutableSet.Builder<BuildTarget> depsBuilder,
       final ImmutableSet.Builder<Path> pathsBuilder,
       ParamInfo info,
@@ -141,6 +148,7 @@ public class TargetNodeFactory {
 
     try {
       info.traverse(
+          cellRoots,
           object -> {
             if (object instanceof PathSourcePath) {
               pathsBuilder.add(((PathSourcePath) object).getRelativePath());
@@ -161,6 +169,7 @@ public class TargetNodeFactory {
   }
 
   @SuppressWarnings("unchecked")
+  @Override
   public <T, U extends Description<T>> TargetNode<T, U> copyNodeWithDescription(
       TargetNode<?, ?> originalNode, U description) {
     try {
@@ -183,6 +192,7 @@ public class TargetNodeFactory {
     }
   }
 
+  @Override
   public <T, U extends Description<T>> TargetNode<T, U> copyNodeWithFlavors(
       TargetNode<T, U> originalNode, ImmutableSet<Flavor> flavors) {
     try {

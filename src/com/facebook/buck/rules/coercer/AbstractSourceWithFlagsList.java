@@ -25,12 +25,9 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Simple type representing a list of {@link SourceWithFlags}. */
-@Value.Immutable
+@Value.Immutable(builder = false, copy = false)
 @BuckStyleImmutable
 abstract class AbstractSourceWithFlagsList {
-
-  public static final SourceWithFlagsList EMPTY =
-      SourceWithFlagsList.ofUnnamedSources(ImmutableSortedSet.of());
 
   public enum Type {
     UNNAMED,

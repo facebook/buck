@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cxx.toolchain.elf;
 
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;

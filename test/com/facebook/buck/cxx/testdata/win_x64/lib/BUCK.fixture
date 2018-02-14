@@ -1,27 +1,27 @@
 cxx_library(
-    name='lib',
+    name = "lib",
     srcs = [
-        'src/lib.c'
+        "src/lib.c",
     ],
-    exported_headers = {
-        'lib.h': 'include/lib.h',
-    },
-    include_dirs = ['include'],
-    link_style = 'static',
     compiler_flags = WINDOWS_COMPILE_FLAGS,
+    exported_headers = {
+        "lib.h": "include/lib.h",
+    },
+    include_dirs = ["include"],
+    link_style = "static",
     linker_flags = WINDOWS_LINK_FLAGS,
-    preferred_linkage = 'static',
-    visibility = ['PUBLIC'],
+    preferred_linkage = "static",
+    visibility = ["PUBLIC"],
 )
 
 genrule(
-  name = 'lib-out',
-  cmd_exe = 'copy "$(location //lib:lib#windows-x86_64,static)" %OUT%',
-  out = 'lib.lib',
+    name = "lib-out",
+    out = "lib.lib",
+    cmd_exe = "copy \"$(location //lib:lib#windows-x86_64,static)\" %OUT%",
 )
 
 genrule(
-  name = 'dll-out',
-  cmd_exe = 'copy "$(location //lib:lib#windows-x86_64,shared)" %OUT%',
-  out = 'lib.dll',
+    name = "dll-out",
+    out = "lib.dll",
+    cmd_exe = "copy \"$(location //lib:lib#windows-x86_64,shared)\" %OUT%",
 )

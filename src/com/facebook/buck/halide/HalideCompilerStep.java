@@ -16,6 +16,7 @@
 
 package com.facebook.buck.halide;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
@@ -43,6 +44,7 @@ public class HalideCompilerStep extends ShellStep {
   private final Optional<ImmutableList<String>> compilerInvocationFlags;
 
   public HalideCompilerStep(
+      BuildTarget buildTarget,
       Path workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> compilerPrefix,
@@ -50,7 +52,7 @@ public class HalideCompilerStep extends ShellStep {
       String funcName,
       String halideTarget,
       Optional<ImmutableList<String>> compilerInvocationFlags) {
-    super(workingDirectory);
+    super(Optional.of(buildTarget), workingDirectory);
     this.environment = environment;
     this.compilerPrefix = compilerPrefix;
     this.outputDir = outputDir;

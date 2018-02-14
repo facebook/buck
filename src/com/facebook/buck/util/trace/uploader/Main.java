@@ -16,8 +16,9 @@
 
 package com.facebook.buck.util.trace.uploader;
 
-import com.facebook.buck.util.BestCompressionGZIPOutputStream;
 import com.facebook.buck.util.network.MacIpv6BugWorkaround;
+import com.facebook.buck.util.trace.uploader.types.CompressionType;
+import com.facebook.buck.util.zip.BestCompressionGZIPOutputStream;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Stopwatch;
@@ -29,6 +30,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -47,11 +49,18 @@ public final class Main {
   @Option(name = "--traceFilePath", required = true)
   private Path traceFilePath;
 
+  @Option(name = "--traceFileKind", required = true)
+  private String traceFileKind;
+
   @Option(name = "--baseUrl", required = true)
   private URI baseUrl;
 
   @Option(name = "--log", required = true)
   private File logFile;
+
+  @Option(name = "--compressionType", required = true)
+  @Nullable
+  private CompressionType compressionType;
 
   private PrintWriter log;
 
@@ -64,34 +73,63 @@ public final class Main {
     CmdLineParser parser = new CmdLineParser(main);
     try {
       parser.parseArgument(args);
-      main.run();
+      int exitCode = main.run();
+      System.exit(exitCode);
     } catch (CmdLineException e) {
       System.err.println(e.getMessage());
       parser.printUsage(System.err);
+      System.exit(1);
     }
   }
 
-  private void run() throws IOException {
+  private int run() throws IOException {
     log = new PrintWriter(logFile); // NOPMD this is just a log
     try {
-      upload();
+      return upload();
     } finally {
       log.close();
     }
   }
 
-  private void upload() {
+  private int upload() {
     Stopwatch timer = Stopwatch.createStarted();
     try {
       OkHttpClient client = new OkHttpClient();
-      HttpUrl url = HttpUrl.get(baseUrl).newBuilder().addQueryParameter("uuid", this.uuid).build();
-      Path compressedTracePath = gzip(traceFilePath);
+      HttpUrl url =
+          HttpUrl.get(baseUrl)
+              .newBuilder()
+              .addQueryParameter("uuid", this.uuid)
+              .addQueryParameter("trace_file_kind", this.traceFileKind)
+              .build();
+      Path fileToUpload = traceFilePath;
+      String mediaType = "application/data";
+      String traceName = traceFilePath.getFileName().toString();
+      boolean compressionEnabled = false;
+      if (compressionType != null) {
+        switch (compressionType) {
+          case GZIP:
+            fileToUpload = gzip(traceFilePath);
+            mediaType = "application/json+gzip";
+            traceName = traceName + ".gz";
+            compressionEnabled = true;
+            break;
+          case NONE:
+            break;
+        }
+      }
 
       log.format("Build ID: %s\n", uuid);
       log.format("Trace file: %s (%d) bytes\n", traceFilePath, Files.size(traceFilePath));
-      log.format("Compressed size: %d bytes\n", Files.size(compressedTracePath));
+      if (compressionEnabled) {
+        log.format("Compressed size: %d bytes\n", Files.size(fileToUpload));
+      }
       log.format("Upload URL: %s\n", url);
-      log.format("Uploading compressed trace...");
+      if (compressionEnabled) {
+        log.format("Uploading compressed trace...");
+      } else {
+        log.format("Uploading trace...");
+      }
+
       Request request =
           new Request.Builder()
               .url(url)
@@ -100,10 +138,8 @@ public final class Main {
                       .setType(MultipartBody.FORM)
                       .addFormDataPart(
                           "trace_file",
-                          traceFilePath.getFileName().toString() + ".gz",
-                          RequestBody.create(
-                              MediaType.parse("application/json+gzip"),
-                              compressedTracePath.toFile()))
+                          traceName,
+                          RequestBody.create(MediaType.parse(mediaType), fileToUpload.toFile()))
                       .build())
               .build();
 
@@ -113,12 +149,15 @@ public final class Main {
 
         if (root.get("success").asBoolean()) {
           log.format("Success!\nFind it at %s\n", root.get("content").get("uri").asText());
+          return 0;
         } else {
           log.format("Failed!\nMessage: %s\n", root.get("error").asText());
+          return 1;
         }
       }
     } catch (Exception e) {
       log.format("\nFailed to upload trace; %s\n", e.getMessage());
+      return 1;
     } finally {
       log.format("Elapsed time: %d millis", timer.elapsed(TimeUnit.MILLISECONDS));
     }

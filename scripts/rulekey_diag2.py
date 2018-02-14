@@ -286,7 +286,7 @@ def print_node(g, u):
 
 
 def print_help():
-    description = '''
+    description = """
 interactive commands:
     q                   quits
     h                   prints this help message
@@ -316,7 +316,7 @@ interactive commands:
     Note that some commands require the corresponding graph or keys file to be loaded.
     These files can be found at `buck-out/log/{build}/rule_key_diag_{graph|keys}.txt`.
     It is enough to specify just the containing folder though.
-    '''
+    """
     print(description)
 
 

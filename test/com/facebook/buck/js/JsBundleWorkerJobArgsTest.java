@@ -16,37 +16,36 @@
 
 package com.facebook.buck.js;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.model.Pair;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.shell.WorkerShellStep;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Preconditions;
+import com.facebook.buck.util.types.Pair;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.junit.Before;
 import org.junit.Test;
 
 public class JsBundleWorkerJobArgsTest {
-  private static final Pattern OUT_FILE_PATTERN = Pattern.compile("--out\\s+(\\S+)");
   private JsTestScenario scenario;
   private BuildContext context;
   private FakeBuildableContext fakeBuildableContext;
@@ -54,29 +53,29 @@ public class JsBundleWorkerJobArgsTest {
   @Before
   public void setUp() throws NoSuchBuildTargetException {
     scenario = JsTestScenario.builder().build();
-    context =
-        FakeBuildContext.withSourcePathResolver(
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(scenario.resolver)));
     fakeBuildableContext = new FakeBuildableContext();
+    buildContext(scenario);
   }
 
   @Test
-  public void testFileRamBundleFlavor() throws NoSuchBuildTargetException {
+  public void testFileRamBundleFlavor() throws NoSuchBuildTargetException, IOException {
     JsBundle bundle =
         scenario.createBundle(
             targetWithFlavors("//:arbitrary", JsFlavors.RAM_BUNDLE_FILES), ImmutableSortedSet.of());
 
-    assertThat(getJobArgs(bundle), startsWith("bundle --files-rambundle "));
+    JsonNode args = ObjectMappers.readValue(getJobArgs(bundle), JsonNode.class);
+    assertThat(args.get("ramBundle").asText(), equalTo("files"));
   }
 
   @Test
-  public void testIndexedRamBundleFlavor() throws NoSuchBuildTargetException {
+  public void testIndexedRamBundleFlavor() throws NoSuchBuildTargetException, IOException {
     JsBundle bundle =
         scenario.createBundle(
             targetWithFlavors("//:arbitrary", JsFlavors.RAM_BUNDLE_INDEXED),
             ImmutableSortedSet.of());
 
-    assertThat(getJobArgs(bundle), startsWith("bundle --indexed-rambundle "));
+    JsonNode args = ObjectMappers.readValue(getJobArgs(bundle), JsonNode.class);
+    assertThat(args.get("ramBundle").asText(), equalTo("indexed"));
   }
 
   @Test(expected = FlavorDomainException.class)
@@ -91,11 +90,11 @@ public class JsBundleWorkerJobArgsTest {
   }
 
   @Test
-  public void testBuildRootIsPassed() throws NoSuchBuildTargetException {
+  public void testBuildRootIsPassed() throws NoSuchBuildTargetException, IOException {
     JsBundle bundle = scenario.createBundle("//:arbitrary", ImmutableSortedSet.of());
+    JsonNode args = ObjectMappers.readValue(getJobArgs(bundle), JsonNode.class);
     assertThat(
-        getJobArgs(bundle),
-        containsString(String.format(" --root %s ", scenario.filesystem.getRootPath())));
+        args.get("rootPath").asText(), equalTo(scenario.filesystem.getRootPath().toString()));
   }
 
   @Test
@@ -135,6 +134,24 @@ public class JsBundleWorkerJobArgsTest {
     assertThat(getOutFile(bundle), equalTo(bundleName));
   }
 
+  @Test
+  public void testLocationMacrosInExtraJsonAreExpandedAndEscaped() {
+    BuildTarget referenced = BuildTargetFactory.newInstance("//needs\t\":escaping");
+    JsTestScenario scenario = JsTestScenario.builder().arbitraryRule(referenced).build();
+    JsBundle bundle =
+        scenario.createBundle(
+            "//:bundle",
+            builder -> builder.setExtraJson("[\"1 %s 2\"]", LocationMacro.of(referenced)));
+
+    buildContext(scenario);
+    assertThat(
+        getJobJson(bundle).get("extraData").toString(),
+        equalTo(
+            String.format(
+                "[\"1 %s/buck-out/gen/needs\\t\\\"/escaping/escaping 2\"]",
+                JsUtil.escapeJsonForStringEmbedding(context.getBuildCellRootPath().toString()))));
+  }
+
   private static String targetWithFlavors(String target, Flavor... flavors) {
     return BuildTargetFactory.newInstance(target)
         .withAppendedFlavors(flavors)
@@ -152,11 +169,22 @@ public class JsBundleWorkerJobArgsTest {
         .getJobArgs();
   }
 
+  private JsonNode getJobJson(JsBundle bundle) {
+    try {
+      return ObjectMappers.readValue(getJobArgs(bundle), JsonNode.class);
+    } catch (IOException error) {
+      throw new HumanReadableException(error, "Couldn't read bundle args as JSON");
+    }
+  }
+
   private String getOutFile(JsBundle bundle) {
-    String jobArgs = getJobArgs(bundle);
-    Matcher matcher = OUT_FILE_PATTERN.matcher(jobArgs);
-    Preconditions.checkState(
-        matcher.find(), "worker job arguments don't contain `--out ...` (got `%s`)", jobArgs);
-    return Paths.get(matcher.group(1)).getFileName().toString();
+    JsonNode args = getJobJson(bundle);
+    return Paths.get(args.get("bundlePath").asText()).getFileName().toString();
+  }
+
+  private void buildContext(JsTestScenario scenario) {
+    context =
+        FakeBuildContext.withSourcePathResolver(
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(scenario.resolver)));
   }
 }

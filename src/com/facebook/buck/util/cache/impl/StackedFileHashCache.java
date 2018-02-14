@@ -18,19 +18,21 @@ package com.facebook.buck.util.cache.impl;
 
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * Wraps a collection of {@link ProjectFilesystem}-specific {@link ProjectFileHashCache}s as a
@@ -184,6 +186,11 @@ public class StackedFileHashCache implements FileHashCache {
     }
 
     return builder.setCachesExamined(cachesExamined).setFilesExamined(filesExamined).build();
+  }
+
+  @Override
+  public Stream<Map.Entry<Path, HashCode>> debugDump() {
+    return caches.stream().flatMap(ProjectFileHashCache::debugDump);
   }
 
   @Override

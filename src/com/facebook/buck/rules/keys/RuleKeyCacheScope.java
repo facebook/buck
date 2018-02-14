@@ -24,7 +24,7 @@ package com.facebook.buck.rules.keys;
 public interface RuleKeyCacheScope<V> extends AutoCloseable {
 
   /** @return the scoped {@link RuleKeyCache}. */
-  RuleKeyCache<V> getCache();
+  TrackedRuleKeyCache<V> getCache();
 
   @Override
   void close();

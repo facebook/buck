@@ -45,6 +45,7 @@ public class AgentMain {
 
   private AgentMain() {}
 
+  public static final int LINE_LENGTH_LIMIT = 4096;
   public static final int CONNECT_TIMEOUT_MS = 5000;
   public static final int RECEIVE_TIMEOUT_MS = 20000;
   public static final int TOTAL_RECEIVE_TIMEOUT_MS_PER_MB = 2000;
@@ -66,8 +67,8 @@ public class AgentMain {
         doGetSignature(userArgs);
       } else if (command.equals("mkdir-p")) {
         doMkdirP(userArgs);
-      } else if (command.equals("receive-file")) {
-        doReceiveFile(userArgs);
+      } else if (command.equals("multi-receive-file")) {
+        doMultiReceiveFile(userArgs);
       } else {
         throw new IllegalArgumentException("Unknown command: " + command);
       }
@@ -109,33 +110,12 @@ public class AgentMain {
     }
   }
 
-  /**
-   * Receive a file over the network and write it to disk.
-   *
-   * <p>Arguments are
-   *
-   * <ol>
-   *   <li>The port to listen on.
-   *   <li>The size of the file to receive.
-   *   <li>The path to write it to.
-   * </ol>
-   *
-   * <p>At startup, the agent will print a textual secret key to stdout. It consists of exactly
-   * {@link AgentUtil#TEXT_SECRET_KEY_SIZE} bytes. The caller must prepend those bytes to the file
-   * being transmitted, in order to prevent another process from sending a malicious payload.
-   */
-  private static void doReceiveFile(List<String> userArgs) throws IOException {
-    if (userArgs.size() != 3) {
-      throw new IllegalArgumentException("usage: receive-file PORT SIZE PATH");
-    }
-
-    int port = Integer.parseInt(userArgs.get(0));
-    int size = Integer.parseInt(userArgs.get(1));
-    File path = new File(userArgs.get(2));
-
-    // First make sure we can bind to the port.
+  private static BufferedInputStream acceptAuthenticConnectionFromClient(int port)
+      throws IOException {
+    BufferedInputStream input;
     ServerSocket serverSocket = null;
     try {
+      // First make sure we can bind to the port.
       serverSocket = new ServerSocket(port);
 
       byte[] secretKey = createAndSendSessionKey();
@@ -144,20 +124,23 @@ public class AgentMain {
       serverSocket.setSoTimeout(CONNECT_TIMEOUT_MS);
       Socket connectionSocket = serverSocket.accept();
       connectionSocket.setSoTimeout(RECEIVE_TIMEOUT_MS);
-      InputStream input = connectionSocket.getInputStream();
+      input = new BufferedInputStream(connectionSocket.getInputStream());
 
       // Report that the socket has been opened.
       System.out.write(new byte[] {'z', '1', '\n'});
       System.out.flush();
 
+      // NOTE: We leak the client socket if this validation fails,
+      // but this is a short-lived program, so it's probably
+      // not worth the complexity to clean it up.
       receiveAndValidateSessionKey(secretKey, input);
-
-      doRawReceiveFile(path, size, input);
     } finally {
       if (serverSocket != null) {
         serverSocket.close();
       }
     }
+
+    return input;
   }
 
   private static byte[] createAndSendSessionKey() throws IOException {
@@ -251,5 +234,99 @@ public class AgentMain {
     if (!success) {
       throw new RuntimeException("Failed to rename temp file.");
     }
+  }
+
+  private static void doMultiReceiveFile(List<String> userArgs) throws IOException {
+    if (userArgs.size() != 3) {
+      throw new IllegalArgumentException("usage: multi-receive-file IP PORT NONCE");
+    }
+
+    String ip = userArgs.get(0);
+    int port = Integer.parseInt(userArgs.get(1));
+    int nonce = Integer.parseInt(userArgs.get(2));
+
+    if (ip.equals("-")) {
+      BufferedInputStream connection = acceptAuthenticConnectionFromClient(port);
+      // TODO: Maybe don't leak connection.
+      multiReceiveFileFromStream(connection);
+    } else {
+      multiReceiveFileFromServer(ip, port, nonce);
+    }
+  }
+
+  private static void multiReceiveFileFromServer(String ip, int port, int nonce)
+      throws IOException {
+    // Send a byte to trigger the installer to accept our connection.
+    System.out.println();
+    System.out.flush();
+
+    Socket clientSocket = null;
+    try {
+      clientSocket = new Socket(ip, port);
+      clientSocket.setSoTimeout(RECEIVE_TIMEOUT_MS);
+
+      byte[] nonceBuffer =
+          new byte[] {
+            (byte) ((nonce >> 24) & 0xFF),
+            (byte) ((nonce >> 16) & 0xFF),
+            (byte) ((nonce >> 8) & 0xFF),
+            (byte) (nonce & 0xFF),
+          };
+      clientSocket.getOutputStream().write(nonceBuffer);
+
+      BufferedInputStream stream = new BufferedInputStream(clientSocket.getInputStream());
+
+      multiReceiveFileFromStream(stream);
+    } finally {
+      if (clientSocket != null) {
+        clientSocket.close();
+      }
+    }
+  }
+
+  private static void multiReceiveFileFromStream(BufferedInputStream stream) throws IOException {
+    while (true) {
+      String header = readLine(stream);
+      int space = header.indexOf(' ');
+      if (space == -1) {
+        throw new IllegalStateException("No space in metadata line.");
+      }
+      // Skip past the hex header size that is only needed for the native agent.
+      String rest = header.substring(space + 1);
+      space = rest.indexOf(' ');
+      if (space == -1) {
+        throw new IllegalStateException("No second space in metadata line.");
+      }
+      int size = Integer.parseInt(rest.substring(0, space));
+      String fileName = rest.substring(space + 1);
+
+      if (size == 0 && fileName.equals("--continue")) {
+        continue;
+      }
+      if (size == 0 && fileName.equals("--complete")) {
+        break;
+      }
+
+      doRawReceiveFile(new File(fileName), size, stream);
+    }
+  }
+
+  private static String readLine(InputStream stream) throws IOException {
+    byte[] bytes = new byte[LINE_LENGTH_LIMIT];
+    int size = 0;
+    while (true) {
+      if (size >= bytes.length) {
+        throw new IllegalStateException("Line length too long.");
+      }
+      int nextByte = stream.read();
+      if (nextByte == -1) {
+        throw new IllegalStateException("Got EOF in middle of line.");
+      }
+      if (nextByte == '\n') {
+        break;
+      }
+      bytes[size++] = (byte) nextByte;
+    }
+    return new String(bytes, 0, size);
   }
 }

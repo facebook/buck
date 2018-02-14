@@ -19,6 +19,7 @@ package com.facebook.buck.io.filesystem.impl;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.util.sha1.Sha1HashCode;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
@@ -41,8 +42,8 @@ public final class DefaultProjectFilesystemDelegate implements ProjectFilesystem
   }
 
   @Override
-  public String getDetailsForLogging() {
-    return String.format("DefaultProjectFilesystemDelegate{root=%s}", root);
+  public ImmutableMap<String, ? extends Object> getDetailsForLogging() {
+    return ImmutableMap.of("filesystem", "default", "filesystem.root", root.toString());
   }
 
   @Override

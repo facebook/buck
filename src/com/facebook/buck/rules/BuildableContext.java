@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
 /**
@@ -26,21 +25,6 @@ import java.nio.file.Path;
  * BuildRule#getBuildSteps(BuildContext, BuildableContext)}.
  */
 public interface BuildableContext {
-
-  /**
-   * When building a {@link BuildRule}, any metadata about the output files for the rule should be
-   * recorded via this method. This ensures it will be stored in the {@link
-   * com.facebook.buck.artifact_cache.ArtifactCache} along with the output.
-   *
-   * <p>If a value for the specified {@code key} has already been set, an exception will be thrown.
-   * (If we discover a good reason for this to be allowed later, we can always relax this
-   * constraint.)
-   */
-  void addMetadata(String key, String value);
-
-  /** @see BuildInfoRecorder#addMetadata(String, ImmutableList) */
-  void addMetadata(String key, ImmutableList<String> values);
-
   /** @see BuildInfoRecorder#recordArtifact(Path) */
   void recordArtifact(Path pathToArtifact);
 }

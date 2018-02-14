@@ -20,6 +20,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.zip.CustomZipEntry;
 import com.facebook.buck.util.zip.CustomZipOutputStream;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
@@ -62,7 +63,7 @@ public class RepackZipEntriesStep implements Step {
    */
   public RepackZipEntriesStep(
       ProjectFilesystem filesystem, Path inputPath, Path outputPath, ImmutableSet<String> entries) {
-    this(filesystem, inputPath, outputPath, entries, ZipCompressionLevel.MAX_COMPRESSION_LEVEL);
+    this(filesystem, inputPath, outputPath, entries, ZipCompressionLevel.MAX);
   }
 
   /**
@@ -120,7 +121,7 @@ public class RepackZipEntriesStep implements Step {
         out.closeEntry();
       }
 
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
   }
 

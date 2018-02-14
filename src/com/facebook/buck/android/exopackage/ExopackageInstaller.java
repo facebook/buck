@@ -27,17 +27,18 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.NamedTemporaryFile;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.common.io.Closer;
 import java.io.File;
 import java.io.IOException;
@@ -47,6 +48,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /** ExopackageInstaller manages the installation of apps with the "exopackage" flag set to true. */
@@ -54,6 +56,9 @@ public class ExopackageInstaller {
   private static final Logger LOG = Logger.get(ExopackageInstaller.class);
 
   public static final Path EXOPACKAGE_INSTALL_ROOT = Paths.get("/data/local/tmp/exopackage/");
+  public static final String SECONDARY_DEX_TYPE = "secondary_dex";
+  public static final String NATIVE_LIBRARY_TYPE = "native_library";
+  public static final String RESOURCES_TYPE = "resources";
 
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus eventBus;
@@ -148,6 +153,13 @@ public class ExopackageInstaller {
       metadata.putAll(resourcesExoHelper.getMetadataToInstall());
     }
 
+    if (exoInfo.getModuleInfo().isPresent()) {
+      ModuleExoHelper moduleExoHelper =
+          new ModuleExoHelper(pathResolver, projectFilesystem, exoInfo.getModuleInfo().get());
+      wantedPaths.addAll(moduleExoHelper.getFilesToInstall().keySet());
+      metadata.putAll(moduleExoHelper.getMetadataToInstall());
+    }
+
     deleteUnwantedFiles(presentFiles, wantedPaths.build());
     installMetadata(metadata.build());
   }
@@ -157,20 +169,26 @@ public class ExopackageInstaller {
     if (exoInfo.getDexInfo().isPresent()) {
       DexExoHelper dexExoHelper =
           new DexExoHelper(pathResolver, projectFilesystem, exoInfo.getDexInfo().get());
-      installMissingFiles(presentFiles, dexExoHelper.getFilesToInstall(), "secondary_dex");
+      installMissingFiles(presentFiles, dexExoHelper.getFilesToInstall(), SECONDARY_DEX_TYPE);
     }
 
     if (exoInfo.getNativeLibsInfo().isPresent()) {
       NativeExoHelper nativeExoHelper =
           new NativeExoHelper(
               device, pathResolver, projectFilesystem, exoInfo.getNativeLibsInfo().get());
-      installMissingFiles(presentFiles, nativeExoHelper.getFilesToInstall(), "native_library");
+      installMissingFiles(presentFiles, nativeExoHelper.getFilesToInstall(), NATIVE_LIBRARY_TYPE);
     }
 
     if (exoInfo.getResourcesInfo().isPresent()) {
       ResourcesExoHelper resourcesExoHelper =
           new ResourcesExoHelper(pathResolver, projectFilesystem, exoInfo.getResourcesInfo().get());
-      installMissingFiles(presentFiles, resourcesExoHelper.getFilesToInstall(), "resources");
+      installMissingFiles(presentFiles, resourcesExoHelper.getFilesToInstall(), RESOURCES_TYPE);
+    }
+
+    if (exoInfo.getModuleInfo().isPresent()) {
+      ModuleExoHelper moduleExoHelper =
+          new ModuleExoHelper(pathResolver, projectFilesystem, exoInfo.getModuleInfo().get());
+      installMissingFiles(presentFiles, moduleExoHelper.getFilesToInstall(), "modular_dex");
     }
   }
 
@@ -181,7 +199,8 @@ public class ExopackageInstaller {
             exoInfo ->
                 exoInfo.getDexInfo().isPresent()
                     || exoInfo.getNativeLibsInfo().isPresent()
-                    || exoInfo.getResourcesInfo().isPresent())
+                    || exoInfo.getResourcesInfo().isPresent()
+                    || exoInfo.getModuleInfo().isPresent())
         .orElse(false);
   }
 
@@ -239,7 +258,9 @@ public class ExopackageInstaller {
             .entrySet()
             .stream()
             .filter(entry -> !presentFiles.contains(entry.getKey()))
-            .collect(MoreCollectors.toImmutableSortedMap(Map.Entry::getKey, Map.Entry::getValue));
+            .collect(
+                ImmutableSortedMap.toImmutableSortedMap(
+                    Ordering.natural(), Map.Entry::getKey, Map.Entry::getValue));
 
     installFiles(filesType, filesToInstall);
   }
@@ -249,8 +270,8 @@ public class ExopackageInstaller {
     ImmutableSortedSet<Path> filesToDelete =
         presentFiles
             .stream()
-            .filter(p -> !p.getFileName().equals("lock") && !wantedFiles.contains(p))
-            .collect(MoreCollectors.toImmutableSortedSet());
+            .filter(p -> !p.getFileName().toString().equals("lock") && !wantedFiles.contains(p))
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     deleteFiles(filesToDelete);
   }
 
@@ -258,7 +279,7 @@ public class ExopackageInstaller {
     filesToDelete
         .stream()
         .collect(
-            MoreCollectors.toImmutableListMultimap(
+            ImmutableListMultimap.toImmutableListMultimap(
                 path -> dataRoot.resolve(path).getParent(), path -> path.getFileName().toString()))
         .asMap()
         .forEach(
@@ -290,18 +311,17 @@ public class ExopackageInstaller {
                   throw new RuntimeException(e);
                 }
               });
+      // Plan the installation.
+      Map<Path, Path> installPaths =
+          filesToInstall
+              .entrySet()
+              .stream()
+              .collect(
+                  Collectors.toMap(
+                      entry -> dataRoot.resolve(entry.getKey()),
+                      entry -> projectFilesystem.resolve(entry.getValue())));
       // Install the files.
-      filesToInstall.forEach(
-          (devicePath, hostPath) -> {
-            Path destination = dataRoot.resolve(devicePath);
-            Path source = projectFilesystem.resolve(hostPath);
-            try (SimplePerfEvent.Scope ignored2 =
-                SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
-              device.installFile(destination, source);
-            } catch (Exception e) {
-              throw new RuntimeException(e);
-            }
-          });
+      device.installFiles(filesType, installPaths);
     }
   }
 

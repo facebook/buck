@@ -1,0 +1,16 @@
+cxx_library(
+    name = "dependency",
+    exported_headers = ["dependency.h"],
+)
+
+cxx_precompiled_header(
+    name = "pch",
+    src = "header.h",
+    deps = [":dependency"],
+)
+
+cxx_binary(
+    name = "main",
+    srcs = ["main.cpp"],
+    precompiled_header = ":pch",
+)

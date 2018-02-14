@@ -1,16 +1,16 @@
 java_library(
-  name = 'util',
-  srcs = [
-    'Util.java',
-  ],
+    name = "util",
+    srcs = [
+        "Util.java",
+    ],
 )
 
 java_library(
-  name = 'biz',
-  srcs = [
-    'SeriousBusiness.java',
-  ],
-  deps = [
-    ':util',
-  ],
+    name = "biz",
+    srcs = [
+        "SeriousBusiness.java",
+    ],
+    deps = [
+        ":util",
+    ],
 )

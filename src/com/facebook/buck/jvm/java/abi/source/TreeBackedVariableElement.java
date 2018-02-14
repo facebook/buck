@@ -49,6 +49,11 @@ class TreeBackedVariableElement extends TreeBackedElement implements ArtificialV
   }
 
   @Override
+  public void complete() {
+    asType();
+  }
+
+  @Override
   public List<? extends ArtificialElement> getEnclosedElements() {
     return Collections.emptyList();
   }

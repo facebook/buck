@@ -27,12 +27,9 @@ import java.util.concurrent.ExecutionException;
 public class FakeBuildEngine implements BuildEngine {
 
   private final ImmutableMap<BuildTarget, BuildResult> buildResults;
-  private final ImmutableMap<BuildTarget, RuleKey> ruleKeys;
 
-  public FakeBuildEngine(
-      Map<BuildTarget, BuildResult> buildResults, Map<BuildTarget, RuleKey> ruleKeys) {
+  public FakeBuildEngine(Map<BuildTarget, BuildResult> buildResults) {
     this.buildResults = ImmutableMap.copyOf(buildResults);
-    this.ruleKeys = ImmutableMap.copyOf(ruleKeys);
   }
 
   @Override
@@ -55,8 +52,8 @@ public class FakeBuildEngine implements BuildEngine {
   }
 
   @Override
-  public RuleKey getRuleKey(BuildTarget buildTarget) {
-    return ruleKeys.get(buildTarget);
+  public void terminateBuildWithFailure(Throwable failure) {
+    // No-op
   }
 
   @Override

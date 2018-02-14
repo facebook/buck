@@ -25,7 +25,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
 import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
-import com.facebook.buck.cxx.toolchain.Preprocessor;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -120,7 +121,7 @@ public class PrecompiledHeaderFeatureTest {
               toolType,
               headerFilename);
       assertNotEquals(
-          "should use either prefix header flag, or precompiled header flag, but never both:"
+          "should use either prefix header flag OR precompiled header flag; one but not both:"
               + " toolType:"
               + toolType
               + " pchEnabled:"
@@ -177,14 +178,11 @@ public class PrecompiledHeaderFeatureTest {
             // The default platform we're testing with doesn't include preprocessors for these.
             continue;
 
-            //$CASES-OMITTED$
+            // $CASES-OMITTED$
           default:
-            Preprocessor preprocessor =
-                CxxSourceTypes.getPreprocessor(platform, sourceType).resolve(resolver);
-
             assertEquals(
                 sourceType.getPrecompiledHeaderLanguage().isPresent(),
-                factory.canUsePrecompiledHeaders(config, preprocessor, sourceType));
+                factory.canUsePrecompiledHeaders(sourceType));
         }
       }
     }
@@ -347,10 +345,6 @@ public class PrecompiledHeaderFeatureTest {
         // TODO(steveo): windows support in the near future.
         // (This case is not hit; parameters at top of this test class don't include WINDOWS.)
         throw new IllegalStateException();
-
-      case DEFAULT:
-        // default not used in test.
-        throw new IllegalStateException();
     }
 
     return false;
@@ -383,10 +377,6 @@ public class PrecompiledHeaderFeatureTest {
         // TODO(steveo): windows support in the near future.
         // (This case is not hit; parameters at top of this test class don't include WINDOWS.)
         throw new IllegalStateException();
-
-      case DEFAULT:
-        // default not used in test.
-        throw new IllegalStateException();
     }
 
     return false;
@@ -408,7 +398,7 @@ public class PrecompiledHeaderFeatureTest {
         .setResolver(ruleResolver)
         .setPathResolver(pathResolver)
         .setRuleFinder(ruleFinder)
-        .setPicType(AbstractCxxSourceRuleFactory.PicType.PDC);
+        .setPicType(PicType.PDC);
   }
 
   private static CxxSourceRuleFactory.Builder preconfiguredSourceRuleFactoryBuilder(
@@ -434,7 +424,10 @@ public class PrecompiledHeaderFeatureTest {
    */
   private static CxxPlatform buildPlatform(CxxToolProvider.Type type, boolean pchEnabled) {
     return CxxPlatformUtils.build(buildConfig(pchEnabled))
-        .withCpp(new PreprocessorProvider(Paths.get("/usr/bin/foopp"), Optional.of(type)));
+        .withCpp(
+            new PreprocessorProvider(
+                PathSourcePath.of(new FakeProjectFilesystem(), Paths.get("/usr/bin/foopp")),
+                Optional.of(type)));
   }
 
   private static final CxxPlatform PLATFORM_SUPPORTING_PCH =

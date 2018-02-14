@@ -1,7 +1,7 @@
 java_library(
     name = "tip",
-    source = "1.8",
     srcs = glob(["src/**/*.java"]),
+    source = "1.8",
     visibility = [
         "PUBLIC",
     ],

@@ -16,8 +16,8 @@
 package com.facebook.buck.android.relinker;
 
 import com.facebook.buck.android.AndroidLinkableMetadata;
-import com.facebook.buck.android.toolchain.NdkCxxPlatform;
-import com.facebook.buck.android.toolchain.TargetCpuType;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -27,16 +27,16 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
-import com.google.common.base.Function;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -51,6 +51,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
@@ -76,11 +77,13 @@ public class NativeRelinker {
   private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
   private final ImmutableList<RelinkerRule> rules;
   private final ImmutableList<Pattern> symbolPatternWhitelist;
+  private final CellPathResolver cellPathResolver;
 
   public NativeRelinker(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
+      CellPathResolver cellPathResolver,
       SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
@@ -90,6 +93,7 @@ public class NativeRelinker {
       ImmutableList<Pattern> symbolPatternWhitelist) {
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
+    this.cellPathResolver = cellPathResolver;
     this.ruleFinder = ruleFinder;
     Preconditions.checkArgument(
         !linkableLibs.isEmpty() || !linkableLibsAssets.isEmpty(),
@@ -192,8 +196,9 @@ public class NativeRelinker {
 
     Function<SourcePath, SourcePath> pathMapper = Functions.forMap(pathMap.build());
     rules = relinkRules.build();
-    relinkedLibs = ImmutableMap.copyOf(Maps.transformValues(linkableLibs, pathMapper));
-    relinkedLibsAssets = ImmutableMap.copyOf(Maps.transformValues(linkableLibsAssets, pathMapper));
+    relinkedLibs = ImmutableMap.copyOf(Maps.transformValues(linkableLibs, pathMapper::apply));
+    relinkedLibsAssets =
+        ImmutableMap.copyOf(Maps.transformValues(linkableLibsAssets, pathMapper::apply));
   }
 
   private static DirectedAcyclicGraph<BuildRule> getBuildGraph(Set<BuildRule> rules) {
@@ -249,8 +254,9 @@ public class NativeRelinker {
         projectFilesystem,
         relinkerParams,
         resolver,
+        cellPathResolver,
         ruleFinder,
-        ImmutableSortedSet.copyOf(Lists.transform(relinkerDeps, getSymbolsNeeded)),
+        ImmutableSortedSet.copyOf(Lists.transform(relinkerDeps, getSymbolsNeeded::apply)),
         cpuType,
         Preconditions.checkNotNull(nativePlatforms.get(cpuType)).getObjdump(),
         cxxBuckConfig,

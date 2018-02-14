@@ -1,15 +1,14 @@
-
 export_file(
-  name = 'visible-target',
-  src = 'secondary//:hello',
+    name = "visible-target",
+    src = "secondary//:hello",
 )
 
 export_file(
-  name = 'not-visible-target',
-  src = 'secondary//:hello',
+    name = "not-visible-target",
+    src = "secondary//:hello",
 )
 
 export_file(
-  name = 'public-target',
-  src = 'secondary//:public',
+    name = "public-target",
+    src = "secondary//:public",
 )

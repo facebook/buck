@@ -33,14 +33,13 @@ package com.facebook.buck.query;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * A 'rdeps(u, x, [, depth])' expression, which finds the reverse dependencies of the given argument
@@ -97,12 +96,14 @@ public class RdepsFunction implements QueryFunction {
     // Iterating depthBound+1 times because the first one processes the given argument set.
     for (int i = 0; i <= depthBound; i++) {
       // Restrict the search to nodes in the transitive closure of the universe set.
-      Iterable<QueryTarget> currentInUniverse = Iterables.filter(current, inUniversePredicate);
+      Iterable<QueryTarget> currentInUniverse =
+          Iterables.filter(current, inUniversePredicate::test);
 
       // Filter nodes visited before.
       Collection<QueryTarget> next =
           env.getReverseDeps(
-              Iterables.filter(currentInUniverse, Predicates.not(visited::contains)));
+              Iterables.filter(
+                  currentInUniverse, ((Predicate<Object>) visited::contains).negate()::test));
       Iterables.addAll(visited, currentInUniverse);
       if (next.isEmpty()) {
         break;

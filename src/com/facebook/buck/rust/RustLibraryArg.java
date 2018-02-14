@@ -16,66 +16,35 @@
 
 package com.facebook.buck.rust;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.HasSourcePath;
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
-import java.util.SortedSet;
+import java.util.function.Consumer;
 
 /** Generate linker command line for Rust library when used as a dependency. */
 public class RustLibraryArg implements Arg, HasSourcePath {
-  private final SourcePathResolver resolver;
-  private final String crate;
-  private final SortedSet<BuildRule> deps;
-  private final SourcePath rlib;
-  private final boolean direct;
+  @AddToRuleKey private final String crate;
+  @AddToRuleKey private final SourcePath rlib;
+  @AddToRuleKey private final boolean direct;
 
-  public RustLibraryArg(
-      SourcePathResolver resolver,
-      String crate,
-      SourcePath rlib,
-      boolean direct,
-      SortedSet<BuildRule> deps) {
-    this.resolver = resolver;
+  RustLibraryArg(String crate, SourcePath rlib, boolean direct) {
     this.crate = crate;
     this.rlib = rlib;
     this.direct = direct;
-    this.deps = deps;
   }
 
   @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    ImmutableSet.Builder<BuildRule> deps = ImmutableSet.builder();
-
-    deps.addAll(ruleFinder.filterBuildRuleInputs(getInputs()));
-    deps.addAll(this.deps);
-
-    return deps.build();
-  }
-
-  @Override
-  public ImmutableList<SourcePath> getInputs() {
-    return ImmutableList.of(rlib);
-  }
-
-  @Override
-  public void appendToCommandLine(
-      ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
-    Path path = resolver.getRelativePath(rlib);
-
+  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    Path path = pathResolver.getRelativePath(rlib);
     // NOTE: each of these logical args must be put on the command line as a single parameter
     // (otherwise dedup might just remove one piece of it)
     if (direct) {
-      builder.add(String.format("--extern=%s=%s", crate, path));
+      consumer.accept(String.format("--extern=%s=%s", crate, path));
     } else {
-      builder.add(String.format("-Ldependency=%s", path.getParent()));
+      consumer.accept(String.format("-Ldependency=%s", path.getParent()));
     }
   }
 
@@ -98,13 +67,7 @@ public class RustLibraryArg implements Arg, HasSourcePath {
     if (direct != that.direct) {
       return false;
     }
-    if (!resolver.equals(that.resolver)) {
-      return false;
-    }
     if (!crate.equals(that.crate)) {
-      return false;
-    }
-    if (!deps.equals(that.deps)) {
       return false;
     }
     return rlib.equals(that.rlib);
@@ -112,18 +75,11 @@ public class RustLibraryArg implements Arg, HasSourcePath {
 
   @Override
   public int hashCode() {
-    int result = resolver.hashCode();
+    int result = crate.hashCode();
     result = 31 * result + crate.hashCode();
-    result = 31 * result + deps.hashCode();
     result = 31 * result + rlib.hashCode();
     result = 31 * result + (direct ? 1 : 0);
     return result;
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("crate", crate);
-    sink.setReflectively("rlib", rlib);
   }
 
   @Override

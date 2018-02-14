@@ -17,10 +17,10 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.base.Predicate;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.function.Predicate;
 
 public interface FilteredDirectoryCopier {
 

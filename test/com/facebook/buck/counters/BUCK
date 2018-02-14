@@ -1,3 +1,5 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
 standard_java_test(
     name = "counters",
     deps = [
@@ -9,14 +11,12 @@ standard_java_test(
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/graph:graph",
-        "//src/com/facebook/buck/hashing:hashing",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io:transport",
-        "//src/com/facebook/buck/jvm/core:packagefinder",
+        "//src/com/facebook/buck/jvm/core:core",
         "//src/com/facebook/buck/model:build_id",
         "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:interfaces",
@@ -26,12 +26,10 @@ standard_java_test(
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/test/selectors:selectors",
-        "//src/com/facebook/buck/timing:timing",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:io",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/autosparse:autosparse_config",
         "//src/com/facebook/buck/util/cache:cache",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/environment:environment",
@@ -42,7 +40,7 @@ standard_java_test(
         "//src/com/facebook/buck/versions:types",
         "//src/com/facebook/buck/worker:worker_process",
         "//test/com/facebook/buck/testutil:testutil",
-        "//test/com/facebook/buck/timing:testutil",
+        "//test/com/facebook/buck/util/timing:testutil",
         "//third-party/java/easymock:easymock",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:java-hamcrest",

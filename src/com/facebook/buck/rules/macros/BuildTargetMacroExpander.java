@@ -27,10 +27,10 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
-import javax.annotation.Nullable;
 
 /**
  * Abstract expander which resolves using a references to another {@link BuildRule}.
@@ -41,7 +41,7 @@ import javax.annotation.Nullable;
 public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
     extends AbstractMacroExpanderWithoutPrecomputedWork<M> {
 
-  protected abstract String expand(SourcePathResolver resolver, BuildRule rule)
+  protected abstract Arg expand(SourcePathResolver resolver, M macro, BuildRule rule)
       throws MacroException;
 
   protected BuildRule resolve(BuildRuleResolver resolver, M input) throws MacroException {
@@ -67,25 +67,12 @@ public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
   }
 
   @Override
-  public String expandFrom(
+  public Arg expandFrom(
       BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, M input)
       throws MacroException {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-    return expand(pathResolver, resolve(resolver, input));
-  }
-
-  protected ImmutableList<BuildRule> extractBuildTimeDeps(
-      @SuppressWarnings("unused") BuildRuleResolver resolver, BuildRule rule)
-      throws MacroException {
-    return ImmutableList.of(rule);
-  }
-
-  @Override
-  public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, M input)
-      throws MacroException {
-    return extractBuildTimeDeps(resolver, resolve(resolver, input));
+    return expand(pathResolver, input, resolve(resolver, input));
   }
 
   @Override
@@ -96,13 +83,5 @@ public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
       ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     buildDepsBuilder.add(input.getTarget());
-  }
-
-  @Override
-  @Nullable
-  public Object extractRuleKeyAppendablesFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, M input)
-      throws MacroException {
-    return resolve(resolver, input).getSourcePathToOutput();
   }
 }

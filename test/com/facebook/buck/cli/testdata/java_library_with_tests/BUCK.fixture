@@ -1,13 +1,13 @@
 java_library(
-  name = 'lib',
-  tests = [
-    ':test',
-  ],
+    name = "lib",
+    tests = [
+        ":test",
+    ],
 )
 
 java_test(
-  name = 'test',
-  srcs = [
-    'Test.java',
-  ],
+    name = "test",
+    srcs = [
+        "Test.java",
+    ],
 )

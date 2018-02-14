@@ -1,19 +1,19 @@
 kotlin_test(
-  name = 'passing',
-  srcs = [
-    'PassingUnitTest.kt',
-  ],
-  deps = [
-    '//:junit',
-  ],
+    name = "passing",
+    srcs = [
+        "PassingUnitTest.kt",
+    ],
+    deps = [
+        "//:junit",
+    ],
 )
 
 kotlin_test(
-  name = 'failing',
-  srcs = [
-    'FailingUnitTest.kt',
-  ],
-  deps = [
-    '//:junit',
-  ],
+    name = "failing",
+    srcs = [
+        "FailingUnitTest.kt",
+    ],
+    deps = [
+        "//:junit",
+    ],
 )

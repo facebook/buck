@@ -19,9 +19,9 @@ package com.facebook.buck.cli;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.test.selectors.TestSelectorParseException;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
+import java.util.function.Supplier;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -38,7 +38,9 @@ public class TestSelectorOptions {
     usage =
         "Select tests to run using <class>, #<method> or <class>#<method>.  "
             + "Selectors are interpreted as java.util.regex regular expressions.  "
-            + "If selectors are given, test result caching is disabled.  "
+            + "Not every language supports these selectors. Notably, C++ and python do "
+            + "not respect these filters. Note also that if an external test runner is used, "
+            + "this filter also ignored. "
             + "If the class (or method) part is omitted, all classes (or methods) will match.  "
             + "If both the class and method is omitted (the string '#') then all tests will match.  "
             + "Prefix a selector with '!' to exclude a class or method.  "
@@ -79,7 +81,7 @@ public class TestSelectorOptions {
         CmdLineParser parser, OptionDef option, Setter<Supplier<TestSelectorList>> setter)
         throws CmdLineException {
       super(parser, option, setter);
-      setter.addValue(Suppliers.memoize(builder::build));
+      setter.addValue(MoreSuppliers.memoize(builder::build));
     }
 
     @Override

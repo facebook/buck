@@ -17,6 +17,8 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.apple.project_generator.XCodeProjectCommandHelper;
+import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
+import com.facebook.buck.artifact_cache.NoopArtifactCache.NoopArtifactCacheFactory;
 import com.facebook.buck.cli.output.PrintStreamPathOutputPresenter;
 import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
 import com.facebook.buck.cli.parameter_extractors.ProjectViewParameters;
@@ -27,11 +29,13 @@ import com.facebook.buck.ide.intellij.IjProjectCommandHelper;
 import com.facebook.buck.ide.intellij.aggregation.AggregationMode;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ListeningProcessExecutor;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Ascii;
@@ -167,7 +171,7 @@ public class ProjectCommand extends BuildCommand {
   @Option(
     name = "--exclude-artifacts",
     usage =
-        "Don't include references to the artifacts created by compiling a target in"
+        "Don't include references to the artifacts created by compiling a target in "
             + "the module representing that target."
   )
   private boolean excludeArtifacts = false;
@@ -225,7 +229,10 @@ public class ProjectCommand extends BuildCommand {
   @Option(
     name = "--view",
     usage =
-        "Option that builds a Project View which is a directory containing symlinks to a single"
+        "Deprecated: this feature will be removed in future versions, see "
+            + "https://github.com/facebook/buck/issues/1567."
+            + "\n"
+            + "Option that builds a Project View which is a directory containing symlinks to a single"
             + " project's code and resources. This directory looks a lot like a standard IntelliJ "
             + "project with all resources under /res, but what's really important is that it "
             + "generates a single IntelliJ module, so that editing is much faster than when you "
@@ -252,21 +259,18 @@ public class ProjectCommand extends BuildCommand {
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException {
     final Ide projectIde =
         (ide == null) ? getIdeFromBuckConfig(params.getBuckConfig()).orElse(null) : ide;
 
     if (projectIde == null) {
-      params
-          .getConsole()
-          .getStdErr()
-          .println("\nCannot build a project: project IDE is not specified.");
-      return 1;
+      throw new CommandLineException("project IDE is not specified in Buck config or --ide");
     }
 
     int rc = runPreprocessScriptIfNeeded(params, projectIde);
     if (rc != 0) {
-      return rc;
+      return ExitCode.map(rc);
     }
 
     try (CommandThreadManager pool =
@@ -275,7 +279,7 @@ public class ProjectCommand extends BuildCommand {
       ListeningExecutorService executor = pool.getListeningExecutorService();
 
       params.getBuckEventBus().post(ProjectGenerationEvent.started());
-      int result;
+      ExitCode result;
       try {
         switch (projectIde) {
           case INTELLIJ:
@@ -303,6 +307,7 @@ public class ProjectCommand extends BuildCommand {
                     params.getVersionedTargetGraphCache(),
                     params.getTypeCoercerFactory(),
                     params.getCell(),
+                    params.getRuleKeyConfiguration(),
                     projectConfig,
                     getEnableParserProfiling(),
                     (buildTargets, disableCaching) ->
@@ -312,6 +317,12 @@ public class ProjectCommand extends BuildCommand {
             result = projectCommandHelper.parseTargetsAndRunProjectGenerator(getArguments());
             break;
           case XCODE:
+            AppleCxxPlatformsProvider appleCxxPlatformsProvider =
+                params
+                    .getCell()
+                    .getToolchainProvider()
+                    .getByName(
+                        AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProvider.class);
             XCodeProjectCommandHelper xcodeProjectCommandHelper =
                 new XCodeProjectCommandHelper(
                     params.getBuckEventBus(),
@@ -320,11 +331,18 @@ public class ProjectCommand extends BuildCommand {
                     params.getVersionedTargetGraphCache(),
                     params.getTypeCoercerFactory(),
                     params.getCell(),
+                    params.getRuleKeyConfiguration(),
                     params.getConsole(),
                     params.getProcessManager(),
                     params.getEnvironment(),
                     params.getExecutors().get(ExecutorPool.PROJECT),
                     getArguments(),
+                    appleCxxPlatformsProvider
+                        .getAppleCxxPlatforms()
+                        .getFlavors()
+                        .stream()
+                        .map(Flavor::toString)
+                        .collect(ImmutableSet.toImmutableSet()),
                     getEnableParserProfiling(),
                     withTests,
                     withoutTests,
@@ -365,21 +383,21 @@ public class ProjectCommand extends BuildCommand {
     return false;
   }
 
-  private int runBuild(CommandRunnerParams params, ImmutableList<String> arguments)
+  private ExitCode runBuild(CommandRunnerParams params, ImmutableList<String> arguments)
       throws IOException, InterruptedException {
     BuildCommand buildCommand = new BuildCommand(arguments);
     return buildCommand.run(params);
   }
 
-  private int runBuild(
+  private ExitCode runBuild(
       CommandRunnerParams params, ImmutableSet<BuildTarget> targets, boolean disableCaching)
       throws IOException, InterruptedException {
     BuildCommand buildCommand =
         new BuildCommand(
-            targets.stream().map(Object::toString).collect(MoreCollectors.toImmutableList()));
+            targets.stream().map(Object::toString).collect(ImmutableList.toImmutableList()));
     buildCommand.setKeepGoing(true);
-    buildCommand.setArtifactCacheDisabled(disableCaching);
-    return buildCommand.run(params);
+    return buildCommand.run(
+        disableCaching ? params.withArtifactCacheFactory(new NoopArtifactCacheFactory()) : params);
   }
 
   private int runPreprocessScriptIfNeeded(CommandRunnerParams params, Ide projectIde)

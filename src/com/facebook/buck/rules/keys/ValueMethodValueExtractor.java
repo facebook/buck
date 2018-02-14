@@ -19,28 +19,45 @@ package com.facebook.buck.rules.keys;
 import com.google.common.base.Preconditions;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /** Extracts a value of a given field, that is assumed to be accessible. */
 public class ValueMethodValueExtractor implements ValueExtractor {
-  private final Method method;
+  private static final Pattern GET_PATTERN = Pattern.compile("get[A-Z].*");
+  private static final Pattern IS_PATTERN = Pattern.compile("is[A-Z].*");
 
-  public ValueMethodValueExtractor(Method method) {
+  private final Method method;
+  private final String name;
+  private final String qualifiedName;
+
+  ValueMethodValueExtractor(Method method) {
     Preconditions.checkArgument(method.getParameterCount() == 0);
     Preconditions.checkArgument(!method.getReturnType().equals(Void.class));
     // TODO(cjhopman): Should this do any other verification of the signature/annotations on the
     // method?
     this.method = method;
+    this.qualifiedName = method.getDeclaringClass() + "." + method.getName();
+    String methodName = method.getName();
+
+    // Strip the leading get/is from names.
+    if (GET_PATTERN.matcher(methodName).matches()) {
+      this.name = Character.toLowerCase(methodName.charAt(3)) + methodName.substring(4);
+    } else if (IS_PATTERN.matcher(methodName).matches()) {
+      this.name = Character.toLowerCase(methodName.charAt(2)) + methodName.substring(3);
+    } else {
+      this.name = methodName;
+    }
   }
 
   @Override
   public String getFullyQualifiedName() {
-    return method.getDeclaringClass() + "." + method.getName();
+    return qualifiedName;
   }
 
   @Override
   public String getName() {
-    return method.getName();
+    return name;
   }
 
   @Override

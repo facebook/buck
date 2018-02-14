@@ -31,15 +31,16 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -90,7 +91,7 @@ public final class IjModuleGraphFactory {
                     targetNode ->
                         shouldConvertToIjModule(projectConfig.getProjectRoot(), targetNode)))
             .collect(
-                MoreCollectors.toImmutableListMultimap(
+                ImmutableListMultimap.toImmutableListMultimap(
                     targetNode -> targetNode.getBuildTarget().getBasePath(),
                     targetNode -> targetNode));
 
@@ -134,7 +135,7 @@ public final class IjModuleGraphFactory {
             .entrySet()
             .stream()
             .collect(
-                MoreCollectors.toImmutableMap(
+                ImmutableMap.toImmutableMap(
                     Map.Entry::getKey,
                     pathWithTargetNode ->
                         aggregationModuleFactory.createAggregationModule(
@@ -161,7 +162,6 @@ public final class IjModuleGraphFactory {
   }
 
   private static ImmutableSet<IjProjectElement> getProjectElementFromBuildTargets(
-      final ProjectFilesystem projectFilesystem,
       final TargetGraph targetGraph,
       final IjLibraryFactory libraryFactory,
       final ImmutableMap<BuildTarget, IjModule> rulesToModules,
@@ -170,30 +170,28 @@ public final class IjModuleGraphFactory {
     return buildTargetStream
         .filter(
             input -> {
-              TargetNode<?, ?> targetNode = targetGraph.get(input);
-              // IntelliJ doesn't support referring to source files which aren't below the root of
-              // the project. Filter out those cases proactively, so that we don't try to resolve
-              // files relative to the wrong ProjectFilesystem.
-              // Maybe one day someone will fix this.
-              return isInRootCell(projectFilesystem, targetNode);
-            })
-        .filter(
-            input -> {
               // The exported deps closure can contain references back to targets contained
               // in the module, so filter those out.
               return !module.getTargets().contains(input);
             })
-        .map(
+        .flatMap(
             depTarget -> {
+              List<IjProjectElement> elements = new ArrayList<>();
               IjModule depModule = rulesToModules.get(depTarget);
               if (depModule != null) {
-                return depModule;
+                elements.add(depModule);
               }
-              TargetNode<?, ?> targetNode = targetGraph.get(depTarget);
-              return libraryFactory.getLibrary(targetNode).orElse(null);
+              if (depModule == null || depModule.getNonSourceBuildTargets().contains(depTarget)) {
+                // all BuildTarget's are merged into IJModule
+                // if a BuildTarget is not built from Java sources, it will also be added as a
+                // library
+                TargetNode<?, ?> targetNode = targetGraph.get(depTarget);
+                elements.add(libraryFactory.getLibrary(targetNode).orElse(null));
+              }
+              return elements.stream();
             })
         .filter(Objects::nonNull)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   /**
@@ -258,7 +256,6 @@ public final class IjModuleGraphFactory {
         } else {
           depElements =
               getProjectElementFromBuildTargets(
-                  projectFilesystem,
                   targetGraph,
                   libraryFactory,
                   rulesToModules,
@@ -269,7 +266,6 @@ public final class IjModuleGraphFactory {
           if (projectConfig.isIncludeTransitiveDependency()) {
             transitiveDepElements =
                 getProjectElementFromBuildTargets(
-                    projectFilesystem,
                     targetGraph,
                     libraryFactory,
                     rulesToModules,

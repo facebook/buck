@@ -134,12 +134,14 @@ The following sections are recognized by Buck:
     'lua',
     'maven_repositories',
     'ndk',
+    'ocaml',
     'parser',
     'project',
     'python',
     'resources',
     'resources_per_rule',
     'rust',
+    'sandbox',
     'test',
     'thrift',
     'tools',
@@ -229,6 +231,19 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'android' /}
+  {param name: 'sdk_path' /}
+  {param example_value: '/Library/Android/sdk' /}
+  {param description}
+    This specifies the absolute path to the Android SDK that all Android code in the project should
+    be built against.  This is equivalent to setting the environment variable
+    <code>ANDROID_SDK=/Library/Android/sdk</code>. The environment variables
+    <code>ANDROID_SDK</code> and <code>ANDROID_HOME</code> both supercede the buckconfig setting.
+    The default is empty.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'android' /}
   {param name: 'target' /}
   {param example_value: 'Google Inc.:Google APIs:21' /}
   {param description}
@@ -236,6 +251,18 @@ $ buck targets --resolve-alias app#src_jar
     built against.  Even if not specified, the version that Buck chose to use will be printed to the
     console during the build.  A list of valid values on your system can be found by running{sp}
     <code>android list targets --compact</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'apk' /}
+  {param name: 'compression_level' /}
+  {param example_value: '6' /}
+  {param description}
+    This is the compression level used when deflating entries for APK. By default it's set
+    to <code>9</code>, which is best for binary size but makes APK creation slower.
+    If APK size is not a concern, as often is the case with CIs or during development, build time
+    can be improved by using smaller numbers or <code>0</code> to completely disable compression.
   {/param}
 {/call}
 
@@ -531,6 +558,31 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: 'ipa_compression_level' /}
+  {param example_value: 'min' /}
+  {param description}
+    Specify a compression level used when creating ipa. The possible values are:
+    <ul>
+      <li>
+        <code>none</code>: Do not compress ipa.
+      </li>
+      <li>
+        <code>min</code>: Use minimum compression level.
+      </li>
+      <li>
+        <code>default</code> (default): Use medium compression level.
+      </li>
+      <li>
+        <code>max</code>: Use maximum compression level.
+      </li>
+    </ul>
+
+    If omitted, the <code>default</code> value will be used.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'build' /}
   {param description}
@@ -562,17 +614,17 @@ $ buck targets --resolve-alias app#src_jar
 {call buckconfig.entry}
   {param section: 'build' /}
   {param name: 'depfiles' /}
-  {param example_value: 'enabled' /}
+  {param example_value: 'cache' /}
   {param description}
     Configures the use of dependency files for rules that support them.  This is an optimization
     that is useful when dependencies are over-specified and the rule can dynamically determine the
     subset of dependencies it actually needs.  The possible values are:
     <ul>
       <li>
-        <code>enabled</code> (default): Use dependency files to avoid unnecessary rebuilds.
+        <code>enabled</code>: Use dependency files to avoid unnecessary rebuilds.
       </li>
       <li>
-        <code>cache</code>: Use dependency files to avoid unnecessary rebuilds and to store/fetch
+        <code>cache</code> (default): Use dependency files to avoid unnecessary rebuilds and to store/fetch
         artifacts to/from the cache.
       </li>
       <li>
@@ -930,6 +982,24 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'cache' /}
+  {param name: 'http_max_store_attempts' /}
+  {param example_value: '1' /}
+  {param description}
+    Maximum number of times to attempt to store item to the cache before giving up.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'http_store_retry_interval_millis' /}
+  {param example_value: '1000' /}
+  {param description}
+    Interval to wait if previous cache store request failed.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
   {param name: 'http_max_store_size' /}
   {param example_value: '5000000' /}
   {param description}
@@ -1056,6 +1126,16 @@ $ buck targets --resolve-alias app#src_jar
     generated action graph with the one already in the cache in the case of a cache hit. If the
     graphs do not match the build is stopped and the mismatching rules are printed and logged.
   {/param}
+{/call}
+
+{call buckconfig.entry}
+	{param section: 'cache' /}
+	{param name: 'max_action_graph_cache_entries' /}
+	{param example_value: '3' /}
+	{param description}
+		Sets the maximum number of action graphs to cache. After this number, the least-recently-used
+		graph will be evicted. Defaults to 1.
+	{/param}
 {/call}
 
 {call buckconfig.entry}
@@ -1364,6 +1444,18 @@ $ buck build //big:expensive-rule            # Action Graph is reused.</pre>
   {param description}
     In case buck is unable to download a file, it will retry specified number of times before
     giving up. By default it's not set, so Buck is not going to retry failed downloads.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'download' /}
+  {param name: 'in_build' /}
+  {param example_value: 'true' /}
+  {param description}
+    If true, allow downloads to be part of the build process. If false, buck build / run / test
+    will require the user to run 'buck fetch' first. This generally should not be changed, to
+    avoid surprising users with unexpected build times, when the cause is mostly download times.
+    By default this set to false.
   {/param}
 {/call}
 
@@ -1686,6 +1778,16 @@ cxx_library(
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'default_reexport_all_header_dependencies' /}
+  {param example_value: 'true' /}
+  {param description}
+    Default value used for {call buck.reexport_all_header_dependencies /}, when
+    it's undefined on the build rule.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'doctor' /}
   {param description}
@@ -1988,6 +2090,16 @@ cxx_library(
 {/call}
 
 {call buckconfig.entry}
+  {param section: 'intellij' /}
+  {param name: 'default_min_android_sdk_version' /}
+  {param example_value: '9' /}
+  {param description}
+    Default minimum Android SDK version supported for this project. Overwritten by min SDK version if
+    specified in target's AndroidManifest.xml.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
   {param section: 'project' /}
   {param name: 'generate_android_manifest' /}
   {param example_value: 'true' /}
@@ -2163,6 +2275,58 @@ cxx_library(
         during the build.
       </li>
     </ul>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'java' /}
+  {param name: 'abi_generation_mode' /}
+  {param example_value: 'source' /}
+  {param description}
+    <p>Specifies how Buck should create ABI jars when computing {call buck.abi_rule_keys /}. Values
+    other than <code>class</code> may not be suitable for all rules; this setting may be overridden
+    on a per-rule basis using the <code>abi_generation_mode</code> parameter on each rule.<p>
+
+    <p>The valid modes are:
+      <ul>
+        <li>
+          <code>class</code> (default): creates an ABI jar for each library by first building the
+          library and then stripping out any information that is not part of the interface (such
+          as method bodies and private members).
+        </li>
+        <li>
+          <p><code>source</code>: creates an ABI jar for each library in the process of building the
+          library, via a plugin to the Java compiler. This improves build times by allowing each
+          library's dependents to start building before the library is done building.</p>
+          <p>Implies <code>jar_spool_mode = direct_to_jar</code>.</p>
+        </li>
+        <li>
+          <p><code>source_only</code>: creates an ABI jar for each library by referencing only the
+          source code of the library, without considering (most of) its dependencies. This can
+          drastically improve build times, especially in larger apps or in build environments with
+          a large number of cores by allowing all ABI jars to be built in parallel, and then all
+          library jars to be built in parallel (up to the available parallelism in the build
+          environment). Additionally, in environments with network-based caches it can reduce
+          the number of calls to the cache required for each build.</p>
+          <p>Requires some changes to how Java code is written. To migrate, first do some builds
+          in <code>migrating_to_source_only</code> mode, using {call buck.cmd_fix /} to
+          fix any issues encountered. Once migrated, errors will still be encountered from time
+          to time when new code does not meet the requirements of this mode.
+          {call buck.cmd_fix /} can be used to address these.</p>
+          <p>When building with <code>source_only</code>, using {call buck.cmd_build /}
+          <code> --keep-going</code> is recommended since some errors that occur when building an
+          ABI jar will actually have their root cause in another rule that builds later.</p>
+          <p>Read more about source-only ABIs&nbsp;
+          {call buck.concept_link}{param page: 'java_abis' /}{param name: 'here' /}{/call}.</p>
+        </li>
+        <li>
+          <p><code>migrating_to_source_only</code>: used when migrating from <code>source</code> to&nbsp;
+          <code>source_only</code>. Acts like <code>source</code>, but issues warnings (in
+          <code>buck.log</code>, not to the console) for any Java code that would cause errors under
+          <code>source_only</code>. {call buck.cmd_fix /} can be used to fix most such warnings.
+        </li>
+      </ul>
+    </p>
   {/param}
 {/call}
 
@@ -2499,11 +2663,35 @@ your <code>.buckjavaargs</code> file</a>:
 
 {call buckconfig.entry}
   {param section: 'ndk' /}
+  {param name: 'ndk_path' /}
+  {param example_value: '/Library/Android/ndk/r10c' /}
+  {param description}
+    This specifies the absolute path to the Android NDK. This is equivalent to setting the
+    environment variable <code>ANDROID_NDK=/Library/Android/ndk/r10c</code>. The environment
+    variables <code>ANDROID_NDK</code> and <code>NDK_HOME</code> both supercede the buckconfig
+    setting. The default is empty.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ndk' /}
+  {param name: 'ndk_repository_path' /}
+  {param example_value: '/Library/Android/ndk' /}
+  {param description}
+    This specifies the absolute path to a directory containing versions of the Android NDK. This is
+    equivalent to setting the environment variable
+    <code>ANDROID_NDK_REPOSITORY=/Library/Android/ndk</code>. The environment variable supercedes
+    the buckconfig setting. The default is empty.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ndk' /}
   {param name: 'app_platform' /}
   {param example_value: 'android-21' /}
   {param description}
     The android platform libraries that the code is targetting.  This is equivalent to the{sp}
-    <code>APP_TARGET</code> in the NDK build system.  The default is <code>android-9</code>.
+    <code>APP_TARGET</code> in the NDK build system.  The default is <code>android-16</code>.
   {/param}
 {/call}
 
@@ -2572,6 +2760,80 @@ your <code>.buckjavaargs</code> file</a>:
 {/call}
 
 {call buckconfig.section}
+  {param name: 'ocaml' /}
+  {param description}
+    <p>
+      This section configures the paths to the OCaml toolchain's binaries.
+    </p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ocaml' /}
+  {param name: 'ocaml.bytecode.compiler' /}
+  {param example_value: '/usr/local/bin/ocamlc.opt' /}
+  {param description}
+    The path to the <a href="https://caml.inria.fr/pub/docs/manual-ocaml/native.html">OCaml bytecode compiler (ocamlc)<a>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ocaml' /}
+  {param name: 'ocaml.compiler' /}
+  {param example_value: '/usr/local/bin/ocamlopt.opt' /}
+  {param description}
+    The path to the <a href="https://caml.inria.fr/pub/docs/manual-ocaml/comp.html">OCaml native-code compiler (ocamlopt)</a>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ocaml' /}
+  {param name: 'dep.tool' /}
+  {param example_value: '/usr/local/bin/ocamldep.opt' /}
+  {param description}
+    The path to the <a href="https://caml.inria.fr/pub/docs/manual-ocaml/depend.html">OCaml dependency generator (ocamldep)</a>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ocaml' /}
+  {param name: 'lex.compiler' /}
+  {param example_value: '/usr/local/bin/ocamllex.opt' /}
+  {param description}
+    The path to the <a href="https://caml.inria.fr/pub/docs/manual-ocaml/lexyacc.html#sec296">OCaml lexer generator (ocamllex)</a>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ocaml' /}
+  {param name: 'yacc.compiler' /}
+  {param example_value: '/usr/local/bin/ocamlyacc' /}
+  {param description}
+    The path to the <a href="https://caml.inria.fr/pub/docs/manual-ocaml/lexyacc.html#sec307">OCaml parser generator (ocamlyacc)</a>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ocaml' /}
+  {param name: 'debug' /}
+  {param example_value: '/usr/local/bin/ocamldebug' /}
+  {param description}
+    The path to the <a href="https://caml.inria.fr/pub/docs/manual-ocaml/debugger.html">OCaml debugger (ocamldebug)</a>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ocaml' /}
+  {param name: 'interop.includes' /}
+  {param example_value: '/usr/local/lib/ocaml' /}
+  {param description}
+    The path to the OCaml standard library directory
+    (see <a href="https://caml.inria.fr/pub/docs/manual-ocaml/intfc.html">Interfacing C with OCaml</a>).
+  {/param}
+{/call}
+
+
+{call buckconfig.section}
   {param name: 'parser' /}
   {param description}
     This section defines settings for the BUCK parser.
@@ -2601,26 +2863,49 @@ your <code>.buckjavaargs</code> file</a>:
 
 {call buckconfig.entry}
   {param section: 'parser' /}
-  {param name: 'freeze_globals' /}
-  {param example_value: 'false' /}
+  {param name: 'polyglot_parsing_enabled' /}
+  {param example_value: 'true' /}
   {param description}
-    Indicates whether globals imported by {call buck.fn_load /} and{sp}
-    {call buck.fn_include_defs /} should be "frozen", which means they will be converted into
-    their read-only counterparts. This can be used to detect
-    accidental attempts to modify global variables causing non-determinism and hard to debug bugs.
-    By default, this is not enabled (<code>false</code>).
+    Indicates whether support for experimental polyglot parsing should be enabled. When enabled,
+    build file can have a <code># BUILD FILE SYNTAX: </code> marker followed by one of supported
+    syntax names that include <code>PYTHON_DSL</code> and an experimental <code>SKYLARK</code>.
+    This flag is disabled by default.
   {/param}
 {/call}
 
 {call buckconfig.entry}
   {param section: 'parser' /}
-  {param name: 'polyglot_parsing_enabled' /}
+  {param name: 'default_build_file_syntax' /}
+  {param example_value: 'SKYLARK' /}
+  {param description}
+    Specifies the default syntax assumed when parsing build files without explicit build syntax
+    marker (<code># BUILD FILE SYNTAX: </code>). This flag is only applicable when
+    <code>parser.polyglot_parsing_enabled</code> configuration is set to <code>true</code>.
+    By default it's value is set to <code>PYTHON_DSL</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'parser' /}
+  {param name: 'disable_implicit_native_rules' /}
   {param example_value: 'true' /}
   {param description}
-    Indicates whether support for experimental polyglot parsing should be enabled. When enabled,
-    build file can have a <code># BUILD FILE SYNTAX: </code> followed by one of supported syntax
-    names (currently <code>PYTHON_DSL</code>code> and very experimental <code>SKYLARK</code>.
-    This experimental flag is disabled by default.
+    If set, native rules (cxx_library, android_library, etc) cannot be used in BUCK files. This
+    can be useful if your team has a common set of macros that should be loaded, and one desires
+    a fast-feedback way to make sure that Buck's native rules are not inadvertently used. If set,
+    native rules can only be accessed via the 'native' object within an extension file that is
+    evaluated with {call buck.fn_load /} or {call buck.fn_include_defs /}.
+    This flag is disabled by default (native rules can be used in build files).
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'parser' /}
+  {param name: 'warn_about_deprecated_syntax' /}
+  {param example_value: 'false' /}
+  {param description}
+    If set, warnings about deprecated syntax in BUCK files will be issued.
+    This flag is enabled by default.
   {/param}
 {/call}
 
@@ -2705,10 +2990,10 @@ your <code>.buckjavaargs</code> file</a>:
 {call buckconfig.entry}
   {param section: 'project' /}
   {param name: 'watchman_query_timeout_ms' /}
-  {param example_value: '1000' /}
+  {param example_value: '60000' /}
   {param description}
     When communicating with <a href="https://facebook.github.io/watchman/">Watchman</a>, Buck will
-    wait this long for a response.  The defaut is <code>1000</code> ms.
+    wait this long for a response.  The defaut is <code>60000</code> ms.
   {/param}
 {/call}
 
@@ -2784,6 +3069,16 @@ your <code>.buckjavaargs</code> file</a>:
   {param example_value: 'math, Foo' /}
   {param description}
     A comma-separated list that configures which Python modules can be imported in build files.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'project' /}
+  {param name: 'motd' /}
+  {param example_value: '"DO NOT BREAK THE BUILD"' /}
+  {param description}
+    A plain text message that will be printed first when a user interacts with buck. This supports
+    simple special characters like newlines (\n).
   {/param}
 {/call}
 
@@ -3094,6 +3389,47 @@ your <code>.buckjavaargs</code> file</a>:
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'rust' /}
+  {param name: 'remap_src_paths' /}
+  {param example_value: 'no' /}
+  {param description}
+    Controls whether <code>rustc</code> remaps the source paths in its output. Buck will always
+    construct a link tree with the sources required for a given rule, which means the paths passed
+    to <code>rustc</code> are not the original source paths. This option will remap those paths
+    in compiler output, debug info, <code>file!()</code> and elsewhere to match the original
+    source names. The options are "no" (don't remap), "unstable" (remap using the experimental
+    version of these options) and "yes" (remap using the stable versions, probably 1.22 onwards).
+  {/param}
+{/call}
+
+{call buckconfig.section}
+  {param name: 'sandbox' /}
+  {param description}
+    This section controls sandboxing. Sandbox execution provides better guarantees about resources
+    accessible to the processes by using system-provided capabilities to restrict certain usages
+    (for example, restricting the set of files allowed to be read and write).
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'sandbox' /}
+  {param name: 'darwin_sandbox_enabled' /}
+  {param example_value: 'true' /}
+  {param description}
+    This option specifies whether sandboxing is enabled on OS X or not.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'sandbox' /}
+  {param name: 'genrule_sandbox_enabled' /}
+  {param example_value: 'true' /}
+  {param description}
+    Enables sandbox in <code>genrule</code>.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'test' /}
   {param description}
@@ -3155,7 +3491,7 @@ your <code>.buckjavaargs</code> file</a>:
         <li><code>target</code>: The {call buck.build_target /} of the test rule.</li>
         <li><code>type</code>: A string describing the type of the test.</li>
         <li>
-          <code>command</code>: An array of command line arguemtns the test runner should invoke to
+          <code>command</code>: An array of command line arguments the test runner should invoke to
           run the test.
         </li>
         <li>
@@ -3169,6 +3505,17 @@ your <code>.buckjavaargs</code> file</a>:
         </li>
       </ul>
     </p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'test' /}
+  {param name: 'thread_utilization_ratio' /}
+  {param example_value: '0.5' /}
+  {param description}
+    Sets the maximum number of threads to use for testing as a ratio of the number of threads
+    used for building. By default(<code>1.0</code>), buck uses runs tests on all threads that
+    were used for building.
   {/param}
 {/call}
 
@@ -3341,6 +3688,18 @@ your <code>.buckjavaargs</code> file</a>:
     during building and testing after an error is reported. Only effective
     when the super console is used. The value has to be a positive number.
     Defaults to the value of {call buckconfig.ui_thread_line_limit /}.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ui' /}
+  {param name: 'superconsole' /}
+  {param example_value: 'ENABLED' /}
+  {param description}
+    Whether the super console is enabled. If so, a more reactive UI will be shown.
+    Valid values are ENABLED, DISABLED, and AUTO. By default, this is set to AUTO
+    which will take OS, terminal settings and other things into account. In most 
+    interactive cases, it will be enabled.
   {/param}
 {/call}
 

@@ -17,6 +17,6 @@
 package com.facebook.buck.model.macros;
 
 /** Interface to define replacement behavior for @{link MacroFinder}. */
-public interface MacroReplacer {
-  String replace(MacroMatchResult matchResult) throws MacroException;
+public interface MacroReplacer<T> {
+  T replace(MacroMatchResult matchResult) throws MacroException;
 }

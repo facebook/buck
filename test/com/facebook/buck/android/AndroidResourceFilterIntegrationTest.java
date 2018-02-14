@@ -21,6 +21,12 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.android.toolchain.TestAndroidSdkLocationFactory;
+import com.facebook.buck.android.toolchain.impl.AndroidBuildToolsResolver;
+import com.facebook.buck.android.toolchain.impl.AndroidPlatformTargetProducer;
+import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
 import com.facebook.buck.artifact_cache.TestArtifactCaches;
@@ -29,9 +35,10 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ProcessExecutor;
@@ -39,7 +46,6 @@ import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -70,14 +76,16 @@ public class AndroidResourceFilterIntegrationTest {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
-    AndroidDirectoryResolver resolver =
-        new DefaultAndroidDirectoryResolver(
-            filesystem.getRootPath().getFileSystem(),
-            ImmutableMap.copyOf(System.getenv()),
-            Optional.empty(),
-            Optional.empty());
+
+    AndroidSdkLocation androidSdkLocation = TestAndroidSdkLocationFactory.create(filesystem);
+    AndroidBuildToolsResolver buildToolsResolver =
+        new AndroidBuildToolsResolver(AndroidNdkHelper.DEFAULT_CONFIG, androidSdkLocation);
     pathToAapt =
-        AndroidPlatformTarget.getDefaultPlatformTarget(resolver, Optional.empty(), Optional.empty())
+        AndroidPlatformTargetProducer.getDefaultPlatformTarget(
+                AndroidBuildToolsLocation.of(buildToolsResolver.getBuildToolsPath()),
+                androidSdkLocation,
+                Optional.empty(),
+                Optional.empty())
             .getAaptExecutable();
     String buildToolsVersion = pathToAapt.getParent().getFileName().toString();
     isBuildToolsNew = new VersionStringComparator().compare(buildToolsVersion, "21") >= 0;
@@ -94,7 +102,7 @@ public class AndroidResourceFilterIntegrationTest {
   @Test
   public void testApkWithoutResourceFilter() throws IOException {
     String target = "//apps/sample:app";
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", target);
+    ProcessResult result = workspace.runBuckCommand("build", target);
     result.assertSuccess();
 
     Path apkFile =
@@ -116,7 +124,7 @@ public class AndroidResourceFilterIntegrationTest {
   @Test
   public void testApkWithMdpiFilter() throws IOException {
     String target = "//apps/sample:app_mdpi";
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", target);
+    ProcessResult result = workspace.runBuckCommand("build", target);
     result.assertSuccess();
 
     Path apkFile =
@@ -138,7 +146,7 @@ public class AndroidResourceFilterIntegrationTest {
   @Test
   public void testModifyingImageRebuildsResourcesFilter() throws IOException {
     String target = "//apps/sample:app_mdpi";
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(target);
+    ProcessResult result = workspace.runBuckBuild(target);
     result.assertSuccess();
 
     Path apkFile =
@@ -170,7 +178,7 @@ public class AndroidResourceFilterIntegrationTest {
   @Test
   public void testApkWithXhdpiAndHdpiFilter() throws IOException {
     String target = "//apps/sample:app_hdpi_xhdpi";
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", target);
+    ProcessResult result = workspace.runBuckCommand("build", target);
     result.assertSuccess();
 
     Path apkFile =
@@ -192,7 +200,7 @@ public class AndroidResourceFilterIntegrationTest {
   @Test
   public void testPostFilterResourcesCmd() throws IOException {
     String target = "//apps/sample:app_post_filter_cmd";
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(target);
+    ProcessResult result = workspace.runBuckBuild(target);
     result.assertSuccess();
 
     Path apkFile =
@@ -245,9 +253,14 @@ public class AndroidResourceFilterIntegrationTest {
   }
 
   @Test
+  public void testPostFilterResourcesAndBanDuplicates() throws IOException {
+    workspace.runBuckBuild("//apps/sample:app_post_filter_no_dups").assertSuccess();
+  }
+
+  @Test
   public void testApkWithStringsAsAssets() throws IOException {
     String target = "//apps/sample:app_comp_str";
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", target);
+    ProcessResult result = workspace.runBuckCommand("build", target);
     result.assertSuccess();
 
     Path apkFile =
@@ -260,7 +273,6 @@ public class AndroidResourceFilterIntegrationTest {
 
   @Test
   public void testStringArtifactsAreCached() throws InterruptedException, IOException {
-    Assume.assumeFalse(true);
     workspace.enableDirCache();
     workspace.runBuckBuild("//apps/sample:app_comp_str").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
@@ -274,14 +286,14 @@ public class AndroidResourceFilterIntegrationTest {
             cache, new RuleKey(androidBinaryRuleKey.getHash()), Optional.empty());
     Files.delete(workspace.resolve(cachedFile));
 
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckBuild("//apps/sample:app_comp_str").assertSuccess();
   }
 
   @Test
   public void testApkWithStringsAsAssetsAndResourceFilter() throws IOException {
     String target = "//apps/sample:app_comp_str_xhdpi";
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(target);
+    ProcessResult result = workspace.runBuckBuild(target);
     result.assertSuccess();
 
     Path apkFile =
@@ -355,9 +367,8 @@ public class AndroidResourceFilterIntegrationTest {
   public void testEnglishBuildDoesntContainFrenchStringsAapt2()
       throws IOException, InterruptedException {
     // TODO(dreiss): Remove this when aapt2 is everywhere.
-    ProjectWorkspace.ProcessResult foundAapt2 =
-        workspace.runBuckBuild("//apps/sample:check_for_aapt2");
-    Assume.assumeTrue(foundAapt2.getExitCode() == 0);
+    ProcessResult foundAapt2 = workspace.runBuckBuild("//apps/sample:check_for_aapt2");
+    Assume.assumeTrue(foundAapt2.getExitCode().getCode() == 0);
 
     String target = "//apps/sample:app_en";
     workspace.replaceFileContents("apps/sample/BUCK", "'aapt1', # app_en", "'aapt2',");

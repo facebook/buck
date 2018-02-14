@@ -1,6 +1,6 @@
 java_library(
-  name = 'lib',
-  srcs = [
-    'Source.java',
-  ],
+    name = "lib",
+    srcs = [
+        "Source.java",
+    ],
 )

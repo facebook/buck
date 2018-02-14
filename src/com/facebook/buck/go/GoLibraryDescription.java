@@ -33,10 +33,11 @@ import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
+import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -49,12 +50,15 @@ import org.immutables.value.Value;
 public class GoLibraryDescription
     implements Description<GoLibraryDescriptionArg>,
         Flavored,
-        MetadataProvidingDescription<GoLibraryDescriptionArg> {
+        MetadataProvidingDescription<GoLibraryDescriptionArg>,
+        VersionPropagator<GoLibraryDescriptionArg> {
 
   private final GoBuckConfig goBuckConfig;
+  private final ToolchainProvider toolchainProvider;
 
-  public GoLibraryDescription(GoBuckConfig goBuckConfig) {
+  public GoLibraryDescription(GoBuckConfig goBuckConfig, ToolchainProvider toolchainProvider) {
     this.goBuckConfig = goBuckConfig;
+    this.toolchainProvider = toolchainProvider;
   }
 
   @Override
@@ -64,7 +68,7 @@ public class GoLibraryDescription
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return goBuckConfig.getPlatformFlavorDomain().containsAnyOf(flavors);
+    return getGoToolchain().getPlatformFlavorDomain().containsAnyOf(flavors);
   }
 
   @Override
@@ -75,7 +79,8 @@ public class GoLibraryDescription
       GoLibraryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) {
-    Optional<GoPlatform> platform = goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget);
+    Optional<GoPlatform> platform =
+        getGoToolchain().getPlatformFlavorDomain().getValue(buildTarget);
 
     if (metadataClass.isAssignableFrom(GoLinkable.class)) {
       Preconditions.checkState(platform.isPresent());
@@ -116,7 +121,8 @@ public class GoLibraryDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       GoLibraryDescriptionArg args) {
-    Optional<GoPlatform> platform = goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget);
+    GoToolchain goToolchain = getGoToolchain();
+    Optional<GoPlatform> platform = goToolchain.getPlatformFlavorDomain().getValue(buildTarget);
 
     if (platform.isPresent()) {
       return GoDescriptors.createGoCompileRule(
@@ -125,6 +131,7 @@ public class GoLibraryDescription
           params,
           resolver,
           goBuckConfig,
+          goToolchain,
           args.getPackageName()
               .map(Paths::get)
               .orElse(goBuckConfig.getDefaultPackageName(buildTarget)),
@@ -132,18 +139,25 @@ public class GoLibraryDescription
           args.getCompilerFlags(),
           args.getAssemblerFlags(),
           platform.get(),
-          FluentIterable.from(params.getDeclaredDeps().get())
-              .transform(BuildRule::getBuildTarget)
-              .append(args.getExportedDeps()));
+          new ImmutableList.Builder<BuildTarget>()
+              .addAll(
+                  params.getDeclaredDeps().get().stream().map(BuildRule::getBuildTarget).iterator())
+              .addAll(args.getExportedDeps())
+              .build(),
+          args.getCgoDeps());
     }
 
     return new NoopBuildRuleWithDeclaredAndExtraDeps(buildTarget, projectFilesystem, params);
   }
 
+  private GoToolchain getGoToolchain() {
+    return toolchainProvider.getByName(GoToolchain.DEFAULT_NAME, GoToolchain.class);
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractGoLibraryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests {
+      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests, HasCgo {
     ImmutableList<String> getCompilerFlags();
 
     ImmutableList<String> getAssemblerFlags();

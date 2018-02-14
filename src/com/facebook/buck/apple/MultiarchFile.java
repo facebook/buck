@@ -132,6 +132,7 @@ public class MultiarchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
     steps.add(
         new DefaultShellStep(
+            getBuildTarget(),
             getProjectFilesystem().getRootPath(),
             commandBuilder.build(),
             lipo.getEnvironment(context.getSourcePathResolver())));

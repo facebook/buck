@@ -1,18 +1,18 @@
 apple_library(
-    name='Mixed',
-    srcs=[
-      ':dummy.swift',
-      'Hello.m',
+    name = "Mixed",
+    srcs = [
+        "Hello.m",
+        ":dummy.swift",
     ],
-    exported_headers = ['Hello.h'],
-    bridging_header = 'Bridging-Header.h',
-    swift_version = '4',
+    bridging_header = "Bridging-Header.h",
+    exported_headers = ["Hello.h"],
     frameworks = [
-        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
     ],
+    swift_version = "4",
 )
 
 export_file(
-  name = 'dummy.swift',
-  visibility = ['PUBLIC'],
+    name = "dummy.swift",
+    visibility = ["PUBLIC"],
 )

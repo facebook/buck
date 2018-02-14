@@ -16,10 +16,12 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.artifact_cache.ArtifactCacheEvent.Operation;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.util.Map;
 import java.util.Optional;
 
 public class DirArtifactCacheEvent {
@@ -31,6 +33,11 @@ public class DirArtifactCacheEvent {
     @Override
     public ArtifactCacheEvent.Started newFetchStartedEvent(ImmutableSet<RuleKey> ruleKeys) {
       return new Started(ArtifactCacheEvent.Operation.FETCH, ruleKeys, Optional.empty());
+    }
+
+    @Override
+    public ArtifactCacheEvent.Started newContainsStartedEvent(ImmutableSet<RuleKey> ruleKeys) {
+      return new Started(Operation.MULTI_CONTAINS, ruleKeys, Optional.empty());
     }
 
     @Override
@@ -49,6 +56,12 @@ public class DirArtifactCacheEvent {
     public ArtifactCacheEvent.Finished newFetchFinishedEvent(
         ArtifactCacheEvent.Started started, CacheResult cacheResult) {
       return newFinishedEvent(started, Optional.of(cacheResult));
+    }
+
+    @Override
+    public ArtifactCacheEvent.Finished newContainsFinishedEvent(
+        ArtifactCacheEvent.Started started, Map<RuleKey, CacheResult> results) {
+      return newFinishedEvent(started, Optional.empty());
     }
 
     public Finished newFinishedEvent(

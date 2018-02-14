@@ -1,0 +1,23 @@
+EMPTY_CONFIGS = {
+    "Debug": {},
+    "Release": {},
+}
+
+apple_library(
+    name = "Dep1_1",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    exported_headers = ["deps1_1.h"],
+    frameworks = [],
+    visibility = ["PUBLIC"],
+    deps = [],
+)
+
+apple_library(
+    name = "Dep1_2",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    visibility = ["PUBLIC"],
+    deps = [],
+)

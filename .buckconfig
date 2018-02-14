@@ -1,3 +1,5 @@
+[repositories]
+    bazel_skylib = ./third-party/skylark/bazel-skylib
 [java]
     ; Indicates that any folder named src or test
     ; are folders that contain Java code.
@@ -5,26 +7,24 @@
     source_level = 8
     target_level = 8
     jar_spool_mode = direct_to_jar
-    abi_generation_mode = source
+    abi_generation_mode = source_only
     # There is some nondeterminism with the Immutables processor that causes verification to
     # fail intermittently at the moment. Once we're generating source ABIs as part of compilation
     # (instead of as a separate step), this can become an error again:
-    source_abi_verification_mode = log
+    source_abi_verification_mode = fail
     compile_against_abis = True
 [alias]
     buck = //programs:buck
     buck-android-support = //android/com/facebook/buck/android/support:buck-android-support
     eden = //test/com/facebook/buck/eden/cli:cli_bin
     hmaptool = //src/com/facebook/buck/apple/clang:hmaptool
-    ideabuck = //src/com/facebook/buck/intellij/ideabuck:ideabuck
+    ideabuck = //tools/ideabuck:ideabuck
     maven-importer = //src/com/facebook/buck/maven:resolver
-[buildfile]
-    includes = //DEFS
 [log]
     rule_key_logger_enabled = True
-[cache]
-    ; Disable the default directory cache.
-    mode =
+# [cache]
+#   ; Disable the default directory cache.
+#   mode = 
 [build]
     metadata_storage = sqlite
 [download]
@@ -72,3 +72,4 @@
   build_rule_minimum_duration_millis=500
 [parser]
   polyglot_parsing_enabled=true
+  default_build_file_syntax=skylark

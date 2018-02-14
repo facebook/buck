@@ -1,0 +1,21 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "bundler",
+    deps = [
+        "//src/com/facebook/buck/rules:cli",
+        "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/rules:source_path",
+        "//src/com/facebook/buck/rules/modern:modern",
+        "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/zip/bundler:bundler",
+        "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/rules:testutil",
+        "//test/com/facebook/buck/step:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

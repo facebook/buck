@@ -22,6 +22,8 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasClasspathEntries;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -34,7 +36,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
@@ -42,9 +43,8 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -55,6 +55,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 
 @BuildsAnnotationProcessor
 public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
@@ -106,13 +107,13 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.requiredForSourceOnlyAbi = requiredForSourceOnlyAbi;
 
     transitiveClasspathsSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 JavaLibraryClasspathProvider.getClasspathsFromLibraries(
                     getTransitiveClasspathDeps()));
 
     this.transitiveClasspathDepsSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () -> {
               if (provided) {
                 return JavaLibraryClasspathProvider.getClasspathDeps(
@@ -156,11 +157,10 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public JavaLibrary.Data initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
+  public JavaLibrary.Data initializeFromDisk() throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
     binaryJarContentsSupplier.load();
-    return JavaLibraryRules.initializeFromDisk(
-        getBuildTarget(), getProjectFilesystem(), onDiskBuildInfo);
+    return JavaLibraryRules.initializeFromDisk(getBuildTarget(), getProjectFilesystem());
   }
 
   @Override

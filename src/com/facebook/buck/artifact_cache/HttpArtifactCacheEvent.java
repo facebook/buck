@@ -282,6 +282,9 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
     Optional<Long> getArtifactSizeBytes();
 
     Optional<String> getErrorMessage();
+
+    /** @return if the store was for an actual artifact of for a manifest. */
+    Optional<Boolean> wasStoreForManifest();
   }
 
   static class MultiFetchStarted extends Started {

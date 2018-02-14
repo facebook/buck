@@ -46,7 +46,7 @@ public abstract class AbstractBreadthFirstThrowingTraversal<Node, E extends Thro
         continue;
       }
 
-      Iterable<Node> depsToVisit = this.visit(currentNode);
+      Iterable<? extends Node> depsToVisit = this.visit(currentNode);
       explored.add(currentNode);
 
       for (Node dep : depsToVisit) {
@@ -69,7 +69,7 @@ public abstract class AbstractBreadthFirstThrowingTraversal<Node, E extends Thro
    * @param node Visited graph node
    * @return The set of direct dependencies to visit after visiting this node.
    */
-  public abstract Iterable<Node> visit(Node node) throws E;
+  public abstract Iterable<? extends Node> visit(Node node) throws E;
 
   /**
    * This will typically be implemented as a lambda passed to {@link #traverse(Object, Visitor)} or

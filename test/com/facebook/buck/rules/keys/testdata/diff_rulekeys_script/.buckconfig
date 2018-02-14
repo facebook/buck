@@ -1,5 +1,9 @@
 [cxx]
   cc=//cxx:cxx
+  cc_type=gcc
   cpp=//cxx:cxx
+  cpp_type=gcc
   cxx=//cxx:cxx
+  cxx_type=gcc
   cxxpp=//cxx:cxx
+  cxxpp_type=gcc

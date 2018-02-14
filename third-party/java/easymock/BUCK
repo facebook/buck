@@ -5,7 +5,7 @@ prebuilt_jar(
         "LICENSE",
     ],
     visibility = [
-        "//src/com/facebook/buck/intellij/...",
+        "//tools/ideabuck/tests/...",
         "//test/...",
     ],
     deps = [

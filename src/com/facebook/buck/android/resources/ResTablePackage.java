@@ -16,11 +16,9 @@
 
 package com.facebook.buck.android.resources;
 
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
@@ -30,6 +28,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 /**
@@ -78,7 +77,7 @@ public class ResTablePackage extends ResChunk {
                 spec ->
                     ResTableTypeSpec.slice(
                         spec, countsToSlice.getOrDefault(spec.getResourceType(), 0)))
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
     StringPool keys = resPackage.keys;
 
@@ -131,7 +130,8 @@ public class ResTablePackage extends ResChunk {
     StringPool types = StringPool.get(slice(buf, typeStringOffset));
     StringPool keys = StringPool.get(slice(buf, keyStringOffset));
 
-    // TODO(cjhopman): aapt1 generates a lastPublicType/lastPublicKey at the end of types/keys. aapt2
+    // TODO(cjhopman): aapt1 generates a lastPublicType/lastPublicKey at the end of types/keys.
+    // aapt2
     // generates them as 0. Does this value matter?
     Preconditions.checkState(lastPublicType == types.getStringCount() || lastPublicType == 0);
     Preconditions.checkState(lastPublicKey == keys.getStringCount() || lastPublicKey == 0);
@@ -188,7 +188,7 @@ public class ResTablePackage extends ResChunk {
     this.typeSpecs = typeSpecs;
 
     name =
-        Suppliers.<String>memoize(
+        MoreSuppliers.memoize(
             () -> {
               // Construct a string from the full name data. This will end with a bunch of \0.
               String fullData = new String(nameData, Charsets.UTF_16LE);

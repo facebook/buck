@@ -20,6 +20,7 @@ import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
@@ -33,6 +34,8 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
@@ -45,15 +48,34 @@ public class CxxLibraryBuilder
         CxxLibraryDescriptionArg.Builder, CxxLibraryDescriptionArg, CxxLibraryDescription,
         BuildRule> {
 
+  private static CxxLibraryDescription createCxxLibraryDescription(
+      CxxBuckConfig cxxBuckConfig, FlavorDomain<CxxPlatform> cxxPlatforms) {
+    ToolchainProvider toolchainProvider =
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                CxxPlatformsProvider.DEFAULT_NAME,
+                CxxPlatformsProvider.of(CxxPlatformUtils.build(cxxBuckConfig), cxxPlatforms))
+            .build();
+    CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors =
+        new CxxLibraryImplicitFlavors(toolchainProvider, cxxBuckConfig);
+    CxxLibraryFactory cxxLibraryFactory =
+        new CxxLibraryFactory(
+            toolchainProvider,
+            cxxBuckConfig,
+            new InferBuckConfig(FakeBuckConfig.builder().build()));
+    CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
+        new CxxLibraryMetadataFactory(toolchainProvider);
+    return new CxxLibraryDescription(
+        toolchainProvider,
+        cxxLibraryImplicitFlavors,
+        new CxxLibraryFlavored(toolchainProvider, cxxBuckConfig),
+        cxxLibraryFactory,
+        cxxLibraryMetadataFactory);
+  }
+
   public CxxLibraryBuilder(
       BuildTarget target, CxxBuckConfig cxxBuckConfig, FlavorDomain<CxxPlatform> cxxPlatforms) {
-    super(
-        new CxxLibraryDescription(
-            cxxBuckConfig,
-            CxxPlatformUtils.build(cxxBuckConfig).getFlavor(),
-            new InferBuckConfig(FakeBuckConfig.builder().build()),
-            cxxPlatforms),
-        target);
+    super(createCxxLibraryDescription(cxxBuckConfig, cxxPlatforms), target);
   }
 
   public CxxLibraryBuilder(BuildTarget target, CxxBuckConfig cxxBuckConfig) {
@@ -116,6 +138,11 @@ public class CxxLibraryBuilder
 
   public CxxLibraryBuilder setSoname(String soname) {
     getArgForPopulating().setSoname(Optional.of(soname));
+    return this;
+  }
+
+  public CxxLibraryBuilder setStaticLibraryBasename(String staticLibraryBasename) {
+    getArgForPopulating().setStaticLibraryBasename(Optional.of(staticLibraryBasename));
     return this;
   }
 

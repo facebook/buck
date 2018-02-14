@@ -17,74 +17,40 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.macros.MacroException;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import java.util.Optional;
+import javax.annotation.Nullable;
 
 /** A macro expander with no inputs or precomputed work */
-public abstract class SimpleMacroExpander
-    extends AbstractMacroExpanderWithoutPrecomputedWork<Void> {
+public abstract class SimpleMacroExpander<M extends Macro>
+    extends AbstractMacroExpanderWithoutPrecomputedWork<M> {
 
   @Override
-  protected final Void parse(
-      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
-      throws MacroException {
+  @Nullable
+  protected final M parse(
+      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input) {
     return null;
   }
 
   @Override
-  public final Class<Void> getInputClass() {
-    return Void.class;
-  }
-
-  @Override
-  public final String expandFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, Void input)
-      throws MacroException {
+  public final Arg expandFrom(
+      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, M input) {
     return expandFrom(target, cellNames, resolver);
   }
 
-  public abstract String expandFrom(
+  public abstract Arg expandFrom(
       BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver);
-
-  @Override
-  public final ImmutableList<BuildRule> extractBuildTimeDepsFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, Void input)
-      throws MacroException {
-    return extractBuildTimeDepsFrom(target, cellNames, resolver);
-  }
-
-  @SuppressWarnings("unused")
-  public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver) {
-    return ImmutableList.of();
-  }
-
-  @Override
-  public final Object extractRuleKeyAppendablesFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, Void input)
-      throws MacroException {
-    return extractRuleKeyAppendablesFrom(target, cellNames, resolver);
-  }
-
-  @SuppressWarnings("unused")
-  public Object extractRuleKeyAppendablesFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver) {
-    return Optional.empty();
-  }
 
   @Override
   public final void extractParseTimeDepsFrom(
       BuildTarget target,
       CellPathResolver cellNames,
-      Void input,
+      M input,
       ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
-      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder)
-      throws MacroException {
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extractParseTimeDepsFrom(target, cellNames, buildDepsBuilder, targetGraphOnlyDepsBuilder);
   }
 

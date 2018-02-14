@@ -20,32 +20,66 @@ import com.facebook.buck.rules.keys.AbstractRuleKeyBuilder;
 import com.facebook.buck.rules.keys.AlterRuleKeys;
 import com.facebook.buck.rules.keys.RuleKeyScopedHasher;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Scope;
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.SortedSet;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 public final class BuildableSupport {
   private BuildableSupport() {}
 
+  /** Derives dependencies based on everything added to the rulekey. */
   public static Stream<BuildRule> deriveDeps(AddsToRuleKey rule, SourcePathRuleFinder ruleFinder) {
-    Builder builder = new Builder(ruleFinder);
+    DepsBuilder builder = new DepsBuilder(ruleFinder);
     AlterRuleKeys.amendKey(builder, rule);
     return builder.build();
   }
 
+  /** Derives dependencies based on everything added to the rulekey. */
   public static Stream<BuildRule> deriveDeps(BuildRule rule, SourcePathRuleFinder ruleFinder) {
-    Builder builder = new Builder(ruleFinder);
+    DepsBuilder builder = new DepsBuilder(ruleFinder);
     AlterRuleKeys.amendKey(builder, rule);
     return builder.build();
   }
 
-  private static class Builder extends AbstractRuleKeyBuilder<Stream<BuildRule>> {
+  /** Derives dependencies based on everything added to its rulekey. */
+  public static ImmutableCollection<BuildRule> getDepsCollection(
+      AddsToRuleKey tool, SourcePathRuleFinder ruleFinder) {
+    return deriveDeps(tool, ruleFinder).collect(ImmutableList.toImmutableList());
+  }
+
+  /** Derives inputs based on everything added to the rulekey. */
+  public static Stream<SourcePath> deriveInputs(AddsToRuleKey object) {
+    InputsBuilder builder = new InputsBuilder();
+    AlterRuleKeys.amendKey(builder, object);
+    return builder.build();
+  }
+
+  /**
+   * Creates a supplier to easily implement (and cache) BuildRule.getBuildDeps() via
+   * BuildableSupport.deriveDeps().
+   */
+  public static Supplier<SortedSet<BuildRule>> buildDepsSupplier(
+      BuildRule rule, SourcePathRuleFinder ruleFinder) {
+    return MoreSuppliers.memoize(
+        () ->
+            deriveDeps(rule, ruleFinder)
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
+  }
+
+  private static class DepsBuilder extends AbstractRuleKeyBuilder<Stream<BuildRule>> {
     private final Stream.Builder<BuildRule> streamBuilder;
     private final SourcePathRuleFinder ruleFinder;
 
-    public Builder(SourcePathRuleFinder ruleFinder) {
+    public DepsBuilder(SourcePathRuleFinder ruleFinder) {
       super(
           new RuleKeyScopedHasher() {
             @Override
@@ -93,7 +127,11 @@ public final class BuildableSupport {
 
     @Override
     protected AbstractRuleKeyBuilder<Stream<BuildRule>> setAddsToRuleKey(AddsToRuleKey appendable) {
-      AlterRuleKeys.amendKey(this, appendable);
+      if (appendable instanceof HasCustomDepsLogic) {
+        ((HasCustomDepsLogic) appendable).getDeps(ruleFinder).forEach(streamBuilder);
+      } else {
+        AlterRuleKeys.amendKey(this, appendable);
+      }
       return this;
     }
 
@@ -113,6 +151,80 @@ public final class BuildableSupport {
 
     @Override
     public Stream<BuildRule> build() {
+      return streamBuilder.build();
+    }
+  }
+
+  private static class InputsBuilder extends AbstractRuleKeyBuilder<Stream<SourcePath>> {
+    private final Stream.Builder<SourcePath> streamBuilder;
+
+    public InputsBuilder() {
+      super(
+          new RuleKeyScopedHasher() {
+            @Override
+            public Scope keyScope(String key) {
+              return () -> {};
+            }
+
+            @Override
+            public Scope wrapperScope(RuleKeyHasher.Wrapper wrapper) {
+              return () -> {};
+            }
+
+            @Override
+            public ContainerScope containerScope(RuleKeyHasher.Container container) {
+              return new ContainerScope() {
+                @Override
+                public void close() {}
+
+                @Override
+                public Scope elementScope() {
+                  return () -> {};
+                }
+              };
+            }
+          });
+      this.streamBuilder = Stream.builder();
+    }
+
+    @Override
+    public RuleKeyObjectSink setPath(Path absolutePath, Path ideallyRelative) throws IOException {
+      return this;
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<Stream<SourcePath>> setSingleValue(@Nullable Object val) {
+      return this;
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<Stream<SourcePath>> setBuildRule(BuildRule rule) {
+      throw new RuntimeException("cannot derive inputs from BuildRule");
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<Stream<SourcePath>> setAddsToRuleKey(
+        AddsToRuleKey appendable) {
+      AlterRuleKeys.amendKey(this, appendable);
+      return this;
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<Stream<SourcePath>> setSourcePath(SourcePath sourcePath)
+        throws IOException {
+      streamBuilder.add(sourcePath);
+      return this;
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<Stream<SourcePath>> setNonHashingSourcePath(
+        SourcePath sourcePath) {
+      streamBuilder.add(sourcePath);
+      return this;
+    }
+
+    @Override
+    public Stream<SourcePath> build() {
       return streamBuilder.build();
     }
   }

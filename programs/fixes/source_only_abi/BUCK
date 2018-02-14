@@ -1,0 +1,16 @@
+python_binary(
+    name = "fix",
+    main_module = "autofix_source_only_abi_warnings",
+    visibility = [
+        "//programs:bucklib",
+    ],
+    deps = [
+        ":fix-lib",
+    ],
+)
+
+python_library(
+    name = "fix-lib",
+    srcs = glob(["*.py"]),
+    base_module = "",
+)

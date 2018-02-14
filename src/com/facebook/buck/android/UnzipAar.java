@@ -32,18 +32,18 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
+import com.facebook.buck.unarchive.UnzipStep;
 import com.facebook.buck.util.zip.JarBuilder;
-import com.facebook.buck.zip.UnzipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -54,7 +54,6 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements InitializableFromDisk<UnzipAar.BuildOutput> {
 
   private static final String AAR_UNZIP_PATH_FORMAT = "__unpack_%s__";
-  private static final String METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE = "R_DOT_JAVA_PACKAGE";
 
   @AddToRuleKey private final SourcePath aarFile;
   private final Path unpackDirectory;
@@ -96,7 +95,9 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         new UnzipStep(
             getProjectFilesystem(),
             context.getSourcePathResolver().getAbsolutePath(aarFile),
-            unpackDirectory));
+            unpackDirectory,
+            Optional.empty()));
+
     steps.add(new TouchStep(getProjectFilesystem(), getProguardConfig()));
     steps.add(
         MkdirStep.of(
@@ -148,7 +149,8 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
             if (dirDoesNotExistOrIsEmpty) {
               filesystem.copy(classesJar, uberClassesJar, CopySourceMode.FILE);
             } else {
-              // Glob all of the contents from classes.jar and the entries in libs/ into a single JAR.
+              // Glob all of the contents from classes.jar and the entries in libs/ into a single
+              // JAR.
               ImmutableSortedSet.Builder<Path> entriesToJarBuilder =
                   ImmutableSortedSet.naturalOrder();
               entriesToJarBuilder.add(classesJar);
@@ -166,7 +168,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   .setRemoveEntryPredicate(RemoveClassesPatternsMatcher.EMPTY)
                   .createJarFile(filesystem.resolve(uberClassesJar));
             }
-            return StepExecutionResult.SUCCESS;
+            return StepExecutionResults.SUCCESS;
           }
         });
 
@@ -176,11 +178,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 context.getBuildCellRootPath(), getProjectFilesystem(), pathToTextSymbolsDir)));
     steps.add(
         new ExtractFromAndroidManifestStep(
-            getAndroidManifest(),
-            getProjectFilesystem(),
-            buildableContext,
-            METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE,
-            pathToRDotJavaPackageFile));
+            getAndroidManifest(), getProjectFilesystem(), pathToRDotJavaPackageFile));
     steps.add(
         CopyStep.forFile(getProjectFilesystem(), getTextSymbolsFile(), pathToTextSymbolsFile));
 
@@ -192,7 +190,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
+  public BuildOutput initializeFromDisk() throws IOException {
     String rDotJavaPackageFromFile =
         getProjectFilesystem().readFirstLine(pathToRDotJavaPackageFile).get();
     return new BuildOutput(rDotJavaPackageFromFile);

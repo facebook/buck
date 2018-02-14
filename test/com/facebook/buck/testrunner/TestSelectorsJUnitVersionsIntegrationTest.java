@@ -20,8 +20,9 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -71,7 +72,7 @@ public class TestSelectorsJUnitVersionsIntegrationTest {
   private void assertPassingTests(Set<String> expectedPassingTests, List<String> buckArgs)
       throws IOException {
     String[] args = buckArgs.toArray(new String[buckArgs.size()]);
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(args);
+    ProcessResult result = workspace.runBuckCommand(args);
     String[] lines = result.getStderr().split("\n");
     ImmutableSet.Builder<String> actualPassingTestsBuilder = new ImmutableSet.Builder<>();
     for (String line : lines) {

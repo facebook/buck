@@ -17,22 +17,18 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 class RelativeLinkArg implements Arg {
-
-  private final PathSourcePath library;
+  @AddToRuleKey private final PathSourcePath library;
   private final ImmutableList<String> link;
 
   public RelativeLinkArg(PathSourcePath library) {
@@ -43,19 +39,8 @@ class RelativeLinkArg implements Arg {
   }
 
   @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ImmutableList.of();
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return ImmutableList.of(library);
-  }
-
-  @Override
-  public void appendToCommandLine(
-      ImmutableCollection.Builder<String> builder, SourcePathResolver pathResolver) {
-    builder.addAll(link);
+  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    link.forEach(consumer);
   }
 
   @Override
@@ -78,10 +63,5 @@ class RelativeLinkArg implements Arg {
   @Override
   public int hashCode() {
     return Objects.hash(library);
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("relative_link_lib", library);
   }
 }

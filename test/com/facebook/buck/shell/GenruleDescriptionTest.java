@@ -21,6 +21,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
@@ -32,12 +33,15 @@ import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
-import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.macros.ClasspathMacro;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.facebook.buck.rules.visibility.VisibilityPattern;
+import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -51,7 +55,11 @@ public class GenruleDescriptionTest {
 
   @Test
   public void testImplicitDepsAreAddedCorrectly() throws Exception {
-    GenruleDescription genruleDescription = new GenruleDescription();
+    GenruleDescription genruleDescription =
+        new GenruleDescription(
+            new ToolchainProviderBuilder().build(),
+            FakeBuckConfig.builder().build(),
+            new NoSandboxExecutionStrategy());
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     Map<String, Object> instance =
         ImmutableMap.of(
@@ -96,7 +104,7 @@ public class GenruleDescriptionTest {
             .getExtraDeps()
             .stream()
             .map(Object::toString)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
   }
 
   @Test
@@ -113,7 +121,7 @@ public class GenruleDescriptionTest {
     TargetNode<?, ?> genruleNode =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("out")
-            .setCmd("$(classpath //exciting:target)")
+            .setCmd(StringWithMacrosUtils.format("%s", ClasspathMacro.of(depNode.getBuildTarget())))
             .build();
 
     TargetGraph targetGraph =

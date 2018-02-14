@@ -21,9 +21,11 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
@@ -46,7 +48,7 @@ public class JavaTestIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "missing_test_deps", temp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//:no-jsr-305");
+    ProcessResult result = workspace.runBuckCommand("build", "//:no-jsr-305");
 
     result.assertFailure();
     String stderr = result.getStderr();
@@ -59,7 +61,7 @@ public class JavaTestIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "missing_test_deps", temp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:no-hamcrest");
+    ProcessResult result = workspace.runBuckCommand("test", "//:no-hamcrest");
 
     // The bug this addresses was exposed as a missing output XML files. We expect the test to fail
     // with a warning to the user explaining that hamcrest was missing.
@@ -77,7 +79,7 @@ public class JavaTestIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "missing_test_deps", temp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:no-junit");
+    ProcessResult result = workspace.runBuckCommand("test", "//:no-junit");
 
     // The bug this address was exposed as a missing output XML files. We expect the test to fail
     // with a warning to the user explaining that hamcrest was missing.
@@ -95,7 +97,7 @@ public class JavaTestIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "missing_test_deps", temp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:no-testng");
+    ProcessResult result = workspace.runBuckCommand("test", "//:no-testng");
 
     result.assertTestFailure();
     String stderr = result.getStderr();
@@ -124,7 +126,7 @@ public class JavaTestIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "deadlock", temp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:suite");
+    ProcessResult result = workspace.runBuckCommand("test", "//:suite");
 
     result.assertSuccess();
   }
@@ -136,9 +138,9 @@ public class JavaTestIntegrationTest {
             this, "java_test_missing_result_file", temp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:simple");
+    ProcessResult result = workspace.runBuckCommand("test", "//:simple");
 
-    result.assertSpecialExitCode("test should fail", 42);
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     String stderr = result.getStderr();
     assertTrue(stderr, stderr.contains("test exited before generating results file"));
   }
@@ -150,8 +152,8 @@ public class JavaTestIntegrationTest {
     workspace.setUp();
     workspace.writeContentsToPath("[test]\n  rule_timeout = 250", ".buckconfig");
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:spinning");
-    result.assertSpecialExitCode("test should fail", 42);
+    ProcessResult result = workspace.runBuckCommand("test", "//:spinning");
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     String stderr = result.getStderr();
     assertTrue(stderr, stderr.contains("test timed out before generating results file"));
     assertThat(stderr, Matchers.containsString("FAIL"));
@@ -164,8 +166,8 @@ public class JavaTestIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "slow_tests_per_rule_timeout", temp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:spinning");
-    result.assertSpecialExitCode("test should fail", 42);
+    ProcessResult result = workspace.runBuckCommand("test", "//:spinning");
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     String stderr = result.getStderr();
     assertTrue(stderr, stderr.contains("test timed out before generating results file"));
     assertThat(stderr, Matchers.containsString("FAIL"));
@@ -195,7 +197,7 @@ public class JavaTestIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "static_initialization_test", temp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:npe");
+    ProcessResult result = workspace.runBuckCommand("test", "//:npe");
     result.assertTestFailure();
     assertThat(
         result.getStderr(), Matchers.containsString("com.facebook.buck.example.StaticErrorTest"));
@@ -206,7 +208,7 @@ public class JavaTestIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "depend_on_another_test", temp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:a");
+    ProcessResult result = workspace.runBuckCommand("test", "//:a");
     result.assertSuccess();
   }
 
@@ -216,7 +218,7 @@ public class JavaTestIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_jni", temp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:jtest");
+    ProcessResult result = workspace.runBuckCommand("test", "//:jtest");
     result.assertSuccess();
   }
 
@@ -226,7 +228,7 @@ public class JavaTestIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_jni", temp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:jtest-skip-dep");
+    ProcessResult result = workspace.runBuckCommand("test", "//:jtest-skip-dep");
     result.assertSuccess();
   }
 
@@ -236,15 +238,15 @@ public class JavaTestIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_jni", temp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult result1 =
+    ProcessResult result1 =
         workspace.runBuckCommand("test", "//:jtest-pernicious", "//:jtest-symlink");
     result1.assertSuccess();
 
-    workspace.replaceFileContents("BUCK", "'//:jlib-native',#delete-1", "");
+    workspace.replaceFileContents("BUCK", "\"//:jlib-native\",  #delete-1", "");
     workspace.replaceFileContents("JTestWithoutPernicious.java", "@Test//getValue", "");
     workspace.replaceFileContents("JTestWithoutPernicious.java", "//@Test//noTestLib", "@Test");
 
-    ProjectWorkspace.ProcessResult result2 =
+    ProcessResult result2 =
         workspace.runBuckCommand("test", "//:jtest-pernicious", "//:jtest-symlink");
     result2.assertSuccess();
   }
@@ -254,7 +256,7 @@ public class JavaTestIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "slow_tests", temp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:fork-mode");
+    ProcessResult result = workspace.runBuckCommand("test", "//:fork-mode");
     result.assertSuccess();
   }
 
@@ -263,8 +265,7 @@ public class JavaTestIntegrationTest {
     final ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "test_rule_classpath", temp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("audit", "classpath", "//:top");
+    ProcessResult result = workspace.runBuckCommand("audit", "classpath", "//:top");
     result.assertSuccess();
     ImmutableSortedSet<Path> actualPaths =
         FluentIterable.from(Arrays.asList(result.getStdout().split("\\s+")))

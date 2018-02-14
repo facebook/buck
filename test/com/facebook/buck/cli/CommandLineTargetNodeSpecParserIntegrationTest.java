@@ -18,12 +18,15 @@ package com.facebook.buck.cli;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
@@ -60,8 +63,7 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
     workspace.setUp();
 
     // First check for a correct usage.
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("targets", "//simple/...").assertSuccess();
+    ProcessResult result = workspace.runBuckCommand("targets", "//simple/...").assertSuccess();
     assertEquals(
         ImmutableSet.of("//simple:simple", "//simple/foo:foo", "//simple/bar:bar"),
         ImmutableSet.copyOf(Splitter.on('\n').omitEmptyStrings().split(result.getStdout())));
@@ -77,27 +79,11 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
     }
     try {
       workspace.runBuckCommand("targets", "//simple/....");
+      fail("Should not reach this");
     } catch (HumanReadableException e) {
       assertThat(
           e.getMessage(),
-          Matchers.containsString(
-              "No build file at simple/..../BUCK when resolving target //simple/....:....."));
-    }
-    try {
-      workspace.runBuckCommand("targets", "//simple/.....");
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getMessage(),
-          Matchers.containsString(
-              "No build file at simple/...../BUCK when resolving target //simple/.....:......"));
-    }
-    try {
-      workspace.runBuckCommand("targets", "//simple/......");
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getMessage(),
-          Matchers.containsString(
-              "No build file at simple/....../BUCK when resolving target //simple/......:......."));
+          Matchers.containsString("//simple/.... references non-existent directory simple"));
     }
   }
 
@@ -120,15 +106,15 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
     workspace.setUp();
 
     // First check for correct usage.
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("targets", "//simple:").assertSuccess();
+    ProcessResult result = workspace.runBuckCommand("targets", "//simple:").assertSuccess();
     assertEquals(
         ImmutableSet.of("//simple:simple"),
         ImmutableSet.copyOf(Splitter.on('\n').omitEmptyStrings().split(result.getStdout())));
 
     result = workspace.runBuckCommand("targets", "//simple:.");
-    result.assertFailure(
-        "No rule found when resolving target //simple:. in build file //simple/BUCK");
+    result.assertExitCode(
+        "No rule found when resolving target //simple:. in build file //simple/BUCK",
+        ExitCode.PARSE_ERROR);
   }
 
   @Test
@@ -137,8 +123,7 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "command_line_parser", tmp);
     workspace.setUp();
     workspace.writeContentsToPath("[project]\n  ignore = ignored", ".buckconfig");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("targets", "...").assertSuccess();
+    ProcessResult result = workspace.runBuckCommand("targets", "...").assertSuccess();
     assertEquals(
         ImmutableSet.of("//simple:simple", "//simple/foo:foo", "//simple/bar:bar"),
         ImmutableSet.copyOf(Splitter.on('\n').omitEmptyStrings().split(result.getStdout())));

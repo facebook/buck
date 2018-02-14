@@ -1,8 +1,0 @@
-cxx_library(
-  name = 'lib',
-  srcs = [
-    'test.cpp',
-    'test.c',
-    'test.s',
-  ],
-)

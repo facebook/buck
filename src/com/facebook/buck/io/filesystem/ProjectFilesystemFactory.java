@@ -18,8 +18,13 @@ package com.facebook.buck.io.filesystem;
 
 import com.facebook.buck.util.config.Config;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public interface ProjectFilesystemFactory {
+  ProjectFilesystem createProjectFilesystem(
+      Path root, Config config, Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo)
+      throws InterruptedException;
+
   ProjectFilesystem createProjectFilesystem(Path root, Config config) throws InterruptedException;
 
   ProjectFilesystem createProjectFilesystem(Path root) throws InterruptedException;

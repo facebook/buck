@@ -36,7 +36,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.timing.FakeClock;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -639,7 +639,7 @@ public class MiniAaptTest {
     aapt.processFileNamesInDirectory(filesystem, Paths.get("res/transition-v19"));
     aapt.processValues(
         filesystem,
-        new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId("")),
+        new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("")),
         Paths.get("res/values"));
 
     assertEquals(

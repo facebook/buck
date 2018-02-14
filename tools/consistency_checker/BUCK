@@ -1,0 +1,7 @@
+java_binary(
+    name = "consistency_checker",
+    main_class = "com.facebook.buck.tools.consistency.Main",
+    deps = [
+        "//tools/consistency_checker/src/com/facebook/buck/tools/consistency:consistency",
+    ],
+)

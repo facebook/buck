@@ -18,22 +18,31 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.distributed.DistBuildConfig;
-import com.facebook.buck.distributed.DistBuildExecutorArgs;
-import com.facebook.buck.distributed.DistBuildLogStateTracker;
 import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
-import com.facebook.buck.distributed.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.FileContentsProvider;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.FrontendService;
 import com.facebook.buck.distributed.MultiSourceContentsProvider;
 import com.facebook.buck.distributed.ServerContentsProvider;
+import com.facebook.buck.distributed.build_client.LogStateTracker;
+import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
+import com.facebook.buck.distributed.build_slave.CoordinatorBuildRuleEventsPublisher;
+import com.facebook.buck.distributed.build_slave.DistBuildSlaveExecutor;
+import com.facebook.buck.distributed.build_slave.DistBuildSlaveExecutorArgs;
+import com.facebook.buck.distributed.build_slave.HealthCheckStatsTracker;
+import com.facebook.buck.distributed.build_slave.MinionBuildProgressTracker;
+import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.keys.RuleKeyCacheScope;
+import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.LoadBalancedService;
+import com.facebook.buck.slb.RetryingHttpService;
 import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.base.Preconditions;
@@ -50,12 +59,13 @@ public abstract class DistBuildFactory {
   }
 
   public static DistBuildService newDistBuildService(CommandRunnerParams params) {
-    return new DistBuildService(newFrontendService(params));
+    return new DistBuildService(
+        newFrontendService(params), params.getBuildEnvironmentDescription().getUser());
   }
 
-  public static DistBuildLogStateTracker newDistBuildLogStateTracker(
-      Path logDir, ProjectFilesystem fileSystem) {
-    return new DistBuildLogStateTracker(logDir, fileSystem);
+  public static LogStateTracker newDistBuildLogStateTracker(
+      Path logDir, ProjectFilesystem fileSystem, DistBuildService service) {
+    return new LogStateTracker(logDir, fileSystem, service);
   }
 
   public static FrontendService newFrontendService(CommandRunnerParams params) {
@@ -64,9 +74,17 @@ public abstract class DistBuildFactory {
         config.getFrontendConfig().createClientSideSlb(params.getClock(), params.getBuckEventBus());
     OkHttpClient client = config.createOkHttpClient();
 
-    return new FrontendService(
-        ThriftOverHttpServiceConfig.of(
-            new LoadBalancedService(slb, client, params.getBuckEventBus())));
+    LoadBalancedService loadBalanceService =
+        new LoadBalancedService(slb, client, params.getBuckEventBus());
+    RetryingHttpService httpService =
+        new RetryingHttpService(
+            params.getBuckEventBus(),
+            loadBalanceService,
+            "buck_frontend_http_retries",
+            config.getFrontendRequestMaxRetries(),
+            config.getFrontendRequestRetryIntervalMillis());
+
+    return new FrontendService(ThriftOverHttpServiceConfig.of(httpService));
   }
 
   public static FileContentsProvider createMultiSourceContentsProvider(
@@ -101,40 +119,53 @@ public abstract class DistBuildFactory {
       int coordinatorPort,
       String coordinatorAddress,
       Optional<StampedeId> stampedeId,
+      BuildSlaveRunId buildSlaveRunId,
       FileContentsProvider fileContentsProvider,
-      DistBuildConfig distBuildConfig) {
+      HealthCheckStatsTracker healthCheckStatsTracker,
+      BuildSlaveTimingStatsTracker timingStatsTracker,
+      CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher,
+      MinionBuildProgressTracker minionBuildProgressTracker,
+      RuleKeyCacheScope<RuleKey> ruleKeyCacheScope) {
     Preconditions.checkArgument(state.getCells().size() > 0);
 
     // Create a cache factory which uses a combination of the distributed build config,
     // overridden with the local buck config (i.e. the build slave).
     ArtifactCacheFactory distBuildArtifactCacheFactory =
-        params.getArtifactCacheFactory().cloneWith(state.getRootCell().getBuckConfig());
+        params.getArtifactCacheFactory().cloneWith(state.getRemoteRootCellConfig());
 
     DistBuildSlaveExecutor executor =
         new DistBuildSlaveExecutor(
-            DistBuildExecutorArgs.builder()
+            DistBuildSlaveExecutorArgs.builder()
                 .setBuckEventBus(params.getBuckEventBus())
                 .setPlatform(params.getPlatform())
                 .setClock(params.getClock())
-                .setArtifactCache(distBuildArtifactCacheFactory.newInstance(true))
+                .setArtifactCacheFactory(distBuildArtifactCacheFactory)
                 .setState(state)
                 .setParser(params.getParser())
                 .setExecutorService(executorService)
                 .setActionGraphCache(params.getActionGraphCache())
-                //TODO(alisdair,shivanker): Change this to state.getRootCell().getBuckConfig().getKeySeed()
-                .setCacheKeySeed(params.getBuckConfig().getKeySeed())
+                .setRuleKeyConfiguration(
+                    ConfigRuleKeyConfigurationFactory.create(
+                        state.getRemoteRootCellConfig(), params.getPluginManager()))
                 .setConsole(params.getConsole())
+                .setLogDirectoryPath(params.getInvocationInfo().get().getLogDirectoryPath())
                 .setProvider(fileContentsProvider)
                 .setExecutors(params.getExecutors())
                 .setDistBuildMode(mode)
                 .setRemoteCoordinatorPort(coordinatorPort)
                 .setRemoteCoordinatorAddress(coordinatorAddress)
                 .setStampedeId(stampedeId.orElse(new StampedeId().setId("LOCAL_FILE")))
+                .setBuildSlaveRunId(buildSlaveRunId)
                 .setVersionedTargetGraphCache(params.getVersionedTargetGraphCache())
                 .setBuildInfoStoreManager(params.getBuildInfoStoreManager())
                 .setDistBuildService(service)
-                .setDistBuildConfig(distBuildConfig)
                 .setProjectFilesystemFactory(params.getProjectFilesystemFactory())
+                .setTimingStatsTracker(timingStatsTracker)
+                .setKnownBuildRuleTypesProvider(params.getKnownBuildRuleTypesProvider())
+                .setCoordinatorBuildRuleEventsPublisher(coordinatorBuildRuleEventsPublisher)
+                .setMinionBuildProgressTracker(minionBuildProgressTracker)
+                .setHealthCheckStatsTracker(healthCheckStatsTracker)
+                .setRuleKeyCacheScope(ruleKeyCacheScope)
                 .build());
     return executor;
   }

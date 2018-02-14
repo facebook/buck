@@ -3,7 +3,8 @@ from typing import Dict, Optional
 
 class Repository:
     """Represents a code repository with .buckconfig file."""
-    def __init__(self, root: str, cell_roots: Dict[str, str]):
+
+    def __init__(self, root: str, cell_roots: Dict[str, str]) -> None:
         self.root = root
         self.cell_roots = cell_roots
 

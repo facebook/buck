@@ -33,7 +33,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -55,14 +54,15 @@ public class ClassUsageTrackerTest {
   private static final Path WINDOWS_JAR_PATH = WINDOWS_FILE_SYSTEM.getPath("C:\\test.jar");
 
   private ClassUsageTracker tracker;
-  private StandardJavaFileManager fileManager;
+  private ListenableFileManager fileManager;
   private FakeStandardJavaFileManager fakeFileManager;
 
   @Before
   public void setUp() {
     tracker = new ClassUsageTracker();
     fakeFileManager = new FakeStandardJavaFileManager();
-    fileManager = tracker.wrapFileManager(fakeFileManager);
+    fileManager = new ListenableFileManager(fakeFileManager);
+    fileManager.addListener(tracker);
 
     fakeFileManager.addFile(WINDOWS_JAR_PATH, WINDOWS_FILE_NAME, JavaFileObject.Kind.CLASS);
 

@@ -30,16 +30,17 @@ import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.timing.SettableFakeClock;
+import com.facebook.buck.util.timing.SettableFakeClock;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -432,6 +433,7 @@ public class XCodeProjectCommandHelperTest {
         BuckEventBusForTests.newInstance(),
         cell,
         FakeBuckConfig.builder().build(),
+        TestRuleKeyConfigurationFactory.create(),
         MoreExecutors.newDirectExecutorService(),
         targetGraphAndTargets,
         passedInTargetsSet,
@@ -442,7 +444,9 @@ public class XCodeProjectCommandHelperTest {
             false,
             true /* shouldUseHeaderMaps */,
             false /* shouldMergeHeaderMaps */,
-            false /* shouldGenerateHeaderSymlinkTreeOnly */),
+            false /* shouldGenerateHeaderSymlinkTreeOnly */,
+            false),
+        ImmutableSet.of(),
         FocusedModuleTargetMatcher.noFocus(),
         projectGenerators,
         false,

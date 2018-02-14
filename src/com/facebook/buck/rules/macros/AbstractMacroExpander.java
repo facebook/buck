@@ -17,12 +17,11 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import java.util.Optional;
 
 public abstract class AbstractMacroExpander<T, P> implements MacroExpander {
 
@@ -79,7 +78,7 @@ public abstract class AbstractMacroExpander<T, P> implements MacroExpander {
       throws MacroException;
 
   @Override
-  public final String expand(
+  public final Arg expand(
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
@@ -94,40 +93,13 @@ public abstract class AbstractMacroExpander<T, P> implements MacroExpander {
         getPrecomputedWorkClass().cast(precomputedWork));
   }
 
-  public abstract String expandFrom(
+  public abstract Arg expandFrom(
       BuildTarget target,
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
       T input,
       P precomputedWork)
       throws MacroException;
-
-  @Override
-  public final ImmutableList<BuildRule> extractBuildTimeDeps(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      ImmutableList<String> input,
-      Object precomputedWork)
-      throws MacroException {
-    return extractBuildTimeDepsFrom(
-        target,
-        cellNames,
-        resolver,
-        parse(target, cellNames, input),
-        getPrecomputedWorkClass().cast(precomputedWork));
-  }
-
-  @SuppressWarnings("unused")
-  public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      T input,
-      P precomputedWork)
-      throws MacroException {
-    return ImmutableList.of();
-  }
 
   @Override
   public final Object extractRuleKeyAppendables(
@@ -137,22 +109,6 @@ public abstract class AbstractMacroExpander<T, P> implements MacroExpander {
       ImmutableList<String> input,
       Object precomputedWork)
       throws MacroException {
-    return extractRuleKeyAppendablesFrom(
-        target,
-        cellNames,
-        resolver,
-        parse(target, cellNames, input),
-        getPrecomputedWorkClass().cast(precomputedWork));
-  }
-
-  @SuppressWarnings("unused")
-  public Object extractRuleKeyAppendablesFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      T input,
-      P precomputedWork)
-      throws MacroException {
-    return Optional.empty();
+    return expand(target, cellNames, resolver, input, precomputedWork);
   }
 }

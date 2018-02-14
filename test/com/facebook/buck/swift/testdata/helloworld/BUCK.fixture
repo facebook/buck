@@ -1,12 +1,12 @@
 swift_library(
-  name = 'hello',
-  srcs = ['main.swift'],
+    name = "hello",
+    srcs = ["main.swift"],
 )
 
 apple_binary(
-  name = 'hello-bin',
-  deps = [':hello'],
-  frameworks = [
-    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-  ],
+    name = "hello-bin",
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    deps = [":hello"],
 )

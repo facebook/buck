@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -146,6 +147,21 @@ public class TreeBackedPackageElementTest extends CompilerTreeApiParameterizedTe
 
     PackageElement fooPackage = elements.getPackageElement("foo");
     assertThat(fooPackage.getAnnotationMirrors(), Matchers.empty());
+  }
+
+  @Test
+  public void testGetAnnotationMirrorsWithAnnotations() throws IOException {
+    compile(
+        ImmutableMap.of("package-info.java", Joiner.on('\n').join("@Deprecated", "package foo;")));
+
+    PackageElement fooPackage = elements.getPackageElement("foo");
+    assertThat(
+        fooPackage
+            .getAnnotationMirrors()
+            .stream()
+            .map(it -> it.getAnnotationType().asElement().getSimpleName().toString())
+            .collect(Collectors.toList()),
+        Matchers.contains("Deprecated"));
   }
 
   private void assertPackageContains(PackageElement packageElement, TypeElement typeElement) {

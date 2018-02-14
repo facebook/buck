@@ -20,9 +20,12 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.util.MoreStrings;
+import com.facebook.buck.util.BuckCellArg;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Optional;
 
 public class CommandLineTargetNodeSpecParser {
@@ -39,16 +42,8 @@ public class CommandLineTargetNodeSpecParser {
   @VisibleForTesting
   protected String normalizeBuildTargetString(String target) {
     // Check and save the cell name
-    int targetSeparator = target.indexOf("//");
-    String cellName = "";
-    if (targetSeparator > 0) {
-      cellName = target.substring(0, targetSeparator);
-      target = target.substring(targetSeparator);
-    }
-
-    // Strip out the leading "//" if there is one to make it easier to normalize the
-    // remaining target string.  We'll add this back at the end.
-    target = MoreStrings.stripPrefix(target, "//").orElse(target);
+    BuckCellArg arg = BuckCellArg.of(target);
+    target = arg.getArg();
 
     // Look up the section after the colon, if present, and strip it off.
     int colonIndex = target.indexOf(':');
@@ -79,7 +74,23 @@ public class CommandLineTargetNodeSpecParser {
       target += ":" + nameAfterColon.get();
     }
 
-    return cellName + "//" + target;
+    return arg.getCellName().orElse("") + "//" + target;
+  }
+
+  /**
+   * Validates a {@code spec} and throws an exception for invalid ones.
+   *
+   * <p>Ideally validation should happen as part of spec creation and some of them actually happen,
+   * but others, especially those that require filesystem interactions, are too expensive to carry
+   * for every single build target.
+   */
+  private void validateTargetSpec(TargetNodeSpec spec, String buildTarget) {
+    Path cellPath = spec.getBuildFileSpec().getCellPath();
+    Path basePath = spec.getBuildFileSpec().getBasePath();
+    if (!Files.exists(cellPath.resolve(basePath))) {
+      throw new HumanReadableException(
+          "%s references non-existent directory %s", buildTarget, basePath);
+    }
   }
 
   public ImmutableSet<TargetNodeSpec> parse(CellPathResolver cellNames, String arg) {
@@ -90,7 +101,9 @@ public class CommandLineTargetNodeSpecParser {
     ImmutableSet.Builder<TargetNodeSpec> specs = new ImmutableSet.Builder<>();
     for (String resolvedArg : resolvedArgs) {
       String buildTarget = normalizeBuildTargetString(resolvedArg);
-      specs.add(parser.parse(cellNames, buildTarget));
+      TargetNodeSpec spec = parser.parse(cellNames, buildTarget);
+      validateTargetSpec(spec, resolvedArg);
+      specs.add(spec);
     }
     return specs.build();
   }

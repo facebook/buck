@@ -16,12 +16,18 @@
 
 package com.facebook.buck.jvm.java.abi.source.api;
 
+import com.facebook.buck.util.liteinfersupport.Nullable;
+import javax.lang.model.element.Element;
+import javax.lang.model.util.Elements;
 import javax.tools.JavaFileManager;
 
 public interface SourceOnlyAbiRuleInfo {
   void setFileManager(JavaFileManager fileManager);
 
-  boolean classIsOnBootClasspath(String binaryName);
+  @Nullable
+  String getOwningTarget(Elements elements, Element element);
+
+  boolean elementIsAvailableForSourceOnlyAbi(Elements elements, Element element);
 
   String getRuleName();
 

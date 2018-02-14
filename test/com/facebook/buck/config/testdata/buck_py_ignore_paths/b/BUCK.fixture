@@ -1,9 +1,9 @@
 java_test(
-  name = 'test',
-  srcs = [
-    'BTest.java',
-  ],
-  deps = [
-    '//lib:junit',
-  ],
+    name = "test",
+    srcs = [
+        "BTest.java",
+    ],
+    deps = [
+        "//lib:junit",
+    ],
 )

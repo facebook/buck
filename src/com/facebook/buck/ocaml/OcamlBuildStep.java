@@ -19,6 +19,7 @@ package com.facebook.buck.ocaml;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -27,6 +28,7 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -39,6 +41,7 @@ import java.nio.file.Paths;
 /** A step that preprocesses, compiles, and assembles OCaml sources. */
 public class OcamlBuildStep implements Step {
 
+  private final BuildTarget target;
   private final BuildContext buildContext;
   private final ProjectFilesystem filesystem;
   private final OcamlBuildContext ocamlContext;
@@ -52,6 +55,7 @@ public class OcamlBuildStep implements Step {
   private final OcamlDepToolStep depToolStep;
 
   public OcamlBuildStep(
+      BuildTarget target,
       BuildContext buildContext,
       ProjectFilesystem filesystem,
       OcamlBuildContext ocamlContext,
@@ -60,6 +64,7 @@ public class OcamlBuildStep implements Step {
       ImmutableMap<String, String> cxxCompilerEnvironment,
       ImmutableList<String> cxxCompiler,
       boolean bytecodeOnly) {
+    this.target = target;
     this.buildContext = buildContext;
     this.filesystem = filesystem;
     this.ocamlContext = ocamlContext;
@@ -74,6 +79,7 @@ public class OcamlBuildStep implements Step {
 
     this.depToolStep =
         new OcamlDepToolStep(
+            target,
             filesystem.getRootPath(),
             this.ocamlContext.getSourcePathResolver(),
             this.ocamlContext.getOcamlDepTool().get(),
@@ -173,7 +179,7 @@ public class OcamlBuildStep implements Step {
                   ocamlContext.getBytecodeIncludeFlags()));
       return debugLauncher.execute(context);
     } else {
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
   }
 
@@ -192,6 +198,7 @@ public class OcamlBuildStep implements Step {
       linkerInputs.add(outputPath);
       Step compileStep =
           new OcamlCCompileStep(
+              target,
               getResolver(),
               filesystem.getRootPath(),
               new OcamlCCompileStep.Args(
@@ -208,7 +215,7 @@ public class OcamlBuildStep implements Step {
         return compileExecutionResult;
       }
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   private StepExecutionResult executeNativeLinking(
@@ -221,6 +228,7 @@ public class OcamlBuildStep implements Step {
 
     OcamlLinkStep linkStep =
         OcamlLinkStep.create(
+            target,
             filesystem.getRootPath(),
             cxxCompilerEnvironment,
             cxxCompiler,
@@ -247,6 +255,7 @@ public class OcamlBuildStep implements Step {
 
     OcamlLinkStep linkStep =
         OcamlLinkStep.create(
+            target,
             filesystem.getRootPath(),
             cxxCompilerEnvironment,
             cxxCompiler,
@@ -309,6 +318,7 @@ public class OcamlBuildStep implements Step {
           getCompileFlags(/* isBytecode */ false, /* excludeDeps */ false);
       Step compileStep =
           new OcamlMLCompileStep(
+              target,
               workingDirectory,
               getResolver(),
               new OcamlMLCompileStep.Args(
@@ -325,7 +335,7 @@ public class OcamlBuildStep implements Step {
         return compileExecutionResult;
       }
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   private StepExecutionResult executeMLBytecodeCompilation(
@@ -361,6 +371,7 @@ public class OcamlBuildStep implements Step {
           getCompileFlags(/* isBytecode */ true, /* excludeDeps */ false);
       Step compileBytecodeStep =
           new OcamlMLCompileStep(
+              target,
               workingDirectory,
               getResolver(),
               new OcamlMLCompileStep.Args(
@@ -377,7 +388,7 @@ public class OcamlBuildStep implements Step {
         return compileExecutionResult;
       }
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   private StepExecutionResult generateSources(ExecutionContext context, Path workingDirectory)
@@ -397,6 +408,7 @@ public class OcamlBuildStep implements Step {
       SourcePath output = ocamlContext.getYaccOutput(ImmutableSet.of(yaccSource)).get(0);
       OcamlYaccStep yaccStep =
           new OcamlYaccStep(
+              target,
               workingDirectory,
               getResolver(),
               new OcamlYaccStep.Args(
@@ -412,6 +424,7 @@ public class OcamlBuildStep implements Step {
       SourcePath output = ocamlContext.getLexOutput(ImmutableSet.of(lexSource)).get(0);
       OcamlLexStep lexStep =
           new OcamlLexStep(
+              target,
               workingDirectory,
               getResolver(),
               new OcamlLexStep.Args(
@@ -423,7 +436,7 @@ public class OcamlBuildStep implements Step {
         return lexExecutionResult;
       }
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   private ImmutableList<Path> sortDependency(

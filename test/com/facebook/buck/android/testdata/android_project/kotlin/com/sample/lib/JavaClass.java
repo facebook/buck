@@ -2,6 +2,6 @@ package com.sample.lib;
 
 class JavaClass {
   void foo() {
-    ExampleKt.out(1)
+    ExampleKt.out(1);
   }
 }

@@ -18,10 +18,11 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Scope;
+import com.facebook.buck.util.concurrent.Parallelizer;
 import com.facebook.buck.util.concurrent.WorkThreadTrackingFuture;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,7 +30,6 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RecursiveTask;
 import java.util.function.Function;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -46,6 +46,7 @@ import javax.annotation.Nullable;
  */
 public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
   private final ForkJoinPool forkJoinPool;
+
   private final TargetGraph targetGraph;
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
   @Nullable private final BuckEventBus eventBus;
@@ -75,7 +76,7 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
         .values()
         .stream()
         .map(Futures::getUnchecked)
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   @Override
@@ -108,6 +109,8 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
             wrap(key -> buildRuleGenerator.transform(targetGraph, this, targetGraph.get(target)))));
   }
 
+  /** Please use {@code computeIfAbsent} instead */
+  @Deprecated
   @Override
   public <T extends BuildRule> T addToIndex(T buildRule) {
     buildRuleIndex.compute(
@@ -148,8 +151,8 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
   }
 
   @Override
-  public <T> Stream<T> maybeParallelize(Stream<T> stream) {
-    return stream.parallel();
+  public Parallelizer getParallelizer() {
+    return Parallelizer.PARALLEL;
   }
 
   private boolean isInForkJoinPool() {

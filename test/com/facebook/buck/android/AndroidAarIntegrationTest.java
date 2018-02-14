@@ -18,20 +18,18 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.android.toolchain.TestAndroidToolchain;
-import com.facebook.buck.cli.Main;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
-import com.facebook.buck.toolchain.impl.TestToolchainProvider;
-import com.facebook.buck.util.zip.Unzip;
+import com.facebook.buck.util.unarchive.ArchiveFormat;
+import com.facebook.buck.util.unarchive.ExistingFileMode;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URL;
@@ -81,8 +79,10 @@ public class AndroidAarIntegrationTest {
         "res/values/values.xml", workspace.getFileContents("res/values/A.xml").trim());
 
     Path contents = tmp.getRoot().resolve("aar-contents");
-    Unzip.extractZipFile(
-        new DefaultProjectFilesystemFactory(), aar, contents, Unzip.ExistingFileMode.OVERWRITE);
+    ArchiveFormat.ZIP
+        .getUnarchiver()
+        .extractArchive(
+            new DefaultProjectFilesystemFactory(), aar, contents, ExistingFileMode.OVERWRITE);
     try (JarFile classes = new JarFile(contents.resolve("classes.jar").toFile())) {
       assertThat(classes.getJarEntry("com/example/HelloWorld.class"), Matchers.notNullValue());
     }
@@ -112,8 +112,10 @@ public class AndroidAarIntegrationTest {
         "res/values/values.xml", workspace.getFileContents("res/values/A.xml").trim());
 
     Path contents = tmp.getRoot().resolve("aar-contents");
-    Unzip.extractZipFile(
-        new DefaultProjectFilesystemFactory(), aar, contents, Unzip.ExistingFileMode.OVERWRITE);
+    ArchiveFormat.ZIP
+        .getUnarchiver()
+        .extractArchive(
+            new DefaultProjectFilesystemFactory(), aar, contents, ExistingFileMode.OVERWRITE);
     try (JarFile classes = new JarFile(contents.resolve("classes.jar").toFile())) {
       assertThat(classes.getJarEntry("com/example/HelloWorld.class"), Matchers.notNullValue());
     }
@@ -133,8 +135,10 @@ public class AndroidAarIntegrationTest {
                 filesystem, BuildTargetFactory.newInstance(target), AndroidAar.AAR_FORMAT));
 
     Path contents = tmp.getRoot().resolve("aar-contents");
-    Unzip.extractZipFile(
-        new DefaultProjectFilesystemFactory(), aar, contents, Unzip.ExistingFileMode.OVERWRITE);
+    ArchiveFormat.ZIP
+        .getUnarchiver()
+        .extractArchive(
+            new DefaultProjectFilesystemFactory(), aar, contents, ExistingFileMode.OVERWRITE);
     try (JarFile classes = new JarFile(contents.resolve("classes.jar").toFile())) {
       for (JarEntry jarEntry : Collections.list(classes.entries())) {
         String jarEntryName = jarEntry.getName();
@@ -157,11 +161,13 @@ public class AndroidAarIntegrationTest {
     Path aarLocation = workspace.buildAndReturnOutput(target);
 
     Path contents = tmp.getRoot().resolve("aar-contents");
-    Unzip.extractZipFile(
-        new DefaultProjectFilesystemFactory(),
-        aarLocation,
-        contents,
-        Unzip.ExistingFileMode.OVERWRITE);
+    ArchiveFormat.ZIP
+        .getUnarchiver()
+        .extractArchive(
+            new DefaultProjectFilesystemFactory(),
+            aarLocation,
+            contents,
+            ExistingFileMode.OVERWRITE);
 
     URL jarUrl = contents.resolve("classes.jar").toUri().toURL();
     try (URLClassLoader loader = new URLClassLoader(new URL[] {jarUrl})) {
@@ -230,19 +236,11 @@ public class AndroidAarIntegrationTest {
 
   @Test
   public void testNativeLibraryDependent() throws InterruptedException, IOException {
-    Main.KnownBuildRuleTypesFactoryFactory factoryFactory =
-        (processExecutor, sdkEnvironment, toolchainProvider) -> {
-          TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
-          testToolchainProvider.addAndroidToolchain(new TestAndroidToolchain());
-          return new KnownBuildRuleTypesFactory(
-              processExecutor, sdkEnvironment, testToolchainProvider);
-        };
-
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "android_aar_native_deps/ndk_deps", tmp);
-    workspace.setKnownBuildRuleTypesFactoryFactory(factoryFactory);
+    workspace.setKnownBuildRuleTypesFactoryFactory(DefaultKnownBuildRuleTypesFactory::of);
     workspace.setUp();
     String target = "//:app";
     workspace.runBuckBuild(target).assertSuccess();
@@ -281,7 +279,7 @@ public class AndroidAarIntegrationTest {
     workspace.setUp();
     workspace.enableDirCache();
     workspace.runBuckBuild("//apps/sample:nearly_empty_aar").assertSuccess();
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
     Path result = workspace.buildAndReturnOutput("//apps/sample:nearly_empty_aar");
     assertThat(workspace.asCell().getFilesystem().exists(result), Matchers.is(true));
   }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.plugin.adapter;
 
+import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.CompilationUnitTree;
@@ -36,6 +37,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 
@@ -45,6 +47,7 @@ import javax.tools.JavaFileObject;
  * <ul>
  *   <li>Exposes the enter method from JavacTaskImpl
  *   <li>Pre-javac-8 support for addTaskListener/removeTaskListener
+ *   <li>Wraps {@link Elements} with some extended functionality
  * </ul>
  */
 public class BuckJavacTask extends JavacTaskWrapper {
@@ -56,6 +59,7 @@ public class BuckJavacTask extends JavacTaskWrapper {
   private boolean pluginsInstalled = false;
 
   @Nullable private TaskListener singleTaskListener;
+  @Nullable private ElementsExtended elements;
 
   public BuckJavacTask(JavacTask inner) {
     super(inner);
@@ -135,6 +139,14 @@ public class BuckJavacTask extends JavacTaskWrapper {
   @Override
   public void removeTaskListener(TaskListener taskListener) {
     taskListeners.removeListener(taskListener);
+  }
+
+  @Override
+  public ElementsExtended getElements() {
+    if (elements == null) {
+      elements = new ElementsExtendedImpl(super.getElements(), getTypes(), getTrees());
+    }
+    return elements;
   }
 
   public void addPlugin(BuckJavacPlugin plugin, String... args) {

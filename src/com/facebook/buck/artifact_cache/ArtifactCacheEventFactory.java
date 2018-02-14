@@ -19,9 +19,12 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.util.Map;
 
 public interface ArtifactCacheEventFactory {
   ArtifactCacheEvent.Started newFetchStartedEvent(ImmutableSet<RuleKey> ruleKeys);
+
+  ArtifactCacheEvent.Started newContainsStartedEvent(ImmutableSet<RuleKey> ruleKeys);
 
   ArtifactCacheEvent.Started newStoreStartedEvent(
       ImmutableSet<RuleKey> ruleKeys, ImmutableMap<String, String> metadata);
@@ -30,4 +33,7 @@ public interface ArtifactCacheEventFactory {
 
   ArtifactCacheEvent.Finished newFetchFinishedEvent(
       ArtifactCacheEvent.Started started, CacheResult cacheResult);
+
+  ArtifactCacheEvent.Finished newContainsFinishedEvent(
+      ArtifactCacheEvent.Started started, Map<RuleKey, CacheResult> results);
 }

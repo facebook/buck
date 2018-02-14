@@ -1,8 +1,8 @@
 apple_resource(
-  name = "file_resource",
-  files = [
-    "file.txt"
-  ],
-  dirs = [],
-  visibility = ['PUBLIC'],
+    name = "file_resource",
+    dirs = [],
+    files = [
+        "file.txt",
+    ],
+    visibility = ["PUBLIC"],
 )

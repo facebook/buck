@@ -18,8 +18,9 @@ package com.facebook.buck.jvm.groovy;
 
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import org.junit.Before;
@@ -42,21 +43,19 @@ public class GroovyTestIntegrationTest {
 
   @Test
   public void allTestsPassingMakesTheBuildResultASuccess() throws Exception {
-    ProjectWorkspace.ProcessResult buildResult =
-        workspace.runBuckCommand("test", "//com/example/spock:passing");
+    ProcessResult buildResult = workspace.runBuckCommand("test", "//com/example/spock:passing");
     buildResult.assertSuccess("Build should have succeeded.");
   }
 
   @Test
   public void oneTestFailingMakesTheBuildResultAFailure() throws Exception {
-    ProjectWorkspace.ProcessResult buildResult =
-        workspace.runBuckCommand("test", "//com/example/spock:failing");
+    ProcessResult buildResult = workspace.runBuckCommand("test", "//com/example/spock:failing");
     buildResult.assertTestFailure();
   }
 
   @Test
   public void compilationFailureMakesTheBuildResultAFailure() throws Exception {
-    ProjectWorkspace.ProcessResult buildResult =
+    ProcessResult buildResult =
         workspace.runBuckCommand("test", "//com/example/spock:will_not_compile");
     buildResult.assertFailure();
   }

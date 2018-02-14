@@ -1,5 +1,5 @@
 android_library(
-  name = 'activity',
-  srcs = glob(['*.java']),
-  visibility = [ 'PUBLIC' ],
+    name = "activity",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
 )

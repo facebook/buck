@@ -18,6 +18,7 @@ package com.facebook.buck.lua;
 
 import com.facebook.buck.cxx.AbstractCxxLibrary;
 import com.facebook.buck.cxx.CxxLink;
+import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
 import com.facebook.buck.cxx.CxxPreprocessables;
@@ -27,6 +28,7 @@ import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
@@ -41,6 +43,7 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -69,8 +72,7 @@ import org.immutables.value.Value;
 @BuckStyleTuple
 abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTarget {
 
-  private static final String NATIVE_STARTER_CXX_SOURCE =
-      "com/facebook/buck/lua/native-starter.cpp.in";
+  private static final String NATIVE_STARTER_CXX_SOURCE = "native-starter.cpp.in";
 
   abstract ProjectFilesystem getProjectFilesystem();
 
@@ -83,6 +85,8 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
   abstract SourcePathResolver getPathResolver();
 
   abstract SourcePathRuleFinder getRuleFinder();
+
+  abstract CellPathResolver getCellPathResolver();
 
   abstract LuaPlatform getLuaPlatform();
 
@@ -104,7 +108,9 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
 
   private String getNativeStarterCxxSourceTemplate() {
     try {
-      return Resources.toString(Resources.getResource(NATIVE_STARTER_CXX_SOURCE), Charsets.UTF_8);
+      return Resources.toString(
+          Resources.getResource(AbstractNativeExecutableStarter.class, NATIVE_STARTER_CXX_SOURCE),
+          Charsets.UTF_8);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -126,7 +132,6 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                               new WriteFile(
                                   templateTarget,
                                   getProjectFilesystem(),
-                                  getBaseParams().withoutDeclaredDeps().withoutExtraDeps(),
                                   getNativeStarterCxxSourceTemplate(),
                                   BuildTargets.getGenPath(
                                       getProjectFilesystem(),
@@ -217,7 +222,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                 ImmutableMultimap.of(),
                 Optional.empty(),
                 Optional.empty(),
-                CxxSourceRuleFactory.PicType.PDC,
+                PicType.PDC,
                 Optional.empty())
             .requirePreprocessAndCompileRules(
                 ImmutableMap.of("native-starter.cpp", getNativeStarterCxxSource()));
@@ -257,15 +262,17 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                     Linker.LinkType.EXECUTABLE,
                     Optional.empty(),
                     getOutput(),
+                    ImmutableList.of(),
                     Linker.LinkableDepType.SHARED,
-                    /* thinLto */ false,
+                    CxxLinkOptions.of(),
                     getNativeStarterDeps(),
                     Optional.empty(),
                     Optional.empty(),
                     ImmutableSet.of(),
                     ImmutableSet.of(),
                     getNativeLinkableInput(),
-                    Optional.empty()));
+                    Optional.empty(),
+                    getCellPathResolver()));
     return linkRule.getSourcePathToOutput();
   }
 

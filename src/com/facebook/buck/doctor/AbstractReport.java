@@ -32,11 +32,11 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.versioncontrol.FullVersionControlStats;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet.Builder;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -137,17 +137,14 @@ public abstract class AbstractReport {
     ImmutableSet<Path> includedPaths =
         FluentIterable.from(selectedBuilds)
             .transformAndConcat(
-                new Function<BuildLogEntry, Iterable<Path>>() {
-                  @Override
-                  public Iterable<Path> apply(BuildLogEntry input) {
-                    ImmutableSet.Builder<Path> result = ImmutableSet.builder();
-                    Optionals.addIfPresent(input.getRuleKeyLoggerLogFile(), result);
-                    Optionals.addIfPresent(input.getMachineReadableLogFile(), result);
-                    Optionals.addIfPresent(input.getRuleKeyDiagKeysFile(), result);
-                    Optionals.addIfPresent(input.getRuleKeyDiagGraphFile(), result);
-                    result.add(input.getRelativePath());
-                    return result.build();
-                  }
+                input -> {
+                  Builder<Path> result = ImmutableSet.builder();
+                  Optionals.addIfPresent(input.getRuleKeyLoggerLogFile(), result);
+                  Optionals.addIfPresent(input.getMachineReadableLogFile(), result);
+                  Optionals.addIfPresent(input.getRuleKeyDiagKeysFile(), result);
+                  Optionals.addIfPresent(input.getRuleKeyDiagGraphFile(), result);
+                  result.add(input.getRelativePath());
+                  return result.build();
                 })
             .append(extraInfoPaths)
             .append(userLocalConfiguration.getLocalConfigsContents().keySet())

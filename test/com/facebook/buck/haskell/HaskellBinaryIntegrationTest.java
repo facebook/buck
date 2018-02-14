@@ -20,8 +20,9 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -77,15 +78,14 @@ public class HaskellBinaryIntegrationTest {
 
   @Test
   public void simple() throws IOException {
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("run", "//:foo#default," + getLinkFlavor());
+    ProcessResult result = workspace.runBuckCommand("run", "//:foo#default," + getLinkFlavor());
     result.assertSuccess();
     assertThat(result.getStdout(), Matchers.equalTo("5"));
   }
 
   @Test
   public void ghcLinkerFlags() throws IOException {
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "run", "//:foo_rtsflags#default," + getLinkFlavor(), "-- +RTS -A512m -RTS");
     result.assertSuccess();
@@ -94,7 +94,7 @@ public class HaskellBinaryIntegrationTest {
 
   @Test
   public void dependency() throws IOException {
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("run", "//:dependent#default," + getLinkFlavor());
     result.assertSuccess();
     assertThat(result.getStdout(), Matchers.equalTo("5"));
@@ -102,15 +102,14 @@ public class HaskellBinaryIntegrationTest {
 
   @Test
   public void foreign() throws IOException {
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("run", "//:foreign#default," + getLinkFlavor());
+    ProcessResult result = workspace.runBuckCommand("run", "//:foreign#default," + getLinkFlavor());
     result.assertSuccess();
     assertThat(result.getStdout(), Matchers.equalTo("hello world"));
   }
 
   @Test
   public void cxxGenrule() throws IOException {
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "run", "-c", "cxx.cppflags=-some-flag", "//:gen_main#default," + getLinkFlavor());
     result.assertSuccess();
@@ -119,7 +118,7 @@ public class HaskellBinaryIntegrationTest {
 
   @Test
   public void cHeader() throws IOException {
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("run", "//:hs_header#default," + getLinkFlavor());
     result.assertSuccess();
     assertThat(result.getStdout(), Matchers.equalTo("hello"));
@@ -127,8 +126,7 @@ public class HaskellBinaryIntegrationTest {
 
   @Test
   public void buildError() throws IOException {
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckBuild("//:error#default," + getLinkFlavor());
+    ProcessResult result = workspace.runBuckBuild("//:error#default," + getLinkFlavor());
     result.assertFailure();
   }
 }

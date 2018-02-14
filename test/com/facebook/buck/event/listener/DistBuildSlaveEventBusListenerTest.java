@@ -16,6 +16,7 @@
 
 package com.facebook.buck.event.listener;
 
+import static org.easymock.EasyMock.anyLong;
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.eq;
@@ -24,31 +25,32 @@ import static org.easymock.EasyMock.makeThreadSafe;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
-import com.facebook.buck.artifact_cache.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEventStoreData;
-import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
-import com.facebook.buck.distributed.DistBuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
+import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker.SlaveEvents;
+import com.facebook.buck.distributed.build_slave.HealthCheckStatsTracker;
 import com.facebook.buck.distributed.testutil.FakeDistBuildSlaveTimingStatsTracker;
-import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
+import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlavePerStageTimingStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.CacheRateStats;
+import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.facebook.buck.distributed.thrift.FileMaterializationStats;
+import com.facebook.buck.distributed.thrift.HealthCheckStats;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleDurationTracker;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleKeys;
@@ -57,8 +59,8 @@ import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
-import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
+import com.facebook.buck.util.timing.SettableFakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -88,6 +90,7 @@ public class DistBuildSlaveEventBusListenerTest {
   private BuckEventBus eventBus;
   private SettableFakeClock clock = SettableFakeClock.DO_NOT_CARE;
   private FileMaterializationStatsTracker fileMaterializationStatsTracker;
+  private HealthCheckStatsTracker healthCheckStatsTracker;
   private FakeDistBuildSlaveTimingStatsTracker slaveStatsTracker;
 
   @Before
@@ -100,6 +103,7 @@ public class DistBuildSlaveEventBusListenerTest {
     makeThreadSafe(distBuildServiceMock, true);
     eventBus = BuckEventBusForTests.newInstance();
     fileMaterializationStatsTracker = new FileMaterializationStatsTracker();
+    healthCheckStatsTracker = new HealthCheckStatsTracker();
     slaveStatsTracker = new FakeDistBuildSlaveTimingStatsTracker();
   }
 
@@ -112,6 +116,7 @@ public class DistBuildSlaveEventBusListenerTest {
             clock,
             slaveStatsTracker,
             fileMaterializationStatsTracker,
+            healthCheckStatsTracker,
             Executors.newScheduledThreadPool(1),
             1);
     eventBus.register(listener);
@@ -128,9 +133,8 @@ public class DistBuildSlaveEventBusListenerTest {
     status.setStampedeId(stampedeId);
     status.setBuildSlaveRunId(buildSlaveRunId);
     status.setTotalRulesCount(0);
-    status.setRulesStartedCount(0);
+    status.setRulesBuildingCount(0);
     status.setRulesFinishedCount(0);
-    status.setRulesSuccessCount(0);
     status.setRulesFailureCount(0);
 
     status.setHttpArtifactTotalBytesUploaded(0);
@@ -148,6 +152,7 @@ public class DistBuildSlaveEventBusListenerTest {
     cacheRateStats.setCacheErrorsCount(0);
     cacheRateStats.setCacheIgnoresCount(0);
     cacheRateStats.setCacheLocalKeyUnchangedHitsCount(0);
+    cacheRateStats.setUnexpectedCacheMissesCount(0);
 
     status.setFilesMaterializedCount(0);
 
@@ -171,7 +176,7 @@ public class DistBuildSlaveEventBusListenerTest {
         eq(stampedeId), eq(buildSlaveRunId), anyObject());
     expectLastCall().anyTimes();
 
-    Capture<List<BuildSlaveConsoleEvent>> capturedEventLists = Capture.newInstance(CaptureType.ALL);
+    Capture<List<BuildSlaveEvent>> capturedEventLists = Capture.newInstance(CaptureType.ALL);
 
     distBuildServiceMock.uploadBuildSlaveConsoleEvents(
         eq(stampedeId), eq(buildSlaveRunId), capture(capturedEventLists));
@@ -190,7 +195,7 @@ public class DistBuildSlaveEventBusListenerTest {
     // have stopped.
     verify(distBuildServiceMock);
 
-    List<BuildSlaveConsoleEvent> capturedEvents =
+    List<BuildSlaveEvent> capturedEvents =
         capturedEventLists.getValues().stream().flatMap(List::stream).collect(Collectors.toList());
     Assert.assertEquals(capturedEvents.size(), 3);
     Assert.assertTrue(
@@ -202,12 +207,9 @@ public class DistBuildSlaveEventBusListenerTest {
   }
 
   @Test
-  public void testHandlingRuleCountCalculatedEvent() throws IOException {
+  public void testHandlingTotalRuleCountUpdates() throws IOException {
     BuildSlaveStatus expectedStatus = createBuildSlaveStatusWithZeros();
-    expectedStatus.setTotalRulesCount(100);
-
-    CacheRateStats cacheRateStats = expectedStatus.getCacheRateStats();
-    cacheRateStats.setTotalRulesCount(100);
+    expectedStatus.setTotalRulesCount(50);
 
     distBuildServiceMock.uploadBuildSlaveConsoleEvents(
         eq(stampedeId), eq(buildSlaveRunId), anyObject());
@@ -225,7 +227,8 @@ public class DistBuildSlaveEventBusListenerTest {
     replay(distBuildServiceMock);
     setUpDistBuildSlaveEventBusListener();
 
-    eventBus.post(BuildEvent.ruleCountCalculated(ImmutableSet.of(), 100));
+    listener.updateTotalRuleCount(100);
+    listener.updateTotalRuleCount(50);
 
     listener.close();
     verify(distBuildServiceMock);
@@ -233,12 +236,9 @@ public class DistBuildSlaveEventBusListenerTest {
   }
 
   @Test
-  public void testHandlingRuleCountUpdateEvent() throws IOException {
+  public void testHandlingFinishedRuleCountUpdates() throws IOException {
     BuildSlaveStatus expectedStatus = createBuildSlaveStatusWithZeros();
-    expectedStatus.setTotalRulesCount(50);
-
-    CacheRateStats cacheRateStats = expectedStatus.getCacheRateStats();
-    cacheRateStats.setTotalRulesCount(50);
+    expectedStatus.setRulesFinishedCount(50);
 
     distBuildServiceMock.uploadBuildSlaveConsoleEvents(
         eq(stampedeId), eq(buildSlaveRunId), anyObject());
@@ -256,23 +256,89 @@ public class DistBuildSlaveEventBusListenerTest {
     replay(distBuildServiceMock);
     setUpDistBuildSlaveEventBusListener();
 
-    eventBus.post(BuildEvent.ruleCountCalculated(ImmutableSet.of(), 100));
-    eventBus.post(BuildEvent.unskippedRuleCountUpdated(50));
+    listener.updateFinishedRuleCount(50);
 
     listener.close();
     verify(distBuildServiceMock);
     Assert.assertEquals(capturedStatus.getValue(), expectedStatus);
+  }
+
+  @Test
+  public void testHandlingUnexpectedCacheMissTracking() throws IOException {
+    BuildSlaveStatus expectedStatus = createBuildSlaveStatusWithZeros();
+
+    CacheRateStats cacheRateStats = expectedStatus.getCacheRateStats();
+    cacheRateStats.setUnexpectedCacheMissesCount(13);
+
+    distBuildServiceMock.uploadBuildSlaveConsoleEvents(
+        eq(stampedeId), eq(buildSlaveRunId), anyObject());
+    expectLastCall().anyTimes();
+
+    distBuildServiceMock.storeBuildSlaveFinishedStats(
+        eq(stampedeId), eq(buildSlaveRunId), anyObject());
+    expectLastCall().anyTimes();
+
+    Capture<BuildSlaveStatus> capturedStatus = Capture.newInstance(CaptureType.LAST);
+    distBuildServiceMock.updateBuildSlaveStatus(
+        eq(stampedeId), eq(buildSlaveRunId), capture(capturedStatus));
+    expectLastCall().atLeastOnce();
+
+    replay(distBuildServiceMock);
+    setUpDistBuildSlaveEventBusListener();
+
+    listener.onUnexpectedCacheMiss(7);
+    listener.onUnexpectedCacheMiss(6);
+
+    listener.close();
+    verify(distBuildServiceMock);
+    Assert.assertEquals(capturedStatus.getValue(), expectedStatus);
+  }
+
+  @Test
+  public void testCoordinatorBuildProgressUpdatesAreSent() throws IOException {
+    Capture<CoordinatorBuildProgress> capturedBuildProgress = Capture.newInstance(CaptureType.LAST);
+    distBuildServiceMock.sendBuildProgressEvent(
+        eq(stampedeId), eq(buildSlaveRunId), capture(capturedBuildProgress), anyLong());
+    expectLastCall().atLeastOnce();
+
+    distBuildServiceMock.uploadBuildSlaveConsoleEvents(
+        eq(stampedeId), eq(buildSlaveRunId), anyObject());
+    expectLastCall().anyTimes();
+
+    distBuildServiceMock.updateBuildSlaveStatus(eq(stampedeId), eq(buildSlaveRunId), anyObject());
+    expectLastCall().anyTimes();
+
+    distBuildServiceMock.storeBuildSlaveFinishedStats(
+        eq(stampedeId), eq(buildSlaveRunId), anyObject());
+    expectLastCall().anyTimes();
+
+    CoordinatorBuildProgress expectedProgress =
+        new CoordinatorBuildProgress()
+            .setBuiltRulesCount(10)
+            .setTotalRulesCount(30)
+            .setSkippedRulesCount(20);
+
+    replay(distBuildServiceMock);
+    setUpDistBuildSlaveEventBusListener();
+
+    listener.updateCoordinatorBuildProgress(expectedProgress);
+
+    listener.close();
+    verify(distBuildServiceMock);
+    Assert.assertEquals(expectedProgress, capturedBuildProgress.getValue());
   }
 
   @Test
   public void testHandlingBuildRuleEvents() throws IOException {
     BuildSlaveStatus expectedStatus = createBuildSlaveStatusWithZeros();
-    expectedStatus.setTotalRulesCount(6);
-    expectedStatus.setRulesStartedCount(1);
-    expectedStatus.setRulesFinishedCount(5);
-    expectedStatus.setRulesSuccessCount(3);
+    expectedStatus.setTotalRulesCount(4);
+    expectedStatus.setRulesBuildingCount(1);
+    expectedStatus.setRulesFinishedCount(2);
     expectedStatus.setRulesFailureCount(1);
 
+    // Total rules for cache stats are different because slave ended up building more rules than
+    // the coordinator asked. Total rules for the cache should be counted with BuildRuleEvents, not
+    // the explicit updateTotalRules/updateFinishedRules methods.
     CacheRateStats cacheRateStats = expectedStatus.getCacheRateStats();
     cacheRateStats.setTotalRulesCount(6);
     cacheRateStats.setUpdatedRulesCount(4);
@@ -319,7 +385,7 @@ public class DistBuildSlaveEventBusListenerTest {
     BuildRuleEvent.Resumed resumed3 = BuildRuleEvent.resumed(fakeRule, tracker, fakeRuleKeyFactory);
     BuildRuleEvent.Suspended suspended7 = BuildRuleEvent.suspended(started7, fakeRuleKeyFactory);
 
-    eventBus.post(BuildEvent.ruleCountCalculated(ImmutableSet.of(), 6));
+    listener.updateTotalRuleCount(4);
     eventBus.post(started1);
     eventBus.post(started2);
     eventBus.post(
@@ -333,7 +399,10 @@ public class DistBuildSlaveEventBusListenerTest {
             false,
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty()));
+    listener.updateFinishedRuleCount(1);
     eventBus.post(started3);
     eventBus.post(
         BuildRuleEvent.finished(
@@ -344,6 +413,8 @@ public class DistBuildSlaveEventBusListenerTest {
             Optional.empty(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
             false,
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.empty()));
@@ -361,6 +432,8 @@ public class DistBuildSlaveEventBusListenerTest {
             false,
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty()));
     eventBus.post(
         BuildRuleEvent.finished(
@@ -373,7 +446,10 @@ public class DistBuildSlaveEventBusListenerTest {
             false,
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty()));
+    listener.updateFinishedRuleCount(2);
     eventBus.post(started6);
     eventBus.post(started7);
     eventBus.post(resumed3);
@@ -386,6 +462,8 @@ public class DistBuildSlaveEventBusListenerTest {
             Optional.empty(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
             false,
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.empty()));
@@ -481,7 +559,6 @@ public class DistBuildSlaveEventBusListenerTest {
         createBuildSlaveStatusWithZeros()
             .setTotalRulesCount(TOTAL_RULE_COUNT)
             .setFilesMaterializedCount(NUM_TOTAL_FILES_MATERIALIZED);
-    status.getCacheRateStats().setTotalRulesCount(TOTAL_RULE_COUNT);
 
     FileMaterializationStats fileMaterializationStats =
         new FileMaterializationStats()
@@ -510,6 +587,16 @@ public class DistBuildSlaveEventBusListenerTest {
     expectedFinishedStats.setDistBuildMode("REMOTE_BUILD");
     expectedFinishedStats.setExitCode(EXIT_CODE);
 
+    HealthCheckStats healthCheckStats = new HealthCheckStats();
+    healthCheckStats.setSlowHeartbeatsReceivedCount(0);
+    healthCheckStats.setSlowestHeartbeatIntervalMillis(0);
+    healthCheckStats.setHeartbeatsReceivedCount(0);
+    healthCheckStats.setAverageHeartbeatIntervalMillis(0);
+    healthCheckStats.setSlowestHeartbeatMinionId("");
+    healthCheckStats.setSlowDeadMinionChecksCount(0);
+    healthCheckStats.setSlowestDeadMinionCheckIntervalMillis(0);
+    expectedFinishedStats.setHealthCheckStats(healthCheckStats);
+
     distBuildServiceMock.uploadBuildSlaveConsoleEvents(
         eq(stampedeId), eq(buildSlaveRunId), anyObject());
     expectLastCall().anyTimes();
@@ -526,7 +613,7 @@ public class DistBuildSlaveEventBusListenerTest {
     setUpDistBuildSlaveEventBusListener();
 
     // Test updates to slave status are included.
-    eventBus.post(BuildEvent.ruleCountCalculated(ImmutableSet.of(), TOTAL_RULE_COUNT));
+    listener.updateTotalRuleCount(TOTAL_RULE_COUNT);
     // Test updates to file materialization stats are included.
     fileMaterializationStatsTracker.recordLocalFileMaterialized();
     fileMaterializationStatsTracker.recordRemoteFileMaterialized(FILE_MATERIALIZATION_TIME_MS);
@@ -537,7 +624,7 @@ public class DistBuildSlaveEventBusListenerTest {
     slaveStatsTracker.setElapsedTimeMillis(
         SlaveEvents.ACTION_GRAPH_CREATION_TIME, ACTION_GRAPH_CREATION_TIME_MS);
 
-    listener.publishBuildSlaveFinishedEvent(eventBus, FakeBuckConfig.builder().build(), EXIT_CODE);
+    listener.publishBuildSlaveFinishedEvent(EXIT_CODE);
     listener.close();
     verify(distBuildServiceMock);
     Assert.assertEquals(expectedFinishedStats, capturedStats.getValue());

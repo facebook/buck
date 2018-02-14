@@ -1,9 +1,9 @@
 apple_test(
-  name = 'eight-tests',
-  srcs = [ '8-test.txt' ],
-  deps = [ ],
-  visibility = [
-      'PUBLIC',
-  ],
-  info_plist = 'Test.plist',
+    name = "eight-tests",
+    srcs = ["8-test.txt"],
+    info_plist = "Test.plist",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [],
 )

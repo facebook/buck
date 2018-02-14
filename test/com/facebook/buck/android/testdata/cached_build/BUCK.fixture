@@ -1,13 +1,12 @@
 android_library(
-  name = 'android-lib',
-  srcs = [
-    ':AService',
-  ],
+    name = "android-lib",
+    srcs = [
+        ":AService",
+    ],
 )
 
 gen_aidl(
-  name = 'AService',
-  aidl = 'java/com/facebook/buck/example/AService.aidl',
-  import_path = 'java/',
+    name = "AService",
+    aidl = "java/com/facebook/buck/example/AService.aidl",
+    import_path = "java/",
 )
-

@@ -21,13 +21,13 @@ import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
-import com.google.common.base.Function;
 import com.google.common.collect.Maps;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 public class RemoteStateBasedFileHashCache implements ProjectFileHashCache {
   private static final Function<BuildJobStateFileHashEntry, HashCode>
@@ -51,11 +51,11 @@ public class RemoteStateBasedFileHashCache implements ProjectFileHashCache {
     this.remoteFileHashes =
         Maps.transformValues(
             DistBuildFileHashes.indexEntriesByPath(filesystem, remoteFileHashes),
-            HASH_CODE_FROM_FILE_HASH_ENTRY);
+            HASH_CODE_FROM_FILE_HASH_ENTRY::apply);
     this.remoteArchiveHashes =
         Maps.transformValues(
             DistBuildFileHashes.indexEntriesByArchivePath(filesystem, remoteFileHashes),
-            HASH_CODE_FROM_FILE_HASH_ENTRY);
+            HASH_CODE_FROM_FILE_HASH_ENTRY::apply);
   }
 
   @Override

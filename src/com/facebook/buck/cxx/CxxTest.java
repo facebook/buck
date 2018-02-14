@@ -41,17 +41,20 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /** A no-op {@link BuildRule} which houses the logic to run and form the results for C/C++ tests. */
@@ -90,10 +93,10 @@ abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     super(buildTarget, projectFilesystem, params);
     this.executable = executable;
     this.env = env;
-    this.args = Suppliers.memoize(args);
+    this.args = MoreSuppliers.memoize(args::get);
     this.resources = resources;
     this.additionalCoverageTargets = additionalCoverageTargets;
-    this.additionalDeps = Suppliers.memoize(additionalDeps);
+    this.additionalDeps = MoreSuppliers.memoize(additionalDeps::get);
     this.labels = labels;
     this.contacts = contacts;
     this.runTestSeparately = runTestSeparately;
@@ -166,6 +169,46 @@ abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   protected abstract ImmutableList<TestResultSummary> parseResults(
       Path exitCode, Path output, Path results) throws Exception;
 
+  /**
+   * Parses a file that contains an exit code that was written by {@link
+   * com.facebook.buck.step.AbstractTestStep}
+   *
+   * @param exitCodePath The path to the file that contains the exit code
+   * @return The parsed exit code
+   * @throws IOException The file could not be parsed. It may not exit, or has invalid data
+   */
+  static int parseExitCode(Path exitCodePath) throws IOException {
+    try (InputStream inputStream = Files.newInputStream(exitCodePath);
+        ObjectInputStream objectIn = new ObjectInputStream(inputStream)) {
+      return objectIn.readInt();
+    }
+  }
+
+  /**
+   * Validates that the exit code in the file does not indicate an abnormal exit of the test program
+   *
+   * @param exitCodePath The path to the file that contains the exit code
+   * @return Error message if the file could not be parsed, or the exit code indicates that the test
+   *     program did not die gracefully. This does not indicate that a test failed, only that a
+   *     signal was received by the test binary. Otherwise empty optional.
+   */
+  static Optional<String> validateExitCode(Path exitCodePath) {
+    // If we failed with an exit code >128 the binary was killed by a signal (on most posix
+    // systems).
+    // This is often sigabrt that can happen after the test has printed "success" but before the
+    // binary has shut down properly.
+    try {
+      int realExitCode = parseExitCode(exitCodePath);
+      if (realExitCode > 128) {
+        return Optional.of(
+            String.format("The program was killed by signal %s", realExitCode - 128));
+      }
+      return Optional.empty();
+    } catch (IOException e) {
+      return Optional.of("Could not parse exit code from file");
+    }
+  }
+
   @Override
   public Callable<TestResults> interpretTestResults(
       final ExecutionContext executionContext,
@@ -180,7 +223,7 @@ abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   parseResults(
                       getPathToTestExitCode(), getPathToTestOutput(), getPathToTestResults()))),
           contacts,
-          labels.stream().map(Object::toString).collect(MoreCollectors.toImmutableSet()));
+          labels.stream().map(Object::toString).collect(ImmutableSet.toImmutableSet()));
     };
   }
 

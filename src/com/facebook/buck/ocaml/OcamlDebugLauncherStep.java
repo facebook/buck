@@ -17,8 +17,8 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.Shell;
@@ -27,7 +27,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.MoreIterables;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -37,7 +36,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-/** OCaml linking step. Dependencies and inputs should be topologically ordered */
+/** Creates a debug launcher script for an ocaml binary */
 public class OcamlDebugLauncherStep implements Step {
 
   private final ProjectFilesystem filesystem;
@@ -78,13 +77,7 @@ public class OcamlDebugLauncherStep implements Step {
 
     Iterable<String> includesBytecodeDirs =
         FluentIterable.from(args.ocamlInput)
-            .transformAndConcat(
-                new Function<OcamlLibrary, Iterable<String>>() {
-                  @Override
-                  public Iterable<String> apply(OcamlLibrary input) {
-                    return input.getBytecodeIncludeDirs();
-                  }
-                });
+            .transformAndConcat(OcamlLibrary::getBytecodeIncludeDirs);
 
     ImmutableList<String> includesBytecodeFlags =
         ImmutableList.copyOf(
@@ -108,11 +101,14 @@ public class OcamlDebugLauncherStep implements Step {
     return getShortName();
   }
 
-  public static class Args implements RuleKeyAppendable {
-    public final Tool ocamlDebug;
+  public static class Args implements AddsToRuleKey {
+    @AddToRuleKey public final Tool ocamlDebug;
+
+    @AddToRuleKey(stringify = true)
     public final Path bytecodeOutput;
+
     public final ImmutableList<OcamlLibrary> ocamlInput;
-    public final ImmutableList<String> bytecodeIncludeFlags;
+    @AddToRuleKey public final ImmutableList<String> bytecodeIncludeFlags;
 
     public Args(
         Tool ocamlDebug,
@@ -127,13 +123,6 @@ public class OcamlDebugLauncherStep implements Step {
 
     public Path getOutput() {
       return Paths.get(bytecodeOutput.toString() + ".debug");
-    }
-
-    @Override
-    public void appendToRuleKey(RuleKeyObjectSink sink) {
-      sink.setReflectively("ocamlDebug", ocamlDebug)
-          .setReflectively("bytecodeOutput", bytecodeOutput.toString())
-          .setReflectively("flags", bytecodeIncludeFlags);
     }
   }
 }

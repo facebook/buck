@@ -1,1 +1,1 @@
-java_library(name='foo')
+java_library(name = "foo")

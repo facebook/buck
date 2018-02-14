@@ -26,8 +26,9 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.zip.CustomJarOutputStream;
 import java.io.IOException;
@@ -60,8 +61,7 @@ public class CalculateSourceAbiIntegrationTest {
   @Test
   public void testAbiJarIncludesGeneratedClasses() throws IOException {
     BuildTarget mainTarget = BuildTargetFactory.newInstance("//:main");
-    ProjectWorkspace.ProcessResult buildResult =
-        workspace.runBuckBuild(mainTarget.getFullyQualifiedName());
+    ProcessResult buildResult = workspace.runBuckBuild(mainTarget.getFullyQualifiedName());
     buildResult.assertSuccess();
 
     // Make sure we built the source ABI
@@ -84,6 +84,7 @@ public class CalculateSourceAbiIntegrationTest {
               "com/example/",
               "com/example/buck/",
               "com/example/buck/Lib.class",
+              "com/example/buck/Lib2.class",
               "com/example/buck/Test.class"));
 
       // And the manifest has one too
@@ -97,7 +98,7 @@ public class CalculateSourceAbiIntegrationTest {
 
   @Test
   public void testErrorsReportedGracefully() throws IOException {
-    ProjectWorkspace.ProcessResult buildResult = workspace.runBuckBuild("//:main-errors");
+    ProcessResult buildResult = workspace.runBuckBuild("//:main-errors");
     buildResult.assertFailure();
     assertThat(
         buildResult.getStderr(),
@@ -111,8 +112,7 @@ public class CalculateSourceAbiIntegrationTest {
   @Test
   public void testAbiJarExcludesRemovedClasses() throws IOException {
     BuildTarget mainTarget = BuildTargetFactory.newInstance("//:main-stripped");
-    ProjectWorkspace.ProcessResult buildResult =
-        workspace.runBuckBuild(mainTarget.getFullyQualifiedName());
+    ProcessResult buildResult = workspace.runBuckBuild(mainTarget.getFullyQualifiedName());
     buildResult.assertFailure();
     assertThat(buildResult.getStderr(), Matchers.stringContainsInOrder("cannot find symbol"));
 
@@ -141,5 +141,21 @@ public class CalculateSourceAbiIntegrationTest {
       Manifest manifest = abiJar.getManifest();
       assertNull(manifest.getAttributes("com/example/buck/Test.class"));
     }
+  }
+
+  @Test
+  public void testAbiJarSupportsDepFileRuleKey() throws IOException {
+    BuildTarget mainTarget = BuildTargetFactory.newInstance("//:main");
+    ProcessResult buildResult = workspace.runBuckBuild(mainTarget.getFullyQualifiedName());
+    buildResult.assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:main");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:lib#source-abi");
+
+    workspace.replaceFileContents("Lib2.java", "changeMe", "changedMe");
+    buildResult = workspace.runBuckBuild(mainTarget.getFullyQualifiedName());
+    buildResult.assertSuccess();
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//:lib#source-abi");
+    workspace.getBuildLog().assertTargetHadMatchingDepfileRuleKey("//:main");
   }
 }

@@ -20,14 +20,16 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;
@@ -43,7 +45,13 @@ public class JavaLibraryBuilder
   protected JavaLibraryBuilder(
       BuildTarget target, ProjectFilesystem projectFilesystem, HashCode hashCode) {
     super(
-        new JavaLibraryDescription(DEFAULT_JAVA_CONFIG, DEFAULT_JAVAC_OPTIONS),
+        new JavaLibraryDescription(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    JavacOptionsProvider.DEFAULT_NAME,
+                    JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
+                .build(),
+            DEFAULT_JAVA_CONFIG),
         target,
         projectFilesystem,
         hashCode);
@@ -56,7 +64,13 @@ public class JavaLibraryBuilder
       ProjectFilesystem projectFilesystem,
       HashCode hashCode) {
     super(
-        new JavaLibraryDescription(javaBuckConfig, DEFAULT_JAVAC_OPTIONS),
+        new JavaLibraryDescription(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    JavacOptionsProvider.DEFAULT_NAME,
+                    JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
+                .build(),
+            javaBuckConfig),
         target,
         projectFilesystem,
         hashCode);

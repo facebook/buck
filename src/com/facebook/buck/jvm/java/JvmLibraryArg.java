@@ -16,13 +16,15 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.JavaBuckConfig.SourceAbiVerificationMode;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -63,7 +65,11 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
 
   ImmutableList<BuildTarget> getPlugins();
 
-  Optional<Boolean> getGenerateSourceOnlyAbi();
+  Optional<AbiGenerationMode> getAbiGenerationMode();
+
+  Optional<CompileAgainstLibraryType> getCompileAgainst();
+
+  Optional<SourceAbiVerificationMode> getSourceAbiVerificationMode();
 
   @Value.Derived
   @Nullable
@@ -96,7 +102,6 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
     }
 
     AnnotationProcessingParams.Builder builder = AnnotationProcessingParams.builder();
-    builder.setOwnerTarget(owner);
     builder.setLegacySafeAnnotationProcessors(safeAnnotationProcessors);
     builder.setProjectFilesystem(filesystem);
 

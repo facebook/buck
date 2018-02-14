@@ -1,7 +1,0 @@
-library --root @
-transform --filename js/apple.js
-var apple;
-transform --filename js/banana.js
-var banana;
-transform --filename js/pear.js
-var pear;

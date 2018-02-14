@@ -29,8 +29,9 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.concurrent.Parallelizer;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -44,6 +45,8 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
 public class CxxPreprocessables {
@@ -131,7 +134,7 @@ public class CxxPreprocessables {
           deps.putAll(dep.getTransitiveCxxPreprocessorInput(cxxPlatform));
           return ImmutableSet.of();
         }
-        return traverse.apply(rule) ? rule.getBuildDeps() : ImmutableSet.of();
+        return traverse.test(rule) ? rule.getBuildDeps() : ImmutableSet.of();
       }
     }.start();
 
@@ -219,13 +222,20 @@ public class CxxPreprocessables {
 
   public static LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
       getTransitiveCxxPreprocessorInputCache(final CxxPreprocessorDep preprocessorDep) {
+    return getTransitiveCxxPreprocessorInputCache(preprocessorDep, Parallelizer.SERIAL);
+  }
+
+  public static LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
+      getTransitiveCxxPreprocessorInputCache(
+          final CxxPreprocessorDep preprocessorDep, Parallelizer parallelizer) {
     return CacheBuilder.newBuilder()
         .build(
             new CacheLoader<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>() {
               @Override
               public ImmutableMap<BuildTarget, CxxPreprocessorInput> load(
                   @Nonnull CxxPlatform key) {
-                return computeTransitiveCxxToPreprocessorInputMap(key, preprocessorDep, true);
+                return computeTransitiveCxxToPreprocessorInputMap(
+                    key, preprocessorDep, true, parallelizer);
               }
             });
   }
@@ -233,13 +243,33 @@ public class CxxPreprocessables {
   public static ImmutableMap<BuildTarget, CxxPreprocessorInput>
       computeTransitiveCxxToPreprocessorInputMap(
           @Nonnull CxxPlatform key, CxxPreprocessorDep preprocessorDep, boolean includeDep) {
+    return computeTransitiveCxxToPreprocessorInputMap(
+        key, preprocessorDep, includeDep, Parallelizer.SERIAL);
+  }
+
+  private static ImmutableMap<BuildTarget, CxxPreprocessorInput>
+      computeTransitiveCxxToPreprocessorInputMap(
+          @Nonnull CxxPlatform key,
+          CxxPreprocessorDep preprocessorDep,
+          boolean includeDep,
+          Parallelizer parallelizer) {
     Map<BuildTarget, CxxPreprocessorInput> builder = new LinkedHashMap<>();
     if (includeDep) {
       builder.put(preprocessorDep.getBuildTarget(), preprocessorDep.getCxxPreprocessorInput(key));
     }
-    for (CxxPreprocessorDep dep : preprocessorDep.getCxxPreprocessorDeps(key)) {
-      builder.putAll(dep.getTransitiveCxxPreprocessorInput(key));
-    }
+
+    Stream<CxxPreprocessorDep> transitiveDepInputs =
+        parallelizer.maybeParallelize(RichStream.from(preprocessorDep.getCxxPreprocessorDeps(key)));
+
+    // We get CxxProcessorInput in parallel for each dep.
+    // We have one cache per CxxPreprocessable. Cache miss may trigger the creation of more
+    // BuildRules, acyclicly.
+    // The creation of new BuildRules will be through forked tasks, and because we wait on the
+    // Futures of the tasks directly, FJP will have current thread steal the work for those tasks
+    // and no deadlock will occur {@link BuildRuleResolverTest.deadLockOnDependencyTest() }.
+    transitiveDepInputs
+        .map(dep -> dep.getTransitiveCxxPreprocessorInput(key))
+        .forEachOrdered(builder::putAll);
     return ImmutableMap.copyOf(builder);
   }
 }

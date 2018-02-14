@@ -17,6 +17,7 @@
 package com.facebook.buck.util.environment;
 
 import com.google.common.collect.ImmutableMap;
+import java.util.Properties;
 
 /** Represents the CPU architecture of a system. */
 public enum Architecture {
@@ -48,18 +49,23 @@ public enum Architecture {
     nameToValueMap = builder.build();
   }
 
-  private Architecture(String name) {
+  Architecture(String name) {
     this.name = name;
   }
 
-  public static Architecture detect() {
-    String javaName = System.getProperty("os.arch");
+  /** Detect the host architecture from the given Java properties */
+  public static Architecture detect(Properties properties) {
+    String javaName = properties.getProperty("os.arch");
     Architecture result = nameToValueMap.get(javaName);
     if (result == null) {
       return UNKNOWN;
     } else {
       return result;
     }
+  }
+
+  public static Architecture detect() {
+    return detect(System.getProperties());
   }
 
   @Override

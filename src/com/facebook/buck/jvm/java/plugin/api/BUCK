@@ -5,6 +5,7 @@ java_library(
         "PUBLIC",
     ],
     deps = [
+        "//src/com/facebook/buck/jvm/java/lang/model:model",
         "//src/com/facebook/buck/util/liteinfersupport:liteinfersupport",
 
         # Don't add deps that aren't already in the plugin; this is a super-light library that can be

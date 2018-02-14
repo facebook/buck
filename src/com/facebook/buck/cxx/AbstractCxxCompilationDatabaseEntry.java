@@ -16,24 +16,22 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import org.immutables.value.Value;
 
+/*
+ * The compilation database specification (https://clang.llvm.org/docs/JSONCompilationDatabase.html)
+ * mandates that either 'arguments' or 'command' is required. They both contain
+ * exactly the same information but in a different format. Hence, for the sake
+ * of producing smaller compilation databases, only arguments is used.
+ */
 @BuckStyleImmutable
 @Value.Immutable
 @JsonSerialize(as = CxxCompilationDatabaseEntry.class)
 @JsonDeserialize(as = CxxCompilationDatabaseEntry.class)
-@JsonIgnoreProperties(
-  value = {"command"},
-  allowGetters = true
-)
 abstract class AbstractCxxCompilationDatabaseEntry {
 
   @Value.Parameter
@@ -44,9 +42,4 @@ abstract class AbstractCxxCompilationDatabaseEntry {
 
   @Value.Parameter
   public abstract ImmutableList<String> getArguments();
-
-  @Value.Derived
-  public String getCommand() {
-    return Joiner.on(' ').join(Iterables.transform(getArguments(), Escaper.SHELL_ESCAPER));
-  }
 }

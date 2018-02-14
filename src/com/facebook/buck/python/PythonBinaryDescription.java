@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.linker.WindowsLinker;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -27,6 +28,9 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.python.toolchain.PexToolProvider;
+import com.facebook.buck.python.toolchain.PythonPlatform;
+import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -41,10 +45,11 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.HasVersionUniverse;
@@ -55,6 +60,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -70,23 +76,17 @@ public class PythonBinaryDescription
 
   private static final Logger LOG = Logger.get(PythonBinaryDescription.class);
 
+  private final ToolchainProvider toolchainProvider;
   private final PythonBuckConfig pythonBuckConfig;
-  private final FlavorDomain<PythonPlatform> pythonPlatforms;
   private final CxxBuckConfig cxxBuckConfig;
-  private final CxxPlatform defaultCxxPlatform;
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public PythonBinaryDescription(
+      ToolchainProvider toolchainProvider,
       PythonBuckConfig pythonBuckConfig,
-      FlavorDomain<PythonPlatform> pythonPlatforms,
-      CxxBuckConfig cxxBuckConfig,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      CxxBuckConfig cxxBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.pythonBuckConfig = pythonBuckConfig;
-    this.pythonPlatforms = pythonPlatforms;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.defaultCxxPlatform = defaultCxxPlatform;
-    this.cxxPlatforms = cxxPlatforms;
   }
 
   @Override
@@ -99,21 +99,13 @@ public class PythonBinaryDescription
   }
 
   public static SourcePath createEmptyInitModule(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
-      BuildRuleResolver resolver) {
+      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleResolver resolver) {
     BuildTarget emptyInitTarget = getEmptyInitTarget(buildTarget);
     Path emptyInitPath = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/__init__.py");
     WriteFile rule =
         resolver.addToIndex(
             new WriteFile(
-                emptyInitTarget,
-                projectFilesystem,
-                params.withoutDeclaredDeps().withoutExtraDeps(),
-                "",
-                emptyInitPath,
-                /* executable */ false));
+                emptyInitTarget, projectFilesystem, "", emptyInitPath, /* executable */ false));
     return rule.getSourcePathToOutput();
   }
 
@@ -143,6 +135,7 @@ public class PythonBinaryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      SourcePathResolver pathResolver,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       String mainModule,
@@ -158,7 +151,7 @@ public class PythonBinaryDescription
     }
 
     // Add in any missing init modules into the python components.
-    SourcePath emptyInit = createEmptyInitModule(buildTarget, projectFilesystem, params, resolver);
+    SourcePath emptyInit = createEmptyInitModule(buildTarget, projectFilesystem, resolver);
     components = components.withModules(addMissingInitModules(components.getModules(), emptyInit));
 
     BuildTarget linkTreeTarget = buildTarget.withAppendedFlavors(InternalFlavor.of("link-tree"));
@@ -166,6 +159,7 @@ public class PythonBinaryDescription
     SymlinkTree linkTree =
         resolver.addToIndex(
             new SymlinkTree(
+                "python_in_place_binary",
                 linkTreeTarget,
                 projectFilesystem,
                 linkTreeRoot,
@@ -173,13 +167,31 @@ public class PythonBinaryDescription
                     .putAll(components.getModules())
                     .putAll(components.getResources())
                     .putAll(components.getNativeLibraries())
+                    .putAll(
+                        components
+                            .getPrebuiltLibraries()
+                            .stream()
+                            // Get the prebuilt libraries, and stick them in a directory that can be
+                            // added to the sys.path of the in-place executor. Use a subdir so that
+                            // we can just glob on '*' and not have to maintain a list of
+                            // whitelisted
+                            // extensions or anything in the inplace python template file.
+                            .collect(
+                                ImmutableMap.toImmutableMap(
+                                    sourcePath ->
+                                        Paths.get(PythonInPlaceBinary.PREBUILT_PYTHON_RULES_SUBDIR)
+                                            .resolve(
+                                                pathResolver
+                                                    .getRelativePath(sourcePath)
+                                                    .getFileName()),
+                                    sourcePath -> sourcePath)))
                     .build()));
 
-    return PythonInPlaceBinary.from(
+    return new PythonInPlaceBinary(
         buildTarget,
         projectFilesystem,
-        params,
         resolver,
+        params.getDeclaredDeps(),
         cxxPlatform,
         pythonPlatform,
         mainModule,
@@ -196,6 +208,7 @@ public class PythonBinaryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
@@ -213,6 +226,7 @@ public class PythonBinaryDescription
             projectFilesystem,
             params,
             resolver,
+            pathResolver,
             pythonPlatform,
             cxxPlatform,
             mainModule,
@@ -221,13 +235,15 @@ public class PythonBinaryDescription
             preloadLibraries);
 
       case STANDALONE:
-        return PythonPackagedBinary.from(
+        return new PythonPackagedBinary(
             buildTarget,
             projectFilesystem,
-            params,
             ruleFinder,
+            params.getDeclaredDeps(),
             pythonPlatform,
-            pythonBuckConfig.getPexTool(resolver),
+            toolchainProvider
+                .getByName(PexToolProvider.DEFAULT_NAME, PexToolProvider.class)
+                .getPexTool(resolver),
             buildArgs,
             pythonBuckConfig.getPexExecutor(resolver).orElse(pythonPlatform.getEnvironment()),
             extension.orElse(pythonBuckConfig.getPexExtension()),
@@ -244,9 +260,15 @@ public class PythonBinaryDescription
   }
 
   private CxxPlatform getCxxPlatform(BuildTarget target, AbstractPythonBinaryDescriptionArg args) {
+    CxxPlatformsProvider cxxPlatformsProvider =
+        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
     return cxxPlatforms
         .getValue(target)
-        .orElse(args.getCxxPlatform().map(cxxPlatforms::getValue).orElse(defaultCxxPlatform));
+        .orElse(
+            args.getCxxPlatform()
+                .map(cxxPlatforms::getValue)
+                .orElse(cxxPlatformsProvider.getDefaultCxxPlatform()));
   }
 
   @Override
@@ -289,6 +311,12 @@ public class PythonBinaryDescription
             /* nativeLibraries */ ImmutableMap.of(),
             /* prebuiltLibraries */ ImmutableSet.of(),
             /* zipSafe */ args.getZipSafe());
+
+    FlavorDomain<PythonPlatform> pythonPlatforms =
+        toolchainProvider
+            .getByName(PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.class)
+            .getPythonPlatforms();
+
     // Extract the platforms from the flavor, falling back to the default platforms if none are
     // found.
     PythonPlatform pythonPlatform =
@@ -300,8 +328,16 @@ public class PythonBinaryDescription
                         .<Flavor>map(InternalFlavor::of)
                         .orElse(pythonPlatforms.getFlavors().iterator().next())));
     CxxPlatform cxxPlatform = getCxxPlatform(buildTarget, args);
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.builder()
+            .setBuildTarget(buildTarget)
+            .setCellPathResolver(cellRoots)
+            .setResolver(resolver)
+            .setExpanders(PythonUtil.MACRO_EXPANDERS)
+            .build();
     PythonPackageComponents allPackageComponents =
         PythonUtil.getAllComponents(
+            cellRoots,
             buildTarget,
             projectFilesystem,
             params,
@@ -310,18 +346,15 @@ public class PythonBinaryDescription
             PythonUtil.getDeps(pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps())
                 .stream()
                 .map(resolver::getRule)
-                .collect(MoreCollectors.toImmutableList()),
+                .collect(ImmutableList.toImmutableList()),
             binaryPackageComponents,
             pythonPlatform,
             cxxBuckConfig,
             cxxPlatform,
             args.getLinkerFlags()
                 .stream()
-                .map(
-                    MacroArg.toMacroArgFunction(
-                            PythonUtil.MACRO_HANDLER, buildTarget, cellRoots, resolver)
-                        ::apply)
-                .collect(MoreCollectors.toImmutableList()),
+                .map(macrosConverter::convert)
+                .collect(ImmutableList.toImmutableList()),
             pythonBuckConfig.getNativeLinkStrategy(),
             args.getPreloadDeps());
     return createPackageRule(
@@ -329,6 +362,7 @@ public class PythonBinaryDescription
         projectFilesystem,
         params,
         resolver,
+        pathResolver,
         ruleFinder,
         pythonPlatform,
         cxxPlatform,
@@ -385,7 +419,7 @@ public class PythonBinaryDescription
 
     ImmutableSet<BuildTarget> getPreloadDeps();
 
-    ImmutableList<String> getLinkerFlags();
+    ImmutableList<StringWithMacros> getLinkerFlags();
 
     Optional<String> getExtension();
   }

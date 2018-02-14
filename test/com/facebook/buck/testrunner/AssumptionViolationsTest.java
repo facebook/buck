@@ -21,8 +21,9 @@ import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import org.junit.Before;
@@ -54,7 +55,7 @@ public class AssumptionViolationsTest {
   }
 
   private void shouldPassWithASimplePassingTest(String type) throws IOException {
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("test", "--all", "--filter", "com.example.PassingTest" + type);
     result.assertSuccess();
     String output = result.getStderr();
@@ -76,7 +77,7 @@ public class AssumptionViolationsTest {
   }
 
   private void shouldFailIfOneTestFails(String type, int numSkipped) throws IOException {
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "test",
             "--all",
@@ -100,7 +101,7 @@ public class AssumptionViolationsTest {
 
   @Test
   public void shouldIndicateAssumptionViolations() throws IOException {
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "test",
             "--all",
@@ -124,7 +125,7 @@ public class AssumptionViolationsTest {
 
   @Test
   public void shouldIndicateAssumptionViolationsBeforeClass() throws IOException {
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//test:tests3");
+    ProcessResult result = workspace.runBuckCommand("test", "//test:tests3");
     result.assertSuccess();
     String output = result.getStderr();
     assertThat(

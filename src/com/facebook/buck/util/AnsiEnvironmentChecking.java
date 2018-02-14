@@ -28,8 +28,8 @@ public class AnsiEnvironmentChecking {
 
   private static final Logger LOG = Logger.get(AnsiEnvironmentChecking.class);
   private static final String TERM_ENV = "TERM";
-  private static final String NAILGUN_STDOUT_ISTTY_ENV = "NAILGUN_TTY_1";
-  private static final String NAILGUN_STDERR_ISTTY_ENV = "NAILGUN_TTY_2";
+  public static final String NAILGUN_STDOUT_ISTTY_ENV = "NAILGUN_TTY_1";
+  public static final String NAILGUN_STDERR_ISTTY_ENV = "NAILGUN_TTY_2";
 
   /** Returns true if the environment supports ANSI escape sequences, false otherwise. */
   public static boolean environmentSupportsAnsiEscapes(

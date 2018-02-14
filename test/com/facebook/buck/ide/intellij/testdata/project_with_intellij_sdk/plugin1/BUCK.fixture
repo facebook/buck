@@ -1,19 +1,19 @@
 java_library(
-  name='lib',
-  deps=[
-    '//lib:idea',
-  ],
-  visibility=['PUBLIC'],
+    name = "lib",
+    visibility = ["PUBLIC"],
+    deps = [
+        "//lib:idea",
+    ],
 )
 
 java_binary(
-  name='plugin',
-  meta_inf_directory='META-INF',
-  deps=[
-    ':lib',
-    '//lib:idea',
-  ],
-  labels = [
-    "intellij_plugin",
-  ],
+    name = "plugin",
+    labels = [
+        "intellij_plugin",
+    ],
+    meta_inf_directory = "META-INF",
+    deps = [
+        ":lib",
+        "//lib:idea",
+    ],
 )

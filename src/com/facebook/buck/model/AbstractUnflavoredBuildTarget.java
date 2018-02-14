@@ -63,11 +63,6 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
         !getBaseName().contains("\\"), "baseName may not contain backslashes.");
 
     Preconditions.checkArgument(
-        getShortName().lastIndexOf("#") == -1,
-        "Build target name cannot contain '#' but was: %s.",
-        getShortName());
-
-    Preconditions.checkArgument(
         !getShortName().contains("#"),
         "Build target name cannot contain '#' but was: %s.",
         getShortName());

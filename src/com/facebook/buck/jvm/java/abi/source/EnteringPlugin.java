@@ -44,6 +44,7 @@ class EnteringPlugin implements BuckJavacPlugin {
     private final TreeBackedTrees trees;
     private final TreeBackedEnter enter;
     private int classesEnteredThisRound = 0;
+    private int entersInProgress = 0;
 
     public EnteringTaskListener(
         TreeBackedElements elements, TreeBackedTypes types, TreeBackedTrees trees) {
@@ -54,12 +55,15 @@ class EnteringPlugin implements BuckJavacPlugin {
 
     @Override
     public void started(TaskEvent e) {
-      if (e.getKind() == TaskEvent.Kind.ENTER && classesEnteredThisRound == 0) {
-        // We want to clear our tables between rounds, and leave them intact after the last enter
-        // phase. However, javac sends the round start after the enter phase, so we must do some
-        // bookkeeping to detect the first enter event *after* a round and clear the table then.
-        elements.clear();
-        trees.clear();
+      if (e.getKind() == TaskEvent.Kind.ENTER) {
+        entersInProgress += 1;
+        if (classesEnteredThisRound == 0) {
+          // We want to clear our tables between rounds, and leave them intact after the last enter
+          // phase. However, javac sends the round start after the enter phase, so we must do some
+          // bookkeeping to detect the first enter event *after* a round and clear the table then.
+          elements.clear();
+          trees.clear();
+        }
       }
     }
 
@@ -68,6 +72,11 @@ class EnteringPlugin implements BuckJavacPlugin {
       if (e.getKind() == TaskEvent.Kind.ENTER) {
         enter.enter(e.getCompilationUnit());
         classesEnteredThisRound += 1;
+        entersInProgress -= 1;
+
+        if (entersInProgress == 0) {
+          elements.complete();
+        }
       } else if (e.getKind() == TaskEvent.Kind.ANNOTATION_PROCESSING_ROUND) {
         // Reset counter for next round
         classesEnteredThisRound = 0;

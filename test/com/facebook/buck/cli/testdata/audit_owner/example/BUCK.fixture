@@ -1,5 +1,5 @@
 apple_library(
-  name = 'one',
-  srcs = [ '1.txt' ],
-  deps = [ '//example/lib:two' ],
+    name = "one",
+    srcs = ["1.txt"],
+    deps = ["//example/lib:two"],
 )

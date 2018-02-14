@@ -19,13 +19,21 @@ package com.facebook.buck.js;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 
 public class JsBundleGenruleBuilder
     extends AbstractNodeBuilder<
         JsBundleGenruleDescriptionArg.Builder, JsBundleGenruleDescriptionArg,
         JsBundleGenruleDescription, JsBundleGenrule> {
   private static final JsBundleGenruleDescription genruleDescription =
-      new JsBundleGenruleDescription();
+      new JsBundleGenruleDescription(createToolchainProvider(), new NoSandboxExecutionStrategy());
+
+  private static ToolchainProvider createToolchainProvider() {
+    return new ToolchainProviderBuilder().build();
+  }
 
   JsBundleGenruleBuilder(
       BuildTarget target, BuildTarget bundleTarget, ProjectFilesystem projectFilesystem) {
@@ -39,12 +47,24 @@ public class JsBundleGenruleBuilder
     if (options.rewriteSourcemap) {
       getArgForPopulating().setRewriteSourcemap(true);
     }
+    if (options.rewriteMisc) {
+      getArgForPopulating().setRewriteMisc(true);
+    }
+    if (options.skipResources) {
+      getArgForPopulating().setSkipResources(true);
+    }
+    if (options.cmd != null) {
+      getArgForPopulating().setCmd(options.cmd);
+    }
   }
 
   public static class Options {
     BuildTarget genruleTarget;
     BuildTarget jsBundle;
     boolean rewriteSourcemap = false;
+    boolean rewriteMisc = false;
+    boolean skipResources = false;
+    public StringWithMacros cmd = null;
 
     public static Options of(BuildTarget genruleTarget, BuildTarget jsBundle) {
       return new Options(genruleTarget, jsBundle);
@@ -52,6 +72,21 @@ public class JsBundleGenruleBuilder
 
     public Options rewriteSourcemap() {
       rewriteSourcemap = true;
+      return this;
+    }
+
+    public Options rewriteMisc() {
+      rewriteMisc = true;
+      return this;
+    }
+
+    public Options skipResources() {
+      skipResources = true;
+      return this;
+    }
+
+    public Options setCmd(StringWithMacros cmd) {
+      this.cmd = cmd;
       return this;
     }
 

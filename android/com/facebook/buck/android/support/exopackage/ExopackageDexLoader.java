@@ -18,7 +18,11 @@ package com.facebook.buck.android.support.exopackage;
 
 import android.content.Context;
 import android.util.Log;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -40,35 +44,86 @@ public class ExopackageDexLoader {
 
   /**
    * Load JARs installed by Buck's Exopackage installer and add them to the Application ClassLoader.
+   * If modular exopackage is enabled, then load the modular-dex secondary directory into the
+   * DelegatingClassLoader instance.
    *
    * @param context The application context.
    */
   @SuppressWarnings("PMD.CollapsibleIfStatements")
   public static void loadExopackageJars(Context context) {
-    File containingDirectory =
-        new File("/data/local/tmp/exopackage/" + context.getPackageName() + "/secondary-dex");
+    loadExopackageJars(context, false);
+  }
 
-    List<File> dexJars = new ArrayList<>();
-    Set<String> expectedOdexSet = new HashSet<>();
-
-    File[] files = containingDirectory.listFiles();
-    if (files != null) {
-      for (File file : files) {
-        if (file.getName().equals("metadata.txt")) {
-          continue;
-        }
-        if (!file.getName().endsWith(".dex.jar")) {
-          Log.w(TAG, "Skipping unexpected file in exopackage directory: " + file.getName());
-          continue;
-        }
-        dexJars.add(file);
-        expectedOdexSet.add(file.getName().replaceFirst("\\.jar$", ".dex"));
-      }
+  /**
+   * Load JARs installed by Buck's Exopackage installer and add them to the Application ClassLoader.
+   * If modular exopackage is enabled, then load the modular-dex secondary directory into the
+   * DelegatingClassLoader instance.
+   *
+   * @param context The application context.
+   * @param exopackageEnabledForModules whether modules should be loaded into a separate classloader
+   *     or ignored and left to the app's own module system.
+   */
+  @SuppressWarnings("PMD.CollapsibleIfStatements")
+  public static void loadExopackageJars(Context context, boolean exopackageEnabledForModules) {
+    if (exopackageEnabledForModules) {
+      // Modular exopackage jars go to the delegating classloader so they can be swapped later
+      final File moduleDirectory =
+          new File("/data/local/tmp/exopackage/" + context.getPackageName() + "/modular-dex");
+      final List<File> dexJars = getJarFilesFromContainingDirectory(moduleDirectory);
+      final File dexOptDir = context.getDir("exopackage_modular_dex_opt", Context.MODE_PRIVATE);
+      DelegatingClassLoader.getInstance().setDexOptDir(dexOptDir).resetDelegate(dexJars);
+      cleanUpOldOdexFiles(dexOptDir, dexJars);
     }
 
+    // Normal exopackage jars go to system CL
+    File secondaryDirectory =
+        new File("/data/local/tmp/exopackage/" + context.getPackageName() + "/secondary-dex");
+    final List<File> dexJars = getJarFilesFromContainingDirectory(secondaryDirectory);
     File dexOptDir = context.getDir("exopackage_dex_opt", Context.MODE_PRIVATE);
     SystemClassLoaderAdder.installDexJars(context.getClassLoader(), dexOptDir, dexJars);
+    cleanUpOldOdexFiles(dexOptDir, dexJars);
+  }
 
+  /** Find all .dex.jar files in the given directory */
+  static List<File> getJarFilesFromContainingDirectory(File containingDirectory) {
+    List<File> dexJars = new ArrayList();
+    try {
+      final File metadataFile = new File(containingDirectory, "metadata.txt");
+      if (!metadataFile.exists()) {
+        return dexJars;
+      }
+      BufferedReader metadataReader =
+          new BufferedReader(new InputStreamReader(new FileInputStream(metadataFile)));
+      try {
+        String line;
+        while ((line = metadataReader.readLine()) != null) {
+          int space = line.indexOf(' ');
+          if (space == -1) {
+            throw new RuntimeException("Found no space in line: " + line);
+          }
+          String baseName = line.substring(0, space);
+          dexJars.add(new File(containingDirectory, baseName));
+        }
+      } finally {
+        metadataReader.close();
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    return dexJars;
+  }
+
+  /**
+   * Clean up any odex files that do not belong to the specified set of jars
+   *
+   * @param dexOptDir the directory to clean
+   * @param dexJars odex files pertaining to these jars will be kept
+   */
+  private static void cleanUpOldOdexFiles(File dexOptDir, List<File> dexJars) {
+    Set<String> expectedOdexSet = new HashSet<>();
+    for (File file : dexJars) {
+      expectedOdexSet.add(file.getName().replaceFirst("\\.jar$", ".dex"));
+    }
     File[] odexes = dexOptDir.listFiles();
     if (odexes != null) {
       for (File odex : odexes) {

@@ -22,25 +22,25 @@ import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.json.JsonObjectHashing;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
-import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.ParamInfoException;
+import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
+import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
@@ -51,6 +51,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * Creates {@link TargetNode} instances from raw data coming in form the {@link
@@ -64,49 +65,61 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
   private final Optional<LoadingCache<Cell, BuildFileTree>> buildFileTrees;
   private final TargetNodeListener<TargetNode<?, ?>> nodeListener;
   private final TargetNodeFactory targetNodeFactory;
+  private final RuleKeyConfiguration ruleKeyConfiguration;
 
   private DefaultParserTargetNodeFactory(
       ConstructorArgMarshaller marshaller,
       Optional<LoadingCache<Cell, BuildFileTree>> buildFileTrees,
       TargetNodeListener<TargetNode<?, ?>> nodeListener,
-      TargetNodeFactory targetNodeFactory) {
+      TargetNodeFactory targetNodeFactory,
+      RuleKeyConfiguration ruleKeyConfiguration) {
     this.marshaller = marshaller;
     this.buildFileTrees = buildFileTrees;
     this.nodeListener = nodeListener;
     this.targetNodeFactory = targetNodeFactory;
+    this.ruleKeyConfiguration = ruleKeyConfiguration;
   }
 
   public static ParserTargetNodeFactory<TargetNode<?, ?>> createForParser(
       ConstructorArgMarshaller marshaller,
       LoadingCache<Cell, BuildFileTree> buildFileTrees,
       TargetNodeListener<TargetNode<?, ?>> nodeListener,
-      TargetNodeFactory targetNodeFactory) {
+      TargetNodeFactory targetNodeFactory,
+      RuleKeyConfiguration ruleKeyConfiguration) {
     return new DefaultParserTargetNodeFactory(
-        marshaller, Optional.of(buildFileTrees), nodeListener, targetNodeFactory);
+        marshaller,
+        Optional.of(buildFileTrees),
+        nodeListener,
+        targetNodeFactory,
+        ruleKeyConfiguration);
   }
 
   public static ParserTargetNodeFactory<TargetNode<?, ?>> createForDistributedBuild(
-      ConstructorArgMarshaller marshaller, TargetNodeFactory targetNodeFactory) {
+      ConstructorArgMarshaller marshaller,
+      TargetNodeFactory targetNodeFactory,
+      RuleKeyConfiguration ruleKeyConfiguration) {
     return new DefaultParserTargetNodeFactory(
         marshaller,
         Optional.empty(),
         (buildFile, node) -> {
           // No-op.
         },
-        targetNodeFactory);
+        targetNodeFactory,
+        ruleKeyConfiguration);
   }
 
   @Override
   public TargetNode<?, ?> createTargetNode(
       Cell cell,
+      KnownBuildRuleTypes knownBuildRuleTypes,
       Path buildFile,
       BuildTarget target,
       Map<String, Object> rawNode,
       Function<PerfEventId, SimplePerfEvent.Scope> perfEventScope) {
-    BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(cell, rawNode);
+    BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(knownBuildRuleTypes, rawNode);
 
     // Because of the way that the parser works, we know this can never return null.
-    Description<?> description = cell.getDescription(buildRuleType);
+    Description<?> description = knownBuildRuleTypes.getDescription(buildRuleType);
 
     UnflavoredBuildTarget unflavoredBuildTarget = target.getUnflavoredBuildTarget();
     if (target.isFlavored()) {
@@ -125,7 +138,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
                 .getFlavors()
                 .stream()
                 .map(Flavor::toString)
-                .collect(MoreCollectors.toImmutableSet());
+                .collect(ImmutableSet.toImmutableSet());
         String invalidFlavorsDisplayStr = String.join(", ", invalidFlavorsStr);
         throw new HumanReadableException(
             "The following flavor(s) are not supported on target %s:\n"
@@ -176,7 +189,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
       try (SimplePerfEvent.Scope scope =
           perfEventScope.apply(PerfEventId.of("CreatedTargetNode"))) {
         Hasher hasher = Hashing.sha1().newHasher();
-        hasher.putString(BuckVersion.getVersion(), UTF_8);
+        hasher.putString(ruleKeyConfiguration.getCoreKey(), UTF_8);
         JsonObjectHashing.hashJsonObject(hasher, rawNode);
         TargetNode<?, ?> node =
             targetNodeFactory.createFromObject(
@@ -249,8 +262,9 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
     }
   }
 
-  private static BuildRuleType parseBuildRuleTypeFromRawRule(Cell cell, Map<String, Object> map) {
+  private static BuildRuleType parseBuildRuleTypeFromRawRule(
+      KnownBuildRuleTypes knownBuildRuleTypes, Map<String, Object> map) {
     String type = (String) Preconditions.checkNotNull(map.get(BuckPyFunction.TYPE_PROPERTY_NAME));
-    return cell.getBuildRuleType(type);
+    return knownBuildRuleTypes.getBuildRuleType(type);
   }
 }

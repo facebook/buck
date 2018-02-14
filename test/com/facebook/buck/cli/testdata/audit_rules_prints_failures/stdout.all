@@ -1,0 +1,16 @@
+# example/BUCK
+
+genrule(
+  name = "example",
+  bash = "bar",
+  out = "baz.txt",
+)
+
+# wat/BUCK
+
+genrule(
+  name = "example",
+  bash = "bar",
+  out = "baz.txt",
+)
+

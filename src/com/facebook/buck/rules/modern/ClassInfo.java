@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -29,12 +28,6 @@ public interface ClassInfo<T extends Buildable> {
   /** Computes the deps of ruleImpl and adds the to depsBuilder. */
   void computeDeps(
       T ruleImpl, InputRuleResolver inputRuleResolver, Consumer<BuildRule> depsBuilder);
-
-  /** Appends ruleImpl's ruleKey to the sink. */
-  void appendToRuleKey(T ruleImpl, RuleKeyObjectSink sink);
-
-  /** Adds all OutputData in ruleImpl to the outputDataBuilder. */
-  void getOutputData(T ruleImpl, BiConsumer<String, OutputData> outputDataBuilder);
 
   /** Adds all outputPaths in ruleImpl to the dataBuilder. */
   void getOutputs(T ruleImpl, BiConsumer<String, OutputPath> dataBuilder);

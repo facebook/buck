@@ -22,6 +22,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -37,12 +38,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.rules.ExternalResource;
 
 public class BuildRulePipelinesRunnerTest {
   @Rule public PipelineTester tester = new PipelineTester();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testPipelineRunsAllRules() throws Exception {
@@ -177,6 +181,35 @@ public class BuildRulePipelinesRunnerTest {
     assertTrue(tester.getPipelineStateForRule(0).isClosed());
   }
 
+  @Test
+  public void testDoesntDependOnPrevious() throws Exception {
+    BuildRulePipelinesRunner runner = new BuildRulePipelinesRunner();
+
+    TestPipelineRule first = new TestPipelineRule("//pipeline:1", null);
+    runner.addRule(first, first::newRunner);
+    TestPipelineRule second = new TestPipelineRule("//pipeline:1", first, new BuildRule[] {});
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage(
+        "Each rule in a pipeline must depend on the previous rule in the pipeline.");
+    runner.addRule(second, second::newRunner);
+  }
+
+  @Test
+  public void testIncludesExtraDeps() throws Exception {
+    BuildRulePipelinesRunner runner = new BuildRulePipelinesRunner();
+
+    TestPipelineRule first = new TestPipelineRule("//pipeline:1", null);
+    runner.addRule(first, first::newRunner);
+    FakeBuildRule other = new FakeBuildRule("//other:1");
+    TestPipelineRule second = new TestPipelineRule("//pipeline:1", first, first, other);
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage(
+        Matchers.containsString(
+            "Each rule in a pipeline cannot depend on rules which are not also"));
+    thrown.expectMessage(Matchers.containsString("//pipeline:1 has extra deps <//other:1>."));
+    runner.addRule(second, second::newRunner);
+  }
+
   private static class PipelineTester extends ExternalResource {
     private final BuildRulePipelinesRunner runner = new BuildRulePipelinesRunner();
     private final List<TestPipelineRule> rules = new ArrayList<>();
@@ -215,7 +248,8 @@ public class BuildRulePipelinesRunnerTest {
     }
 
     public PipelineTester startPipelineAtRule(int ruleNum) {
-      pipelineRunnableFuture = runner.runPipelineStartingAt(rules.get(ruleNum), executor);
+      pipelineRunnableFuture =
+          runner.runPipelineStartingAt(FakeBuildContext.NOOP_CONTEXT, rules.get(ruleNum), executor);
       return this;
     }
 
@@ -264,6 +298,9 @@ public class BuildRulePipelinesRunnerTest {
   private static class TestPipelineState implements RulePipelineState {
     private boolean isClosed;
 
+    @SuppressWarnings("unused")
+    public TestPipelineState(BuildContext context, BuildTarget firstTarget) {}
+
     @Override
     public void close() {
       isClosed = true;
@@ -286,7 +323,11 @@ public class BuildRulePipelinesRunnerTest {
     private TestPipelineState pipeline;
 
     public TestPipelineRule(String target, TestPipelineRule previous) {
-      super(target, getDeps(previous));
+      this(target, previous, getDeps(previous));
+    }
+
+    public TestPipelineRule(String target, TestPipelineRule previous, BuildRule... deps) {
+      super(target, deps);
       this.previous = previous;
     }
 

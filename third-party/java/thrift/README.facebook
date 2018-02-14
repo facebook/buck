@@ -1,0 +1,28 @@
+version
+-------
+This file stores the version of thrift currently being used. Although it doesn't
+strictly have to be a version number. It is only relevant as a string for use in
+pattern-matching in update.sh.
+
+** Some notes about the current version **
+libthrift-0.10.0 has a bug where TServiceClient grabs System.out and prints an
+unconditional log message. https://github.com/apache/thrift/pull/1173 fixes it,
+but it will only be available in the next thrift release. The current version of
+libthrift jar files have the fix cherry-picked on top of the 0.10.0 branch.
+
+Steps to obtain the jar files:
+
+   git clone https://github.com/apache/thrift
+   git checkout -b v10-with-hotfix 0.10.0
+   git cherry-pick 34bd992bc3104517062482ec837d4b49d33963ef
+   ant dist pack.src
+   cp build/*.jar ~/buck/third-party/java/thrift/
+
+update.sh
+---------
+This is a best-effort script to update thrift to the system-version and re-generate all sources.
+It grabs the .jar files from the maven repository.
+
+gen.sh
+------
+This script re-generates all thrift sources from checked-in thrift files.

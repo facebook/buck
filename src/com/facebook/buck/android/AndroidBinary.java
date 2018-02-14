@@ -18,13 +18,17 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
+import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
+import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.redex.RedexOptions;
-import com.facebook.buck.android.toolchain.TargetCpuType;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.HasClasspathEntries;
-import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.core.HasClasspathEntries;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
@@ -46,14 +50,13 @@ import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -82,7 +85,6 @@ public class AndroidBinary extends AbstractBuildRule
         HasInstallableApk,
         HasInstallHelpers {
   static final String SECONDARY_DEX_SUBDIR = "assets/secondary-program-dex-jars";
-  private final Optional<BuildRule> moduleVerification;
 
   /**
    * This list of package types is taken from the set of targets that the default build.xml provides
@@ -96,39 +98,6 @@ public class AndroidBinary extends AbstractBuildRule
     RELEASE,
     TEST,
     ;
-  }
-
-  enum ExopackageMode {
-    SECONDARY_DEX(1),
-    NATIVE_LIBRARY(2),
-    RESOURCES(4),
-    ;
-
-    private final int code;
-
-    ExopackageMode(int code) {
-      this.code = code;
-    }
-
-    public static boolean enabledForSecondaryDexes(EnumSet<ExopackageMode> modes) {
-      return modes.contains(SECONDARY_DEX);
-    }
-
-    public static boolean enabledForNativeLibraries(EnumSet<ExopackageMode> modes) {
-      return modes.contains(NATIVE_LIBRARY);
-    }
-
-    public static boolean enabledForResources(EnumSet<ExopackageMode> modes) {
-      return modes.contains(RESOURCES);
-    }
-
-    public static int toBitmask(EnumSet<ExopackageMode> modes) {
-      int bitmask = 0;
-      for (ExopackageMode mode : modes) {
-        bitmask |= mode.code;
-      }
-      return bitmask;
-    }
   }
 
   enum RelinkerMode {
@@ -164,6 +133,10 @@ public class AndroidBinary extends AbstractBuildRule
   private final Tool javaRuntimeLauncher;
   private final boolean isCacheable;
 
+  private final Optional<BuildRule> moduleVerification;
+  private final Optional<ExopackageInfo> exopackageInfo;
+  private final SourcePath manifestPath;
+
   private final BuildRuleParams buildRuleParams;
 
   @AddToRuleKey private final AndroidBinaryBuildable buildable;
@@ -172,6 +145,8 @@ public class AndroidBinary extends AbstractBuildRule
   AndroidBinary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      AndroidSdkLocation androidSdkLocation,
+      AndroidPlatformTarget androidPlatformTarget,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       Optional<List<String>> proguardJvmArgs,
@@ -195,7 +170,13 @@ public class AndroidBinary extends AbstractBuildRule
       ManifestEntries manifestEntries,
       Tool javaRuntimeLauncher,
       boolean isCacheable,
-      Optional<BuildRule> moduleVerification) {
+      Optional<BuildRule> moduleVerification,
+      DexFilesInfo dexFilesInfo,
+      NativeFilesInfo nativeFilesInfo,
+      ResourceFilesInfo resourceFilesInfo,
+      ImmutableSortedSet<APKModule> apkModules,
+      Optional<ExopackageInfo> exopackageInfo,
+      int apkCompressionLevel) {
     super(buildTarget, projectFilesystem);
     Preconditions.checkArgument(params.getExtraDeps().get().isEmpty());
     this.ruleFinder = ruleFinder;
@@ -216,6 +197,7 @@ public class AndroidBinary extends AbstractBuildRule
     this.manifestEntries = manifestEntries;
     this.isCacheable = isCacheable;
     this.moduleVerification = moduleVerification;
+    this.manifestPath = enhancementResult.getAndroidManifestPath();
 
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       Preconditions.checkArgument(
@@ -245,6 +227,8 @@ public class AndroidBinary extends AbstractBuildRule
         new AndroidBinaryBuildable(
             getBuildTarget(),
             getProjectFilesystem(),
+            androidSdkLocation,
+            androidPlatformTarget,
             keystore.getPathToStore(),
             keystore.getPathToPropertiesFile(),
             redexOptions,
@@ -252,20 +236,24 @@ public class AndroidBinary extends AbstractBuildRule
                 .map(options -> enhancementResult.getAdditionalRedexInputs())
                 .orElse(ImmutableList.of()),
             exopackageModes,
-            enhancementResult,
             xzCompressionLevel,
             packageAssetLibraries,
             compressAssetLibraries,
             javaRuntimeLauncher,
             enhancementResult.getAndroidManifestPath(),
-            enhancementResult.getPrimaryResourcesApkPath(),
-            enhancementResult.getPrimaryApkAssetZips(),
-            resourceCompressionMode.isCompressResources());
+            resourceCompressionMode.isCompressResources(),
+            dexFilesInfo,
+            nativeFilesInfo,
+            resourceFilesInfo,
+            apkModules,
+            apkCompressionLevel);
+    this.exopackageInfo = exopackageInfo;
+
     params =
         params.withExtraDeps(
             () ->
                 BuildableSupport.deriveDeps(this, ruleFinder)
-                    .collect(MoreCollectors.toImmutableSortedSet()));
+                    .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
     this.buildRuleParams = params;
   }
 
@@ -347,8 +335,8 @@ public class AndroidBinary extends AbstractBuildRule
   public ApkInfo getApkInfo() {
     return ApkInfo.builder()
         .setApkPath(getSourcePathToOutput())
-        .setManifestPath(getManifestPath())
-        .setExopackageInfo(getExopackageInfo())
+        .setManifestPath(manifestPath)
+        .setExopackageInfo(exopackageInfo)
         .build();
   }
 
@@ -387,60 +375,6 @@ public class AndroidBinary extends AbstractBuildRule
     return keystore;
   }
 
-  private SourcePath getManifestPath() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), buildable.getManifestPath());
-  }
-
-  private Optional<ExopackageInfo> getExopackageInfo() {
-    boolean shouldInstall = false;
-
-    ExopackageInfo.Builder builder = ExopackageInfo.builder();
-    if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
-      PreDexMerge preDexMerge = enhancementResult.getPreDexMerge().get();
-      builder.setDexInfo(
-          ExopackageInfo.DexInfo.of(
-              preDexMerge.getMetadataTxtSourcePath(), preDexMerge.getDexDirectorySourcePath()));
-      shouldInstall = true;
-    }
-
-    if (ExopackageMode.enabledForNativeLibraries(exopackageModes)
-        && enhancementResult.getCopyNativeLibraries().isPresent()) {
-      CopyNativeLibraries copyNativeLibraries =
-          Preconditions.checkNotNull(
-              enhancementResult
-                  .getCopyNativeLibraries()
-                  .get()
-                  .get(enhancementResult.getAPKModuleGraph().getRootAPKModule()));
-      builder.setNativeLibsInfo(
-          ExopackageInfo.NativeLibsInfo.of(
-              copyNativeLibraries.getSourcePathToMetadataTxt(),
-              copyNativeLibraries.getSourcePathToAllLibsDir()));
-      shouldInstall = true;
-    }
-
-    if (ExopackageMode.enabledForResources(exopackageModes)) {
-      Preconditions.checkState(!enhancementResult.getExoResources().isEmpty());
-      builder.setResourcesInfo(
-          ExopackageInfo.ResourcesInfo.of(
-              ImmutableList.<SourcePath>builder()
-                  .addAll(enhancementResult.getExoResources())
-                  .add(
-                      ExplicitBuildTargetSourcePath.of(
-                          getBuildTarget(), buildable.getMergedThirdPartyJarsPath()))
-                  .build()));
-      shouldInstall = true;
-    } else {
-      Preconditions.checkState(enhancementResult.getExoResources().isEmpty());
-    }
-
-    if (!shouldInstall) {
-      return Optional.empty();
-    }
-
-    ExopackageInfo exopackageInfo = builder.build();
-    return Optional.of(exopackageInfo);
-  }
-
   public SortedSet<BuildRule> getClasspathDeps() {
     return getDeclaredDeps();
   }
@@ -458,7 +392,7 @@ public class AndroidBinary extends AbstractBuildRule
             .getClasspathEntriesToDex()
             .stream()
             .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
   }
 
   @Override
@@ -474,31 +408,8 @@ public class AndroidBinary extends AbstractBuildRule
 
   @Override
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
-    Stream.Builder<Stream<BuildTarget>> deps = Stream.builder();
-    deps.add(RichStream.from(moduleVerification).map(BuildRule::getBuildTarget));
-
-    if (ExopackageMode.enabledForNativeLibraries(exopackageModes)
-        && enhancementResult.getCopyNativeLibraries().isPresent()) {
-      deps.add(
-          enhancementResult
-              .getCopyNativeLibraries()
-              .get()
-              .values()
-              .stream()
-              .map(BuildRule::getBuildTarget));
-    }
-    if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
-      deps.add(
-          Optionals.toStream(enhancementResult.getPreDexMerge()).map(BuildRule::getBuildTarget));
-    }
-    if (ExopackageMode.enabledForResources(exopackageModes)) {
-      deps.add(
-          enhancementResult
-              .getExoResources()
-              .stream()
-              .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
-              .map(BuildRule::getBuildTarget));
-    }
-    return deps.build().reduce(Stream.empty(), Stream::concat);
+    return RichStream.from(moduleVerification)
+        .map(BuildRule::getBuildTarget)
+        .concat(HasInstallableApkSupport.getRuntimeDepsForInstallableApk(this, ruleFinder));
   }
 }

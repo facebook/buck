@@ -1,0 +1,14 @@
+java_library(
+    name = "hashing",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/util/hashing:hashing",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//third-party/java/guava:guava",
+    ],
+)

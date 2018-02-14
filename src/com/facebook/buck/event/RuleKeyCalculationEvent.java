@@ -16,12 +16,15 @@
 
 package com.facebook.buck.event;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.Scope;
 
 /** Events used to track time spent calculating rule keys. */
 public interface RuleKeyCalculationEvent extends LeafEvent, WorkAdvanceEvent {
 
   Type getType();
+
+  BuildTarget getTarget();
 
   @Override
   default String getCategory() {
@@ -49,15 +52,22 @@ public interface RuleKeyCalculationEvent extends LeafEvent, WorkAdvanceEvent {
   class Event extends AbstractBuckEvent implements RuleKeyCalculationEvent {
 
     private final Type type;
+    private final BuildTarget target;
 
-    public Event(EventKey eventKey, Type type) {
+    public Event(EventKey eventKey, Type type, BuildTarget target) {
       super(eventKey);
       this.type = type;
+      this.target = target;
     }
 
     @Override
     public Type getType() {
       return type;
+    }
+
+    @Override
+    public BuildTarget getTarget() {
+      return target;
     }
 
     @Override
@@ -77,21 +87,21 @@ public interface RuleKeyCalculationEvent extends LeafEvent, WorkAdvanceEvent {
 
   class DefaultStarted extends Event implements Started {
 
-    private DefaultStarted(EventKey eventKey, Type type) {
-      super(eventKey, type);
+    private DefaultStarted(EventKey eventKey, Type type, BuildTarget target) {
+      super(eventKey, type, target);
     }
   }
 
   class DefaultFinished extends Event implements Finished {
 
-    private DefaultFinished(EventKey eventKey, Type type) {
-      super(eventKey, type);
+    private DefaultFinished(EventKey eventKey, Type type, BuildTarget target) {
+      super(eventKey, type, target);
     }
   }
 
-  static Scope scope(BuckEventBus buckEventBus, Type type) {
+  static Scope scope(BuckEventBus buckEventBus, Type type, BuildTarget target) {
     EventKey eventKey = EventKey.unique();
-    buckEventBus.post(new DefaultStarted(eventKey, type));
-    return () -> buckEventBus.post(new DefaultFinished(eventKey, type));
+    buckEventBus.post(new DefaultStarted(eventKey, type, target));
+    return () -> buckEventBus.post(new DefaultFinished(eventKey, type, target));
   }
 }

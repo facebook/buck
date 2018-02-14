@@ -20,8 +20,8 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -77,11 +77,10 @@ class DefaultClassUsageFileReader {
         }
       }
     } catch (IOException e) {
-      throw new HumanReadableException(
+      throw new BuckUncheckedExecutionException(
           e,
-          "Failed to load class usage files from %s:\n%s",
-          classUsageFilePath,
-          e.getLocalizedMessage());
+          "When loading class usage files from %s.",
+          projectFilesystem.resolve(classUsageFilePath));
     }
     return builder.build();
   }
@@ -105,6 +104,7 @@ class DefaultClassUsageFileReader {
     }
     return cellPathResolver
         .getCellPath(Optional.of(cellName.toString()))
+        .orElseThrow(() -> new AssertionError("Cell name does not exist: " + cellName.toString()))
         .resolve(relativeToCellRoot);
   }
 }

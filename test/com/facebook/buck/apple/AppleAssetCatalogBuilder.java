@@ -38,4 +38,14 @@ public class AppleAssetCatalogBuilder
     getArgForPopulating().setDirs(dirs);
     return this;
   }
+
+  public AppleAssetCatalogBuilder setLaunchImage(String launchImage) {
+    getArgForPopulating().setLaunchImage(launchImage);
+    return this;
+  }
+
+  public AppleAssetCatalogBuilder setAppIcon(String appIcon) {
+    getArgForPopulating().setAppIcon(appIcon);
+    return this;
+  }
 }

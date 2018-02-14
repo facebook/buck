@@ -15,9 +15,6 @@
  */
 package com.facebook.buck.rules;
 
-import static com.facebook.buck.util.MoreCollectors.toImmutableMap;
-import static java.util.stream.Collectors.collectingAndThen;
-
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.RawConfig;
@@ -36,6 +33,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
 /**
@@ -144,8 +142,8 @@ abstract class AbstractCellConfig {
           .entrySet()
           .stream()
           .collect(
-              collectingAndThen(
-                  toImmutableMap(Map.Entry::getKey, entry -> entry.getValue().build()),
+              Collectors.collectingAndThen(
+                  ImmutableMap.toImmutableMap(e -> e.getKey(), entry -> entry.getValue().build()),
                   CellConfig::of));
     }
 

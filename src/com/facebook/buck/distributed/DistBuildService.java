@@ -16,7 +16,10 @@
 
 package com.facebook.buck.distributed;
 
-import static com.facebook.buck.distributed.DistBuildClientStatsTracker.DistBuildClientStat.*;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.SET_BUCK_VERSION;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.UPLOAD_BUCK_DOT_FILES;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.UPLOAD_MISSING_FILES;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.UPLOAD_TARGET_GRAPH;
 
 import com.facebook.buck.distributed.thrift.AppendBuildSlaveEventsRequest;
 import com.facebook.buck.distributed.thrift.BuckVersion;
@@ -25,7 +28,8 @@ import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.BuildMode;
-import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
+import com.facebook.buck.distributed.thrift.BuildRuleFinishedEvent;
+import com.facebook.buck.distributed.thrift.BuildRuleStartedEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventType;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventsQuery;
@@ -33,9 +37,13 @@ import com.facebook.buck.distributed.thrift.BuildSlaveEventsRange;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
+import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.BuildStatusRequest;
 import com.facebook.buck.distributed.thrift.CASContainsRequest;
+import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
+import com.facebook.buck.distributed.thrift.CoordinatorBuildProgressEvent;
 import com.facebook.buck.distributed.thrift.CreateBuildRequest;
+import com.facebook.buck.distributed.thrift.CreateBuildResponse;
 import com.facebook.buck.distributed.thrift.EnqueueMinionsRequest;
 import com.facebook.buck.distributed.thrift.FetchBuildGraphRequest;
 import com.facebook.buck.distributed.thrift.FetchBuildSlaveFinishedStatsRequest;
@@ -54,11 +62,13 @@ import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveLogDirResponse;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveRealTimeLogsRequest;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveRealTimeLogsResponse;
 import com.facebook.buck.distributed.thrift.PathInfo;
+import com.facebook.buck.distributed.thrift.ReportCoordinatorAliveRequest;
 import com.facebook.buck.distributed.thrift.RuleKeyLogEntry;
 import com.facebook.buck.distributed.thrift.SequencedBuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.SetBuckDotFilePathsRequest;
 import com.facebook.buck.distributed.thrift.SetBuckVersionRequest;
 import com.facebook.buck.distributed.thrift.SetCoordinatorRequest;
+import com.facebook.buck.distributed.thrift.SetFinalBuildStatusRequest;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.StartBuildRequest;
 import com.facebook.buck.distributed.thrift.StoreBuildGraphRequest;
@@ -67,7 +77,7 @@ import com.facebook.buck.distributed.thrift.StoreLocalChangesRequest;
 import com.facebook.buck.distributed.thrift.UpdateBuildSlaveStatusRequest;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.Pair;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
 import com.facebook.buck.util.HumanReadableException;
@@ -80,6 +90,7 @@ import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -99,9 +110,22 @@ public class DistBuildService implements Closeable {
   private static final ThriftProtocol PROTOCOL_FOR_CLIENT_ONLY_STRUCTS = ThriftProtocol.COMPACT;
 
   private final FrontendService service;
+  private final String username;
 
-  public DistBuildService(FrontendService service) {
+  /** Exception thrown when CreateBuildRequest is rejected (with a rejection message). */
+  public static class DistBuildRejectedException extends Exception {
+
+    private static final String MESSAGE_PREFIX = "Distributed build will not run: ";
+
+    public DistBuildRejectedException(String message) {
+      super(MESSAGE_PREFIX + message);
+    }
+  }
+
+  public DistBuildService(FrontendService service, String username) {
+    Preconditions.checkNotNull(username, "Username needs to be set for distributed build.");
     this.service = service;
+    this.username = username;
   }
 
   public MultiGetBuildSlaveRealTimeLogsResponse fetchSlaveLogLines(
@@ -139,7 +163,7 @@ public class DistBuildService implements Closeable {
   public void uploadTargetGraph(
       final BuildJobState buildJobState,
       final StampedeId stampedeId,
-      final DistBuildClientStatsTracker distBuildClientStats)
+      final ClientStatsTracker distBuildClientStats)
       throws IOException {
     distBuildClientStats.startTimer(UPLOAD_TARGET_GRAPH);
 
@@ -159,7 +183,7 @@ public class DistBuildService implements Closeable {
   public ListenableFuture<Void> uploadMissingFilesAsync(
       final Map<Integer, ProjectFilesystem> localFilesystemsByCell,
       final List<BuildJobStateFileHashes> fileHashes,
-      final DistBuildClientStatsTracker distBuildClientStats,
+      final ClientStatsTracker distBuildClientStats,
       final ListeningExecutorService executorService) {
     distBuildClientStats.startTimer(UPLOAD_MISSING_FILES);
     List<PathInfo> requiredFiles = new ArrayList<>();
@@ -217,7 +241,6 @@ public class DistBuildService implements Closeable {
    * @param executorService Executor to enable concurrent file reads and upload request.
    * @return A Future containing the number of missing files which were uploaded to the CAS. This
    *     future completes when the upload finishes.
-   * @throws IOException
    */
   private ListenableFuture<Integer> uploadMissingFilesAsync(
       final List<PathInfo> absPathsAndHashes, final ListeningExecutorService executorService) {
@@ -307,11 +330,18 @@ public class DistBuildService implements Closeable {
   }
 
   public BuildJob createBuild(
-      BuildMode buildMode, int numberOfMinions, String repository, String tenantId)
-      throws IOException {
+      BuildId buildId,
+      BuildMode buildMode,
+      int numberOfMinions,
+      String repository,
+      String tenantId,
+      List<String> buildTargets,
+      String buildLabel)
+      throws IOException, DistBuildRejectedException {
     Preconditions.checkArgument(
         buildMode == BuildMode.REMOTE_BUILD
-            || buildMode == BuildMode.DISTRIBUTED_BUILD_WITH_REMOTE_COORDINATOR,
+            || buildMode == BuildMode.DISTRIBUTED_BUILD_WITH_REMOTE_COORDINATOR
+            || buildMode == BuildMode.DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR,
         "BuildMode [%s=%d] is currently not supported.",
         buildMode.toString(),
         buildMode.ordinal());
@@ -323,8 +353,12 @@ public class DistBuildService implements Closeable {
     CreateBuildRequest createBuildRequest = new CreateBuildRequest();
     createBuildRequest
         .setCreateTimestampMillis(System.currentTimeMillis())
+        .setBuckBuildUuid(buildId.toString())
         .setBuildMode(buildMode)
-        .setNumberOfMinions(numberOfMinions);
+        .setNumberOfMinions(numberOfMinions)
+        .setUsername(username)
+        .setBuildTargets(buildTargets)
+        .setBuildLabel(buildLabel);
 
     if (repository != null && repository.length() > 0) {
       createBuildRequest.setRepository(repository);
@@ -339,13 +373,30 @@ public class DistBuildService implements Closeable {
     request.setCreateBuildRequest(createBuildRequest);
     FrontendResponse response = makeRequestChecked(request);
 
-    return response.getCreateBuildResponse().getBuildJob();
+    CreateBuildResponse createBuildResponse = response.getCreateBuildResponse();
+    if (createBuildResponse.isSetWasAccepted() && !createBuildResponse.wasAccepted) {
+      throw new DistBuildRejectedException(createBuildResponse.getRejectionMessage());
+    }
+
+    return createBuildResponse.getBuildJob();
   }
 
   public BuildJob startBuild(StampedeId id) throws IOException {
+    return startBuild(id, true);
+  }
+
+  /**
+   * Make a start-build request with custom value for {@param enqueueJob}.
+   *
+   * @param id - Stampede id for the build you want to start.
+   * @param enqueueJob - Whether or not this job should be enqueued on the coordinator queue.start
+   * @return - Latest BuildJob spec.
+   */
+  public BuildJob startBuild(StampedeId id, boolean enqueueJob) throws IOException {
     // Start the build
     StartBuildRequest startRequest = new StartBuildRequest();
     startRequest.setStampedeId(id);
+    startRequest.setEnqueueJob(enqueueJob);
     FrontendRequest request = new FrontendRequest();
     request.setType(FrontendRequestType.START_BUILD);
     request.setStartBuildRequest(startRequest);
@@ -435,7 +486,7 @@ public class DistBuildService implements Closeable {
   }
 
   public void setBuckVersion(
-      StampedeId id, BuckVersion buckVersion, DistBuildClientStatsTracker distBuildClientStats)
+      StampedeId id, BuckVersion buckVersion, ClientStatsTracker distBuildClientStats)
       throws IOException {
     distBuildClientStats.startTimer(SET_BUCK_VERSION);
     SetBuckVersionRequest setBuckVersionRequest = new SetBuckVersionRequest();
@@ -463,7 +514,7 @@ public class DistBuildService implements Closeable {
       final StampedeId id,
       final ProjectFilesystem filesystem,
       FileHashCache fileHashCache,
-      DistBuildClientStatsTracker distBuildClientStats,
+      ClientStatsTracker distBuildClientStats,
       ListeningExecutorService executorService) {
     distBuildClientStats.startTimer(UPLOAD_BUCK_DOT_FILES);
     ListenableFuture<List<Path>> pathsFuture =
@@ -519,7 +570,9 @@ public class DistBuildService implements Closeable {
 
     ListenableFuture<Void> resultFuture =
         Futures.transform(
-            Futures.allAsList(ImmutableList.of(setFilesFuture, uploadFilesFuture)), input -> null);
+            Futures.allAsList(ImmutableList.of(setFilesFuture, uploadFilesFuture)),
+            input -> null,
+            MoreExecutors.directExecutor());
 
     resultFuture.addListener(
         () -> distBuildClientStats.stopTimer(UPLOAD_BUCK_DOT_FILES), executorService);
@@ -528,20 +581,166 @@ public class DistBuildService implements Closeable {
   }
 
   public void uploadBuildSlaveConsoleEvents(
-      StampedeId stampedeId, BuildSlaveRunId runId, List<BuildSlaveConsoleEvent> events)
+      StampedeId stampedeId, BuildSlaveRunId runId, List<BuildSlaveEvent> events)
       throws IOException {
     AppendBuildSlaveEventsRequest request = new AppendBuildSlaveEventsRequest();
     request.setStampedeId(stampedeId);
     request.setBuildSlaveRunId(runId);
-    for (BuildSlaveConsoleEvent slaveEvent : events) {
-      BuildSlaveEvent buildSlaveEvent = new BuildSlaveEvent();
-      buildSlaveEvent.setEventType(BuildSlaveEventType.CONSOLE_EVENT);
-      buildSlaveEvent.setStampedeId(stampedeId);
-      buildSlaveEvent.setBuildSlaveRunId(runId);
-      buildSlaveEvent.setConsoleEvent(slaveEvent);
+    for (BuildSlaveEvent slaveEvent : events) {
+      Preconditions.checkArgument(slaveEvent.getEventType() == BuildSlaveEventType.CONSOLE_EVENT);
+      Preconditions.checkArgument(slaveEvent.isSetConsoleEvent());
+      request.addToEvents(
+          ThriftUtil.serializeToByteBuffer(PROTOCOL_FOR_CLIENT_ONLY_STRUCTS, slaveEvent));
+    }
+
+    FrontendRequest frontendRequest = new FrontendRequest();
+    frontendRequest.setType(FrontendRequestType.APPEND_BUILD_SLAVE_EVENTS);
+    frontendRequest.setAppendBuildSlaveEventsRequest(request);
+    makeRequestChecked(frontendRequest);
+  }
+
+  /**
+   * Publishes BuildRuleStartedEvents, so that they can be downloaded by distributed build client.
+   *
+   * @param stampedeId
+   * @param runId
+   * @param startedTargets
+   * @throws IOException
+   */
+  public void uploadBuildRuleStartedEvents(
+      StampedeId stampedeId, BuildSlaveRunId runId, List<String> startedTargets, long timeMillis)
+      throws IOException {
+    LOG.info(String.format("Uploading [%d] build rule started events", startedTargets.size()));
+    AppendBuildSlaveEventsRequest request = new AppendBuildSlaveEventsRequest();
+    request.setStampedeId(stampedeId);
+    request.setBuildSlaveRunId(runId);
+    for (String target : startedTargets) {
+      LOG.info(String.format("Uploading build rule started event for target [%s]", target));
+      BuildRuleStartedEvent startedEvent = new BuildRuleStartedEvent();
+      startedEvent.setBuildTarget(target);
+
+      BuildSlaveEvent buildSlaveEvent =
+          DistBuildUtil.createBuildSlaveEvent(
+              BuildSlaveEventType.BUILD_RULE_STARTED_EVENT, timeMillis);
+      buildSlaveEvent.setBuildRuleStartedEvent(startedEvent);
       request.addToEvents(
           ThriftUtil.serializeToByteBuffer(PROTOCOL_FOR_CLIENT_ONLY_STRUCTS, buildSlaveEvent));
     }
+
+    FrontendRequest frontendRequest = new FrontendRequest();
+    frontendRequest.setType(FrontendRequestType.APPEND_BUILD_SLAVE_EVENTS);
+    frontendRequest.setAppendBuildSlaveEventsRequest(request);
+    makeRequestChecked(frontendRequest);
+  }
+
+  /**
+   * Publishes BuildRuleFinishedEvents, so that they can be downloaded by distributed build client.
+   *
+   * @param stampedeId
+   * @param runId
+   * @param finishedTargets
+   * @throws IOException
+   */
+  public void uploadBuildRuleFinishedEvents(
+      StampedeId stampedeId, BuildSlaveRunId runId, List<String> finishedTargets, long timeMillis)
+      throws IOException {
+    LOG.info(String.format("Uploading [%d] build rule finished events", finishedTargets.size()));
+    AppendBuildSlaveEventsRequest request = new AppendBuildSlaveEventsRequest();
+    request.setStampedeId(stampedeId);
+    request.setBuildSlaveRunId(runId);
+    for (String target : finishedTargets) {
+      LOG.info(String.format("Uploading build rule finished event for target [%s]", target));
+      BuildRuleFinishedEvent finishedEvent = new BuildRuleFinishedEvent();
+      finishedEvent.setBuildTarget(target);
+
+      BuildSlaveEvent buildSlaveEvent =
+          DistBuildUtil.createBuildSlaveEvent(
+              BuildSlaveEventType.BUILD_RULE_FINISHED_EVENT, timeMillis);
+      buildSlaveEvent.setBuildRuleFinishedEvent(finishedEvent);
+      request.addToEvents(
+          ThriftUtil.serializeToByteBuffer(PROTOCOL_FOR_CLIENT_ONLY_STRUCTS, buildSlaveEvent));
+    }
+
+    FrontendRequest frontendRequest = new FrontendRequest();
+    frontendRequest.setType(FrontendRequestType.APPEND_BUILD_SLAVE_EVENTS);
+    frontendRequest.setAppendBuildSlaveEventsRequest(request);
+    makeRequestChecked(frontendRequest);
+  }
+
+  /**
+   * Let the client no that there are no more build rule finished events on the way.
+   *
+   * @param stampedeId
+   * @param runId
+   * @throws IOException
+   */
+  public void sendAllBuildRulesPublishedEvent(
+      StampedeId stampedeId, BuildSlaveRunId runId, long timeMillis) throws IOException {
+    LOG.info("Sending all build rules finished event");
+    AppendBuildSlaveEventsRequest request = new AppendBuildSlaveEventsRequest();
+    request.setStampedeId(stampedeId);
+    request.setBuildSlaveRunId(runId);
+
+    BuildSlaveEvent buildSlaveEvent =
+        DistBuildUtil.createBuildSlaveEvent(
+            BuildSlaveEventType.ALL_BUILD_RULES_FINISHED_EVENT, timeMillis);
+    request.addToEvents(
+        ThriftUtil.serializeToByteBuffer(PROTOCOL_FOR_CLIENT_ONLY_STRUCTS, buildSlaveEvent));
+
+    FrontendRequest frontendRequest = new FrontendRequest();
+    frontendRequest.setType(FrontendRequestType.APPEND_BUILD_SLAVE_EVENTS);
+    frontendRequest.setAppendBuildSlaveEventsRequest(request);
+    makeRequestChecked(frontendRequest);
+  }
+
+  /**
+   * Let the client know that most build rules have completed.
+   *
+   * @param stampedeId
+   * @param runId
+   * @throws IOException
+   */
+  public void sendMostBuildRulesCompletedEvent(
+      StampedeId stampedeId, BuildSlaveRunId runId, long timeMillis) throws IOException {
+    LOG.info("Sending most build rules finished event");
+    AppendBuildSlaveEventsRequest request = new AppendBuildSlaveEventsRequest();
+    request.setStampedeId(stampedeId);
+    request.setBuildSlaveRunId(runId);
+
+    BuildSlaveEvent buildSlaveEvent =
+        DistBuildUtil.createBuildSlaveEvent(
+            BuildSlaveEventType.MOST_BUILD_RULES_FINISHED_EVENT, timeMillis);
+    request.addToEvents(
+        ThriftUtil.serializeToByteBuffer(PROTOCOL_FOR_CLIENT_ONLY_STRUCTS, buildSlaveEvent));
+
+    FrontendRequest frontendRequest = new FrontendRequest();
+    frontendRequest.setType(FrontendRequestType.APPEND_BUILD_SLAVE_EVENTS);
+    frontendRequest.setAppendBuildSlaveEventsRequest(request);
+    makeRequestChecked(frontendRequest);
+  }
+
+  /** Send build progress updates to the client. */
+  public void sendBuildProgressEvent(
+      StampedeId stampedeId,
+      BuildSlaveRunId runId,
+      CoordinatorBuildProgress progress,
+      long timeMillis)
+      throws IOException {
+    LOG.info("Sending coordinator build progress event");
+    AppendBuildSlaveEventsRequest request = new AppendBuildSlaveEventsRequest();
+    request.setStampedeId(stampedeId);
+    request.setBuildSlaveRunId(runId);
+
+    CoordinatorBuildProgressEvent progressEvent =
+        new CoordinatorBuildProgressEvent().setBuildProgress(progress);
+
+    BuildSlaveEvent buildSlaveEvent =
+        DistBuildUtil.createBuildSlaveEvent(
+            BuildSlaveEventType.COORDINATOR_BUILD_PROGRESS_EVENT, timeMillis);
+    buildSlaveEvent.setCoordinatorBuildProgressEvent(progressEvent);
+
+    request.addToEvents(
+        ThriftUtil.serializeToByteBuffer(PROTOCOL_FOR_CLIENT_ONLY_STRUCTS, buildSlaveEvent));
 
     FrontendRequest frontendRequest = new FrontendRequest();
     frontendRequest.setType(FrontendRequestType.APPEND_BUILD_SLAVE_EVENTS);
@@ -571,8 +770,10 @@ public class DistBuildService implements Closeable {
     return query;
   }
 
-  public List<Pair<Integer, BuildSlaveEvent>> multiGetBuildSlaveEvents(
+  /** Fetch BuildSlaveEvents based on a list of queries. */
+  public List<BuildSlaveEventWrapper> multiGetBuildSlaveEvents(
       List<BuildSlaveEventsQuery> eventsQueries) throws IOException {
+    LOG.info("Fetching events from Frontend");
     MultiGetBuildSlaveEventsRequest request = new MultiGetBuildSlaveEventsRequest();
     request.setRequests(eventsQueries);
     FrontendRequest frontendRequest = new FrontendRequest();
@@ -583,7 +784,7 @@ public class DistBuildService implements Closeable {
     Preconditions.checkState(response.isSetMultiGetBuildSlaveEventsResponse());
     Preconditions.checkState(response.getMultiGetBuildSlaveEventsResponse().isSetResponses());
 
-    List<Pair<Integer, BuildSlaveEvent>> result = new LinkedList<>();
+    List<BuildSlaveEventWrapper> result = Lists.newArrayList();
     for (BuildSlaveEventsRange eventsRange :
         response.getMultiGetBuildSlaveEventsResponse().getResponses()) {
       Preconditions.checkState(eventsRange.isSetSuccess());
@@ -600,9 +801,15 @@ public class DistBuildService implements Closeable {
         BuildSlaveEvent event = new BuildSlaveEvent();
         ThriftUtil.deserialize(
             PROTOCOL_FOR_CLIENT_ONLY_STRUCTS, slaveEventWithSeqId.getEvent(), event);
-        result.add(new Pair<>(slaveEventWithSeqId.getEventNumber(), event));
+        result.add(
+            new BuildSlaveEventWrapper(
+                slaveEventWithSeqId.getEventNumber(),
+                eventsRange.getQuery().getBuildSlaveRunId(),
+                event));
       }
     }
+
+    LOG.info(String.format("Fetched events from Frontend. Got [%d] events.", result.size()));
     return result;
   }
 
@@ -667,9 +874,21 @@ public class DistBuildService implements Closeable {
     return Optional.of(status);
   }
 
-  public List<RuleKeyLogEntry> fetchRuleKeyLogs(Collection<String> ruleKeys) throws IOException {
+  /**
+   * Fetch rule key logs as name says. RKL are filtered by repository, schedule type and distributed
+   * flag.
+   */
+  public List<RuleKeyLogEntry> fetchRuleKeyLogs(
+      Collection<String> ruleKeys,
+      String repository,
+      String scheduleType,
+      boolean distributedBuildModeEnabled)
+      throws IOException {
     FetchRuleKeyLogsRequest request = new FetchRuleKeyLogsRequest();
     request.setRuleKeys(Lists.newArrayList(ruleKeys));
+    request.setRepository(repository);
+    request.setScheduleType(scheduleType);
+    request.setDistributedBuildModeEnabled(distributedBuildModeEnabled);
 
     FrontendRequest frontendRequest = new FrontendRequest();
     frontendRequest.setType(FrontendRequestType.FETCH_RULE_KEY_LOGS);
@@ -681,6 +900,22 @@ public class DistBuildService implements Closeable {
     Preconditions.checkState(response.getFetchRuleKeyLogsResponse().isSetRuleKeyLogs());
 
     return response.getFetchRuleKeyLogsResponse().getRuleKeyLogs();
+  }
+
+  /** Sets the final BuildStatus of the BuildJob. */
+  public void setFinalBuildStatus(StampedeId stampedeId, BuildStatus status, String statusMessage)
+      throws IOException {
+    Preconditions.checkArgument(BuildStatusUtil.isTerminalBuildStatus(status));
+    SetFinalBuildStatusRequest request =
+        new SetFinalBuildStatusRequest()
+            .setStampedeId(stampedeId)
+            .setBuildStatus(status)
+            .setBuildStatusMessage(statusMessage);
+    FrontendRequest frontendRequest =
+        new FrontendRequest()
+            .setType(FrontendRequestType.SET_FINAL_BUILD_STATUS)
+            .setSetFinalBuildStatusRequest(request);
+    makeRequestChecked(frontendRequest);
   }
 
   @Override
@@ -718,6 +953,18 @@ public class DistBuildService implements Closeable {
 
     FrontendResponse response = makeRequestChecked(frontendRequest);
     Preconditions.checkState(response.isSetEnqueueMinionsResponse());
+  }
+
+  /** Reports that the coordinator is alive to the stampede servers. */
+  public void reportCoordinatorIsAlive(StampedeId stampedeId) throws IOException {
+    ReportCoordinatorAliveRequest request = new ReportCoordinatorAliveRequest();
+    request.setStampedeId(stampedeId);
+
+    FrontendRequest frontendRequest = new FrontendRequest();
+    frontendRequest.setType(FrontendRequestType.REPORT_COORDINATOR_ALIVE);
+    frontendRequest.setReportCoordinatorAliveRequest(request);
+    FrontendResponse response = makeRequestChecked(frontendRequest);
+    Preconditions.checkState(response.isSetReportCoordinatorAliveResponse());
   }
 
   private FrontendResponse makeRequestChecked(FrontendRequest request) throws IOException {

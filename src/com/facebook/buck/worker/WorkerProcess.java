@@ -162,7 +162,6 @@ public class WorkerProcess implements Closeable {
       }
 
       throw new HumanReadableException(
-          e,
           "Error while trying to close the worker process %s.",
           Joiner.on(' ').join(processParams.getCommand()));
     }

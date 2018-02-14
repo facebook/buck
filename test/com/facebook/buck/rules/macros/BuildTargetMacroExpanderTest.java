@@ -33,6 +33,8 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -54,9 +56,10 @@ public class BuildTargetMacroExpanderTest {
     BuildTargetMacroExpander<?> macroExpander =
         new ExecutableMacroExpander() {
           @Override
-          public String expand(SourcePathResolver resolver, BuildRule rule) throws MacroException {
+          public Arg expand(SourcePathResolver resolver, ExecutableMacro ignored, BuildRule rule)
+              throws MacroException {
             found.add(rule.getBuildTarget());
-            return "";
+            return StringArg.of("");
           }
         };
     MacroHandler handler = new MacroHandler(ImmutableMap.of("exe", macroExpander));

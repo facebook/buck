@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.BuckConfigTestUtils;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;

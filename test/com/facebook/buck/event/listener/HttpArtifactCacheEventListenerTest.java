@@ -19,10 +19,10 @@ package com.facebook.buck.event.listener;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.artifact_cache.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent.Finished;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.network.BatchingLogger;

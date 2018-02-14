@@ -19,16 +19,15 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.aapt.MergeAndroidResourceSources;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
+import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
-import com.facebook.buck.android.toolchain.NdkCxxPlatform;
-import com.facebook.buck.android.toolchain.TargetCpuType;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavacFactory;
-import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -42,6 +41,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableCollection;
@@ -76,23 +76,20 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
   private static final Flavor AAR_ANDROID_RESOURCE_FLAVOR =
       InternalFlavor.of("aar_android_resource");
 
-  private final AndroidManifestDescription androidManifestDescription;
+  private final ToolchainProvider toolchainProvider;
+  private final AndroidManifestFactory androidManifestFactory;
   private final CxxBuckConfig cxxBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
-  private final JavacOptions javacOptions;
-  private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
 
   public AndroidAarDescription(
-      AndroidManifestDescription androidManifestDescription,
+      ToolchainProvider toolchainProvider,
+      AndroidManifestFactory androidManifestFactory,
       CxxBuckConfig cxxBuckConfig,
-      JavaBuckConfig javaBuckConfig,
-      JavacOptions javacOptions,
-      ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms) {
-    this.androidManifestDescription = androidManifestDescription;
+      JavaBuckConfig javaBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
+    this.androidManifestFactory = androidManifestFactory;
     this.cxxBuckConfig = cxxBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
-    this.javacOptions = javacOptions;
-    this.nativePlatforms = nativePlatforms;
   }
 
   @Override
@@ -120,22 +117,13 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
     BuildTarget androidManifestTarget =
         buildTarget.withAppendedFlavors(AAR_ANDROID_MANIFEST_FLAVOR);
 
-    AndroidManifestDescriptionArg androidManifestArgs =
-        AndroidManifestDescriptionArg.builder()
-            .setName(androidManifestTarget.getShortName())
-            .setSkeleton(args.getManifestSkeleton())
-            .setDeps(args.getDeps())
-            .build();
-
     AndroidManifest manifest =
-        androidManifestDescription.createBuildRule(
-            targetGraph,
+        androidManifestFactory.createBuildRule(
             androidManifestTarget,
             projectFilesystem,
-            originalBuildRuleParams,
             resolver,
-            cellRoots,
-            androidManifestArgs);
+            args.getDeps(),
+            args.getManifestSkeleton());
     aarExtraDepsBuilder.add(resolver.addToIndex(manifest));
 
     final APKModuleGraph apkModuleGraph =
@@ -221,12 +209,14 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
               buildTarget,
               projectFilesystem,
               AndroidBinary.PackageType.RELEASE,
-              EnumSet.noneOf(AndroidBinary.ExopackageMode.class),
+              EnumSet.noneOf(ExopackageMode.class),
               args.getBuildConfigValues(),
               Optional.empty(),
               resolver,
               JavacFactory.create(ruleFinder, javaBuckConfig, args),
-              javacOptions,
+              toolchainProvider
+                  .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                  .getJavacOptions(),
               packageableCollection);
       buildConfigRules.forEach(resolver::addToIndex);
       aarExtraDepsBuilder.addAll(buildConfigRules);
@@ -240,11 +230,12 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
     /* native_libraries */
     AndroidNativeLibsPackageableGraphEnhancer packageableGraphEnhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
+            toolchainProvider,
+            cellRoots,
             resolver,
             buildTarget,
             projectFilesystem,
             originalBuildRuleParams,
-            nativePlatforms,
             ImmutableSet.of(),
             cxxBuckConfig,
             /* nativeLibraryMergeMap */ Optional.empty(),
@@ -288,13 +279,13 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
   }
 
   @BuckStyleImmutable
-  @Value.Immutable
+  @Value.Immutable(copy = true)
   interface AbstractAndroidAarDescriptionArg extends AndroidLibraryDescription.CoreArg {
     SourcePath getManifestSkeleton();
 
     @Value.Default
     default BuildConfigFields getBuildConfigValues() {
-      return BuildConfigFields.empty();
+      return BuildConfigFields.of();
     }
 
     @Value.Default

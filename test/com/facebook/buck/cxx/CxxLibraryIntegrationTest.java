@@ -26,7 +26,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
-import com.facebook.buck.apple.ApplePlatform;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -44,10 +44,11 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.InferHelper;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import java.io.FileInputStream;
@@ -102,7 +103,7 @@ public class CxxLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "private_and_exported_headers", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:good-bin");
+    ProcessResult result = workspace.runBuckBuild("//:good-bin");
     result.assertSuccess();
   }
 
@@ -112,7 +113,7 @@ public class CxxLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "private_and_exported_headers", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:bad-bin");
+    ProcessResult result = workspace.runBuckBuild("//:bad-bin");
     result.assertFailure();
   }
 
@@ -122,7 +123,7 @@ public class CxxLibraryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "shared_library", tmp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:binary");
+    ProcessResult result = workspace.runBuckBuild("//:binary");
     assertTrue(
         Files.isRegularFile(
             workspace.getPath(
@@ -218,13 +219,14 @@ public class CxxLibraryIntegrationTest {
   public void testCxxLibraryWithDefaultsInFlagBuildsSomething()
       throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
     workspace.setUp();
 
     BuildTarget target = BuildTargetFactory.newInstance("//foo:library_with_header");
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "build",
             target.getFullyQualifiedName(),
@@ -258,8 +260,7 @@ public class CxxLibraryIntegrationTest {
             this, "explicit_header_only_dependency", tmp);
     workspace.setUp();
     workspace.runBuckBuild("//:binary").assertSuccess();
-    ProjectWorkspace.ProcessResult shouldFail =
-        workspace.runBuckBuild("//:binary-lacking-symbols").assertFailure();
+    ProcessResult shouldFail = workspace.runBuckBuild("//:binary-lacking-symbols").assertFailure();
     assertThat(
         "Should not link in archive of direct header-only dependency.",
         shouldFail.getStderr(),
@@ -280,7 +281,7 @@ public class CxxLibraryIntegrationTest {
     workspace.setUp();
     workspace.enableDirCache();
     workspace.runBuckBuild("//:binary").assertSuccess();
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
     workspace.copyFile("lib1.c.new", "lib1.c");
     workspace.runBuckBuild("//:binary").assertSuccess();
     BuckBuildLog log = workspace.getBuildLog();
@@ -448,7 +449,7 @@ public class CxxLibraryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_library", tmp);
     workspace.setUp();
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "targets", "--config", "cxx.should_remap_host_platform=false", "//:foo");
     result.assertSuccess();

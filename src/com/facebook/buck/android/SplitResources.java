@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.resources.ExoResourcesRewriter;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -34,9 +35,11 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.SortedSet;
@@ -55,6 +58,7 @@ public class SplitResources extends AbstractBuildRule {
   @AddToRuleKey private final SourcePath pathToAaptResources;
   @AddToRuleKey private final SourcePath pathToOriginalRDotTxt;
 
+  private final AndroidPlatformTarget androidPlatformTarget;
   private final SourcePathRuleFinder ruleFinder;
 
   public SplitResources(
@@ -62,8 +66,10 @@ public class SplitResources extends AbstractBuildRule {
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
       SourcePath pathToAaptResources,
-      SourcePath pathToOriginalRDotTxt) {
+      SourcePath pathToOriginalRDotTxt,
+      AndroidPlatformTarget androidPlatformTarget) {
     super(buildTarget, projectFilesystem);
+    this.androidPlatformTarget = androidPlatformTarget;
     this.ruleFinder = ruleFinder;
     this.pathToAaptResources = pathToAaptResources;
     this.pathToOriginalRDotTxt = pathToOriginalRDotTxt;
@@ -79,7 +85,7 @@ public class SplitResources extends AbstractBuildRule {
   @Override
   public SortedSet<BuildRule> getBuildDeps() {
     return BuildableSupport.deriveDeps(this, ruleFinder)
-        .collect(MoreCollectors.toImmutableSortedSet());
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   @Override
@@ -99,7 +105,9 @@ public class SplitResources extends AbstractBuildRule {
         .add(new SplitResourcesStep(context.getSourcePathResolver()))
         .add(
             new ZipalignStep(
+                getBuildTarget(),
                 getProjectFilesystem().getRootPath(),
+                androidPlatformTarget,
                 getUnalignedExoPath(),
                 exoResourcesOutputPath))
         .build();
@@ -149,7 +157,7 @@ public class SplitResources extends AbstractBuildRule {
           getProjectFilesystem().getPathForRelativePath(primaryResourcesOutputPath),
           getProjectFilesystem().getPathForRelativePath(getUnalignedExoPath()),
           getProjectFilesystem().getPathForRelativePath(rDotTxtOutputPath));
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
 
     @Override

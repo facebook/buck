@@ -55,6 +55,11 @@ class TreeBackedTypeParameterElement extends TreeBackedElement
   }
 
   @Override
+  public void complete() {
+    getBounds();
+  }
+
+  @Override
   public List<? extends ArtificialElement> getEnclosedElements() {
     return Collections.emptyList();
   }

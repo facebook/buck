@@ -20,15 +20,14 @@ import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_BUILD_RULE_F
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_CACHE_STATS;
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_EXIT_CODE;
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_INVOCATION_INFO;
-import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_PERFTIMES_COMPLETE;
-import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_PERFTIMES_UPDATE;
+import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_PERFTIMES;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
-import com.facebook.buck.artifact_cache.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.CacheCountersSummary;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ParsingEvent;
@@ -36,13 +35,14 @@ import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.log.PerfTimesStats;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.autosparse.AutoSparseStateEvents;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
@@ -56,12 +56,13 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.OptionalInt;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import javax.annotation.Nullable;
 
 public class MachineReadableLoggerListener implements BuckEventListener {
 
@@ -82,8 +83,10 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   private AtomicInteger cacheIgnores = new AtomicInteger(0);
   private AtomicInteger localKeyUnchangedHits = new AtomicInteger(0);
 
+  @Nullable private PerfTimesStats latestPerfTimesStats;
+
   // Values to be written in the end of the log.
-  private OptionalInt exitCode = OptionalInt.empty();
+  private Optional<ExitCode> exitCode = Optional.empty();
 
   // Cache upload statistics
   private AtomicInteger cacheUploadSuccessCount = new AtomicInteger();
@@ -156,12 +159,12 @@ public class MachineReadableLoggerListener implements BuckEventListener {
 
   @Subscribe
   public void commandFinished(CommandEvent.Finished event) {
-    exitCode = OptionalInt.of(event.getExitCode());
+    exitCode = Optional.of(event.getExitCode());
   }
 
   @Subscribe
   public synchronized void commandInterrupted(CommandEvent.Interrupted event) {
-    exitCode = OptionalInt.of(event.getExitCode());
+    exitCode = Optional.of(event.getExitCode());
   }
 
   @Subscribe
@@ -191,29 +194,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
 
   @Subscribe
   public synchronized void timePerfStatsEvent(PerfTimesEventListener.PerfTimesEvent event) {
-    writeToLog(
-        event instanceof PerfTimesEventListener.PerfTimesEvent.Complete
-            ? PREFIX_PERFTIMES_COMPLETE
-            : PREFIX_PERFTIMES_UPDATE,
-        event);
-  }
-
-  @Subscribe
-  public synchronized void autosparseSparseRefreshStarted(
-      AutoSparseStateEvents.SparseRefreshStarted event) {
-    writeToLog("Autosparse.SparseRefreshStarted", event);
-  }
-
-  @Subscribe
-  public synchronized void autosparseSparseRefreshFinished(
-      AutoSparseStateEvents.SparseRefreshFinished event) {
-    writeToLog("Autosparse.SparseRefreshFinished", event);
-  }
-
-  @Subscribe
-  public synchronized void autosparseSparseRefreshFailed(
-      AutoSparseStateEvents.SparseRefreshFailed event) {
-    writeToLog("Autosparse.SparseRefreshFailed", event);
+    latestPerfTimesStats = event.getPerfTimesStats();
   }
 
   @Subscribe
@@ -255,11 +236,15 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   public void outputTrace(BuildId buildId) throws InterruptedException {
     // IMPORTANT: logging the ExitCode must happen on the executor, otherwise random
     // log lines will be overwritten as outputStream access is not thread safe.
+
     @SuppressWarnings("unused")
     Future<?> unused =
         executor.submit(
             () -> {
               try {
+                if (latestPerfTimesStats != null) {
+                  writeToLogImpl(PREFIX_PERFTIMES, latestPerfTimesStats);
+                }
                 writeToLogImpl(
                     PREFIX_CACHE_STATS,
                     CacheCountersSummary.of(
@@ -274,7 +259,9 @@ public class MachineReadableLoggerListener implements BuckEventListener {
                         cacheUploadFailureCount));
 
                 outputStream.write(
-                    String.format(PREFIX_EXIT_CODE + " {\"exitCode\":%d}", exitCode.orElse(-1))
+                    String.format(
+                            PREFIX_EXIT_CODE + " {\"exitCode\":%d}",
+                            exitCode.map(code -> code.getCode()).orElse(-1))
                         .getBytes(Charsets.UTF_8));
 
                 outputStream.close();

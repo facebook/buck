@@ -18,6 +18,7 @@ package com.facebook.buck.testutil.integration;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;

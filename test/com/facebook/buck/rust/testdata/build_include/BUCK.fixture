@@ -1,0 +1,20 @@
+rust_binary(
+    name = "include_included",
+    srcs = [
+        "included.rs",
+        "main.rs",
+    ],
+    deps = [
+        "//subdir:subdir",
+    ],
+)
+
+rust_binary(
+    name = "include_missing",
+    srcs = [
+        "main.rs",
+    ],
+    deps = [
+        "//subdir:subdir",
+    ],
+)

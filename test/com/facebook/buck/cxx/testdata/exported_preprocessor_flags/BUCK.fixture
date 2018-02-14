@@ -1,38 +1,39 @@
 cxx_binary(
-  name = 'main',
-  srcs = [
-    'main.cpp',
-  ],
-  deps = [
-    ':lib',
-  ],
+    name = "main",
+    srcs = [
+        "main.cpp",
+    ],
+    deps = [
+        ":lib",
+    ],
 )
 
 cxx_library(
-  name = 'lib',
-  srcs = [
-    'lib.cpp',
-  ],
-  exported_preprocessor_flags = [
-    '-DLIB',
-  ],
+    name = "lib",
+    srcs = [
+        "lib.cpp",
+    ],
+    exported_preprocessor_flags = [
+        "-DLIB",
+    ],
 )
 
 genrule(
-  name = 'gen',
-  out = 'gen',
-  cmd = 'touch "$OUT"',
+    name = "gen",
+    out = "gen",
+    cmd = "touch \"$OUT\"",
 )
 
 cxx_library(
-  name = 'lib_with_location_macro',
-  exported_preprocessor_flags = [
-    # This is actually a preprocessor flag.  A better example would be the
-    # `-fsanitize-blacklist` compiler, but since this isn't available on older
-    # compilers, use `-include` instead.
-    '-include', '$(location :gen)',
-  ],
-  srcs = [
-    'foo.cpp',
-  ],
+    name = "lib_with_location_macro",
+    srcs = [
+        "foo.cpp",
+    ],
+    exported_preprocessor_flags = [
+        # This is actually a preprocessor flag.  A better example would be the
+        # `-fsanitize-blacklist` compiler, but since this isn't available on older
+        # compilers, use `-include` instead.
+        "-include",
+        "$(location :gen)",
+    ],
 )

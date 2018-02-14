@@ -16,18 +16,21 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.jvm.java.HasClasspathEntries;
+import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.WriteToFileArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 import java.io.File;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -59,56 +62,55 @@ public class ClasspathMacroExpander extends BuildTargetMacroExpander<ClasspathMa
   }
 
   @Override
-  public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      ClasspathMacro input)
-      throws MacroException {
-    return ImmutableList.copyOf(
-        getHasClasspathEntries(resolve(resolver, input)).getTransitiveClasspathDeps());
+  public Arg makeExpandToFileArg(BuildTarget target, String prefix, Arg delegate) {
+    return new ClassPathWriteToFileArg(target, prefix, delegate);
   }
 
   @Override
-  public String expandForFile(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      ImmutableList<String> input,
-      Object precomputedWork)
+  protected Arg expand(SourcePathResolver resolver, ClasspathMacro ignored, BuildRule rule)
       throws MacroException {
-    // javac is the canonical reader of classpaths, and its code for reading classpaths from
-    // files is a little weird:
-    // http://hg.openjdk.java.net/jdk7/jdk7/langtools/file/ce654f4ecfd8/src/share/classes/com/sun/tools/javac/main/CommandLine.java#l74
-    // The # characters that might be present in classpaths due to flavoring would be read as
-    // comments. As a simple workaround, we quote the entire classpath.
-    return String.format("'%s'", expand(target, cellNames, resolver, input, precomputedWork));
+    return new ClasspathArg(
+        getHasClasspathEntries(rule)
+            .getTransitiveClasspathDeps()
+            .stream()
+            .map(BuildRule::getSourcePathToOutput)
+            .filter(Objects::nonNull)
+            .sorted()
+            .collect(ImmutableList.toImmutableList()));
   }
 
-  @Override
-  protected String expand(SourcePathResolver resolver, BuildRule rule) throws MacroException {
-    return getHasClasspathEntries(rule)
-        .getTransitiveClasspathDeps()
-        .stream()
-        .filter(dep -> dep.getSourcePathToOutput() != null)
-        .map(dep -> resolver.getAbsolutePath(dep.getSourcePathToOutput()))
-        .map(Object::toString)
-        .sorted(Ordering.natural())
-        .collect(Collectors.joining(File.pathSeparator));
+  // javac is the canonical reader of classpaths, and its code for reading classpaths from
+  // files is a little weird:
+  // http://hg.openjdk.java.net/jdk7/jdk7/langtools/file/ce654f4ecfd8/src/share/classes/com/sun/tools/javac/main/CommandLine.java#l74
+  // The # characters that might be present in classpaths due to flavoring would be read as
+  // comments. As a simple workaround, we quote the entire classpath.
+  private static class ClassPathWriteToFileArg extends WriteToFileArg {
+    public ClassPathWriteToFileArg(BuildTarget target, String prefix, Arg delegate) {
+      super(target, prefix, delegate);
+    }
+
+    @Override
+    protected String getContent(SourcePathResolver pathResolver) {
+      return "'" + super.getContent(pathResolver) + "'";
+    }
   }
 
-  @Override
-  public Object extractRuleKeyAppendablesFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      ClasspathMacro input)
-      throws MacroException {
-    return getHasClasspathEntries(resolve(resolver, input))
-        .getTransitiveClasspathDeps()
-        .stream()
-        .map(BuildRule::getSourcePathToOutput)
-        .filter(Objects::nonNull)
-        .collect(MoreCollectors.toImmutableSortedSet());
+  private class ClasspathArg implements Arg {
+    @AddToRuleKey private final ImmutableList<SourcePath> classpath;
+
+    public ClasspathArg(ImmutableList<SourcePath> collect) {
+      this.classpath = collect;
+    }
+
+    @Override
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+      consumer.accept(
+          classpath
+              .stream()
+              .map(dep -> pathResolver.getAbsolutePath(dep))
+              .map(Object::toString)
+              .sorted(Ordering.natural())
+              .collect(Collectors.joining(File.pathSeparator)));
+    }
   }
 }

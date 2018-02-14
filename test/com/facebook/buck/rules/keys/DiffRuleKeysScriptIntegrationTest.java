@@ -16,12 +16,14 @@
 
 package com.facebook.buck.rules.keys;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.log.LogFormatter;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
@@ -128,10 +130,10 @@ public class DiffRuleKeysScriptIntegrationTest {
             .join(
                 "Change details for "
                     + "[//:java_lib_2->jarBuildStepsFactory->configuredCompiler->javacOptions]",
-                "  (getSourceLevel):",
+                "  (sourceLevel):",
                 "    -[string(\"6\")]",
                 "    +[string(\"7\")]",
-                "  (getTargetLevel):",
+                "  (targetLevel):",
                 "    -[string(\"6\")]",
                 "    +[string(\"7\")]",
                 "");
@@ -154,8 +156,8 @@ public class DiffRuleKeysScriptIntegrationTest {
         runRuleKeyDiffer(workspace, "//cxx:cxx_bin"),
         Matchers.stringContainsInOrder(
             "Change details for [//cxx:cxx_bin#compile-a.cpp.", /* hash */
-            ",default->preprocessDelegate->includes]",
-            "(include(cxx/a.h)):",
+            ",default->preprocessDelegate->preprocessorFlags->includes]",
+            "(cxx/a.h):",
             "-[path(cxx/a.h:", /*hash*/
             ")]",
             "+[path(cxx/a.h:", /*hash*/
@@ -192,8 +194,8 @@ public class DiffRuleKeysScriptIntegrationTest {
     assertThat(
         runRuleKeyDiffer(workspace),
         Matchers.stringContainsInOrder(
-            "Change details for [//:java_lib_2]",
-            "  (buck.deps):",
+            "Change details for [//:java_lib_2->buck.deps]",
+            "  (additionalDeps):",
             "    -[<missing>]",
             "    +[\"//:java_lib_3\"@ruleKey(sha1=", /* some rulekey */
             ")]",
@@ -219,23 +221,43 @@ public class DiffRuleKeysScriptIntegrationTest {
 
     assertThat(
         runRuleKeyDiffer(workspace, ""),
-        Matchers.containsString(
-            // TODO: The fact that it shows only the rule key difference for jarBuildStepsFactory
-            // rather than the change in the srcs property of that class is a bug in the differ.
-            "Change details for [//:java_lib_all]\n"
-                + "  (jarBuildStepsFactory):\n"
-                + "    -[ruleKey(sha1=d03b45658c41d6068553d40a648682fdffbba013)]\n"
-                + "    +[ruleKey(sha1=40358b32a8871a24789d1359228f16ab2d5e8953)]\n"
-                + "Change details for [//:java_lib_2->jarBuildStepsFactory]\n"
-                + "  (srcs):\n"
-                + "    -[<missing>]\n"
-                + "    -[container(LIST,len=1)]\n"
-                + "    +[container(LIST,len=2)]\n"
-                + "    +[path(JavaLib3.java:3396c5e71e9fad8e8f177af9d842f1b9b67bfb46)]\n"
-                + "Change details for [//:java_lib_1->jarBuildStepsFactory]\n"
-                + "  (srcs):\n"
-                + "    -[path(JavaLib1.java:e3506ff7c11f638458d08120d54f186dc79ddada)]\n"
-                + "    +[path(JavaLib1.java:7d82c86f964af479abefa21da1f19b1030649314)]"));
+        // TODO: The fact that it shows only the rule key difference for jarBuildStepsFactory
+        // rather than the change in the srcs property of that class is a bug in the differ.
+        Matchers.allOf(
+            Matchers.containsString(
+                "Change details for [//:java_lib_all]\n"
+                    + "  (jarBuildStepsFactory):\n"
+                    + "    -[ruleKey(sha1=9241a8c0f9dd6ded71e133ba67b49e8f2cdb34f3)]\n"
+                    + "    +[ruleKey(sha1=e822b1bf6f2416bfa285d6e8e11874f9807390ce)]\n"),
+            Matchers.containsString(
+                "Change details for [//:java_lib_2->jarBuildStepsFactory]\n"
+                    + "  (srcs):\n"
+                    + "    -[<missing>]\n"
+                    + "    -[container(LIST,len=1)]\n"
+                    + "    +[container(LIST,len=2)]\n"
+                    + "    +[path(JavaLib3.java:3396c5e71e9fad8e8f177af9d842f1b9b67bfb46)]\n"),
+            Matchers.containsString(
+                "Change details for [//:java_lib_1->jarBuildStepsFactory]\n"
+                    + "  (srcs):\n"
+                    + "    -[path(JavaLib1.java:e3506ff7c11f638458d08120d54f186dc79ddada)]\n"
+                    + "    +[path(JavaLib1.java:7d82c86f964af479abefa21da1f19b1030649314)]")));
+  }
+
+  @Test
+  public void testPreprocessorSanitization() throws Exception {
+    Assume.assumeTrue(Platform.detect() == Platform.MACOS);
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "diff_rulekeys_script", tmp);
+    workspace.setUp();
+
+    invokeBuckCommand(workspace, ImmutableList.of("//apple:cxx_bin"), "buck-0.log");
+
+    Path logPath = tmp.getRoot().resolve("buck-0.log");
+    String expectedFileContent = new String(Files.readAllBytes(logPath), UTF_8);
+    assertThat(
+        expectedFileContent,
+        Matchers.containsString("string(\"-I$SDKROOT/usr/include/libxml2\"):key(sanitized):"));
   }
 
   private void writeBuckConfig(ProjectWorkspace projectWorkspace, String javaVersion)
@@ -277,7 +299,7 @@ public class DiffRuleKeysScriptIntegrationTest {
   private void invokeBuckCommand(
       ProjectWorkspace workspace, ImmutableList<String> targets, String logOut) throws IOException {
     ImmutableList<String> args = ImmutableList.of("targets", "--show-rulekey");
-    ProjectWorkspace.ProcessResult buckCommandResult =
+    ProcessResult buckCommandResult =
         workspace.runBuckCommand(
             Stream.concat(args.stream(), targets.stream()).toArray(String[]::new));
 

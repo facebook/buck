@@ -17,9 +17,11 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.rules.Cell;
+import com.facebook.buck.util.BuckCellArg;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.FluentIterable;
@@ -27,6 +29,7 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -77,23 +80,22 @@ public class AuditConfigCommand extends AbstractCommand {
   }
 
   @Override
-  public int runWithoutHelp(final CommandRunnerParams params)
+  public ExitCode runWithoutHelp(final CommandRunnerParams params)
       throws IOException, InterruptedException {
     if (shouldGenerateTabbedOutput() && shouldGenerateJsonOutput()) {
-      params
-          .getBuckEventBus()
-          .post(ConsoleEvent.severe("--json and --tab cannot both be specified"));
-      return 1;
+      throw new CommandLineException("--json and --tab cannot both be specified");
     }
 
-    final BuckConfig buckConfig = params.getBuckConfig();
+    final Cell rootCell = params.getCell();
 
     final ImmutableSortedSet<ConfigValue> configs =
         getArguments()
             .stream()
             .flatMap(
                 input -> {
-                  String[] parts = input.split("\\.", 2);
+                  BuckCellArg arg = BuckCellArg.of(input);
+                  BuckConfig buckConfig = getCellBuckConfig(rootCell, arg.getCellName());
+                  String[] parts = arg.getArg().split("\\.", 2);
 
                   DirtyPrintStreamDecorator stdErr = params.getConsole().getStdErr();
                   if (parts.length == 1) {
@@ -124,7 +126,7 @@ public class AuditConfigCommand extends AbstractCommand {
                           input, parts[0], parts[1], buckConfig.getValue(parts[0], parts[1])));
                 })
             .collect(
-                MoreCollectors.toImmutableSortedSet(
+                ImmutableSortedSet.toImmutableSortedSet(
                     Comparator.comparing(ConfigValue::getSection)
                         .thenComparing(ConfigValue::getKey)));
 
@@ -135,7 +137,15 @@ public class AuditConfigCommand extends AbstractCommand {
     } else {
       printBuckconfigOutput(params, configs);
     }
-    return 0;
+    return ExitCode.SUCCESS;
+  }
+
+  private BuckConfig getCellBuckConfig(Cell cell, Optional<String> cellName) {
+    Optional<Path> cellPath = cell.getCellPathResolver().getCellPath(cellName);
+    if (!cellPath.isPresent()) {
+      return cell.getBuckConfig();
+    }
+    return cell.getCell(cellPath.get()).getBuckConfig();
   }
 
   private void printTabbedOutput(

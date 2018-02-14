@@ -30,7 +30,7 @@ import com.facebook.buck.event.EventKey;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.timing.FakeClock;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.eventbus.Subscribe;
@@ -63,7 +63,7 @@ public class UnskippedRulesTrackerTest {
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     RuleDepsCache depsCache = new RuleDepsCache(resolver);
     unskippedRulesTracker = new UnskippedRulesTracker(depsCache, resolver);
-    eventBus = new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId());
+    eventBus = new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId());
     eventBus.register(
         new Object() {
           @Subscribe

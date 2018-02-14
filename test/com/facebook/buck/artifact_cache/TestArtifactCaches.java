@@ -16,6 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import java.io.IOException;
 import java.nio.file.Path;

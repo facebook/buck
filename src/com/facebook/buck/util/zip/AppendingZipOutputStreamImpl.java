@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.zip;
 
-import com.facebook.buck.timing.Clock;
+import com.facebook.buck.util.timing.Clock;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.io.OutputStream;

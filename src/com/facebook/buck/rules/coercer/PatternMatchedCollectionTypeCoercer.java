@@ -17,8 +17,8 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.util.types.Pair;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
@@ -54,10 +54,11 @@ public class PatternMatchedCollectionTypeCoercer<T>
   }
 
   @Override
-  public void traverse(PatternMatchedCollection<T> object, Traversal traversal) {
+  public void traverse(
+      CellPathResolver cellRoots, PatternMatchedCollection<T> object, Traversal traversal) {
     for (Pair<Pattern, T> value : object.getPatternsAndValues()) {
       traversal.traverse(value.getFirst());
-      valueTypeCoercer.traverse(value.getSecond(), traversal);
+      valueTypeCoercer.traverse(cellRoots, value.getSecond(), traversal);
     }
   }
 

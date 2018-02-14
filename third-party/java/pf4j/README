@@ -1,0 +1,14 @@
+The following jars were built from https://github.com/decebals/pf4j
+
+- pf4j-2.0.0-SNAPSHOT-javadoc.jar
+- pf4j-2.0.0-SNAPSHOT-sources.jar
+- pf4j-2.0.0-SNAPSHOT.jar
+
+To regenerate these jars:
+
+ 0) install maven (brew install maven)
+ 1) git clone https://github.com/decebals/pf4j.git
+ 2) cd pf4j
+ 3) git checkout 422484d7502fb16f45c1a8143aa9eef867659e81
+ 4) mvn clean package
+ 5) copy jars from pf4j/target to buck/third-party/java/pf4j

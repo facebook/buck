@@ -20,10 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.Compiler;
@@ -32,6 +32,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -53,6 +54,7 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -60,16 +62,16 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
@@ -93,22 +95,38 @@ public class CxxPrecompiledHeaderRuleTest {
   private static final CxxBuckConfig CXX_CONFIG_PCH_ENABLED =
       new CxxBuckConfig(FakeBuckConfig.builder().setSections("[cxx]", "pch_enabled=true").build());
 
-  private static final PreprocessorProvider PREPROCESSOR_SUPPORTING_PCH =
-      new PreprocessorProvider(Paths.get("foopp"), Optional.of(CxxToolProvider.Type.CLANG));
-
-  private static final CxxPlatform PLATFORM_SUPPORTING_PCH =
-      CxxPlatformUtils.build(CXX_CONFIG_PCH_ENABLED).withCpp(PREPROCESSOR_SUPPORTING_PCH);
-
-  @Rule public TemporaryPaths tmp = new TemporaryPaths(true);
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
   private ProjectFilesystem filesystem;
   private ProjectWorkspace workspace;
 
+  private PreprocessorProvider preprocessorSupportingPch;
+  private CxxPlatform platformSupportingPch;
+  private CxxBuckConfig cxxConfigPchDisabled;
+  private CxxPlatform platformNotSupportingPch;
+
   @Before
   public void setUp() throws InterruptedException, IOException {
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_precompiled_header_rule", tmp);
     workspace.setUp();
+
+    preprocessorSupportingPch =
+        new PreprocessorProvider(
+            PathSourcePath.of(filesystem, Paths.get("foopp")),
+            Optional.of(CxxToolProvider.Type.CLANG));
+
+    platformSupportingPch =
+        CxxPlatformUtils.build(CXX_CONFIG_PCH_ENABLED).withCpp(preprocessorSupportingPch);
+
+    cxxConfigPchDisabled =
+        new CxxBuckConfig(
+            FakeBuckConfig.builder().setSections("[cxx]\n" + "pch_enabled=false\n").build());
+
+    platformNotSupportingPch =
+        CxxPlatformUtils.build(cxxConfigPchDisabled).withCpp(preprocessorSupportingPch);
   }
 
   public final TargetNodeToBuildRuleTransformer transformer =
@@ -135,7 +153,10 @@ public class CxxPrecompiledHeaderRuleTest {
     return new CxxPrecompiledHeaderTemplate(
         target,
         new FakeProjectFilesystem(),
-        newParams().copyAppendingExtraDeps(deps),
+        deps,
+        ruleResolver,
+        pathResolver,
+        ruleFinder,
         headerSourcePath);
   }
 
@@ -160,8 +181,8 @@ public class CxxPrecompiledHeaderRuleTest {
         .setResolver(ruleResolver)
         .setRuleFinder(ruleFinder)
         .setPathResolver(DefaultSourcePathResolver.from(ruleFinder))
-        .setCxxPlatform(PLATFORM_SUPPORTING_PCH)
-        .setPicType(AbstractCxxSourceRuleFactory.PicType.PIC)
+        .setCxxPlatform(platformSupportingPch)
+        .setPicType(PicType.PIC)
         .setCxxBuckConfig(CXX_CONFIG_PCH_ENABLED);
   }
 
@@ -191,10 +212,6 @@ public class CxxPrecompiledHeaderRuleTest {
       }
     }
     return list.subList(i, list.size());
-  }
-
-  private boolean platformOkForPCHTests() {
-    return Platform.detect() != Platform.WINDOWS;
   }
 
   /** @return exit code from that process */
@@ -237,8 +254,6 @@ public class CxxPrecompiledHeaderRuleTest {
 
   @Test
   public void samePchIffSameFlags() throws Exception {
-    assumeTrue(platformOkForPCHTests());
-
     BuildTarget pchTarget = newTarget("//test:pch");
     CxxPrecompiledHeaderTemplate pch = newPCH(pchTarget);
     ruleResolver.addToIndex(pch);
@@ -302,8 +317,6 @@ public class CxxPrecompiledHeaderRuleTest {
 
   @Test
   public void userRuleChangesDependencyPCHRuleFlags() throws Exception {
-    assumeTrue(platformOkForPCHTests());
-
     BuildTarget pchTarget = newTarget("//test:pch");
     CxxPrecompiledHeaderTemplate pch = newPCH(pchTarget);
     ruleResolver.addToIndex(pch);
@@ -335,14 +348,13 @@ public class CxxPrecompiledHeaderRuleTest {
     assertNotNull(pchInstance);
     ImmutableList<String> pchCmd =
         pchInstance.makeMainStep(pathResolver, Paths.get("/tmp/x")).getCommand();
+
     assertTrue(seek(pchCmd, "-flag-for-source").size() > 0);
     assertTrue(seek(pchCmd, "-flag-for-factory").size() > 0);
   }
 
   @Test
   public void pchDepsNotRepeatedInLinkArgs() throws Exception {
-    assumeTrue(platformOkForPCHTests());
-
     final BuildTarget publicHeaderTarget = BuildTargetFactory.newInstance("//test:header");
     final BuildTarget publicHeaderSymlinkTreeTarget =
         BuildTargetFactory.newInstance("//test:symlink");
@@ -423,7 +435,7 @@ public class CxxPrecompiledHeaderRuleTest {
     CxxLink binLink =
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             CXX_CONFIG_PCH_ENABLED,
-            PLATFORM_SUPPORTING_PCH,
+            platformSupportingPch,
             filesystem,
             ruleResolver,
             pathResolver,
@@ -433,15 +445,17 @@ public class CxxPrecompiledHeaderRuleTest {
             Linker.LinkType.EXECUTABLE,
             Optional.empty(), // soname
             Paths.get("/tmp/bin.prog"),
+            ImmutableList.of(),
             Linker.LinkableDepType.STATIC,
-            /*thinLTO*/ false,
+            CxxLinkOptions.of(),
             nativeLinkableDeps,
             Optional.empty(), // cxxRuntimeType,
             Optional.empty(), // bundleLoader,
             ImmutableSet.of(), // blacklist,
             ImmutableSet.of(libTarget), // linkWholeDeps,
             NativeLinkableInput.builder().addAllArgs(SourcePathArg.from(binObjects)).build(),
-            Optional.<LinkOutputPostprocessor>empty());
+            Optional.<LinkOutputPostprocessor>empty(),
+            TestCellPathResolver.get(filesystem));
 
     CxxWriteArgsToFileStep argsToFile = null;
     for (Step step :
@@ -470,9 +484,32 @@ public class CxxPrecompiledHeaderRuleTest {
   }
 
   @Test
-  public void userRuleIncludePathsChangedByPCH() throws Exception {
-    assumeTrue(platformOkForPCHTests());
+  public void pchDisabledShouldIncludeAsRegularHeader() throws Exception {
+    BuildTarget pchTarget = newTarget("//test:pch");
+    CxxPrecompiledHeaderTemplate pch =
+        newPCH(pchTarget, FakeSourcePath.of("header.h"), ImmutableSortedSet.of());
+    ruleResolver.addToIndex(pch);
+    CxxPreprocessAndCompile compileLibRule =
+        newFactoryBuilder(newTarget("//test:lib"), new FakeProjectFilesystem())
+            .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
+            .setCxxPlatform(platformNotSupportingPch)
+            .setCxxBuckConfig(cxxConfigPchDisabled)
+            .build()
+            .requirePreprocessAndCompileBuildRule("lib.cpp", newSource("lib.cpp"));
 
+    ruleResolver.addToIndex(compileLibRule);
+    ImmutableList<String> compileLibCmd =
+        compileLibRule.makeMainStep(pathResolver, Paths.get("/tmp/x"), false).getCommand();
+
+    assertSame(seek(compileLibCmd, "-include-pch").size(), 0);
+
+    List<String> flag = seek(compileLibCmd, "-include");
+    assertTrue(flag.size() >= 2);
+    assertTrue(flag.get(1).endsWith(".h"));
+  }
+
+  @Test
+  public void userRuleIncludePathsChangedByPCH() throws Exception {
     CxxPreprocessorInput cxxPreprocessorInput =
         CxxPreprocessorInput.builder()
             .addIncludes(
@@ -538,20 +575,16 @@ public class CxxPrecompiledHeaderRuleTest {
 
   @Test
   public void successfulBuildWithPchHavingNoDeps() throws Exception {
-    assumeTrue(platformOkForPCHTests());
     workspace.runBuckBuild("//basic_tests:main").assertSuccess();
   }
 
   @Test
   public void successfulBuildWithPchHavingDeps() throws Exception {
-    assumeTrue(platformOkForPCHTests());
     workspace.runBuckBuild("//deps_test:bin").assertSuccess();
   }
 
   @Test
   public void changingPrecompilableHeaderCausesRecompile() throws Exception {
-    assumeTrue(platformOkForPCHTests());
-
     BuckBuildLog buildLog;
 
     workspace.writeContentsToPath(
@@ -585,8 +618,6 @@ public class CxxPrecompiledHeaderRuleTest {
 
   @Test
   public void changingHeaderIncludedByPCHPrefixHeaderCausesRecompile() throws Exception {
-    assumeTrue(platformOkForPCHTests());
-
     BuckBuildLog buildLog;
 
     workspace.writeContentsToPath(
@@ -645,15 +676,13 @@ public class CxxPrecompiledHeaderRuleTest {
 
   @Test
   public void deterministicHashesForSharedPCHs() throws Exception {
-    assumeTrue(platformOkForPCHTests());
-
     Sha1HashCode pchHashA = null;
     workspace.runBuckBuild("//determinism/a:main").assertSuccess();
     BuckBuildLog buildLogA = workspace.getBuildLog();
     for (BuildTarget target : buildLogA.getAllTargets()) {
       if (target.toString().startsWith("//determinism/lib:pch#default,pch-cxx-")) {
         pchHashA = buildLogA.getLogEntry(target).getRuleKey();
-        System.err.println("A: " + pchHashA);
+        System.err.println("A: " + target.toString() + " " + pchHashA);
       }
     }
     assertNotNull(pchHashA);
@@ -664,7 +693,7 @@ public class CxxPrecompiledHeaderRuleTest {
     for (BuildTarget target : buildLogB.getAllTargets()) {
       if (target.toString().startsWith("//determinism/lib:pch#default,pch-cxx-")) {
         pchHashB = buildLogB.getLogEntry(target).getRuleKey();
-        System.err.println("B: " + pchHashB);
+        System.err.println("B: " + target.toString() + " " + pchHashB);
       }
     }
     assertNotNull(pchHashB);
@@ -676,7 +705,7 @@ public class CxxPrecompiledHeaderRuleTest {
     for (BuildTarget target : buildLogC.getAllTargets()) {
       if (target.toString().startsWith("//determinism/lib:pch#default,pch-cxx-")) {
         pchHashC = buildLogC.getLogEntry(target).getRuleKey();
-        System.err.println("C: " + pchHashC);
+        System.err.println("C: " + target.toString() + " " + pchHashC);
       }
     }
     assertNotNull(pchHashC);

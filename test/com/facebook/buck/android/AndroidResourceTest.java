@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
@@ -37,8 +36,8 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleParams;
-import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
-import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -105,9 +104,11 @@ public class AndroidResourceTest {
     SourcePathResolver pathResolver2 = DefaultSourcePathResolver.from(ruleFinder2);
 
     RuleKey ruleKey1 =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver1, ruleFinder1).build(androidResource1);
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver1, ruleFinder1)
+            .build(androidResource1);
     RuleKey ruleKey2 =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver2, ruleFinder2).build(androidResource2);
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver2, ruleFinder2)
+            .build(androidResource2);
 
     assertNotEquals(
         "The two android_resource rules should have different rule keys.", ruleKey1, ruleKey2);
@@ -143,8 +144,7 @@ public class AndroidResourceTest {
     projectFilesystem.writeContentsToPath(
         "com.example.android\n",
         resolver.getRelativePath(androidResource.getPathToRDotJavaPackageFile()));
-    FakeOnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
-    androidResource.initializeFromDisk(onDiskBuildInfo);
+    androidResource.initializeFromDisk();
     assertEquals("com.example.android", androidResource.getRDotJavaPackage());
   }
 
@@ -177,8 +177,7 @@ public class AndroidResourceTest {
             /* hasWhitelistedStrings */ false);
     projectFilesystem.writeContentsToPath(
         "com.ex.pkg\n", resolver.getRelativePath(androidResource.getPathToRDotJavaPackageFile()));
-    FakeOnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
-    androidResource.initializeFromDisk(onDiskBuildInfo);
+    androidResource.initializeFromDisk();
     assertEquals("com.ex.pkg", androidResource.getRDotJavaPackage());
   }
 
@@ -212,14 +211,14 @@ public class AndroidResourceTest {
     filesystem.writeContentsToPath(
         "something", pathResolver.getRelativePath(dep.getPathToTextSymbolsFile()));
     RuleKey original =
-        new InputBasedRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder).build(resource);
+        new TestInputBasedRuleKeyFactory(fileHashCache, pathResolver, ruleFinder).build(resource);
 
     fileHashCache.invalidateAll();
 
     filesystem.writeContentsToPath(
         "something else", pathResolver.getRelativePath(dep.getPathToTextSymbolsFile()));
     RuleKey changed =
-        new InputBasedRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder).build(resource);
+        new TestInputBasedRuleKeyFactory(fileHashCache, pathResolver, ruleFinder).build(resource);
 
     assertThat(original, Matchers.not(Matchers.equalTo(changed)));
   }

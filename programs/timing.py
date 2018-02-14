@@ -6,11 +6,11 @@ import sys
 
 
 def monotonic_time_nanos():
-    '''Returns a monotonically-increasing timestamp value in nanoseconds.
+    """Returns a monotonically-increasing timestamp value in nanoseconds.
 
     The epoch of the return value is undefined. To use this, you must call
     it more than once and calculate the delta between two calls.
-    '''
+    """
     # This function should be overwritten below on supported platforms.
     raise Exception('Unsupported platform: ' + platform.system())
 

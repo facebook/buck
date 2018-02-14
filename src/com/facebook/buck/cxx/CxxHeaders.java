@@ -19,8 +19,10 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.BuildableSupport;
+import com.facebook.buck.rules.HasCustomDepsLogic;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -39,7 +41,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /** Encapsulates headers from a single root location. */
-public abstract class CxxHeaders implements RuleKeyAppendable {
+public abstract class CxxHeaders implements AddsToRuleKey, HasCustomDepsLogic {
 
   public abstract CxxPreprocessables.IncludeType getIncludeType();
 
@@ -51,19 +53,23 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
   public abstract Optional<SourcePath> getHeaderMap();
 
   /**
-   * @return the path to add to the preprocessor search path to find the includes. This defaults to
-   *     the root, but can be overridden to use an alternate path.
-   */
-  @Nullable
-  public abstract SourcePath getIncludeRoot();
-
-  /**
    * Add this header pack to the given {@link com.facebook.buck.cxx.HeaderPathNormalizer.Builder}.
    */
   public abstract void addToHeaderPathNormalizer(HeaderPathNormalizer.Builder builder);
 
   /** @return all deps required by this header pack. */
-  public abstract Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder);
+  @Override
+  public Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    return BuildableSupport.deriveDeps(this, ruleFinder);
+  }
+
+  /**
+   * @return the path to add to the preprocessor search path to find the includes. This defaults to
+   *     the root, but can be overridden to use an alternate path.
+   */
+  public Optional<Path> getResolvedIncludeRoot(SourcePathResolver resolver) {
+    return Optional.of(resolver.getAbsolutePath(Preconditions.checkNotNull(getRoot())));
+  }
 
   private static Path resolveSourcePathAndShorten(
       SourcePathResolver resolver, SourcePath path, Optional<PathShortener> pathShortener) {
@@ -94,12 +100,16 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
             cxxHeaders.getIncludeType(),
             resolveSourcePathAndShorten(resolver, headerMap.get(), pathMinimizer).toString());
       }
-      if (cxxHeaders.getIncludeRoot() != null) {
-        roots.put(
-            cxxHeaders.getIncludeType(),
-            resolveSourcePathAndShorten(resolver, cxxHeaders.getIncludeRoot(), pathMinimizer)
-                .toString());
-      }
+      cxxHeaders
+          .getResolvedIncludeRoot(resolver)
+          .ifPresent(
+              resolvedPath ->
+                  roots.put(
+                      cxxHeaders.getIncludeType(),
+                      pathMinimizer
+                          .map(min -> min.shorten(resolvedPath))
+                          .orElse(resolvedPath)
+                          .toString()));
     }
 
     // Define the include type ordering.  We always add local ("-I") include paths first so that
@@ -145,7 +155,6 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
     }
   }
 
-  @SuppressWarnings("serial")
   public static class ConflictingHeadersException extends Exception {
     public ConflictingHeadersException(Path key, SourcePath value1, SourcePath value2) {
       super(

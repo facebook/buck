@@ -16,9 +16,10 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import org.junit.Before;
@@ -47,7 +48,7 @@ public class AndroidResourceLibraryDepIntegrationTest {
     String libTarget = "//java/com/sample/small:small";
 
     // Do the initial resource build.
-    ProjectWorkspace.ProcessResult first = workspace.runBuckCommand("build", appTarget);
+    ProcessResult first = workspace.runBuckCommand("build", appTarget);
     first.assertSuccess();
 
     // Verify that the resource and library dependency were successfully built.
@@ -63,7 +64,7 @@ public class AndroidResourceLibraryDepIntegrationTest {
     workspace.resetBuildLogFile();
 
     // Re-run the build, which should just rebuild the java library.
-    ProjectWorkspace.ProcessResult second = workspace.runBuckCommand("build", appTarget);
+    ProcessResult second = workspace.runBuckCommand("build", appTarget);
     second.assertSuccess();
 
     // Now verify that just the library and top-level binary got rebuilt.

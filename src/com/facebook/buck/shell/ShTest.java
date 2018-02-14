@@ -20,7 +20,6 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -43,7 +42,6 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -64,15 +62,10 @@ import java.util.stream.Stream;
 public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule, BinaryBuildRule {
 
-  private final SourcePathRuleFinder ruleFinder;
-  @AddToRuleKey private final ImmutableList<Arg> args;
-  @AddToRuleKey private final ImmutableMap<String, Arg> env;
-  @AddToRuleKey private final Optional<String> type;
-
-  @AddToRuleKey
-  @SuppressWarnings("PMD.UnusedPrivateField")
+  private final ImmutableList<Arg> args;
+  private final ImmutableMap<String, Arg> env;
+  private final Optional<String> type;
   private final ImmutableSortedSet<? extends SourcePath> resources;
-
   private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<String> contacts;
   private final boolean runTestSeparately;
@@ -82,7 +75,6 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathRuleFinder ruleFinder,
       ImmutableList<Arg> args,
       ImmutableMap<String, Arg> env,
       ImmutableSortedSet<? extends SourcePath> resources,
@@ -92,7 +84,6 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
       Optional<String> type,
       ImmutableSet<String> contacts) {
     super(buildTarget, projectFilesystem, params);
-    this.ruleFinder = ruleFinder;
     this.args = args;
     this.env = env;
     this.resources = resources;
@@ -129,6 +120,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
         .add(
             // Return a single command that runs an .sh file with no arguments.
             new RunShTestAndRecordResultStep(
+                getBuildTarget(),
                 getProjectFilesystem(),
                 Arg.stringify(args, buildContext.getSourcePathResolver()),
                 Arg.stringify(env, buildContext.getSourcePathResolver()),
@@ -166,7 +158,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
           getBuildTarget(),
           ImmutableList.of(testCaseSummary),
           contacts,
-          labels.stream().map(Object::toString).collect(MoreCollectors.toImmutableSet()));
+          labels.stream().map(Object::toString).collect(ImmutableSet.toImmutableSet()));
     };
   }
 
@@ -189,8 +181,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Tool getExecutableCommand() {
-    CommandTool.Builder builder =
-        new CommandTool.Builder().addDeps(ruleFinder.filterBuildRuleInputs(resources));
+    CommandTool.Builder builder = new CommandTool.Builder().addInputs(resources);
 
     for (Arg arg : args) {
       builder.addArg(arg);

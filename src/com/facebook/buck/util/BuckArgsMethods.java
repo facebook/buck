@@ -16,8 +16,11 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.rules.RelativeCellName;
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -31,22 +34,22 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /** Utility class for methods related to args handling. */
 public class BuckArgsMethods {
 
   private static final ImmutableSet<String> FLAG_FILE_OPTIONS = ImmutableSet.of("--flagfile");
+  private static final String PASS_THROUGH_DELIMITER = "--";
 
   private BuckArgsMethods() {
     // Utility class.
   }
 
-  private static Stream<String> getArgsFromTextFile(Path argsPath) throws IOException {
-    return Files.readAllLines(argsPath, Charsets.UTF_8).stream();
+  private static Iterable<String> getArgsFromTextFile(Path argsPath) throws IOException {
+    return Files.readAllLines(argsPath, Charsets.UTF_8);
   }
 
-  private static Stream<String> getArgsFromPythonFile(Path argsPath, String suffix)
+  private static Iterable<String> getArgsFromPythonFile(Path argsPath, String suffix)
       throws IOException {
     Process proc =
         Runtime.getRuntime()
@@ -56,11 +59,11 @@ public class BuckArgsMethods {
         OutputStream output = proc.getOutputStream();
         BufferedReader reader =
             new BufferedReader(new InputStreamReader(input, Charsets.UTF_8)); ) {
-      return reader.lines().collect(Collectors.toList()).stream();
+      return reader.lines().collect(Collectors.toList());
     }
   }
 
-  private static Stream<String> getArgsFromPath(Path argsPath, Optional<String> flavors)
+  private static Iterable<String> getArgsFromPath(Path argsPath, Optional<String> flavors)
       throws IOException {
     if (!argsPath.toAbsolutePath().toString().endsWith(".py")) {
       if (flavors.isPresent()) {
@@ -86,38 +89,62 @@ public class BuckArgsMethods {
    * @param projectRoot path against which any {@code @args} path arguments will be resolved.
    * @return args array with AT-files expanded.
    */
-  public static ImmutableList<String> expandAtFiles(Iterable<String> args, Path projectRoot) {
+  public static ImmutableList<String> expandAtFiles(
+      Iterable<String> args, ImmutableMap<RelativeCellName, Path> cellMapping) {
     Iterator<String> argsIterator = args.iterator();
-    Stream<? extends String> argumentStream = Stream.empty();
+    ImmutableList.Builder<String> argumentsBuilder = ImmutableList.builder();
     while (argsIterator.hasNext()) {
       String arg = argsIterator.next();
+      if (PASS_THROUGH_DELIMITER.equals(arg)) {
+        // all flags after -- should be passed through without any preprocessing
+        argumentsBuilder.add(arg);
+        argumentsBuilder.addAll(argsIterator);
+        break;
+      }
       if (FLAG_FILE_OPTIONS.contains(arg)) {
         if (!argsIterator.hasNext()) {
           throw new HumanReadableException(arg + " should be followed by a path.");
         }
-        argumentStream =
-            Stream.concat(argumentStream, expandFile(argsIterator.next(), projectRoot));
+        argumentsBuilder.addAll(expandFile(argsIterator.next(), cellMapping));
       } else if (arg.startsWith("@")) {
-        argumentStream = Stream.concat(argumentStream, expandFile(arg.substring(1), projectRoot));
+        argumentsBuilder.addAll(expandFile(arg.substring(1), cellMapping));
       } else {
-        argumentStream = Stream.concat(argumentStream, ImmutableList.of(arg).stream());
+        argumentsBuilder.add(arg);
       }
     }
-    return argumentStream.collect(MoreCollectors.toImmutableList());
+    return argumentsBuilder.build();
   }
 
   /** Extracts command line options from a file identified by {@code arg} with AT-file syntax. */
-  private static Stream<? extends String> expandFile(String arg, Path projectRoot) {
-    String[] parts = arg.split("#", 2);
+  private static Iterable<? extends String> expandFile(
+      String arg, ImmutableMap<RelativeCellName, Path> cellMapping) {
+    BuckCellArg argfile = BuckCellArg.of(arg);
+    String[] parts = argfile.getArg().split("#", 2);
     String unresolvedArgsPath = parts[0];
+    Path projectRoot = null;
+
+    // Try to resolve the name to a path if present
+    if (argfile.getCellName().isPresent()) {
+      projectRoot = cellMapping.get(RelativeCellName.fromComponents(argfile.getCellName().get()));
+      if (projectRoot == null) {
+        String cellName = argfile.getCellName().get();
+        throw new HumanReadableException(
+            String.format(
+                "The cell '%s' was not found. Did you mean '%s/%s'?",
+                cellName, cellName, unresolvedArgsPath));
+      }
+    } else {
+      projectRoot = cellMapping.get(RelativeCellName.ROOT_CELL_NAME);
+    }
+    Preconditions.checkNotNull(projectRoot, "Project root not resolved");
     Path argsPath = projectRoot.resolve(Paths.get(unresolvedArgsPath));
 
     if (!Files.exists(argsPath)) {
       throw new HumanReadableException(
           "The file "
               + unresolvedArgsPath
-              + " can't be found. Please make sure the path exists relatively to the "
-              + "current folder.");
+              + " can't be found. Please make sure the path exists relative to the "
+              + "project root.");
     }
     Optional<String> flavors = parts.length == 2 ? Optional.of(parts[1]) : Optional.empty();
     try {

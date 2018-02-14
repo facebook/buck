@@ -74,6 +74,15 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable
   }
 
   @Override
+  public void complete() {
+    asType();
+    getReturnType();
+    getReceiverType();
+    getThrownTypes();
+    getDefaultValue();
+  }
+
+  @Override
   public StandaloneTypeMirror asType() {
     if (typeMirror == null) {
       typeMirror =

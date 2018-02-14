@@ -16,22 +16,30 @@
 
 package com.facebook.buck.crosscell;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
-import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.exceptions.BuildTargetException;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
+import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -59,6 +67,12 @@ public class IntraCellIntegrationTest {
 
     // We don't need to do a build. It's enough to just parse these things.
     Cell cell = workspace.asCell();
+    KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
+        KnownBuildRuleTypesProvider.of(
+            DefaultKnownBuildRuleTypesFactory.of(
+                new DefaultProcessExecutor(new TestConsole()),
+                BuckPluginManagerFactory.createPluginManager(),
+                new TestSandboxExecutionStrategyFactory()));
 
     TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
     Parser parser =
@@ -66,7 +80,9 @@ public class IntraCellIntegrationTest {
             new BroadcastEventListener(),
             cell.getBuckConfig().getView(ParserConfig.class),
             coercerFactory,
-            new ConstructorArgMarshaller(coercerFactory));
+            new ConstructorArgMarshaller(coercerFactory),
+            knownBuildRuleTypesProvider,
+            new ExecutableFinder());
 
     // This parses cleanly
     parser.buildTargetGraph(
@@ -102,4 +118,20 @@ public class IntraCellIntegrationTest {
   @Test
   @Ignore
   public void allOutputsShouldBePlacedInTheSameRootOutputDirectory() {}
+
+  @Test
+  public void testEmbeddedBuckOut() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "intracell/visibility", tmp);
+    workspace.setUp();
+    Cell cell = workspace.asCell();
+    assertEquals(cell.getFilesystem().getBuckPaths().getGenDir().toString(), "buck-out/gen");
+    Cell childCell =
+        cell.getCell(
+            BuildTargetFactory.newInstance(
+                workspace.getDestPath().resolve("child-repo"), "//:child-target"));
+    assertEquals(
+        childCell.getFilesystem().getBuckPaths().getGenDir().toString(),
+        "../buck-out/cells/child/gen");
+  }
 }

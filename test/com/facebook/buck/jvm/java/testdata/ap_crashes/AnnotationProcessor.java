@@ -15,6 +15,15 @@ public class AnnotationProcessor extends AbstractProcessor {
   @Override
   public boolean process(
       Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-      throw new RuntimeException("Test crash!");
+      try {
+          crash();
+	  return true;
+      } catch (RuntimeException e) {
+          throw new RuntimeException(e);
+      }
   }
+
+    private void crash() {
+        throw new IllegalArgumentException("Test crash!");
+    }
 }

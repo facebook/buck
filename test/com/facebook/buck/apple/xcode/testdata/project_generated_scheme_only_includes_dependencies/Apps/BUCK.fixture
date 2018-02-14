@@ -1,41 +1,41 @@
 EMPTY_CONFIGS = {
-  'Debug': {},
-  'Release': {},
+    "Debug": {},
+    "Release": {},
 }
 
 apple_binary(
-  name = 'TestAppBinary',
-  configs = EMPTY_CONFIGS,
-  srcs = [],
-  frameworks = [],
-  deps = [
-    '//Libraries:Dep1',
-    '//Libraries:Dep2',
-  ],
+    name = "TestAppBinary",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    deps = [
+        "//Libraries:Dep1",
+        "//Libraries:Dep2",
+    ],
 )
 
 apple_bundle(
-  name = 'TestApp',
-  deps = [':TestAppBinary'],
-  info_plist = 'Info.plist',
-  binary = ':TestAppBinary',
-  extension = 'app',
-  tests = [':TestAppTests'],
+    name = "TestApp",
+    binary = ":TestAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+    tests = [":TestAppTests"],
+    deps = [":TestAppBinary"],
 )
 
 apple_test(
-  name = 'TestAppTests',
-  configs = EMPTY_CONFIGS,
-  info_plist = 'Test.plist',
-  srcs = [],
-  frameworks = [],
-  deps = [
-    '//Libraries:Dep1',
-    '//Libraries:Dep2',
-  ],
+    name = "TestAppTests",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    info_plist = "Test.plist",
+    deps = [
+        "//Libraries:Dep1",
+        "//Libraries:Dep2",
+    ],
 )
 
 xcode_workspace_config(
-  name = 'workspace',
-  src_target = '//Apps:TestApp'
+    name = "workspace",
+    src_target = "//Apps:TestApp",
 )

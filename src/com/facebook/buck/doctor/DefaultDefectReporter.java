@@ -30,8 +30,8 @@ import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.LoadBalancedService;
 import com.facebook.buck.slb.RetryingHttpService;
 import com.facebook.buck.slb.SlbBuckConfig;
-import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.zip.CustomZipEntry;
 import com.facebook.buck.util.zip.CustomZipOutputStream;
 import com.facebook.buck.util.zip.ZipOutputStreams;
@@ -179,6 +179,7 @@ public class DefaultDefectReporter implements DefectReporter {
         new RetryingHttpService(
             buckEventBus,
             new LoadBalancedService(slb, httpClient, buckEventBus),
+            "buck_defect_reporter_http_retries",
             doctorConfig.getReportMaxUploadRetries());
 
     try {

@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.easymock.EasyMock.createNiceMock;
-import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -30,14 +29,16 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidLibraryBuilder;
-import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.jvm.core.HasClasspathEntries;
+import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -59,6 +60,8 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.ExecutionContext;
@@ -73,7 +76,6 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -83,7 +85,6 @@ import com.facebook.buck.util.zip.CustomJarOutputStream;
 import com.facebook.buck.util.zip.ZipOutputStreams;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -93,7 +94,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.hash.Hashing;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.LinkOption;
@@ -104,8 +104,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
-import javax.annotation.Nullable;
-import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -157,14 +155,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         AndroidLibraryBuilder.createBuilder(buildTarget).addSrc(src).build(ruleResolver);
     DefaultJavaLibrary javaLibrary = (DefaultJavaLibrary) libraryRule;
 
-    String bootclasspath =
-        "effects.jar"
-            + File.pathSeparator
-            + "maps.jar"
-            + File.pathSeparator
-            + "usb.jar"
-            + File.pathSeparator;
-    BuildContext context = createBuildContext(bootclasspath);
+    BuildContext context = createBuildContext();
 
     List<Step> steps = javaLibrary.getBuildSteps(context, new FakeBuildableContext());
 
@@ -426,12 +417,9 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     BuildTarget annotationProcessorTarget = validJavaLibrary.createTarget();
     BuildTarget annotationProcessorAbiTarget = validJavaLibraryAbi.createTarget();
 
-    BuildRule annotationProcessorRule = validJavaLibrary.createRule(annotationProcessorTarget);
+    validJavaLibrary.createRule(annotationProcessorTarget);
     BuildRule annotationProcessorAbiRule =
         validJavaLibraryAbi.createRule(annotationProcessorAbiTarget);
-
-    ruleResolver.addToIndex(annotationProcessorRule);
-    ruleResolver.addToIndex(annotationProcessorAbiRule);
 
     BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libone");
 
@@ -820,7 +808,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             Optional.of(AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR),
             /* postprocessClassesCommands */ ImmutableList.of());
 
-    BuildContext buildContext = createBuildContext(/* bootclasspath */ null);
+    BuildContext buildContext = createBuildContext();
 
     ImmutableList<Step> steps =
         javaLibraryBuildRule.getBuildSteps(buildContext, new FakeBuildableContext());
@@ -843,7 +831,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             Optional.of(AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR),
             /* postprocessClassesCommands */ ImmutableList.of("process_class_files.py"));
 
-    BuildContext buildContext = createBuildContext(/* bootclasspath */ null);
+    BuildContext buildContext = createBuildContext();
 
     ImmutableList<Step> steps =
         javaLibraryBuildRule.getBuildSteps(buildContext, new FakeBuildableContext());
@@ -866,7 +854,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             Optional.of(AbstractJavacOptions.SpoolMode.INTERMEDIATE_TO_DISK),
             /* postprocessClassesCommands */ ImmutableList.of());
 
-    BuildContext buildContext = createBuildContext(/* bootclasspath */ null);
+    BuildContext buildContext = createBuildContext();
 
     ImmutableList<Step> steps =
         javaLibraryBuildRule.getBuildSteps(buildContext, new FakeBuildableContext());
@@ -897,7 +885,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     FileHashCache originalHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     InputBasedRuleKeyFactory factory =
-        new InputBasedRuleKeyFactory(0, originalHashCache, pathResolver, ruleFinder);
+        new TestInputBasedRuleKeyFactory(originalHashCache, pathResolver, ruleFinder);
     RuleKey originalRuleKey = factory.build(library);
 
     // Now change the genrule such that its rule key changes, but it's output stays the same (since
@@ -917,7 +905,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .build(ruleResolver, filesystem);
     FileHashCache unaffectedHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
-    factory = new InputBasedRuleKeyFactory(0, unaffectedHashCache, pathResolver, ruleFinder);
+    factory = new TestInputBasedRuleKeyFactory(unaffectedHashCache, pathResolver, ruleFinder);
     RuleKey unaffectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
 
@@ -938,7 +926,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .build(ruleResolver, filesystem);
     FileHashCache affectedHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
-    factory = new InputBasedRuleKeyFactory(0, affectedHashCache, pathResolver, ruleFinder);
+    factory = new TestInputBasedRuleKeyFactory(affectedHashCache, pathResolver, ruleFinder);
     RuleKey affectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
   }
@@ -979,7 +967,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     FileHashCache originalHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     InputBasedRuleKeyFactory factory =
-        new InputBasedRuleKeyFactory(0, originalHashCache, pathResolver, ruleFinder);
+        new TestInputBasedRuleKeyFactory(originalHashCache, pathResolver, ruleFinder);
     RuleKey originalRuleKey = factory.build(library);
 
     // Now change the Java library dependency such that its rule key changes, and change its JAR
@@ -1004,7 +992,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         "different JAR contents", pathResolver.getRelativePath(dep.getSourcePathToOutput()));
     FileHashCache unaffectedHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
-    factory = new InputBasedRuleKeyFactory(0, unaffectedHashCache, pathResolver, ruleFinder);
+    factory = new TestInputBasedRuleKeyFactory(unaffectedHashCache, pathResolver, ruleFinder);
     RuleKey unaffectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
 
@@ -1027,7 +1015,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         "changed ABI JAR contents");
     FileHashCache affectedHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
-    factory = new InputBasedRuleKeyFactory(0, affectedHashCache, pathResolver, ruleFinder);
+    factory = new TestInputBasedRuleKeyFactory(affectedHashCache, pathResolver, ruleFinder);
     RuleKey affectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
   }
@@ -1078,7 +1066,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     FileHashCache originalHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     InputBasedRuleKeyFactory factory =
-        new InputBasedRuleKeyFactory(0, originalHashCache, pathResolver, ruleFinder);
+        new TestInputBasedRuleKeyFactory(originalHashCache, pathResolver, ruleFinder);
     RuleKey originalRuleKey = factory.build(library);
 
     // Now change the exported Java library dependency such that its rule key changes, and change
@@ -1105,7 +1093,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         pathResolver.getRelativePath(exportedDep.getSourcePathToOutput()));
     FileHashCache unaffectedHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
-    factory = new InputBasedRuleKeyFactory(0, unaffectedHashCache, pathResolver, ruleFinder);
+    factory = new TestInputBasedRuleKeyFactory(unaffectedHashCache, pathResolver, ruleFinder);
     RuleKey unaffectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
 
@@ -1128,7 +1116,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         "changed ABI JAR contents");
     FileHashCache affectedHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
-    factory = new InputBasedRuleKeyFactory(0, affectedHashCache, pathResolver, ruleFinder);
+    factory = new TestInputBasedRuleKeyFactory(affectedHashCache, pathResolver, ruleFinder);
     RuleKey affectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
   }
@@ -1184,7 +1172,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     FileHashCache originalHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     InputBasedRuleKeyFactory factory =
-        new InputBasedRuleKeyFactory(0, originalHashCache, pathResolver, ruleFinder);
+        new TestInputBasedRuleKeyFactory(originalHashCache, pathResolver, ruleFinder);
     RuleKey originalRuleKey = factory.build(library);
 
     // Now change the exported Java library dependency such that its rule key changes, and change
@@ -1211,7 +1199,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         pathResolver.getRelativePath(exportedDep.getSourcePathToOutput()));
     FileHashCache unaffectedHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
-    factory = new InputBasedRuleKeyFactory(0, unaffectedHashCache, pathResolver, ruleFinder);
+    factory = new TestInputBasedRuleKeyFactory(unaffectedHashCache, pathResolver, ruleFinder);
     RuleKey unaffectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
 
@@ -1234,7 +1222,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         "changed ABI JAR contents");
     FileHashCache affectedHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
-    factory = new InputBasedRuleKeyFactory(0, affectedHashCache, pathResolver, ruleFinder);
+    factory = new TestInputBasedRuleKeyFactory(affectedHashCache, pathResolver, ruleFinder);
     RuleKey affectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
   }
@@ -1350,11 +1338,11 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       fileHashes.put(filename, Hashing.sha1().hashString(filename, Charsets.UTF_8).toString());
     }
     DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(
-            0, FakeFileHashCache.createFromStrings(fileHashes.build()), pathResolver1, ruleFinder1);
+        new TestDefaultRuleKeyFactory(
+            FakeFileHashCache.createFromStrings(fileHashes.build()), pathResolver1, ruleFinder1);
     DefaultRuleKeyFactory ruleKeyFactory2 =
-        new DefaultRuleKeyFactory(
-            0, FakeFileHashCache.createFromStrings(fileHashes.build()), pathResolver2, ruleFinder2);
+        new TestDefaultRuleKeyFactory(
+            FakeFileHashCache.createFromStrings(fileHashes.build()), pathResolver2, ruleFinder2);
 
     RuleKey key1 = ruleKeyFactory.build(rule1);
     RuleKey key2 = ruleKeyFactory2.build(rule2);
@@ -1416,7 +1404,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     assertEquals(
         RichStream.from(jsrJavac.getCompilerClassPath())
             .map(pathResolver::getRelativePath)
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         ImmutableSet.of(pathResolver.getRelativePath(javac.getSourcePathToOutput())));
   }
 
@@ -1446,18 +1434,9 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   }
 
   // test.
-  private BuildContext createBuildContext(@Nullable String bootclasspath) {
-    AndroidPlatformTarget platformTarget = EasyMock.createMock(AndroidPlatformTarget.class);
-    ImmutableList<Path> bootclasspathEntries =
-        (bootclasspath == null)
-            ? ImmutableList.of(Paths.get("I am not used"))
-            : ImmutableList.of(Paths.get(bootclasspath));
-    expect(platformTarget.getBootclasspathEntries()).andStubReturn(bootclasspathEntries);
-    replay(platformTarget);
-
+  private BuildContext createBuildContext() {
     return FakeBuildContext.withSourcePathResolver(
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver)))
-        .withAndroidPlatformTargetSupplier(Suppliers.ofInstance(platformTarget));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver)));
   }
 
   private abstract static class AnnotationProcessorTarget {
@@ -1545,7 +1524,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       ProjectFilesystem projectFilesystem =
           TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
       DefaultJavaLibrary javaLibrary = createJavaLibraryRule(projectFilesystem);
-      BuildContext buildContext = createBuildContext(/* bootclasspath */ null);
+      BuildContext buildContext = createBuildContext();
       List<Step> steps = javaLibrary.getBuildSteps(buildContext, new FakeBuildableContext());
       JavacStep javacCommand = lastJavacCommand(steps);
 
@@ -1565,7 +1544,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     private DefaultJavaLibrary createJavaLibraryRule(ProjectFilesystem projectFilesystem)
         throws IOException, NoSuchBuildTargetException {
       BuildTarget buildTarget = BuildTargetFactory.newInstance(ANNOTATION_SCENARIO_TARGET);
-      annotationProcessingParamsBuilder.setOwnerTarget(buildTarget);
       annotationProcessingParamsBuilder.setProjectFilesystem(projectFilesystem);
 
       tmp.newFolder("android", "java", "src", "com", "facebook");
@@ -1619,6 +1597,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
   private static ImmutableSet<Path> resolve(
       ImmutableSet<SourcePath> paths, SourcePathResolver resolver) {
-    return paths.stream().map(resolver::getAbsolutePath).collect(MoreCollectors.toImmutableSet());
+    return paths.stream().map(resolver::getAbsolutePath).collect(ImmutableSet.toImmutableSet());
   }
 }

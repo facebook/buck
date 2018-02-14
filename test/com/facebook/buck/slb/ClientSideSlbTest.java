@@ -17,7 +17,7 @@
 package com.facebook.buck.slb;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.timing.Clock;
+import com.facebook.buck.util.timing.Clock;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.net.URI;
@@ -138,6 +138,7 @@ public class ClientSideSlbTest extends EasyMockSupport {
                           .code(200)
                           .protocol(Protocol.HTTP_1_1)
                           .request(new Request.Builder().url(server.toString()).build())
+                          .message("")
                           .build();
                   callback.onResponse(mockCall, response);
                   return null;

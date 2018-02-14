@@ -1,3 +1,5 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
 java_test(
     name = "external",
     srcs = glob(["*Test.java"]),
@@ -7,6 +9,7 @@ java_test(
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/test/external:events",
         "//src/com/facebook/buck/test/selectors:selectors",
+        "//src/com/facebook/buck/util:util",
         "//test/com/facebook/buck/model:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",

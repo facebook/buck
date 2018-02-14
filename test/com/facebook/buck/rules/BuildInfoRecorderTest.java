@@ -25,8 +25,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactInfo;
-import com.facebook.buck.artifact_cache.CacheReadMode;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
+import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.file.BorrowablePath;
@@ -37,14 +37,14 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.ZipArchive;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.facebook.buck.util.timing.DefaultClock;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -112,13 +112,13 @@ public class BuildInfoRecorderTest {
     buildInfoRecorder.addBuildMetadata("build", "metadata");
     buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ true);
     onDiskBuildInfo = new DefaultOnDiskBuildInfo(BUILD_TARGET, filesystem, store);
-    assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "build", "metadata");
+    assertOnDiskBuildInfoHasBuildMetadata(onDiskBuildInfo, "build", "metadata");
 
     // Verify additional info build metadata always gets written.
     buildInfoRecorder = createBuildInfoRecorder(filesystem);
     buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ true);
     onDiskBuildInfo = new DefaultOnDiskBuildInfo(BUILD_TARGET, filesystem, store);
-    assertTrue(onDiskBuildInfo.getValue(BuildInfo.MetadataKey.ADDITIONAL_INFO).isPresent());
+    assertTrue(onDiskBuildInfo.getBuildValue(BuildInfo.MetadataKey.ADDITIONAL_INFO).isPresent());
   }
 
   @Test
@@ -139,7 +139,7 @@ public class BuildInfoRecorderTest {
 
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(filesystem);
-    BuckEventBus bus = new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId("BUILD"));
+    BuckEventBus bus = new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("BUILD"));
 
     final byte[] contents = "contents".getBytes();
 
@@ -186,10 +186,12 @@ public class BuildInfoRecorderTest {
                       "buck-out/bin/",
                       "buck-out/bin/foo/",
                       "buck-out/bin/foo/.bar/",
-                      "buck-out/bin/foo/.bar/metadata/"),
+                      "buck-out/bin/foo/.bar/metadata/",
+                      "buck-out/bin/foo/.bar/metadata/artifact/"),
                   zip.getDirNames());
               assertEquals(
-                  ImmutableSet.of("dir/file", "file", "buck-out/bin/foo/.bar/metadata/metadata"),
+                  ImmutableSet.of(
+                      "dir/file", "file", "buck-out/bin/foo/.bar/metadata/artifact/metadata"),
                   zip.getFileNames());
               assertArrayEquals(contents, zip.readFully("file"));
               assertArrayEquals(contents, zip.readFully("dir/file"));
@@ -288,9 +290,18 @@ public class BuildInfoRecorderTest {
   private static void assertOnDiskBuildInfoHasMetadata(
       OnDiskBuildInfo onDiskBuildInfo, String key, String value) {
     MoreAsserts.assertOptionalValueEquals(
-        String.format("BuildInfoRecorder must record '%s:%s' to the filesystem.", key, value),
+        String.format(
+            "BuildInfoRecorder must record '%s:%s' to the artifact metadata.", key, value),
         value,
         onDiskBuildInfo.getValue(key));
+  }
+
+  private static void assertOnDiskBuildInfoHasBuildMetadata(
+      OnDiskBuildInfo onDiskBuildInfo, String key, String value) {
+    MoreAsserts.assertOptionalValueEquals(
+        String.format("BuildInfoRecorder must record '%s:%s' to the build metadata.", key, value),
+        value,
+        onDiskBuildInfo.getBuildValue(key));
   }
 
   private static void assertOnDiskBuildInfoDoesNotHaveMetadata(
@@ -298,6 +309,9 @@ public class BuildInfoRecorderTest {
     assertFalse(
         String.format("BuildInfoRecorder should have cleared this metadata key: %s", key),
         onDiskBuildInfo.getValue(key).isPresent());
+    assertFalse(
+        String.format("BuildInfoRecorder should have cleared this metadata key: %s", key),
+        onDiskBuildInfo.getBuildValue(key).isPresent());
   }
 
   private static BuildInfoRecorder createBuildInfoRecorder(ProjectFilesystem filesystem) {

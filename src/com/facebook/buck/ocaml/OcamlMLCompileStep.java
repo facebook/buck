@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -24,7 +25,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.MoreIterables;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -34,6 +34,7 @@ import com.google.common.io.Files;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Function;
 
 /** A compilation step for .ml and .mli files */
 public class OcamlMLCompileStep extends ShellStep {
@@ -69,7 +70,6 @@ public class OcamlMLCompileStep extends ShellStep {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public void appendToRuleKey(RuleKeyObjectSink sink) {
       try {
         sink.setReflectively("cCompiler", cCompiler)
@@ -111,8 +111,9 @@ public class OcamlMLCompileStep extends ShellStep {
   private final Args args;
   private final SourcePathResolver resolver;
 
-  public OcamlMLCompileStep(Path workingDirectory, SourcePathResolver resolver, Args args) {
-    super(workingDirectory);
+  public OcamlMLCompileStep(
+      BuildTarget buildTarget, Path workingDirectory, SourcePathResolver resolver, Args args) {
+    super(Optional.of(buildTarget), workingDirectory);
     this.resolver = resolver;
     this.args = args;
   }

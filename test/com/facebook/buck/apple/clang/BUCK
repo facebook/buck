@@ -1,9 +1,15 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
 java_test(
-    name = "headermap",
+    name = "clang",
     srcs = glob(["*.java"]),
+    resources = glob(["testdata/**"]),
     deps = [
-        "//src/com/facebook/buck/apple/clang:headermap",
+        "//src/com/facebook/buck/apple/clang:clang",
         "//src/com/facebook/buck/util/environment:platform",
+        "//test/com/facebook/buck/io/file:testutil",
+        "//test/com/facebook/buck/util:testutil",
+        "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/junit:junit",
     ],

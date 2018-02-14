@@ -1,28 +1,28 @@
 cxx_library(
-  name = 'dep',
-  srcs = [
-    'dep.cpp',
-  ],
+    name = "dep",
+    srcs = [
+        "dep.cpp",
+    ],
 )
 
 cxx_library(
-  name = 'cxx_library',
-  srcs = ['library.cpp'],
-  exported_deps = [
-    ':dep',
-  ],
+    name = "cxx_library",
+    srcs = ["library.cpp"],
+    exported_deps = [
+        ":dep",
+    ],
 )
 
-platform = read_config('cxx', 'platform')
+platform = read_config("cxx", "platform")
 
 prebuilt_cxx_library(
-  name = 'prebuilt_cxx_library',
-  supports_shared_library_interface = True,
-  static_lib = ':cxx_library#static,{}'.format(platform),
-  shared_lib = ':cxx_library#shared,{}'.format(platform),
-  exported_deps = [
-    ':dep',
-  ],
+    name = "prebuilt_cxx_library",
+    exported_deps = [
+        ":dep",
+    ],
+    shared_lib = ":cxx_library#shared,{}".format(platform),
+    static_lib = ":cxx_library#static,{}".format(platform),
+    supports_shared_library_interface = True,
 )
 
 for library in ('cxx_library', 'prebuilt_cxx_library'):

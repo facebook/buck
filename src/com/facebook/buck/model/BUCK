@@ -1,3 +1,5 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
 BUILD_ID_SRCS = ["BuildId.java"]
 
 java_library(
@@ -10,33 +12,11 @@ java_library(
     ],
 )
 
-MACRO_SRCS = [
-    "AbstractMacroMatchResult.java",
-    "MacroFinder.java",
-    "MacroReplacer.java",
-    "MacroException.java",
-]
-
-SIMPLE_TYPES_SRCS = [
-    "Either.java",
-    "Pair.java",
-]
-
-java_library(
-    name = "simple_types",
-    srcs = SIMPLE_TYPES_SRCS,
-    visibility = ["PUBLIC"],
-    deps = [
-        "//third-party/java/guava:guava",
-        "//third-party/java/jsr:jsr305",
-    ],
-)
-
 java_immutables_library(
     name = "model",
     srcs = glob(
         ["*.java"],
-        excludes = BUILD_ID_SRCS + MACRO_SRCS + SIMPLE_TYPES_SRCS,
+        exclude = BUILD_ID_SRCS,
     ),
     tests = [
         "//test/com/facebook/buck/model:model",

@@ -1,26 +1,26 @@
 java_library(
-  name='lib',
-  deps=[
-    '//lib:openapi',
-  ],
-  visibility=['PUBLIC'],
+    name = "lib",
+    visibility = ["PUBLIC"],
+    deps = [
+        "//lib:openapi",
+    ],
 )
 
 java_binary(
-  name='plugin',
-  meta_inf_directory='resources/META-INF',
-  deps=[
-    ':lib',
-    '//lib:openapi',
-  ],
-  labels = [
-    "intellij_plugin",
-  ],
+    name = "plugin",
+    labels = [
+        "intellij_plugin",
+    ],
+    meta_inf_directory = "resources/META-INF",
+    deps = [
+        ":lib",
+        "//lib:openapi",
+    ],
 )
 
 # Other executables with meta_inf_directories shouldn't overwrite the plugin's meta_inf
 java_binary(
-  name='executable',
-  meta_inf_directory='resources',
-  main_class='HelloWorld',
+    name = "executable",
+    main_class = "HelloWorld",
+    meta_inf_directory = "resources",
 )

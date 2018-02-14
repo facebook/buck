@@ -1,4 +1,4 @@
 sh_binary(
-  name = 'pwd',
-  main = 'pwd.sh',
+    name = "pwd",
+    main = "pwd.sh",
 )

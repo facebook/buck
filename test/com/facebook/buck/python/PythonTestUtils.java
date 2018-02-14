@@ -17,9 +17,11 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.python.toolchain.PythonEnvironment;
+import com.facebook.buck.python.toolchain.PythonPlatform;
+import com.facebook.buck.python.toolchain.PythonVersion;
 import java.nio.file.Paths;
 import java.util.Optional;
 
@@ -28,10 +30,10 @@ public class PythonTestUtils {
   private PythonTestUtils() {}
 
   public static final PythonBuckConfig PYTHON_CONFIG =
-      new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder());
+      new PythonBuckConfig(FakeBuckConfig.builder().build());
 
   public static final PythonPlatform PYTHON_PLATFORM =
-      PythonPlatform.of(
+      new TestPythonPlatform(
           InternalFlavor.of("default"),
           new PythonEnvironment(Paths.get("python"), PythonVersion.of("CPython", "2.6")),
           Optional.empty());

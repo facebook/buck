@@ -19,23 +19,27 @@ package com.facebook.buck.rules.macros;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 
-public class StringExpander extends SimpleMacroExpander {
+/** Expands macros into fixed strings. */
+public class StringExpander<M extends Macro> extends SimpleMacroExpander<M> {
 
-  private final String toReturn;
+  private final Class<M> clazz;
+  private final StringArg toReturn;
 
-  public StringExpander(String toReturn) {
+  public StringExpander(Class<M> clazz, StringArg toReturn) {
+    this.clazz = clazz;
     this.toReturn = toReturn;
   }
 
   @Override
-  public String expandFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver) {
-    return toReturn;
+  public Class<M> getInputClass() {
+    return clazz;
   }
 
   @Override
-  public Object extractRuleKeyAppendablesFrom(
+  public Arg expandFrom(
       BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver) {
     return toReturn;
   }

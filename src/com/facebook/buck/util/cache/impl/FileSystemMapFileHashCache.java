@@ -19,6 +19,7 @@ package com.facebook.buck.util.cache.impl;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.util.FileSystemMap;
+import com.facebook.buck.util.PathFragments;
 import com.facebook.buck.util.cache.FileHashCacheEngine;
 import com.facebook.buck.util.cache.HashCodeAndFileType;
 import com.google.common.hash.HashCode;
@@ -37,8 +38,10 @@ class FileSystemMapFileHashCache implements FileHashCacheEngine {
 
   private FileSystemMapFileHashCache(
       ValueLoader<HashCodeAndFileType> hashLoader, ValueLoader<Long> sizeLoader) {
-    this.loadingCache = new FileSystemMap<>(hashLoader::load);
-    this.sizeCache = new FileSystemMap<>(sizeLoader::load);
+    this.loadingCache =
+        new FileSystemMap<>(fragment -> hashLoader.load(PathFragments.fragmentToPath(fragment)));
+    this.sizeCache =
+        new FileSystemMap<>(fragment -> sizeLoader.load(PathFragments.fragmentToPath(fragment)));
   }
 
   public static FileHashCacheEngine createWithStats(

@@ -19,7 +19,6 @@ package com.facebook.buck.model;
 import static com.facebook.buck.io.file.MorePaths.pathWithPlatformSeparators;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -62,6 +61,6 @@ public class InMemoryBuildFileTreeTest {
 
     assertEquals(
         expectedChildren,
-        children.stream().map(Object::toString).collect(MoreCollectors.toImmutableSet()));
+        children.stream().map(Object::toString).collect(ImmutableSet.toImmutableSet()));
   }
 }

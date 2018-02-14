@@ -1,6 +1,6 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
 TYPES = [
-    "InputPath.java",
-    "AbstractLimitedSourcePath.java",
     "OutputPath.java",
 ]
 
@@ -13,6 +13,7 @@ java_immutables_library(
     deps = [
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/rules:rule_key",
         "//src/com/facebook/buck/rules:source_path",
         "//third-party/java/guava:guava",
     ],
@@ -22,11 +23,12 @@ java_library(
     name = "modern",
     srcs = glob(
         ["**/*.java"],
-        excludes = TYPES,
+        exclude = TYPES,
     ),
     exported_deps = [
         ":types",
     ],
+    tests = ["//test/com/facebook/buck/rules/modern/impl:impl"],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/event:interfaces",
@@ -34,7 +36,6 @@ java_library(
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:interfaces",
         "//src/com/facebook/buck/rules:rule_key",

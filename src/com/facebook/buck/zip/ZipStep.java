@@ -22,10 +22,11 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.zip.CustomZipEntry;
 import com.facebook.buck.util.zip.CustomZipOutputStream;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
@@ -98,7 +99,7 @@ public class ZipStep implements Step {
     if (filesystem.exists(pathToZipFile)) {
       context.postEvent(
           ConsoleEvent.severe("Attempting to overwrite an existing zip: %s", pathToZipFile));
-      return StepExecutionResult.ERROR;
+      return StepExecutionResults.ERROR;
     }
 
     // Since filesystem traversals can be non-deterministic, sort the entries we find into
@@ -127,9 +128,7 @@ public class ZipStep implements Step {
             // We want deterministic ZIPs, so avoid mtimes.
             entry.setFakeTime();
             entry.setCompressionLevel(
-                isDirectory
-                    ? ZipCompressionLevel.MIN_COMPRESSION_LEVEL.getValue()
-                    : compressionLevel.getValue());
+                isDirectory ? ZipCompressionLevel.NONE.getValue() : compressionLevel.getValue());
             // If we're using STORED files, we must manually set the CRC, size, and compressed size.
             if (entry.getMethod() == ZipEntry.STORED && !isDirectory) {
               entry.setSize(attr.size());
@@ -189,7 +188,7 @@ public class ZipStep implements Step {
       }
     }
 
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

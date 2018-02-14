@@ -17,15 +17,16 @@
 package com.facebook.buck.shell;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -83,6 +84,19 @@ public class GenruleDescriptionIntegrationTest {
   public void depsFromSetAreFilteredByKind() throws Exception {
     expectGenruleOutput(":echo_with_kind_is_binary", ImmutableList.of("//:app"));
     expectGenruleOutput(":echo_with_kind_is_library", ImmutableList.of("//:lib_a", "//:lib_b"));
+  }
+
+  @Test
+  public void depsFromDepsQueryToFile() throws Exception {
+    expectGenruleOutput(
+        ":echo_with_deps_to_file",
+        ImmutableList.of(
+            "//:app",
+            "//:lib_a",
+            "//:lib_b",
+            "//:lib_d",
+            "//annotations:proc",
+            "//annotations:proc-lib"));
   }
 
   @Test
@@ -195,6 +209,13 @@ public class GenruleDescriptionIntegrationTest {
         ":echo_labels_of_output", ImmutableList.of(getOutputFile("//other:hidden").toString()));
   }
 
+  @Test
+  public void testQueryTargetsAndOutputsCanGetOutputFromLabel() throws Exception {
+    expectGenruleOutput(
+        ":echo_labels_of_targets_and_output",
+        ImmutableList.of("//other:hidden", getOutputFile("//other:hidden").toString()));
+  }
+
   private void expectOutputPathsGenruleOutput(String genrule, List<String> expectedOutputs)
       throws Exception {
     expectGenruleOutput(
@@ -207,7 +228,7 @@ public class GenruleDescriptionIntegrationTest {
   }
 
   private void expectGenruleOutput(String genrule, List<String> expectedOutputs) throws Exception {
-    ProjectWorkspace.ProcessResult buildResult = workspace.runBuckCommand("build", genrule);
+    ProcessResult buildResult = workspace.runBuckCommand("build", genrule);
     buildResult.assertSuccess();
 
     String outputFileContents = workspace.getFileContents(getOutputFile(genrule));
@@ -220,15 +241,14 @@ public class GenruleDescriptionIntegrationTest {
 
   private Path getOutputFile(String targetName) {
     try {
-      ProjectWorkspace.ProcessResult buildResult =
+      ProcessResult buildResult =
           workspace.runBuckCommand("targets", targetName, "--show-full-output", "--json");
       buildResult.assertSuccess();
       JsonNode jsonNode = ObjectMappers.READER.readTree(buildResult.getStdout()).get(0);
       assert jsonNode.has("buck.outputPath");
       return Paths.get(jsonNode.get("buck.outputPath").asText());
-    } catch (Exception e) {
-      fail(e.getMessage());
-      return Paths.get("");
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 }

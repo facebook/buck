@@ -44,16 +44,14 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -66,6 +64,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -129,7 +129,7 @@ public class AndroidBinaryTest {
                 .getClasspathEntriesToDex()
                 .stream()
                 .map(pathResolver::getRelativePath)
-                .collect(MoreCollectors.toImmutableSet()),
+                .collect(ImmutableSet.toImmutableSet()),
             pathResolver.getAllAbsolutePaths(packageableCollection.getProguardConfigs()),
             false,
             commands,
@@ -159,14 +159,16 @@ public class AndroidBinaryTest {
     ImmutableList.Builder<Step> expectedSteps = ImmutableList.builder();
 
     ProGuardObfuscateStep.create(
+        BuildTargetFactory.newInstance("//dummy:target"),
+        TestAndroidPlatformTargetFactory.create(),
         JavaCompilationConstants.DEFAULT_JAVA_COMMAND_PREFIX,
         new FakeProjectFilesystem(),
         /* proguardJarOverride */ Optional.empty(),
         /* proguardMaxHeapSize */ "1024M",
         /* proguardAgentPath */ Optional.empty(),
-        aaptProguardDir.resolve("proguard.txt"),
         /* customProguardConfigs */ ImmutableSet.of(
-            proguardConfig.getFilesystem().resolve(proguardConfig.getRelativePath())),
+            proguardConfig.getFilesystem().resolve(proguardConfig.getRelativePath()),
+            proguardConfig.getFilesystem().resolve(aaptProguardDir.resolve("proguard.txt"))),
         ProGuardObfuscateStep.SdkProguardType.NONE,
         /* optimizationPasses */ Optional.empty(),
         /* proguardJvmArgs */ Optional.empty(),
@@ -317,10 +319,12 @@ public class AndroidBinaryTest {
 
   private void assertCommandsInOrder(List<Step> steps, List<Class<?>> expectedCommands)
       throws Exception {
-    Iterable<Class<?>> filteredObservedCommands =
-        FluentIterable.from(steps)
-            .transform((Function<Step, Class<?>>) Step::getClass)
-            .filter(Sets.newHashSet(expectedCommands)::contains);
+    List<Class<?>> filteredObservedCommands =
+        steps
+            .stream()
+            .map(((Function<Step, Class<?>>) Step::getClass))
+            .filter(Sets.newHashSet(expectedCommands)::contains)
+            .collect(Collectors.toList());
     MoreAsserts.assertIterablesEquals(expectedCommands, filteredObservedCommands);
   }
 
@@ -339,7 +343,7 @@ public class AndroidBinaryTest {
             .setPrimaryDexScenarioOverflowAllowed(true)
             .setDexCompression(DexStore.JAR)
             // Force no predexing.
-            .setPreprocessJavaClassesBash("cp")
+            .setPreprocessJavaClassesBash(StringWithMacrosUtils.format("cp"))
             .build(ruleResolver);
 
     Set<Path> classpath = new HashSet<>();
@@ -395,7 +399,7 @@ public class AndroidBinaryTest {
             .setDexCompression(DexStore.JAR)
             .setIntraDexReorderResources(true, reorderTool, reorderData)
             // Force no predexing.
-            .setPreprocessJavaClassesBash("cp")
+            .setPreprocessJavaClassesBash(StringWithMacrosUtils.format("cp"))
             .build(ruleResolver);
 
     Set<Path> classpath = new HashSet<>();
@@ -444,7 +448,7 @@ public class AndroidBinaryTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     AndroidBinaryBuilder builder =
         AndroidBinaryBuilder.createBuilder(target)
-            .setPostFilterResourcesCmd(Optional.of("cmd"))
+            .setPostFilterResourcesCmd(Optional.of(StringWithMacrosUtils.format("cmd")))
             .setResourceFilter(new ResourceFilter(ImmutableList.of("mdpi")))
             .setKeystore(keystoreRule.getBuildTarget())
             .setManifest(FakeSourcePath.of("manifest"));

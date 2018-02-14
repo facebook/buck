@@ -20,14 +20,13 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
@@ -37,6 +36,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -44,11 +44,10 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -57,6 +56,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
@@ -64,8 +64,8 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule, BinaryBuildRule {
 
   private final Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps;
-  @AddToRuleKey private final Supplier<ImmutableMap<String, String>> env;
-  @AddToRuleKey private final PythonBinary binary;
+  private final Supplier<ImmutableMap<String, Arg>> env;
+  private final PythonBinary binary;
   private final ImmutableSet<String> labels;
   private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<String> contacts;
@@ -76,7 +76,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps,
-      Supplier<ImmutableMap<String, String>> env,
+      Supplier<ImmutableMap<String, Arg>> env,
       PythonBinary binary,
       ImmutableSet<String> labels,
       ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
@@ -96,7 +96,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      Supplier<ImmutableMap<String, String>> env,
+      Supplier<ImmutableMap<String, Arg>> env,
       PythonBinary binary,
       ImmutableSet<String> labels,
       ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
@@ -141,6 +141,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     getPathToTestOutputDirectory())))
         .add(
             new PythonRunTestsStep(
+                getBuildTarget(),
                 getProjectFilesystem().getRootPath(),
                 getBuildTarget().getFullyQualifiedName(),
                 binary
@@ -156,7 +157,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private ImmutableMap<String, String> getMergedEnv(SourcePathResolver pathResolver) {
     return new ImmutableMap.Builder<String, String>()
         .putAll(binary.getExecutableCommand().getEnvironment(pathResolver))
-        .putAll(env.get())
+        .putAll(Arg.stringify(env.get(), pathResolver))
         .build();
   }
 
@@ -196,7 +197,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   getBuildTarget().getFullyQualifiedName(),
                   ImmutableList.copyOf(testResultSummaries))),
           contacts,
-          labels.stream().map(Object::toString).collect(MoreCollectors.toImmutableSet()));
+          labels.stream().map(Object::toString).collect(ImmutableSet.toImmutableSet()));
     };
   }
 
@@ -205,7 +206,8 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return false;
   }
 
-  // A python test rule is actually just a {@link NoopBuildRuleWithDeclaredAndExtraDeps} which contains a references to
+  // A python test rule is actually just a {@link NoopBuildRuleWithDeclaredAndExtraDeps} which
+  // contains a references to
   // a {@link PythonBinary} rule, which is the actual test binary.  Therefore, we *need* this
   // rule around to run this test, so model this via the {@link HasRuntimeDeps} interface.
   @Override
@@ -214,9 +216,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .concat(originalDeclaredDeps.get().stream().map(BuildRule::getBuildTarget))
         .concat(binary.getRuntimeDeps(ruleFinder))
         .concat(
-            binary
-                .getExecutableCommand()
-                .getDeps(ruleFinder)
+            BuildableSupport.getDepsCollection(binary.getExecutableCommand(), ruleFinder)
                 .stream()
                 .map(BuildRule::getBuildTarget));
   }

@@ -26,6 +26,7 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.exopackage.AndroidDevice;
 import com.facebook.buck.android.exopackage.RealAndroidDevice;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
@@ -33,7 +34,7 @@ import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -80,7 +81,16 @@ public class AdbHelperTest {
       AdbOptions adbOptions,
       TargetDeviceOptions targetDeviceOptions)
       throws CmdLineException {
-    return new AdbHelper(adbOptions, targetDeviceOptions, () -> executionContext, true);
+    return new AdbHelper(
+        adbOptions,
+        targetDeviceOptions,
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
+            .build(),
+        () -> executionContext,
+        true,
+        ImmutableList.of());
   }
 
   /** Verify that null is returned when no devices are present. */
@@ -397,7 +407,16 @@ public class AdbHelperTest {
   }
 
   private AdbHelper createAdbHelper(final List<IDevice> deviceList) {
-    return new AdbHelper(new AdbOptions(), new TargetDeviceOptions(), () -> testContext, true) {
+    return new AdbHelper(
+        new AdbOptions(),
+        new TargetDeviceOptions(),
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
+            .build(),
+        () -> testContext,
+        true,
+        ImmutableList.of()) {
       @Override
       public ImmutableList<AndroidDevice> getDevices(boolean quiet) {
         return deviceList
@@ -406,7 +425,7 @@ public class AdbHelperTest {
                 id ->
                     (AndroidDevice)
                         new RealAndroidDevice(testContext.getBuckEventBus(), id, testConsole))
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
       }
     };
   }

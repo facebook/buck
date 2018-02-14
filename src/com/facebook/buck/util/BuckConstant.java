@@ -22,6 +22,7 @@ import java.nio.file.Paths;
 public class BuckConstant {
   public static final String BUCK_LOG_FILE_NAME = "buck.log";
   public static final String BUCK_MACHINE_LOG_FILE_NAME = "buck-machine-log";
+  public static final String DIST_BUILD_TRACE_FILE_NAME = "dist-build.trace";
   private static final Path BUCK_OUTPUT_PATH_DEFAULT = Paths.get("buck-out");
 
   public static final String DIST_BUILD_SLAVE_TOPLEVEL_LOG_DIR_NAME_TEMPLATE =

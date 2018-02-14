@@ -1,9 +1,7 @@
-# BUILD FILE SYNTAX: SKYLARK
-
 prebuilt_jar(
     name = "skylark-lang",
     binary_jar = "skylark-lang_deploy.jar",
-    source_jar = "skylark-lang_deploy-src.jar",
     licenses = ["LICENSE"],
+    source_jar = "skylark-lang_deploy-src.jar",
     visibility = ["PUBLIC"],
 )

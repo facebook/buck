@@ -26,8 +26,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.testutil.ParameterizedTests;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -154,14 +155,32 @@ public class CxxDependencyFileIntegrationTest {
   public void removingUsedHeaderAndReferenceToItCausesRebuild() throws IOException {
     workspace.writeContentsToPath("int main() { return 1; }", "test.cpp");
     Files.delete(workspace.getPath("used.h"));
-    workspace.replaceFileContents("BUCK", "\'used.h\',", "");
+    workspace.replaceFileContents("BUCK", "\"used.h\",", "");
     runCommand("build", target.toString()).assertSuccess();
     assertThat(
         workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
         Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
   }
 
-  private ProjectWorkspace.ProcessResult runCommand(String... args) throws IOException {
+  @Test
+  public void modifyingPreprocessorFlagLocationMacroSourceCausesRebuild() throws IOException {
+    workspace.writeContentsToPath("#define SOMETHING", "include.h");
+    runCommand("build", target.toString()).assertSuccess();
+    assertThat(
+        workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
+        Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+  }
+
+  @Test
+  public void modifyingCompilerFlagLocationMacroSourceCausesRebuild() throws IOException {
+    workspace.writeContentsToPath("", "cc_bin_dir/some_extra_script");
+    runCommand("build", target.toString()).assertSuccess();
+    assertThat(
+        workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
+        Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+  }
+
+  private ProcessResult runCommand(String... args) throws IOException {
     if (buckd) {
       return workspace.runBuckdCommand(args);
     } else {

@@ -1,0 +1,3 @@
+load("//:lib.bzl", "name")
+
+export_file(name = name)

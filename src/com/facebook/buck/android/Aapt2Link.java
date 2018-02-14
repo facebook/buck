@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -35,10 +36,9 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.zip.ZipScrubberStep;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -46,7 +46,9 @@ import com.google.common.collect.Lists;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /** Perform the "aapt2 link" step of building an Android app. */
@@ -56,6 +58,7 @@ public class Aapt2Link extends AbstractBuildRule {
   @AddToRuleKey private final SourcePath manifest;
   @AddToRuleKey private final ManifestEntries manifestEntries;
 
+  private final AndroidPlatformTarget androidPlatformTarget;
   private final Supplier<ImmutableSortedSet<BuildRule>> buildDepsSupplier;
 
   Aapt2Link(
@@ -66,14 +69,16 @@ public class Aapt2Link extends AbstractBuildRule {
       ImmutableList<HasAndroidResourceDeps> resourceRules,
       SourcePath manifest,
       ManifestEntries manifestEntries,
-      boolean noAutoVersion) {
+      boolean noAutoVersion,
+      AndroidPlatformTarget androidPlatformTarget) {
     super(buildTarget, projectFilesystem);
+    this.androidPlatformTarget = androidPlatformTarget;
     this.compileRules = compileRules;
     this.manifest = manifest;
     this.manifestEntries = manifestEntries;
     this.noAutoVersion = noAutoVersion;
     this.buildDepsSupplier =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(compileRules)
@@ -134,10 +139,12 @@ public class Aapt2Link extends AbstractBuildRule {
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(), getProjectFilesystem(), linkTreePath))
             .withRecursive(true));
-    steps.add(new SymlinkTreeStep(getProjectFilesystem(), linkTreePath, symlinkMap.build()));
+    steps.add(
+        new SymlinkTreeStep("aapt", getProjectFilesystem(), linkTreePath, symlinkMap.build()));
 
     steps.add(
-        new Aapt2LinkStep(getProjectFilesystem().resolve(linkTreePath), symlinkPaths.build()));
+        new Aapt2LinkStep(
+            getBuildTarget(), getProjectFilesystem().resolve(linkTreePath), symlinkPaths.build()));
     steps.add(ZipScrubberStep.of(getProjectFilesystem().resolve(getResourceApkPath())));
 
     buildableContext.recordArtifact(getFinalManifestPath());
@@ -194,8 +201,9 @@ public class Aapt2Link extends AbstractBuildRule {
   class Aapt2LinkStep extends ShellStep {
     private final List<Path> compiledResourcePaths;
 
-    Aapt2LinkStep(Path workingDirectory, List<Path> compiledResourcePaths) {
-      super(workingDirectory);
+    Aapt2LinkStep(
+        BuildTarget buildTarget, Path workingDirectory, List<Path> compiledResourcePaths) {
+      super(Optional.of(buildTarget), workingDirectory);
       this.compiledResourcePaths = compiledResourcePaths;
     }
 
@@ -206,8 +214,6 @@ public class Aapt2Link extends AbstractBuildRule {
 
     @Override
     protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-      AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
-
       ImmutableList.Builder<String> builder = ImmutableList.builder();
 
       builder.add(androidPlatformTarget.getAapt2Executable().toString());

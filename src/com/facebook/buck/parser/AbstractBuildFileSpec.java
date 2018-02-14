@@ -97,7 +97,7 @@ abstract class AbstractBuildFileSpec {
     // Otherwise, we need to do a recursive walk to find relevant build files.
     boolean tryWatchman =
         buildFileSearchMethod == ParserConfig.BuildFileSearchMethod.WATCHMAN
-            && watchman.getWatchmanClient().isPresent()
+            && watchman.getTransportPath().isPresent()
             && watchman.getProjectWatches().containsKey(filesystem.getRootPath());
     boolean walkComplete = false;
     if (tryWatchman) {
@@ -109,20 +109,22 @@ abstract class AbstractBuildFileSpec {
           projectWatch.getWatchRoot(),
           projectWatch.getProjectPrefix(),
           getBasePath());
-      walkComplete =
-          forEachBuildFileWatchman(
-              filesystem,
-              watchman.getWatchmanClient().get(),
-              projectWatch.getWatchRoot(),
-              projectWatch.getProjectPrefix(),
-              getBasePath(),
-              buildFileName,
-              function);
+      try (WatchmanClient watchmanClient = watchman.createClient()) {
+        walkComplete =
+            forEachBuildFileWatchman(
+                filesystem,
+                watchmanClient,
+                projectWatch.getWatchRoot(),
+                projectWatch.getProjectPrefix(),
+                getBasePath(),
+                buildFileName,
+                function);
+      }
     } else {
       LOG.debug(
-          "Not using Watchman (search method %s, client present %s, root present %s)",
+          "Not using Watchman (search method %s, socket path %s, root present %s)",
           buildFileSearchMethod,
-          watchman.getWatchmanClient().isPresent(),
+          watchman.getTransportPath().isPresent(),
           watchman.getProjectWatches().containsKey(filesystem.getRootPath()));
     }
 

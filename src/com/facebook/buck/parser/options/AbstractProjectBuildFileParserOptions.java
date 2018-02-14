@@ -17,6 +17,7 @@
 package com.facebook.buck.parser.options;
 
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -72,17 +73,7 @@ abstract class AbstractProjectBuildFileParserOptions {
 
   @Value.Default
   Watchman getWatchman() {
-    return Watchman.NULL_WATCHMAN;
-  }
-
-  @Value.Default
-  public boolean getUseMercurialGlob() {
-    return false;
-  }
-
-  @Value.Default
-  public boolean getFreezeGlobals() {
-    return false;
+    return WatchmanFactory.NULL_WATCHMAN;
   }
 
   @Value.Default
@@ -93,4 +84,14 @@ abstract class AbstractProjectBuildFileParserOptions {
   abstract Optional<Long> getWatchmanQueryTimeoutMs();
 
   abstract List<String> getBuildFileImportWhitelist();
+
+  @Value.Default
+  public boolean getDisableImplicitNativeRules() {
+    return false;
+  }
+
+  @Value.Default
+  public boolean isWarnAboutDeprecatedSyntax() {
+    return true;
+  }
 }

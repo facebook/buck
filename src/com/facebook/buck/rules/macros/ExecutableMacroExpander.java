@@ -20,19 +20,15 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.util.Escaper;
-import com.google.common.base.Joiner;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.ToolArg;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 /** Resolves to the executable command for a build target referencing a {@link BinaryBuildRule}. */
 public class ExecutableMacroExpander extends BuildTargetMacroExpander<ExecutableMacro> {
-
   @Override
   public Class<ExecutableMacro> getInputClass() {
     return ExecutableMacro.class;
@@ -56,25 +52,8 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander<Executable
   }
 
   @Override
-  protected ImmutableList<BuildRule> extractBuildTimeDeps(
-      BuildRuleResolver resolver, BuildRule rule) throws MacroException {
-    return ImmutableList.copyOf(getTool(rule).getDeps(new SourcePathRuleFinder(resolver)));
-  }
-
-  @Override
-  public String expand(SourcePathResolver resolver, BuildRule rule) throws MacroException {
-    // TODO(mikekap): Pass environment variables through.
-    return Joiner.on(' ')
-        .join(Iterables.transform(getTool(rule).getCommandPrefix(resolver), Escaper.SHELL_ESCAPER));
-  }
-
-  @Override
-  public Object extractRuleKeyAppendablesFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      ExecutableMacro input)
+  protected Arg expand(SourcePathResolver resolver, ExecutableMacro ignored, BuildRule rule)
       throws MacroException {
-    return getTool(resolve(resolver, input));
+    return ToolArg.of(getTool(rule));
   }
 }

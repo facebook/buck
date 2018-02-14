@@ -18,8 +18,9 @@ package com.facebook.buck.jvm.groovy;
 
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import org.junit.Before;
@@ -42,28 +43,25 @@ public class GroovyLibraryIntegrationTest {
 
   @Test
   public void shouldCompileGroovyClass() throws Exception {
-    ProjectWorkspace.ProcessResult buildResult =
-        workspace.runBuckCommand("build", "//com/example/good:example");
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/good:example");
     buildResult.assertSuccess("Build should have succeeded.");
   }
 
   @Test
   public void shouldCompileLibraryWithDependencyOnAnother() throws Exception {
-    ProjectWorkspace.ProcessResult buildResult =
-        workspace.runBuckCommand("build", "//com/example/child:child");
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/child:child");
     buildResult.assertSuccess("Build should have succeeded.");
   }
 
   @Test
   public void shouldFailToCompileInvalidGroovyClass() throws Exception {
-    ProjectWorkspace.ProcessResult buildResult =
-        workspace.runBuckCommand("build", "//com/example/bad:fail");
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/bad:fail");
     buildResult.assertFailure();
   }
 
   @Test
   public void shouldCrossCompileWithJava() throws Exception {
-    ProjectWorkspace.ProcessResult buildResult =
+    ProcessResult buildResult =
         workspace.runBuckCommand("build", "//com/example/xcompile:xcompile");
     buildResult.assertSuccess();
   }
@@ -71,15 +69,14 @@ public class GroovyLibraryIntegrationTest {
   @Test
   public void javaOptionsArePassedThroughToTheJavacCompiler() throws Exception {
     // The code inside requires java 7, but the source level is set to java 6.
-    ProjectWorkspace.ProcessResult buildResult =
-        workspace.runBuckCommand("build", "//com/example/modern:xcompile");
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/modern:xcompile");
 
     buildResult.assertFailure();
   }
 
   @Test
   public void arbitraryJavaOptionsArePassedThrough() throws Exception {
-    ProjectWorkspace.ProcessResult buildResult =
+    ProcessResult buildResult =
         workspace.runBuckCommand("build", "//com/example/javacextras:javacextras");
 
     buildResult.assertFailure();

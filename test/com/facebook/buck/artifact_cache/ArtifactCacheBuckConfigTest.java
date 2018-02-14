@@ -18,11 +18,16 @@ package com.facebook.buck.artifact_cache;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
+import com.facebook.buck.artifact_cache.config.CacheReadMode;
+import com.facebook.buck.artifact_cache.config.DirCacheEntry;
+import com.facebook.buck.artifact_cache.config.HttpCacheEntry;
 import com.facebook.buck.config.BuckConfigTestUtils;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;

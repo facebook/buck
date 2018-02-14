@@ -249,7 +249,7 @@ public class HttpArtifactCacheBinaryProtocol {
       try (DataOutputStream dataOutputStream = new DataOutputStream(responseSink)) {
         dataOutputStream.writeInt(rawMetadata.length);
         dataOutputStream.write(rawMetadata);
-        ByteStreams.copy(payloadSource.openStream(), responseSink);
+        payloadSource.copyTo(responseSink);
       }
     }
   }

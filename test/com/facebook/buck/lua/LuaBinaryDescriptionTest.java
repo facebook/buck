@@ -33,10 +33,12 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.python.CxxPythonExtensionBuilder;
 import com.facebook.buck.python.PythonBinaryDescription;
-import com.facebook.buck.python.PythonEnvironment;
 import com.facebook.buck.python.PythonLibraryBuilder;
-import com.facebook.buck.python.PythonPlatform;
-import com.facebook.buck.python.PythonVersion;
+import com.facebook.buck.python.TestPythonPlatform;
+import com.facebook.buck.python.toolchain.PythonEnvironment;
+import com.facebook.buck.python.toolchain.PythonPlatform;
+import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
+import com.facebook.buck.python.toolchain.PythonVersion;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ConstantToolProvider;
@@ -56,8 +58,9 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -74,7 +77,7 @@ public class LuaBinaryDescriptionTest {
   private static final BuildTarget PYTHON2_DEP_TARGET =
       BuildTargetFactory.newInstance("//:python2_dep");
   private static final PythonPlatform PY2 =
-      PythonPlatform.of(
+      new TestPythonPlatform(
           InternalFlavor.of("py2"),
           new PythonEnvironment(Paths.get("python2"), PythonVersion.of("CPython", "2.6")),
           Optional.of(PYTHON2_DEP_TARGET));
@@ -82,7 +85,7 @@ public class LuaBinaryDescriptionTest {
   private static final BuildTarget PYTHON3_DEP_TARGET =
       BuildTargetFactory.newInstance("//:python3_dep");
   private static final PythonPlatform PY3 =
-      PythonPlatform.of(
+      new TestPythonPlatform(
           InternalFlavor.of("py3"),
           new PythonEnvironment(Paths.get("python3"), PythonVersion.of("CPython", "3.5")),
           Optional.of(PYTHON3_DEP_TARGET));
@@ -269,10 +272,16 @@ public class LuaBinaryDescriptionTest {
     LuaBinaryBuilder luaBinaryBuilder =
         new LuaBinaryBuilder(
                 new LuaBinaryDescription(
-                    LuaTestUtils.DEFAULT_PLATFORM,
-                    LuaTestUtils.DEFAULT_PLATFORMS,
-                    cxxBuckConfig,
-                    pythonPlatforms),
+                    new ToolchainProviderBuilder()
+                        .withToolchain(
+                            LuaPlatformsProvider.DEFAULT_NAME,
+                            LuaPlatformsProvider.of(
+                                LuaTestUtils.DEFAULT_PLATFORM, LuaTestUtils.DEFAULT_PLATFORMS))
+                        .withToolchain(
+                            PythonPlatformsProvider.DEFAULT_NAME,
+                            PythonPlatformsProvider.of(pythonPlatforms))
+                        .build(),
+                    cxxBuckConfig),
                 BuildTargetFactory.newInstance("//:binary"))
             .setMainModule("main")
             .setDeps(ImmutableSortedSet.of(cxxPythonExtensionBuilder.getTarget()));
@@ -323,7 +332,7 @@ public class LuaBinaryDescriptionTest {
     assertThat(
         luaBinary
             .getRuntimeDeps(new SourcePathRuleFinder(resolver))
-            .collect(MoreCollectors.toImmutableSet()),
+            .collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItem(PythonBinaryDescription.getEmptyInitTarget(luaBinary.getBuildTarget())));
   }
 

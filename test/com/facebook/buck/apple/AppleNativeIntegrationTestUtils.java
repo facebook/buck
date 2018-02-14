@@ -16,6 +16,15 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.apple.toolchain.AppleSdk;
+import com.facebook.buck.apple.toolchain.AppleSdkPaths;
+import com.facebook.buck.apple.toolchain.AppleToolchain;
+import com.facebook.buck.apple.toolchain.impl.AppleCxxPlatforms;
+import com.facebook.buck.apple.toolchain.impl.AppleSdkDiscovery;
+import com.facebook.buck.apple.toolchain.impl.AppleToolchainDiscovery;
+import com.facebook.buck.apple.toolchain.impl.XcodeToolFinder;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -71,7 +80,7 @@ public class AppleNativeIntegrationTestUtils {
     }
     AppleSdk anySdk = anySdkOptional.get();
     AppleCxxPlatform appleCxxPlatform =
-        AppleCxxPlatforms.buildWithExecutableChecker(
+        AppleCxxPlatforms.buildWithXcodeToolFinder(
             new FakeProjectFilesystem(),
             anySdk,
             "fakeversion",

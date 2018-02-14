@@ -20,7 +20,6 @@ import com.facebook.buck.ide.intellij.model.DependencyType;
 import com.facebook.buck.ide.intellij.model.IjLibrary;
 import com.facebook.buck.ide.intellij.model.IjModule;
 import com.facebook.buck.ide.intellij.model.IjProjectElement;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -48,7 +47,7 @@ public class IjModuleGraph {
         .stream()
         .filter(dep -> dep instanceof IjModule)
         .map(IjModule.class::cast)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   public ImmutableSet<IjLibrary> getLibraries() {
@@ -56,7 +55,7 @@ public class IjModuleGraph {
         .stream()
         .filter(node -> node instanceof IjLibrary)
         .map(IjLibrary.class::cast)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   public ImmutableMap<IjProjectElement, DependencyType> getDepsFor(IjProjectElement source) {
@@ -70,7 +69,7 @@ public class IjModuleGraph {
         .filter(dep -> dep instanceof IjModule)
         .map(module -> (IjModule) module)
         .collect(
-            MoreCollectors.toImmutableMap(
+            ImmutableMap.toImmutableMap(
                 k -> k, input -> Preconditions.checkNotNull(deps.get(input))));
   }
 
@@ -81,7 +80,7 @@ public class IjModuleGraph {
         .filter(dep -> dep instanceof IjLibrary)
         .map(library -> (IjLibrary) library)
         .collect(
-            MoreCollectors.toImmutableMap(
+            ImmutableMap.toImmutableMap(
                 k -> k, input -> Preconditions.checkNotNull(deps.get(input))));
   }
 

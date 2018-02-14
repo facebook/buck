@@ -53,13 +53,6 @@ abstract class AbstractPerfTimesStats {
     return 0L;
   }
 
-  /** @return time spent refreshing the working copy via autosparse, in milliseconds. */
-  @JsonView(JsonViews.MachineReadableLog.class)
-  @Value.Default
-  public Long getSparseRefreshTimeMs() {
-    return 0L;
-  }
-
   /** @return time it takes to generate the action graph, in milliseconds. */
   @JsonView(JsonViews.MachineReadableLog.class)
   @Value.Default
@@ -74,6 +67,16 @@ abstract class AbstractPerfTimesStats {
   @JsonView(JsonViews.MachineReadableLog.class)
   @Value.Default
   public Long getRulekeyTimeMs() {
+    return 0L;
+  }
+
+  /**
+   * @return rule key computation is happening throughout the build with different types of rule
+   *     keys. This measures the total time we spend calculating all different types of rule keys.
+   */
+  @JsonView(JsonViews.MachineReadableLog.class)
+  @Value.Default
+  public Long getTotalRulekeyTimeMs() {
     return 0L;
   }
 

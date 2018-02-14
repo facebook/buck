@@ -16,18 +16,33 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.WorkerTool;
 import com.google.common.collect.ImmutableList;
+import java.util.function.Consumer;
 
-public class WorkerMacroExpander extends ExecutableMacroExpander {
+/** Macro expander for the `$(worker ...)` macro. */
+public class WorkerMacroExpander extends BuildTargetMacroExpander<WorkerMacro> {
 
   @Override
+  public Class<WorkerMacro> getInputClass() {
+    return WorkerMacro.class;
+  }
+
+  @Override
+  protected WorkerMacro parse(
+      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
+      throws MacroException {
+    return WorkerMacro.of(parseBuildTarget(target, cellNames, input));
+  }
+
   protected Tool getTool(BuildRule rule) throws MacroException {
     if (!(rule instanceof WorkerTool)) {
       throw new MacroException(
@@ -39,16 +54,19 @@ public class WorkerMacroExpander extends ExecutableMacroExpander {
   }
 
   @Override
-  protected ImmutableList<BuildRule> extractBuildTimeDeps(
-      BuildRuleResolver resolver, BuildRule rule) throws MacroException {
-    ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
-    deps.add(rule);
-    deps.addAll(getTool(rule).getDeps(new SourcePathRuleFinder(resolver)));
-    return deps.build();
+  protected Arg expand(SourcePathResolver resolver, WorkerMacro ignored, BuildRule rule)
+      throws MacroException {
+    return new WorkerToolArg(getTool(rule));
   }
 
-  @Override
-  public String expand(SourcePathResolver resolver, BuildRule rule) throws MacroException {
-    return "";
+  private class WorkerToolArg implements Arg {
+    @AddToRuleKey private final Tool tool;
+
+    public WorkerToolArg(Tool tool) {
+      this.tool = tool;
+    }
+
+    @Override
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {}
   }
 }

@@ -24,9 +24,10 @@ import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.keys.RuleKeyFactory;
-import com.facebook.buck.timing.ClockDuration;
 import com.facebook.buck.util.Scope;
+import com.facebook.buck.util.timing.ClockDuration;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.base.Preconditions;
@@ -88,7 +89,9 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       boolean willTryUploadToCache,
       Optional<HashCode> outputHash,
       Optional<Long> outputSize,
-      Optional<BuildRuleDiagnosticData> diagnosticData) {
+      Optional<BuildRuleDiagnosticData> diagnosticData,
+      Optional<ManifestFetchResult> manifestFetchResult,
+      Optional<ManifestStoreResult> manifestStoreResult) {
     return new Finished(
         beginning,
         ruleKeys,
@@ -99,7 +102,9 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         willTryUploadToCache,
         outputHash,
         outputSize,
-        diagnosticData);
+        diagnosticData,
+        manifestFetchResult,
+        manifestStoreResult);
   }
 
   public static StartedRuleKeyCalc ruleKeyCalculationStarted(
@@ -207,7 +212,9 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     private final BuildRuleKeys ruleKeys;
     private final Optional<HashCode> outputHash;
     private final Optional<Long> outputSize;
-    Optional<BuildRuleDiagnosticData> diagnosticData;
+    private final Optional<BuildRuleDiagnosticData> diagnosticData;
+    private final Optional<ManifestFetchResult> manifestFetchResult;
+    private final Optional<ManifestStoreResult> manifestStoreResult;
 
     private Finished(
         BeginningBuildRuleEvent beginning,
@@ -219,7 +226,9 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         boolean willTryUploadToCache,
         Optional<HashCode> outputHash,
         Optional<Long> outputSize,
-        Optional<BuildRuleDiagnosticData> diagnosticData) {
+        Optional<BuildRuleDiagnosticData> diagnosticData,
+        Optional<ManifestFetchResult> manifestFetchResult,
+        Optional<ManifestStoreResult> manifestStoreResult) {
       super(beginning);
       this.status = status;
       this.cacheResult = cacheResult;
@@ -230,6 +239,8 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       this.outputHash = outputHash;
       this.outputSize = outputSize;
       this.diagnosticData = diagnosticData;
+      this.manifestFetchResult = manifestFetchResult;
+      this.manifestStoreResult = manifestStoreResult;
     }
 
     @JsonView(JsonViews.MachineReadableLog.class)
@@ -280,6 +291,22 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     @JsonIgnore
     public Optional<BuildRuleDiagnosticData> getDiagnosticData() {
       return diagnosticData;
+    }
+
+    @JsonIgnore
+    public Optional<ManifestFetchResult> getManifestFetchResult() {
+      return manifestFetchResult;
+    }
+
+    @JsonIgnore
+    public Optional<ManifestStoreResult> getManifestStoreResult() {
+      return manifestStoreResult;
+    }
+
+    @JsonIgnore
+    public boolean isBuildRuleNoOp() {
+      return getBuildRule() instanceof NoopBuildRule
+          || getBuildRule() instanceof NoopBuildRuleWithDeclaredAndExtraDeps;
     }
 
     @Override
@@ -352,7 +379,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
    * Marks the start of processing a rule to calculate its rule key. We overload this as both a rule
    * start and rule key calc start event to generate less events and be more efficient.
    */
-  private static class StartedRuleKeyCalc extends Started
+  public static class StartedRuleKeyCalc extends Started
       implements RuleKeyCalculationEvent.Started {
 
     private StartedRuleKeyCalc(
@@ -364,13 +391,18 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     public Type getType() {
       return Type.NORMAL;
     }
+
+    @Override
+    public BuildTarget getTarget() {
+      return getBuildRule().getBuildTarget();
+    }
   }
 
   /**
    * Marks the completion of processing a rule to calculate its rule key. We overload this as both a
    * rule suspend and rule key calc finish event to generate less events and be more efficient.
    */
-  private static class FinishedRuleKeyCalc extends Suspended
+  public static class FinishedRuleKeyCalc extends Suspended
       implements RuleKeyCalculationEvent.Finished {
 
     private FinishedRuleKeyCalc(
@@ -381,6 +413,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     @Override
     public Type getType() {
       return Type.NORMAL;
+    }
+
+    @Override
+    public BuildTarget getTarget() {
+      return getBuildRule().getBuildTarget();
     }
   }
 
@@ -413,15 +450,5 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     StartedRuleKeyCalc started = ruleKeyCalculationStarted(rule, tracker);
     eventBus.post(started);
     return () -> eventBus.post(ruleKeyCalculationFinished(started, ruleKeyFactory));
-  }
-
-  public static Scope resumeSuspendScope(
-      BuckEventBus eventBus,
-      BuildRule rule,
-      BuildRuleDurationTracker tracker,
-      RuleKeyFactory<RuleKey> ruleKeyFactory) {
-    Resumed resumed = resumed(rule, tracker, ruleKeyFactory);
-    eventBus.post(resumed);
-    return () -> eventBus.post(suspended(resumed, ruleKeyFactory));
   }
 }

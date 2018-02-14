@@ -1,4 +1,6 @@
-java_immutables_library(
+load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
+
+java_library_with_plugins(
     name = "kotlin",
     srcs = glob(["*.java"]),
     tests = [
@@ -10,14 +12,14 @@ java_immutables_library(
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/jvm/core:classhash",
+        "//src/com/facebook/buck/jvm/core:core",
         "//src/com/facebook/buck/jvm/java:config",
         "//src/com/facebook/buck/jvm/java:rules",
         "//src/com/facebook/buck/jvm/java:steps",
         "//src/com/facebook/buck/jvm/java:support",
+        "//src/com/facebook/buck/jvm/java/toolchain:toolchain",
         "//src/com/facebook/buck/maven:util",
         "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/model/macros:macros",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/rules:build_rule",
@@ -30,6 +32,7 @@ java_immutables_library(
         "//src/com/facebook/buck/shell:steps",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
+        "//src/com/facebook/buck/toolchain:toolchain",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:io",
         "//src/com/facebook/buck/util:process_executor",

@@ -16,9 +16,261 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.RulePipelineState;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.Verbosity;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Lists;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 public class JavacPipelineState implements RulePipelineState {
+  private static final Logger LOG = Logger.get(JavacPipelineState.class);
+
+  private final CompilerParameters compilerParameters;
+  private final JavacOptions javacOptions;
+  private final BuildTarget invokingRule;
+  private final SourcePathResolver resolver;
+  private final ProjectFilesystem filesystem;
+  private final Javac javac;
+  private final ClasspathChecker classpathChecker;
+  @Nullable private final JarParameters abiJarParameters;
+  @Nullable private final JarParameters libraryJarParameters;
+
+  private final List<AutoCloseable> closeables = new ArrayList<>();
+
+  @Nullable private CapturingPrintStream stdout;
+  @Nullable private CapturingPrintStream stderr;
+  @Nullable private Javac.Invocation invocation;
+
+  public JavacPipelineState(
+      Javac javac,
+      JavacOptions javacOptions,
+      BuildTarget invokingRule,
+      SourcePathResolver resolver,
+      ProjectFilesystem filesystem,
+      ClasspathChecker classpathChecker,
+      CompilerParameters compilerParameters,
+      @Nullable JarParameters abiJarParameters,
+      @Nullable JarParameters libraryJarParameters) {
+    this.javac = javac;
+    this.javacOptions = javacOptions;
+    this.invokingRule = invokingRule;
+    this.resolver = resolver;
+    this.filesystem = filesystem;
+    this.classpathChecker = classpathChecker;
+    this.compilerParameters = compilerParameters;
+    this.abiJarParameters = abiJarParameters;
+    this.libraryJarParameters = libraryJarParameters;
+  }
+
+  public boolean isRunning() {
+    return invocation != null;
+  }
+
+  public Javac.Invocation getJavacInvocation(ExecutionContext context)
+      throws IOException, InterruptedException {
+    if (invocation == null) {
+      javacOptions.validateOptions(classpathChecker::validateClasspath);
+
+      stdout = new CapturingPrintStream();
+      closeables.add(stdout);
+      stderr = new CapturingPrintStream();
+      closeables.add(stderr);
+      Verbosity verbosity =
+          context.getVerbosity().isSilent()
+              ? Verbosity.STANDARD_INFORMATION
+              : context.getVerbosity();
+      ExecutionContext firstOrderContext =
+          context.createSubContext(stdout, stderr, Optional.of(verbosity));
+      closeables.add(firstOrderContext);
+
+      JavacExecutionContext javacExecutionContext =
+          JavacExecutionContext.of(
+              new JavacEventSinkToBuckEventBusBridge(firstOrderContext.getBuckEventBus()),
+              stderr,
+              firstOrderContext.getClassLoaderCache(),
+              verbosity,
+              firstOrderContext.getCellPathResolver(),
+              firstOrderContext.getJavaPackageFinder(),
+              filesystem,
+              context.getProjectFilesystemFactory(),
+              firstOrderContext.getEnvironment(),
+              firstOrderContext.getProcessExecutor());
+
+      ImmutableList<JavacPluginJsr199Fields> pluginFields =
+          ImmutableList.copyOf(
+              javacOptions
+                  .getAnnotationProcessingParams()
+                  .getAnnotationProcessors(this.filesystem, resolver)
+                  .stream()
+                  .map(ResolvedJavacPluginProperties::getJavacPluginJsr199Fields)
+                  .collect(Collectors.toList()));
+
+      invocation =
+          getJavac()
+              .newBuildInvocation(
+                  javacExecutionContext,
+                  resolver,
+                  invokingRule,
+                  getOptions(context, compilerParameters.getClasspathEntries()),
+                  pluginFields,
+                  compilerParameters.getSourceFilePaths(),
+                  compilerParameters.getPathToSourcesList(),
+                  compilerParameters.getWorkingDirectory(),
+                  compilerParameters.shouldTrackClassUsage(),
+                  abiJarParameters,
+                  libraryJarParameters,
+                  compilerParameters.getAbiGenerationMode(),
+                  compilerParameters.getAbiCompatibilityMode(),
+                  compilerParameters.getSourceOnlyAbiRuleInfo());
+
+      closeables.add(invocation);
+    }
+
+    return invocation;
+  }
+
+  public String getStdoutContents() {
+    return Preconditions.checkNotNull(stdout).getContentsAsString(Charsets.UTF_8);
+  }
+
+  public String getStderrContents() {
+    return Preconditions.checkNotNull(stderr).getContentsAsString(Charsets.UTF_8);
+  }
+
   @Override
-  public void close() {}
+  public void close() {
+    for (AutoCloseable closeable : Lists.reverse(closeables)) {
+      try {
+        if (closeable != null) {
+          closeable.close();
+        }
+      } catch (Exception e) {
+        LOG.warn(e, "Unable to close %s; we may be leaking memory.", closeable);
+      }
+    }
+
+    closeables.clear();
+    stdout = null;
+    stderr = null;
+    invocation = null;
+  }
+
+  @VisibleForTesting
+  Javac getJavac() {
+    return javac;
+  }
+
+  /**
+   * Returns a list of command-line options to pass to javac. These options reflect the
+   * configuration of this javac command.
+   *
+   * @param context the ExecutionContext with in which javac will run
+   * @return list of String command-line options.
+   */
+  @VisibleForTesting
+  ImmutableList<String> getOptions(
+      ExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
+    return getOptions(
+        javacOptions,
+        filesystem,
+        resolver,
+        compilerParameters.getOutputDirectory(),
+        CompilerParameters.getAnnotationPath(filesystem, invokingRule).get(),
+        context,
+        buildClasspathEntries);
+  }
+
+  public static ImmutableList<String> getOptions(
+      JavacOptions javacOptions,
+      ProjectFilesystem filesystem,
+      SourcePathResolver pathResolver,
+      Path outputDirectory,
+      Path generatedCodeDirectory,
+      ExecutionContext context,
+      ImmutableSortedSet<Path> buildClasspathEntries) {
+    final ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    javacOptions.appendOptionsTo(
+        new OptionsConsumer() {
+          @Override
+          public void addOptionValue(String option, String value) {
+            if (option.equals("bootclasspath")) {
+              builder
+                  .add("-bootclasspath")
+                  .add(
+                      Arrays.stream(value.split(File.pathSeparator))
+                          .map(path -> filesystem.resolve(path).toString())
+                          .collect(Collectors.joining(File.pathSeparator)));
+            } else {
+              builder.add("-" + option).add(value);
+            }
+          }
+
+          @Override
+          public void addFlag(String flagName) {
+            builder.add("-" + flagName);
+          }
+
+          @Override
+          public void addExtras(Collection<String> extras) {
+            builder.addAll(extras);
+          }
+        },
+        pathResolver,
+        filesystem);
+
+    // verbose flag, if appropriate.
+    if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
+      builder.add("-verbose");
+    }
+
+    // Specify the output directory.
+    builder.add("-d").add(filesystem.resolve(outputDirectory).toString());
+
+    if (!javacOptions.getAnnotationProcessingParams().isEmpty()) {
+      builder.add("-s").add(filesystem.resolve(generatedCodeDirectory).toString());
+    }
+
+    // Build up and set the classpath.
+    if (!buildClasspathEntries.isEmpty()) {
+      String classpath = Joiner.on(File.pathSeparator).join(buildClasspathEntries);
+      builder.add("-classpath", classpath);
+    } else {
+      builder.add("-classpath", "''");
+    }
+
+    return builder.build();
+  }
+
+  CompilerParameters getCompilerParameters() {
+    return compilerParameters;
+  }
+
+  Optional<JarParameters> getLibraryJarParameters() {
+    return Optional.ofNullable(libraryJarParameters);
+  }
+
+  Optional<JarParameters> getAbiJarParameters() {
+    return Optional.ofNullable(abiJarParameters);
+  }
 }

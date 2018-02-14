@@ -1,9 +1,8 @@
 cxx_library(
-  name = 'xplat-lib',
-  srcs = glob(['*.cpp']),
-  deps = [
-    'primary//:lib',
-  ],
-  visibility = ['PUBLIC'],
+    name = "xplat-lib",
+    srcs = glob(["*.cpp"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "primary//:lib",
+    ],
 )
-

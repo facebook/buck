@@ -1,0 +1,88 @@
+{namespace cgo_libraru}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'cgo_library()' /}
+    {param navid: 'rule_cgo_library' /}
+    {param prettify: true /}
+    {param description}
+      A cgo_library() rule builds a native C/C++ object with cgo utility.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+A cgo_library() rule builds an object from the supplied set of Go/C source files and
+dependencies. The outputs are linked into go executable in the last step (compile).
+This rule borrows from cxx_binary since C/C++ sources are being compiled.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call go_common.package_name_arg /}
+
+{call cxx_common.srcs_arg /}
+
+{call cxx_common.headers_arg /}
+
+{call cxx_common.preprocessor_flags_arg /}
+
+{call cxx_common.platform_preprocessor_flags_arg /}
+
+{call go_common.cgo_compiler_flags_arg /}
+
+{call cxx_common.compiler_flags_arg /}
+
+{call cxx_common.platform_compiler_flags_arg /}
+
+{call cxx_common.linker_extra_outputs_arg /}
+
+{call cxx_common.linker_flags_arg /}
+
+{call cxx_common.platform_linker_flags_arg /}
+
+{call native_common.link_style /}
+
+{call cxx_common.raw_headers_arg /}
+
+{/param} // close args
+
+{param examples}
+{literal}<pre class="prettyprint lang-py">
+# A rule that builds a Go native executable with linked cgo library based on
+# C/C++ util library.
+go_binary(
+    name = "bin",
+    srcs = ["main.go"],
+    cgo_deps = [":lib"],
+)
+
+cgo_library(
+    name = "lib",
+    srcs = ["cgo_source.go"],
+    headers = ["util.h"],
+    deps = [":util"],
+)
+
+cxx_library(
+    name = "util",
+    srcs = ["util.c"],
+    headers = ["util.h"],
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

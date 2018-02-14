@@ -23,12 +23,12 @@ def fake_android_resource_strings(**kwargs):
   android_resource(**kwargs)
 
 fake_android_resource_strings(
-  name = 'res',
-  res = 'res',
-  package = 'com.sample',
-  visibility = [
-    'PUBLIC',
-  ],
-  deps = [
-  ],
+    name = "res",
+    package = "com.sample",
+    res = "res",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+    ],
 )

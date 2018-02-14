@@ -70,47 +70,104 @@ run_command() {
   local platform=
   local assets_dir=
 
-  set -- $2
+  # While we transition to JSON, buck can generates both format depending on the type of rule.
+  if [[ "$2" == '{'* ]]; then
 
-  while [[ $# -gt 0 ]]; do
-    case "$1" in
-      --out)
-        outfile="$2"
-        shift
-        ;;
-      --assets|--root|--sourcemap)
-        args=$(concat $args "$1" "$(replace_root "$2")")
-        if [[ "$1" == "--assets" ]]; then
-          assets_dir="$2"
-        elif [[ "$1" == "--sourcemap" ]]; then
-          write_sourcemap "$2"
-        fi
-        shift
-        ;;
-      --lib)
-        args=$(concat $args "$1" "$(replace_root "$2")")
-        infiles=$(concat $infiles "$2")
-        shift
-        ;;
-      --*)
-        args=$(concat $args "$1")
-        if [[ "$1" == "--platform" ]]; then
-          platform="$2"
-        fi
-        if [[ "$2" != --* ]]; then
-          args=$(concat $args "$2")
+    # Process args_string ($2) as JSON
+    # We use `sed` to extract JSON field values. This is utterly broken, as it doesn't handle
+    # escaping, spaces, etc. However, it gets the job done here by assuming we won't have escaped
+    # characters in integration tests, and that the JSON is minified.
+
+    # We just 'relativize' any path contained anywhere in the JSON args. This will break
+    # if $ROOT contain any pipe character "|", that we use as `sed` delimiter.
+    args=$(echo "$2" | sed "s|$ROOT|@|g")
+
+    local command=$(echo "$2" | sed -n 's/.*"command":"\([^"]*\)".*/\1/p')
+
+    if [[ "$command" == "bundle" ]]; then
+      infiles=$(echo "$2" | sed -n 's/.*"libraries":\["\([^]]*\)"\].*/\1/p' | sed 's/","/ /g')
+      outfile=$(echo "$2" | sed -n 's/.*"bundlePath":"\([^"]*\)".*/\1/p')
+      platform=$(echo "$2" | sed -n 's/.*"platform":"\([^"]*\)".*/\1/p')
+      assets_dir=$(echo "$2" | sed -n 's/.*"assetsDirPath":"\([^"]*\)".*/\1/p')
+
+      local source_map_path=$(echo "$2" | sed -n 's/.*"sourceMapPath":"\([^"]*\)".*/\1/p')
+      if [[ -n "$source_map_path" ]]; then
+        write_sourcemap "$source_map_path"
+      fi
+    fi
+
+    if [[ "$command" == "dependencies" ]]; then
+      infiles=$(echo "$2" | sed -n 's/.*"libraries":\["\([^]]*\)"\].*/\1/p' | sed 's/","/ /g')
+      outfile=$(echo "$2" | sed -n 's/.*"outputFilePath":"\([^"]*\)".*/\1/p')
+    fi
+
+    if [[ "$command" == "library-dependencies" ]]; then
+      infiles=$(echo "$2" | sed -n 's/.*"aggregatedSourceFilesFilePath":"\([^"]*\)".*/\1/p')
+      local deps=$(echo "$2" | sed -n 's/.*"dependencyLibraryFilePaths":\["\([^]]*\)"\].*/\1/p' | sed 's/","/ /g')
+      infiles="$deps $infiles"
+      outfile=$(echo "$2" | sed -n 's/.*"outputPath":"\([^"]*\)".*/\1/p')
+    fi
+
+    if [[ "$command" == "library-files" ]]; then
+      infiles=$(echo "$2" | sed -n 's/.*"sourceFilePaths":\["\([^]]*\)"\].*/\1/p' | sed 's/","/ /g')
+      outfile=$(echo "$2" | sed -n 's/.*"outputFilePath":"\([^"]*\)".*/\1/p')
+    fi
+
+    if [[ "$command" == "transform" ]]; then
+      infiles=$(echo "$2" | sed -n 's/.*"sourceJsFilePath":"\([^"]*\)".*/\1/p')
+      outfile=$(echo "$2" | sed -n 's/.*"outputFilePath":"\([^"]*\)".*/\1/p')
+    fi
+
+    if [[ "$command" == "optimize" ]]; then
+      infiles=$(echo "$2" | sed -n 's/.*"transformedJsFilePath":"\([^"]*\)".*/\1/p')
+      outfile=$(echo "$2" | sed -n 's/.*"outputFilePath":"\([^"]*\)".*/\1/p')
+    fi
+
+  else
+
+    # Process args_string ($2) as command-line arguments
+    set -- $2
+
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --out)
+          outfile="$2"
           shift
-        fi
-        ;;
-      */*)
-        infiles=$(concat $infiles "$1")
-        ;;
-      *)
-        args=$(concat $args "$1")
-        ;;
-    esac
-    shift
-  done
+          ;;
+        --assets|--root|--sourcemap)
+          args=$(concat $args "$1" "$(replace_root "$2")")
+          if [[ "$1" == "--assets" ]]; then
+            assets_dir="$2"
+          elif [[ "$1" == "--sourcemap" ]]; then
+            write_sourcemap "$2"
+          fi
+          shift
+          ;;
+        --lib|--files)
+          args=$(concat $args "$1" "$(replace_root "$2")")
+          infiles=$(concat $infiles "$2")
+          shift
+          ;;
+        --*)
+          args=$(concat $args "$1")
+          if [[ "$1" == "--platform" ]]; then
+            platform="$2"
+          fi
+          if [[ "$2" != --* ]]; then
+            args=$(concat $args "$2")
+            shift
+          fi
+          ;;
+        */*)
+          infiles=$(concat $infiles "$1")
+          ;;
+        *)
+          args=$(concat $args "$1")
+          ;;
+      esac
+      shift
+    done
+  fi
 
   if [[ -n "$assets_dir" ]]; then
     write_asset "$assets_dir" "$platform"
@@ -118,7 +175,8 @@ run_command() {
 
   if [[ -z "$outfile" ]]; then
     echo "No output file given" >&2
-    return ',{"id": %d, "type": "error", "exit_code": 1}' "$message_id"
+    printf ',{"id": %d, "type": "error", "exit_code": 1}' "$message_id"
+    return
   fi
 
   mkdir -p "$(dirname "$outfile")"

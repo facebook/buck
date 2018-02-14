@@ -15,8 +15,6 @@
  */
 package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -25,6 +23,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.StreamSupport;
 
 /** Encapsulates all the logic to sanitize debug paths in native code. */
@@ -62,8 +61,8 @@ public abstract class DebugPathSanitizer {
 
   public ImmutableList<String> sanitizeFlags(Iterable<String> flags) {
     return StreamSupport.stream(flags.spliterator(), false)
-        .map(sanitize(Optional.empty())::apply)
-        .collect(MoreCollectors.toImmutableList());
+        .map(sanitize(Optional.empty()))
+        .collect(ImmutableList.toImmutableList());
   }
 
   /**

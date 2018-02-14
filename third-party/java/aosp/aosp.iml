@@ -21,7 +21,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../gson/gson-2.2.4.jar!/" />
+          <root url="jar://$MODULE_DIR$/../gson/gson-2.8.2.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -30,20 +30,15 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../guava/guava-20.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/../errorprone/error_prone_annotations-2.0.19.jar!/" />
         </CLASSES>
         <JAVADOC />
-        <SOURCES />
+        <SOURCES>
+          <root url="jar://$MODULE_DIR$/../errorprone/error_prone_annotations-2.0.19-sources.jar!/" />
+        </SOURCES>
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../errorprone/error-prone-annotations-2.0.15.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
+    <orderEntry type="library" name="guava" level="project" />
+    <orderEntry type="library" name="android-sdklib-25.3.0" level="project" />
   </component>
 </module>

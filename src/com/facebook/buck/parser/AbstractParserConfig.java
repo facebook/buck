@@ -17,16 +17,13 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ConfigView;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.WatchmanWatcher;
-import com.facebook.buck.python.PythonBuckConfig;
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -45,7 +42,6 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   public enum GlobHandler {
     PYTHON,
     WATCHMAN,
-    MERCURIAL,
     ;
   }
 
@@ -193,32 +189,9 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
     return getDelegate().getListWithoutComments("project", "build_file_import_whitelist");
   }
 
-  /**
-   * Returns the path to python interpreter. If python is specified in the 'python_interpreter' key
-   * of the 'parser' section that is used and an error reported if invalid.
-   *
-   * <p>If none has been specified, consult the PythonBuckConfig for an interpreter.
-   *
-   * @return The found python interpreter.
-   */
   @Value.Lazy
-  public String getPythonInterpreter(Optional<String> configPath, ExecutableFinder exeFinder) {
-    PythonBuckConfig pyconfig = new PythonBuckConfig(getDelegate(), exeFinder);
-    Path path =
-        configPath
-            .map(c -> pyconfig.getPythonInterpreter(Optional.of(c)))
-            // Fall back to the Python section configuration
-            .orElseGet(pyconfig::getPythonInterpreter);
-    if (!(Files.isExecutable(path) && !Files.isDirectory(path))) {
-      throw new HumanReadableException("Not a python executable: " + path);
-    }
-    return path.toString();
-  }
-
-  @Value.Lazy
-  public String getPythonInterpreter(ExecutableFinder exeFinder) {
-    Optional<String> configPath = getDelegate().getValue("parser", "python_interpreter");
-    return getPythonInterpreter(configPath, exeFinder);
+  public Optional<String> getParserPythonInterpreterPath() {
+    return getDelegate().getValue("parser", "python_interpreter");
   }
 
   /**
@@ -233,25 +206,57 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   }
 
   /**
-   * Indicates whether globals imported by {@code include_defs} should be "frozen", which means they
-   * will be converted into their read-only counterparts. This can be used to detect accidental
-   * attempts to modify global variables causing non-determinism and hard to debug bugs.
-   *
-   * @return boolean flag indicating whether globals must be "frozen".
-   */
-  @Value.Lazy
-  public boolean getFreezeGlobals() {
-    return getDelegate().getBooleanValue("parser", "freeze_globals", false);
-  }
-
-  /**
    * @return boolean flag indicating whether support for parsing build files using non default
    *     syntax (currently Python DSL).
-   *     <p>For a list of supported syntax see {@link
-   *     com.facebook.buck.json.HybridProjectBuildFileParser.Syntax}.
+   *     <p>For a list of supported syntax see {@link Syntax}.
    */
   @Value.Lazy
   public boolean isPolyglotParsingEnabled() {
     return getDelegate().getBooleanValue("parser", "polyglot_parsing_enabled", false);
+  }
+
+  /**
+   * @return a syntax to assume for build files without explicit build file syntax marker. *
+   *     <p>For a list of supported syntax see {@link Syntax}.
+   */
+  @Value.Lazy
+  public Syntax getDefaultBuildFileSyntax() {
+    return getDelegate()
+        .getEnum("parser", "default_build_file_syntax", Syntax.class)
+        .orElse(Syntax.PYTHON_DSL);
+  }
+
+  /**
+   * Returns a whether we should show the warning for parser cache mutation when using buck
+   * parser-cache --load
+   */
+  @Value.Lazy
+  public boolean isParserCacheMutationWarningEnabled() {
+    return getDelegate().getBooleanValue("parser", "parser_cache_mutation_warning_enabled", true);
+  }
+
+  /**
+   * @return whether native build rules are available for users in build files. If not, they are
+   *     only accessible in extension files under the 'native' object
+   */
+  @Value.Lazy
+  public boolean getDisableImplicitNativeRules() {
+    return getDelegate().getBooleanValue("parser", "disable_implicit_native_rules", false);
+  }
+
+  /** @return whether Buck should warn about deprecated syntax. */
+  @Value.Lazy
+  public boolean isWarnAboutDeprecatedSyntax() {
+    return getDelegate().getBooleanValue("parser", "warn_about_deprecated_syntax", true);
+  }
+
+  /**
+   * @return whether Buck should invalidate the parser state based on environment variables.
+   *     <p>WARNING: Environment variable changes won't discard the parser state. This setting
+   *     should be used with caution since it can lead to wrong parser results.
+   */
+  @Value.Lazy
+  public boolean shouldIgnoreEnvironmentVariablesChanges() {
+    return getDelegate().getBooleanValue("parser", "ignore_environment_variables_changes", false);
   }
 }

@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -27,9 +28,11 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -42,7 +45,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class ParserIntegrationTest {
-  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths(true);
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
@@ -55,7 +58,7 @@ public class ParserIntegrationTest {
     BuildTarget target = workspace.newBuildTarget("//:base_genrule");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
-    ProjectWorkspace.ProcessResult buildResult = workspace.runBuckCommand("build", "", "-v", "2");
+    ProcessResult buildResult = workspace.runBuckCommand("build", "", "-v", "2");
     buildResult.assertSuccess();
 
     workspace.verify(
@@ -141,8 +144,9 @@ public class ParserIntegrationTest {
             this, "not_allow_empty_glob", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//:root_module");
-    result.assertFailure("buck build should fail on empty glob results when set in config");
+    ProcessResult result = workspace.runBuckCommand("build", "//:root_module");
+    result.assertExitCode(
+        "buck build should fail on empty glob results when set in config", ExitCode.PARSE_ERROR);
     assertThat(
         "error message for failure to return results from glob is incorrect",
         result.getStderr(),
@@ -158,7 +162,7 @@ public class ParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "allow_empty_glob", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//:root_module");
+    ProcessResult result = workspace.runBuckCommand("build", "//:root_module");
     result.assertSuccess("buck build should ignore empty glob results by default");
   }
 
@@ -168,8 +172,8 @@ public class ParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "glob_ignores", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//:root_module");
-    result.assertFailure("glob should be empty because of ignores");
+    ProcessResult result = workspace.runBuckCommand("build", "//:root_module");
+    result.assertExitCode("glob should be empty because of ignores", ExitCode.PARSE_ERROR);
     assertThat(
         "error message for failure to return results from glob is incorrect",
         result.getStderr(),
@@ -184,7 +188,7 @@ public class ParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "build_file_name", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("targets", "//:root");
+    ProcessResult result = workspace.runBuckCommand("targets", "//:root");
     result.assertSuccess("buck should parse build files with a different name");
     assertEquals("//:root\n", result.getStdout());
   }
@@ -195,8 +199,8 @@ public class ParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "missing_name", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("targets", "//...");
-    result.assertFailure("missing attribute should error");
+    ProcessResult result = workspace.runBuckCommand("targets", "//...");
+    result.assertExitCode("missing attribute should error", ExitCode.PARSE_ERROR);
     assertThat(result.getStderr(), containsString("genrule"));
     assertThat(result.getStderr(), containsString("name"));
   }
@@ -207,8 +211,8 @@ public class ParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "missing_attr", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("targets", "//:gr");
-    result.assertFailure("missing name should error");
+    ProcessResult result = workspace.runBuckCommand("targets", "//:gr");
+    result.assertExitCode("missing name should error", ExitCode.PARSE_ERROR);
     assertThat(result.getStderr(), containsString("genrule"));
     assertThat(result.getStderr(), containsString("gr"));
     assertThat(result.getStderr(), containsString("out"));
@@ -220,8 +224,8 @@ public class ParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "extra_attr", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("targets", "//:gr");
-    result.assertFailure("extra attr should error");
+    ProcessResult result = workspace.runBuckCommand("targets", "//:gr");
+    result.assertExitCode("extra attr should error", ExitCode.PARSE_ERROR);
     assertThat(result.getStderr(), containsString("genrule"));
     assertThat(result.getStderr(), containsString("gr"));
     assertThat(result.getStderr(), containsString("blurgle"));
@@ -289,7 +293,8 @@ public class ParserIntegrationTest {
     workspace.setUp();
     BigFileTree bigFileTree = new BigFileTree(workspace);
 
-    // We need to change a bunch of files to trigger watchman overflow.  Build a directory hierarchy to avoid overstuffing any individual directory.
+    // We need to change a bunch of files to trigger watchman overflow.  Build a directory hierarchy
+    // to avoid overstuffing any individual directory.
     byte[] initialContents = "xxx".getBytes();
     bigFileTree.visit(path -> Files.write(path, initialContents));
 
@@ -317,5 +322,251 @@ public class ParserIntegrationTest {
     workspace
         .runBuckBuild("//java/bar:bar_test", "-c", "parser.polyglot_parsing_enabled=true")
         .assertSuccess();
+  }
+
+  @Test
+  public void testPythonDSLParsingHasNoWarningsForLoadsWithoutCell() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "python_dsl_warnings", temporaryFolder);
+    workspace.setUp();
+    ProcessResult result =
+        workspace.runBuckBuild(
+            "cell//:ext.bzl",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.default_build_file_syntax=python_dsl");
+    System.out.println(result.getStderr());
+    assertThat(result.getStderr(), not(containsString("Warning raised by BUCK file parser")));
+    result.assertSuccess();
+  }
+
+  @Test
+  public void absoluteTargetPathInCellResolvesRelativeToCellRootInSkylark() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cross_cell_load", temporaryFolder);
+    workspace.setUp();
+    workspace
+        .runBuckBuild(
+            "b//:lib2.bzl",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.default_build_file_syntax=skylark")
+        .assertSuccess();
+  }
+
+  @Test
+  public void absoluteTargetPathInCellResolvesRelativeToCellRootInPythonDSL() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cross_cell_load", temporaryFolder);
+    workspace.setUp();
+    workspace
+        .runBuckBuild(
+            "b//:lib2.bzl",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.default_build_file_syntax=python_dsl")
+        .assertSuccess();
+  }
+
+  private void assertParseFailedWithSubstrings(ProcessResult result, String... substrings) {
+    result.assertExitCode("", ExitCode.PARSE_ERROR);
+    System.out.println(result.getStderr());
+    for (String substring : substrings) {
+      assertThat(result.getStderr(), containsString(substring));
+    }
+  }
+
+  @Test
+  public void testDisablingImplicitNativeRules() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "disable_implicit_native_rules", temporaryFolder);
+    workspace.setUp();
+
+    // Python interpreter, true / false / default for disabling implicit native rules
+
+    assertParseFailedWithSubstrings(
+        workspace.runBuckBuild(
+            "//python/implicit_in_build_file:main",
+            "-c",
+            "parser.disable_implicit_native_rules=true"),
+        "NameError: name 'java_library' is not defined",
+        "BUCK\", line 1");
+    assertParseFailedWithSubstrings(
+        workspace.runBuckBuild(
+            "//python/implicit_in_extension_bzl:main",
+            "-c",
+            "parser.disable_implicit_native_rules=true"),
+        "NameError: global name 'java_library' is not defined",
+        "extension.bzl\", line 5",
+        "BUCK\", line 5");
+    workspace
+        .runBuckBuild(
+            "//python/native_in_extension_bzl:main",
+            "-c",
+            "parser.disable_implicit_native_rules=true")
+        .assertSuccess();
+
+    workspace
+        .runBuckBuild(
+            "//python/implicit_in_build_file:main",
+            "-c",
+            "parser.disable_implicit_native_rules=false")
+        .assertSuccess();
+    workspace
+        .runBuckBuild(
+            "//python/implicit_in_extension_bzl:main",
+            "-c",
+            "parser.disable_implicit_native_rules=false")
+        .assertSuccess();
+    workspace
+        .runBuckBuild(
+            "//python/native_in_extension_bzl:main",
+            "-c",
+            "parser.disable_implicit_native_rules=false")
+        .assertSuccess();
+
+    workspace.runBuckBuild("//python/implicit_in_build_file:main").assertSuccess();
+    workspace.runBuckBuild("//python/implicit_in_extension_bzl:main").assertSuccess();
+    workspace.runBuckBuild("//python/native_in_extension_bzl:main").assertSuccess();
+
+    // Skylark interpreter, true / false / default for disabling implicit native rules
+    // TODO: Specific error messages are disabled until we hook up the skylark parser to the
+    // general buck event bus, since that's how we get messages in integration tests (and how
+    // the python parser is hooked up)
+
+    assertParseFailedWithSubstrings(
+        workspace.runBuckBuild(
+            "//skylark/implicit_in_build_file:main",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.disable_implicit_native_rules=true"),
+        "BUCK:2:1: name 'java_library' is not defined");
+    assertParseFailedWithSubstrings(
+        workspace.runBuckBuild(
+            "//skylark/implicit_in_extension_bzl:main",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.disable_implicit_native_rules=true"),
+        "name 'java_library' is not defined",
+        "extension.bzl\", line 5",
+        "BUCK\", line 4");
+    workspace
+        .runBuckBuild(
+            "//skylark/native_in_extension_bzl:main",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.disable_implicit_native_rules=true")
+        .assertSuccess();
+
+    workspace
+        .runBuckBuild(
+            "//skylark/implicit_in_build_file:main",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.disable_implicit_native_rules=false")
+        .assertSuccess();
+    assertParseFailedWithSubstrings(
+        workspace.runBuckBuild(
+            "//skylark/implicit_in_extension_bzl:main",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.disable_implicit_native_rules=false"),
+        "name 'java_library' is not defined",
+        "extension.bzl\", line 5",
+        "BUCK\", line 4");
+    workspace
+        .runBuckBuild(
+            "//skylark/native_in_extension_bzl:main",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.disable_implicit_native_rules=false")
+        .assertSuccess();
+
+    workspace
+        .runBuckBuild(
+            "//skylark/implicit_in_build_file:main",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.default_build_file_syntax=SKYLARK")
+        .assertSuccess();
+    assertParseFailedWithSubstrings(
+        workspace.runBuckBuild(
+            "//skylark/implicit_in_extension_bzl:main",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.default_build_file_syntax=SKYLARK"),
+        "name 'java_library' is not defined",
+        "extension.bzl\", line 5",
+        "BUCK\", line 4");
+    workspace
+        .runBuckBuild(
+            "//skylark/native_in_extension_bzl:main",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.default_build_file_syntax=SKYLARK")
+        .assertSuccess();
+  }
+
+  @Test
+  public void deprecatedSyntaxWarningIsDisplayedWhenReferencingACellWithoutAt() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "deprecated_cell_syntax", temporaryFolder);
+    workspace.setUp();
+    ProcessResult result =
+        workspace
+            .runBuckBuild(
+                "cell//:lib.bzl",
+                "-c",
+                "parser.polyglot_parsing_enabled=true",
+                "-c",
+                "parser.default_build_file_syntax=python_dsl",
+                "-c",
+                "parser.warn_about_deprecated_syntax=true")
+            .assertSuccess();
+    assertThat(
+        result.getStderr(),
+        containsString(
+            "BUCK has a load label \"cell//:lib.bzl\" that uses a deprecated cell format."
+                + " \"cell\" should instead be \"@cell\"."));
+    assertThat(
+        result.getStderr(),
+        containsString(
+            "lib.bzl has a load label \"cell//:lib2.bzl\" that uses a deprecated cell format. "
+                + "\"cell\" should instead be \"@cell\"."));
+  }
+
+  @Test
+  public void deprecatedSyntaxWarningIsNotDisplayedIfDisabled() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "deprecated_cell_syntax", temporaryFolder);
+    workspace.setUp();
+    ProcessResult result =
+        workspace
+            .runBuckBuild(
+                "cell//:lib.bzl",
+                "-c",
+                "parser.polyglot_parsing_enabled=true",
+                "-c",
+                "parser.default_build_file_syntax=python_dsl",
+                "-c",
+                "parser.warn_about_deprecated_syntax=false")
+            .assertSuccess();
+    assertThat(result.getStderr(), not(containsString("Warning raised by BUCK file parser")));
   }
 }

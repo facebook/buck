@@ -16,7 +16,7 @@
 
 package com.facebook.buck.config;
 
-import com.facebook.buck.randomizedtrial.WithProbability;
+import com.facebook.buck.util.randomizedtrial.WithProbability;
 
 public enum ActionGraphParallelizationMode implements WithProbability {
   ENABLED(0.5),

@@ -136,6 +136,12 @@ of the compiled class files and resources.
   {param binary: 'java_binary' /}
 {/call}
 
+{call jvm_common.abi_generation_mode /}
+
+{call jvm_common.source_only_abi_deps /}
+
+{call jvm_common.required_for_source_only_abi /}
+
 {call buck.labels_arg /}
 
 {call buck.tests_arg /}

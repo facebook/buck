@@ -33,11 +33,11 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.model.Pair;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.network.FakeFailingScribeLogger;
 import com.facebook.buck.util.network.ScribeLogger;
+import com.facebook.buck.util.types.Pair;
 import com.fasterxml.jackson.core.JsonParser;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -46,6 +46,7 @@ import com.google.common.collect.ObjectArrays;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -226,7 +227,8 @@ public class OfflineScribeLoggerTest {
     offlineLogger.log(testCategory, ImmutableList.of("line1", "line2"));
     offlineLogger.close();
 
-    //Check read&sent data is as expected - for first category we expect clustered 8 lines from 2x4.
+    // Check read&sent data is as expected - for first category we expect clustered 8 lines from
+    // 2x4.
     assertEquals(4, sentData.size());
     final String[] expectedCategories =
         ObjectArrays.concat(uniqueCategories, uniqueCategories, String.class);
@@ -302,7 +304,8 @@ public class OfflineScribeLoggerTest {
                 storedCategoriesWithLines.incrementAndGet();
               }
             }
-          });
+          },
+          MoreExecutors.directExecutor());
       return upload;
     }
 

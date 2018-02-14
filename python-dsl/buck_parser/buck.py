@@ -7,32 +7,31 @@ import __builtin__
 import __future__
 
 import contextlib
+import collections
 from pathlib import Path, PurePath
 from pywatchman import WatchmanError
+from .deterministic_set import DeterministicSet
 from .json_encoder import BuckJSONEncoder
 from .glob_internal import glob_internal
-from .glob_mercurial import glob_mercurial_manifest, load_mercurial_repo_info
 from .glob_watchman import SyncCookieState, glob_watchman
 from .util import Diagnostic, cygwin_adjusted_path, get_caller_frame, is_special, is_in_dir
 from .module_whitelist import ImportWhitelistManager
 from .profiler import Profiler
+from .struct import Struct
 
-import StringIO
 import abc
 import functools
-import hashlib
 import imp
 import inspect
 import json
 import optparse
 import os
 import os.path
-import pstats
+import platform
 import pywatchman
 import re
 import select
 import sys
-import tempfile
 import time
 import traceback
 import types
@@ -47,6 +46,8 @@ except ImportError:
 
 # When build files are executed, the functions in this file tagged with
 # @provide_for_build will be provided in the build file's local symbol table.
+# Those tagged with @provide_as_native_rule will be present unless
+# explicitly disabled by parser.native_rules_enabled_in_build_files
 #
 # When these functions are called from a build file, they will be passed
 # a keyword parameter, build_env, which is a object with information about
@@ -60,10 +61,11 @@ except ImportError:
 # "cell_name" - The cell name the build file is in.
 
 BUILD_FUNCTIONS = []
+NATIVE_FUNCTIONS = []
 
 # Wait this many seconds on recv() or send() in the pywatchman client
 # if not otherwise specified in .buckconfig
-DEFAULT_WATCHMAN_QUERY_TIMEOUT = 5.0
+DEFAULT_WATCHMAN_QUERY_TIMEOUT = 60.0
 
 ORIGINAL_IMPORT = __builtin__.__import__
 
@@ -115,10 +117,10 @@ class AbstractContext(object):
 class BuildFileContext(AbstractContext):
     """The build context used when processing a build file."""
 
-    def __init__(self, project_root, base_path, dirname, cell_name, allow_empty_globs,
+    def __init__(self, project_root, base_path, path, dirname, cell_name, allow_empty_globs,
                  ignore_paths, watchman_client, watchman_watch_root, watchman_project_prefix,
                  sync_cookie_state, watchman_glob_stat_results,
-                 watchman_use_glob_generator, use_mercurial_glob):
+                 watchman_use_glob_generator):
         self.globals = {}
         self._includes = set()
         self._used_configs = {}
@@ -128,6 +130,7 @@ class BuildFileContext(AbstractContext):
 
         self.project_root = project_root
         self.base_path = base_path
+        self.path = path
         self.cell_name = cell_name
         self.dirname = dirname
         self.allow_empty_globs = allow_empty_globs
@@ -138,7 +141,6 @@ class BuildFileContext(AbstractContext):
         self.sync_cookie_state = sync_cookie_state
         self.watchman_glob_stat_results = watchman_glob_stat_results
         self.watchman_use_glob_generator = watchman_use_glob_generator
-        self.use_mercurial_glob = use_mercurial_glob
 
     @property
     def includes(self):
@@ -160,7 +162,14 @@ class BuildFileContext(AbstractContext):
 class IncludeContext(AbstractContext):
     """The build context used when processing an include."""
 
-    def __init__(self):
+    def __init__(self, cell_name, path):
+        """
+        :param cell_name: a cell name of the current context. Note that this cell name can be
+            different from the one BUCK file is evaluated in, since it can load extension files
+            from other cells, which should resolve their loads relative to their own location.
+        """
+        self.cell_name = cell_name
+        self.path = path
         self.globals = {}
         self._includes = set()
         self._used_configs = {}
@@ -182,6 +191,9 @@ class IncludeContext(AbstractContext):
     @property
     def diagnostics(self):
         return self._diagnostics
+
+
+BuildInclude = collections.namedtuple("BuildInclude", ["cell_name", "path"])
 
 
 class LazyBuildEnvPartial(object):
@@ -220,6 +232,100 @@ class LazyBuildEnvPartial(object):
             raise
 
 
+HostInfoOs = collections.namedtuple(
+    'HostInfoOs',
+    [
+        'is_linux',
+        'is_macos',
+        'is_windows',
+        'is_freebsd',
+        'is_unknown',
+    ],
+)
+
+HostInfoArch = collections.namedtuple(
+    'HostInfoArch',
+    [
+        'is_aarch64',
+        'is_arm',
+        'is_armeb',
+        'is_i386',
+        'is_mips',
+        'is_mips64',
+        'is_mipsel',
+        'is_mipsel64',
+        'is_powerpc',
+        'is_ppc64',
+        'is_unknown',
+        'is_x86_64',
+    ]
+)
+
+HostInfo = collections.namedtuple('HostInfo', ['os', 'arch'])
+
+
+__supported_oses = {
+    'darwin': 'macos',
+    'windows': 'windows',
+    'linux': 'linux',
+    'freebsd': 'freebsd',
+}
+
+# Pulled from com.facebook.buck.util.environment.Architecture.java as
+# possible values. amd64 and arm64 are remapped, but they may not
+# actually be present on most systems
+__supported_archs = {
+    'aarch64': 'aarch64',
+    'arm': 'arm',
+    'armeb': 'armeb',
+    'i386': 'i386',
+    'mips': 'mips',
+    'mips64': 'mips64',
+    'mipsel': 'mipsel',
+    'mipsel64': 'mipsel64',
+    'powerpc': 'powerpc',
+    'ppc64': 'ppc64',
+    'unknown': 'unknown',
+    'x86_64': 'x86_64',
+    'amd64': 'x86_64',
+    'arm64': 'aarch64',
+}
+
+
+def host_info(
+        platform_system=platform.system,
+        platform_machine=platform.machine):
+
+    host_arch = __supported_archs.get(platform_machine().lower(), 'unknown')
+    host_os = __supported_oses.get(platform_system().lower(), 'unknown')
+    return HostInfo(
+        os=HostInfoOs(
+            is_linux=(host_os == 'linux'),
+            is_macos=(host_os == 'macos'),
+            is_windows=(host_os == 'windows'),
+            is_freebsd=(host_os == 'freebsd'),
+            is_unknown=(host_os == 'unknown'),
+        ),
+        arch=HostInfoArch(
+            is_aarch64=(host_arch == 'aarch64'),
+            is_arm=(host_arch == 'arm'),
+            is_armeb=(host_arch == 'armeb'),
+            is_i386=(host_arch == 'i386'),
+            is_mips=(host_arch == 'mips'),
+            is_mips64=(host_arch == 'mips64'),
+            is_mipsel=(host_arch == 'mipsel'),
+            is_mipsel64=(host_arch == 'mipsel64'),
+            is_powerpc=(host_arch == 'powerpc'),
+            is_ppc64=(host_arch == 'ppc64'),
+            is_unknown=(host_arch == 'unknown'),
+            is_x86_64=(host_arch == 'x86_64'),
+        ),
+    )
+
+
+_cached_host_info = host_info()
+
+
 def get_mismatched_args(func, actual_args, actual_kwargs):
     argspec = inspect.getargspec(func)
 
@@ -253,6 +359,11 @@ class IncorrectArgumentsException(TypeError):
             message += ' Extra unknown kwargs: %s' % (', '.join(extra_args),)
 
         super(IncorrectArgumentsException, self).__init__(message)
+
+
+def provide_as_native_rule(func):
+    NATIVE_FUNCTIONS.append(func)
+    return func
 
 
 def provide_for_build(func):
@@ -304,15 +415,10 @@ def glob(includes, excludes=None, include_dotfiles=False, build_env=None, search
 
     if search_base is None:
         search_base = Path(build_env.dirname)
-    mercurial_repo_info = load_mercurial_repo_info(build_env, search_base, allow_safe_import)
 
     results = None
     if not includes:
         results = []
-    elif mercurial_repo_info is not None:
-        results = glob_mercurial_manifest(
-            includes, excludes, build_env.ignore_paths, include_dotfiles, search_base,
-            build_env.project_root, mercurial_repo_info)
     elif build_env.watchman_client:
         results = glob_watchman(
             includes,
@@ -431,6 +537,44 @@ def get_base_path(build_env=None):
 
 
 @provide_for_build
+def package_name(build_env=None):
+    """The name of the package being evaluated.
+
+    For example, in the BUCK file "some/package/BUCK", its value will be
+    "some/package".
+    If the BUCK file calls a function defined in a *.bzl file, package_name()
+    will return the package of the calling BUCK file. For example, if there is
+    a BUCK file at "some/package/BUCK" and "some/other/package/ext.bzl"
+    extension file, when BUCK file calls a function inside of ext.bzl file
+    it will still return "some/package" and not "some/other/package".
+
+    This function is intended to be used from within a build defs file that
+    likely contains macros that could be called from any build file.
+    Such macros may need to know the base path of the file in which they
+    are defining new build rules.
+
+    :return: a string, such as "java/com/facebook". Note there is no
+             trailing slash. The return value will be "" if called from
+             the build file in the root of the project.
+    :rtype: str
+    """
+    return get_base_path(build_env=build_env)
+
+
+@provide_for_build
+def fail(message, attr=None, build_env=None):
+    """Raises a parse error.
+
+    :param message: Error message to display for the user.
+        The object is converted to a string.
+    :param attr: Optional name of the attribute that caused the error.
+    """
+    attribute_prefix = ("attribute " + attr + ": " if attr is not None else "")
+    msg = attribute_prefix + str(message)
+    raise AssertionError(msg)
+
+
+@provide_for_build
 def get_cell_name(build_env=None):
     """Get the cell name of the build file that was initially evaluated.
 
@@ -476,6 +620,15 @@ def flatten_dicts(*args, **_):
     return flatten_list_of_dicts(args)
 
 
+@provide_for_build
+def depset(elements, build_env=None):
+    """Creates an instance of sets with deterministic iteration order.
+    :param elements: the list of elements constituting the returned depset.
+    :rtype: DeterministicSet
+    """
+    return DeterministicSet(elements)
+
+
 GENDEPS_SIGNATURE = re.compile(r'^#@# GENERATED FILE: DO NOT MODIFY ([a-f0-9]{40}) #@#\n$')
 
 
@@ -494,10 +647,11 @@ class BuildFileProcessor(object):
 
     def __init__(self, project_root, cell_roots, cell_name, build_file_name, allow_empty_globs,
                  watchman_client, watchman_glob_stat_results,
-                 watchman_use_glob_generator, use_mercurial_glob,
+                 watchman_use_glob_generator,
                  project_import_whitelist=None, implicit_includes=None,
                  extra_funcs=None, configs=None, env_vars=None,
-                 ignore_paths=None, freeze_globals=False):
+                 ignore_paths=None, disable_implicit_native_rules=False,
+                 warn_about_deprecated_syntax=True):
         if project_import_whitelist is None:
             project_import_whitelist = []
         if implicit_includes is None:
@@ -510,7 +664,7 @@ class BuildFileProcessor(object):
             env_vars = {}
         if ignore_paths is None:
             ignore_paths = []
-        self._cache = {}
+        self._include_cache = {}
         self._current_build_env = None
         self._sync_cookie_state = SyncCookieState()
 
@@ -523,21 +677,46 @@ class BuildFileProcessor(object):
         self._watchman_client = watchman_client
         self._watchman_glob_stat_results = watchman_glob_stat_results
         self._watchman_use_glob_generator = watchman_use_glob_generator
-        self._use_mercurial_glob = use_mercurial_glob
         self._configs = configs
         self._env_vars = env_vars
         self._ignore_paths = ignore_paths
-        self._freeze_globals = freeze_globals
+        self._disable_implicit_native_rules = disable_implicit_native_rules
+        self._warn_about_deprecated_syntax = warn_about_deprecated_syntax
 
-        lazy_functions = {}
+        lazy_global_functions = {}
+        lazy_native_functions = {}
         for func in BUILD_FUNCTIONS + extra_funcs:
             func_with_env = LazyBuildEnvPartial(func)
-            lazy_functions[func.__name__] = func_with_env
-        self._functions = lazy_functions
+            lazy_global_functions[func.__name__] = func_with_env
+        for func in NATIVE_FUNCTIONS:
+            func_with_env = LazyBuildEnvPartial(func)
+            lazy_native_functions[func.__name__] = func_with_env
+
+        self._global_functions = lazy_global_functions
+        self._native_functions = lazy_native_functions
         self._import_whitelist_manager = ImportWhitelistManager(
             import_whitelist=self._create_import_whitelist(project_import_whitelist),
             safe_modules_config=self.SAFE_MODULES_CONFIG,
             path_predicate=lambda path: is_in_dir(path, self._project_root))
+
+    def _create_native_module(self):
+        """
+        Creates a native module exposing built-in Buck rules.
+
+        This module allows clients to refer to built-in Buck rules using
+        "native.<native_rule>" syntax in their build files. For example,
+        "native.java_library(...)" will use a native Java library rule.
+
+        :return: 'native' module struct.
+        """
+        native_globals = {}
+        self._install_builtins(native_globals, force_native_rules=True)
+        assert 'glob' not in native_globals
+        assert 'host_info' not in native_globals
+        native_globals['glob'] = self._glob
+        native_globals['host_info'] = self._host_info
+        native_module_type = collections.namedtuple('native', native_globals.keys())
+        return native_module_type(**native_globals)
 
     def _wrap_env_var_read(self, read, real):
         """
@@ -592,8 +771,8 @@ class BuildFileProcessor(object):
             yield
 
     @staticmethod
-    def _merge_explicit_globals(src, dst, freeze_globals, whitelist=None, whitelist_mapping=None):
-        # type: (types.ModuleType, Dict[str, Any], bool, List[str], Dict[str, str]) -> None
+    def _merge_explicit_globals(src, dst, whitelist=None, whitelist_mapping=None):
+        # type: (types.ModuleType, Dict[str, Any], List[str], Dict[str, str]) -> None
         """Copy explicitly requested global definitions from one globals dict to another.
 
         If whitelist is set, only globals from the whitelist will be pulled in.
@@ -606,19 +785,13 @@ class BuildFileProcessor(object):
             for symbol in whitelist:
                 if symbol not in src.__dict__:
                     raise KeyError("\"%s\" is not defined in %s" % (symbol, src.__name__))
-                value = src.__dict__[symbol]
-                if freeze_globals:
-                    value = BuildFileProcessor._freeze(value)
-                dst[symbol] = value
+                dst[symbol] = src.__dict__[symbol]
 
         if whitelist_mapping is not None:
             for exported_name, symbol in whitelist_mapping.iteritems():
                 if symbol not in src.__dict__:
                     raise KeyError("\"%s\" is not defined in %s" % (symbol, src.__name__))
-                value = src.__dict__[symbol]
-                if freeze_globals:
-                    value = BuildFileProcessor._freeze(value)
-                dst[exported_name] = value
+                dst[exported_name] = src.__dict__[symbol]
 
     def _merge_globals(self, mod, dst):
         # type: (types.ModuleType, Dict[str, Any]) -> None
@@ -640,41 +813,28 @@ class BuildFileProcessor(object):
             block_copying_module = not hasattr(mod, '__all__') and isinstance(
                 mod.__dict__[key], types.ModuleType)
             if not key.startswith('_') and key not in hidden and not block_copying_module:
-                value = mod.__dict__[key]
-                if self._freeze_globals:
-                    value = BuildFileProcessor._freeze(value)
-                dst[key] = value
-
-    @staticmethod
-    def _freeze(value):
-        # type: (Any) -> Any
-        """
-        Returns a read-only version of the passed value instance.
-
-        Note: mutable nested fields can still be modified.
-        """
-        if isinstance(value, list):
-            return tuple(value)
-        elif isinstance(value, set):
-            return frozenset(value)
-        # TODO(ttsugrii): handle other types
-        return value
+                dst[key] = mod.__dict__[key]
 
     def _update_functions(self, build_env):
         """
         Updates the build functions to use the given build context when called.
         """
 
-        for function in self._functions.itervalues():
+        for function in self._global_functions.itervalues():
+            function.build_env = build_env
+        for function in self._native_functions.itervalues():
             function.build_env = build_env
 
-    def _install_builtins(self, namespace):
+    def _install_builtins(self, namespace, force_native_rules=False):
         """
         Installs the build functions, by their name, into the given namespace.
         """
 
-        for name, function in self._functions.iteritems():
+        for name, function in self._global_functions.iteritems():
             namespace[name] = function.invoke
+        if not self._disable_implicit_native_rules or force_native_rules:
+            for name, function in self._native_functions.iteritems():
+                namespace[name] = function.invoke
 
     @contextlib.contextmanager
     def with_builtins(self, namespace):
@@ -690,9 +850,9 @@ class BuildFileProcessor(object):
             namespace.clear()
             namespace.update(original_namespace)
 
-    def _get_include_path(self, name):
-        # type: (str) -> str
-        """Resolve the given include def name to a full path."""
+    def _resolve_include(self, name):
+        # type: (str) -> BuildInclude
+        """Resolve the given include def name to a BuildInclude metadata."""
         match = re.match(r'^([A-Za-z0-9_]*)//(.*)$', name)
         if match is None:
             raise ValueError(
@@ -706,37 +866,47 @@ class BuildFileProcessor(object):
                 raise KeyError(
                     'include_defs argument {} references an unknown cell named {}'
                     'known cells: {!r}'.format(name, cell_name, self._cell_roots))
-            return os.path.normpath(os.path.join(cell_root, relative_path))
+            return BuildInclude(cell_name=cell_name,
+                                path=os.path.normpath(os.path.join(cell_root, relative_path)))
         else:
-            return os.path.normpath(os.path.join(self._project_root, relative_path))
+            return BuildInclude(cell_name=cell_name,
+                                path=os.path.normpath(
+                                    os.path.join(self._project_root, relative_path)))
 
     def _get_load_path(self, label):
-        # type: (str) -> str
-        """Resolve the given load function label to a full path."""
+        # type: (str) -> BuildInclude
+        """Resolve the given load function label to a BuildInclude metadata."""
         match = re.match(r'^(@?[A-Za-z0-9_]+)?//(.*):(.*)$', label)
         if match is None:
             raise ValueError(
                 'load label {} should be in the form of '
                 '//path:file or cellname//path:file'.format(label))
-        cell_name = match.group(1) or ''
+        cell_name = match.group(1)
+        if cell_name:
+            if cell_name.startswith('@'):
+                cell_name = cell_name[1:]
+            elif self._warn_about_deprecated_syntax:
+                self._emit_warning('{} has a load label "{}" that uses a deprecated cell format. '
+                                   '"{}" should instead be "@{}".'.format(
+                                        self._current_build_env.path, label, cell_name,
+                                        cell_name), 'load function')
+        else:
+            cell_name = self._current_build_env.cell_name
         relative_path = match.group(2)
         file_name = match.group(3)
-        if len(cell_name) > 0:
-            if not cell_name.startswith('@'):
-                self._emit_warning('load label {} uses a deprecated style cell references. Instead'
-                                   ' of {} it should be {}.'.format(label, cell_name,
-                                                                    '@' + cell_name),
-                                   'load function')
-            else:
-                cell_name = cell_name[1:]
+        if cell_name:
             cell_root = self._cell_roots.get(cell_name)
             if cell_root is None:
                 raise KeyError(
                     'load label {} references an unknown cell named {}'
                     'known cells: {!r}'.format(label, cell_name, self._cell_roots))
-            return os.path.normpath(os.path.join(cell_root, relative_path, file_name))
+            return BuildInclude(
+                cell_name=cell_name,
+                path=os.path.normpath(os.path.join(cell_root, relative_path, file_name)))
         else:
-            return os.path.normpath(os.path.join(self._project_root, relative_path, file_name))
+            return BuildInclude(
+                cell_name=cell_name,
+                path=os.path.normpath(os.path.join(self._project_root, relative_path, file_name)))
 
     def _read_config(self, section, field, default=None):
         # type: (str, str, Any) -> Any
@@ -760,7 +930,12 @@ class BuildFileProcessor(object):
 
         return value
 
-    def _glob(self, includes, excludes=None, include_dotfiles=False, search_base=None):
+    def _glob(self, includes, excludes=None, include_dotfiles=False, search_base=None,
+              exclude=None):
+        assert exclude is None or excludes is None, \
+            "Mixing 'exclude' and 'excludes' attributes is not allowed. Please replace your " \
+            "exclude and excludes arguments with a single 'excludes = %r'." % (exclude + excludes)
+        excludes = excludes or exclude
         build_env = self._current_build_env
         return glob(
             includes, excludes=excludes, include_dotfiles=include_dotfiles,
@@ -810,8 +985,8 @@ class BuildFileProcessor(object):
 
         # Resolve the named include to its path and process it to get its
         # build context and module.
-        path = self._get_include_path(name)
-        inner_env, mod = self._process_include(path, is_implicit_include)
+        build_include = self._resolve_include(name)
+        inner_env, mod = self._process_include(build_include, is_implicit_include)
 
         # Look up the caller's stack frame and merge the include's globals
         # into it's symbol table.
@@ -827,10 +1002,10 @@ class BuildFileProcessor(object):
 
         # Pull in the include's accounting of its own referenced includes
         # into the current build context.
-        build_env.includes.add(path)
+        build_env.includes.add(build_include.path)
         build_env.merge(inner_env)
 
-    def _load(self, name, *symbols, **symbol_kwargs):
+    def _load(self, is_implicit_include, name, *symbols, **symbol_kwargs):
         # type: (str, *str, **str) -> None
         """Pull the symbols from the named include into the current caller's context.
 
@@ -842,20 +1017,34 @@ class BuildFileProcessor(object):
 
         # Resolve the named include to its path and process it to get its
         # build context and module.
-        path = self._get_load_path(name)
-        inner_env, module = self._process_include(path, False)
+        build_include = self._get_load_path(name)
+        inner_env, module = self._process_include(build_include, is_implicit_include)
 
         # Look up the caller's stack frame and merge the include's globals
         # into it's symbol table.
         frame = get_caller_frame(skip=['_functools', __name__])
         BuildFileProcessor._merge_explicit_globals(
-            module, frame.f_globals, self._freeze_globals, symbols, symbol_kwargs,
+            module, frame.f_globals, symbols, symbol_kwargs,
         )
 
         # Pull in the include's accounting of its own referenced includes
         # into the current build context.
-        build_env.includes.add(path)
+        build_env.includes.add(build_include.path)
         build_env.merge(inner_env)
+
+    def _provider(self):
+        """Creates a declared provider factory.
+
+        The return value of this function can be used to create "struct-like"
+        values. Example:
+            SomeInfo = provider()
+            def foo():
+              return 3
+            info = SomeInfo(x = 2, foo = foo)
+            print(info.x + info.foo())  # prints 5
+        """
+        return Struct
+
 
     def _add_build_file_dep(self, name):
         # type: (str) -> None
@@ -870,8 +1059,11 @@ class BuildFileProcessor(object):
         # Grab the current build context from the top of the stack.
         build_env = self._current_build_env
 
-        path = self._get_include_path(name)
+        cell_name, path = self._resolve_include(name)
         build_env.includes.add(path)
+
+    def _host_info(self):
+        return _cached_host_info
 
     @contextlib.contextmanager
     def _set_build_env(self, build_env):
@@ -989,10 +1181,6 @@ class BuildFileProcessor(object):
             included from an implicit include.
         :returns: build context (potentially different if retrieved from cache) and loaded module.
         """
-        # First check the cache.
-        cached = self._cache.get(path)
-        if cached is not None:
-            return cached
 
         # Install the build context for this input as the current context.
         with self._set_build_env(build_env):
@@ -1004,17 +1192,21 @@ class BuildFileProcessor(object):
                 'allow_unsafe_import': self._import_whitelist_manager.allow_unsafe_import,
                 'glob': self._glob,
                 'subdir_glob': self._subdir_glob,
-                'load': self._load,
+                'load': functools.partial(self._load, is_implicit_include),
+                'struct': Struct,
+                'provider': self._provider,
+                'host_info': self._host_info,
+                'native': self._create_native_module(),
             }
 
             # Don't include implicit includes if the current file being
             # processed is an implicit include
             if not is_implicit_include:
                 for include in self._implicit_includes:
-                    include_path = self._get_include_path(include)
-                    inner_env, mod = self._process_include(include_path, True)
+                    build_include = self._resolve_include(include)
+                    inner_env, mod = self._process_include(build_include, True)
                     self._merge_globals(mod, default_globals)
-                    build_env.includes.add(include_path)
+                    build_env.includes.add(build_include.path)
                     build_env.merge(inner_env)
 
             # Build a new module for the given file, using the default globals
@@ -1039,19 +1231,28 @@ class BuildFileProcessor(object):
             with self._build_file_sandboxing():
                 exec(code, module.__dict__)
 
-        self._cache[path] = build_env, module
         return build_env, module
 
-    def _process_include(self, path, is_implicit_include):
-        # type: (str, bool) -> Tuple[AbstractContext, types.ModuleType]
+    def _process_include(self, build_include, is_implicit_include):
+        # type: (BuildInclude, bool) -> Tuple[AbstractContext, types.ModuleType]
         """Process the include file at the given path.
 
-        :param path: path to the include.
+        :param build_include: build include metadata (cell_name and path).
         :param is_implicit_include: whether the file being processed is an implicit include, or was
             included from an implicit include.
         """
-        build_env = IncludeContext()
-        return self._process(build_env, path, is_implicit_include=is_implicit_include)
+
+        # First check the cache.
+        cached = self._include_cache.get(build_include.path)
+        if cached is not None:
+            return cached
+
+        build_env = IncludeContext(cell_name=build_include.cell_name, path=build_include.path)
+        build_env, mod = self._process(build_env, build_include.path,
+                                       is_implicit_include=is_implicit_include)
+
+        self._include_cache[build_include.path] = build_env, mod
+        return build_env, mod
 
     def _process_build_file(self, watch_root, project_prefix, path):
         """Process the build file at the given path."""
@@ -1065,6 +1266,7 @@ class BuildFileProcessor(object):
         build_env = BuildFileContext(
             self._project_root,
             base_path,
+            path,
             dirname,
             self._cell_name,
             self._allow_empty_globs,
@@ -1074,8 +1276,7 @@ class BuildFileProcessor(object):
             project_prefix,
             self._sync_cookie_state,
             self._watchman_glob_stat_results,
-            self._watchman_use_glob_generator,
-            self._use_mercurial_glob)
+            self._watchman_use_glob_generator)
 
         return self._process(build_env, path, is_implicit_include=False)
 
@@ -1338,11 +1539,6 @@ def main():
         dest='watchman_query_timeout_ms',
         help='Maximum time in milliseconds to wait for watchman query to respond.')
     parser.add_option(
-        '--use_mercurial_glob',
-        action='store_true',
-        dest='use_mercurial_glob',
-        help='Use the mercurial manifest to get lists of files instead of globbing from disk.')
-    parser.add_option(
         '--include',
         action='append',
         dest='include')
@@ -1366,9 +1562,15 @@ def main():
         action='append',
         dest='build_file_import_whitelist')
     parser.add_option(
-        '--freeze_globals',
+        '--disable_implicit_native_rules',
         action='store_true',
-        help='Do not allow mutations of included globals.')
+        help='Do not allow native rules in build files, only included ones',
+    )
+    parser.add_option(
+        '--warn_about_deprecated_syntax',
+        action='store_true',
+        help='Warn about deprecated syntax usage.',
+    )
     (options, args) = parser.parse_args()
 
     # Even though project_root is absolute path, it may not be concise. For
@@ -1384,7 +1586,6 @@ def main():
                       for (k, v) in options.cell_roots.iteritems())
 
     watchman_client = None
-    use_mercurial_glob = False
     if options.use_watchman_glob:
         client_args = {'sendEncoding': 'json', 'recvEncoding': 'json'}
         if options.watchman_query_timeout_ms is not None:
@@ -1397,20 +1598,6 @@ def main():
             client_args['sockpath'] = options.watchman_socket_path
             client_args['transport'] = 'local'
         watchman_client = pywatchman.client(**client_args)
-    elif options.use_mercurial_glob:
-        # exit early if the mercurial libraries can't be loaded
-        try:
-            from mercurial import ui, hg
-            use_mercurial_glob = True
-        except ImportError:
-            d = Diagnostic(
-                message='Mercurial not available for glob_handler = mercurial, aborting.',
-                level='fatal',
-                source='mercurial',
-                exception=None,
-            )
-            java_process_send_result(to_parent, [], [d], None)
-            raise
 
     configs = {}
     if options.config is not None:
@@ -1433,12 +1620,12 @@ def main():
         watchman_client,
         options.watchman_glob_stat_results,
         options.watchman_use_glob_generator,
-        use_mercurial_glob,
         project_import_whitelist=options.build_file_import_whitelist or [],
         implicit_includes=options.include or [],
         configs=configs,
         ignore_paths=ignore_paths,
-        freeze_globals=options.freeze_globals)
+        disable_implicit_native_rules=options.disable_implicit_native_rules,
+        warn_about_deprecated_syntax=options.warn_about_deprecated_syntax)
 
     # While processing, we'll write exceptions as diagnostic messages
     # to the parent then re-raise them to crash the process. While

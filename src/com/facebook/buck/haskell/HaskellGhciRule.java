@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
@@ -36,7 +35,10 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.step.AbstractExecutionStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MakeExecutableStep;
@@ -44,7 +46,9 @@ import com.facebook.buck.step.fs.StringTemplateStep;
 import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.MoreIterables;
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -57,23 +61,24 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.stringtemplate.v4.ST;
 
 public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements BinaryBuildRule {
-
-  BuildRuleResolver buildRuleResolver;
 
   @AddToRuleKey HaskellSources srcs;
 
   @AddToRuleKey ImmutableList<String> compilerFlags;
 
-  @AddToRuleKey Optional<BuildTarget> ghciBinDep;
+  @AddToRuleKey Optional<SourcePath> ghciBinDep;
 
   @AddToRuleKey Optional<SourcePath> ghciInit;
 
   @AddToRuleKey BuildRule omnibusSharedObject;
 
   ImmutableSortedMap<String, SourcePath> solibs;
+
+  ImmutableSortedMap<String, SourcePath> preloadLibs;
 
   @AddToRuleKey ImmutableSet<HaskellPackage> firstOrderHaskellPackages;
 
@@ -87,10 +92,19 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   Path ghciScriptTemplate;
 
   @AddToRuleKey(stringify = true)
+  Path ghciIservScriptTemplate;
+
+  @AddToRuleKey(stringify = true)
   Path ghciBinutils;
 
   @AddToRuleKey(stringify = true)
   Path ghciGhc;
+
+  @AddToRuleKey(stringify = true)
+  Path ghciIServ;
+
+  @AddToRuleKey(stringify = true)
+  Path ghciIServProf;
 
   @AddToRuleKey(stringify = true)
   Path ghciLib;
@@ -108,39 +122,45 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver buildRuleResolver,
       HaskellSources srcs,
       ImmutableList<String> compilerFlags,
-      Optional<BuildTarget> ghciBinDep,
+      Optional<SourcePath> ghciBinDep,
       Optional<SourcePath> ghciInit,
       BuildRule omnibusSharedObject,
       ImmutableSortedMap<String, SourcePath> solibs,
+      ImmutableSortedMap<String, SourcePath> preloadLibs,
       ImmutableSet<HaskellPackage> firstOrderHaskellPackages,
       ImmutableSet<HaskellPackage> haskellPackages,
       ImmutableSet<HaskellPackage> prebuiltHaskellPackages,
       boolean enableProfiling,
       Path ghciScriptTemplate,
+      Path ghciIservScriptTemplate,
       Path ghciBinutils,
       Path ghciGhc,
+      Path ghciIServ,
+      Path ghciIServProf,
       Path ghciLib,
       Path ghciCxx,
       Path ghciCc,
       Path ghciCpp) {
     super(buildTarget, projectFilesystem, params);
-    this.buildRuleResolver = buildRuleResolver;
     this.srcs = srcs;
     this.compilerFlags = compilerFlags;
     this.ghciBinDep = ghciBinDep;
     this.ghciInit = ghciInit;
     this.omnibusSharedObject = omnibusSharedObject;
     this.solibs = solibs;
+    this.preloadLibs = preloadLibs;
     this.firstOrderHaskellPackages = firstOrderHaskellPackages;
     this.haskellPackages = haskellPackages;
     this.prebuiltHaskellPackages = prebuiltHaskellPackages;
     this.enableProfiling = enableProfiling;
     this.ghciScriptTemplate = ghciScriptTemplate;
+    this.ghciIservScriptTemplate = ghciIservScriptTemplate;
     this.ghciBinutils = ghciBinutils;
     this.ghciGhc = ghciGhc;
+    this.ghciIServ = ghciIServ;
+    this.ghciIServProf = ghciIServProf;
     this.ghciLib = ghciLib;
     this.ghciCxx = ghciCxx;
     this.ghciCc = ghciCc;
@@ -149,13 +169,15 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("links", solibsForRuleKey());
+    sink.setReflectively("links", solibsForRuleKey(solibs));
+    sink.setReflectively("preloads", solibsForRuleKey(preloadLibs));
   }
 
-  private ImmutableSortedMap<String, NonHashableSourcePathContainer> solibsForRuleKey() {
+  private ImmutableSortedMap<String, NonHashableSourcePathContainer> solibsForRuleKey(
+      ImmutableSortedMap<String, SourcePath> libs) {
     ImmutableSortedMap.Builder<String, NonHashableSourcePathContainer> solibMap =
         ImmutableSortedMap.naturalOrder();
-    for (Map.Entry<String, SourcePath> entry : solibs.entrySet()) {
+    for (Map.Entry<String, SourcePath> entry : libs.entrySet()) {
       solibMap.put(entry.getKey(), new NonHashableSourcePathContainer(entry.getValue()));
     }
 
@@ -166,26 +188,29 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       HaskellSources srcs,
       ImmutableList<String> compilerFlags,
-      Optional<BuildTarget> ghciBinDep,
+      Optional<SourcePath> ghciBinDep,
       Optional<SourcePath> ghciInit,
       BuildRule omnibusSharedObject,
       ImmutableSortedMap<String, SourcePath> solibs,
+      ImmutableSortedMap<String, SourcePath> preloadLibs,
       ImmutableSet<HaskellPackage> firstOrderHaskellPackages,
       ImmutableSet<HaskellPackage> haskellPackages,
       ImmutableSet<HaskellPackage> prebuiltHaskellPackages,
       boolean enableProfiling,
       Path ghciScriptTemplate,
+      Path ghciIservScriptTemplate,
       Path ghciBinutils,
       Path ghciGhc,
+      Path ghciIServ,
+      Path ghciIServProf,
       Path ghciLib,
       Path ghciCxx,
       Path ghciCc,
       Path ghciCpp) {
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     ImmutableSet.Builder<BuildRule> extraDeps = ImmutableSet.builder();
 
     extraDeps.add(omnibusSharedObject);
@@ -198,30 +223,31 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       extraDeps.addAll(pkg.getDeps(ruleFinder)::iterator);
     }
 
-    if (ghciBinDep.isPresent()) {
-      extraDeps.add(resolver.getRule(ghciBinDep.get()));
-    }
+    ghciBinDep.flatMap(ruleFinder::getRule).ifPresent(extraDeps::add);
 
     extraDeps.addAll(ruleFinder.filterBuildRuleInputs(solibs.values()));
-
+    extraDeps.addAll(ruleFinder.filterBuildRuleInputs(preloadLibs.values()));
     return new HaskellGhciRule(
         buildTarget,
         projectFilesystem,
         params.copyAppendingExtraDeps(extraDeps.build()),
-        resolver,
         srcs,
         compilerFlags,
         ghciBinDep,
         ghciInit,
         omnibusSharedObject,
         solibs,
+        preloadLibs,
         firstOrderHaskellPackages,
         haskellPackages,
         prebuiltHaskellPackages,
         enableProfiling,
         ghciScriptTemplate,
+        ghciIservScriptTemplate,
         ghciBinutils,
         ghciGhc,
+        ghciIServ,
+        ghciIServProf,
         ghciLib,
         ghciCxx,
         ghciCc,
@@ -237,6 +263,47 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getOutputDir());
   }
 
+  /** Resolves the real path to the lib and generates a symlink to it */
+  private class ResolveAndSymlinkStep extends AbstractExecutionStep {
+
+    private SourcePathResolver resolver;
+    private Path symlinkDir;
+    private String name;
+    private SourcePath lib;
+
+    public ResolveAndSymlinkStep(
+        SourcePathResolver resolver, Path symlinkDir, String name, SourcePath lib) {
+      super("symlinkLib_" + name);
+      this.resolver = resolver;
+      this.symlinkDir = symlinkDir;
+      this.name = name;
+      this.lib = lib;
+    }
+
+    @Override
+    public StepExecutionResult execute(ExecutionContext context)
+        throws IOException, InterruptedException {
+      Path src = resolver.getRelativePath(lib).toRealPath();
+      Path dest = symlinkDir.resolve(name);
+      SymlinkFileStep.Builder sl = SymlinkFileStep.builder();
+      return sl.setFilesystem(getProjectFilesystem())
+          .setExistingFile(src)
+          .setDesiredLink(dest)
+          .build()
+          .execute(context);
+    }
+  }
+
+  private void symlinkLibs(
+      SourcePathResolver resolver,
+      Path symlinkDir,
+      ImmutableList.Builder<Step> steps,
+      ImmutableSortedMap<String, SourcePath> libs) {
+    for (Map.Entry<String, SourcePath> ent : libs.entrySet()) {
+      steps.add(new ResolveAndSymlinkStep(resolver, symlinkDir, ent.getKey(), ent.getValue()));
+    }
+  }
+
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
@@ -247,7 +314,8 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     Path dir = getOutputDir();
     Path so = resolver.getRelativePath(omnibusSharedObject.getSourcePathToOutput());
     Path packagesDir = dir.resolve(name + ".packages");
-    Path symlinkDir = dir.resolve(name + ".so-symlinks");
+    Path symlinkDir = dir.resolve(HaskellGhciDescription.getSoLibsRelDir(getBuildTarget()));
+    Path symlinkPreloadDir = dir.resolve(name + ".preload-symlinks");
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.addAll(
@@ -261,24 +329,16 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), symlinkPreloadDir)));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), packagesDir)));
 
     steps.add(CopyStep.forFile(getProjectFilesystem(), so, dir.resolve(so.getFileName())));
 
-    try {
-      for (Map.Entry<String, SourcePath> ent : solibs.entrySet()) {
-        Path src = resolver.getRelativePath(ent.getValue()).toRealPath();
-        Path dest = symlinkDir.resolve(ent.getKey());
-        steps.add(
-            SymlinkFileStep.builder()
-                .setFilesystem(getProjectFilesystem())
-                .setExistingFile(src)
-                .setDesiredLink(dest)
-                .build());
-      }
-    } catch (IOException ex) {
-      throw new RuntimeException(ex);
-    }
+    symlinkLibs(resolver, symlinkDir, steps, solibs);
+    symlinkLibs(resolver, symlinkPreloadDir, steps, preloadLibs);
 
     ImmutableSet.Builder<String> pkgdirs = ImmutableSet.builder();
     for (HaskellPackage pkg : prebuiltHaskellPackages) {
@@ -337,7 +397,52 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       exposedPkgs.add(String.format("%s-%s", pkg.getInfo().getName(), pkg.getInfo().getVersion()));
     }
 
+    // iserv script
+    Optional<Path> iservScript = Optional.empty();
+
+    if (!preloadLibs.isEmpty()) {
+      iservScript = Optional.of(dir.resolve("iserv"));
+      steps.add(
+          new AbstractExecutionStep("ghci_iserv_wrapper") {
+            @Override
+            public StepExecutionResult execute(ExecutionContext context)
+                throws IOException, InterruptedException {
+              String template;
+              template = new String(Files.readAllBytes(ghciIservScriptTemplate), Charsets.UTF_8);
+              ST st = new ST(template);
+              ImmutableSet.Builder<String> preloadLibrariesB = ImmutableSet.builder();
+              for (Map.Entry<String, SourcePath> ent : preloadLibs.entrySet()) {
+                preloadLibrariesB.add(
+                    "${DIR}/" + dir.relativize(symlinkPreloadDir.resolve(ent.getKey())));
+              }
+              ImmutableSet<String> preloadLibraries = preloadLibrariesB.build();
+              st.add("name", name + "-iserv");
+              st.add("preload_libs", Joiner.on(':').join(preloadLibraries));
+              if (enableProfiling) {
+                st.add("ghci_iserv_path", ghciIServProf.toRealPath().toString());
+              } else {
+                st.add("ghci_iserv_path", ghciIServ.toRealPath().toString());
+              }
+              Path actualIserv = dir.resolve("iserv");
+              if (enableProfiling) {
+                actualIserv = dir.resolve("iserv-prof");
+              }
+              return new WriteFileStep(
+                      getProjectFilesystem(),
+                      Preconditions.checkNotNull(st.render()),
+                      actualIserv, /* executable */
+                      true)
+                  .execute(context);
+            }
+          });
+    }
+
+    // .ghci file
     StringBuilder startGhciContents = new StringBuilder();
+    if (iservScript.isPresent()) {
+      // Need to unset preloaded deps for `iserv`
+      startGhciContents.append("System.Environment.unsetEnv \"LD_PRELOAD\"\n");
+    }
     startGhciContents.append(":set ");
     startGhciContents.append(
         Joiner.on(' ')
@@ -367,6 +472,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
             startGhci,
             /* executable */ false));
 
+    // ghciBinDep
     ImmutableList.Builder<String> srcpaths = ImmutableList.builder();
     for (SourcePath sp : srcs.getSourcePaths()) {
       srcpaths.add(resolver.getRelativePath(sp).toString());
@@ -378,8 +484,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
         Path binDir = dir.resolve(name + ".bin");
         Path bin = binDir.resolve("ghci");
-        BuildRule rule = buildRuleResolver.getRule(ghciBinDep.get());
-        SourcePath sp = rule.getSourcePathToOutput();
+        SourcePath sp = ghciBinDep.get();
 
         steps.addAll(
             MakeCleanDirectoryStep.of(
@@ -422,7 +527,6 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     try {
       templateArgs.put("name", name);
       templateArgs.put("start_ghci", dir.relativize(startGhci).toString());
-      templateArgs.put("ld_library_path", dir.relativize(symlinkDir).toString());
       templateArgs.put("exposed_packages", exposed);
       templateArgs.put("package_dbs", pkgdbs);
       templateArgs.put("compiler_flags", Joiner.on(' ').join(compilerFlags));
@@ -433,6 +537,9 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       templateArgs.put("cxx_path", ghciCxx.toRealPath().toString());
       templateArgs.put("cc_path", ghciCc.toRealPath().toString());
       templateArgs.put("cpp_path", ghciCpp.toRealPath().toString());
+      if (iservScript.isPresent()) {
+        templateArgs.put("iserv_path", dir.relativize(iservScript.get()).toString());
+      }
     } catch (IOException ex) {
       throw new RuntimeException(ex);
     }

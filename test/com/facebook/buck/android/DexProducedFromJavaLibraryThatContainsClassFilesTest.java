@@ -17,19 +17,17 @@
 package com.facebook.buck.android;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.dalvik.EstimateDexWeightStep;
+import com.facebook.buck.android.dalvik.EstimateDexWeightStep;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
-import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -42,9 +40,6 @@ import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.FakeOnDiskBuildInfo;
-import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -55,11 +50,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.ObjectMappers;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
@@ -68,8 +59,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
-import org.easymock.EasyMock;
 import org.junit.Test;
 
 public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
@@ -110,21 +101,31 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
             "%s.dex.jar");
     createFiles(filesystem, dexOutput.toString(), jarOutput.toString());
 
+    AndroidPlatformTarget androidPlatformTarget =
+        AndroidPlatformTarget.of(
+            "android",
+            Paths.get(""),
+            Collections.emptyList(),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get("/usr/bin/dx"),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""));
+
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar#dex");
     BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary preDex =
-        new DexProducedFromJavaLibrary(buildTarget, filesystem, params, javaLibraryRule);
+        new DexProducedFromJavaLibrary(
+            buildTarget, filesystem, androidPlatformTarget, params, javaLibraryRule, DxStep.DX);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
-    AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
-    expect(androidPlatformTarget.getDxExecutable()).andStubReturn(Paths.get("/usr/bin/dx"));
-    EasyMock.replay(androidPlatformTarget);
-
-    ExecutionContext executionContext =
-        TestExecutionContext.newBuilder()
-            .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
-            .build();
+    ExecutionContext executionContext = TestExecutionContext.newBuilder().build();
 
     String expectedDxCommand =
         String.format(
@@ -146,13 +147,15 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     Step recordArtifactAndMetadataStep = steps.get(5);
     int exitCode = recordArtifactAndMetadataStep.execute(executionContext).getExitCode();
     assertEquals(0, exitCode);
-    assertEquals(
+    MoreAsserts.assertContainsOne(
         "The generated .dex.jar file should be in the set of recorded artifacts.",
-        ImmutableSet.of(BuildTargets.getGenPath(filesystem, buildTarget, "%s.dex.jar")),
-        buildableContext.getRecordedArtifacts());
+        buildableContext.getRecordedArtifacts(),
+        BuildTargets.getGenPath(filesystem, buildTarget, "%s.dex.jar"));
 
-    buildableContext.assertContainsMetadataMapping(
-        DexProducedFromJavaLibrary.WEIGHT_ESTIMATE, "250");
+    BuildOutputInitializer<DexProducedFromJavaLibrary.BuildOutput> outputInitializer =
+        preDex.getBuildOutputInitializer();
+    outputInitializer.initializeFromDisk();
+    assertEquals(250, outputInitializer.getBuildOutput().weightEstimate);
   }
 
   private void createFiles(ProjectFilesystem filesystem, String... paths) throws IOException {
@@ -181,7 +184,13 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#dex");
     BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary preDex =
-        new DexProducedFromJavaLibrary(buildTarget, projectFilesystem, params, javaLibrary);
+        new DexProducedFromJavaLibrary(
+            buildTarget,
+            projectFilesystem,
+            TestAndroidPlatformTargetFactory.create(),
+            params,
+            javaLibrary,
+            DxStep.DX);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
     Path dexOutput = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s.dex.jar");
@@ -221,47 +230,16 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary preDexWithClasses =
         new DexProducedFromJavaLibrary(
-            buildTarget, projectFilesystem, params, accumulateClassNames);
+            buildTarget,
+            projectFilesystem,
+            TestAndroidPlatformTargetFactory.create(),
+            params,
+            accumulateClassNames,
+            DxStep.DX);
     assertNull(preDexWithClasses.getSourcePathToOutput());
     assertEquals(
         BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s.dex.jar"),
         preDexWithClasses.getPathToDex());
-  }
-
-  private static <T> void initialize(
-      InitializableFromDisk<T> initializableFromDisk, OnDiskBuildInfo onDiskBuildInfo)
-      throws IOException {
-    BuildOutputInitializer<T> buildOutputInitializer =
-        initializableFromDisk.getBuildOutputInitializer();
-    buildOutputInitializer.setBuildOutputForTests(
-        initializableFromDisk.initializeFromDisk(onDiskBuildInfo));
-  }
-
-  @Test
-  public void getOutputDoesNotAccessWrappedJavaLibrary() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-
-    JavaLibrary javaLibrary =
-        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
-            .build(ruleResolver);
-
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:target");
-    BuildRuleParams params = TestBuildRuleParams.create();
-    DexProducedFromJavaLibrary dexProducedFromJavaLibrary =
-        new DexProducedFromJavaLibrary(buildTarget, projectFilesystem, params, javaLibrary);
-
-    FakeOnDiskBuildInfo onDiskBuildInfo =
-        new FakeOnDiskBuildInfo()
-            .putMetadata(DexProducedFromJavaLibrary.WEIGHT_ESTIMATE, "0")
-            .putMetadata(
-                DexProducedFromJavaLibrary.CLASSNAMES_TO_HASHES,
-                ObjectMappers.WRITER.writeValueAsString(ImmutableMap.<String, String>of()));
-    initialize(dexProducedFromJavaLibrary, onDiskBuildInfo);
-
-    assertFalse(dexProducedFromJavaLibrary.hasOutput());
   }
 
   @Test

@@ -1,4 +1,6 @@
-java_immutables_library(
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_library_with_plugins")
+
+java_library_with_plugins(
     name = "rules",
     srcs = [
         "AbstractGenruleDescription.java",
@@ -13,6 +15,7 @@ java_immutables_library(
         "ShBinaryDescription.java",
         "ShTest.java",
         "ShTestDescription.java",
+        "ShellDescriptionsProvider.java",
     ],
     tests = [
         "//test/com/facebook/buck/shell:shell",
@@ -21,7 +24,10 @@ java_immutables_library(
     deps = [
         ":steps",
         ":worker",
+        "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:utils",
+        "//src/com/facebook/buck/android/toolchain:toolchain",
+        "//src/com/facebook/buck/android/toolchain/ndk:ndk",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
@@ -29,7 +35,6 @@ java_immutables_library(
         "//src/com/facebook/buck/model/macros:macros",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/rules:build_rule",
-        "//src/com/facebook/buck/rules:command_tool",
         "//src/com/facebook/buck/rules:interfaces",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules:source_path",
@@ -38,9 +43,12 @@ java_immutables_library(
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/rules/macros:macros",
         "//src/com/facebook/buck/rules/macros:types",
+        "//src/com/facebook/buck/sandbox:sandbox",
+        "//src/com/facebook/buck/shell/programrunner:programrunner",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/test:test",
+        "//src/com/facebook/buck/toolchain:toolchain",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
@@ -81,6 +89,8 @@ java_library(
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/rules:interfaces",
+        "//src/com/facebook/buck/sandbox:sandbox",
+        "//src/com/facebook/buck/shell/programrunner:programrunner",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/test:test",
         "//src/com/facebook/buck/test/result/type:type",
@@ -111,13 +121,12 @@ java_immutables_library(
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
+        "//src/com/facebook/buck/file:rules",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/model/macros:macros",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/rules:build_rule",
-        "//src/com/facebook/buck/rules:command_tool",
         "//src/com/facebook/buck/rules:interfaces",
         "//src/com/facebook/buck/rules:rule_key",
         "//src/com/facebook/buck/rules:rules",

@@ -1,6 +1,6 @@
 genrule(
-  name = "gr",
-  out = "generated",
-  cmd = "touch $OUT",
-  blurgle = "mcschberble",
+    name = "gr",
+    out = "generated",
+    blurgle = "mcschberble",
+    cmd = "touch $OUT",
 )

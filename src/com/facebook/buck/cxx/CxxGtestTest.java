@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
@@ -38,7 +39,6 @@ import com.facebook.buck.util.xml.XmlDomParser;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -53,6 +53,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -129,6 +130,15 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
   @Override
   protected ImmutableList<TestResultSummary> parseResults(Path exitCode, Path output, Path results)
       throws IOException, SAXException {
+
+    // Make sure we didn't die abnormally
+    Optional<String> abnormalExitError = validateExitCode(getProjectFilesystem().resolve(exitCode));
+    if (abnormalExitError.isPresent()) {
+      return ImmutableList.of(
+          getProgramFailureSummary(
+              abnormalExitError.get(),
+              getProjectFilesystem().readFileIfItExists(output).orElse("")));
+    }
 
     // Try to parse the results file first, which should be written if the test suite exited
     // normally (even in the event of a failing test).  If this fails, just construct a test
@@ -209,7 +219,9 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.concat(
         super.getRuntimeDeps(ruleFinder),
-        getExecutableCommand().getDeps(ruleFinder).stream().map(BuildRule::getBuildTarget));
+        BuildableSupport.getDepsCollection(getExecutableCommand(), ruleFinder)
+            .stream()
+            .map(BuildRule::getBuildTarget));
   }
 
   @Override

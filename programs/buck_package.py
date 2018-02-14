@@ -3,12 +3,9 @@ import errno
 import contextlib
 import os
 import json
-import logging
 import shutil
 import stat
-import sys
 import tempfile
-import textwrap
 
 import pkg_resources
 import file_locks
@@ -18,10 +15,13 @@ from buck_tool import BuckTool, Resource
 
 SERVER = Resource("buck_server")
 BOOTSTRAPPER = Resource("bootstrapper_jar")
+BUCK_BINARY_HASH = Resource("buck_binary_hash")
 
 PEX_ONLY_EXPORTED_RESOURCES = [
     Resource("external_executor_jar"),
 ]
+
+MODULES_DIR = "buck-modules"
 
 
 @contextlib.contextmanager
@@ -47,20 +47,16 @@ def closable_named_temporary_file(*args, **kwargs):
 
 class BuckPackage(BuckTool):
 
-    def __init__(self, buck_project):
-        super(BuckPackage, self).__init__(buck_project)
-        self._package_info = json.loads(
-            pkg_resources.resource_string(__name__, 'buck_package_info'))
+    def __init__(self, buck_project, buck_reporter):
+        super(BuckPackage, self).__init__(buck_project, buck_reporter)
         self._resource_subdir = None
         self._lock_file = None
 
-    def _get_buck_version_uid(self):
-        if self._fake_buck_version:
-            return self._fake_buck_version
-        return self._package_info['version']
+    def _get_package_info(self):
+        return json.loads(pkg_resources.resource_string(__name__, 'buck_package_info'))
 
-    def _get_buck_version_timestamp(self):
-        return self._package_info['timestamp']
+    def _get_buck_git_commit(self):
+        return self._get_buck_version_uid()
 
     def _get_resource_dir(self):
         if self._use_buckd:
@@ -71,13 +67,7 @@ class BuckPackage(BuckTool):
 
     def _get_resource_subdir(self):
         def try_subdir(lock_file_dir):
-            try:
-                os.makedirs(lock_file_dir)
-            except OSError as ex:
-                # Multiple threads may try to create this at the same time, so just swallow the
-                # error if is about the directory already existing.
-                if ex.errno != errno.EEXIST:
-                    raise
+            self.__create_dir(lock_file_dir)
             lock_file_path = os.path.join(lock_file_dir, file_locks.BUCK_LOCK_FILE_NAME)
             lock_file = open(lock_file_path, 'a+')
             if file_locks.acquire_shared_lock(lock_file):
@@ -100,6 +90,15 @@ class BuckPackage(BuckTool):
                 self._resource_subdir = subdir
 
         return self._resource_subdir
+
+    def __create_dir(self, dir):
+        try:
+            os.makedirs(dir)
+        except OSError as ex:
+            # Multiple threads may try to create this at the same time, so just swallow the
+            # error if is about the directory already existing.
+            if ex.errno != errno.EEXIST:
+                raise
 
     def _get_resource_lock_path(self):
         return os.path.join(self._get_resource_subdir(), file_locks.BUCK_LOCK_FILE_NAME)
@@ -139,16 +138,11 @@ class BuckPackage(BuckTool):
                 outf.close()
                 shutil.copy(outf.name, resource_path)
 
-    def _is_buck_production(self):
-        build_type = pkg_resources.resource_string(__name__, 'buck_build_type_info').strip()
-        return build_type == 'RELEASE_PEX'
-
     def _get_extra_java_args(self):
         return [
-            "-Dbuck.git_commit={0}".format(self._get_buck_version_uid()),
-            "-Dbuck.git_commit_timestamp={0}".format(self._package_info['timestamp']),
             "-Dbuck.git_dirty=0",
-            "-Dbuck.path_to_python_dsl="
+            "-Dbuck.path_to_python_dsl=",
+            "-Dpf4j.pluginsDir={0}/{1}".format(self._resource_subdir, MODULES_DIR),
         ]
 
     def _get_exported_resources(self):
@@ -159,6 +153,33 @@ class BuckPackage(BuckTool):
 
     def _get_java_classpath(self):
         return self._get_resource(SERVER)
+
+    def _get_buck_binary_hash(self):
+        with open(self._get_resource(BUCK_BINARY_HASH), 'r') as buck_binary_hash_file:
+            return buck_binary_hash_file.read().strip()
+
+    def _unpack_modules(self):
+        if not pkg_resources.resource_exists(__name__, MODULES_DIR):
+            raise Exception("Cannot unpack modules: {0} doesn't exist in the package"
+                            .format(MODULES_DIR))
+
+        if not pkg_resources.resource_isdir(__name__, MODULES_DIR):
+            raise Exception("Cannot unpack modules: {0} is not a directory"
+                            .format(MODULES_DIR))
+
+        modules_dir = os.path.join(self._get_resource_subdir(), MODULES_DIR)
+
+        self.__create_dir(modules_dir)
+
+        if not os.path.exists(modules_dir):
+            raise Exception("Cannot unpack plugins: cannot create directory {0}"
+                            .format(modules_dir))
+
+        for module in pkg_resources.resource_listdir(__name__, MODULES_DIR):
+            module_path = os.path.join(modules_dir, module)
+            if os.path.exists(module_path):
+                continue
+            self._unpack_resource(module_path, '/'.join((MODULES_DIR, module)), False)
 
     def __enter__(self):
         return self

@@ -1,15 +1,15 @@
 export_file(
-  name = 'secondary_dex_head.list',
-  src = 'secondary_dex_head.list',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "secondary_dex_head.list",
+    src = "secondary_dex_head.list",
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 python_binary(
-  name = 'redex',
-  main = 'fake_redex.py',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "redex",
+    main = "fake_redex.py",
+    visibility = [
+        "PUBLIC",
+    ],
 )

@@ -32,8 +32,8 @@ import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ObjectMappers;
@@ -114,6 +114,8 @@ public class DistBuildPostBuildAnalysisTest {
             successType,
             false,
             outputHash.map(s -> HashCode.fromString(s)),
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty());
 

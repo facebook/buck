@@ -1,21 +1,21 @@
 android_library(
-  name = 'tip',
-  srcs = glob(['src/**/*.java']),
-  deps = [
-    '//libs:guava',
-    '//libs:jsr305',
-    '//modules/dep1:dep1',
-  ],
+    name = "tip",
+    srcs = glob(["src/**/*.java"]),
+    deps = [
+        "//libs:guava",
+        "//libs:jsr305",
+        "//modules/dep1:dep1",
+    ],
 )
 
 java_test(
-  name = 'test',
-  srcs = glob(['test/**/*Test.java']),
-  deps = [
-    ':tip',
-    '//libs:generated',
-    '//libs:guava',
-    '//libs:jsr305',
-    '//libs:junit',
-  ],
+    name = "test",
+    srcs = glob(["test/**/*Test.java"]),
+    deps = [
+        ":tip",
+        "//libs:generated",
+        "//libs:guava",
+        "//libs:jsr305",
+        "//libs:junit",
+    ],
 )

@@ -17,15 +17,14 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.MiniAapt;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -39,10 +38,12 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.types.Either;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -69,7 +70,8 @@ public class AndroidResourceDescription
       ImmutableSet.of(
           ".gitkeep", ".svn", ".git", ".ds_store", ".scc", "cvs", "thumbs.db", "picasa.ini");
 
-  private final boolean isGrayscaleImageProcessingEnabled;
+  private final ToolchainProvider toolchainProvider;
+  private final AndroidBuckConfig androidBuckConfig;
 
   @VisibleForTesting
   static final Flavor RESOURCES_SYMLINK_TREE_FLAVOR = InternalFlavor.of("resources-symlink-tree");
@@ -82,8 +84,10 @@ public class AndroidResourceDescription
 
   public static final Flavor AAPT2_COMPILE_FLAVOR = InternalFlavor.of("aapt2_compile");
 
-  public AndroidResourceDescription(boolean enableGrayscaleImageProcessing) {
-    isGrayscaleImageProcessingEnabled = enableGrayscaleImageProcessing;
+  public AndroidResourceDescription(
+      ToolchainProvider toolchainProvider, AndroidBuckConfig androidBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
+    this.androidBuckConfig = androidBuckConfig;
   }
 
   @Override
@@ -144,9 +148,13 @@ public class AndroidResourceDescription
           resDir.isPresent(),
           "Tried to require rule %s, but no resource dir is preset.",
           buildTarget);
+      AndroidPlatformTarget androidPlatformTarget =
+          toolchainProvider.getByName(
+              AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
       return new Aapt2Compile(
           buildTarget,
           projectFilesystem,
+          androidPlatformTarget,
           ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(resDir.get())),
           resDir.get());
     }
@@ -190,7 +198,7 @@ public class AndroidResourceDescription
         args.getManifest().orElse(null),
         args.getHasWhitelistedStrings(),
         args.getResourceUnion(),
-        isGrayscaleImageProcessingEnabled);
+        androidBuckConfig.isGrayscaleImageProcessingEnabled());
   }
 
   private SymlinkTree createSymlinkTree(
@@ -217,12 +225,12 @@ public class AndroidResourceDescription
             RichStream.from(symlinkAttribute.get().getRight().entrySet())
                 .map(e -> new AbstractMap.SimpleEntry<>(Paths.get(e.getKey()), e.getValue()))
                 .filter(e -> isPossibleResourcePath(e.getKey()))
-                .collect(MoreCollectors.toImmutableMap(e -> e.getKey(), e -> e.getValue()));
+                .collect(ImmutableMap.toImmutableMap(e -> e.getKey(), e -> e.getValue()));
       }
     }
     Path symlinkTreeRoot =
         BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s").resolve(outputDirName);
-    return new SymlinkTree(buildTarget, projectFilesystem, symlinkTreeRoot, links);
+    return new SymlinkTree("android_res", buildTarget, projectFilesystem, symlinkTreeRoot, links);
   }
 
   public static Optional<SourcePath> getResDirectoryForProject(

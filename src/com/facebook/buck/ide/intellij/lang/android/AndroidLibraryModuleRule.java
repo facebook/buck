@@ -32,11 +32,14 @@ import java.util.Optional;
 
 public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDescription.CoreArg> {
 
+  private final AndroidManifestParser androidManifestParser;
+
   public AndroidLibraryModuleRule(
       ProjectFilesystem projectFilesystem,
       IjModuleFactoryResolver moduleFactoryResolver,
       IjProjectConfig projectConfig) {
     super(projectFilesystem, moduleFactoryResolver, projectConfig, AndroidProjectType.LIBRARY);
+    androidManifestParser = new AndroidManifestParser(projectFilesystem);
   }
 
   @Override
@@ -50,6 +53,7 @@ public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDe
     super.apply(target, context);
     addDepsAndSources(target, true /* wantsPackagePrefix */, context);
     JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
+    JavaLibraryRuleHelper.addNonSourceBuildTargets(target, context);
     Optional<Path> dummyRDotJavaClassPath = moduleFactoryResolver.getDummyRDotJavaPath(target);
     if (dummyRDotJavaClassPath.isPresent()) {
       context.addExtraClassPathDependency(dummyRDotJavaClassPath.get());
@@ -61,6 +65,13 @@ public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDe
     IjModuleAndroidFacet.Builder builder = context.getOrCreateAndroidFacetBuilder();
     Optional<Path> manifestPath = moduleFactoryResolver.getLibraryAndroidManifestPath(target);
     manifestPath.ifPresent(builder::addManifestPaths);
+
+    if (manifestPath.isPresent()) {
+      Path projectManifestPath = projectFilesystem.getPathForRelativePath(manifestPath.get());
+      androidManifestParser
+          .parseMinSdkVersion(projectManifestPath)
+          .ifPresent(builder::addMinSdkVersions);
+    }
 
     context.setCompilerOutputPath(moduleFactoryResolver.getCompilerOutputPath(target));
   }

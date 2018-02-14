@@ -17,17 +17,16 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.Set;
@@ -49,16 +48,11 @@ import org.immutables.value.Value;
 abstract class AbstractAnnotationProcessingParams implements AddsToRuleKey {
   public static final AnnotationProcessingParams EMPTY =
       AnnotationProcessingParams.builder()
-          .setOwnerTarget(null)
           .setProjectFilesystem(null)
           .setModernProcessors(ImmutableList.of())
           .setParameters(ImmutableSortedSet.of())
           .setProcessOnly(false)
           .build();
-
-  @Nullable
-  @AddToRuleKey
-  protected abstract BuildTarget getOwnerTarget();
 
   @Nullable
   protected abstract ProjectFilesystem getProjectFilesystem();
@@ -115,7 +109,7 @@ abstract class AbstractAnnotationProcessingParams implements AddsToRuleKey {
 
   @Value.Check
   protected void check() {
-    if (!isEmpty() && getOwnerTarget() != null) {
+    if (!isEmpty()) {
       Preconditions.checkNotNull(getProjectFilesystem());
     }
   }
@@ -137,7 +131,7 @@ abstract class AbstractAnnotationProcessingParams implements AddsToRuleKey {
                 .stream()
                 .map(processorGroup -> processorGroup.resolve(filesystem, resolver)),
             getModernProcessors().stream())
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   @Value.NaturalOrder
@@ -149,7 +143,7 @@ abstract class AbstractAnnotationProcessingParams implements AddsToRuleKey {
             getLegacyProcessors().stream().map(JavacPluginProperties::getInputs),
             getModernProcessors().stream().map(ResolvedJavacPluginProperties::getInputs))
         .flatMap(Collection::stream)
-        .collect(MoreCollectors.toImmutableSortedSet());
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   @Value.Default

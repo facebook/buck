@@ -21,7 +21,8 @@ import com.facebook.buck.rules.SourcePath;
 
 /**
  * Represents output paths of JS builds, consisting of JavaScript build output, a corresponding
- * source map, and assets/resources used from within the packaged JS source code.
+ * source map, "misc" directory that can contain diverse assets not meant to be part of the app
+ * being shipped and assets/resources used from within the packaged JS source code.
  */
 public interface JsBundleOutputs extends BuildRule {
   String JS_DIR_NAME = "js";
@@ -53,5 +54,13 @@ public interface JsBundleOutputs extends BuildRule {
    */
   default SourcePath getSourcePathToResources() {
     return JsUtil.relativeToOutputRoot(getBuildTarget(), getProjectFilesystem(), "res");
+  }
+
+  /**
+   * @return the {@link SourcePath} to a directory containing various metadata that can be used by
+   *     dependent rules but are not meant to be shipped with the application.
+   */
+  default SourcePath getSourcePathToMisc() {
+    return JsUtil.relativeToOutputRoot(getBuildTarget(), getProjectFilesystem(), "misc");
   }
 }

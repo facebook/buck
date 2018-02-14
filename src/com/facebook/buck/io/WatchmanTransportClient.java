@@ -19,11 +19,11 @@ package com.facebook.buck.io;
 import static com.facebook.buck.util.concurrent.MostExecutors.newSingleThreadExecutor;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
-import com.facebook.buck.bser.BserDeserializer;
-import com.facebook.buck.bser.BserSerializer;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.bser.BserDeserializer;
+import com.facebook.buck.util.bser.BserSerializer;
+import com.facebook.buck.util.timing.Clock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -91,7 +91,7 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
     listeningExecutorService.shutdown();
   }
 
-  private synchronized void showDisabledWarning(Console console, long timeoutNanos) {
+  private synchronized void showDisabledWarning(long timeoutNanos) {
     if (disabledWarningShown) {
       return;
     }
@@ -135,7 +135,7 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
       LOG.warn(
           "Watchman did not respond within %d ms, disabling.",
           TimeUnit.NANOSECONDS.toMillis(timeoutNanos));
-      showDisabledWarning(console, timeoutNanos);
+      showDisabledWarning(timeoutNanos);
       return Optional.empty();
     }
   }

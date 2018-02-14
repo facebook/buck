@@ -1,27 +1,31 @@
 java_library(
-  name = 'a',
-  srcs = ['A.java', 'B.java', 'AbstractC.java'],
-  plugins = [
-    ':processor',
-  ],
-  remove_classes = [ 'RemovableD' ],
+    name = "a",
+    srcs = [
+        "A.java",
+        "AbstractC.java",
+        "B.java",
+    ],
+    plugins = [
+        ":processor",
+    ],
+    remove_classes = ["RemovableD"],
 )
 
 java_binary(
-    name = 'binary',
-    deps = [':a'],
-    main_class = 'A',
+    name = "binary",
+    main_class = "A",
+    deps = [":a"],
 )
 
 java_annotation_processor(
-  name = 'processor',
-  processor_class = 'AnnotationProcessor',
-  deps = [
-    ':processor-lib',
-  ],
+    name = "processor",
+    processor_class = "AnnotationProcessor",
+    deps = [
+        ":processor-lib",
+    ],
 )
 
 java_library(
-  name = 'processor-lib',
-  srcs = [ 'AnnotationProcessor.java' ],
+    name = "processor-lib",
+    srcs = ["AnnotationProcessor.java"],
 )

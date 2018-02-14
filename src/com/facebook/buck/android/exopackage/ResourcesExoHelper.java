@@ -18,14 +18,13 @@ package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.stream.Stream;
 
 public class ResourcesExoHelper {
   @VisibleForTesting public static final Path RESOURCES_DIR = Paths.get("resources");
@@ -43,8 +42,26 @@ public class ResourcesExoHelper {
     this.resourcesInfo = resourcesInfo;
   }
 
+  public static ImmutableMap<Path, Path> getFilesToInstall(ImmutableMap<String, Path> filesByHash) {
+    return ExopackageUtil.applyFilenameFormat(filesByHash, RESOURCES_DIR, "%s.apk");
+  }
+
+  /** Returns a map of hash to path for resource files. */
+  public static ImmutableMap<String, Path> getResourceFilesByHash(
+      SourcePathResolver pathResolver,
+      ProjectFilesystem projectFilesystem,
+      Stream<ExopackagePathAndHash> resourcesPaths) {
+    return resourcesPaths.collect(
+        ImmutableMap.toImmutableMap(
+            pathAndHash ->
+                projectFilesystem
+                    .readFileIfItExists(pathResolver.getAbsolutePath(pathAndHash.getHashPath()))
+                    .get(),
+            i -> projectFilesystem.resolve(pathResolver.getAbsolutePath(i.getPath()))));
+  }
+
   public ImmutableMap<Path, Path> getFilesToInstall() {
-    return ExopackageUtil.applyFilenameFormat(getResourceFilesByHash(), RESOURCES_DIR, "%s.apk");
+    return getFilesToInstall(getResourceFilesByHash());
   }
 
   public ImmutableMap<Path, String> getMetadataToInstall() {
@@ -54,20 +71,8 @@ public class ResourcesExoHelper {
   }
 
   private ImmutableMap<String, Path> getResourceFilesByHash() {
-    return resourcesInfo
-        .getResourcesPaths()
-        .stream()
-        .map(p -> projectFilesystem.relativize(pathResolver.getAbsolutePath(p)))
-        .collect(
-            MoreCollectors.toImmutableMap(
-                p -> {
-                  try {
-                    return projectFilesystem.computeSha1(p).getHash();
-                  } catch (IOException e) {
-                    throw new RuntimeException(e);
-                  }
-                },
-                i -> i));
+    return getResourceFilesByHash(
+        pathResolver, projectFilesystem, resourcesInfo.getResourcesPaths().stream());
   }
 
   private String getResourceMetadataContents(ImmutableMap<String, Path> filesByHash) {

@@ -1,3 +1,5 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
 CONFIG_SRCS = [
     "VersionControlBuckConfig.java",
 ]
@@ -6,7 +8,6 @@ VALUE_TYPES_SRCS = [
     "AbstractFullVersionControlStats.java",
     "AbstractFastVersionControlStats.java",
     "AbstractSlowVersionControlStats.java",
-    "AbstractSparseSummary.java",
     "CommonFastVersionControlStats.java",
     "CommonSlowVersionControlStats.java",
 ]
@@ -51,20 +52,11 @@ java_library(
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/log/views:views",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jsr:jsr305",
-    ],
-)
-
-export_file(
-    name = "rawmanifest",
-    src = "rawmanifest.py",
-    visibility = [
-        "PUBLIC",
     ],
 )
 
@@ -86,11 +78,8 @@ java_library(
     name = "versioncontrol",
     srcs = glob(
         ["*.java"],
-        excludes = CONFIG_SRCS + GENERATOR_SRCS + VALUE_TYPES_SRCS,
+        exclude = CONFIG_SRCS + GENERATOR_SRCS + VALUE_TYPES_SRCS,
     ),
-    resources = [
-        "rawmanifest.py",
-    ],
     tests = [
         "//test/com/facebook/buck/util/versioncontrol:versioncontrol",
     ],
@@ -101,7 +90,6 @@ java_library(
         ":value_types",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/log/views:views",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",

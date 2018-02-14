@@ -24,9 +24,9 @@ import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.google.common.collect.Lists;
@@ -61,7 +61,7 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            new AndroidBinaryIntegrationTest(), "android_project", tmpFolder);
+            new AndroidExopackageBinaryIntegrationTest(), "android_project", tmpFolder);
     workspace.setUp();
     setWorkspaceCompilationMode(workspace);
 
@@ -97,7 +97,7 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
             BuildTargets.getScratchPath(
                 filesystem,
                 BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET)
-                    .withFlavors(InternalFlavor.of("dex_merge")),
+                    .withFlavors(InternalFlavor.of("dex"), InternalFlavor.of("dex_merge")),
                 "%s_output/secondary/jarfiles/assets/secondary-program-dex-jars"));
 
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(secondaryDir)) {
@@ -230,7 +230,7 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
 
     // Now convert it into an asset native library and ensure that we re-run apkbuilder.
     workspace.replaceFileContents(
-        "native/cxx/BUCK", "name = 'lib',", "name = 'lib',\ncan_be_asset=True,");
+        "native/cxx/BUCK", "name = \"lib\",", "name = \"lib\",\ncan_be_asset = True,");
 
     workspace.resetBuildLogFile();
     workspace.runBuckBuild(DEX_EXOPACKAGE_TARGET).assertSuccess();

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.step;
 
-import com.google.common.base.Supplier;
 import java.io.IOException;
+import java.util.function.Supplier;
 
 /** {@link Step} that is run conditionally based on {@code Supplier&lt;Boolean> shouldRunStep}. */
 public class ConditionalStep implements Step {
@@ -36,7 +36,7 @@ public class ConditionalStep implements Step {
     if (shouldRunStep.get()) {
       return step.execute(context);
     } else {
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
   }
 

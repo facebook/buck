@@ -20,8 +20,9 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
@@ -51,11 +52,11 @@ public class CxxIncludeDirsIntegrationTest {
   @Test
   public void cxxLibraryWithoutIncludeDirs() throws IOException {
     workspace.replaceFileContents("cxx_library/BUCK", "include_dirs", "#");
-    ProjectWorkspace.ProcessResult lib2Result = workspace.runBuckBuild("//cxx_library:lib2");
+    ProcessResult lib2Result = workspace.runBuckBuild("//cxx_library:lib2");
     lib2Result.assertFailure();
     assertThat(lib2Result.getStderr(), containsString("lib2.h"));
 
-    ProjectWorkspace.ProcessResult lib3Result = workspace.runBuckBuild("//cxx_library:lib3");
+    ProcessResult lib3Result = workspace.runBuckBuild("//cxx_library:lib3");
     lib3Result.assertFailure();
     assertThat(lib3Result.getStderr(), containsString("lib3.h"));
   }
@@ -68,7 +69,7 @@ public class CxxIncludeDirsIntegrationTest {
   @Test
   public void cxxBinaryWithoutIncludeDirs() throws IOException {
     workspace.replaceFileContents("cxx_binary/BUCK", "include_dirs", "#");
-    ProjectWorkspace.ProcessResult bin2Result = workspace.runBuckBuild("//cxx_binary:bin2");
+    ProcessResult bin2Result = workspace.runBuckBuild("//cxx_binary:bin2");
     bin2Result.assertFailure();
     assertThat(bin2Result.getStderr(), containsString("bin2.h"));
   }
@@ -81,7 +82,7 @@ public class CxxIncludeDirsIntegrationTest {
   @Test
   public void cxxTestWithoutIncludeDirs() throws IOException {
     workspace.replaceFileContents("cxx_test/BUCK", "include_dirs", "#");
-    ProjectWorkspace.ProcessResult test2Result = workspace.runBuckBuild("//cxx_test:test2");
+    ProcessResult test2Result = workspace.runBuckBuild("//cxx_test:test2");
     test2Result.assertFailure();
     assertThat(test2Result.getStderr(), containsString("test2.h"));
   }
@@ -94,8 +95,7 @@ public class CxxIncludeDirsIntegrationTest {
   @Test
   public void cxxPythonExtensionWithoutIncludeDirs() throws IOException {
     workspace.replaceFileContents("python_binary/BUCK", "include_dirs", "#");
-    ProjectWorkspace.ProcessResult buildResult =
-        workspace.runBuckBuild("//python_binary:binary_with_extension");
+    ProcessResult buildResult = workspace.runBuckBuild("//python_binary:binary_with_extension");
     buildResult.assertFailure();
     assertThat(buildResult.getStderr(), containsString("extension.h"));
   }

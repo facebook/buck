@@ -33,7 +33,6 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -155,10 +154,7 @@ public class APKModuleTest {
     }
 
     assertThat(
-        dag.getAPKModules()
-            .stream()
-            .map(APKModule::getName)
-            .collect(MoreCollectors.toImmutableSet()),
+        dag.getAPKModules().stream().map(APKModule::getName).collect(ImmutableSet.toImmutableSet()),
         containsInAnyOrder(
             "dex",
             "src.com.facebook.test.android.library",

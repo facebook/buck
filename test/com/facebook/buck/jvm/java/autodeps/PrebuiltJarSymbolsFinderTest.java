@@ -35,14 +35,13 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.timing.Clock;
-import com.facebook.buck.timing.FakeClock;
+import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.util.timing.Clock;
+import com.facebook.buck.util.timing.FakeClock;
 import com.facebook.buck.util.zip.CustomZipOutputStream;
 import com.facebook.buck.util.zip.ZipOutputStreams;
-import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -58,6 +57,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.zip.ZipEntry;
 import org.junit.Rule;
 import org.junit.Test;
@@ -135,7 +135,7 @@ public class PrebuiltJarSymbolsFinderTest {
             throw new RuntimeException(e);
           }
           RuleKey ruleKey =
-              new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder)
+              new TestDefaultRuleKeyFactory(fileHashCache, pathResolver, ruleFinder)
                   .build(javaSymbolsRule);
           jarFile.delete();
 
@@ -178,7 +178,7 @@ public class PrebuiltJarSymbolsFinderTest {
             TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()));
 
     RuleKey key1 =
-        new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(fileHashCache, pathResolver, ruleFinder)
             .build(javaSymbolsRule1);
 
     JavaSymbolsRule javaSymbolsRule2 =
@@ -187,7 +187,7 @@ public class PrebuiltJarSymbolsFinderTest {
             createFinderForGeneratedJar("//foo:jar_genrule2"),
             TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()));
     RuleKey key2 =
-        new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(fileHashCache, pathResolver, ruleFinder)
             .build(javaSymbolsRule2);
 
     assertNotNull(key1);
@@ -198,7 +198,7 @@ public class PrebuiltJarSymbolsFinderTest {
 
   private PrebuiltJarSymbolsFinder createFinderForFileWithEntries(
       String jarFileName, Iterable<String> entries) throws InterruptedException, IOException {
-    Clock clock = FakeClock.DO_NOT_CARE;
+    Clock clock = FakeClock.doNotCare();
     Path jarFile = tmp.newFile(jarFileName);
     try (OutputStream stream =
             new BufferedOutputStream(java.nio.file.Files.newOutputStream(jarFile));

@@ -1,7 +1,7 @@
 prebuilt_jar(
-  name = 'guava',
-  binary_jar = 'guava.jar',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "guava",
+    binary_jar = "guava.jar",
+    visibility = [
+        "PUBLIC",
+    ],
 )

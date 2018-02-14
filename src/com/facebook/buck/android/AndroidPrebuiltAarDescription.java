@@ -16,16 +16,17 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
-import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JavacFactory;
-import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.MaybeRequiredForSourceOnlyAbiArg;
 import com.facebook.buck.jvm.java.PrebuiltJar;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -43,6 +44,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -78,12 +80,13 @@ public class AndroidPrebuiltAarDescription
     return Sets.difference(flavors, KNOWN_FLAVORS).isEmpty();
   }
 
+  private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
-  private final JavacOptions javacOptions;
 
-  public AndroidPrebuiltAarDescription(JavaBuckConfig javaBuckConfig, JavacOptions javacOptions) {
+  public AndroidPrebuiltAarDescription(
+      ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
-    this.javacOptions = javacOptions;
   }
 
   @Override
@@ -168,9 +171,14 @@ public class AndroidPrebuiltAarDescription
     }
 
     if (flavors.contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
+      AndroidPlatformTarget androidPlatformTarget =
+          toolchainProvider.getByName(
+              AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+
       return new Aapt2Compile(
           buildTarget,
           projectFilesystem,
+          androidPlatformTarget,
           ImmutableSortedSet.of(unzipAarRule),
           unzipAar.getResDirectory());
     }
@@ -209,9 +217,14 @@ public class AndroidPrebuiltAarDescription
         /* prebuiltJar */ prebuiltJar,
         /* unzipRule */ unzipAar,
         new JavacToJarStepFactory(
+            pathResolver,
+            ruleFinder,
+            projectFilesystem,
             JavacFactory.create(ruleFinder, javaBuckConfig, null),
-            javacOptions,
-            AndroidClasspathFromContextFunction.INSTANCE),
+            toolchainProvider
+                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getJavacOptions(),
+            new AndroidClasspathProvider(toolchainProvider)),
         /* exportedDeps */ javaDeps,
         JavaLibraryRules.getAbiClasspath(buildRuleResolver, androidLibraryParams.getBuildDeps()),
         args.getRequiredForSourceOnlyAbi());

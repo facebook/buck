@@ -69,6 +69,17 @@ compiled class files and resources.
 {/call}
 
 {call buck.arg}
+  {param name: 'skip_non_union_r_dot_java' /}
+  {param default : 'false' /}
+  {param desc}
+  When using <code>resource_union_package</code> setting <code>skip_non_union_r_dot_java</code> will
+  skip generating dummy R.java for other packages which are unnecessary. Reducing the number of
+  R.java helps in improving the overall compile time especially in libraries with large number of
+  dependent prebuilt targets.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name: 'deps' /}
   {param default : '[]' /}
   {param desc}
@@ -148,18 +159,23 @@ compiled class files and resources.
   {/param}
 {/call}
 
-{call buck.arg}
-  {param name: 'exported_deps' /}
-  {param default : '[]' /}
-  {param desc}
-  This is the same as in <a href="{ROOT}rule/java_library.html">
-  <code>java_library</code></a>.
-  {/param}
+{call jvm_common.exported_deps}
+  {param library: 'android_library' /}
+{/call}
+
+{call jvm_common.provided_deps}
+  {param binary: 'android_binary' /}
 {/call}
 
 {call buck.deps_query_arg /}
 
 {call buck.provided_deps_query_arg /}
+
+{call jvm_common.abi_generation_mode /}
+
+{call jvm_common.source_only_abi_deps /}
+
+{call jvm_common.required_for_source_only_abi /}
 
 {call buck.tests_arg /}
 

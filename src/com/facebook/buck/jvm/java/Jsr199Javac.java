@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -29,14 +30,6 @@ import javax.tools.JavaCompiler;
 
 /** Command used to compile java libraries with a variety of ways to handle dependencies. */
 public abstract class Jsr199Javac implements Javac {
-
-  private static final JavacVersion VERSION = JavacVersion.of("in memory");
-
-  @Override
-  public JavacVersion getVersion() {
-    return VERSION;
-  }
-
   @Override
   public String getDescription(
       ImmutableList<String> options,
@@ -65,28 +58,38 @@ public abstract class Jsr199Javac implements Javac {
     throw new UnsupportedOperationException("In memory javac may not be used externally");
   }
 
-  protected abstract JavaCompiler createCompiler(JavacExecutionContext context);
+  protected abstract JavaCompiler createCompiler(
+      JavacExecutionContext context, SourcePathResolver resolver);
 
   @Override
   public Invocation newBuildInvocation(
       JavacExecutionContext context,
+      SourcePathResolver resolver,
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableList<JavacPluginJsr199Fields> pluginFields,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Path workingDirectory,
+      boolean trackClassUsage,
+      @Nullable JarParameters abiJarParameters,
+      @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,
+      AbiGenerationMode abiCompatibilityMode,
       @Nullable SourceOnlyAbiRuleInfo ruleInfo) {
     return new Jsr199JavacInvocation(
-        this::createCompiler,
+        () -> createCompiler(context, resolver),
         context,
         invokingRule,
         options,
         pluginFields,
         javaSourceFilePaths,
         pathToSrcsList,
+        trackClassUsage,
+        abiJarParameters,
+        libraryJarParameters,
         abiGenerationMode,
+        abiCompatibilityMode,
         ruleInfo);
   }
 }

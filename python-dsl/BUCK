@@ -1,6 +1,6 @@
 PYTHON_PROD_SRCS = glob(
     ["buck_parser/**/*.py"],
-    excludes = ["buck_parser/**/*_test.py"],
+    exclude = ["buck_parser/**/*_test.py"],
 )
 
 java_library(
@@ -18,6 +18,19 @@ python_library(
         "//third-party/py/pathlib:pathlib",
         "//third-party/py/pywatchman:pywatchman",
     ],
+)
+
+python_library(
+    name = "deterministic_set",
+    srcs = ["buck_parser/deterministic_set.py"],
+    base_module = "",
+)
+
+python_test(
+    name = "deterministic_set_test",
+    srcs = ["buck_parser/deterministic_set_test.py"],
+    base_module = "",
+    deps = [":deterministic_set"],
 )
 
 python_test(

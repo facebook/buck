@@ -1,6 +1,7 @@
 [cxx]
   pch_enabled = true
-  untracked_headers = warn
+  untracked_headers = error
+  untracked_headers_whitelist=/usr/include/.*
 
 [build]
   depfiles = enabled

@@ -20,17 +20,18 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.LogConfigSetup;
 import com.facebook.buck.rules.CellConfig;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Map;
-import java.util.OptionalInt;
+import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 
 public interface Command {
 
   /** @return the appropriate exit code for the command */
-  int run(CommandRunnerParams params) throws IOException, InterruptedException;
+  ExitCode run(CommandRunnerParams params) throws IOException, InterruptedException;
 
   /**
    * If the current command is a help command, run the action to print out the appropriate help
@@ -42,7 +43,7 @@ public interface Command {
    * @param stream stream to output the help text.
    * @return The exit code of the command, if the command is a help request.
    */
-  OptionalInt runHelp(PrintStream stream);
+  Optional<ExitCode> runHelp(PrintStream stream);
 
   /** @return whether the command doesn't modify the state of the filesystem */
   boolean isReadOnly();

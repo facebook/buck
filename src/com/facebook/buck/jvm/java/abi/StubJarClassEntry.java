@@ -36,7 +36,8 @@ class StubJarClassEntry extends StubJarEntry {
   private final ClassNode stub;
 
   @Nullable
-  public static StubJarClassEntry of(LibraryReader input, Path path, boolean sourceAbiCompatible)
+  public static StubJarClassEntry of(
+      LibraryReader input, Path path, @Nullable AbiGenerationMode compatibilityMode)
       throws IOException {
     ClassNode stub = new ClassNode(Opcodes.ASM6);
 
@@ -49,8 +50,8 @@ class StubJarClassEntry extends StubJarEntry {
     // If we want ABIs that are compatible with those generated from source, we add a visitor
     // at the very start of the chain which transforms the event stream coming out of `ClassNode`
     // to look like what ClassVisitorDriverFromElement would have produced.
-    if (sourceAbiCompatible) {
-      firstLevelFiltering = new SourceAbiCompatibleVisitor(firstLevelFiltering);
+    if (compatibilityMode != null && compatibilityMode != AbiGenerationMode.CLASS) {
+      firstLevelFiltering = new SourceAbiCompatibleVisitor(firstLevelFiltering, compatibilityMode);
     }
     input.visitClass(path, firstLevelFiltering);
 

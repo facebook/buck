@@ -90,17 +90,8 @@ public enum BuildRuleSuccessType {
     return properties.contains(Property.SHOULD_UPLOAD_RESULTING_ARTIFACT);
   }
 
-  /** @return whether a rule completing with this success type may have changed it's outputs. */
-  public boolean outputsHaveChanged() {
-    return properties.contains(Property.OUTPUTS_HAVE_CHANGED);
-  }
-
   public String getShortDescription() {
     return shortDescription;
-  }
-
-  public boolean isMatchingKey() {
-    return properties.contains(Property.MATCHING_KEY);
   }
 
   private enum Property {

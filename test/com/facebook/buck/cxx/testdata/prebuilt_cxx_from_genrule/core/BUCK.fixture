@@ -1,5 +1,5 @@
 cxx_binary(
-  name = 'binary',
-  deps = ['//test_lib:foo'],
-  srcs = [ 'binary.cpp' ],
+    name = "binary",
+    srcs = ["binary.cpp"],
+    deps = ["//test_lib:foo"],
 )

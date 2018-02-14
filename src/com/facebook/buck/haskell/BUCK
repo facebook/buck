@@ -1,8 +1,9 @@
-java_immutables_library(
+load("//tools/build_rules:module_rules.bzl", "buck_module")
+
+buck_module(
     name = "haskell",
     srcs = glob(["*.java"]),
-    visibility = ["PUBLIC"],
-    deps = [
+    provided_deps = [
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
@@ -17,7 +18,6 @@ java_immutables_library(
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/rules:build_rule",
-        "//src/com/facebook/buck/rules:command_tool",
         "//src/com/facebook/buck/rules:interfaces",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules:source_path",
@@ -26,16 +26,20 @@ java_immutables_library(
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/rules/query:query",
         "//src/com/facebook/buck/rules/query:types",
+        "//src/com/facebook/buck/rules/query:utils",
         "//src/com/facebook/buck/rules/tool/config:config",
         "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/shell:steps",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
+        "//src/com/facebook/buck/toolchain:toolchain",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/versions:translator",
         "//src/com/facebook/buck/versions:versions",
         "//third-party/java/infer-annotations:infer-annotations",
+        "//third-party/java/stringtemplate:stringtemplate",
     ],
+    visibility = ["PUBLIC"],
 )

@@ -49,17 +49,20 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
   private final Path pathToOutputFile;
   private final Path temp;
   private final BuildRule bundle;
+  private final ZipCompressionLevel compressionLevel;
 
   public BuiltinApplePackage(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRule bundle) {
+      BuildRule bundle,
+      ZipCompressionLevel compressionLevel) {
     super(buildTarget, projectFilesystem, params);
     // TODO(markwang): This will be different for Mac apps.
     this.pathToOutputFile = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s.ipa");
     this.temp = BuildTargets.getScratchPath(getProjectFilesystem(), buildTarget, "__temp__%s");
     this.bundle = bundle;
+    this.compressionLevel = compressionLevel;
   }
 
   @Override
@@ -109,13 +112,14 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
                 context.getBuildCellRootPath(),
                 getProjectFilesystem(),
                 pathToOutputFile.getParent())));
+
     commands.add(
         new ZipStep(
             getProjectFilesystem(),
             pathToOutputFile,
             ImmutableSet.of(),
             false,
-            ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
+            compressionLevel,
             temp));
 
     buildableContext.recordArtifact(

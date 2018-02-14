@@ -20,13 +20,15 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Joiner;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.util.function.Supplier;
 
 /**
  * Takes in a list of files and outputs a concatenation of them in the same directory. Used for
@@ -63,7 +65,7 @@ public class ConcatStep implements Step {
       ImmutableList.Builder<Path> inputsBuilder, // NOPMD confused by method reference
       Path outputPath) {
     this.filesystem = filesystem;
-    this.inputs = Suppliers.memoize(inputsBuilder::build);
+    this.inputs = MoreSuppliers.memoize(inputsBuilder::build);
     output = outputPath;
   }
 
@@ -77,7 +79,7 @@ public class ConcatStep implements Step {
       }
       out.flush();
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

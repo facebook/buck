@@ -23,11 +23,49 @@ import com.google.common.collect.ImmutableMap;
 import com.sun.source.tree.CompilationUnitTree;
 import java.io.IOException;
 import java.util.Map;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(CompilerTreeApiTestRunner.class)
 public class InterfaceValidatorTest extends CompilerTreeApiTest {
+  ImmutableMap<String, String> CLASSPATH_WITH_COMPLEX_MEMBER_TYPES =
+      ImmutableMap.of(
+          "com/facebook/bar/Bar.java",
+          Joiner.on('\n')
+              .join(
+                  "package com.facebook.bar;",
+                  "import com.facebook.baz.Baz;",
+                  "public class Bar extends Baz {",
+                  "  public static class StaticMember extends SuperStaticMember{",
+                  "    public static class StaticMemberer extends SuperStaticMemberer {",
+                  "    }",
+                  "  }",
+                  "  public class Inner extends Baz.Inner { }",
+                  "}"),
+          "com/facebook/baz/Baz.java",
+          Joiner.on('\n')
+              .join(
+                  "package com.facebook.baz;",
+                  "public class Baz {",
+                  "  public static class SuperStaticMember {",
+                  "    public static class SuperStaticMemberer {",
+                  "      public static class StaticMemberest {",
+                  "      }",
+                  "    }",
+                  "  }",
+                  "  public class Inner {",
+                  "    public class Innerer { }",
+                  "  }",
+                  "}"));
+
+  private ValidatingTaskListenerFactory taskListenerFactory;
+
+  @Before
+  public void setUp() {
+    taskListenerFactory = new ValidatingTaskListenerFactory("//:rule");
+  }
+
   @Test
   public void testSimpleClassPasses() throws IOException {
     compileWithValidation("public class Foo { }");
@@ -37,6 +75,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
 
   @Test
   public void testImplicitAnnotationSuperclassSucceeds() throws IOException {
+    taskListenerFactory.setRuleIsRequiredForSourceAbi(true);
     compileWithValidation("@interface Foo { };");
 
     assertNoErrors();
@@ -45,8 +84,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
   @Test
   public void testAnnotationInNonRequiredRuleFails() throws IOException {
     testCompiler.setAllowCompilationErrors(true);
-    compileWithValidation(
-        ImmutableMap.of("Foo.java", "@interface Foo { @interface Inner { } };"), false);
+    compileWithValidation(ImmutableMap.of("Foo.java", "@interface Foo { @interface Inner { } };"));
 
     assertErrors(
         "Foo.java:1: error: Annotation definitions must be in rules with required_for_source_only_abi = True.\n"
@@ -61,6 +99,70 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
             + "  For a quick fix, add required_for_source_only_abi = True to //:rule.\n"
             + "  A better fix is to move Inner to a new rule that contains only\n"
             + "  annotations, and mark that rule required_for_source_only_abi.");
+  }
+
+  @Test
+  public void testMissingGrandSuperFailsButMissingSuperDoesNot() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/bar/Bar.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.bar;",
+                    "import com.facebook.baz.Baz;",
+                    "import com.facebook.iface2.Interface2;",
+                    "public class Bar extends Baz implements Interface2 { }"),
+            "com/facebook/baz/Baz.java",
+            Joiner.on('\n').join("package com.facebook.baz;", "public class Baz { }"),
+            "com/facebook/iface/Interface.java",
+            Joiner.on('\n').join("package com.facebook.iface;", "public interface Interface { }"),
+            "com/facebook/iface2/Interface2.java",
+            Joiner.on('\n')
+                .join("package com.facebook.iface2;", "public interface Interface2 { }")));
+    taskListenerFactory.addTargetAvailableForSourceOnlyAbi("//com/facebook/bar:bar");
+    testCompiler.setAllowCompilationErrors(true);
+    compileWithValidation(
+        ImmutableMap.of(
+            "com/facebook/foo/Foo.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.foo;",
+                    "import com.facebook.bar.Bar;",
+                    "import com.facebook.iface.Interface;",
+                    "public class Foo extends Bar implements Interface { }")));
+
+    assertErrors(
+        "Foo.java:4: error: Source-only ABI generation requires that this type be unavailable, or that all of its superclasses/interfaces be available.\n"
+            + "public class Foo extends Bar implements Interface { }\n"
+            + "                         ^\n"
+            + "  To fix, add the following rules to source_only_abi_deps in //:rule: //com/facebook/baz:baz, //com/facebook/iface2:iface2");
+  }
+
+  @Test
+  public void testMissingSuperSucceeds() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/bar/Bar.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.bar;",
+                    "import com.facebook.baz.Baz;",
+                    "public class Bar extends Baz { }"),
+            "com/facebook/baz/Baz.java",
+            Joiner.on('\n').join("package com.facebook.baz;", "public class Baz { }"),
+            "com/facebook/iface/Interface.java",
+            Joiner.on('\n').join("package com.facebook.iface;", "public interface Interface { }")));
+    compileWithValidation(
+        ImmutableMap.of(
+            "com/facebook/foo/Foo.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.foo;",
+                    "import com.facebook.bar.Bar;",
+                    "import com.facebook.iface.Interface;",
+                    "public class Foo extends Bar implements Interface { }")));
+
+    assertNoErrors();
   }
 
   @Test
@@ -134,6 +236,22 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
   }
 
   @Test
+  public void testImportedPackageAnnotationSucceeds() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/anno/Anno.java",
+            Joiner.on('\n').join("package com.facebook.anno;", "public @interface Anno { }")));
+
+    compileWithValidation(
+        ImmutableMap.of(
+            "com/facebook/foo/package-info.java",
+            Joiner.on('\n')
+                .join("@Anno", "package com.facebook.foo;", "import com.facebook.anno.Anno;")));
+
+    assertNoErrors();
+  }
+
+  @Test
   public void testStarImportedTypeFromClasspathFails() throws IOException {
     withClasspath(
         ImmutableMap.of(
@@ -147,9 +265,11 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
     assertErrors(
         Joiner.on('\n')
             .join(
-                "Foo.java:2: error: Must qualify the name: com.facebook.bar.Bar",
+                "Foo.java:2: error: Source-only ABI generation requires that this type be explicitly imported (star imports are not accepted).",
                 "public abstract class Foo extends Bar { }",
-                "                                  ^"));
+                "                                  ^",
+                "  To fix: ",
+                "  Add an import for \"com.facebook.bar.Bar\""));
   }
 
   @Test
@@ -166,12 +286,106 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
   }
 
   @Test
-  public void testStarImportedTypeFromBootClasspathFails() throws IOException {
+  public void testStarImportedTypeFromBootClasspathSucceeds() throws IOException {
     this.compileWithValidation(
         Joiner.on('\n')
             .join("import java.util.*;", "public abstract class Foo implements List<String> { }"));
 
     assertNoErrors();
+  }
+
+  @Test
+  public void testStaticImportedMemberWithMissingSuperclassFails() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/base/Base.java",
+            Joiner.on('\n').join("package com.facebook.base;", "public class Base {", "}")));
+
+    testCompiler.setAllowCompilationErrors(true);
+    this.compileWithValidation(
+        ImmutableMap.of(
+            "com/facebook/bar/Bar.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.bar;",
+                    "public class Bar extends com.facebook.base.Base {",
+                    "  public static void foo() { }",
+                    "}"),
+            "com/facebook/foo/Foo.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.foo;",
+                    "import static com.facebook.bar.Bar.foo;",
+                    "public class Foo {",
+                    "}")));
+
+    assertError(
+        "Foo.java:2: error: Source-only ABI generation requires that this type be unavailable, or that all of its superclasses/interfaces be available.\nimport static com.facebook.bar.Bar.foo;\n                              ^\n  To fix, add the following rules to source_only_abi_deps in //:rule: //com/facebook/base:base");
+  }
+
+  @Test
+  public void testCanonicallyStaticImportedTypeFails() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/bar/Bar.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.bar;",
+                    "import com.facebook.baz.Baz;",
+                    "public class Bar extends Baz { }"),
+            "com/facebook/baz/Baz.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.baz;",
+                    "public class Baz { public static class Inner { } }")));
+
+    testCompiler.setAllowCompilationErrors(true);
+    this.compileWithValidation(
+        Joiner.on('\n')
+            .join(
+                "package com.facebook.foo;",
+                "import static com.facebook.baz.Baz.Inner;",
+                "public class Foo {",
+                "  Inner i;",
+                "}"));
+
+    assertErrors(
+        "Foo.java:4: error: Source-only ABI generation requires that this type be unavailable, or that all of its superclasses/interfaces be available.\n"
+            + "  Inner i;\n"
+            + "  ^\n"
+            + "  To fix, add the following rules to source_only_abi_deps in //:rule: //com/facebook/baz:baz");
+  }
+
+  @Test
+  public void testNonCanonicallyStaticImportedTypeFails() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/bar/Bar.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.bar;",
+                    "import com.facebook.baz.Baz;",
+                    "public class Bar extends Baz { }"),
+            "com/facebook/baz/Baz.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.baz;",
+                    "public class Baz { public static class Inner { } }")));
+    testCompiler.setAllowCompilationErrors(true);
+    this.compileWithValidation(
+        Joiner.on('\n')
+            .join(
+                "package com.facebook.foo;",
+                "import static com.facebook.bar.Bar.Inner;",
+                "public class Foo {",
+                "  Inner i;",
+                "}"));
+
+    assertErrors(
+        "Foo.java:4: error: Source-only ABI generation requires that this type be unavailable, or that all of its superclasses/interfaces be available.\n"
+            + "  Inner i;\n"
+            + "  ^\n"
+            + "  To fix, add the following rules to source_only_abi_deps in //:rule: //com/facebook/baz:baz");
   }
 
   @Test
@@ -216,7 +430,13 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
 
     assertError(
         Joiner.on('\n')
-            .join("Foo.java:4: error: Must qualify the name: Baz.Inner", "  Inner i;", "  ^"));
+            .join(
+                "Foo.java:4: error: Source-only ABI generation requires that this member type reference be more explicit.",
+                "  Inner i;",
+                "  ^",
+                "  To fix: ",
+                "  Add an import for \"com.facebook.foo.Baz\"",
+                "  Use \"Baz.Inner\" here instead of \"Inner\"."));
   }
 
   @Test
@@ -305,7 +525,128 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
 
     assertError(
         Joiner.on('\n')
-            .join("Foo.java:3: error: Must qualify the name: Bar.Inner", "  Inner i;", "  ^"));
+            .join(
+                "Foo.java:3: error: Source-only ABI generation requires that this member type reference be more explicit.",
+                "  Inner i;",
+                "  ^",
+                "  To fix: ",
+                "  Add an import for \"com.facebook.foo.Bar\"",
+                "  Use \"Bar.Inner\" here instead of \"Inner\"."));
+  }
+
+  @Test
+  public void testNonCanonicalUnqualifiedPackageMemberInnerTypeFromClasspathFails()
+      throws IOException {
+    withClasspath(CLASSPATH_WITH_COMPLEX_MEMBER_TYPES);
+    testCompiler.setAllowCompilationErrors(true);
+    compileWithValidation(
+        ImmutableMap.of(
+            "FooBar.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.baz;",
+                    "import com.facebook.bar.Bar;",
+                    "class FooBar extends Bar {",
+                    "  StaticMember.StaticMemberer.StaticMemberest i;",
+                    "}")));
+
+    assertErrors(
+        Joiner.on('\n')
+            .join(
+                "FooBar.java:4: error: Source-only ABI generation requires that this type be referred to by its canonical name.",
+                "  StaticMember.StaticMemberer.StaticMemberest i;",
+                "  ^",
+                "  To fix: ",
+                "  Add an import for \"com.facebook.baz.Baz.SuperStaticMember\"",
+                "  Use \"SuperStaticMember\" here instead of \"StaticMember\"."),
+        Joiner.on('\n')
+            .join(
+                "FooBar.java:4: error: Source-only ABI generation requires that this type be referred to by its canonical name.",
+                "  StaticMember.StaticMemberer.StaticMemberest i;",
+                "              ^",
+                "  To fix: ",
+                "  Use \"SuperStaticMemberer\" here instead of \"StaticMemberer\"."));
+  }
+
+  @Test
+  public void testNonCanonicalInnerTypeErrorMessageWhenCanonicalOuterIsImported()
+      throws IOException {
+    withClasspath(CLASSPATH_WITH_COMPLEX_MEMBER_TYPES);
+    testCompiler.setAllowCompilationErrors(true);
+    compileWithValidation(
+        ImmutableMap.of(
+            "Foo.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.foo;",
+                    "import com.facebook.bar.Bar;",
+                    "import com.facebook.baz.Baz;",
+                    "public class Foo {",
+                    "  Baz b;",
+                    "  Bar.SuperStaticMember m;",
+                    "}")));
+
+    assertError(
+        "Foo.java:6: error: Source-only ABI generation requires that this type be referred to by its canonical name.\n"
+            + "  Bar.SuperStaticMember m;\n"
+            + "  ^\n"
+            + "  To fix: \n"
+            + "  Add an import for \"com.facebook.baz.Baz\"\n"
+            + "  Use \"Baz\" here instead of \"Bar\".");
+  }
+
+  @Test
+  public void testQualifiedNestedGenericSucceeds() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/bar/Bar.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.bar;",
+                    "public class Bar<T> {",
+                    "  public class Inner<U> { }",
+                    "}")));
+
+    compileWithValidation(
+        ImmutableMap.of(
+            "Foo.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.foo;",
+                    "public class Foo {",
+                    "  com.facebook.bar.Bar<Integer>.Inner<String> i;",
+                    "}")));
+
+    assertNoErrors();
+  }
+
+  @Test
+  public void testQualifiedAnnotatedTypeSucceeds() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/bar/Bar.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.bar;",
+                    "public class Bar {",
+                    "  public class Inner { }",
+                    "}")));
+
+    taskListenerFactory.setRuleIsRequiredForSourceAbi(true);
+    compileWithValidation(
+        ImmutableMap.of(
+            "Foo.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.foo;",
+                    "import java.lang.annotation.*;",
+                    "public class Foo {",
+                    "  com.facebook.bar.@Anno Bar.Inner i;",
+                    "}",
+                    "@Target(ElementType.TYPE_USE)",
+                    "@interface Anno { }")));
+
+    assertNoErrors();
   }
 
   @Test
@@ -330,13 +671,14 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
   }
 
   @Test
-  public void testConstantFromClasspathFails() throws IOException {
+  public void testConstantFromUnavailableTargetFails() throws IOException {
     withClasspath(
         ImmutableMap.of(
             "Constants.java",
             Joiner.on('\n')
                 .join(
-                    "class Constants {",
+                    "package com.facebook.constants;",
+                    "public class Constants {",
                     "  public static final int CONSTANT = 3 + 5;",
                     "  public static final int CONST2 = 3;",
                     "}")));
@@ -346,6 +688,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
             "Foo.java",
             Joiner.on('\n')
                 .join(
+                    "import com.facebook.constants.Constants;",
                     "class Foo {",
                     "  public static final int CONSTANT = Constants.CONSTANT + 1 + Constants.CONST2;",
                     "}")));
@@ -353,32 +696,55 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
     assertErrors(
         Joiner.on('\n')
             .join(
-                "Foo.java:2: error: Must inline the constant value: 8",
+                "Foo.java:3: error: This constant will not be available during source-only ABI generation.",
                 "  public static final int CONSTANT = Constants.CONSTANT + 1 + Constants.CONST2;",
-                "                                              ^"),
+                "                                              ^",
+                "  For a quick fix, add required_for_source_only_abi = True to //com/facebook/constants:constants.",
+                "  A better fix is to move Constants to a new rule that contains only",
+                "  constants, and mark that rule required_for_source_only_abi."),
         Joiner.on('\n')
             .join(
-                "Foo.java:2: error: Must inline the constant value: 3",
+                "Foo.java:3: error: This constant will not be available during source-only ABI generation.",
                 "  public static final int CONSTANT = Constants.CONSTANT + 1 + Constants.CONST2;",
-                "                                                                       ^"));
+                "                                                                       ^",
+                "  For a quick fix, add required_for_source_only_abi = True to //com/facebook/constants:constants.",
+                "  A better fix is to move Constants to a new rule that contains only",
+                "  constants, and mark that rule required_for_source_only_abi."));
+  }
+
+  @Test
+  public void testConstantFromAvailableTargetFails() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "Constants.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.constants;",
+                    "public class Constants {",
+                    "  public static final int CONSTANT = 3 + 5;",
+                    "  public static final int CONST2 = 3;",
+                    "}")));
+    taskListenerFactory.addTargetAvailableForSourceOnlyAbi("//com/facebook/constants:constants");
+    compileWithValidation(
+        ImmutableMap.of(
+            "Foo.java",
+            Joiner.on('\n')
+                .join(
+                    "import com.facebook.constants.Constants;",
+                    "class Foo {",
+                    "  public static final int CONSTANT = Constants.CONSTANT + 1 + Constants.CONST2;",
+                    "}")));
+
+    assertNoErrors();
   }
 
   protected Iterable<? extends CompilationUnitTree> compileWithValidation(String source)
       throws IOException {
-    return compileWithValidation(ImmutableMap.of("Foo.java", source), true);
+    return compileWithValidation(ImmutableMap.of("Foo.java", source));
   }
 
   protected Iterable<? extends CompilationUnitTree> compileWithValidation(
       Map<String, String> sources) throws IOException {
-    return compileWithValidation(sources, true);
-  }
-
-  protected Iterable<? extends CompilationUnitTree> compileWithValidation(
-      Map<String, String> sources, boolean requiredForSourceAbi) throws IOException {
-    return compile(
-        sources,
-        // A side effect of our hacky test class loader appears to be that this only works if
-        // it's NOT a lambda. LoL.
-        new ValidatingTaskListenerFactory("//:rule", requiredForSourceAbi));
+    return compile(sources, taskListenerFactory);
   }
 }

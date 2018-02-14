@@ -16,35 +16,32 @@
 
 package com.facebook.buck.rules;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
-import com.facebook.buck.jvm.java.JavaBinaryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
-import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.ocaml.OcamlBinaryDescription;
-import com.facebook.buck.ocaml.OcamlLibraryDescription;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.toolchain.Toolchain;
+import com.facebook.buck.toolchain.impl.DefaultToolchainProvider;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -66,6 +63,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.pf4j.PluginManager;
 
 public class KnownBuildRuleTypesTest {
 
@@ -79,6 +77,7 @@ public class KnownBuildRuleTypesTest {
   private static BuildTarget buildTarget;
   private static ProjectFilesystem projectFilesystem;
   private static BuildRuleParams buildRuleParams;
+  private ExecutableFinder executableFinder = new ExecutableFinder();
 
   static class KnownRuleTestDescription implements Description<KnownRuleTestDescriptionArg> {
 
@@ -160,13 +159,24 @@ public class KnownBuildRuleTypesTest {
     BuckConfig buckConfig =
         FakeBuckConfig.builder().setFilesystem(filesystem).setSections(sections).build();
 
+    DefaultToolchainProvider toolchainProvider =
+        new DefaultToolchainProvider(
+            BuckPluginManagerFactory.createPluginManager(),
+            environment,
+            buckConfig,
+            filesystem,
+            createExecutor(),
+            executableFinder,
+            TestRuleKeyConfigurationFactory.create());
+
     KnownBuildRuleTypes buildRuleTypes =
-        KnownBuildRuleTypesTestUtil.getDefaultKnownBuildRuleTypes(filesystem, environment);
+        KnownBuildRuleTypesTestUtil.getDefaultKnownBuildRuleTypes(
+            filesystem, toolchainProvider, environment);
     DefaultJavaLibrary libraryRule = createJavaLibrary(buildRuleTypes);
 
     ProcessExecutor processExecutor = createExecutor(javac.toString(), "fakeVersion 0.1");
     KnownBuildRuleTypes configuredBuildRuleTypes =
-        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, filesystem, processExecutor);
+        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, processExecutor);
     DefaultJavaLibrary configuredRule = createJavaLibrary(configuredBuildRuleTypes);
 
     SourcePathRuleFinder ruleFinder =
@@ -178,72 +188,61 @@ public class KnownBuildRuleTypesTest {
         new FakeFileHashCache(
             ImmutableMap.of(javac, MorePaths.asByteSource(javac).hash(Hashing.sha1())));
     RuleKey configuredKey =
-        new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(configuredRule);
+        new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder).build(configuredRule);
     RuleKey libraryKey =
-        new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(libraryRule);
+        new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder).build(libraryRule);
 
     assertNotEquals(libraryKey, configuredKey);
   }
 
-  @Test
-  public void whenRegisteringDescriptionsLastOneWins() throws Exception {
-    FlavorDomain<CxxPlatform> cxxPlatforms = FlavorDomain.of("C/C++ platform");
-    CxxPlatform defaultPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
-
+  @Test(expected = IllegalStateException.class)
+  public void whenRegisteringDescriptionsWithSameTypeErrorIsThrown() throws Exception {
     KnownBuildRuleTypes.Builder buildRuleTypesBuilder = KnownBuildRuleTypes.builder();
-    buildRuleTypesBuilder.register(new KnownRuleTestDescription("Foo"));
-    buildRuleTypesBuilder.register(new KnownRuleTestDescription("Bar"));
-    buildRuleTypesBuilder.register(new KnownRuleTestDescription("Raz"));
-
-    buildRuleTypesBuilder.setCxxPlatforms(cxxPlatforms);
-    buildRuleTypesBuilder.setDefaultCxxPlatform(defaultPlatform);
-
-    KnownBuildRuleTypes buildRuleTypes = buildRuleTypesBuilder.build();
-
-    assertEquals(
-        "Only one description should have wound up in the final KnownBuildRuleTypes",
-        KnownBuildRuleTypes.builder()
-                .setCxxPlatforms(cxxPlatforms)
-                .setDefaultCxxPlatform(defaultPlatform)
-                .build()
-                .getAllDescriptions()
-                .size()
-            + 1,
-        buildRuleTypes.getAllDescriptions().size());
-
-    boolean foundTestDescription = false;
-    for (Description<?> description : buildRuleTypes.getAllDescriptions()) {
-      if (Description.getBuildRuleType(description)
-          .equals(Description.getBuildRuleType(KnownRuleTestDescription.class))) {
-        assertFalse("Should only find one test description", foundTestDescription);
-        foundTestDescription = true;
-        assertEquals(
-            "Last description should have won",
-            "Raz",
-            ((KnownRuleTestDescription) description).getValue());
-      }
-    }
+    buildRuleTypesBuilder.addDescriptions(new KnownRuleTestDescription("Foo"));
+    buildRuleTypesBuilder.addDescriptions(new KnownRuleTestDescription("Bar"));
+    buildRuleTypesBuilder.addDescriptions(new KnownRuleTestDescription("Raz"));
+    buildRuleTypesBuilder.build();
   }
 
   @Test
   public void createInstanceShouldReturnDifferentInstancesIfCalledWithDifferentParameters()
       throws Exception {
+    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    DefaultToolchainProvider toolchainProvider =
+        new DefaultToolchainProvider(
+            pluginManager,
+            environment,
+            buckConfig,
+            filesystem,
+            createExecutor(),
+            executableFinder,
+            TestRuleKeyConfigurationFactory.create());
+
     KnownBuildRuleTypes knownBuildRuleTypes1 =
-        KnownBuildRuleTypesTestUtil.createInstance(
-            FakeBuckConfig.builder().build(), filesystem, createExecutor());
+        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
 
     final Path javac = temporaryFolder.newExecutableFile();
     ImmutableMap<String, ImmutableMap<String, String>> sections =
         ImmutableMap.of("tools", ImmutableMap.of("javac", javac.toString()));
-    BuckConfig buckConfig =
-        FakeBuckConfig.builder().setFilesystem(filesystem).setSections(sections).build();
+    buckConfig = FakeBuckConfig.builder().setFilesystem(filesystem).setSections(sections).build();
 
     ProcessExecutor processExecutor = createExecutor(javac.toString(), "");
 
+    toolchainProvider =
+        new DefaultToolchainProvider(
+            pluginManager,
+            environment,
+            buckConfig,
+            filesystem,
+            createExecutor(),
+            executableFinder,
+            TestRuleKeyConfigurationFactory.create());
+
     KnownBuildRuleTypes knownBuildRuleTypes2 =
-        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, filesystem, processExecutor);
+        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, processExecutor);
 
     assertNotEquals(knownBuildRuleTypes1, knownBuildRuleTypes2);
   }
@@ -256,8 +255,44 @@ public class KnownBuildRuleTypesTest {
         ImmutableMap.of("cxx", ImmutableMap.of("default_platform", "default"));
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
 
+    DefaultToolchainProvider toolchainProvider =
+        new DefaultToolchainProvider(
+            BuckPluginManagerFactory.createPluginManager(),
+            environment,
+            buckConfig,
+            filesystem,
+            createExecutor(),
+            executableFinder,
+            TestRuleKeyConfigurationFactory.create());
+
     // This would throw if "default" weren't available as a platform.
-    KnownBuildRuleTypesTestUtil.createInstance(buckConfig, filesystem, createExecutor());
+    KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
+  }
+
+  @Test
+  public void canOverrideDefaultHostPlatform() throws Exception {
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
+    Flavor flavor = InternalFlavor.of("flavor");
+    String flag = "-flag";
+    ImmutableMap<String, ImmutableMap<String, String>> sections =
+        ImmutableMap.of("cxx#" + flavor, ImmutableMap.of("cflags", flag));
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
+    DefaultToolchainProvider toolchainProvider =
+        new DefaultToolchainProvider(
+            BuckPluginManagerFactory.createPluginManager(),
+            environment,
+            buckConfig,
+            filesystem,
+            createExecutor(),
+            executableFinder,
+            TestRuleKeyConfigurationFactory.create());
+    CxxPlatformsProvider cxxPlatformsProvider =
+        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+    assertThat(
+        cxxPlatformsProvider.getCxxPlatforms().getValue(flavor).getCflags(),
+        Matchers.contains(flag));
+    KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
   }
 
   @Test
@@ -270,84 +305,43 @@ public class KnownBuildRuleTypesTest {
             "cxx#macosx-x86_64", ImmutableMap.of("cache_links", "true"),
             "cxx#windows-x86_64", ImmutableMap.of("cache_links", "true"));
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
+    DefaultToolchainProvider toolchainProvider =
+        new DefaultToolchainProvider(
+            BuckPluginManagerFactory.createPluginManager(),
+            environment,
+            buckConfig,
+            filesystem,
+            createExecutor(),
+            executableFinder,
+            TestRuleKeyConfigurationFactory.create());
 
     // It should be legal to override multiple host platforms even though
     // only one will be practically used in a build.
-    KnownBuildRuleTypesTestUtil.createInstance(buckConfig, filesystem, createExecutor());
+    KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
   }
 
   @Test
-  public void canOverrideDefaultHostPlatform() throws Exception {
+  public void toolchainAreNotCreated() throws Exception {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
-    Flavor flavor = InternalFlavor.of("flavor");
-    String flag = "-flag";
-    ImmutableMap<String, ImmutableMap<String, String>> sections =
-        ImmutableMap.of("cxx#" + flavor, ImmutableMap.of("cflags", flag));
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
-    KnownBuildRuleTypes knownBuildRuleTypes =
-        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, filesystem, createExecutor());
-    assertThat(
-        knownBuildRuleTypes.getCxxPlatforms().getValue(flavor).getCflags(),
-        Matchers.contains(flag));
-  }
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    DefaultToolchainProvider toolchainProvider =
+        new DefaultToolchainProvider(
+            BuckPluginManagerFactory.createPluginManager(),
+            environment,
+            buckConfig,
+            filesystem,
+            createExecutor(),
+            executableFinder,
+            TestRuleKeyConfigurationFactory.create()) {
+          @Override
+          public Toolchain getByName(String toolchainName) {
+            throw new IllegalStateException(
+                "Toolchain creation is not allowed during construction of KnownBuildRuleTypesTest");
+          }
+        };
 
-  @Test
-  public void ocamlUsesConfiguredDefaultPlatform() throws Exception {
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
-    Flavor flavor = InternalFlavor.of("flavor");
-    ImmutableMap<String, ImmutableMap<String, String>> sections =
-        ImmutableMap.of(
-            "cxx",
-            ImmutableMap.of("default_platform", flavor.toString()),
-            "cxx#" + flavor,
-            ImmutableMap.of());
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
-    KnownBuildRuleTypes knownBuildRuleTypes =
-        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, filesystem, createExecutor());
-    OcamlLibraryDescription ocamlLibraryDescription =
-        (OcamlLibraryDescription)
-            knownBuildRuleTypes.getDescription(
-                knownBuildRuleTypes.getBuildRuleType("ocaml_library"));
-    assertThat(
-        ocamlLibraryDescription.getOcamlBuckConfig().getCxxPlatform(),
-        Matchers.equalTo(knownBuildRuleTypes.getCxxPlatforms().getValue(flavor)));
-    OcamlBinaryDescription ocamlBinaryDescription =
-        (OcamlBinaryDescription)
-            knownBuildRuleTypes.getDescription(
-                knownBuildRuleTypes.getBuildRuleType("ocaml_binary"));
-    assertThat(
-        ocamlBinaryDescription.getOcamlBuckConfig().getCxxPlatform(),
-        Matchers.equalTo(knownBuildRuleTypes.getCxxPlatforms().getValue(flavor)));
-  }
-
-  @Test
-  public void javaDefaultCxxPlatform() throws Exception {
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
-    Flavor flavor = InternalFlavor.of("flavor");
-    ImmutableMap<String, ImmutableMap<String, String>> sections =
-        ImmutableMap.of(
-            "cxx#" + flavor,
-            ImmutableMap.of(),
-            "java",
-            ImmutableMap.of("default_cxx_platform", flavor.toString()));
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
-    KnownBuildRuleTypes knownBuildRuleTypes =
-        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, filesystem, createExecutor());
-    JavaBinaryDescription javaBinaryDescription =
-        (JavaBinaryDescription)
-            knownBuildRuleTypes.getDescription(knownBuildRuleTypes.getBuildRuleType("java_binary"));
-    assertThat(
-        javaBinaryDescription.getDefaultCxxPlatform(),
-        Matchers.equalTo(knownBuildRuleTypes.getCxxPlatforms().getValue(flavor)));
-    JavaTestDescription javaTestDescription =
-        (JavaTestDescription)
-            knownBuildRuleTypes.getDescription(knownBuildRuleTypes.getBuildRuleType("java_test"));
-    assertThat(
-        javaTestDescription.getDefaultCxxPlatform(),
-        Matchers.equalTo(knownBuildRuleTypes.getCxxPlatforms().getValue(flavor)));
+    KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
   }
 
   private ProcessExecutor createExecutor() throws IOException {

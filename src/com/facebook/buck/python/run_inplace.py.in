@@ -9,6 +9,8 @@ native_libs_env_var = <NATIVE_LIBS_ENV_VAR>
 native_libs_dir = <NATIVE_LIBS_DIR>
 native_libs_preload_env_var = <NATIVE_LIBS_PRELOAD_ENV_VAR>
 native_libs_preload = <NATIVE_LIBS_PRELOAD>
+# The list of .whl, .egg, etc files that should be added to sys.path
+prebuilt_libs_dir = <PREBUILT_LIBS_DIR>
 
 dirpath = os.path.dirname(os.path.realpath(__file__))
 
@@ -31,17 +33,15 @@ STARTUP = """\
 # Wrap everything in a private function to prevent globals being captured by
 # the `runpy._run_module_as_main` below.
 def __run():
+    import errno
+    import fcntl
+    import glob
     import os
+    import os.path
     import runpy
+    import shutil
     import sys
-
-    # Set `argv[0]` to the executing script.
-    assert sys.argv[0] == '-c'
-    sys.argv[0] = {arg0!r}
-
-    # Replace the working directory with location of the modules directory.
-    assert sys.path[0] == ''
-    sys.path[0] = {pythonpath!r}
+    import zipfile
 
     def setenv(var, val):
         if val is None:
@@ -53,16 +53,96 @@ def __run():
         for k, v in d.items():
             setenv(k, v)
 
-    restoreenv({env_vals!r})
+    def do_extract_whl(wheel_map):
+        conflict_map = {{}}
+        for whl, (short_whl, installed_path, changed) in wheel_map.items():
+            with zipfile.ZipFile(whl) as zip:
+                names = zip.namelist()
+                for name in names:
+                    if name in conflict_map:
+                        raise RuntimeError(
+                            'Wheel path {{}} from {{}} conflicts with {{}}'
+                            .format(name, short_whl, conflict_map[name])
+                        )
+                    conflict_map[name] = short_whl
+                    if changed:
+                        if os.path.isdir(installed_path):
+                            shutil.rmtree(installed_path)
+                        zip.extractall(installed_path)
 
+    def maybe_extract_whl(wheel_map):
+        with open('{this_file}') as lockfile:
+            try:
+                fcntl.flock(lockfile, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except IOError as ioe:
+                if ioe.errno not in {{errno.EAGAIN, errno.EACCES}}:
+                    raise
+
+                # Another process holds our lock, which means it will attempt
+                # all extractions for us.  Let's wait for it.
+                fcntl.flock(lockfile, fcntl.LOCK_EX)
+                try:
+                    for short_whl, installed_path, _ in wheel_map.values():
+                        if not os.path.isdir(installed_path):
+                            raise RuntimeError(
+                                'Wheel {{}} not extracted'.format(short_whl)
+                            )
+                    # All directories present, no need to extract.
+                    return
+                finally:
+                    fcntl.flock(lockfile, fcntl.LOCK_UN)
+
+            try:
+                do_extract_whl(wheel_map)
+            finally:
+                fcntl.flock(lockfile, fcntl.LOCK_UN)
+
+    def process_whl(wheels):
+        wheel_map = {{}}
+
+        for whl in sorted(wheels):
+            short_whl = os.path.basename(whl)
+            installed_path = os.path.join(prebuilt_libs, short_whl + "-installed")
+            changed = True
+            if os.path.isdir(installed_path):
+                whl_mtime = os.stat(whl).st_mtime
+                installed_mtime = os.stat(installed_path).st_mtime
+                if whl_mtime \<= installed_mtime:
+                    # we already unpacked this before
+                    changed = False
+            wheel_map[whl] = (short_whl, installed_path, changed)
+            sys.path.append(installed_path)
+
+        if not any(changed for _, _, changed in wheel_map.values()):
+            return
+
+        maybe_extract_whl(wheel_map)
+
+    # Set `argv[0]` to the executing script.
+    assert sys.argv[0] == '-c'
+    sys.argv[0] = {arg0!r}
+
+    # Replace the working directory with location of the modules directory.
+    assert sys.path[0] == ''
+    sys.path[0] = {pythonpath!r}
+
+    # Extract .whl files to "install them"
+    prebuilt_libs = {prebuilt_libs!r}
+    wheels = glob.glob(os.path.join(prebuilt_libs, "*.whl"))
+    process_whl(wheels)
+
+    restoreenv({env_vals!r})
     runpy._run_module_as_main({main_module!r}, False)
 
 __run()
 """.format(
     arg0=sys.argv[0],
     pythonpath=os.path.join(dirpath, modules_dir),
+    prebuilt_libs=os.path.join(dirpath, prebuilt_libs_dir),
     env_vals=env_vals_to_restore,
-    main_module=main_module)
+    main_module=main_module,
+    this_file=__file__,
+)
 
 args = [sys.executable, '-Es', '-c', STARTUP]
 

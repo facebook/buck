@@ -1,10 +1,14 @@
 apple_library(
-  name = 'TestLibrary',
-  srcs = ['Foo.m', 'Bar.swift', 'Struct.swift'],
-  exported_headers = ['Foo.h'],
-  visibility = ['//Apps/...'],
-  swift_version = '4',
-  frameworks = [
-    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-  ],
+    name = "TestLibrary",
+    srcs = [
+        "Bar.swift",
+        "Foo.m",
+        "Struct.swift",
+    ],
+    exported_headers = ["Foo.h"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    swift_version = "4",
+    visibility = ["//Apps/..."],
 )

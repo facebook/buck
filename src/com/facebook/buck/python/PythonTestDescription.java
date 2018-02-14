@@ -18,20 +18,27 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.file.WriteFile;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.model.Pair;
+import com.facebook.buck.python.toolchain.PythonPlatform;
+import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
+import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasContacts;
 import com.facebook.buck.rules.HasTestTimeout;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -39,28 +46,36 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.args.MacroArg;
-import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.coercer.NeededCoverageSpec;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.HasVersionUniverse;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Supplier;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
+import com.google.common.io.Resources;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.SortedSet;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class PythonTestDescription
@@ -70,32 +85,20 @@ public class PythonTestDescription
 
   private static final Flavor BINARY_FLAVOR = InternalFlavor.of("binary");
 
-  private static final MacroHandler MACRO_HANDLER =
-      new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
-
+  private final ToolchainProvider toolchainProvider;
   private final PythonBinaryDescription binaryDescription;
   private final PythonBuckConfig pythonBuckConfig;
-  private final FlavorDomain<PythonPlatform> pythonPlatforms;
   private final CxxBuckConfig cxxBuckConfig;
-  private final CxxPlatform defaultCxxPlatform;
-  private final Optional<Long> defaultTestRuleTimeoutMs;
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public PythonTestDescription(
+      ToolchainProvider toolchainProvider,
       PythonBinaryDescription binaryDescription,
       PythonBuckConfig pythonBuckConfig,
-      FlavorDomain<PythonPlatform> pythonPlatforms,
-      CxxBuckConfig cxxBuckConfig,
-      CxxPlatform defaultCxxPlatform,
-      Optional<Long> defaultTestRuleTimeoutMs,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      CxxBuckConfig cxxBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.binaryDescription = binaryDescription;
     this.pythonBuckConfig = pythonBuckConfig;
-    this.pythonPlatforms = pythonPlatforms;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.defaultCxxPlatform = defaultCxxPlatform;
-    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
-    this.cxxPlatforms = cxxPlatforms;
   }
 
   @Override
@@ -141,7 +144,6 @@ public class PythonTestDescription
   private static BuildRule createTestModulesSourceBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       Path outputPath,
       ImmutableSet<String> testModules) {
 
@@ -152,18 +154,64 @@ public class PythonTestDescription
     String contents = getTestModulesListContents(testModules);
 
     return new WriteFile(
-        newBuildTarget,
-        projectFilesystem,
-        params.withoutDeclaredDeps().withoutExtraDeps(),
-        contents,
-        outputPath, /* executable */
-        false);
+        newBuildTarget, projectFilesystem, contents, outputPath, /* executable */ false);
   }
 
   private CxxPlatform getCxxPlatform(BuildTarget target, AbstractPythonTestDescriptionArg args) {
+    CxxPlatformsProvider cxxPlatformsProvider =
+        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
+
     return cxxPlatforms
         .getValue(target)
-        .orElse(args.getCxxPlatform().map(cxxPlatforms::getValue).orElse(defaultCxxPlatform));
+        .orElse(
+            args.getCxxPlatform()
+                .map(cxxPlatforms::getValue)
+                .orElse(cxxPlatformsProvider.getDefaultCxxPlatform()));
+  }
+
+  private SourcePath requireTestMain(
+      BuildTarget baseTarget, ProjectFilesystem filesystem, BuildRuleResolver ruleResolver) {
+    BuildRule testMainRule =
+        ruleResolver.computeIfAbsent(
+            baseTarget.withFlavors(InternalFlavor.of("python-test-main")),
+            target ->
+                new AbstractBuildRule(target, filesystem) {
+
+                  private final Path output =
+                      BuildTargets.getGenPath(
+                          getProjectFilesystem(), getBuildTarget(), "%s/__test_main__.py");
+
+                  @Override
+                  public SortedSet<BuildRule> getBuildDeps() {
+                    return ImmutableSortedSet.of();
+                  }
+
+                  @Override
+                  public ImmutableList<? extends Step> getBuildSteps(
+                      BuildContext context, BuildableContext buildableContext) {
+                    buildableContext.recordArtifact(output);
+                    return ImmutableList.of(
+                        MkdirStep.of(
+                            BuildCellRelativePath.fromCellRelativePath(
+                                context.getBuildCellRootPath(),
+                                getProjectFilesystem(),
+                                output.getParent())),
+                        new WriteFileStep(
+                            getProjectFilesystem(),
+                            Resources.asByteSource(
+                                Resources.getResource(
+                                    PythonTestDescription.class, "__test_main__.py")),
+                            output,
+                            /* executable */ false));
+                  }
+
+                  @Override
+                  public SourcePath getSourcePathToOutput() {
+                    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
+                  }
+                });
+    return Preconditions.checkNotNull(testMainRule.getSourcePathToOutput());
   }
 
   @Override
@@ -175,6 +223,11 @@ public class PythonTestDescription
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       final PythonTestDescriptionArg args) {
+
+    FlavorDomain<PythonPlatform> pythonPlatforms =
+        toolchainProvider
+            .getByName(PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.class)
+            .getPythonPlatforms();
 
     PythonPlatform pythonPlatform =
         pythonPlatforms
@@ -234,7 +287,6 @@ public class PythonTestDescription
         createTestModulesSourceBuildRule(
             buildTarget,
             projectFilesystem,
-            params,
             getTestModulesListPath(buildTarget, projectFilesystem),
             testModules);
     resolver.addToIndex(testModulesBuildRule);
@@ -251,7 +303,7 @@ public class PythonTestDescription
         PythonPackageComponents.of(
             ImmutableMap.<Path, SourcePath>builder()
                 .put(getTestModulesListName(), testModulesBuildRule.getSourcePathToOutput())
-                .put(getTestMainName(), pythonBuckConfig.getPathToTestMain(projectFilesystem))
+                .put(getTestMainName(), requireTestMain(buildTarget, projectFilesystem, resolver))
                 .putAll(srcs)
                 .build(),
             resources,
@@ -264,9 +316,17 @@ public class PythonTestDescription
                     pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps()))
             .concat(args.getNeededCoverage().stream().map(NeededCoverageSpec::getBuildTarget))
             .map(resolver::getRule)
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.builder()
+            .setBuildTarget(buildTarget)
+            .setCellPathResolver(cellRoots)
+            .setResolver(resolver)
+            .setExpanders(PythonUtil.MACRO_EXPANDERS)
+            .build();
     PythonPackageComponents allComponents =
         PythonUtil.getAllComponents(
+            cellRoots,
             buildTarget,
             projectFilesystem,
             params,
@@ -279,11 +339,8 @@ public class PythonTestDescription
             cxxPlatform,
             args.getLinkerFlags()
                 .stream()
-                .map(
-                    MacroArg.toMacroArgFunction(
-                            PythonUtil.MACRO_HANDLER, buildTarget, cellRoots, resolver)
-                        ::apply)
-                .collect(MoreCollectors.toImmutableList()),
+                .map(macrosConverter::convert)
+                .collect(ImmutableList.toImmutableList()),
             pythonBuckConfig.getNativeLinkStrategy(),
             args.getPreloadDeps());
 
@@ -295,6 +352,7 @@ public class PythonTestDescription
             projectFilesystem,
             params,
             resolver,
+            pathResolver,
             ruleFinder,
             pythonPlatform,
             cxxPlatform,
@@ -343,11 +401,8 @@ public class PythonTestDescription
       }
     }
 
-    Supplier<ImmutableMap<String, String>> testEnv =
-        () ->
-            ImmutableMap.copyOf(
-                Maps.transformValues(
-                    args.getEnv(), MACRO_HANDLER.getExpander(buildTarget, cellRoots, resolver)));
+    Supplier<ImmutableMap<String, Arg>> testEnv =
+        () -> ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert));
 
     // Generate and return the python test rule, which depends on the python binary rule above.
     return PythonTest.from(
@@ -358,7 +413,9 @@ public class PythonTestDescription
         binary,
         args.getLabels(),
         neededCoverageBuilder.build(),
-        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+        args.getTestRuleTimeoutMs()
+            .map(Optional::of)
+            .orElse(cxxBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
         args.getContacts());
   }
 
@@ -396,12 +453,12 @@ public class PythonTestDescription
 
     ImmutableSet<BuildTarget> getPreloadDeps();
 
-    ImmutableList<String> getLinkerFlags();
+    ImmutableList<StringWithMacros> getLinkerFlags();
 
     ImmutableList<NeededCoverageSpec> getNeededCoverage();
 
     ImmutableList<String> getBuildArgs();
 
-    ImmutableMap<String, String> getEnv();
+    ImmutableMap<String, StringWithMacros> getEnv();
   }
 }

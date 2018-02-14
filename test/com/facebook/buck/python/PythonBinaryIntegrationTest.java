@@ -31,13 +31,15 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.python.toolchain.impl.PythonInterpreterFromConfig;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.config.Config;
@@ -144,7 +146,10 @@ public class PythonBinaryIntegrationTest {
         link, workspace.getPath(Splitter.on(" ").splitToList(output).get(1)).toAbsolutePath());
     ProcessExecutor.Result result =
         workspace.runCommand(
-            getPythonBuckConfig().getPythonInterpreter().toString(), link.toString());
+            new PythonInterpreterFromConfig(getPythonBuckConfig(), new ExecutableFinder())
+                .getPythonInterpreterPath()
+                .toString(),
+            link.toString());
     assertThat(
         result.getStdout().orElse("") + result.getStderr().orElse(""),
         result.getExitCode(),
@@ -153,8 +158,7 @@ public class PythonBinaryIntegrationTest {
 
   @Test
   public void commandLineArgs() throws IOException {
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("run", ":bin", "HELLO WORLD").assertSuccess();
+    ProcessResult result = workspace.runBuckCommand("run", ":bin", "HELLO WORLD").assertSuccess();
     assertThat(result.getStdout(), containsString("HELLO WORLD"));
   }
 
@@ -177,8 +181,7 @@ public class PythonBinaryIntegrationTest {
         "TODO(8667197): Native libs currently don't work on El Capitan",
         Platform.detect(),
         not(equalTo(Platform.MACOS)));
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("run", ":bin-with-native-libs").assertSuccess();
+    ProcessResult result = workspace.runBuckCommand("run", ":bin-with-native-libs").assertSuccess();
     assertThat(result.getStdout(), containsString("HELLO WORLD"));
   }
 
@@ -264,7 +267,7 @@ public class PythonBinaryIntegrationTest {
     workspace.writeContentsToPath("print('hello world')", "main.py");
     workspace.enableDirCache();
     workspace.runBuckBuild(":bin").assertSuccess();
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     String stdout = workspace.runBuckCommand("run", ":bin").assertSuccess().getStdout().trim();
     assertThat(stdout, equalTo("hello world"));
   }
@@ -273,14 +276,14 @@ public class PythonBinaryIntegrationTest {
   public void externalPexToolAffectsRuleKey() throws IOException {
     assumeThat(packageStyle, equalTo(PythonBuckConfig.PackageStyle.STANDALONE));
 
-    ProjectWorkspace.ProcessResult firstResult =
+    ProcessResult firstResult =
         workspace.runBuckCommand(
             "targets", "-c", "python.path_to_pex=//:pex_tool", "--show-rulekey", "//:bin");
     String firstRuleKey = firstResult.assertSuccess().getStdout().trim();
 
     workspace.writeContentsToPath("changes", "pex_tool.sh");
 
-    ProjectWorkspace.ProcessResult secondResult =
+    ProcessResult secondResult =
         workspace.runBuckCommand(
             "targets", "-c", "python.path_to_pex=//:pex_tool", "--show-rulekey", "//:bin");
     String secondRuleKey = secondResult.assertSuccess().getStdout().trim();
@@ -291,7 +294,7 @@ public class PythonBinaryIntegrationTest {
   @Test
   public void multiplePythonHomes() throws Exception {
     assumeThat(Platform.detect(), not(Matchers.is(Platform.WINDOWS)));
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckBuild(
             "-c",
             "python#a.library=//:platform_a",
@@ -313,9 +316,14 @@ public class PythonBinaryIntegrationTest {
     assumeThat(packageStyle, Matchers.is(PythonBuckConfig.PackageStyle.STANDALONE));
     workspace.enableDirCache();
     workspace.runBuckBuild("-c", "python.cache_binaries=false", ":bin").assertSuccess();
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckBuild("-c", "python.cache_binaries=false", ":bin").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:bin");
+  }
+
+  @Test
+  public void packagePrebuilLibrariesProperly() throws IOException {
+    workspace.runBuckCommand("run", "//:main_module_with_prebuilt_dep_bin").assertSuccess();
   }
 
   /**
@@ -342,6 +350,6 @@ public class PythonBinaryIntegrationTest {
             Platform.detect(),
             ImmutableMap.copyOf(System.getenv()),
             DefaultCellPathResolver.of(tmp.getRoot(), rawConfig));
-    return new PythonBuckConfig(buckConfig, new ExecutableFinder());
+    return new PythonBuckConfig(buckConfig);
   }
 }

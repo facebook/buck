@@ -18,8 +18,8 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import org.hamcrest.Matchers;
@@ -41,6 +41,24 @@ public class TargetGraphHashingIntegrationTest {
         workspace.runBuckCommand("targets", "--show-target-hash", "//:empty").getStdout();
     workspace.writeContentsToPath("some content", "somefile.txt");
     String hash = workspace.runBuckCommand("targets", "--show-target-hash", "//:empty").getStdout();
+    assertThat(hash, Matchers.equalTo(expectedHash));
+  }
+
+  @Test
+  public void hashDoesNotChangeWithParallelization() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "java_library_resources_root_target_hash", tmp);
+    workspace.setUp();
+
+    String expectedHash =
+        workspace
+            .runBuckCommand("-c", "build.threads=1", "targets", "--show-target-hash", "//:empty")
+            .getStdout();
+    String hash =
+        workspace
+            .runBuckCommand("-c", "build.threads=10", "targets", "--show-target-hash", "//:empty")
+            .getStdout();
     assertThat(hash, Matchers.equalTo(expectedHash));
   }
 }

@@ -3,11 +3,13 @@
 java_library(
     name = "liteinfersupport",
     srcs = glob(["*.java"]),
+    required_for_source_only_abi = True,
     visibility = [
         "//src/com/facebook/buck/jvm/java:fat-jar-main",
         "//src/com/facebook/buck/jvm/java:java",
         "//src/com/facebook/buck/jvm/java/abi/source:source",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
+        "//src/com/facebook/buck/jvm/java/lang/model:model",
         "//src/com/facebook/buck/jvm/java/plugin/adapter:adapter",
         "//src/com/facebook/buck/jvm/java/plugin/api:api",
     ],

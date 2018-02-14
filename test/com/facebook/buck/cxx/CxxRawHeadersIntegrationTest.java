@@ -27,8 +27,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.testutil.ParameterizedTests;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -120,19 +121,19 @@ public class CxxRawHeadersIntegrationTest {
 
   @Test
   public void listedRawHeadersPassVerification() throws IOException {
-    ProjectWorkspace.ProcessResult result = runCommand("build", "//lib1");
+    ProcessResult result = runCommand("build", "//lib1");
     result.assertSuccess();
   }
 
   @Test
   public void listedRawHeadersInDepPassVerification() throws IOException {
-    ProjectWorkspace.ProcessResult result = runCommand("build", "//lib4");
+    ProcessResult result = runCommand("build", "//lib4");
     result.assertSuccess();
   }
 
   @Test
   public void unlistedRawHeadersDoNotPassVerification() throws IOException {
-    ProjectWorkspace.ProcessResult result = runCommand("build", "//lib2");
+    ProcessResult result = runCommand("build", "//lib2");
     result.assertFailure();
     assertThat(result.getStderr(), containsString("included an untracked header"));
   }
@@ -225,7 +226,7 @@ public class CxxRawHeadersIntegrationTest {
   public void removingUsedHeaderAndReferenceToItCausesRebuild1() throws IOException {
     workspace.writeContentsToPath("int main() { return 1; }", "depfiles1/test.cpp");
     Files.delete(workspace.getPath("depfiles1/used.h"));
-    workspace.replaceFileContents("depfiles1/BUCK", "\'used.h\',", "");
+    workspace.replaceFileContents("depfiles1/BUCK", "\"used.h\",", "");
     runCommand("build", target1.toString()).assertSuccess();
     assertThat(
         workspace.getBuildLog().getLogEntry(compileTarget1).getSuccessType(),
@@ -236,7 +237,7 @@ public class CxxRawHeadersIntegrationTest {
   public void removingUsedHeaderAndReferenceToItCausesRebuild2() throws IOException {
     workspace.writeContentsToPath("int main() { return 1; }", "depfiles2/test/test.cpp");
     Files.delete(workspace.getPath("depfiles2/headers/used.h"));
-    workspace.replaceFileContents("depfiles2/headers/BUCK", "\'used.h\',", "");
+    workspace.replaceFileContents("depfiles2/headers/BUCK", "\"used.h\",", "");
     runCommand("build", target2.toString()).assertSuccess();
     assertThat(
         workspace.getBuildLog().getLogEntry(compileTarget2).getSuccessType(),
@@ -257,7 +258,7 @@ public class CxxRawHeadersIntegrationTest {
         containsString("Cannot use `headers` and `raw_headers` in the same rule"));
   }
 
-  private ProjectWorkspace.ProcessResult runCommand(String... args) throws IOException {
+  private ProcessResult runCommand(String... args) throws IOException {
     if (useBuckd) {
       return workspace.runBuckdCommand(args);
     } else {

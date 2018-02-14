@@ -35,11 +35,16 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.EventPostingRuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
+import com.facebook.buck.rules.keys.TrackedRuleKeyCache;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -54,7 +59,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Option;
@@ -205,20 +210,19 @@ public abstract class AbstractCommand implements Command {
   }
 
   @Override
-  public OptionalInt runHelp(PrintStream stream) {
+  public Optional<ExitCode> runHelp(PrintStream stream) {
     if (help) {
       printUsage(stream);
-      return OptionalInt.of(1);
-    } else {
-      return OptionalInt.empty();
+      return Optional.of(ExitCode.SUCCESS);
     }
+    return Optional.empty();
   }
 
   @Override
-  public final int run(CommandRunnerParams params) throws IOException, InterruptedException {
+  public final ExitCode run(CommandRunnerParams params) throws IOException, InterruptedException {
     if (help) {
       printUsage(params.getConsole().getStdErr());
-      return 1;
+      return ExitCode.SUCCESS;
     }
     if (params.getConsole().getAnsi().isAnsiTerminal()) {
       ImmutableList<String> motd = params.getBuckConfig().getMessageOfTheDay();
@@ -242,7 +246,7 @@ public abstract class AbstractCommand implements Command {
     };
   }
 
-  public abstract int runWithoutHelp(CommandRunnerParams params)
+  public abstract ExitCode runWithoutHelp(CommandRunnerParams params)
       throws IOException, InterruptedException;
 
   protected CommandLineBuildTargetNormalizer getCommandLineBuildTargetNormalizer(
@@ -295,7 +299,6 @@ public abstract class AbstractCommand implements Command {
   protected ExecutionContext.Builder getExecutionContextBuilder(CommandRunnerParams params) {
     return ExecutionContext.builder()
         .setConsole(params.getConsole())
-        .setAndroidPlatformTargetSupplier(params.getAndroidPlatformTargetSupplier())
         .setBuckEventBus(params.getBuckEventBus())
         .setPlatform(params.getPlatform())
         .setEnvironment(params.getEnvironment())
@@ -314,13 +317,7 @@ public abstract class AbstractCommand implements Command {
   }
 
   public ConcurrencyLimit getConcurrencyLimit(BuckConfig buckConfig) {
-    ResourcesConfig resourcesConfig = buckConfig.getView(ResourcesConfig.class);
-    return new ConcurrencyLimit(
-        buckConfig.getNumThreads(),
-        resourcesConfig.getResourceAllocationFairness(),
-        resourcesConfig.getManagedThreadCount(),
-        resourcesConfig.getDefaultResourceAmounts(),
-        resourcesConfig.getMaximumResourceAmounts());
+    return buckConfig.getView(ResourcesConfig.class).getConcurrencyLimit();
   }
 
   @Override
@@ -357,6 +354,22 @@ public abstract class AbstractCommand implements Command {
         .orElseGet(
             () ->
                 new EventPostingRuleKeyCacheScope<>(
-                    params.getBuckEventBus(), new DefaultRuleKeyCache<>()));
+                    params.getBuckEventBus(),
+                    new TrackedRuleKeyCache<>(
+                        new DefaultRuleKeyCache<>(), new InstrumentingCacheStatsTracker())));
+  }
+
+  /**
+   * @param buckConfig the configuration for resources
+   * @return a memoized supplier for a ForkJoinPool that will be closed properly if initialized
+   */
+  protected CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> getForkJoinPoolSupplier(
+      BuckConfig buckConfig) {
+    ResourcesConfig resource = buckConfig.getView(ResourcesConfig.class);
+    return CloseableMemoizedSupplier.of(
+        () ->
+            MostExecutors.forkJoinPoolWithThreadLimit(
+                resource.getDefaultResourceAmounts().getCpu(), 16),
+        ForkJoinPool::shutdownNow);
   }
 }

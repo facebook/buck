@@ -36,8 +36,9 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -53,6 +54,7 @@ import org.junit.Test;
 public class GraphEnhancementQueryEnvironmentTest {
 
   private CellPathResolver cellRoots;
+  private static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
   private static final Path ROOT = Paths.get("/fake/cell/root");
 
   @Before
@@ -67,6 +69,7 @@ public class GraphEnhancementQueryEnvironmentTest {
         new GraphEnhancementQueryEnvironment(
             Optional.of(createMock(BuildRuleResolver.class)),
             Optional.of(createMock(TargetGraph.class)),
+            TYPE_COERCER_FACTORY,
             cellRoots,
             BuildTargetPatternParser.forBaseName(target.getBaseName()),
             ImmutableSet.of());
@@ -85,6 +88,7 @@ public class GraphEnhancementQueryEnvironmentTest {
         new GraphEnhancementQueryEnvironment(
             Optional.of(createMock(BuildRuleResolver.class)),
             Optional.of(createMock(TargetGraph.class)),
+            TYPE_COERCER_FACTORY,
             cellRoots,
             BuildTargetPatternParser.forBaseName(target.getBaseName()),
             ImmutableSet.of());
@@ -113,6 +117,7 @@ public class GraphEnhancementQueryEnvironmentTest {
         new GraphEnhancementQueryEnvironment(
             Optional.of(createMock(BuildRuleResolver.class)),
             Optional.of(createMock(TargetGraph.class)),
+            TYPE_COERCER_FACTORY,
             cellRoots,
             BuildTargetPatternParser.forBaseName(target.getBaseName()),
             ImmutableSet.of(dep1, dep2));
@@ -155,6 +160,7 @@ public class GraphEnhancementQueryEnvironmentTest {
     return new GraphEnhancementQueryEnvironment(
         Optional.of(realResolver),
         Optional.of(targetGraph),
+        TYPE_COERCER_FACTORY,
         cellRoots,
         BuildTargetPatternParser.forBaseName(libNode.getBuildTarget().getBaseName()),
         ImmutableSet.of(sublibNode.getBuildTarget()));
@@ -195,7 +201,7 @@ public class GraphEnhancementQueryEnvironmentTest {
     GraphEnhancementQueryEnvironment env = buildQueryEnvironmentWithGraph();
     ImmutableSet<QueryTarget> classpath =
         env.getFirstOrderClasspath(ImmutableSet.of(getQueryTarget("//:lib")))
-            .collect(MoreCollectors.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     assertThat(classpath, Matchers.hasItems(getQueryTarget("//:sublib")));
   }
 }

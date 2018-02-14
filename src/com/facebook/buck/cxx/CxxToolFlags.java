@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
@@ -34,9 +34,7 @@ import org.immutables.value.Value;
  *
  * <p>Users should use the API in this class instead of the concrete implementations.
  */
-public abstract class CxxToolFlags implements RuleKeyAppendable {
-  private static final CxxToolFlags EMPTY_FLAGS = CxxToolFlags.explicitBuilder().build();
-
+public abstract class CxxToolFlags implements AddsToRuleKey {
   /** Flags that precede flags from {@code #getRuleFlags()}. */
   public abstract ImmutableList<Arg> getPlatformFlags();
 
@@ -48,12 +46,6 @@ public abstract class CxxToolFlags implements RuleKeyAppendable {
     return Iterables.concat(getPlatformFlags(), getRuleFlags());
   }
 
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("platformFlags", getPlatformFlags());
-    sink.setReflectively("ruleFlags", getRuleFlags());
-  }
-
   /** Returns a builder for explicitly specifying the flags. */
   public static ExplicitCxxToolFlags.Builder explicitBuilder() {
     return ExplicitCxxToolFlags.builder();
@@ -61,7 +53,7 @@ public abstract class CxxToolFlags implements RuleKeyAppendable {
 
   /** Returns the empty lists of flags. */
   public static CxxToolFlags of() {
-    return EMPTY_FLAGS;
+    return ExplicitCxxToolFlags.of();
   }
 
   /** Directly construct an instance from the given members. */
@@ -86,16 +78,18 @@ interface CxxToolFlagsBuilder {
 }
 
 /** {@code CxxToolFlags} implementation where the flags are stored explicitly as lists. */
-@Value.Immutable
+@Value.Immutable(singleton = true, copy = false)
 @BuckStyleImmutable
 abstract class AbstractExplicitCxxToolFlags extends CxxToolFlags {
   public abstract static class Builder implements CxxToolFlagsBuilder {}
 
   @Override
+  @AddToRuleKey
   @Value.Parameter
   public abstract ImmutableList<Arg> getPlatformFlags();
 
   @Override
+  @AddToRuleKey
   @Value.Parameter
   public abstract ImmutableList<Arg> getRuleFlags();
 
@@ -114,8 +108,10 @@ abstract class AbstractExplicitCxxToolFlags extends CxxToolFlags {
 @BuckStyleTuple
 abstract class AbstractIterableCxxToolFlags extends CxxToolFlags {
   @Override
+  @AddToRuleKey
   public abstract ImmutableList<Arg> getPlatformFlags();
 
   @Override
+  @AddToRuleKey
   public abstract ImmutableList<Arg> getRuleFlags();
 }

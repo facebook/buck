@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -38,10 +39,9 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -51,7 +51,9 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
@@ -114,10 +116,10 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       final ImmutableSortedSet<SourcePath> interfaces,
       ImmutableSortedSet<SourcePath> objects) {
     Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
-        Suppliers.memoize(
+        MoreSuppliers.memoize(
             () ->
                 ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(ghcPkg.getDeps(ruleFinder))
+                    .addAll(BuildableSupport.getDepsCollection(ghcPkg, ruleFinder))
                     .addAll(
                         depPackages
                             .values()
@@ -236,6 +238,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     // Initialize the package DB.
     steps.add(
         new GhcPkgStep(
+            getBuildTarget(),
             context.getSourcePathResolver(),
             ImmutableList.of("init", packageDb.toString()),
             ImmutableMap.of()));
@@ -252,6 +255,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     ImmutableList<String> ghcPkgCmd = ghcPkgCmdBuilder.build();
     steps.add(
         new GhcPkgStep(
+            getBuildTarget(),
             context.getSourcePathResolver(),
             ghcPkgCmd,
             ImmutableMap.of(
@@ -297,8 +301,11 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     private final ImmutableMap<String, String> env;
 
     public GhcPkgStep(
-        SourcePathResolver resolver, ImmutableList<String> args, ImmutableMap<String, String> env) {
-      super(getProjectFilesystem().getRootPath());
+        BuildTarget buildTarget,
+        SourcePathResolver resolver,
+        ImmutableList<String> args,
+        ImmutableMap<String, String> env) {
+      super(Optional.of(buildTarget), getProjectFilesystem().getRootPath());
       this.resolver = resolver;
       this.args = args;
       this.env = env;

@@ -5,14 +5,20 @@ import os
 
 
 class IncludeDef:
-    """Represents build file include definition like include_defs("//include/path")."""
+    """
+    Represents build file include definition like
+        include_defs("//include/path").
+    """
 
     def __init__(self, ast_call: ast.Call) -> None:
         self.ast_call = ast_call
 
     def get_location(self) -> str:
-        """Returns an include definition location. For include_defs("//include/path") it is
-        //include/path"""
+        """
+        Returns an include definition location.
+
+        For include_defs("//include/path") it is "//include/path".
+        """
         return self.ast_call.args[0].s
 
     def get_label(self) -> label.Label:
@@ -26,5 +32,7 @@ class IncludeDef:
 
 
 def from_ast_call(ast_call: ast.Call) -> IncludeDef:
-    """IncludeDef factory method that creates instances from ast Call description."""
+    """
+    IncludeDef factory method that creates instances from ast Call description.
+    """
     return IncludeDef(ast_call)

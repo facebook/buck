@@ -8,22 +8,28 @@ import os
 
 class BuildFileTest(unittest.TestCase):
     def test_find_all_include_defs_when_no_includes(self):
-        self.assertEqual([], build_file.from_content('').find_all_include_defs())
+        self.assertEqual([],
+                         build_file.from_content('').find_all_include_defs())
 
     def test_find_all_include_defs_when_they_exist(self):
         all_include_defs = build_file.from_content(
             'include_defs("//foo/DEFS")').find_all_include_defs()
         self.assertEqual(["//foo/DEFS"],
-                         list(map(lambda include: include.get_location(), all_include_defs)))
+                         list(
+                             map(lambda include: include.get_location(),
+                                 all_include_defs)))
 
     def test_find_only_include_defs_when_they_exist(self):
         content = """
 include_defs("//foo/DEFS")
 foo("bar")
         """
-        all_include_defs = build_file.from_content(content).find_all_include_defs()
-        self.assertEqual(["//foo/DEFS"], list(
-            map(lambda include: include.get_location(), all_include_defs)))
+        all_include_defs = build_file.from_content(
+            content).find_all_include_defs()
+        self.assertEqual(["//foo/DEFS"],
+                         list(
+                             map(lambda include: include.get_location(),
+                                 all_include_defs)))
 
     def test_find_used_symbols(self):
         content = """
@@ -32,9 +38,11 @@ bar('foo')
 def func():
   pass
 """
-        self.assertEqual(['BAR', 'bar'],
-                         list(map(lambda n: n.id,
-                                  build_file.from_content(content)._find_used_symbols())))
+        self.assertEqual(
+            ['BAR', 'bar'],
+            list(
+                map(lambda n: n.id,
+                    build_file.from_content(content)._find_used_symbols())))
 
     def test_find_exported_symbols(self):
         content = """
@@ -46,8 +54,9 @@ class Clazz:
   def foo():
     pass
 """
-        self.assertEqual(['foo', 'func', 'Clazz'],
-                         build_file.from_content(content).find_exported_symbols())
+        self.assertEqual(
+            ['foo', 'func', 'Clazz'],
+            build_file.from_content(content).find_exported_symbols())
 
     def test_find_export_transitive_closure(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -62,9 +71,8 @@ class Clazz:
                 defs_file.write('bar = "BAR"')
             repo = repository.Repository('/repo', {'cell': tmp_dir})
             self.assertEqual(['foo', 'bar'],
-                             build_file.from_path(
-                                 build_file_path).get_exported_symbols_transitive_closure(
-                                 repo))
+                             build_file.from_path(build_file_path)
+                             .get_exported_symbols_transitive_closure(repo))
 
     def test_find_function_calls_by_name(self):
         content = """
@@ -72,7 +80,8 @@ foo('bar')
 bar('foo')
 foo('baz')
         """
-        foo_calls = build_file.from_content(content)._find_all_function_calls_by_name('foo')
+        foo_calls = build_file.from_content(
+            content)._find_all_function_calls_by_name('foo')
         self.assertEqual(2, len(foo_calls))
         for call in foo_calls:
             self.assertEqual('foo', call.func.id)

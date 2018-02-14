@@ -194,6 +194,7 @@ public class ServerContentsProvider implements FileContentsProvider {
   }
 
   @Override
+  @SuppressWarnings("CheckReturnValue")
   public ListenableFuture<Boolean> materializeFileContentsAsync(
       BuildJobStateFileHashEntry entry, Path targetAbsPath) {
 

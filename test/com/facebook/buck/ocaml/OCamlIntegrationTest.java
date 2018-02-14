@@ -32,17 +32,17 @@ import com.facebook.buck.cxx.CxxSourceRuleFactoryHelper;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.DefaultCellPathResolver;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.config.Config;
@@ -83,10 +83,7 @@ public class OCamlIntegrationTest {
             ImmutableMap.copyOf(System.getenv()),
             DefaultCellPathResolver.of(filesystem.getRootPath(), rawConfig));
 
-    OcamlBuckConfig ocamlBuckConfig =
-        new OcamlBuckConfig(
-            buckConfig,
-            DefaultCxxPlatforms.build(Platform.detect(), new CxxBuckConfig(buckConfig)));
+    OcamlBuckConfig ocamlBuckConfig = new OcamlBuckConfig(buckConfig);
 
     assumeTrue(ocamlBuckConfig.getOcamlCompiler().isPresent());
     assumeTrue(ocamlBuckConfig.getOcamlBytecodeCompiler().isPresent());
@@ -167,7 +164,8 @@ public class OCamlIntegrationTest {
     BuildTarget staticLib1 = createStaticLibraryBuildTarget(lib1);
     ImmutableSet<BuildTarget> targets1 = ImmutableSet.of(target, binary, lib1, staticLib1);
     // We rebuild if lib name changes
-    workspace.replaceFileContents("hello_ocaml/BUCK", "name = 'ocamllib'", "name = 'ocamllib1'");
+    workspace.replaceFileContents(
+        "hello_ocaml/BUCK", "name = \"ocamllib\"", "name = \"ocamllib1\"");
     workspace.replaceFileContents("hello_ocaml/BUCK", ":ocamllib", ":ocamllib1");
 
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
@@ -390,7 +388,7 @@ public class OCamlIntegrationTest {
         CxxSourceRuleFactoryHelper.of(workspace.getDestPath(), cclib, cxxPlatform);
     BuildTarget cclibbin =
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
-            cclib, cxxPlatform.getFlavor(), CxxSourceRuleFactory.PicType.PDC);
+            cclib, cxxPlatform.getFlavor(), PicType.PDC);
     String sourceName = "cc/cc.cpp";
     BuildTarget ccObj = cxxSourceRuleFactory.createCompileBuildTarget(sourceName);
     BuildTarget headerSymlinkTreeTarget =

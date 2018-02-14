@@ -16,7 +16,6 @@
 
 package com.facebook.buck.eden;
 
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.eden.thrift.SHA1Result;
@@ -112,7 +111,7 @@ public class EdenMount {
       throw new RuntimeException(e);
     }
 
-    return bindMounts.stream().map(Paths::get).collect(MoreCollectors.toImmutableList());
+    return bindMounts.stream().map(Paths::get).collect(ImmutableList.toImmutableList());
   }
 
   /**

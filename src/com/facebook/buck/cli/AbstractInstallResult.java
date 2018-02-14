@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -24,7 +25,7 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 interface AbstractInstallResult {
 
-  int getExitCode();
+  ExitCode getExitCode();
 
   Optional<Long> getLaunchedPid();
 }

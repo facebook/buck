@@ -16,37 +16,41 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.Set;
 
 public class AidlStep extends ShellStep {
 
   private final ProjectFilesystem filesystem;
-  private final BuildTarget target;
+  private final ToolchainProvider toolchainProvider;
   private final Path aidlFilePath;
   private final Set<String> importDirectoryPaths;
   private final Path destinationDirectory;
 
   public AidlStep(
       ProjectFilesystem filesystem,
-      BuildTarget target,
+      BuildTarget buildTarget,
+      ToolchainProvider toolchainProvider,
       Path aidlFilePath,
       Set<String> importDirectoryPaths,
       Path destinationDirectory) {
-    super(filesystem.getRootPath());
+    super(Optional.of(buildTarget), filesystem.getRootPath());
 
     this.filesystem = filesystem;
-    this.target = target;
+    this.toolchainProvider = toolchainProvider;
     this.aidlFilePath = aidlFilePath;
     this.importDirectoryPaths = ImmutableSet.copyOf(importDirectoryPaths);
     this.destinationDirectory = destinationDirectory;
@@ -58,8 +62,12 @@ public class AidlStep extends ShellStep {
 
     // The arguments passed to aidl are based off of what I observed when running Ant in verbose
     // mode.
-    AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
     verifyImportPaths(filesystem, importDirectoryPaths);
+
+    AndroidPlatformTarget androidPlatformTarget =
+        toolchainProvider.getByName(
+            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+
     args.add(androidPlatformTarget.getAidlExecutable().toString());
 
     // For some reason, all of the flags to aidl do not permit a space between the flag name and
@@ -86,7 +94,8 @@ public class AidlStep extends ShellStep {
   private void verifyImportPaths(ProjectFilesystem filesystem, Set<String> importDirectoryPaths) {
     for (String path : importDirectoryPaths) {
       if (!filesystem.exists(Paths.get(path))) {
-        throw new HumanReadableException("%s: Cannot find import path: %s", target, path);
+        throw new HumanReadableException(
+            "%s: Cannot find import path: %s", getBuildTarget().get(), path);
       }
     }
   }

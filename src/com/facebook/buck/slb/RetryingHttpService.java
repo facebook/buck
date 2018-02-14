@@ -31,34 +31,48 @@ import okhttp3.Request;
 public class RetryingHttpService implements HttpService {
   private static final Logger LOG = Logger.get(RetryingHttpService.class);
 
-  public static final String COUNTER_CATEGORY = "buck_retry_service_counters";
+  private static final int NO_RETRY_INTERVAL = -1;
 
   private final HttpService decoratedService;
   private final int maxNumberOfAttempts;
+  private final long retryRequestIntervalMillis;
 
   private final IntegerCounter successAfterRetryCountCounter;
   private final IntegerCounter retryCountCounter;
   private final IntegerCounter failAfterAllRetriesCountCounter;
 
+  public RetryingHttpService(
+      BuckEventBus eventBus,
+      HttpService decoratedService,
+      String counterCategory,
+      int maxNumberOfRetries) {
+    this(eventBus, decoratedService, counterCategory, maxNumberOfRetries, NO_RETRY_INTERVAL);
+  }
+
   // Currently when there's a cache miss, all the children nodes get immediately retried without
   // any backoffs. We will do the same here for this initial implementation (and also to avoid
   // adding extra latency during the retry policy).
   public RetryingHttpService(
-      BuckEventBus eventBus, HttpService decoratedService, int maxNumberOfRetries) {
+      BuckEventBus eventBus,
+      HttpService decoratedService,
+      String counterCategory,
+      int maxNumberOfRetries,
+      long retryRequestIntervalMillis) {
     Preconditions.checkArgument(
         maxNumberOfRetries >= 0,
         "The max number of retries needs to be non-negative instead of: %s",
         maxNumberOfRetries);
     this.decoratedService = decoratedService;
     this.maxNumberOfAttempts = maxNumberOfRetries + 1;
+    this.retryRequestIntervalMillis = retryRequestIntervalMillis;
 
     failAfterAllRetriesCountCounter =
-        new IntegerCounter(COUNTER_CATEGORY, "fail_after_all_retries_count", ImmutableMap.of());
+        new IntegerCounter(counterCategory, "fail_after_all_retries_count", ImmutableMap.of());
 
     successAfterRetryCountCounter =
-        new IntegerCounter(COUNTER_CATEGORY, "success_after_retry_count", ImmutableMap.of());
+        new IntegerCounter(counterCategory, "success_after_retry_count", ImmutableMap.of());
 
-    retryCountCounter = new IntegerCounter(COUNTER_CATEGORY, "retry_count", ImmutableMap.of());
+    retryCountCounter = new IntegerCounter(counterCategory, "retry_count", ImmutableMap.of());
 
     eventBus.post(
         new CounterRegistry.AsyncCounterRegistrationEvent(
@@ -85,9 +99,17 @@ public class RetryingHttpService implements HttpService {
         return response;
 
       } catch (IOException exception) {
-        LOG.debug(
+        LOG.warn(
             exception, "encountered an exception while connecting to the service for %s", path);
         allExceptions.add(exception);
+      }
+
+      if (retryRequestIntervalMillis != NO_RETRY_INTERVAL) {
+        try {
+          Thread.sleep(retryRequestIntervalMillis);
+        } catch (InterruptedException e) {
+          throw new RuntimeException(e);
+        }
       }
     }
 

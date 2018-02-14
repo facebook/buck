@@ -15,14 +15,14 @@
  */
 package com.facebook.buck.macho;
 
-import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
-import com.google.common.base.Function;
+import com.facebook.buck.util.charset.NulTerminatedCharsetDecoder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.UnsignedInteger;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 public class LoadCommandUtils {
   private LoadCommandUtils() {}

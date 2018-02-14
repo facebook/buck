@@ -21,13 +21,10 @@ from tracing import Tracing
 from subprocutils import check_output, which, CalledProcessError
 
 BUCKD_CLIENT_TIMEOUT_MILLIS = 120000
+BUCKD_STARTUP_TIMEOUT_MILLIS = 10000
 GC_MAX_PAUSE_TARGET = 15000
 
 JAVA_MAX_HEAP_SIZE_MB = 1000
-
-# While waiting for the daemon to terminate, print a message at most
-# every DAEMON_BUSY_MESSAGE_SECONDS seconds.
-DAEMON_BUSY_MESSAGE_SECONDS = 1.0
 
 
 class Resource(object):
@@ -45,13 +42,11 @@ class Resource(object):
 
 # Resource that get propagated to buck via system properties.
 EXPORTED_RESOURCES = [
+    Resource("fix_script", executable=True),
     Resource("testrunner_classes"),
-    Resource("path_to_asm_jar"),
     Resource("logging_config_file"),
     Resource("path_to_python_dsl"),
-    Resource("path_to_rawmanifest_py", basename='rawmanifest.py'),
     Resource("path_to_pathlib_py", basename='pathlib.py'),
-    Resource("path_to_intellij_py"),
     Resource("path_to_pex"),
     Resource("path_to_pywatchman"),
     Resource("path_to_typing"),
@@ -105,8 +100,30 @@ class ExecuteTarget(Exception):
 
     def execve(self):
         # Restore default handling of SIGPIPE.  See https://bugs.python.org/issue1652.
-        signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+        if os.name != 'nt':
+            signal.signal(signal.SIGPIPE, signal.SIG_DFL)
         os.execvpe(self._path, self._argv, self._envp)
+
+
+class BuckStatusReporter(object):
+    """ Add custom logic to log Buck completion statuses or errors including
+    critical ones like JVM crashes and OOMs. This object is fully mutable with
+    all fields optional which get populated on the go. Only safe operations
+    are allowed in the reporter except for report() function which can throw
+    """
+    def __init__(self, argv):
+        self.argv = argv
+        self.build_id = None
+        self.buck_version = None
+        self.is_buckd = False
+        self.no_buckd_reason = None
+        self.status_message = None
+        self.repository = None
+        self.start_time = time.time()
+
+    def report(self, exit_code):
+        """ Add custom code here to track Buck invocations """
+        pass
 
 
 class JvmCrashLogger(object):
@@ -147,7 +164,9 @@ class JvmCrashLogger(object):
 
 
 class BuckTool(object):
-    def __init__(self, buck_project):
+    def __init__(self, buck_project, buck_reporter):
+        self._reporter = buck_reporter
+        self._package_info = self._get_package_info()
         self._init_timestamp = int(round(time.time() * 1000))
         self._command_line = CommandLineArgs(sys.argv)
         self._buck_project = buck_project
@@ -159,6 +178,10 @@ class BuckTool(object):
         self._pathsep = os.pathsep
         if sys.platform == 'cygwin':
             self._pathsep = ';'
+
+
+    def _get_package_info(self):
+        raise NotImplementedError()
 
     def _has_resource(self, resource):
         """Check whether the given resource exists."""
@@ -178,10 +201,18 @@ class BuckTool(object):
         raise NotImplementedError()
 
     def _get_buck_version_uid(self):
-        raise NotImplementedError()
+        if self._fake_buck_version:
+            return self._fake_buck_version
+        return self._package_info['version']
 
     def _get_buck_version_timestamp(self):
+        return self._package_info['timestamp']
+
+    def _get_buck_git_commit(self):
         raise NotImplementedError()
+
+    def _get_buck_repo_dirty(self):
+        return self._package_info['is_dirty']
 
     def _get_bootstrap_classpath(self):
         raise NotImplementedError()
@@ -189,7 +220,16 @@ class BuckTool(object):
     def _get_java_classpath(self):
         raise NotImplementedError()
 
-    def _is_buck_production(self):
+    def _get_buck_binary_hash(self):
+        """
+        Returns Buck binary hash
+
+        This hash reflects the code that can affect the content of artifacts.
+        """
+
+        raise NotImplementedError()
+
+    def _unpack_modules(self):
         raise NotImplementedError()
 
     def _get_extra_java_args(self):
@@ -221,10 +261,31 @@ class BuckTool(object):
                 pass
         return env
 
+    def _add_args(self, argv, args):
+        """
+        Add new arguments to the beginning of arguments string
+        Adding to the end will mess up with custom test runner params
+        """
+        if (len(argv) < 2):
+            return argv + args
+        return [argv[0]] + args + argv[1:]
+
+    def _add_args_from_env(self, argv):
+        """
+        Implicitly add command line arguments based on environmental variables. This is a bad
+        practice and should be considered for infrastructure / debugging purposes only
+        """
+
+        if os.environ.get('BUCK_NO_CACHE') == '1' and '--no-cache' not in argv:
+            argv = self._add_args(argv, ['--no-cache'])
+        if os.environ.get('BUCK_CACHE_READONLY') == '1':
+            argv = self._add_args(argv, ['-c', 'cache.http_mode=readonly'])
+        return argv
+
     def _run_with_nailgun(self, argv, env):
-        '''
+        """
         Run the command using nailgun.  If the daemon is busy, block until it becomes free.
-        '''
+        """
         exit_code = 2
         busy_diagnostic_displayed = False
         while exit_code == 2:
@@ -236,12 +297,11 @@ class BuckTool(object):
                     str(now - self._init_timestamp)
                 exit_code = c.send_command(
                     'com.facebook.buck.cli.Main',
-                    argv,
+                    self._add_args_from_env(argv),
                     env=env,
                     cwd=self._buck_project.root)
                 if exit_code == 2:
                     env['BUCK_BUILD_ID'] = str(uuid.uuid4())
-                    now = time.time()
                     if not busy_diagnostic_displayed:
                         logging.info("Buck daemon is busy with another command. " +
                                      "Waiting for it to become free...\n" +
@@ -252,9 +312,9 @@ class BuckTool(object):
         return exit_code
 
     def _run_without_nailgun(self, argv, env):
-        '''
+        """
         Run the command by directly invoking `java` (rather than by sending a command via nailgun)
-        '''
+        """
         command = ["buck"]
         extra_default_options = [
             "-Djava.io.tmpdir={0}".format(self._tmp_dir),
@@ -265,8 +325,7 @@ class BuckTool(object):
         command.extend(self._get_java_args(self._get_buck_version_uid(), extra_default_options))
         command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
         command.append("com.facebook.buck.cli.Main")
-        command.extend(argv)
-
+        command.extend(self._add_args_from_env(argv))
         now = int(round(time.time() * 1000))
         env['BUCK_PYTHON_SPACE_INIT_TIME'] = str(now - self._init_timestamp)
         java = which('java')
@@ -279,10 +338,10 @@ class BuckTool(object):
                                    executable=java)
 
     def _execute_command_and_maybe_run_target(self, run_fn, env):
-        '''
+        """
         Run a buck command using the specified `run_fn`.  If the command is "run", get the path,
         args, etc. from the daemon, and raise an exception that tells __main__ to run that binary
-        '''
+        """
         with Tracing('buck', args={'command': sys.argv[1:]}):
             argv = sys.argv[1:]
             if len(argv) == 0 or argv[0] != 'run':
@@ -305,39 +364,70 @@ class BuckTool(object):
     def launch_buck(self, build_id):
         with Tracing('BuckTool.launch_buck'):
             with JvmCrashLogger(self, self._buck_project.root):
+                self._reporter.build_id = build_id
+
+                try:
+                    repository = self._get_repository()
+                    self._reporter.repository = repository
+                except Exception as e:
+                    # _get_repository() is only for reporting,
+                    # so skip on error
+                    logging.warning('Failed to get repo name: ' + str(e))
+
                 if self._command_line.command == "clean" and \
                         not self._command_line.is_help():
                     self.kill_buckd()
 
                 buck_version_uid = self._get_buck_version_uid()
+                self._reporter.buck_version = buck_version_uid
 
                 if self._command_line.is_version():
                     print("buck version {}".format(buck_version_uid))
                     return 0
 
                 use_buckd = self._use_buckd
-                if not self._command_line.is_help():
+                if not use_buckd:
+                    logging.warning("Not using buckd because NO_BUCKD is set.")
+                    self._reporter.no_buckd_reason = "explicit"
+
+                if use_buckd and self._command_line.is_help():
+                    use_buckd = False
+                    self._reporter.no_buckd_reason = "help"
+
+                if use_buckd:
                     has_watchman = bool(which('watchman'))
-                    if use_buckd and has_watchman:
-                        running_version = self._buck_project.get_running_buckd_version()
-
-                        if running_version != buck_version_uid:
-                            self.kill_buckd()
-
-                        if not self._is_buckd_running():
-                            self.launch_buckd(buck_version_uid=buck_version_uid)
-                    elif use_buckd and not has_watchman:
+                    if not has_watchman:
+                        use_buckd = False
+                        self._reporter.no_buckd_reason = "watchman"
                         logging.warning("Not using buckd because watchman isn't installed.")
-                    elif not use_buckd:
-                        logging.warning("Not using buckd because NO_BUCKD is set.")
+
+                if use_buckd:
+                    running_version = self._buck_project.get_running_buckd_version()
+                    if running_version != buck_version_uid or not self._is_buckd_running():
+                        self.kill_buckd()
+                        if not self.launch_buckd(buck_version_uid=buck_version_uid):
+                            use_buckd = False
+                            self._reporter.no_buckd_reason = "daemon_failure"
+                            logging.warning("Not using buckd because daemon failed to start.")
 
                 env = self._environ_for_buck()
                 env['BUCK_BUILD_ID'] = build_id
 
-                use_nailgun = use_buckd and self._is_buckd_running()
-                run_fn = self._run_with_nailgun if use_nailgun else self._run_without_nailgun
+                self._reporter.is_buckd = use_buckd
+                run_fn = self._run_with_nailgun if use_buckd else self._run_without_nailgun
 
-                return self._execute_command_and_maybe_run_target(run_fn, env)
+                self._unpack_modules()
+
+                exit_code = self._execute_command_and_maybe_run_target(
+                    run_fn, env)
+
+                # Most shells return process termination with signal as
+                # 128 + N, where N is the signal. However Python's subprocess
+                # call returns them as negative numbers. Buck binary protocol
+                # uses shell's convention, so convert
+                if (exit_code < 0):
+                    exit_code = 128 + (-1 * exit_code)
+                return exit_code
 
 
     def _generate_log_entry(self, message, logs_array):
@@ -346,7 +436,9 @@ class BuckTool(object):
         traits = {
             "severity": "SEVERE",
             "logger": "com.facebook.buck.python.buck_tool.py",
-            "buckGitCommit": self._get_buck_version_uid(),
+            "buckGitCommit": self._get_buck_git_commit(),
+            "buckVersion": self._get_buck_version_uid(),
+            "isBuckRepoDirty": self._get_buck_repo_dirty(),
             "os": platform.system(),
             "osVersion": platform.release(),
             "user": getpass.getuser(),
@@ -373,14 +465,14 @@ class BuckTool(object):
             buckd_tmp_dir = self._buck_project.create_buckd_tmp_dir()
             ngserver_output_path = os.path.join(buckd_tmp_dir, 'ngserver-out')
 
-            '''
+            """
             Use SoftRefLRUPolicyMSPerMB for immediate GC of javac output.
             Set timeout to 60s (longer than the biggest GC pause seen for a 2GB
             heap) and GC target to 15s. This means that the GC has to miss its
             target by 100% or many 500ms heartbeats must be missed before a client
             disconnection occurs. Specify port 0 to allow Nailgun to find an
             available port, then parse the port number out of the first log entry.
-            '''
+            """
             command = ["buckd"]
             extra_default_options = [
                 "-Dbuck.buckd_launch_time_nanos={0}".format(monotonic_time_nanos()),
@@ -417,19 +509,10 @@ class BuckTool(object):
                 DETACHED_PROCESS = 0x00000008
                 creationflags = DETACHED_PROCESS
             else:
-                # Make sure the Unix domain socket doesn't exist before this call.
-                try:
-                    os.unlink(buckd_transport_file_path)
-                except OSError as e:
-                    if e.errno == errno.ENOENT:
-                        # Socket didn't previously exist.
-                        pass
-                    else:
-                        raise e
-                '''
+                """
                 Change the process group of the child buckd process so that when this
                 script is interrupted, it does not kill buckd.
-                '''
+                """
 
                 def preexec_fn():
                     # Close any open file descriptors to further separate buckd from its
@@ -454,17 +537,31 @@ class BuckTool(object):
             self._buck_project.save_buckd_version(buck_version_uid)
 
             # Give Java some time to create the listening socket.
-            for i in range(0, 300):
-                if not transport_exists(buckd_transport_file_path):
-                    time.sleep(0.01)
+
+            wait_seconds = 0.01
+            repetitions = int(BUCKD_STARTUP_TIMEOUT_MILLIS / 1000.0 / wait_seconds)
+            for i in range(repetitions):
+                if transport_exists(buckd_transport_file_path):
+                    break
+                time.sleep(wait_seconds)
+
+            if not transport_exists(buckd_transport_file_path):
+                return False
 
             returncode = process.poll()
 
             # If the process hasn't exited yet, everything is working as expected
             if returncode is None:
-                return 0
+                return True
 
-            return returncode
+            return False
+
+    def _get_repository(self):
+        arcconfig = os.path.join(self._buck_project.root, '.arcconfig')
+        if os.path.isfile(arcconfig):
+            with open(arcconfig, 'r') as fp:
+                return json.load(fp).get('project_id', None)
+        return os.path.basename(self._buck_project.root)
 
 
     def kill_buckd(self):
@@ -472,10 +569,12 @@ class BuckTool(object):
             buckd_transport_file_path = self._buck_project.get_buckd_transport_file_path()
             if transport_exists(buckd_transport_file_path):
                 logging.debug("Shutting down buck daemon.")
+                wait_socket_close = False
                 try:
                     with NailgunConnection(self._buck_project.get_buckd_transport_address(),
                                            cwd=self._buck_project.root) as c:
                         c.send_command('ng-stop')
+                    wait_socket_close = True
                 except NailgunException as e:
                     if e.code not in (NailgunException.CONNECT_FAILED,
                                       NailgunException.CONNECTION_BROKEN,
@@ -483,6 +582,17 @@ class BuckTool(object):
                         raise BuckToolException(
                             'Unexpected error shutting down nailgun server: ' +
                             str(e))
+
+                # if ng-stop command succeeds, wait for buckd process to terminate and for the
+                # socket to close
+                if wait_socket_close:
+                    for i in range(0, 300):
+                        if not transport_exists(buckd_transport_file_path):
+                            break
+                        time.sleep(0.01)
+
+                if transport_exists(buckd_transport_file_path):
+                    force_close_transport(buckd_transport_file_path)
 
             self._buck_project.clean_up_buckd()
 
@@ -518,6 +628,9 @@ class BuckTool(object):
                 "-Dbuck.version_uid={0}".format(version_uid),
                 "-Dbuck.buckd_dir={0}".format(self._buck_project.buckd_dir),
                 "-Dorg.eclipse.jetty.util.log.class=org.eclipse.jetty.util.log.JavaUtilLog",
+                "-Dbuck.git_commit={0}".format(self._get_buck_version_uid()),
+                "-Dbuck.git_commit_timestamp={0}".format(self._get_buck_version_timestamp()),
+                "-Dbuck.binary_hash={0}".format(self._get_buck_binary_hash())
             ]
 
             resource_lock_path = self._get_resource_lock_path()
@@ -537,8 +650,9 @@ class BuckTool(object):
                         Resource("libjcocoa.dylib"))))
 
             if "BUCK_DEBUG_MODE" in os.environ and os.environ.get("BUCK_DEBUG_MODE") != "0":
+                suspend = "n" if os.environ.get("BUCK_DEBUG_MODE") == "2" else "y"
                 java_args.append("-agentlib:jdwp=transport=dt_socket,"
-                                 "server=y,suspend=y,address=8888")
+                                 "server=y,suspend=" + suspend + ",quiet=y,address=8888")
 
             if os.environ.get("BUCK_DEBUG_SOY"):
                 java_args.append("-Dbuck.soy.debug=true")
@@ -559,6 +673,8 @@ class BuckTool(object):
             return java_args
 
 
+
+
 def install_signal_handlers():
     if os.name == 'posix':
         signal.signal(
@@ -570,17 +686,6 @@ def platform_path(path):
     if sys.platform != 'cygwin':
         return path
     return check_output(['cygpath', '-w', path]).strip()
-
-
-def truncate_logs_pretty(logs):
-    NUMBER_OF_LINES_BEFORE = 100
-    NUMBER_OF_LINES_AFTER = 100
-    if len(logs) <= NUMBER_OF_LINES_BEFORE + NUMBER_OF_LINES_AFTER:
-        return logs
-    new_logs = logs[:NUMBER_OF_LINES_BEFORE]
-    new_logs.append('...<truncated>...')
-    new_logs.extend(logs[-NUMBER_OF_LINES_AFTER:])
-    return new_logs
 
 
 def setup_watchman_watch():
@@ -598,6 +703,19 @@ def setup_watchman_watch():
         logging.debug("Using watchman.")
 
 
+def force_close_transport(path):
+    if os.name == 'nt':
+        # TODO(buck_team): do something for Windows too
+        return
+
+    try:
+        os.unlink(path)
+    except OSError as e:
+        # it is ok if socket did not exist
+        if e.errno != errno.ENOENT:
+            raise e
+
+
 def transport_exists(path):
     return os.path.exists(path)
 
@@ -610,8 +728,7 @@ if os.name == 'nt':
     FindFirstFile = ctypes.windll.kernel32.FindFirstFileW
     FindClose = ctypes.windll.kernel32.FindClose
 
-
-    # on windows os.path.exists doen't allow to check reliably that pipe exists
+    # on windows os.path.exists doesn't allow to check reliably that pipe exists
     # (os.path.exists tries to open connection to a pipe)
     def transport_exists(transport_path):
         wfd = WIN32_FIND_DATA()

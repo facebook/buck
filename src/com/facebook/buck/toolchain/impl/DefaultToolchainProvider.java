@@ -16,65 +16,107 @@
 
 package com.facebook.buck.toolchain.impl;
 
-import com.facebook.buck.android.toolchain.AndroidToolchain;
-import com.facebook.buck.android.toolchain.impl.DefaultAndroidToolchainFactory;
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
+import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.toolchain.BaseToolchainProvider;
 import com.facebook.buck.toolchain.Toolchain;
+import com.facebook.buck.toolchain.ToolchainCreationContext;
+import com.facebook.buck.toolchain.ToolchainDescriptor;
 import com.facebook.buck.toolchain.ToolchainFactory;
-import com.facebook.buck.util.HumanReadableException;
-import com.google.common.annotations.VisibleForTesting;
+import com.facebook.buck.toolchain.ToolchainInstantiationException;
+import com.facebook.buck.toolchain.ToolchainSupplier;
+import com.facebook.buck.toolchain.ToolchainWithCapability;
+import com.facebook.buck.util.ProcessExecutor;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.util.HashMap;
-import java.util.Map;
+import com.google.common.util.concurrent.UncheckedExecutionException;
+import java.util.Collection;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Stream;
+import org.pf4j.PluginManager;
 
 public class DefaultToolchainProvider extends BaseToolchainProvider {
 
-  enum ToolchainDescriptor {
-    ANDROID(AndroidToolchain.DEFAULT_NAME, DefaultAndroidToolchainFactory.class);
+  private static final Logger LOG = Logger.get(DefaultToolchainProvider.class);
 
-    @VisibleForTesting final String name;
-    private final Class<? extends ToolchainFactory<?>> toolchainFactoryClass;
-
-    ToolchainDescriptor(String name, Class<? extends ToolchainFactory<?>> toolchainFactoryClass) {
-      this.name = name;
-      this.toolchainFactoryClass = toolchainFactoryClass;
-    }
-  }
-
-  private final ImmutableMap<String, String> environment;
-  private final BuckConfig buckConfig;
-  private final ProjectFilesystem projectFilesystem;
+  private final ToolchainCreationContext toolchainCreationContext;
+  private final ImmutableList<ToolchainDescriptor<?>> toolchainDescriptors;
   private final ImmutableMap<String, Class<? extends ToolchainFactory<?>>> toolchainFactories;
 
-  private final Map<String, Optional<? extends Toolchain>> toolchains = new HashMap<>();
+  private final LoadingCache<String, Optional<? extends Toolchain>> toolchains =
+      CacheBuilder.newBuilder()
+          .maximumSize(1024)
+          .build(
+              new CacheLoader<String, Optional<? extends Toolchain>>() {
+                @Override
+                public Optional<? extends Toolchain> load(String toolchainName) throws Exception {
+                  if (!toolchainFactories.containsKey(toolchainName)) {
+                    throw new IllegalStateException("Unknown toolchain: " + toolchainName);
+                  }
+                  return createToolchain(toolchainFactories.get(toolchainName));
+                }
+              });
+  private final ConcurrentHashMap<String, ToolchainInstantiationException> failedToolchains =
+      new ConcurrentHashMap<>();
 
   public DefaultToolchainProvider(
+      PluginManager pluginManager,
       ImmutableMap<String, String> environment,
       BuckConfig buckConfig,
-      ProjectFilesystem projectFilesystem) {
-    this.environment = environment;
-    this.buckConfig = buckConfig;
-    this.projectFilesystem = projectFilesystem;
+      ProjectFilesystem projectFilesystem,
+      ProcessExecutor processExecutor,
+      ExecutableFinder executableFinder,
+      RuleKeyConfiguration ruleKeyConfiguration) {
+    toolchainCreationContext =
+        ToolchainCreationContext.of(
+            environment,
+            buckConfig,
+            projectFilesystem,
+            processExecutor,
+            executableFinder,
+            ruleKeyConfiguration);
+
+    toolchainDescriptors =
+        loadToolchainDescriptorsFromPlugins(pluginManager).collect(ImmutableList.toImmutableList());
 
     ImmutableMap.Builder<String, Class<? extends ToolchainFactory<?>>> toolchainFactoriesBuilder =
         ImmutableMap.builder();
-    for (ToolchainDescriptor toolchainDescriptor : ToolchainDescriptor.values()) {
+    for (ToolchainDescriptor<?> toolchainDescriptor : toolchainDescriptors) {
       toolchainFactoriesBuilder.put(
-          toolchainDescriptor.name, toolchainDescriptor.toolchainFactoryClass);
+          toolchainDescriptor.getName(), toolchainDescriptor.getToolchainFactoryClass());
     }
     toolchainFactories = toolchainFactoriesBuilder.build();
   }
 
+  private Stream<ToolchainDescriptor<?>> loadToolchainDescriptorsFromPlugins(
+      PluginManager pluginManager) {
+    return pluginManager
+        .getExtensions(ToolchainSupplier.class)
+        .stream()
+        .flatMap(supplier -> supplier.getToolchainDescriptor().stream());
+  }
+
   @Override
-  public synchronized Toolchain getByName(String toolchainName) {
+  public Toolchain getByName(String toolchainName) {
     Optional<? extends Toolchain> toolchain = getOrCreate(toolchainName);
     if (toolchain.isPresent()) {
       return toolchain.get();
     } else {
-      throw new HumanReadableException("Unknown toolchain: " + toolchainName);
+      ToolchainInstantiationException exception;
+      if (failedToolchains.containsKey(toolchainName)) {
+        exception = failedToolchains.get(toolchainName);
+      } else {
+        exception = new ToolchainInstantiationException("Unknown toolchain: %s", toolchainName);
+      }
+      throw exception;
     }
   }
 
@@ -83,20 +125,59 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
     return toolchainFactories.containsKey(toolchainName) && getOrCreate(toolchainName).isPresent();
   }
 
-  private Optional<? extends Toolchain> getOrCreate(String toolchainName) {
-    Optional<? extends Toolchain> toolchain;
-    if (!toolchains.containsKey(toolchainName)) {
-      if (!toolchainFactories.containsKey(toolchainName)) {
-        throw new IllegalStateException("Unknown toolchain: " + toolchainName);
+  @Override
+  public boolean isToolchainCreated(String toolchainName) {
+    return toolchains.getIfPresent(toolchainName) != null;
+  }
+
+  @Override
+  public boolean isToolchainFailed(String toolchainName) {
+    return failedToolchains.containsKey(toolchainName);
+  }
+
+  @Override
+  public <T extends ToolchainWithCapability> Collection<String> getToolchainsWithCapability(
+      Class<T> capability) {
+    ImmutableList.Builder<String> toolchainsWithCapabilities = ImmutableList.builder();
+
+    for (ToolchainDescriptor<?> toolchainDescriptor : toolchainDescriptors) {
+      if (capability.isAssignableFrom(toolchainDescriptor.getToolchainClass())) {
+        toolchainsWithCapabilities.add(toolchainDescriptor.getName());
       }
-      Class<? extends ToolchainFactory<?>> toolchainFactoryClass =
-          toolchainFactories.get(toolchainName);
-      toolchain = createToolchain(toolchainFactoryClass);
-      toolchains.put(toolchainName, toolchain);
-    } else {
-      toolchain = toolchains.get(toolchainName);
     }
-    return toolchain;
+
+    return toolchainsWithCapabilities.build();
+  }
+
+  @Override
+  public Optional<ToolchainInstantiationException> getToolchainInstantiationException(
+      String toolchainName) {
+    return failedToolchains.containsKey(toolchainName)
+        ? Optional.of(failedToolchains.get(toolchainName))
+        : Optional.empty();
+  }
+
+  private Optional<? extends Toolchain> getOrCreate(String toolchainName) {
+    if (failedToolchains.containsKey(toolchainName)) {
+      return Optional.empty();
+    }
+
+    try {
+      return toolchains.get(toolchainName);
+    } catch (ExecutionException | UncheckedExecutionException e) {
+      if (e.getCause() instanceof ToolchainInstantiationException) {
+        LOG.warn(
+            String.format(
+                "Cannot create a toolchain: %s. Cause: %s",
+                toolchainName, e.getCause().getMessage()));
+        failedToolchains.put(toolchainName, (ToolchainInstantiationException) e.getCause());
+        return Optional.empty();
+      }
+      throw new RuntimeException(
+          String.format(
+              "Cannot create a toolchain: %s. Cause: %s", toolchainName, e.getCause().getMessage()),
+          e);
+    }
   }
 
   private Optional<? extends Toolchain> createToolchain(
@@ -107,6 +188,6 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
     } catch (IllegalAccessException | InstantiationException e) {
       throw new RuntimeException(e);
     }
-    return toolchainFactory.createToolchain(environment, buckConfig, projectFilesystem);
+    return toolchainFactory.createToolchain(this, toolchainCreationContext);
   }
 }

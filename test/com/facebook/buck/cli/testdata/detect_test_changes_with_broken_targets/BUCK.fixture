@@ -1,4 +1,4 @@
 genrule(
-  name = 'test',
-  out = 'test-output',
+    name = "test",
+    out = "test-output",
 )

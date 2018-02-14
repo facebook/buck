@@ -18,7 +18,7 @@ package com.facebook.buck.gwt;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -46,6 +46,7 @@ import com.google.common.collect.Iterables;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Buildable that produces a GWT application as a WAR file, which is a zip of the outputs produced
@@ -144,7 +145,7 @@ public class GwtBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 context.getBuildCellRootPath(), getProjectFilesystem(), deployDirectory)));
 
     Step javaStep =
-        new ShellStep(projectFilesystem.getRootPath()) {
+        new ShellStep(Optional.of(getBuildTarget()), projectFilesystem.getRootPath()) {
           @Override
           public String getShortName() {
             return "gwt-compile";

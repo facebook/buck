@@ -1,4 +1,4 @@
 robolectric_test(
-  name = 'tip',
-  srcs = glob(['src/**/*.java']),
+    name = "tip",
+    srcs = glob(["src/**/*.java"]),
 )

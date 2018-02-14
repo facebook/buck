@@ -17,6 +17,7 @@
 package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.ide.intellij.aggregation.AggregationMode;
+import com.facebook.buck.ide.intellij.lang.android.AndroidManifestParser;
 import com.facebook.buck.ide.intellij.lang.android.AndroidResourceFolder;
 import com.facebook.buck.ide.intellij.model.ContentRoot;
 import com.facebook.buck.ide.intellij.model.DependencyType;
@@ -36,9 +37,7 @@ import com.facebook.buck.ide.intellij.model.folders.TestFolder;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -61,6 +60,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -84,6 +84,7 @@ public class IjProjectTemplateDataPreparer {
   private final ProjectFilesystem projectFilesystem;
   private final IjProjectConfig projectConfig;
   private final IjSourceRootSimplifier sourceRootSimplifier;
+  private final AndroidManifestParser androidManifestParser;
   private final ImmutableSet<Path> referencedFolderPaths;
   private final ImmutableSet<Path> filesystemTraversalBoundaryPaths;
   private final ImmutableSet<IjModule> modulesToBeWritten;
@@ -93,7 +94,8 @@ public class IjProjectTemplateDataPreparer {
       JavaPackageFinder javaPackageFinder,
       IjModuleGraph moduleGraph,
       ProjectFilesystem projectFilesystem,
-      IjProjectConfig projectConfig) {
+      IjProjectConfig projectConfig,
+      AndroidManifestParser androidManifestParser) {
     this.javaPackageFinder = javaPackageFinder;
     this.moduleGraph = moduleGraph;
     this.projectFilesystem = projectFilesystem;
@@ -101,6 +103,7 @@ public class IjProjectTemplateDataPreparer {
     this.sourceRootSimplifier = new IjSourceRootSimplifier(javaPackageFinder);
     this.modulesToBeWritten = createModulesToBeWritten(moduleGraph);
     this.librariesToBeWritten = moduleGraph.getLibraries();
+    this.androidManifestParser = androidManifestParser;
     this.filesystemTraversalBoundaryPaths =
         createFilesystemTraversalBoundaryPathSet(modulesToBeWritten);
     this.referencedFolderPaths = createReferencedFolderPathsSet(modulesToBeWritten);
@@ -129,7 +132,7 @@ public class IjProjectTemplateDataPreparer {
     return Stream.concat(
             modules.stream().map(IjModule::getModuleBasePath),
             Stream.of(projectConfig.getProjectPaths().getIdeaConfigDir()))
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   public static ImmutableSet<Path> createPackageLookupPathSet(IjModuleGraph moduleGraph) {
@@ -175,7 +178,7 @@ public class IjProjectTemplateDataPreparer {
     }
 
     return Stream.concat(graph.getModules().stream(), supplementalModules.stream())
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   public ImmutableSet<IjModule> getModulesToBeWritten() {
@@ -208,9 +211,9 @@ public class IjProjectTemplateDataPreparer {
               List<IjSourceFolder> sourceFolders =
                   contentRootFolders
                       .stream()
-                      .map(transformToFolder::apply)
+                      .map(transformToFolder)
                       .sorted()
-                      .collect(MoreCollectors.toImmutableList());
+                      .collect(ImmutableList.toImmutableList());
               sources.put(contentRoot.toString(), sourceFolders);
             });
     ImmutableList.Builder<ContentRoot> contentRootsBuilder = ImmutableList.builder();
@@ -296,7 +299,7 @@ public class IjProjectTemplateDataPreparer {
     ImmutableList<IjFolder> sourcesAndExcludes =
         Stream.concat(module.getFolders().stream(), createExcludes(module).stream())
             .sorted()
-            .collect(MoreCollectors.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     return createContentRoots(module, moduleBasePath, sourcesAndExcludes, moduleLocationBasePath);
   }
 
@@ -304,8 +307,8 @@ public class IjProjectTemplateDataPreparer {
     return module
         .getGeneratedSourceCodeFolders()
         .stream()
-        .map(new IjFolderToIjSourceFolderTransform(module)::apply)
-        .collect(MoreCollectors.toImmutableSortedSet());
+        .map(new IjFolderToIjSourceFolderTransform(module))
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   public ImmutableSet<DependencyEntry> getDependencies(IjModule module) {
@@ -360,7 +363,7 @@ public class IjProjectTemplateDataPreparer {
                   .setGroup(group)
                   .build();
             })
-        .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   public Map<String, Object> getAndroidProperties(IjModule module) {
@@ -468,26 +471,23 @@ public class IjProjectTemplateDataPreparer {
   }
 
   private Optional<Path> getAndroidManifestPath(IjModuleAndroidFacet androidFacet) {
-    ImmutableSet<Path> androidManifestPaths = androidFacet.getManifestPaths();
-
-    if (androidManifestPaths.size() == 1) {
-      return Optional.of(androidManifestPaths.iterator().next());
-    }
-
     if (projectConfig.isGeneratingAndroidManifestEnabled()) {
-      Optional<String> packageName = androidFacet.getPackageName();
+      Optional<String> packageName = androidFacet.discoverPackageName(androidManifestParser);
       if (packageName.isPresent()) {
         return Optional.of(
             androidFacet
                 .getGeneratedSourcePath()
                 .resolve(packageName.get().replace('.', '/'))
                 .resolve("AndroidManifest.xml"));
-      } else if (androidManifestPaths.size() > 0) {
-        return Optional.of(androidManifestPaths.iterator().next());
       }
     }
 
-    return projectConfig.getAndroidManifest();
+    Optional<Path> firstManifest = androidFacet.getFirstManifestPath();
+    if (firstManifest.isPresent()) {
+      return firstManifest;
+    } else {
+      return projectConfig.getAndroidManifest();
+    }
   }
 
   private void addAndroidProguardPath(

@@ -32,7 +32,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.PatternAndMessage;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.config.Config;
@@ -139,6 +138,11 @@ public class BuckConfig implements ConfigPathGetter {
     this.environment = environment;
   }
 
+  /** Returns a clone of the current config with a the argument CellPathResolver. */
+  public BuckConfig withCellPathResolver(CellPathResolver resolver) {
+    return new BuckConfig(config, projectFilesystem, architecture, platform, environment, resolver);
+  }
+
   /**
    * Get a {@link ConfigView} of this config.
    *
@@ -234,7 +238,7 @@ public class BuckConfig implements ConfigPathGetter {
                           resolve,
                           String.format(
                               "Error in %s.%s: Cell-relative path not found: ", section, field)))
-              .collect(MoreCollectors.toImmutableList());
+              .collect(ImmutableList.toImmutableList());
       return Optional.of(paths);
     }
 
@@ -252,7 +256,7 @@ public class BuckConfig implements ConfigPathGetter {
     return buildTargets
         .stream()
         .map(buildTarget -> buildTarget.getFullyQualifiedName() + suffix)
-        .collect(MoreCollectors.toImmutableSet());
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   public ImmutableSet<BuildTarget> getBuildTargetsForAlias(String unflavoredAlias) {
@@ -341,9 +345,12 @@ public class BuckConfig implements ConfigPathGetter {
   }
 
   /** @return a {@link SourcePath} identified by a {@link Path}. */
-  public SourcePath getSourcePath(Path path) {
+  public PathSourcePath getPathSourcePath(@PropagatesNullable Path path) {
     if (path == null) {
       return null;
+    }
+    if (path.isAbsolute()) {
+      return PathSourcePath.of(projectFilesystem, path);
     }
     return PathSourcePath.of(
         projectFilesystem,
@@ -470,6 +477,10 @@ public class BuckConfig implements ConfigPathGetter {
     return Boolean.parseBoolean(getValue("adb", "adb_restart_on_failure").orElse("true"));
   }
 
+  public ImmutableList<String> getAdbRapidInstallTypes() {
+    return getListWithoutComments("adb", "rapid_install_types_beta");
+  }
+
   public boolean getMultiInstallMode() {
     return getBooleanValue("adb", "multi_install_mode", false);
   }
@@ -482,7 +493,7 @@ public class BuckConfig implements ConfigPathGetter {
     return ImmutableSet.copyOf(getListWithoutComments("extensions", "listeners"));
   }
 
-  /** Return Strings so as to avoid a dependency on {@link LabelSelector}! */
+  /** Return Strings so as to avoid a dependency on {@link com.facebook.buck.cli.LabelSelector}! */
   public ImmutableList<String> getDefaultRawExcludedLabelSelectors() {
     return getListWithoutComments("test", "excluded_labels");
   }
@@ -544,8 +555,25 @@ public class BuckConfig implements ConfigPathGetter {
     return getBooleanValue("cache", "action_graph_cache_check_enabled", false);
   }
 
+  public int getMaxActionGraphCacheEntries() {
+    return getInteger("cache", "max_action_graph_cache_entries").orElse(1);
+  }
+
   public Optional<String> getRepository() {
     return config.get("cache", "repository");
+  }
+
+  /**
+   * Whether Buck should use Buck binary hash or git commit id as the core key in all rule keys.
+   *
+   * <p>The binary hash reflects the code that can affect the content of artifacts.
+   *
+   * <p>By default git commit id is used as the core key.
+   *
+   * @return <code>True</code> if binary hash should be used as the core key
+   */
+  public boolean useBuckBinaryHash() {
+    return getBooleanValue("cache", "use_buck_binary_hash", false);
   }
 
   public Optional<ImmutableSet<PatternAndMessage>> getUnexpectedFlavorsMessages() {
@@ -703,9 +731,27 @@ public class BuckConfig implements ConfigPathGetter {
     return getNumThreads(getDefaultMaximumNumberOfThreads());
   }
 
+  /**
+   * @return the number of threads Buck should use for testing. This will use the build
+   *     parallelization settings if not configured.
+   */
+  public int getNumTestThreads() {
+    double ratio = config.getFloat(TEST_SECTION_HEADER, "thread_utilization_ratio").orElse(1.0F);
+    if (ratio <= 0.0F) {
+      throw new HumanReadableException(
+          "thread_utilization_ratio must be greater than zero (was " + ratio + ")");
+    }
+    return (int) Math.ceil(ratio * getNumThreads());
+  }
+
   /** @return the number of threads to be used for the scheduled executor thread pool. */
   public int getNumThreadsForSchedulerPool() {
     return config.getLong("build", "scheduler_threads").orElse((long) 2).intValue();
+  }
+
+  /** @return the maximum size of files input based rule keys will be willing to hash. */
+  public long getBuildInputRuleKeyFileSizeLimit() {
+    return config.getLong("build", "input_rule_key_file_size_limit").orElse(Long.MAX_VALUE);
   }
 
   public int getDefaultMaximumNumberOfThreads() {
@@ -916,10 +962,6 @@ public class BuckConfig implements ConfigPathGetter {
     return getBooleanValue("project", "buck_out_compat_link", false);
   }
 
-  public boolean isGrayscaleImageProcessingEnabled() {
-    // TODO(tyurins): move to android section
-    return config.getBooleanValue("resources", "resource_grayscale_enabled", false);
-  }
   /** @return whether to enabled versions on build/test command. */
   public boolean getBuildVersions() {
     return getBooleanValue("build", "versions", false);
@@ -939,9 +981,8 @@ public class BuckConfig implements ConfigPathGetter {
     return getListWithoutComments("clean", "additional_paths");
   }
 
-  /** @return whether to enable new file hash cache engine. */
-  public boolean getCompareFileHashCacheEngines() {
-    return getBooleanValue("build", "compare_file_hash_cache_engines", false);
+  public ImmutableList<String> getCleanExcludedCaches() {
+    return getListWithoutComments("clean", "excluded_dir_caches");
   }
 
   /** @return whether to enable new file hash cache engine. */
@@ -967,5 +1008,23 @@ public class BuckConfig implements ConfigPathGetter {
   /** Whether to create symlinks of build output in buck-out/last. */
   public boolean createBuildOutputSymLinksEnabled() {
     return getBooleanValue("build", "create_build_output_symlinks_enabled", false);
+  }
+
+  public boolean isEmbeddedCellBuckOutEnabled() {
+    return getBooleanValue("project", "embedded_cell_buck_out_enabled", false);
+  }
+
+  /** Whether to instrument the action graph and record performance */
+  public boolean getShouldInstrumentActionGraph() {
+    return getBooleanValue("instrumentation", "action_graph", false);
+  }
+
+  public Optional<String> getPathToBuildPrehookScript() {
+    return getValue("build", "prehook_script");
+  }
+
+  /** The timeout to apply to entire test rules. */
+  public Optional<Long> getDefaultTestRuleTimeoutMs() {
+    return config.getLong(TEST_SECTION_HEADER, "rule_timeout");
   }
 }

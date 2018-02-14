@@ -17,7 +17,7 @@ package com.facebook.buck.util.unit;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.model.Pair;
+import com.facebook.buck.util.types.Pair;
 import org.junit.Test;
 
 public class SizeUnitTest {

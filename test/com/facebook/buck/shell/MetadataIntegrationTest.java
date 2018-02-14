@@ -27,8 +27,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
@@ -56,7 +57,7 @@ public class MetadataIntegrationTest {
             this, "metadata_permissions", temporaryFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult buildResult = workspace.runBuckCommand("build", "//:test");
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//:test");
     buildResult.assertSuccess();
 
     // Check permissions on metadata.type
@@ -70,7 +71,7 @@ public class MetadataIntegrationTest {
     Files.setPosixFilePermissions(
         fs.getPathForRelativeExistingPath(metadataType),
         EnumSet.of(OWNER_READ, GROUP_READ, OTHERS_READ));
-    ProjectWorkspace.ProcessResult buildResult2 = workspace.runBuckCommand("build", "//:test");
+    ProcessResult buildResult2 = workspace.runBuckCommand("build", "//:test");
     buildResult2.assertSuccess();
   }
 }

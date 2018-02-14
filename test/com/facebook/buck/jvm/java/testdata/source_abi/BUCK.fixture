@@ -12,6 +12,7 @@ java_library(
     name = "lib",
     srcs = [
         "Lib.java",
+        "Lib2.java",
     ],
     plugins = [
         ":ap",
@@ -51,18 +52,18 @@ java_library(
         ":ap",
     ],
     remove_classes = [
-      "com.example.buck.Test",
-      "^com.example.buck$" # This line should not result in anything getting removed
-      ],
+        "com.example.buck.Test",
+        "^com.example.buck$",  # This line should not result in anything getting removed
+    ],
 )
 
 java_annotation_processor(
     name = "ap",
+    processor_class = "com.example.buck.AnnotationProcessor",
+    supports_abi_generation_from_source = True,
     deps = [
         ":ap-lib",
     ],
-    processor_class = "com.example.buck.AnnotationProcessor",
-    supports_abi_generation_from_source = True,
 )
 
 java_library(

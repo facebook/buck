@@ -1,0 +1,121 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "dalvik_stats_tool",
+    srcs = [
+        "AbstractDalvikMemberReference.java",
+        "DalvikStatsTool.java",
+    ],
+    tests = [
+        "//test/com/facebook/buck/android/dalvik:dalvik",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//third-party/java/asm:asm",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)
+
+java_binary(
+    name = "cli_dalvik_stats_tool",
+    main_class = "com.facebook.buck.android.dalvik.DalvikStatsTool",
+    deps = [
+        ":dalvik",
+        "//src/com/facebook/buck/android:utils",
+        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/event/external:external_lib",
+        "//src/com/facebook/buck/graph:graph",
+        "//src/com/facebook/buck/io:executable-finder",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io:transport",
+        "//src/com/facebook/buck/jvm/core:core",
+        "//src/com/facebook/buck/jvm/java/classes:classes",
+        "//src/com/facebook/buck/model:build_id",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:interfaces",
+        "//src/com/facebook/buck/rules:relative_cell_name",
+        "//src/com/facebook/buck/rules:rule_key",
+        "//src/com/facebook/buck/rules/coercer:interface",
+        "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/test/result/type:type",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:io",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/immutables:immutables",
+        "//src/com/facebook/buck/util/sha1:sha1",
+        "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
+        "//src/com/facebook/buck/versions:types",
+        "//src/com/facebook/buck/worker:worker_process",
+        "//third-party/java/asm:asm",
+        "//third-party/java/guava:guava",
+        "//third-party/java/immutables:immutables",
+        "//third-party/java/infer-annotations:infer-annotations",
+        "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jackson:jackson-core",
+        "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/jna:jna",
+        "//third-party/java/jsr:jsr305",
+    ],
+)
+
+java_library(
+    name = "dalvik",
+    srcs = [
+        "CanaryFactory.java",
+        "DalvikAwareOutputStreamHelper.java",
+        "DalvikAwareZipSplitter.java",
+        "DalvikAwareZipSplitterFactory.java",
+        "DalvikStatsCache.java",
+        "SecondaryDexHelper.java",
+        "ZipOutputStreamHelper.java",
+        "ZipSplitter.java",
+        "ZipSplitterFactory.java",
+    ],
+    tests = [
+        "//test/com/facebook/buck/android/dalvik:dalvik",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":dalvik_stats_tool",
+        "//src/com/facebook/buck/android/apkmodule:apkmodule",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/jvm/java/classes:classes",
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util/zip:zip",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)
+
+java_library(
+    name = "steps",
+    srcs = [
+        "EstimateDexWeightStep.java",
+    ],
+    tests = [
+        "//test/com/facebook/buck/android/dalvik:dalvik",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/jvm/java/classes:classes",
+        "//src/com/facebook/buck/step:step",
+        "//third-party/java/guava:guava",
+    ],
+)

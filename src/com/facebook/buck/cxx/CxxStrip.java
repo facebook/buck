@@ -98,7 +98,9 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
             + ", which masked errors in constructing "
             + "build targets and caused the returned rule's build target to differ from the "
             + "requested one. This is now explicitly disallowed to catch existing and future "
-            + "programming errors of this kind.");
+            + "programming errors of this kind. (Applied to target "
+            + buildTarget.toString()
+            + ")");
     if (flavoredStripStyle.isPresent()) {
       return buildTarget.withoutFlavors(flavoredStripStyle.get().getFlavor());
     }
@@ -130,6 +132,7 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
             context.getSourcePathResolver().getAbsolutePath(unstrippedBinary),
             output),
         new StripSymbolsStep(
+            getBuildTarget(),
             output,
             strip.getCommandPrefix(context.getSourcePathResolver()),
             strip.getEnvironment(context.getSourcePathResolver()),

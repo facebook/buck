@@ -21,6 +21,7 @@ import static com.facebook.buck.rust.RustCompileUtils.ruleToCrateName;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -29,7 +30,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -46,8 +46,11 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.ToolProvider;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -68,18 +71,14 @@ public class RustLibraryDescription
 
   private static final FlavorDomain<RustDescriptionEnhancer.Type> LIBRARY_TYPE =
       FlavorDomain.from("Rust Library Type", RustDescriptionEnhancer.Type.class);
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
+  private final ToolchainProvider toolchainProvider;
   private final RustBuckConfig rustBuckConfig;
-  private final CxxPlatform defaultCxxPlatform;
 
   public RustLibraryDescription(
-      RustBuckConfig rustBuckConfig,
-      FlavorDomain<CxxPlatform> cxxPlatforms,
-      CxxPlatform defaultCxxPlatform) {
+      ToolchainProvider toolchainProvider, RustBuckConfig rustBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.rustBuckConfig = rustBuckConfig;
-    this.cxxPlatforms = cxxPlatforms;
-    this.defaultCxxPlatform = defaultCxxPlatform;
   }
 
   @Override
@@ -98,7 +97,7 @@ public class RustLibraryDescription
       RustBuckConfig rustBuckConfig,
       ImmutableList<String> extraFlags,
       ImmutableList<String> extraLinkerFlags,
-      Iterable<com.facebook.buck.rules.args.Arg> linkerInputs,
+      Iterable<Arg> linkerInputs,
       String crate,
       CrateType crateType,
       Linker.LinkableDepType depType,
@@ -153,17 +152,27 @@ public class RustLibraryDescription
 
     String crate = args.getCrate().orElse(ruleToCrateName(buildTarget.getShortName()));
 
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, RustDescriptionEnhancer.Type>> type =
         LIBRARY_TYPE.getFlavorAndValue(buildTarget);
-    Optional<CxxPlatform> cxxPlatform = cxxPlatforms.getValue(buildTarget);
+    Optional<CxxPlatform> cxxPlatform =
+        cxxPlatformsProvider.getCxxPlatforms().getValue(buildTarget);
 
     if (type.isPresent()) {
       // Uncommon case - someone explicitly invoked buck to build a specific flavor as the
       // direct target.
-      CrateType crateType = type.get().getValue().getCrateType();
+      CrateType crateType;
+
       Linker.LinkableDepType depType;
+
+      if (args.getProcMacro()) {
+        crateType = CrateType.PROC_MACRO;
+      } else {
+        crateType = type.get().getValue().getCrateType();
+      }
 
       if (crateType.isDynamic()) {
         depType = Linker.LinkableDepType.SHARED;
@@ -182,7 +191,7 @@ public class RustLibraryDescription
           resolver,
           pathResolver,
           ruleFinder,
-          cxxPlatform.orElse(defaultCxxPlatform),
+          cxxPlatform.orElse(cxxPlatformsProvider.getDefaultCxxPlatform()),
           rustBuckConfig,
           rustcArgs.build(),
           /* linkerArgs */ ImmutableList.of(),
@@ -197,7 +206,7 @@ public class RustLibraryDescription
     return new RustLibrary(buildTarget, projectFilesystem, params) {
       // RustLinkable
       @Override
-      public com.facebook.buck.rules.args.Arg getLinkerArg(
+      public Arg getLinkerArg(
           boolean direct,
           boolean isCheck,
           CxxPlatform cxxPlatform,
@@ -210,6 +219,8 @@ public class RustLibraryDescription
         // the use of -rpath will break with flavored paths containing ','.
         if (isCheck) {
           crateType = CrateType.CHECK;
+        } else if (args.getProcMacro()) {
+          crateType = CrateType.PROC_MACRO;
         } else {
           switch (args.getPreferredLinkage()) {
             case ANY:
@@ -260,7 +271,12 @@ public class RustLibraryDescription
                 depType,
                 args);
         SourcePath rlib = rule.getSourcePathToOutput();
-        return new RustLibraryArg(pathResolver, crate, rlib, direct, params.getBuildDeps());
+        return new RustLibraryArg(crate, rlib, direct);
+      }
+
+      @Override
+      public boolean isProcMacro() {
+        return args.getProcMacro();
       }
 
       @Override
@@ -270,8 +286,10 @@ public class RustLibraryDescription
 
       @Override
       public ImmutableMap<String, SourcePath> getRustSharedLibraries(CxxPlatform cxxPlatform) {
+        BuildTarget target = getBuildTarget();
+
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
-        String sharedLibrarySoname = CrateType.DYLIB.filenameFor(crate, cxxPlatform);
+        String sharedLibrarySoname = CrateType.DYLIB.filenameFor(target, crate, cxxPlatform);
         BuildRule sharedLibraryBuildRule =
             requireBuild(
                 buildTarget,
@@ -396,12 +414,13 @@ public class RustLibraryDescription
     extraDepsBuilder.addAll(
         rustBuckConfig.getLinker().map(ToolProvider::getParseTimeDeps).orElse(ImmutableList.of()));
 
-    extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms.getValues()));
+    extraDepsBuilder.addAll(
+        CxxPlatforms.getParseTimeDeps(getCxxPlatformsProvider().getCxxPlatforms().getValues()));
   }
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    if (cxxPlatforms.containsAnyOf(flavors)) {
+    if (getCxxPlatformsProvider().getCxxPlatforms().containsAnyOf(flavors)) {
       return true;
     }
 
@@ -416,7 +435,12 @@ public class RustLibraryDescription
 
   @Override
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(ImmutableSet.of(cxxPlatforms, LIBRARY_TYPE));
+    return Optional.of(ImmutableSet.of(getCxxPlatformsProvider().getCxxPlatforms(), LIBRARY_TYPE));
+  }
+
+  private CxxPlatformsProvider getCxxPlatformsProvider() {
+    return toolchainProvider.getByName(
+        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
   }
 
   @BuckStyleImmutable
@@ -436,5 +460,10 @@ public class RustLibraryDescription
     Optional<String> getCrate();
 
     Optional<SourcePath> getCrateRoot();
+
+    @Value.Default
+    default boolean getProcMacro() {
+      return false;
+    }
   }
 }

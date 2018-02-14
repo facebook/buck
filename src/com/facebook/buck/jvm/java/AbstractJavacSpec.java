@@ -16,17 +16,17 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.types.Either;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractJavacSpec implements AddsToRuleKey {
   public static final String COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL =
@@ -64,8 +64,6 @@ abstract class AbstractJavacSpec implements AddsToRuleKey {
         switch (javacLocation) {
           case IN_PROCESS:
             return new ConstantJavacProvider(new JdkProvidedInMemoryJavac());
-          case OUT_OF_PROCESS:
-            return new ConstantJavacProvider(new OutOfProcessJdkProvidedInMemoryJavac());
         }
         break;
     }

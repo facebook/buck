@@ -22,16 +22,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.BuckConfigTestUtils;
 import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.WatchmanWatcher.CursorType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -201,55 +199,6 @@ public class ParserConfigTest {
         BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader)
             .getView(ParserConfig.class);
     assertEquals(ImmutableList.of("os", "foo"), config.getBuildFileImportWhitelist());
-  }
-
-  @Test
-  public void whenParserPythonIsExecutableFileThenItIsUsed() throws IOException {
-    Path configPythonFile = temporaryFolder.newExecutableFile("python");
-    ParserConfig parserConfig =
-        FakeBuckConfig.builder()
-            .setSections(
-                ImmutableMap.of(
-                    "parser",
-                    ImmutableMap.of(
-                        "python_interpreter", configPythonFile.toAbsolutePath().toString())))
-            .build()
-            .getView(ParserConfig.class);
-    assertEquals(
-        "Should return path to temp file.",
-        configPythonFile.toAbsolutePath().toString(),
-        parserConfig.getPythonInterpreter(new ExecutableFinder()));
-  }
-
-  @Test(expected = HumanReadableException.class)
-  public void whenParserPythonDoesNotExistThenItIsNotUsed() throws IOException {
-    String invalidPath = temporaryFolder.getRoot().toAbsolutePath() + "DoesNotExist";
-    ParserConfig parserConfig =
-        FakeBuckConfig.builder()
-            .setSections(
-                ImmutableMap.of("parser", ImmutableMap.of("python_interpreter", invalidPath)))
-            .build()
-            .getView(ParserConfig.class);
-    parserConfig.getPythonInterpreter(new ExecutableFinder());
-    fail("Should throw exception as python config is invalid.");
-  }
-
-  @Test
-  public void whenParserPythonIsNotSetFallbackIsUsed() throws IOException {
-    Path configPythonFile = temporaryFolder.newExecutableFile("python");
-    // This sets the python.interpreter section, not parser.python_interpreter
-    ParserConfig parserConfig =
-        FakeBuckConfig.builder()
-            .setSections(
-                ImmutableMap.of(
-                    "python",
-                    ImmutableMap.of("interpreter", configPythonFile.toAbsolutePath().toString())))
-            .build()
-            .getView(ParserConfig.class);
-    assertEquals(
-        "Should return path to temp file.",
-        configPythonFile.toAbsolutePath().toString(),
-        parserConfig.getPythonInterpreter(new ExecutableFinder()));
   }
 
   @Test

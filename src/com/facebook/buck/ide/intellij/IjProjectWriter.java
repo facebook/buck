@@ -21,8 +21,9 @@ import com.facebook.buck.ide.intellij.model.IjLibrary;
 import com.facebook.buck.ide.intellij.model.IjModule;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -120,9 +121,7 @@ public class IjProjectWriter {
     contents.add("jdk15", getJdk15FromLanguageLevel(languageLevelInIjFormat));
     contents.add("jdkName", sdkName.get());
     contents.add("jdkType", sdkType.get());
-    if (projectConfig.getOutputUrl().isPresent()) {
-      contents.add("outputUrl", projectConfig.getOutputUrl().get());
-    }
+    contents.add("outputUrl", projectConfig.getOutputUrl().orElse(null));
 
     StringTemplateFile.writeToFile(
         projectFilesystem, contents, path, projectConfig.getProjectPaths().getIdeaConfigDir());
@@ -162,21 +161,21 @@ public class IjProjectWriter {
             .getBinaryJars()
             .stream()
             .map(projectPaths::toProjectDirRelativeString)
-            .collect(MoreCollectors.toImmutableSortedSet()));
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
     contents.add(
         "classPaths",
         library
             .getClassPaths()
             .stream()
             .map(projectPaths::toProjectDirRelativeString)
-            .collect(MoreCollectors.toImmutableSortedSet()));
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
     contents.add(
         "sourceJars",
         library
             .getSourceJars()
             .stream()
             .map(projectPaths::toProjectDirRelativeString)
-            .collect(MoreCollectors.toImmutableSortedSet()));
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
     contents.add("javadocUrls", library.getJavadocUrls());
     // TODO(mkosiba): support res and assets for aar.
 

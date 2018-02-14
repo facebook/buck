@@ -1,20 +1,20 @@
 genrule(
-  name = 'test',
-  out = 'test-output',
+    name = "test",
+    out = "test-output",
 )
 
 genrule(
-  name = 'another-test',
-  out = 'test-output',
+    name = "another-test",
+    out = "test-output",
 )
 
 java_library(
-    name = 'java_lib',
-    srcs = [ 'A.java' ],
-    plugins = [ ':plugin' ],
+    name = "java_lib",
+    srcs = ["A.java"],
+    plugins = [":plugin"],
 )
 
 java_annotation_processor(
-    name = 'plugin',
+    name = "plugin",
     processor_class = "com.example.Plugin",
 )

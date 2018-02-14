@@ -1,30 +1,28 @@
 android_binary(
-  name = 'app',
-  manifest = 'AndroidManifest.xml',
-  keystore = '//keystores:debug',
-  preprocess_java_classes_bash = '$(location :convert) $IN_JARS_DIR $OUT_JARS_DIR',
-  preprocess_java_classes_deps = [':convert'],
-  primary_dex_patterns = [
-    '/MyApplication^',
-  ],
-  deps = [
-    '//java/com/sample/app:app',
-    '//java/com/sample/lib:lib',
-  ],
+    name = "app",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    preprocess_java_classes_bash = "$(location :convert) $IN_JARS_DIR $OUT_JARS_DIR",
+    preprocess_java_classes_deps = [":convert"],
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+    ],
 )
-
 
 export_file(
-  name = 'convert',
-  src = 'convert.py',
+    name = "convert",
+    src = "convert.py",
 )
 
-
 genrule(
-  name = 'disassemble',
-  bash = ' && '.join([
-      '$(exe //third-party/smali:baksmali) -o $TMP $(location :app)',
-      'grep -o content=. $TMP/com/facebook/sample/Sample3.smali > $OUT',
-      ]),
-  out = 'content.txt',
+    name = "disassemble",
+    out = "content.txt",
+    bash = " && ".join([
+        "$(exe //third-party/smali:baksmali) -o $TMP $(location :app)",
+        "grep -o content=. $TMP/com/facebook/sample/Sample3.smali > $OUT",
+    ]),
 )

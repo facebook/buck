@@ -43,7 +43,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.DependencyMode;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -68,7 +67,9 @@ public class AndroidLibraryGraphEnhancerTest {
             /* forceFinalResourceIds */ false,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
-            false);
+            /* useOldStyleableFormat */ false,
+            /* skipNonUnionRDotJava */ false);
+
     Optional<DummyRDotJava> result =
         graphEnhancer.getBuildableForAndroidResources(
             new SingleThreadedBuildRuleResolver(
@@ -91,7 +92,9 @@ public class AndroidLibraryGraphEnhancerTest {
             /* forceFinalResourceIds */ false,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
-            false);
+            /* useOldStyleableFormat */ false,
+            /* skipNonUnionRDotJava */ false);
+
     BuildRuleResolver buildRuleResolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
@@ -139,7 +142,9 @@ public class AndroidLibraryGraphEnhancerTest {
             /* forceFinalResourceIds */ false,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
-            false);
+            /* useOldStyleableFormat */ false,
+            /* skipNonUnionRDotJava */ false);
+
     Optional<DummyRDotJava> dummyRDotJava =
         graphEnhancer.getBuildableForAndroidResources(
             ruleResolver, /* createBuildableIfEmptyDeps */ false);
@@ -161,7 +166,7 @@ public class AndroidLibraryGraphEnhancerTest {
             .getBuildDeps()
             .stream()
             .map(Object::toString)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(ImmutableSet.toImmutableSet()));
   }
 
   @Test
@@ -204,7 +209,8 @@ public class AndroidLibraryGraphEnhancerTest {
             /* forceFinalResourceIds */ false,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
-            false);
+            /* useOldStyleableFormat */ false,
+            /* skipNonUnionRDotJava */ false);
     Optional<DummyRDotJava> dummyRDotJava =
         graphEnhancer.getBuildableForAndroidResources(
             ruleResolver, /* createBuildableIfEmptyDeps */ false);
@@ -244,7 +250,8 @@ public class AndroidLibraryGraphEnhancerTest {
             /* forceFinalResourceIds */ false,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
-            false);
+            /* useOldStyleableFormat */ false,
+            /* skipNonUnionRDotJava */ false);
     Optional<DummyRDotJava> result =
         graphEnhancer.getBuildableForAndroidResources(
             resolver, /* createdBuildableIfEmptyDeps */ true);

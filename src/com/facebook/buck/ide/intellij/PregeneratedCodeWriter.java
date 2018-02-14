@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ide.intellij;
 
+import com.facebook.buck.ide.intellij.lang.android.AndroidManifestParser;
 import com.facebook.buck.ide.intellij.model.IjModule;
 import com.facebook.buck.ide.intellij.model.IjModuleAndroidFacet;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
@@ -31,14 +32,17 @@ public class PregeneratedCodeWriter {
   private final IjProjectTemplateDataPreparer projectDataPreparer;
   private final IjProjectConfig projectConfig;
   private final ProjectFilesystem projectFilesystem;
+  private final AndroidManifestParser androidManifestParser;
 
   public PregeneratedCodeWriter(
       IjProjectTemplateDataPreparer projectDataPreparer,
       IjProjectConfig projectConfig,
-      ProjectFilesystem projectFilesystem) {
+      ProjectFilesystem projectFilesystem,
+      AndroidManifestParser androidManifestParser) {
     this.projectDataPreparer = projectDataPreparer;
     this.projectConfig = projectConfig;
     this.projectFilesystem = projectFilesystem;
+    this.androidManifestParser = androidManifestParser;
   }
 
   public void write(IJProjectCleaner cleaner) throws IOException {
@@ -86,16 +90,22 @@ public class PregeneratedCodeWriter {
       return;
     }
 
-    Optional<String> packageName = androidFacet.get().getPackageName();
+    Optional<String> packageName = androidFacet.get().discoverPackageName(androidManifestParser);
     if (!packageName.isPresent()) {
       return;
     }
 
-    if (androidFacet.get().getManifestPaths().size() == 1) {
-      return;
+    Optional<String> minSdkVersionFromManifest = androidFacet.get().getMinSdkVersion();
+    Optional<String> defaultProjectMinSdkVersion = projectConfig.getMinAndroidSdkVersion();
+
+    Optional<String> minSdkVersion = Optional.empty();
+    if (minSdkVersionFromManifest.isPresent()) {
+      minSdkVersion = minSdkVersionFromManifest;
+    } else if (defaultProjectMinSdkVersion.isPresent()) {
+      minSdkVersion = defaultProjectMinSdkVersion;
     }
 
-    writeAndroidManifestToFile(androidFacet.get(), cleaner, packageName.get());
+    writeAndroidManifestToFile(androidFacet.get(), cleaner, packageName.get(), minSdkVersion);
   }
 
   private void writeGeneratedByIdeaClassToFile(
@@ -117,10 +127,15 @@ public class PregeneratedCodeWriter {
   }
 
   private void writeAndroidManifestToFile(
-      IjModuleAndroidFacet androidFacet, IJProjectCleaner cleaner, String packageName)
+      IjModuleAndroidFacet androidFacet,
+      IJProjectCleaner cleaner,
+      String packageName,
+      Optional<String> minSdkVersion)
       throws IOException {
 
     ST contents = StringTemplateFile.ANDROID_MANIFEST.getST().add("package", packageName);
+
+    contents.add("minSdkVersion", minSdkVersion.orElse(null));
 
     writeTemplateToFile(androidFacet, cleaner, "AndroidManifest.xml", packageName, contents);
   }

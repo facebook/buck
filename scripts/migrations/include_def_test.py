@@ -15,5 +15,12 @@ class IncludeDefTest(unittest.TestCase):
         include = self._parse_include_def('include_defs("cell//pkg/DEFS")')
         self.assertEqual('/repo/cell/pkg/DEFS', include.get_include_path(repo))
 
-    def _parse_include_def(self, code) -> include_def.IncludeDef:
+    def test_handles_dash_in_path(self):
+        repo = repository.Repository('/repo', {})
+        include = self._parse_include_def('include_defs("//third-party/DEFS")')
+        self.assertEqual('//third-party/DEFS', include.get_location())
+        self.assertEqual('/repo/third-party/DEFS',
+                         include.get_include_path(repo))
+
+    def _parse_include_def(self, code: str) -> include_def.IncludeDef:
         return include_def.from_ast_call(ast.parse(code).body[0].value)

@@ -1,20 +1,20 @@
 ocaml_binary(
-    name = 'ocaml_ext',
+    name = "ocaml_ext",
     srcs = [
-        'main_plus.ml',
+        "main_plus.ml",
     ],
     deps = [
-        ':plus',
+        ":plus",
     ],
 )
 
 prebuilt_ocaml_library(
-    name = 'plus',
-    lib_dir = 'third_party/lib',
-    native_lib = 'libplus_lib.cmxa',
-    bytecode_lib = 'libplus_lib_bc.cma',
-    c_libs = ['libplus_lib.a'],
+    name = "plus",
+    bytecode_lib = "libplus_lib_bc.cma",
+    c_libs = ["libplus_lib.a"],
+    lib_dir = "third_party/lib",
+    native_lib = "libplus_lib.cmxa",
     visibility = [
-        'PUBLIC',
-    ]
+        "PUBLIC",
+    ],
 )

@@ -30,11 +30,12 @@ import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.ZipArchive;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.unarchive.ArchiveFormat;
+import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.facebook.buck.util.zip.OverwritingZipOutputStreamImpl;
-import com.facebook.buck.util.zip.Unzip;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.collect.ImmutableList;
@@ -85,7 +86,7 @@ public class ZipStepTest {
             Paths.get("zipstep/output.zip"),
             ImmutableSet.of(),
             false,
-            ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
+            ZipCompressionLevel.DEFAULT,
             Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
@@ -112,7 +113,7 @@ public class ZipStepTest {
             Paths.get("zipstep/output.zip"),
             ImmutableSet.of(Paths.get("zipdir/file2.txt")),
             false,
-            ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
+            ZipCompressionLevel.DEFAULT,
             Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
@@ -137,7 +138,7 @@ public class ZipStepTest {
             Paths.get("zipstep/output.zip"),
             ImmutableSet.of(),
             false,
-            ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
+            ZipCompressionLevel.DEFAULT,
             Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
@@ -172,7 +173,7 @@ public class ZipStepTest {
             Paths.get("zipstep/output.zip"),
             ImmutableSet.of(),
             false,
-            ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
+            ZipCompressionLevel.DEFAULT,
             Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
@@ -199,7 +200,7 @@ public class ZipStepTest {
             Paths.get("zipstep"),
             ImmutableSet.of(),
             false,
-            ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
+            ZipCompressionLevel.DEFAULT,
             Paths.get("zipdir"));
     assertEquals(1, step.execute(TestExecutionContext.newInstance()).getExitCode());
   }
@@ -219,7 +220,7 @@ public class ZipStepTest {
             Paths.get("zipstep/output.zip"),
             ImmutableSet.of(),
             true,
-            ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
+            ZipCompressionLevel.DEFAULT,
             Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
@@ -243,7 +244,7 @@ public class ZipStepTest {
             Paths.get("zipstep/output.zip"),
             ImmutableSet.of(),
             true,
-            ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
+            ZipCompressionLevel.DEFAULT,
             Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
@@ -282,7 +283,7 @@ public class ZipStepTest {
             Paths.get("zipstep/output.zip"),
             ImmutableSet.of(),
             false,
-            ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
+            ZipCompressionLevel.NONE,
             Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
@@ -314,7 +315,7 @@ public class ZipStepTest {
             outputZip,
             ImmutableSet.of(),
             false,
-            ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
+            ZipCompressionLevel.DEFAULT,
             Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
@@ -350,16 +351,19 @@ public class ZipStepTest {
             outputZip,
             ImmutableSet.of(),
             false,
-            ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
+            ZipCompressionLevel.NONE,
             Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
     Path destination = tmp.newFolder("output");
-    Unzip.extractZipFile(
-        new DefaultProjectFilesystemFactory(),
-        outputZip,
-        destination,
-        Unzip.ExistingFileMode.OVERWRITE);
+
+    ArchiveFormat.ZIP
+        .getUnarchiver()
+        .extractArchive(
+            new DefaultProjectFilesystemFactory(),
+            outputZip,
+            destination,
+            ExistingFileMode.OVERWRITE);
     assertTrue(Files.isExecutable(destination.resolve("foo.sh")));
   }
 
@@ -375,13 +379,7 @@ public class ZipStepTest {
     filesystem.touch(zipdir.resolve("file1"));
     filesystem.touch(zipdir.resolve("file2"));
     ZipStep step =
-        new ZipStep(
-            filesystem,
-            output,
-            ImmutableSet.of(),
-            false,
-            ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
-            zipdir);
+        new ZipStep(filesystem, output, ImmutableSet.of(), false, ZipCompressionLevel.NONE, zipdir);
     assertEquals(0, step.execute(context).getExitCode());
     ImmutableList<String> entries1 = getEntries(filesystem, output);
 
@@ -392,13 +390,7 @@ public class ZipStepTest {
     filesystem.touch(zipdir.resolve("file2"));
     filesystem.touch(zipdir.resolve("file1"));
     step =
-        new ZipStep(
-            filesystem,
-            output,
-            ImmutableSet.of(),
-            false,
-            ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
-            zipdir);
+        new ZipStep(filesystem, output, ImmutableSet.of(), false, ZipCompressionLevel.NONE, zipdir);
     assertEquals(0, step.execute(context).getExitCode());
     ImmutableList<String> entries2 = getEntries(filesystem, output);
 

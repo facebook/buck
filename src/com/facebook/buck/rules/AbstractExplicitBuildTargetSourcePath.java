@@ -17,8 +17,8 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ComparisonChain;
 import java.nio.file.Path;
 import java.util.Objects;

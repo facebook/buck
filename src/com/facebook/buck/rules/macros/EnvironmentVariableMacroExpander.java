@@ -19,6 +19,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 
@@ -52,16 +53,16 @@ public class EnvironmentVariableMacroExpander
   }
 
   @Override
-  public String expandFrom(
+  public StringArg expandFrom(
       BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, String var)
       throws MacroException {
     if (platform == Platform.WINDOWS) {
       if ("pwd".equalsIgnoreCase(var)) {
         var = "cd";
       }
-      return "%" + var + "%";
+      return StringArg.of("%" + var + "%");
     } else {
-      return "${" + var + "}";
+      return StringArg.of("${" + var + "}");
     }
   }
 }

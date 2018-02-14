@@ -1,14 +1,15 @@
 {
   "//example:one" : {
     "deps" : [
-      ":two",
-      ":three"
+      ":three",
+      ":two"
     ]
   },
   "//example:three" : {
     "deps" : [
+      ":five",
       ":four",
-      ":five"
+      ":six"
     ]
   },
   "//example:two" : {

@@ -1,0 +1,25 @@
+load("//tools/build_rules:module_rules.bzl", "buck_module")
+
+buck_module(
+    name = "bundler",
+    srcs = glob(["*.java"]),
+    provided_deps = [
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/jvm/java:support",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/rules:source_path",
+        "//src/com/facebook/buck/rules/modern:modern",
+        "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/step/fs:fs",
+        "//src/com/facebook/buck/unarchive:unarchive",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/zip:zip",
+    ],
+    tests = [
+        "//test/com/facebook/buck/zip/bundler:bundler",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/zip/rules:rules",
+        "//test/...",
+    ],
+)

@@ -17,8 +17,9 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,42 +27,42 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractAppleBundleDestinations implements RuleKeyAppendable {
+abstract class AbstractAppleBundleDestinations implements AddsToRuleKey {
+  @AddToRuleKey(stringify = true)
   @Value.Parameter
   public abstract Path getMetadataPath();
 
+  @AddToRuleKey(stringify = true)
   @Value.Parameter
   public abstract Path getResourcesPath();
 
+  @AddToRuleKey(stringify = true)
   @Value.Parameter
   public abstract Path getExecutablesPath();
 
+  @AddToRuleKey(stringify = true)
   @Value.Parameter
   public abstract Path getFrameworksPath();
 
+  @AddToRuleKey(stringify = true)
   @Value.Parameter
   public abstract Path getPlugInsPath();
 
+  @AddToRuleKey(stringify = true)
   @Value.Parameter
   public abstract Path getWatchAppPath();
 
+  @AddToRuleKey(stringify = true)
   @Value.Parameter
   public abstract Path getHeadersPath();
 
+  @AddToRuleKey(stringify = true)
   @Value.Parameter
   public abstract Path getModulesPath();
 
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("metadata_path", getMetadataPath().toString())
-        .setReflectively("resources_path", getResourcesPath().toString())
-        .setReflectively("executables_path", getExecutablesPath().toString())
-        .setReflectively("frameworks_path", getFrameworksPath().toString())
-        .setReflectively("plugins_path", getPlugInsPath().toString())
-        .setReflectively("watch_app_path", getWatchAppPath().toString())
-        .setReflectively("headers_path", getHeadersPath().toString())
-        .setReflectively("modules_path", getModulesPath().toString());
-  }
+  @AddToRuleKey(stringify = true)
+  @Value.Parameter
+  public abstract Path getXPCServicesPath();
 
   private static final Path OSX_CONTENTS_PATH = Paths.get("Contents");
   public static final AppleBundleDestinations OSX_DESTINATIONS =
@@ -74,6 +75,7 @@ abstract class AbstractAppleBundleDestinations implements RuleKeyAppendable {
           .setWatchAppPath(OSX_CONTENTS_PATH)
           .setHeadersPath(OSX_CONTENTS_PATH)
           .setModulesPath(OSX_CONTENTS_PATH)
+          .setXPCServicesPath(OSX_CONTENTS_PATH.resolve("XPCServices"))
           .build();
 
   private static final Path OSX_FRAMEWORK_CONTENTS_PATH = Paths.get("");
@@ -87,6 +89,7 @@ abstract class AbstractAppleBundleDestinations implements RuleKeyAppendable {
           .setWatchAppPath(OSX_FRAMEWORK_CONTENTS_PATH)
           .setHeadersPath(OSX_FRAMEWORK_CONTENTS_PATH.resolve("Headers"))
           .setModulesPath(OSX_FRAMEWORK_CONTENTS_PATH.resolve("Modules"))
+          .setXPCServicesPath(OSX_FRAMEWORK_CONTENTS_PATH.resolve("XPCServices"))
           .build();
 
   private static final Path IOS_CONTENTS_PATH = Paths.get("");
@@ -100,6 +103,7 @@ abstract class AbstractAppleBundleDestinations implements RuleKeyAppendable {
           .setWatchAppPath(IOS_CONTENTS_PATH.resolve("Watch"))
           .setHeadersPath(IOS_CONTENTS_PATH)
           .setModulesPath(IOS_CONTENTS_PATH)
+          .setXPCServicesPath(IOS_CONTENTS_PATH.resolve("XPCServices"))
           .build();
 
   private static final Path IOS_FRAMEWORK_CONTENTS_PATH = Paths.get("");
@@ -113,6 +117,7 @@ abstract class AbstractAppleBundleDestinations implements RuleKeyAppendable {
           .setWatchAppPath(IOS_FRAMEWORK_CONTENTS_PATH)
           .setHeadersPath(IOS_FRAMEWORK_CONTENTS_PATH.resolve("Headers"))
           .setModulesPath(IOS_FRAMEWORK_CONTENTS_PATH.resolve("Modules"))
+          .setXPCServicesPath(IOS_FRAMEWORK_CONTENTS_PATH.resolve("XPCServices"))
           .build();
 
   public static AppleBundleDestinations platformDestinations(ApplePlatform platform) {

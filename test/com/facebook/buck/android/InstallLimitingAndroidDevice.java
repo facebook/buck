@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.exopackage.DexExoHelper;
+import com.facebook.buck.android.exopackage.ModuleExoHelper;
 import com.facebook.buck.android.exopackage.NativeExoHelper;
 import com.facebook.buck.android.exopackage.ResourcesExoHelper;
 import com.facebook.buck.android.exopackage.TestAndroidDevice;
@@ -30,6 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /** This allows limiting the number of apks/dexes/etc that are installed to a device. Useful */
 class InstallLimitingAndroidDevice extends DelegatingAndroidDevice {
@@ -38,11 +40,13 @@ class InstallLimitingAndroidDevice extends DelegatingAndroidDevice {
   private int allowedInstalledDexes;
   private int allowedInstalledLibs;
   private int allowedInstalledResources;
+  private int allowedInstalledModules;
 
   private List<Path> installedApks;
   private List<Path> installedDexes;
   private List<Path> installedLibs;
   private List<Path> installedResources;
+  private List<Path> installedModules;
 
   private final Path apkPath;
   private final Path agentApkPath;
@@ -59,11 +63,13 @@ class InstallLimitingAndroidDevice extends DelegatingAndroidDevice {
     allowedInstalledDexes = 0;
     allowedInstalledLibs = 0;
     allowedInstalledResources = 0;
+    allowedInstalledModules = 0;
 
     installedApks = new ArrayList<>();
     installedDexes = new ArrayList<>();
     installedLibs = new ArrayList<>();
     installedResources = new ArrayList<>();
+    installedModules = new ArrayList<>();
   }
 
   @Override
@@ -83,8 +89,7 @@ class InstallLimitingAndroidDevice extends DelegatingAndroidDevice {
     return super.installApkOnDevice(apk, installViaSd, quiet, verifyTempWritable);
   }
 
-  @Override
-  public void installFile(Path targetDevicePath, Path source) throws Exception {
+  private void validateInstallFile(Path targetDevicePath, Path source) throws Exception {
     assertTrue(
         String.format(
             "Exopackage should only install files to the install root (%s, %s)",
@@ -117,26 +122,46 @@ class InstallLimitingAndroidDevice extends DelegatingAndroidDevice {
             String.format("Installed paths: [%s]", Joiner.on(", ").join(installedResources)),
             allowedInstalledResources >= 0);
       }
+    } else if (relativePath.startsWith(ModuleExoHelper.MODULAR_DEX_DIR)) {
+      installedModules.add(source);
+      final Path fileName = relativePath.getFileName();
+      if (!fileName.equals(Paths.get("metadata.txt"))
+          && !fileName.toString().endsWith(".metadata")) {
+        allowedInstalledModules--;
+        assertTrue(
+            String.format("Installed paths: [%s]", Joiner.on(", ").join(installedModules)),
+            allowedInstalledModules >= 0);
+      }
     } else {
       fail("Unrecognized target path (" + relativePath + ")");
     }
-    super.installFile(targetDevicePath, source);
+  }
+
+  @Override
+  public void installFiles(String filesType, Map<Path, Path> installPaths) throws Exception {
+    for (Map.Entry<Path, Path> entry : installPaths.entrySet()) {
+      validateInstallFile(entry.getKey(), entry.getValue());
+    }
+    super.installFiles(filesType, installPaths);
   }
 
   public void setAllowedInstallCounts(
       int expectedApksInstalled,
       int expectedDexesInstalled,
       int expectedLibsInstalled,
-      int expectedResourcesInstalled) {
+      int expectedResourcesInstalled,
+      int expectedModulesInstalled) {
     this.allowedInstalledApks = expectedApksInstalled;
     this.allowedInstalledDexes = expectedDexesInstalled;
     this.allowedInstalledLibs = expectedLibsInstalled;
     this.allowedInstalledResources = expectedResourcesInstalled;
+    this.allowedInstalledModules = expectedModulesInstalled;
 
     installedApks.clear();
     installedDexes.clear();
     installedLibs.clear();
     installedResources.clear();
+    installedModules.clear();
   }
 
   public void assertExpectedInstallsAreConsumed() {
@@ -144,5 +169,6 @@ class InstallLimitingAndroidDevice extends DelegatingAndroidDevice {
     assertEquals("fewer dexes installed than expected", 0, allowedInstalledDexes);
     assertEquals("fewer libs installed than expected", 0, allowedInstalledLibs);
     assertEquals("fewer resources installed than expected", 0, allowedInstalledResources);
+    assertEquals("fewer modules installed than expected", 0, allowedInstalledModules);
   }
 }

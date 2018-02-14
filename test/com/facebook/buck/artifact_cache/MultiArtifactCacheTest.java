@@ -20,20 +20,26 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
+import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -48,6 +54,8 @@ public class MultiArtifactCacheTest {
 
   private static final RuleKey dummyRuleKey =
       new RuleKey("76b1c1beae69428db2d1befb31cf743ac8ce90df");
+  private static final RuleKey dummyRuleKey2 =
+      new RuleKey("00000000ae69428db2d1befb31cf743a00000000");
   private static final LazyPath dummyFile = LazyPath.ofInstance(Paths.get("dummy"));
 
   // An cache which always returns errors from fetching.
@@ -87,6 +95,67 @@ public class MultiArtifactCacheTest {
         "Fetch should succeed after store",
         CacheResultType.HIT,
         Futures.getUnchecked(multiArtifactCache.fetchAsync(dummyRuleKey, dummyFile)).getType());
+
+    multiArtifactCache.close();
+  }
+
+  @Test
+  public void testCacheMultiContains() throws InterruptedException, IOException {
+    DummyArtifactCache dummyArtifactCache1 = new DummyArtifactCache();
+    DummyArtifactCache dummyArtifactCache2 = new DummyArtifactCache();
+    MultiArtifactCache multiArtifactCache =
+        new MultiArtifactCache(ImmutableList.of(dummyArtifactCache1, dummyArtifactCache2));
+
+    Map<RuleKey, CacheResult> results =
+        Futures.getUnchecked(
+            multiArtifactCache.multiContainsAsync(ImmutableSet.of(dummyRuleKey, dummyRuleKey2)));
+    assertEquals(
+        "Contains should fail",
+        ImmutableMap.of(dummyRuleKey, CacheResult.miss(), dummyRuleKey2, CacheResult.miss()),
+        results);
+
+    dummyArtifactCache1.store(
+        ArtifactInfo.builder().addRuleKeys(dummyRuleKey).build(),
+        BorrowablePath.notBorrowablePath(dummyFile.get()));
+    results =
+        Futures.getUnchecked(
+            multiArtifactCache.multiContainsAsync(ImmutableSet.of(dummyRuleKey, dummyRuleKey2)));
+    assertEquals(
+        "Contains should succeed for first rulekey (present in store 1)",
+        CacheResultType.CONTAINS,
+        results.get(dummyRuleKey).getType());
+    assertEquals(
+        "Contains should fail for second rulekey (not yet written)",
+        CacheResultType.MISS,
+        results.get(dummyRuleKey2).getType());
+
+    dummyArtifactCache2.store(
+        ArtifactInfo.builder().addRuleKeys(dummyRuleKey2).build(),
+        BorrowablePath.notBorrowablePath(dummyFile.get()));
+    results =
+        Futures.getUnchecked(
+            multiArtifactCache.multiContainsAsync(ImmutableSet.of(dummyRuleKey, dummyRuleKey2)));
+    assertEquals(
+        "Contains should succeed for first rulekey (present in store 1)",
+        CacheResultType.CONTAINS,
+        results.get(dummyRuleKey).getType());
+    assertEquals(
+        "Contains should succeed for second rulekey (present in store 2)",
+        CacheResultType.CONTAINS,
+        results.get(dummyRuleKey2).getType());
+
+    dummyArtifactCache1.reset();
+    results =
+        Futures.getUnchecked(
+            multiArtifactCache.multiContainsAsync(ImmutableSet.of(dummyRuleKey, dummyRuleKey2)));
+    assertEquals(
+        "Contains should fail for first rulekey (removed from store 1)",
+        CacheResultType.MISS,
+        results.get(dummyRuleKey).getType());
+    assertEquals(
+        "Contains should succeed for second rulekey (present in store 2)",
+        CacheResultType.CONTAINS,
+        results.get(dummyRuleKey2).getType());
 
     multiArtifactCache.close();
   }
@@ -193,6 +262,11 @@ public class MultiArtifactCacheTest {
       return Futures.immediateFuture(fetch(ruleKey, output));
     }
 
+    @Override
+    public void skipPendingAndFutureAsyncFetches() {
+      // Async requests are not supported by SimpleArtifactCache, so do nothing
+    }
+
     private CacheResult fetch(RuleKey ruleKey, LazyPath output) {
       if (ruleKey.equals(storedKey.get())) {
         try {
@@ -217,6 +291,24 @@ public class MultiArtifactCacheTest {
       }
       storedKey.set(Iterables.getFirst(info.getRuleKeys(), null));
       return Futures.immediateFuture(null);
+    }
+
+    @Override
+    public ListenableFuture<ImmutableMap<RuleKey, CacheResult>> multiContainsAsync(
+        ImmutableSet<RuleKey> ruleKeys) {
+      RuleKey storedKeyInstance = storedKey.get();
+      return Futures.immediateFuture(
+          Maps.toMap(
+              ruleKeys,
+              ruleKey ->
+                  ruleKey.equals(storedKeyInstance)
+                      ? CacheResult.contains("cache", ArtifactCacheMode.http)
+                      : CacheResult.miss()));
+    }
+
+    @Override
+    public ListenableFuture<CacheDeleteResult> deleteAsync(List<RuleKey> ruleKeys) {
+      throw new RuntimeException("Delete operation is not supported");
     }
 
     @Override

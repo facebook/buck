@@ -26,14 +26,17 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.python.toolchain.PythonVersion;
+import com.facebook.buck.python.toolchain.impl.PythonPlatformsProviderFactoryUtils;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.ParameterizedTests;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
@@ -93,8 +96,7 @@ public class PythonTestIntegrationTest {
 
     ProcessResult runResult2 = workspace.runBuckCommand("run", "//:test-failure");
     runResult2.assertExitCode(
-        "python test binary should exit with expected error code on failure",
-        PythonRunTestsStep.TEST_FAILURES_EXIT_CODE);
+        "python test binary should exit with expected error code on failure", ExitCode.TEST_ERROR);
   }
 
   @Test
@@ -135,16 +137,16 @@ public class PythonTestIntegrationTest {
   public void testPythonTestTimeout() throws IOException {
     ProcessResult result = workspace.runBuckCommand("test", "//:test-spinning");
     String stderr = result.getStderr();
-    result.assertSpecialExitCode("test should fail", 42);
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     assertTrue(stderr, stderr.contains("Following test case timed out: //:test-spinning"));
   }
 
   @Test
   public void testPythonSetupClassFailure() throws IOException, InterruptedException {
     assumePythonVersionIsAtLeast("2.7", "`setUpClass` support was added in Python-2.7");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("test", "//:test-setup-class-failure");
-    result.assertSpecialExitCode("Tests should execute successfully but fail.", 42);
+    ProcessResult result = workspace.runBuckCommand("test", "//:test-setup-class-failure");
+    result.assertSpecialExitCode(
+        "Tests should execute successfully but fail.", ExitCode.TEST_ERROR);
     assertThat(
         result.getStderr(),
         containsString(
@@ -168,9 +170,10 @@ public class PythonTestIntegrationTest {
   @Test
   public void testPythonSetupClassFailureWithTestSuite() throws IOException, InterruptedException {
     assumePythonVersionIsAtLeast("2.7", "`setUpClass` support was added in Python-2.7");
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand("test", "//:test-setup-class-failure-with-test-suite");
-    result.assertSpecialExitCode("Tests should execute successfully but fail.", 42);
+    result.assertSpecialExitCode(
+        "Tests should execute successfully but fail.", ExitCode.TEST_ERROR);
     assertThat(
         result.getStderr(),
         containsString(
@@ -186,7 +189,7 @@ public class PythonTestIntegrationTest {
     workspace.runBuckBuild("//:test-success").assertSuccess();
 
     // Clean buck-out.
-    workspace.runBuckCommand("clean");
+    workspace.runBuckCommand("clean", "--keep-cache");
 
     // Run the tests, which should get cache hits for everything.
     workspace.runBuckCommand("test", "//:test-success").assertSuccess();
@@ -195,8 +198,10 @@ public class PythonTestIntegrationTest {
   private void assumePythonVersionIsAtLeast(String expectedVersion, String message)
       throws InterruptedException {
     PythonVersion actualVersion =
-        new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder())
-            .getPythonEnvironment(new DefaultProcessExecutor(new TestConsole()))
+        PythonPlatformsProviderFactoryUtils.getPythonEnvironment(
+                FakeBuckConfig.builder().build(),
+                new DefaultProcessExecutor(new TestConsole()),
+                new ExecutableFinder())
             .getPythonVersion();
     assumeTrue(
         String.format(
@@ -216,6 +221,6 @@ public class PythonTestIntegrationTest {
             Platform.detect(),
             ImmutableMap.copyOf(System.getenv()),
             DefaultCellPathResolver.of(tmp.getRoot(), rawConfig));
-    return new PythonBuckConfig(buckConfig, new ExecutableFinder());
+    return new PythonBuckConfig(buckConfig);
   }
 }

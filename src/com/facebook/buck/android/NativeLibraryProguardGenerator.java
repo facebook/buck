@@ -20,9 +20,9 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -31,12 +31,13 @@ import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.RichStream;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -44,6 +45,7 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Optional;
 
 /** This provides a way for android_binary rules to generate proguard config based on the */
 public class NativeLibraryProguardGenerator extends AbstractBuildRuleWithDeclaredAndExtraDeps {
@@ -88,15 +90,15 @@ public class NativeLibraryProguardGenerator extends AbstractBuildRuleWithDeclare
             MakeCleanDirectoryStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(), getProjectFilesystem(), outputDir)))
-        .add(new RunConfigGenStep(context.getSourcePathResolver()))
+        .add(new RunConfigGenStep(getBuildTarget(), context.getSourcePathResolver()))
         .build();
   }
 
   private class RunConfigGenStep extends ShellStep {
     private final SourcePathResolver pathResolver;
 
-    RunConfigGenStep(SourcePathResolver sourcePathResolver) {
-      super(getProjectFilesystem().getRootPath());
+    RunConfigGenStep(BuildTarget buildTarget, SourcePathResolver sourcePathResolver) {
+      super(Optional.of(buildTarget), getProjectFilesystem().getRootPath());
       this.pathResolver = sourcePathResolver;
     }
 
@@ -123,12 +125,13 @@ public class NativeLibraryProguardGenerator extends AbstractBuildRuleWithDeclare
         throw new RuntimeException(e);
       }
 
-      String executableCommand;
-      try {
-        executableCommand = new ExecutableMacroExpander().expand(pathResolver, codeGenerator);
-      } catch (MacroException e) {
-        throw new RuntimeException(e);
-      }
+      Preconditions.checkState(codeGenerator instanceof BinaryBuildRule);
+      String executableCommand =
+          Joiner.on(" ")
+              .join(
+                  ((BinaryBuildRule) codeGenerator)
+                      .getExecutableCommand()
+                      .getCommandPrefix(pathResolver));
 
       return ImmutableList.<String>builder()
           .addAll(Splitter.on(' ').split(executableCommand))

@@ -75,7 +75,18 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
 
   @Override
   public Path getAndroidManifestPath(TargetNode<AndroidBinaryDescriptionArg, ?> targetNode) {
-    return sourcePathResolver.getAbsolutePath(targetNode.getConstructorArg().getManifest());
+    AndroidBinaryDescriptionArg arg = targetNode.getConstructorArg();
+    Optional<SourcePath> manifestSourcePath = arg.getManifest();
+    if (!manifestSourcePath.isPresent()) {
+      manifestSourcePath = arg.getManifestSkeleton();
+    }
+    if (!manifestSourcePath.isPresent()) {
+      throw new IllegalArgumentException(
+          "android_binary "
+              + targetNode.getBuildTarget()
+              + " did not specify manifest or manifest_skeleton");
+    }
+    return sourcePathResolver.getAbsolutePath(manifestSourcePath.get());
   }
 
   @Override

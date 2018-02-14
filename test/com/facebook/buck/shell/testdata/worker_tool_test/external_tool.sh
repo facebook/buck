@@ -21,7 +21,7 @@ for i in "$@"; do
 done
 
 ARGS="--num-jobs $num_jobs"
-if [ "$loc" != "" -a ! -e $loc ]; then
+if [ "$loc" != "" -a ! -e "$loc" ]; then
     echo "$loc does not exist" 1>&2
     exit 1
 elif [ "$loc" != "" ]; then

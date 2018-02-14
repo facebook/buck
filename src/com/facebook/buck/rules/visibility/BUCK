@@ -1,0 +1,15 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "visibility",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/rules:interfaces",
+        "//third-party/java/guava:guava",
+    ],
+)

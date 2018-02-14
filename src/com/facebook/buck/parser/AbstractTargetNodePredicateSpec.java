@@ -20,14 +20,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-/**
- * Matches all {@link TargetNode} objects in a repository that match the given {@link Predicate}.
- */
+/** Matches all {@link TargetNode} objects in a repository that match the specification. */
 @Value.Immutable(builder = false)
 @BuckStyleImmutable
 abstract class AbstractTargetNodePredicateSpec implements TargetNodeSpec {

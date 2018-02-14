@@ -18,8 +18,9 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import org.hamcrest.Matchers;
@@ -43,22 +44,21 @@ public class AndroidLibraryGraphEnhancerIntegrationTest {
   @Test
   public void testPullsResourcesFromDeps() throws IOException, InterruptedException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:lib_with_direct_dep");
+    ProcessResult result = workspace.runBuckBuild("//:lib_with_direct_dep");
     result.assertSuccess();
   }
 
   @Test
   public void testPullsResourcesFromProvidedDeps() throws IOException, InterruptedException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:lib_with_provided_dep");
+    ProcessResult result = workspace.runBuckBuild("//:lib_with_provided_dep");
     result.assertSuccess();
   }
 
   @Test
   public void testDoesNotPullResourcesFromJavaResources() throws IOException, InterruptedException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckBuild("//:lib_with_java_resources_dep");
+    ProcessResult result = workspace.runBuckBuild("//:lib_with_java_resources_dep");
     result.assertFailure();
     assertThat(
         result.getStderr(),
@@ -71,7 +71,7 @@ public class AndroidLibraryGraphEnhancerIntegrationTest {
   @Test
   public void testDoesNotPullResourcesFromLicenses() throws IOException, InterruptedException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:lib_with_licenses_dep");
+    ProcessResult result = workspace.runBuckBuild("//:lib_with_licenses_dep");
     result.assertFailure();
     assertThat(
         result.getStderr(),

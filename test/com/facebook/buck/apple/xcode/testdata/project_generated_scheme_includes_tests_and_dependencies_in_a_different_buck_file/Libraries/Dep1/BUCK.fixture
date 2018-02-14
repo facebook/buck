@@ -1,25 +1,25 @@
 EMPTY_CONFIGS = {
-  'Debug': {},
-  'Release': {},
+    "Debug": {},
+    "Release": {},
 }
 
 apple_library(
-  name = 'Dep1',
-  configs = EMPTY_CONFIGS,
-  srcs = [],
-  frameworks = [],
-  deps = [],
-  tests = [':Dep1Tests'],
-  visibility = ['PUBLIC'],
+    name = "Dep1",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    tests = [":Dep1Tests"],
+    visibility = ["PUBLIC"],
+    deps = [],
 )
 
 apple_test(
-  name = 'Dep1Tests',
-  configs = EMPTY_CONFIGS,
-  info_plist = 'Test.plist',
-  srcs = [],
-  frameworks = [],
-  deps = [
-    ':Dep1',
-  ],
+    name = "Dep1Tests",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    info_plist = "Test.plist",
+    deps = [
+        ":Dep1",
+    ],
 )

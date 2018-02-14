@@ -38,9 +38,10 @@ import com.facebook.buck.test.external.ExternalTestRunEvent;
 import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.testutil.JsonMatcher;
-import com.facebook.buck.timing.Clock;
-import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.timing.Clock;
+import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -148,7 +149,7 @@ public class EventSerializationTest {
   @Test
   public void testBuildEventFinished() throws IOException {
     BuildEvent.Finished event =
-        BuildEvent.finished(BuildEvent.started(ImmutableSet.of("//base:short")), 0);
+        BuildEvent.finished(BuildEvent.started(ImmutableSet.of("//base:short")), ExitCode.SUCCESS);
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
@@ -185,6 +186,8 @@ public class EventSerializationTest {
             Optional.empty(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
             false,
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.empty());
@@ -260,7 +263,7 @@ public class EventSerializationTest {
   @Test
   public void testExternalTestRunEventFinished() throws Exception {
     ExternalTestRunEvent.Finished event =
-        ExternalTestRunEvent.finished(ImmutableSet.of(), /* exitCode */ 0);
+        ExternalTestRunEvent.finished(ImmutableSet.of(), /* exitCode */ ExitCode.SUCCESS);
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(

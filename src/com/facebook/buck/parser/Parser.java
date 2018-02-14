@@ -25,24 +25,26 @@ import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.GraphTraversable;
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.WatchmanOverflowEvent;
 import com.facebook.buck.io.WatchmanPathEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasDefaultFlavors;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.exceptions.BuildTargetException;
+import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.parser.thrift.RemoteDaemonicParserState;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
+import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -58,6 +60,7 @@ import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.AbstractMap;
@@ -83,17 +86,27 @@ public class Parser {
   private final DaemonicParserState permState;
   private final ConstructorArgMarshaller marshaller;
   private final TypeCoercerFactory typeCoercerFactory;
+  private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
+  private final ParserPythonInterpreterProvider parserPythonInterpreterProvider;
 
   public Parser(
       BroadcastEventListener broadcastEventListener,
       ParserConfig parserConfig,
       TypeCoercerFactory typeCoercerFactory,
-      ConstructorArgMarshaller marshaller) {
+      ConstructorArgMarshaller marshaller,
+      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
+      ExecutableFinder executableFinder) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.permState =
         new DaemonicParserState(
-            broadcastEventListener, typeCoercerFactory, parserConfig.getNumParsingThreads());
+            broadcastEventListener,
+            typeCoercerFactory,
+            parserConfig.getNumParsingThreads(),
+            parserConfig.shouldIgnoreEnvironmentVariablesChanges());
     this.marshaller = marshaller;
+    this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
+    this.parserPythonInterpreterProvider =
+        new ParserPythonInterpreterProvider(parserConfig, executableFinder);
   }
 
   protected DaemonicParserState getPermState() {
@@ -137,8 +150,10 @@ public class Parser {
         new PerBuildState(
             this,
             eventBus,
+            parserPythonInterpreterProvider,
             executor,
             cell,
+            knownBuildRuleTypesProvider,
             enableProfiling,
             PerBuildState.SpeculativeParsing.ENABLED)) {
       return state.getAllTargetNodes(cell, buildFile);
@@ -156,8 +171,10 @@ public class Parser {
         new PerBuildState(
             this,
             eventBus,
+            parserPythonInterpreterProvider,
             executor,
             cell,
+            knownBuildRuleTypesProvider,
             enableProfiling,
             PerBuildState.SpeculativeParsing.DISABLED)) {
       return state.getTargetNode(target);
@@ -185,17 +202,22 @@ public class Parser {
                   .getParseDeps()
                   .stream()
                   .map(Object::toString)
-                  .collect(MoreCollectors.toImmutableList()));
+                  .collect(ImmutableList.toImmutableList()));
           return toReturn;
         }
       }
-    } catch (Cell.MissingBuildFileException e) {
+    } catch (MissingBuildFileException e) {
       throw new RuntimeException("Deeply unlikely to be true: the cell is missing: " + targetNode);
     }
     return null;
   }
 
+  /**
+   * @deprecated Prefer {@link #getRawTargetNode(PerBuildState, Cell, TargetNode)} and reusing a
+   *     PerBuildState instance, especially when calling in a loop.
+   */
   @Nullable
+  @Deprecated
   public SortedMap<String, Object> getRawTargetNode(
       BuckEventBus eventBus,
       Cell cell,
@@ -208,8 +230,10 @@ public class Parser {
         new PerBuildState(
             this,
             eventBus,
+            parserPythonInterpreterProvider,
             executor,
             cell,
+            knownBuildRuleTypesProvider,
             enableProfiling,
             PerBuildState.SpeculativeParsing.DISABLED)) {
       return getRawTargetNode(state, cell, targetNode);
@@ -245,8 +269,10 @@ public class Parser {
         new PerBuildState(
             this,
             eventBus,
+            parserPythonInterpreterProvider,
             executor,
             rootCell,
+            knownBuildRuleTypesProvider,
             enableProfiling,
             PerBuildState.SpeculativeParsing.ENABLED)) {
       return buildTargetGraph(state, eventBus, toExplore);
@@ -273,7 +299,7 @@ public class Parser {
           TargetNode<?, ?> node;
           try {
             node = state.getTargetNode(target);
-          } catch (BuildFileParseException | BuildTargetException e) {
+          } catch (BuildFileParseException e) {
             throw new RuntimeException(e);
           }
 
@@ -286,8 +312,6 @@ public class Parser {
             try {
               state.getTargetNode(dep);
             } catch (BuildFileParseException e) {
-              throw ParserMessages.createReadableExceptionWithWhenSuffix(target, dep, e);
-            } catch (BuildTargetException e) {
               throw ParserMessages.createReadableExceptionWithWhenSuffix(target, dep, e);
             } catch (HumanReadableException e) {
               throw ParserMessages.createReadableExceptionWithWhenSuffix(target, dep, e);
@@ -369,8 +393,10 @@ public class Parser {
         new PerBuildState(
             this,
             eventBus,
+            parserPythonInterpreterProvider,
             executor,
             rootCell,
+            knownBuildRuleTypesProvider,
             enableProfiling,
             PerBuildState.SpeculativeParsing.ENABLED)) {
 
@@ -405,7 +431,14 @@ public class Parser {
 
     try (PerBuildState state =
         new PerBuildState(
-            this, eventBus, executor, rootCell, enableProfiling, speculativeParsing)) {
+            this,
+            eventBus,
+            parserPythonInterpreterProvider,
+            executor,
+            rootCell,
+            knownBuildRuleTypesProvider,
+            enableProfiling,
+            speculativeParsing)) {
       return resolveTargetSpecs(state, eventBus, rootCell, specs, applyDefaultFlavorsMode);
     }
   }
@@ -464,7 +497,7 @@ public class Parser {
       // Format a proper error message for non-existent build files.
       if (!cell.getFilesystem().isFile(buildFile)) {
         throw new MissingBuildFileException(
-            firstSpec, cell.getFilesystem().getRootPath().relativize(buildFile));
+            firstSpec.toString(), cell.getFilesystem().getRootPath().relativize(buildFile));
       }
 
       for (int index : buildFileSpecs) {
@@ -483,7 +516,8 @@ public class Parser {
                         spec,
                         node.getBuildTarget());
                     return new AbstractMap.SimpleEntry<>(index, buildTargets);
-                  }));
+                  },
+                  MoreExecutors.directExecutor()));
         } else {
           // Build up a list of all target nodes from the build file.
           targetFutures.add(
@@ -491,7 +525,8 @@ public class Parser {
                   state.getAllTargetNodesJob(cell, buildFile),
                   nodes ->
                       new AbstractMap.SimpleEntry<>(
-                          index, applySpecFilter(spec, nodes, applyDefaultFlavorsMode))));
+                          index, applySpecFilter(spec, nodes, applyDefaultFlavorsMode)),
+                  MoreExecutors.directExecutor()));
         }
       }
     }
@@ -571,8 +606,8 @@ public class Parser {
     return target.withFlavors(defaultFlavors);
   }
 
-  public RemoteDaemonicParserState storeParserState() throws IOException {
-    return getPermState().serialiseDaemonicParserState();
+  public RemoteDaemonicParserState storeParserState(Cell rootCell) throws IOException {
+    return getPermState().serializeDaemonicParserState(rootCell);
   }
 
   public void restoreParserState(RemoteDaemonicParserState state, Cell rootCell) {
@@ -590,6 +625,10 @@ public class Parser {
     LOG.verbose("Parser watched event %s %s", event.getKind(), event.getPath());
 
     permState.invalidateBasedOn(event);
+  }
+
+  public void invalidateBasedOnPath(Path fullPath, boolean isCreatedOrDeleted) {
+    permState.invalidateBasedOnPath(fullPath, isCreatedOrDeleted);
   }
 
   public void recordParseStartTime(BuckEventBus eventBus) {

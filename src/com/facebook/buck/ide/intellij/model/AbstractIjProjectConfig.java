@@ -96,4 +96,6 @@ abstract class AbstractIjProjectConfig {
   public abstract Optional<String> getOutputUrl();
 
   public abstract Optional<Path> getExtraCompilerOutputModulesPath();
+
+  public abstract Optional<String> getMinAndroidSdkVersion();
 }

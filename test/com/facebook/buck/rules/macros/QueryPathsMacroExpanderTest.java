@@ -32,11 +32,12 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.HashMapWithStats;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -155,16 +156,19 @@ public class QueryPathsMacroExpanderTest {
                 BuildTargetFactory.newInstance(filesystem.getRootPath(), "//some:target"),
                 filesystem)
             .setOut("foo.txt")
-            .setCmd("$(query_paths 'inputs(:dep)')")
+            .setCmd(
+                StringWithMacrosUtils.format(
+                    "%s",
+                    QueryPathsMacro.of(Query.of(dep.getBuildTarget().getFullyQualifiedName()))))
             .build();
 
     TargetGraph graph = TargetGraphFactory.newInstance(dep, target);
 
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRule depRule = resolver.requireRule(dep.getBuildTarget());
     BuildRule rule = resolver.requireRule(target.getBuildTarget());
 
-    assertEquals(
-        ImmutableSortedSet.of(resolver.requireRule(dep.getBuildTarget())), rule.getBuildDeps());
+    assertEquals(ImmutableSortedSet.of(depRule), rule.getBuildDeps());
   }
 }

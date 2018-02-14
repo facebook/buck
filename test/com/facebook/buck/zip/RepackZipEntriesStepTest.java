@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
@@ -87,11 +87,7 @@ public class RepackZipEntriesStepTest {
     Path out = parent.resolve("output.zip");
     RepackZipEntriesStep step =
         new RepackZipEntriesStep(
-            filesystem,
-            zipFile,
-            out,
-            ImmutableSet.of("file"),
-            ZipCompressionLevel.MIN_COMPRESSION_LEVEL);
+            filesystem, zipFile, out, ImmutableSet.of("file"), ZipCompressionLevel.NONE);
     step.execute(TestExecutionContext.newInstance());
 
     byte[] expected = Files.readAllBytes(zipFile);

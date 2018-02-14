@@ -26,13 +26,13 @@ import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.HashCodeAndFileType;
 import com.facebook.buck.util.zip.CustomJarOutputStream;
 import com.facebook.buck.util.zip.CustomZipOutputStream;
 import com.facebook.buck.util.zip.ZipOutputStreams;
+import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import java.io.ByteArrayInputStream;
@@ -67,7 +67,7 @@ public class DefaultFileHashCacheTest {
     return EnumSet.allOf(FileHashCacheMode.class)
         .stream()
         .map(v -> new Object[] {v})
-        .collect(MoreCollectors.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   public DefaultFileHashCacheTest(FileHashCacheMode fileHashCacheMode) throws IOException {
@@ -332,6 +332,7 @@ public class DefaultFileHashCacheTest {
     DefaultFileHashCache cache =
         DefaultFileHashCache.createBuckOutFileHashCache(filesystem, fileHashCacheMode);
     assertTrue(cache.willGet(filesystem.getPath("buck-out/file.txt")));
+    assertFalse(cache.willGet(filesystem.getPath("buck-out/cells/file.txt")));
     assertFalse(cache.willGet(filesystem.getPath("file.txt")));
   }
 
@@ -347,6 +348,7 @@ public class DefaultFileHashCacheTest {
     DefaultFileHashCache cache =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
     assertFalse(cache.willGet(filesystem.getPath("buck-out/file.txt")));
+    assertFalse(cache.willGet(filesystem.getPath("buck-out/cells/file.txt")));
     assertTrue(cache.willGet(filesystem.getPath("file.txt")));
   }
 }

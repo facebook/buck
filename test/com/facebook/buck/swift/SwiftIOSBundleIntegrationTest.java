@@ -26,15 +26,16 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
-import com.facebook.buck.apple.ApplePlatform;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import java.nio.file.Files;
@@ -122,7 +123,7 @@ public class SwiftIOSBundleIntegrationTest {
         BuildTargetFactory.newInstance("//:ios-parent-dynamic")
             .withAppendedFlavors(InternalFlavor.of("iphonesimulator-x86_64"));
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "build", parentDynamicTarget.getFullyQualifiedName(), "--config", "cxx.cflags=-g");
     result.assertSuccess();
@@ -164,7 +165,7 @@ public class SwiftIOSBundleIntegrationTest {
         BuildTargetFactory.newInstance("//:ios-parent-dynamic")
             .withAppendedFlavors(InternalFlavor.of("iphonesimulator-x86_64"));
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "build", parentDynamicTarget.getFullyQualifiedName(), "--config", "cxx.cflags=-g");
     result.assertSuccess();
@@ -210,7 +211,7 @@ public class SwiftIOSBundleIntegrationTest {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "build", ":dep1-soname#iphonesimulator-x86_64,shared", "--config", "cxx.cflags=-g");
     result.assertSuccess();
@@ -249,10 +250,10 @@ public class SwiftIOSBundleIntegrationTest {
 
     workspace.replaceFileContents(
         "BUCK",
-        "preferred_linkage = 'any', # iosdep1 preferred_linkage anchor",
-        "preferred_linkage = 'static'");
+        "preferred_linkage = \"any\",  # iosdep1 preferred_linkage anchor",
+        "preferred_linkage = \"static\"");
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "build", ":ios-parent-dynamic#iphonesimulator-x86_64", "--config", "cxx.cflags=-g");
     result.assertSuccess();

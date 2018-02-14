@@ -25,8 +25,8 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
-import com.facebook.buck.apple.ApplePlatform;
 import com.facebook.buck.apple.CodeSigning;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
 import com.facebook.buck.io.file.MoreFiles;
@@ -37,10 +37,11 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.FakeAppleDeveloperEnvironment;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -117,7 +118,7 @@ public class ObjectPathsAbsolutifierIntegrationTest {
     BuildTarget target =
         BuildTargetFactory.newInstance("//Apps/TestApp:TestApp")
             .withAppendedFlavors(platformFlavor);
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "build", "--config", "cxx.cflags=-g", target.getFullyQualifiedName());
     result.assertSuccess();
@@ -309,7 +310,7 @@ public class ObjectPathsAbsolutifierIntegrationTest {
     String oldCompDirValue = sanitizer.getCompilationDirectory();
     String newCompDirValue = workspace.getDestPath().toString();
 
-    ProjectWorkspace.ProcessResult result =
+    ProcessResult result =
         workspace.runBuckCommand(
             "machoutils",
             "absolutify_object_paths",
