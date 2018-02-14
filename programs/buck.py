@@ -29,6 +29,11 @@ def killall_buck(reporter):
 
     for line in os.popen('jps -l'):
         split = line.split()
+        if len(split) == 1:
+            # Java processes which are launched not as `java Main`
+            # (e. g. `idea`) are shown with only PID without
+            # main class name.
+            continue
         if len(split) != 2:
             raise Exception('cannot parse a line in jps -l outout: ' + repr(line))
         pid = int(split[0])
