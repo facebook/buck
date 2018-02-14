@@ -75,6 +75,8 @@ public class StampedeBuildClientTest {
   private static final boolean TWO_STAGE = false;
   private static final boolean NO_FALLBACK = false;
   private static final boolean FALLBACK_ENABLED = true;
+  private static final String SUCCESS_STATUS_MSG =
+      "The build succeeded locally before distributed build finished.";
 
   private BuckEventBus mockEventBus;
   private RemoteBuildRuleSynchronizer remoteBuildRuleSynchronizer;
@@ -343,9 +345,7 @@ public class StampedeBuildClientTest {
 
     // Distributed build job should be set to finished when synchronized build completes
     mockDistBuildService.setFinalBuildStatus(
-        INITIALIZED_STAMPEDE_ID,
-        BuildStatus.FINISHED_SUCCESSFULLY,
-        "succeeded locally before distributed build finished.");
+        INITIALIZED_STAMPEDE_ID, BuildStatus.FINISHED_SUCCESSFULLY, SUCCESS_STATUS_MSG);
     EasyMock.expectLastCall();
 
     // Synchronized build returns with success code
@@ -419,9 +419,7 @@ public class StampedeBuildClientTest {
     expectMockLocalBuildExecutorReturnsWithCode(SUCCESS_CODE);
 
     mockDistBuildService.setFinalBuildStatus(
-        INITIALIZED_STAMPEDE_ID,
-        BuildStatus.FINISHED_SUCCESSFULLY,
-        "succeeded locally before distributed build finished.");
+        INITIALIZED_STAMPEDE_ID, BuildStatus.FINISHED_SUCCESSFULLY, SUCCESS_STATUS_MSG);
     EasyMock.expectLastCall();
 
     replayAllMocks();
