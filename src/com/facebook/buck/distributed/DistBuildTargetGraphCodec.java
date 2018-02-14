@@ -32,6 +32,7 @@ import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
@@ -40,6 +41,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -122,8 +124,8 @@ public class DistBuildTargetGraphCodec {
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider)
       throws IOException {
 
-    ImmutableMap.Builder<BuildTarget, TargetNode<?, ?>> targetNodeIndexBuilder =
-        ImmutableMap.builder();
+    final Map<BuildTarget, TargetNode<?, ?>> index = new HashMap<>();
+    final Map<BuildTarget, TargetNode<?, ?>> graphNodes = new HashMap<>();
 
     ImmutableSet.Builder<BuildTarget> buildTargetsBuilder = ImmutableSet.builder();
 
@@ -152,22 +154,38 @@ public class DistBuildTargetGraphCodec {
               target,
               rawNode,
               input -> SimplePerfEvent.scope(Optional.empty(), input));
-      targetNodeIndexBuilder.put(targetNode.getBuildTarget(), targetNode);
+
+      MoreMaps.putCheckEquals(index, target, targetNode);
+      MoreMaps.putCheckEquals(graphNodes, target, targetNode);
+
+      if (target.isFlavored()) {
+        BuildTarget unflavoredTarget = BuildTarget.of(target.getUnflavoredBuildTarget());
+        TargetNode<?, ?> unflavoredTargetNode =
+            parserTargetNodeFactory.createTargetNode(
+                cell,
+                knownBuildRuleTypesProvider.get(cell),
+                buildFilePath,
+                unflavoredTarget,
+                rawNode,
+                input -> SimplePerfEvent.scope(Optional.empty(), input));
+
+        MoreMaps.putCheckEquals(index, unflavoredTarget, unflavoredTargetNode);
+      }
     }
 
     ImmutableSet<BuildTarget> buildTargets = buildTargetsBuilder.build();
     Preconditions.checkArgument(topLevelTargets.size() == buildTargets.size());
 
-    ImmutableMap<BuildTarget, TargetNode<?, ?>> targetNodeIndex = targetNodeIndexBuilder.build();
+    ImmutableMap<BuildTarget, TargetNode<?, ?>> targetNodeIndex = ImmutableMap.copyOf(index);
 
     MutableDirectedGraph<TargetNode<?, ?>> mutableTargetGraph = new MutableDirectedGraph<>();
-    for (TargetNode<?, ?> targetNode : targetNodeIndex.values()) {
+    for (TargetNode<?, ?> targetNode : graphNodes.values()) {
       mutableTargetGraph.addNode(targetNode);
       for (BuildTarget dep : targetNode.getParseDeps()) {
         mutableTargetGraph.addEdge(
             targetNode,
             Preconditions.checkNotNull(
-                targetNodeIndex.get(dep),
+                graphNodes.get(dep),
                 "Dependency [%s] of target [%s] was not found in the client-side target graph.",
                 dep.getFullyQualifiedName(),
                 targetNode.getBuildTarget().getFullyQualifiedName()));
