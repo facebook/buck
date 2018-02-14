@@ -23,7 +23,7 @@ java_library(
         "JavaPackageFinder.java",
     ],
     visibility = [
-        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:build_context",
         "//src/com/facebook/buck/step:step",
     ],
     deps = ["//src/com/facebook/buck/model:model"],
