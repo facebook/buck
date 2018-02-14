@@ -52,7 +52,7 @@ public class KotlinLibraryIntegrationTest {
 
   @Test
   public void shouldAnnotationProcessorClass() throws Exception {
-    ProjectWorkspace.ProcessResult buildResult =
+    ProcessResult buildResult =
         workspace.runBuckCommand("build", "//com/example/ap:kotlin");
     buildResult.assertSuccess("Build should have succeeded.");
   }
