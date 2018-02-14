@@ -411,7 +411,8 @@ expr ::= deps(expr)
 
 <p>
 The <code>deps(x)</code> operator evaluates to the graph formed by the
-transitive closure of dependencies of its argument set <i>x</i>. For example,
+transitive closure of dependencies of its argument set <i>x</i>, including the 
+nodes from the argument set <i>x</i>. For example,
 the value of <code>deps(//foo:bar)</code> is the dependency graph rooted at
 the single target node <code>//foo:bar</code>, including all its dependencies.
 </p>
@@ -593,7 +594,8 @@ expr ::= rdeps(expr, expr)
 <p>
 The <code>rdeps(u, x)</code> operator evaluates to the reverse dependencies
 of the argument set <code>x</code> within the transitive closure of the
-set <code>u</code> (the <i>universe</i>).
+set <code>u</code> (the <i>universe</i>), including the nodes from the argument 
+set <code>x</code>.
 </p>
 
 <p>
