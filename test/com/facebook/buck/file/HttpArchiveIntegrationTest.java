@@ -75,6 +75,9 @@ public class HttpArchiveIntegrationTest {
                 .put(
                     "/foo_no_symlinks.zip",
                     Files.readAllBytes(workspace.resolve("output_no_symlinks.zip")))
+                .put(
+                    "/package/artifact_name/version/artifact_name-version-classifier.zip",
+                    Files.readAllBytes(workspace.resolve("output_no_symlinks.zip")))
                 .build());
     httpd = new HttpdForTests();
     httpd.addHandler(httpdHandler);
@@ -723,6 +726,50 @@ public class HttpArchiveIntegrationTest {
     }
 
     Assert.assertEquals(ImmutableList.of("/really_a_zip.tar"), httpdHandler.getRequestedPaths());
+    Assert.assertEquals(
+        0, Files.walk(workspace.resolve(scratchDownloadPath)).filter(Files::isRegularFile).count());
+  }
+
+  @Test
+  public void downloadZipFromMavenCoordinates() throws IOException, InterruptedException {
+    TestDataHelper.overrideBuckconfig(
+        workspace,
+        ImmutableMap.of("download", ImmutableMap.of("maven_repo", httpd.getRootUri().toString())));
+
+    Path outputPath =
+        workspace.getBuckPaths().getGenDir().resolve("zip_from_maven").resolve("zip_from_maven");
+    Path scratchDownloadPath =
+        workspace.getBuckPaths().getScratchDir().resolve("zip_from_maven#archive-download");
+    Path downloadPath =
+        workspace
+            .getBuckPaths()
+            .getGenDir()
+            .resolve("zip_from_maven#archive-download")
+            .resolve("zip_from_maven");
+    Path expectedMainDotJavaPath = outputPath.resolve(mainDotJavaPath);
+    Path expectedEchoDotShPath = outputPath.resolve(echoDotShPath);
+
+    workspace.runBuckCommand("fetch", "//:zip_from_maven").assertSuccess();
+
+    Assert.assertFalse(
+        Files.exists(workspace.resolve(scratchDownloadPath).resolve("zip_from_maven")));
+    Assert.assertTrue(Files.exists(workspace.resolve(downloadPath)));
+    Assert.assertArrayEquals(
+        Files.readAllBytes(workspace.resolve("output_no_symlinks.zip")),
+        Files.readAllBytes(workspace.resolve(downloadPath)));
+    Assert.assertTrue(Files.isDirectory(workspace.resolve(outputPath)));
+    Assert.assertTrue(Files.exists(workspace.resolve(expectedMainDotJavaPath)));
+    Assert.assertTrue(Files.exists(workspace.resolve(expectedEchoDotShPath)));
+    Assert.assertEquals(mainDotJavaContents, workspace.getFileContents(expectedMainDotJavaPath));
+    Assert.assertEquals(echoDotShContents, workspace.getFileContents(expectedEchoDotShPath));
+    if (Platform.detect() != WINDOWS) {
+      Assert.assertFalse(Files.isExecutable(workspace.resolve(expectedMainDotJavaPath)));
+      Assert.assertTrue(Files.isExecutable(workspace.resolve(expectedEchoDotShPath)));
+    }
+
+    Assert.assertEquals(
+        ImmutableList.of("/package/artifact_name/version/artifact_name-version-classifier.zip"),
+        httpdHandler.getRequestedPaths());
     Assert.assertEquals(
         0, Files.walk(workspace.resolve(scratchDownloadPath)).filter(Files::isRegularFile).count());
   }
