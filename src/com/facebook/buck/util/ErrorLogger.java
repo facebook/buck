@@ -25,6 +25,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -96,7 +97,9 @@ public class ErrorLogger {
 
     // TODO(cjhopman): Think about how to handle multiline context strings.
     List<String> context = new LinkedList<>();
-    while (e instanceof ExecutionException || e instanceof WrapsException) {
+    while (e instanceof ExecutionException
+        || e instanceof UncheckedExecutionException
+        || e instanceof WrapsException) {
       if (e instanceof ExceptionWithContext) {
         ((ExceptionWithContext) e).getContext().ifPresent(msg -> context.add(0, msg));
       }
