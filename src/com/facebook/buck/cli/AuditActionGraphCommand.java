@@ -27,6 +27,7 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
@@ -37,6 +38,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ForkJoinPool;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
@@ -53,7 +55,9 @@ public class AuditActionGraphCommand extends AbstractCommand {
   public ExitCode runWithoutHelp(CommandRunnerParams params)
       throws IOException, InterruptedException {
     try (CommandThreadManager pool =
-        new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig()))) {
+            new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig()));
+        CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier =
+            getForkJoinPoolSupplier(params.getBuckConfig())) {
       // Create the target graph.
       TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets =
           params
@@ -78,7 +82,8 @@ public class AuditActionGraphCommand extends AbstractCommand {
                   params.getBuckEventBus(),
                   targetGraphAndBuildTargets.getTargetGraph(),
                   params.getBuckConfig(),
-                  params.getRuleKeyConfiguration());
+                  params.getRuleKeyConfiguration(),
+                  poolSupplier);
 
       // Dump the action graph.
       if (generateDotOutput) {

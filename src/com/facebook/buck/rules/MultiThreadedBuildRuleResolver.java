@@ -46,6 +46,7 @@ import javax.annotation.Nullable;
  */
 public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
   private final ForkJoinPool forkJoinPool;
+
   private final TargetGraph targetGraph;
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
   @Nullable private final BuckEventBus eventBus;

@@ -34,6 +34,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.versions.VersionedAliasBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,6 +48,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.SortedSet;
+import java.util.concurrent.ForkJoinPool;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -55,19 +57,27 @@ public class AuditClasspathCommandTest {
   private TestConsole console;
   private AuditClasspathCommand auditClasspathCommand;
   private CommandRunnerParams params;
+  private CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier;
 
   @Before
   public void setUp() throws IOException, InterruptedException {
     console = new TestConsole();
     auditClasspathCommand = new AuditClasspathCommand();
     params = CommandRunnerParamsForTesting.builder().setConsole(console).build();
+    poolSupplier =
+        CloseableMemoizedSupplier.of(
+            () -> {
+              throw new IllegalStateException(
+                  "should not use parallel executor for action graph construction in distributed slave build");
+            },
+            ignored -> {});
   }
 
   @Test
   public void testClassPathOutput() throws Exception {
     // Test that no output is created.
     auditClasspathCommand.printClasspath(
-        params, TargetGraphFactory.newInstance(ImmutableSet.of()), ImmutableSet.of());
+        params, TargetGraphFactory.newInstance(ImmutableSet.of()), ImmutableSet.of(), poolSupplier);
     assertEquals("", console.getTextWrittenToStdOut());
     assertEquals("", console.getTextWrittenToStdErr());
 
@@ -109,7 +119,7 @@ public class AuditClasspathCommandTest {
         TargetGraphFactory.newInstance(
             ImmutableSet.of(
                 javaLibraryNode, androidLibraryNode, keystoreNode, testAndroidNode, testJavaNode));
-    auditClasspathCommand.printClasspath(params, targetGraph, ImmutableSet.of());
+    auditClasspathCommand.printClasspath(params, targetGraph, ImmutableSet.of(), poolSupplier);
 
     // Still empty.
     assertEquals("", console.getTextWrittenToStdOut());
@@ -119,7 +129,8 @@ public class AuditClasspathCommandTest {
     // - paths don't appear multiple times when dependencies are referenced multiple times.
     // - dependencies are walked
     // - independent targets in the same BUCK file are not included in the output
-    auditClasspathCommand.printClasspath(params, targetGraph, ImmutableSet.of(testAndroidTarget));
+    auditClasspathCommand.printClasspath(
+        params, targetGraph, ImmutableSet.of(testAndroidTarget), poolSupplier);
 
     Path root = javaLibraryTarget.getUnflavoredBuildTarget().getCellPath();
     SortedSet<String> expectedPaths =
@@ -154,8 +165,8 @@ public class AuditClasspathCommandTest {
         TargetGraphFactory.newInstance(
             ImmutableSet.of(
                 javaLibraryNode, androidLibraryNode, keystoreNode, testAndroidNode, testJavaNode)),
-        ImmutableSet.of(
-            testAndroidTarget, javaLibraryTarget, androidLibraryTarget, testJavaTarget));
+        ImmutableSet.of(testAndroidTarget, javaLibraryTarget, androidLibraryTarget, testJavaTarget),
+        poolSupplier);
 
     BuildTarget testJavaCompiledJar = testJavaTarget.withFlavors(COMPILED_TESTS_LIBRARY_FLAVOR);
 
@@ -205,7 +216,8 @@ public class AuditClasspathCommandTest {
     auditClasspathCommand.printJsonClasspath(
         params,
         TargetGraphFactory.newInstance(ImmutableSet.of(androidNode, javaNode)),
-        ImmutableSet.of(androidTarget, javaTarget));
+        ImmutableSet.of(androidTarget, javaTarget),
+        poolSupplier);
 
     Path root = javaTarget.getCellPath();
     ObjectMapper objectMapper = ObjectMappers.legacyCreate();
@@ -263,7 +275,8 @@ public class AuditClasspathCommandTest {
                 .setSections(ImmutableMap.of("build", ImmutableMap.of("versions", "true")))
                 .build()),
         targetGraph,
-        ImmutableSet.of(androidLibrary.getBuildTarget(), javaLibrary.getBuildTarget()));
+        ImmutableSet.of(androidLibrary.getBuildTarget(), javaLibrary.getBuildTarget()),
+        poolSupplier);
 
     // Verify output.
     Path root = javaLibrary.getBuildTarget().getUnflavoredBuildTarget().getCellPath();
@@ -319,7 +332,8 @@ public class AuditClasspathCommandTest {
                 .setSections(ImmutableMap.of("build", ImmutableMap.of("versions", "true")))
                 .build()),
         targetGraph,
-        ImmutableSet.of(androidLibrary.getBuildTarget(), javaLibrary.getBuildTarget()));
+        ImmutableSet.of(androidLibrary.getBuildTarget(), javaLibrary.getBuildTarget()),
+        poolSupplier);
 
     // Verify output.
     Path root = javaLibrary.getBuildTarget().getCellPath();

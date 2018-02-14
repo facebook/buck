@@ -87,6 +87,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
@@ -2641,7 +2642,16 @@ public class ParserTest {
   private BuildRuleResolver buildActionGraph(BuckEventBus eventBus, TargetGraph targetGraph) {
     return Preconditions.checkNotNull(
             ActionGraphCache.getFreshActionGraph(
-                eventBus, targetGraph, ActionGraphParallelizationMode.DISABLED, false))
+                eventBus,
+                targetGraph,
+                ActionGraphParallelizationMode.DISABLED,
+                false,
+                CloseableMemoizedSupplier.of(
+                    () -> {
+                      throw new IllegalStateException(
+                          "should not use parallel executor for action graph construction in test");
+                    },
+                    ignored -> {})))
         .getResolver();
   }
 

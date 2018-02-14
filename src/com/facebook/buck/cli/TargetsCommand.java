@@ -61,6 +61,7 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
@@ -100,6 +101,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.SortedMap;
+import java.util.concurrent.ForkJoinPool;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -311,7 +313,9 @@ public class TargetsCommand extends AbstractCommand {
   public ExitCode runWithoutHelp(CommandRunnerParams params)
       throws IOException, InterruptedException {
     try (CommandThreadManager pool =
-        new CommandThreadManager("Targets", getConcurrencyLimit(params.getBuckConfig()))) {
+            new CommandThreadManager("Targets", getConcurrencyLimit(params.getBuckConfig()));
+        CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier =
+            getForkJoinPoolSupplier(params.getBuckConfig())) {
       ListeningExecutorService executor = pool.getListeningExecutorService();
 
       // Exit early if --resolve-alias is passed in: no need to parse any build files.
@@ -321,7 +325,7 @@ public class TargetsCommand extends AbstractCommand {
         return ExitCode.SUCCESS;
       }
 
-      return runWithExecutor(params, executor);
+      return runWithExecutor(params, executor, poolSupplier);
     } catch (BuildFileParseException | CycleException | VersionException e) {
       params
           .getBuckEventBus()
@@ -330,7 +334,10 @@ public class TargetsCommand extends AbstractCommand {
     }
   }
 
-  private ExitCode runWithExecutor(CommandRunnerParams params, ListeningExecutorService executor)
+  private ExitCode runWithExecutor(
+      CommandRunnerParams params,
+      ListeningExecutorService executor,
+      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
           CycleException, VersionException {
     Optional<ImmutableSet<Class<? extends Description<?>>>> descriptionClasses =
@@ -356,7 +363,7 @@ public class TargetsCommand extends AbstractCommand {
     // shortcut to DOT format, it only works along with rule keys and transitive rule keys
     // because we want to construct action graph
     if (shouldUseDotFormat()) {
-      printDotFormat(params, executor);
+      printDotFormat(params, executor, poolSupplier);
       return ExitCode.SUCCESS;
     }
 
@@ -380,7 +387,8 @@ public class TargetsCommand extends AbstractCommand {
                 targetGraphAndBuildTargetsForShowRules.getTargetGraph(),
                 targetGraphAndBuildTargetsForShowRules
                     .getTargetGraph()
-                    .getAll(targetGraphAndBuildTargetsForShowRules.getBuildTargets())));
+                    .getAll(targetGraphAndBuildTargetsForShowRules.getBuildTargets())),
+            poolSupplier);
 
     if (shouldUseJsonFormat()) {
       ImmutableSortedSet.Builder<BuildTarget> keysBuilder = ImmutableSortedSet.naturalOrder();
@@ -399,7 +407,10 @@ public class TargetsCommand extends AbstractCommand {
    * Output rules along with dependencies as a graph in DOT format As a part of invocation,
    * constructs both target and action graphs
    */
-  private void printDotFormat(CommandRunnerParams params, ListeningExecutorService executor)
+  private void printDotFormat(
+      CommandRunnerParams params,
+      ListeningExecutorService executor,
+      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
           VersionException {
     TargetGraphAndBuildTargets targetGraphAndTargets = buildTargetGraphAndTargets(params, executor);
@@ -410,7 +421,8 @@ public class TargetsCommand extends AbstractCommand {
                 params.getBuckEventBus(),
                 targetGraphAndTargets.getTargetGraph(),
                 params.getBuckConfig(),
-                params.getRuleKeyConfiguration());
+                params.getRuleKeyConfiguration(),
+                poolSupplier);
 
     // construct real graph
     MutableDirectedGraph<BuildRule> actionGraphMutable = new MutableDirectedGraph<>();
@@ -851,7 +863,8 @@ public class TargetsCommand extends AbstractCommand {
   private ImmutableMap<BuildTarget, TargetResult> computeShowRules(
       CommandRunnerParams params,
       ListeningExecutorService executor,
-      Pair<TargetGraph, Iterable<TargetNode<?, ?>>> targetGraphAndTargetNodes)
+      Pair<TargetGraph, Iterable<TargetNode<?, ?>>> targetGraphAndTargetNodes,
+      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
           CycleException {
 
@@ -886,7 +899,8 @@ public class TargetsCommand extends AbstractCommand {
                     params.getBuckEventBus(),
                     targetGraphAndTargetNodes.getFirst(),
                     params.getBuckConfig(),
-                    params.getRuleKeyConfiguration());
+                    params.getRuleKeyConfiguration(),
+                    poolSupplier);
         actionGraph = Optional.of(result.getActionGraph());
         buildRuleResolver = Optional.of(result.getResolver());
         if (isShowRuleKey) {
@@ -927,6 +941,7 @@ public class TargetsCommand extends AbstractCommand {
         }
       }
 
+      // TODO rewrite targets so that this doesn't alter the ActionGraph
       for (TargetNode<?, ?> targetNode : targetGraphAndTargetNodes.getSecond()) {
         TargetResult.Builder builder =
             targetResultBuilders.getOrCreate(targetNode.getBuildTarget());
@@ -1247,6 +1262,7 @@ public class TargetsCommand extends AbstractCommand {
    * their results in to result builder for each build target.
    */
   private static class TargetResultBuilders {
+
     final Map<BuildTarget, TargetResult.Builder> map = new HashMap<>();
 
     TargetResult.Builder getOrCreate(BuildTarget target) {
@@ -1257,6 +1273,7 @@ public class TargetsCommand extends AbstractCommand {
   @Value.Immutable
   @BuckStyleImmutable
   abstract static class AbstractTargetResult {
+
     public abstract Optional<String> getOutputPath();
 
     public abstract Optional<String> getGeneratedSourcePath();

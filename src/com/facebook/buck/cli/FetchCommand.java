@@ -44,6 +44,7 @@ import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.DefaultStepRunner;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
@@ -51,6 +52,7 @@ import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.util.concurrent.ForkJoinPool;
 
 public class FetchCommand extends BuildCommand {
 
@@ -72,8 +74,11 @@ public class FetchCommand extends BuildCommand {
 
     FetchTargetNodeToBuildRuleTransformer ruleGenerator = createFetchTransformer(params);
     int exitCodeInt;
+
     try (CommandThreadManager pool =
-        new CommandThreadManager("Fetch", getConcurrencyLimit(params.getBuckConfig()))) {
+            new CommandThreadManager("Fetch", getConcurrencyLimit(params.getBuckConfig()));
+        CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier =
+            getForkJoinPoolSupplier(params.getBuckConfig())) {
       ActionGraphAndResolver actionGraphAndResolver;
       ImmutableSet<BuildTarget> buildTargets;
       try {
@@ -98,7 +103,8 @@ public class FetchCommand extends BuildCommand {
                     ruleGenerator,
                     result.getTargetGraph(),
                     params.getBuckConfig().getActionGraphParallelizationMode(),
-                    params.getBuckConfig().getShouldInstrumentActionGraph()));
+                    params.getBuckConfig().getShouldInstrumentActionGraph(),
+                    poolSupplier));
         buildTargets = ruleGenerator.getDownloadableTargets();
       } catch (BuildFileParseException | VersionException e) {
         params

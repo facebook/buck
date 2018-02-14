@@ -40,6 +40,7 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.PathTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
@@ -153,7 +154,13 @@ public class DelegateAndGraphsInitializer {
                   args.getRuleKeyConfiguration(),
                   ActionGraphParallelizationMode.DISABLED,
                   Optional.empty(),
-                  args.getShouldInstrumentActionGraph());
+                  args.getShouldInstrumentActionGraph(),
+                  CloseableMemoizedSupplier.of(
+                      () -> {
+                        throw new IllegalStateException(
+                            "should not use parallel executor for action graph construction in distributed slave build");
+                      },
+                      ignored -> {}));
       return actionGraphAndResolver;
     } finally {
       args.getTimingStatsTracker().stopTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
