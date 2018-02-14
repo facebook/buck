@@ -38,6 +38,7 @@ public class LocalBuildRunner {
   private static final Logger LOG = Logger.get(LocalBuildRunner.class);
 
   private final ExecutorService executor;
+  private boolean isDownloadHeavyBuild;
   private final RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter;
   private final AtomicReference<Build> buildReference;
   private final CountDownLatch initializeBuildLatch;
@@ -55,11 +56,13 @@ public class LocalBuildRunner {
       ExecutorService executor,
       LocalBuildExecutorInvoker localBuildExecutorInvoker,
       String localBuildType,
+      boolean isDownloadHeavyBuild,
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
       Optional<CountDownLatch> waitForLocalBuildCalledLatch) {
     this.executor = executor;
     this.localBuildExecutorInvoker = localBuildExecutorInvoker;
     this.localBuildType = localBuildType;
+    this.isDownloadHeavyBuild = isDownloadHeavyBuild;
     this.remoteBuildRuleCompletionWaiter = remoteBuildRuleCompletionWaiter;
     this.waitForLocalBuildCalledLatch = waitForLocalBuildCalledLatch;
 
@@ -85,7 +88,10 @@ public class LocalBuildRunner {
       LOG.info(String.format("Invoking LocalBuildExecutorInvoker for %s build..", localBuildType));
       exitCode =
           localBuildExecutorInvoker.executeLocalBuild(
-              remoteBuildRuleCompletionWaiter, initializeBuildLatch, buildReference);
+              isDownloadHeavyBuild,
+              remoteBuildRuleCompletionWaiter,
+              initializeBuildLatch,
+              buildReference);
 
     } catch (IOException e) {
       LOG.error(e, String.format("Stampede local %s build failed with exception.", localBuildType));

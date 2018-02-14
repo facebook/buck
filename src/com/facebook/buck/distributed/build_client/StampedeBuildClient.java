@@ -70,12 +70,14 @@ public class StampedeBuildClient {
             executorForLocalBuild,
             localBuildExecutorInvoker,
             "racer",
+            false,
             Optional.of(waitForRacingBuildCalledLatch));
     this.synchronizedBuildRunner =
         createStampedeLocalBuildRunner(
             executorForLocalBuild,
             localBuildExecutorInvoker,
             "synchronized",
+            true,
             Optional.of(waitForSynchronizedBuildCalledLatch));
     this.distBuildRunner =
         createStampedeDistBuildExecutor(
@@ -100,10 +102,14 @@ public class StampedeBuildClient {
     this.remoteBuildRuleSynchronizer = new RemoteBuildRuleSynchronizer();
     this.racerBuildRunner =
         createStampedeLocalBuildRunner(
-            executorForLocalBuild, localBuildExecutorInvoker, "racer", Optional.empty());
+            executorForLocalBuild, localBuildExecutorInvoker, "racer", false, Optional.empty());
     this.synchronizedBuildRunner =
         createStampedeLocalBuildRunner(
-            executorForLocalBuild, localBuildExecutorInvoker, "synchronized", Optional.empty());
+            executorForLocalBuild,
+            localBuildExecutorInvoker,
+            "synchronized",
+            true,
+            Optional.empty());
     this.distBuildRunner =
         createStampedeDistBuildExecutor(
             createDistBuildControllerInvoker(
@@ -179,12 +185,14 @@ public class StampedeBuildClient {
       ExecutorService executorForLocalBuild,
       LocalBuildExecutorInvoker localBuildExecutorInvoker,
       String localBuildType,
+      boolean isDownloadHeavyBuild,
       Optional<CountDownLatch> waitForBuildCalledLatch) {
     Preconditions.checkNotNull(remoteBuildRuleSynchronizer);
     return new LocalBuildRunner(
         executorForLocalBuild,
         localBuildExecutorInvoker,
         localBuildType,
+        isDownloadHeavyBuild,
         remoteBuildRuleSynchronizer,
         waitForBuildCalledLatch);
   }

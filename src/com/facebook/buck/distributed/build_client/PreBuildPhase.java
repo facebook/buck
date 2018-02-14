@@ -186,11 +186,13 @@ public class PreBuildPhase {
                     new DistBuildArtifactCacheImpl(
                         actionAndTargetGraphs.getActionGraphAndResolver().getResolver(),
                         networkExecutorService,
-                        buildExecutorArgs.getArtifactCacheFactory().remoteOnlyInstance(true),
+                        buildExecutorArgs.getArtifactCacheFactory().remoteOnlyInstance(true, false),
                         eventBus,
                         localRuleKeyCalculator,
                         Optional.of(
-                            buildExecutorArgs.getArtifactCacheFactory().localOnlyInstance(true)))) {
+                            buildExecutorArgs
+                                .getArtifactCacheFactory()
+                                .localOnlyInstance(true, false)))) {
 
                   return new CacheOptimizedBuildTargetsQueueFactory(
                           actionAndTargetGraphs.getActionGraphAndResolver().getResolver(),

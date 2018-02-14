@@ -100,7 +100,7 @@ public class DistBuildSlaveExecutor {
               args.getCoordinatorBuildRuleEventsPublisher(),
               args.getBuckEventBus(),
               args.getExecutorService(),
-              args.getArtifactCacheFactory().remoteOnlyInstance(true),
+              args.getArtifactCacheFactory().remoteOnlyInstance(true, false),
               Futures.transform(
                   initializer.getDelegateAndGraphs(),
                   graphs -> {
@@ -171,7 +171,7 @@ public class DistBuildSlaveExecutor {
                   args.getMinionBuildProgressTracker(),
                   args.getBuckEventBus(),
                   args.getExecutorService(),
-                  args.getArtifactCacheFactory().remoteOnlyInstance(true),
+                  args.getArtifactCacheFactory().remoteOnlyInstance(true, false),
                   args.getTimingStatsTracker(),
                   args.getHealthCheckStatsTracker(),
                   args.getDistBuildConfig().getCoordinatorBuildCapacityRatio());
@@ -251,6 +251,7 @@ public class DistBuildSlaveExecutor {
                 args.getExecutorService(),
                 KEEP_GOING,
                 true,
+                false,
                 args.getRuleKeyCacheScope(),
                 Optional.empty(),
                 Optional.empty(),

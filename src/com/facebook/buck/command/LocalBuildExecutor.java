@@ -87,6 +87,7 @@ public class LocalBuildExecutor implements BuildExecutor {
       WeightedListeningExecutorService executorService,
       boolean keepGoing,
       boolean useDistributedBuildCache,
+      boolean isDownloadHeavyBuild,
       RuleKeyCacheScope<RuleKey> ruleKeyRuleKeyCacheScope,
       Optional<BuildMode> buildEngineMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
@@ -107,7 +108,8 @@ public class LocalBuildExecutor implements BuildExecutor {
             actionGraphAndResolver.getResolver(),
             args.getRootCell(),
             cachingBuildEngine,
-            args.getArtifactCacheFactory().newInstance(useDistributedBuildCache),
+            args.getArtifactCacheFactory()
+                .newInstance(useDistributedBuildCache, isDownloadHeavyBuild),
             args.getBuckConfig().getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),
             args.getClock(),
             executionContext,

@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public interface LocalBuildExecutorInvoker {
   int executeLocalBuild(
+      boolean isDownloadHeavyBuild,
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
       CountDownLatch initializeBuildLatch,
       AtomicReference<Build> buildReference)

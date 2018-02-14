@@ -241,7 +241,7 @@ public class BuildPhase {
             finishedRulePublisher,
             buildExecutorArgs.getBuckEventBus(),
             executorService,
-            buildExecutorArgs.getArtifactCacheFactory().remoteOnlyInstance(true),
+            buildExecutorArgs.getArtifactCacheFactory().remoteOnlyInstance(true, false),
             localRuleKeyCalculator,
             // TODO(shivanker): Make health-check stats work.
             new HealthCheckStatsTracker(),

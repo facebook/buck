@@ -81,6 +81,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private final Optional<String> wifiSsid;
   private final ListeningExecutorService httpWriteExecutorService;
   private final ListeningExecutorService httpFetchExecutorService;
+  private final ListeningExecutorService downloadHeavyBuildHttpFetchExecutorService;
   private final ExecutorService artifactCacheCloseExecutorService;
   private List<ArtifactCache> artifactCaches = new ArrayList<>();
 
@@ -122,6 +123,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       Optional<String> wifiSsid,
       ListeningExecutorService httpWriteExecutorService,
       ListeningExecutorService httpFetchExecutorService,
+      ListeningExecutorService downloadHeavyBuildHttpFetchExecutorService,
       ExecutorService artifactCacheCloseExecutorService) {
     this.buckConfig = buckConfig;
     this.buckEventBus = buckEventBus;
@@ -129,6 +131,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
     this.wifiSsid = wifiSsid;
     this.httpWriteExecutorService = httpWriteExecutorService;
     this.httpFetchExecutorService = httpFetchExecutorService;
+    this.downloadHeavyBuildHttpFetchExecutorService = downloadHeavyBuildHttpFetchExecutorService;
     this.artifactCacheCloseExecutorService = artifactCacheCloseExecutorService;
   }
 
@@ -143,32 +146,41 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
 
   @Override
   public ArtifactCache newInstance() {
-    return newInstance(false);
+    return newInstance(false, false);
   }
 
   /**
    * Creates a new instance of the cache for use during a build.
    *
    * @param distributedBuildModeEnabled true if this is a distributed build
+   * @param isDownloadHeavyBuild true if creating cache connector for download heavy build
    * @return ArtifactCache instance
    */
   @Override
-  public ArtifactCache newInstance(boolean distributedBuildModeEnabled) {
-    return newInstanceInternal(ImmutableSet.of(), distributedBuildModeEnabled);
+  public ArtifactCache newInstance(
+      boolean distributedBuildModeEnabled, boolean isDownloadHeavyBuild) {
+    return newInstanceInternal(
+        ImmutableSet.of(), distributedBuildModeEnabled, isDownloadHeavyBuild);
   }
 
   @Override
-  public ArtifactCache remoteOnlyInstance(boolean distributedBuildModeEnabled) {
-    return newInstanceInternal(ImmutableSet.of(local), distributedBuildModeEnabled);
+  public ArtifactCache remoteOnlyInstance(
+      boolean distributedBuildModeEnabled, boolean isDownloadHeavyBuild) {
+    return newInstanceInternal(
+        ImmutableSet.of(local), distributedBuildModeEnabled, isDownloadHeavyBuild);
   }
 
   @Override
-  public ArtifactCache localOnlyInstance(boolean distributedBuildModeEnabled) {
-    return newInstanceInternal(ImmutableSet.of(remote), distributedBuildModeEnabled);
+  public ArtifactCache localOnlyInstance(
+      boolean distributedBuildModeEnabled, boolean isDownloadHeavyBuild) {
+    return newInstanceInternal(
+        ImmutableSet.of(remote), distributedBuildModeEnabled, isDownloadHeavyBuild);
   }
 
   private ArtifactCache newInstanceInternal(
-      ImmutableSet<CacheType> cacheTypeBlacklist, boolean distributedBuildModeEnabled) {
+      ImmutableSet<CacheType> cacheTypeBlacklist,
+      boolean distributedBuildModeEnabled,
+      boolean isDownloadHeavyBuild) {
     ArtifactCacheConnectEvent.Started started = ArtifactCacheConnectEvent.started();
     buckEventBus.post(started);
 
@@ -179,7 +191,9 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
             projectFilesystem,
             wifiSsid,
             httpWriteExecutorService,
-            httpFetchExecutorService,
+            isDownloadHeavyBuild
+                ? downloadHeavyBuildHttpFetchExecutorService
+                : httpFetchExecutorService,
             cacheTypeBlacklist,
             distributedBuildModeEnabled);
 
@@ -198,6 +212,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
         wifiSsid,
         httpWriteExecutorService,
         httpFetchExecutorService,
+        downloadHeavyBuildHttpFetchExecutorService,
         artifactCacheCloseExecutorService);
   }
 

@@ -576,6 +576,7 @@ public class BuildCommand extends AbstractCommand {
                   commandThreadManager.getWeightedListeningExecutorService(),
                   optionalRuleKeyLogger,
                   new NoOpRemoteBuildRuleCompletionWaiter(),
+                  false,
                   Optional.empty(),
                   ruleKeyCacheScope,
                   lastBuild);
@@ -877,6 +878,7 @@ public class BuildCommand extends AbstractCommand {
           new LocalBuildExecutorInvoker() {
             @Override
             public int executeLocalBuild(
+                boolean isDownloadHeavyBuild,
                 RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
                 CountDownLatch initializeBuildLatch,
                 AtomicReference<Build> buildReference)
@@ -888,6 +890,7 @@ public class BuildCommand extends AbstractCommand {
                       executorService,
                       Optional.empty(),
                       remoteBuildRuleCompletionWaiter,
+                      isDownloadHeavyBuild,
                       Optional.of(initializeBuildLatch),
                       ruleKeyCacheScope,
                       buildReference)
@@ -1239,6 +1242,7 @@ public class BuildCommand extends AbstractCommand {
       WeightedListeningExecutorService executor,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
+      boolean isDownloadHeavyBuild,
       Optional<CountDownLatch> initializeBuildLatch,
       RuleKeyCacheScope<RuleKey> ruleKeyCacheScope,
       AtomicReference<Build> buildReference)
@@ -1253,6 +1257,7 @@ public class BuildCommand extends AbstractCommand {
             executor,
             isKeepGoing(),
             useDistributedBuild,
+            isDownloadHeavyBuild,
             ruleKeyCacheScope,
             getBuildEngineMode(),
             ruleKeyLogger,

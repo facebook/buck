@@ -838,9 +838,17 @@ public final class Main {
                         "HTTP Write",
                         cacheBuckConfig.getHttpWriterShutdownTimeout());
             CloseableWrapper<ListeningExecutorService, InterruptedException>
+                stampedeSyncBuildHttpFetchExecutorService =
+                    getExecutorWrapper(
+                        getHttpFetchExecutorService(
+                            "heavy", cacheBuckConfig.getDownloadHeavyBuildHttpFetchConcurrency()),
+                        "Download Heavy Build HTTP Read",
+                        cacheBuckConfig.getHttpWriterShutdownTimeout());
+            CloseableWrapper<ListeningExecutorService, InterruptedException>
                 httpFetchExecutorService =
                     getExecutorWrapper(
-                        getHttpFetchExecutorService(cacheBuckConfig),
+                        getHttpFetchExecutorService(
+                            "standard", cacheBuckConfig.getHttpFetchConcurrency()),
                         "HTTP Read",
                         cacheBuckConfig.getHttpWriterShutdownTimeout());
             CloseableWrapper<ScheduledExecutorService, InterruptedException>
@@ -925,6 +933,7 @@ public final class Main {
                     executionEnvironment.getWifiSsid(),
                     httpWriteExecutorService.get(),
                     httpFetchExecutorService.get(),
+                    stampedeSyncBuildHttpFetchExecutorService.get(),
                     diskIoExecutorService.get());
 
             // This will get executed first once it gets out of try block and just wait for
@@ -1465,11 +1474,11 @@ public final class Main {
   }
 
   private static ListeningExecutorService getHttpFetchExecutorService(
-      ArtifactCacheBuckConfig buckConfig) {
+      String prefix, int fetchConcurrency) {
     return listeningDecorator(
         MostExecutors.newMultiThreadExecutor(
-            new ThreadFactoryBuilder().setNameFormat("cache-fetch-%d").build(),
-            buckConfig.getHttpFetchConcurrency()));
+            new ThreadFactoryBuilder().setNameFormat(prefix + "-cache-fetch-%d").build(),
+            fetchConcurrency));
   }
 
   private static ConsoleHandlerState.Writer createWriterForConsole(

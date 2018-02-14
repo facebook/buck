@@ -136,7 +136,7 @@ public class CacheCommand extends AbstractCommand {
 
     List<ArtifactRunner> results = null;
     try (ArtifactCache cache =
-            params.getArtifactCacheFactory().newInstance(isRequestForDistributed);
+            params.getArtifactCacheFactory().newInstance(isRequestForDistributed, false);
         CommandThreadManager pool =
             new CommandThreadManager("Build", getConcurrencyLimit(params.getBuckConfig()))) {
       WeightedListeningExecutorService executor = pool.getWeightedListeningExecutorService();

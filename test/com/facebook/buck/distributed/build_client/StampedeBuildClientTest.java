@@ -31,6 +31,7 @@
  */
 package com.facebook.buck.distributed.build_client;
 
+import static org.easymock.EasyMock.anyBoolean;
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
@@ -115,6 +116,7 @@ public class StampedeBuildClientTest {
         new LocalBuildExecutorInvoker() {
           @Override
           public int executeLocalBuild(
+              boolean isDownloadHeavyBuild,
               RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
               CountDownLatch initializeBuildLatch,
               AtomicReference<Build> buildReference)
@@ -138,7 +140,10 @@ public class StampedeBuildClientTest {
             }
 
             return mockLocalBuildExecutorInvoker.executeLocalBuild(
-                remoteBuildRuleCompletionWaiter, initializeBuildLatch, buildReference);
+                isDownloadHeavyBuild,
+                remoteBuildRuleCompletionWaiter,
+                initializeBuildLatch,
+                buildReference);
           }
         };
     mockDistBuildControllerInvoker = EasyMock.createMock(DistBuildControllerInvoker.class);
@@ -499,6 +504,7 @@ public class StampedeBuildClientTest {
       throws IOException, InterruptedException {
     expect(
             mockLocalBuildExecutorInvoker.executeLocalBuild(
+                anyBoolean(),
                 anyObject(RemoteBuildRuleSynchronizer.class),
                 anyObject(CountDownLatch.class),
                 anyObject(AtomicReference.class)))
