@@ -156,6 +156,10 @@ public class DistBuildConfig {
 
   private static final String AUTO_STAMPEDE_BUILD_MESSAGE = "auto_stampede_build_message";
 
+  private static final String FILE_MATERIALIZATION_TIMEOUT_SECS =
+      "pending_file_materialization_timeout_secs";
+  private static final long DEFAULT_FILE_MATERIALIZATION_TIMEOUT_SECS = 30;
+
   private final SlbBuckConfig frontendConfig;
   private final BuckConfig buckConfig;
 
@@ -377,6 +381,12 @@ public class DistBuildConfig {
   public boolean isUploadFromLocalCacheEnabled() {
     return buckConfig.getBooleanValue(
         STAMPEDE_SECTION, ENABLE_UPLOADS_FROM_LOCAL_CACHE, DEFAULT_ENABLE_UPLOADS_FROM_LOCAL_CACHE);
+  }
+
+  public long getFileMaterializationTimeoutSecs() {
+    return buckConfig
+        .getLong(STAMPEDE_SECTION, FILE_MATERIALIZATION_TIMEOUT_SECS)
+        .orElse(DEFAULT_FILE_MATERIALIZATION_TIMEOUT_SECS);
   }
 
   /** Whether a non-distributed build should be automatically turned into a distributed one. */

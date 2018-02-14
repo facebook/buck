@@ -183,7 +183,8 @@ public class DelegateAndGraphsInitializer {
               ruleFinder,
               caches.remoteStateCache,
               caches.materializingCache,
-              this.args.getRuleKeyConfiguration());
+              this.args.getRuleKeyConfiguration(),
+              this.args.getDistBuildConfig().getFileMaterializationTimeoutSecs());
     } else {
       cachingBuildEngineDelegate = new LocalCachingBuildEngineDelegate(caches.remoteStateCache);
     }
