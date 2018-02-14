@@ -33,6 +33,7 @@ import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
@@ -167,12 +168,12 @@ public class AndroidBinaryBuilder
     return this;
   }
 
-  public AndroidBinaryBuilder setPostFilterResourcesCmd(Optional<String> command) {
+  public AndroidBinaryBuilder setPostFilterResourcesCmd(Optional<StringWithMacros> command) {
     getArgForPopulating().setPostFilterResourcesCmd(command);
     return this;
   }
 
-  public AndroidBinaryBuilder setPreprocessJavaClassesBash(String command) {
+  public AndroidBinaryBuilder setPreprocessJavaClassesBash(StringWithMacros command) {
     getArgForPopulating().setPreprocessJavaClassesBash(command);
     return this;
   }

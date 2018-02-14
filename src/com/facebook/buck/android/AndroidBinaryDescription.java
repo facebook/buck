@@ -47,7 +47,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -65,10 +64,12 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
+import com.facebook.buck.rules.macros.AbstractMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.rules.macros.MacroArg;
-import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
@@ -76,7 +77,6 @@ import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
@@ -87,7 +87,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -110,11 +109,8 @@ public class AndroidBinaryDescription
    */
   private static final long DEFAULT_LINEAR_ALLOC_HARD_LIMIT = 4 * 1024 * 1024;
 
-  private static final MacroHandler MACRO_HANDLER =
-      new MacroHandler(
-          ImmutableMap.of(
-              "exe", new ExecutableMacroExpander(),
-              "location", new LocationMacroExpander()));
+  private static final ImmutableList<AbstractMacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
+      ImmutableList.of(new ExecutableMacroExpander(), new LocationMacroExpander());
 
   private static final Pattern COUNTRY_LOCALE_PATTERN = Pattern.compile("([a-z]{2})-[A-Z]{2}");
 
@@ -480,27 +476,6 @@ public class AndroidBinaryDescription
       if (redexTarget.isPresent()) {
         extraDepsBuilder.add(redexTarget.get());
       }
-
-      constructorArg
-          .getRedexExtraArgs()
-          .forEach(
-              a ->
-                  addDepsFromParam(
-                      buildTarget, cellRoots, a, extraDepsBuilder, targetGraphOnlyDepsBuilder));
-    }
-  }
-
-  private void addDepsFromParam(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      String paramValue,
-      ImmutableCollection.Builder<BuildTarget> buildDefsBuilder,
-      ImmutableCollection.Builder<BuildTarget> nonBuildDefsBuilder) {
-    try {
-      MACRO_HANDLER.extractParseTimeDeps(
-          target, cellNames, paramValue, buildDefsBuilder, nonBuildDefsBuilder);
-    } catch (MacroException e) {
-      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }
   }
 
@@ -509,8 +484,14 @@ public class AndroidBinaryDescription
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots) {
-    return arg.getPostFilterResourcesCmd()
-        .map(MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver));
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.builder()
+            .setBuildTarget(buildTarget)
+            .setCellPathResolver(cellRoots)
+            .setResolver(resolver)
+            .setExpanders(MACRO_EXPANDERS)
+            .build();
+    return arg.getPostFilterResourcesCmd().map(macrosConverter::convert);
   }
 
   private Optional<Arg> getPreprocessJavaClassesBash(
@@ -518,8 +499,14 @@ public class AndroidBinaryDescription
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots) {
-    return arg.getPreprocessJavaClassesBash()
-        .map(MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver));
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.builder()
+            .setBuildTarget(buildTarget)
+            .setCellPathResolver(cellRoots)
+            .setResolver(resolver)
+            .setExpanders(MACRO_EXPANDERS)
+            .build();
+    return arg.getPreprocessJavaClassesBash().map(macrosConverter::convert);
   }
 
   private Optional<RedexOptions> getRedexOptions(
@@ -541,10 +528,15 @@ public class AndroidBinaryDescription
           buildTarget, SECTION, CONFIG_PARAM_REDEX);
     }
 
-    Function<String, Arg> macroArgFunction =
-        MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.builder()
+            .setBuildTarget(buildTarget)
+            .setCellPathResolver(cellRoots)
+            .setResolver(resolver)
+            .setExpanders(MACRO_EXPANDERS)
+            .build();
     List<Arg> redexExtraArgs =
-        arg.getRedexExtraArgs().stream().map(macroArgFunction).collect(Collectors.toList());
+        arg.getRedexExtraArgs().stream().map(macrosConverter::convert).collect(Collectors.toList());
 
     return Optional.of(
         RedexOptions.builder()
@@ -704,7 +696,7 @@ public class AndroidBinaryDescription
     @Value.NaturalOrder
     ImmutableSortedSet<BuildTarget> getPreprocessJavaClassesDeps();
 
-    Optional<String> getPreprocessJavaClassesBash();
+    Optional<StringWithMacros> getPreprocessJavaClassesBash();
 
     @Value.Default
     default boolean isReorderClassesIntraDex() {
@@ -766,9 +758,9 @@ public class AndroidBinaryDescription
 
     Optional<SourcePath> getRedexConfig();
 
-    ImmutableList<String> getRedexExtraArgs();
+    ImmutableList<StringWithMacros> getRedexExtraArgs();
 
-    Optional<String> getPostFilterResourcesCmd();
+    Optional<StringWithMacros> getPostFilterResourcesCmd();
 
     Optional<SourcePath> getBuildConfigValuesFile();
 

@@ -44,6 +44,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
@@ -342,7 +343,7 @@ public class AndroidBinaryTest {
             .setPrimaryDexScenarioOverflowAllowed(true)
             .setDexCompression(DexStore.JAR)
             // Force no predexing.
-            .setPreprocessJavaClassesBash("cp")
+            .setPreprocessJavaClassesBash(StringWithMacrosUtils.format("cp"))
             .build(ruleResolver);
 
     Set<Path> classpath = new HashSet<>();
@@ -398,7 +399,7 @@ public class AndroidBinaryTest {
             .setDexCompression(DexStore.JAR)
             .setIntraDexReorderResources(true, reorderTool, reorderData)
             // Force no predexing.
-            .setPreprocessJavaClassesBash("cp")
+            .setPreprocessJavaClassesBash(StringWithMacrosUtils.format("cp"))
             .build(ruleResolver);
 
     Set<Path> classpath = new HashSet<>();
@@ -447,7 +448,7 @@ public class AndroidBinaryTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     AndroidBinaryBuilder builder =
         AndroidBinaryBuilder.createBuilder(target)
-            .setPostFilterResourcesCmd(Optional.of("cmd"))
+            .setPostFilterResourcesCmd(Optional.of(StringWithMacrosUtils.format("cmd")))
             .setResourceFilter(new ResourceFilter(ImmutableList.of("mdpi")))
             .setKeystore(keystoreRule.getBuildTarget())
             .setManifest(FakeSourcePath.of("manifest"));
