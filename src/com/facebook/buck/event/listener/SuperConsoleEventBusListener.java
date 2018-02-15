@@ -312,17 +312,21 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     // Synchronize on the DirtyPrintStreamDecorator to prevent interlacing of output.
     // We don't log immediately so we avoid locking the console handler to avoid deadlocks.
     boolean stderrDirty;
+    boolean stdoutDirty;
     synchronized (console.getStdErr()) {
-      // If another source has written to stderr, stop rendering with the SuperConsole.
-      // We need to do this to keep our updates consistent. We don't do this with stdout
-      // because we don't use it directly except in a couple of cases, where the
-      // synchronization in DirtyPrintStreamDecorator should be sufficient
-      stderrDirty = console.getStdErr().isDirty();
-      if (stderrDirty) {
-        stopRenderScheduler();
-      } else if (previousNumLinesPrinted != 0 || !lines.isEmpty() || !logLines.isEmpty()) {
-        String fullFrame = renderFullFrame(logLines, lines, previousNumLinesPrinted);
-        console.getStdErr().getRawStream().print(fullFrame);
+      synchronized (console.getStdOut()) {
+        // If another source has written to stderr, stop rendering with the SuperConsole.
+        // We need to do this to keep our updates consistent. We don't do this with stdout
+        // because we don't use it directly except in a couple of cases, where the
+        // synchronization in DirtyPrintStreamDecorator should be sufficient
+        stderrDirty = console.getStdErr().isDirty();
+        stdoutDirty = console.getStdOut().isDirty();
+        if (stderrDirty || stdoutDirty) {
+          stopRenderScheduler();
+        } else if (previousNumLinesPrinted != 0 || !lines.isEmpty() || !logLines.isEmpty()) {
+          String fullFrame = renderFullFrame(logLines, lines, previousNumLinesPrinted);
+          console.getStdErr().getRawStream().print(fullFrame);
+        }
       }
     }
     if (stderrDirty) {
@@ -862,7 +866,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
     // We're about to write to stdout, so make sure we render the final frame before we do.
     render();
-    console.getStdOut().println(testOutput);
+    synchronized (console.getStdOut()) {
+      console.getStdOut().println(testOutput);
+    }
   }
 
   @Subscribe

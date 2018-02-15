@@ -1150,6 +1150,8 @@ public class BuildCommand extends AbstractCommand {
                       showFullOutput || showFullJsonOutput
                           ? path
                           : params.getCell().getFilesystem().relativize(path));
+
+      params.getConsole().getStdOut().flush();
       if (showJsonOutput || showFullJsonOutput) {
         sortedJsonOutputs.put(
             rule.getFullyQualifiedName(), outputPath.map(Object::toString).orElse(""));
