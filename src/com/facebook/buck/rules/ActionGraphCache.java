@@ -50,6 +50,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ForkJoinPool;
+import java.util.stream.StreamSupport;
 
 /**
  * Class that transforms {@link TargetGraph} to {@link ActionGraph}. It also holds a cache for the
@@ -371,6 +372,13 @@ public class ActionGraphCache {
                   clock,
                   eventBus,
                   () -> Iterables.size(resolver.getBuildRules()),
+                  () ->
+                      StreamSupport.stream(resolver.getBuildRules().spliterator(), true)
+                          .filter(
+                              rule ->
+                                  rule instanceof NoopBuildRule
+                                      || rule instanceof NoopBuildRuleWithDeclaredAndExtraDeps)
+                          .count(),
                   node.getDescription().getClass().getName(),
                   node.getBuildTarget().getFullyQualifiedName())) {
             resolver.requireRule(node.getBuildTarget());
