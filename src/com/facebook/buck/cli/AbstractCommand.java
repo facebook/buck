@@ -369,7 +369,7 @@ public abstract class AbstractCommand implements Command {
     return CloseableMemoizedSupplier.of(
         () ->
             MostExecutors.forkJoinPoolWithThreadLimit(
-                resource.getDefaultResourceAmounts().getCpu(), 16),
+                resource.getMaximumResourceAmounts().getCpu(), 16),
         ForkJoinPool::shutdownNow);
   }
 }
