@@ -106,4 +106,9 @@ public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
   public void testNoClassesDotJar() throws IOException {
     workspace.runBuckBuild("//:app-no-classes-dot-jar").assertSuccess();
   }
+
+  @Test
+  public void testAarWithoutResBuildsFine() throws IOException {
+    workspace.runBuckBuild("//:app-dep-on-aar-without-res").assertSuccess();
+  }
 }
