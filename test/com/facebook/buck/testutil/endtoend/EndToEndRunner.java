@@ -16,6 +16,8 @@
 
 package com.facebook.buck.testutil.endtoend;
 
+import com.facebook.buck.testutil.ProcessResult;
+import java.lang.annotation.AnnotationFormatError;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -164,10 +166,30 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
   }
 
   /**
+   * Marks validation errors in errors if the given method does not have exact args ({@link
+   * EndToEndTestDescriptor}, {@link ProcessResult})
+   */
+  private void validateTestMethodArgs(FrameworkMethod testMethod, List<Throwable> errors) {
+    Class<?>[] paramTypes = testMethod.getMethod().getParameterTypes();
+    if (paramTypes.length != 2
+        || !EndToEndTestDescriptor.class.isAssignableFrom(paramTypes[0])
+        || !ProcessResult.class.isAssignableFrom(paramTypes[1])) {
+      errors.add(
+          new AnnotationFormatError(
+              "Methods marked by @Test in the EndToEndRunner must support taking an "
+                  + "EndToEndTestDescriptor and ProcessResult. Example:\n"
+                  + "@Test\n"
+                  + "public void shouldRun(EndToEndTestDescriptor test, ProcessResult result) {\n\n}"));
+    }
+  }
+
+  /**
    * Marks validation errors in errors if:
    *
    * <ul>
    *   <li>Any method marked by @Test is a not a public non-static void method.
+   *   <li>Any method marked by @Test does not have exact args ({@link EndToEndTestDescriptor},
+   *       {@link ProcessResult})
    * </ul>
    */
   private void validateTestMethods(List<Throwable> errors) {
@@ -175,7 +197,7 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
 
     for (FrameworkMethod testMethod : methods) {
       testMethod.validatePublicVoid(false, errors);
-      // TODO: validate they have the two parameters we give them
+      validateTestMethodArgs(testMethod, errors);
     }
   }
 
