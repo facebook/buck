@@ -136,7 +136,7 @@ public class ParserCacheCommand extends AbstractCommand {
         } else if (status.equals("R") || status.equals("!")) {
           isRemoved = true;
         }
-        Path fullPath = params.getCell().getRoot().resolve(path);
+        Path fullPath = params.getCell().getRoot().resolve(path).normalize();
         params.getParser().invalidateBasedOnPath(fullPath, isAdded || isRemoved);
       }
     }
