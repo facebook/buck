@@ -12,7 +12,7 @@ go_library(
     name = "a",
     package_name = "a",
     srcs = [
-        "a.go",
+        "a/a.go",
     ],
     exported_deps = [
         ":b",
@@ -23,6 +23,6 @@ go_library(
     name = "b",
     package_name = "b",
     srcs = [
-        "b.go",
+        "b/b.go",
     ],
 )

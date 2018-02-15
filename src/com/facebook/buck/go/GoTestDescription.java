@@ -424,7 +424,8 @@ public class GoTestDescription
               ImmutableSortedSet.<BuildTarget>naturalOrder()
                   .addAll(libraryArg.getCgoDeps())
                   .addAll(args.getCgoDeps())
-                  .build());
+                  .build(),
+                  true);
     } else {
       testLibrary =
           GoDescriptors.createGoCompileRule(
@@ -445,7 +446,8 @@ public class GoTestDescription
                   .stream()
                   .map(BuildRule::getBuildTarget)
                   .collect(ImmutableList.toImmutableList()),
-              args.getCgoDeps());
+              args.getCgoDeps(),
+              true);
     }
 
     return testLibrary;

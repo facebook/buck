@@ -106,7 +106,8 @@ abstract class GoDescriptors {
       List<String> assemblerFlags,
       GoPlatform platform,
       Iterable<BuildTarget> deps,
-      ImmutableSortedSet<BuildTarget> cgoDeps) {
+      ImmutableSortedSet<BuildTarget> cgoDeps,
+      boolean includeTestFiles) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -147,7 +148,6 @@ abstract class GoDescriptors {
     ImmutableList<BuildRule> srcDependencies = getDependenciesFromSources(ruleFinder, compileSrcs);
 
     LOG.verbose("Symlink tree for compiling %s: %s", buildTarget, symlinkTree.getLinks());
-
     return new GoCompile(
         buildTarget,
         projectFilesystem,
@@ -165,14 +165,12 @@ abstract class GoDescriptors {
                 .flatMap(input -> input.getGoLinkInput().keySet().stream())
                 .collect(ImmutableList.toImmutableList())),
         compileSrcBuilder.build(),
+        goToolchain,
         ImmutableList.copyOf(compilerFlags),
-        goToolchain.getCompiler(),
         ImmutableList.copyOf(assemblerFlags),
-        goToolchain.getAssemblerIncludeDirs(),
-        goToolchain.getAssembler(),
-        goToolchain.getPacker(),
         platform,
-        extraAsmOutputsBuilder.build());
+        extraAsmOutputsBuilder.build(),
+        includeTestFiles);
   }
 
   @VisibleForTesting
@@ -237,7 +235,8 @@ abstract class GoDescriptors {
                 .stream()
                 .map(BuildRule::getBuildTarget)
                 .collect(ImmutableList.toImmutableList()),
-            cgoDeps);
+            cgoDeps,
+            false);
     resolver.addToIndex(library);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);

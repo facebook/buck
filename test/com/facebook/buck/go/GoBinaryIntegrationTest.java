@@ -135,8 +135,8 @@ public class GoBinaryIntegrationTest {
         workspace.runBuckCommand("run", "//:hello").assertSuccess().getStdout(),
         Matchers.containsString("Hello, world!"));
     workspace.writeContentsToPath(
-        workspace.getFileContents("messenger/printer.go").replace('!', '?'),
-        "messenger/printer.go");
+        workspace.getFileContents("messenger/printer/printer.go").replace('!', '?'),
+        "messenger/printer/printer.go");
     assertThat(
         workspace.runBuckCommand("run", "//:hello").assertSuccess().getStdout(),
         Matchers.containsString("Hello, world?"));

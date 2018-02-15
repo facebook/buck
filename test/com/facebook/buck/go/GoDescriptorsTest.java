@@ -167,7 +167,8 @@ public class GoDescriptorsTest {
             ImmutableList.of(),
             goPlatform,
             ImmutableList.of(),
-            ImmutableSortedSet.of());
+            ImmutableSortedSet.of(),
+            false);
 
     Assert.assertTrue(
         compile

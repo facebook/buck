@@ -142,7 +142,8 @@ public class GoLibraryDescription
                   params.getDeclaredDeps().get().stream().map(BuildRule::getBuildTarget).iterator())
               .addAll(args.getExportedDeps())
               .build(),
-          args.getCgoDeps());
+          args.getCgoDeps(),
+          false);
     }
 
     return new NoopBuildRuleWithDeclaredAndExtraDeps(buildTarget, projectFilesystem, params);

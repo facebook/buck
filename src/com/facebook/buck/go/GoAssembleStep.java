@@ -22,6 +22,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Optional;
 
 public class GoAssembleStep extends ShellStep {
@@ -29,7 +30,7 @@ public class GoAssembleStep extends ShellStep {
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> asmCommandPrefix;
   private final ImmutableList<String> flags;
-  private final Path src;
+  private final Iterable<Path> srcs;
   private final ImmutableList<Path> includeDirectories;
   private final GoPlatform platform;
   private final Path output;
@@ -40,7 +41,7 @@ public class GoAssembleStep extends ShellStep {
       ImmutableMap<String, String> environment,
       ImmutableList<String> asmCommandPrefix,
       ImmutableList<String> flags,
-      Path src,
+      Iterable<Path> srcs,
       ImmutableList<Path> includeDirectories,
       GoPlatform platform,
       Path output) {
@@ -48,7 +49,7 @@ public class GoAssembleStep extends ShellStep {
     this.environment = environment;
     this.asmCommandPrefix = asmCommandPrefix;
     this.flags = flags;
-    this.src = src;
+    this.srcs = srcs;
     this.includeDirectories = includeDirectories;
     this.platform = platform;
     this.output = output;
@@ -56,22 +57,28 @@ public class GoAssembleStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    ImmutableList.Builder<String> commandBuilder =
-        ImmutableList.<String>builder()
-            .addAll(asmCommandPrefix)
-            .add("-trimpath", workingDirectory.toString())
-            .addAll(flags)
-            .add("-D", "GOOS_" + platform.getGoOs())
-            .add("-D", "GOARCH_" + platform.getGoArch())
-            .add("-o", output.toString());
-
-    for (Path dir : includeDirectories) {
-      commandBuilder.add("-I", dir.toString());
+    ArrayList<String> pathStrings = new ArrayList<>();
+    for (Path path : srcs) {
+      pathStrings.add(path.toString());
     }
+    if (pathStrings.size() > 0) {
+      ImmutableList.Builder<String> commandBuilder =
+          ImmutableList.<String>builder()
+              .addAll(asmCommandPrefix)
+              .add("-trimpath", workingDirectory.toString())
+              .addAll(flags)
+              .add("-D", "GOOS_" + platform.getGoOs())
+              .add("-D", "GOARCH_" + platform.getGoArch())
+              .add("-o", output.toString());
 
-    commandBuilder.add(src.toString());
-
-    return commandBuilder.build();
+      for (Path dir : includeDirectories) {
+        commandBuilder.add("-I", dir.toString());
+      }
+      commandBuilder.addAll(pathStrings);
+      return commandBuilder.build();
+    } else {
+      return ImmutableList.of();
+    }
   }
 
   @Override

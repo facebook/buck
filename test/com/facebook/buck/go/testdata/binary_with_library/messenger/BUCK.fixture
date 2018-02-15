@@ -15,6 +15,6 @@ go_library(
     name = "printer",
     package_name = "messenger/printer",
     srcs = [
-        "printer.go",
+        "printer/printer.go",
     ],
 )
