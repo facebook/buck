@@ -19,6 +19,7 @@ package com.facebook.buck.python;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -31,6 +32,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.python.PythonBuckConfig.PackageStyle;
 import com.facebook.buck.python.toolchain.impl.PythonInterpreterFromConfig;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultCellPathResolver;
@@ -46,13 +48,16 @@ import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.unarchive.Unzip;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -322,7 +327,49 @@ public class PythonBinaryIntegrationTest {
   }
 
   @Test
-  public void packagePrebuilLibrariesProperly() throws IOException {
+  public void standalonePackagePrebuiltLibrariesProperly()
+      throws IOException, InterruptedException {
+    assumeThat(packageStyle, Matchers.is(PythonBuckConfig.PackageStyle.STANDALONE));
+
+    workspace.runBuckCommand("run", "//:main_module_with_prebuilt_dep_bin").assertSuccess();
+    Path binPath =
+        workspace.resolve(
+            workspace.getBuckPaths().getGenDir().resolve("main_module_with_prebuilt_dep_bin.pex"));
+
+    ImmutableSet<Path> expectedPaths =
+        ImmutableSet.of(
+            Paths.get("wheel_package", "my_wheel.py"),
+            Paths.get("wheel_package", "__init__.py"),
+            Paths.get("wheel_package-0.0.1.dist-info", "DESCRIPTION.rst"));
+    ImmutableSet<Path> expectedAbsentPaths =
+        ImmutableSet.of(
+            Paths.get(
+                ".deps", "wheel_package-0.0.1-py2-none-any.whl", "wheel_package", "my_wheel.py"),
+            Paths.get(
+                ".deps", "wheel_package-0.0.1-py2-none-any.whl", "wheel_package", "__init__.py"),
+            Paths.get(
+                ".deps",
+                "wheel_package-0.0.1-py2-none-any.whl",
+                "wheel_package-0.0.1.dist-info",
+                "DESCRIPTION.rst"));
+    ImmutableSet<Path> paths;
+    if (pexDirectory) {
+      paths =
+          Files.walk(binPath)
+              .filter(p -> !p.equals(binPath))
+              .map(binPath::relativize)
+              .collect(ImmutableSet.toImmutableSet());
+    } else {
+      paths = Unzip.getZipMembers(binPath);
+    }
+    assertThat(expectedPaths, everyItem(Matchers.in(paths)));
+    assertThat(expectedAbsentPaths, everyItem(not(Matchers.in(paths))));
+  }
+
+  @Test
+  public void inplacePackagePrebuiltLibrariesProperly() throws IOException, InterruptedException {
+    assumeThat(packageStyle, Matchers.is(PackageStyle.INPLACE));
+
     workspace.runBuckCommand("run", "//:main_module_with_prebuilt_dep_bin").assertSuccess();
   }
 

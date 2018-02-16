@@ -160,13 +160,6 @@ def main():
         # NOTE(agallagher): see rationale above.
         pex_builder.add_resource(dereference_symlinks(src), dst)
 
-    # Add prebuilt libraries listed in the manifest.
-    for req in manifest.get('prebuiltLibraries', []):
-        try:
-            pex_builder.add_dist_location(req)
-        except Exception as e:
-            raise Exception("Failed to add {}: {}".format(req, e))
-
     # Add resources listed in the manifest.
     for dst, src in manifest['nativeLibraries'].iteritems():
         # NOTE(agallagher): see rationale above.
