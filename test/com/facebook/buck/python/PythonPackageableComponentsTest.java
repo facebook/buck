@@ -26,10 +26,13 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class PythonPackageableComponentsTest {
@@ -42,6 +45,7 @@ public class PythonPackageableComponentsTest {
             ImmutableMap.of(),
             ImmutableMap.of(),
             ImmutableSet.of(),
+            ImmutableMultimap.of(),
             Optional.of(true));
     PythonPackageComponents compB =
         PythonPackageComponents.of(
@@ -49,6 +53,7 @@ public class PythonPackageableComponentsTest {
             ImmutableMap.of(),
             ImmutableMap.of(),
             ImmutableSet.of(),
+            ImmutableMultimap.of(),
             Optional.of(false));
 
     BuildTarget me = BuildTargetFactory.newInstance("//:me");
@@ -85,6 +90,7 @@ public class PythonPackageableComponentsTest {
             ImmutableMap.of(),
             ImmutableMap.of(),
             ImmutableSet.of(),
+            ImmutableMultimap.of(),
             Optional.empty());
     PythonPackageComponents compB =
         PythonPackageComponents.of(
@@ -92,6 +98,7 @@ public class PythonPackageableComponentsTest {
             ImmutableMap.of(),
             ImmutableMap.of(),
             ImmutableSet.of(),
+            ImmutableMultimap.of(),
             Optional.empty());
     PythonPackageComponents.Builder builder = new PythonPackageComponents.Builder(me);
     builder.addComponent(compA, them);
@@ -115,6 +122,7 @@ public class PythonPackageableComponentsTest {
             ImmutableMap.of(),
             ImmutableMap.of(),
             ImmutableSet.of(),
+            ImmutableMultimap.of(),
             Optional.empty());
     PythonPackageComponents compB =
         PythonPackageComponents.of(
@@ -122,10 +130,61 @@ public class PythonPackageableComponentsTest {
             ImmutableMap.of(),
             ImmutableMap.of(),
             ImmutableSet.of(),
+            ImmutableMultimap.of(),
             Optional.empty());
     PythonPackageComponents.Builder builder = new PythonPackageComponents.Builder(me);
     builder.addComponent(compA, them);
     builder.addComponent(compB, them);
     builder.build();
+  }
+
+  @Test
+  public void testBuilderBuildsAndUpdates() {
+    BuildTarget me = BuildTargetFactory.newInstance("//:me");
+    BuildTarget them = BuildTargetFactory.newInstance("//:them");
+
+    PythonPackageComponents expected =
+        PythonPackageComponents.of(
+            ImmutableMap.of(
+                Paths.get("fooA"),
+                FakeSourcePath.of("sourceA"),
+                Paths.get("fooB"),
+                FakeSourcePath.of("sourceB")),
+            ImmutableMap.of(
+                Paths.get("barA"),
+                FakeSourcePath.of("resA"),
+                Paths.get("barB"),
+                FakeSourcePath.of("resB")),
+            ImmutableMap.of(
+                Paths.get("nativeA.so"),
+                FakeSourcePath.of("nativeA"),
+                Paths.get("nativeB.so"),
+                FakeSourcePath.of("nativeB")),
+            ImmutableSet.of(FakeSourcePath.of("archiveA.whl"), FakeSourcePath.of("archiveB.whl")),
+            ImmutableSetMultimap.of(
+                Paths.get(""),
+                FakeSourcePath.of("extractedA.whl"),
+                Paths.get(""),
+                FakeSourcePath.of("extractedB.whl")),
+            Optional.empty());
+
+    PythonPackageComponents.Builder builder = new PythonPackageComponents.Builder(me);
+    builder.addModule(Paths.get("fooA"), FakeSourcePath.of("sourceA"), them);
+    builder.addResources(ImmutableMap.of(Paths.get("barA"), FakeSourcePath.of("resA")), them);
+    builder.addNativeLibraries(
+        ImmutableMap.of(Paths.get("nativeA.so"), FakeSourcePath.of("nativeA")), them);
+    builder.addPrebuiltLibraries(ImmutableSet.of(FakeSourcePath.of("archiveA.whl")));
+    builder.addModuleDirs(
+        ImmutableSetMultimap.of(Paths.get(""), FakeSourcePath.of("extractedA.whl")));
+
+    builder.addModule(Paths.get("fooB"), FakeSourcePath.of("sourceB"), them);
+    builder.addResources(ImmutableMap.of(Paths.get("barB"), FakeSourcePath.of("resB")), them);
+    builder.addNativeLibraries(
+        ImmutableMap.of(Paths.get("nativeB.so"), FakeSourcePath.of("nativeB")), them);
+    builder.addPrebuiltLibraries(ImmutableSet.of(FakeSourcePath.of("archiveB.whl")));
+    builder.addModuleDirs(
+        ImmutableSetMultimap.of(Paths.get(""), FakeSourcePath.of("extractedB.whl")));
+
+    Assert.assertEquals(expected, builder.build());
   }
 }

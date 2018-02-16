@@ -315,6 +315,7 @@ public class PythonBinaryDescription
             /* resources */ ImmutableMap.of(),
             /* nativeLibraries */ ImmutableMap.of(),
             /* prebuiltLibraries */ ImmutableSet.of(),
+            /* moduleDirs */ ImmutableMultimap.of(),
             /* zipSafe */ args.getZipSafe());
 
     FlavorDomain<PythonPlatform> pythonPlatforms =

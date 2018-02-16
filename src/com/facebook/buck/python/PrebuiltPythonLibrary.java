@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 
@@ -59,6 +60,7 @@ public class PrebuiltPythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
         ImmutableMap.of(),
         ImmutableMap.of(),
         ImmutableSet.of(binarySrc),
+        ImmutableMultimap.of(),
         Optional.empty());
   }
 }

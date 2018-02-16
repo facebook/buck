@@ -67,6 +67,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
@@ -309,6 +310,7 @@ public class PythonTestDescription
             resources,
             ImmutableMap.of(),
             ImmutableSet.of(),
+            ImmutableMultimap.of(),
             args.getZipSafe());
     ImmutableList<BuildRule> deps =
         RichStream.from(
