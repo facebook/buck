@@ -190,9 +190,9 @@ public abstract class DefaultJavaLibraryRules {
           CalculateClassAbi classAbiRule = buildClassAbiRule(libraryRule);
           CompareAbis compareAbisRule;
           if (sourceOnlyAbiRule != null) {
-            compareAbisRule = buildCompareAbisRule(sourceOnlyAbiRule, sourceAbiRule);
+            compareAbisRule = buildCompareAbisRule(sourceAbiRule, sourceOnlyAbiRule);
           } else {
-            compareAbisRule = buildCompareAbisRule(sourceAbiRule, classAbiRule);
+            compareAbisRule = buildCompareAbisRule(classAbiRule, sourceAbiRule);
           }
 
           if (HasJavaAbi.isLibraryTarget(target)) {
@@ -209,12 +209,12 @@ public abstract class DefaultJavaLibraryRules {
 
   @Nullable
   private <T extends BuildRule & CalculateAbi, U extends BuildRule & CalculateAbi>
-      CompareAbis buildCompareAbisRule(@Nullable T abi1, @Nullable U abi2) {
+      CompareAbis buildCompareAbisRule(@Nullable T correctAbi, @Nullable U experimentalAbi) {
     if (!willProduceCompareAbis()) {
       return null;
     }
-    Preconditions.checkNotNull(abi1);
-    Preconditions.checkNotNull(abi2);
+    Preconditions.checkNotNull(correctAbi);
+    Preconditions.checkNotNull(experimentalAbi);
 
     BuildTarget compareAbisTarget = HasJavaAbi.getVerifiedSourceAbiJar(getLibraryTarget());
     return getBuildRuleResolver()
@@ -223,11 +223,11 @@ public abstract class DefaultJavaLibraryRules {
                 compareAbisTarget,
                 getProjectFilesystem(),
                 getInitialParams()
-                    .withDeclaredDeps(ImmutableSortedSet.of(abi1, abi2))
+                    .withDeclaredDeps(ImmutableSortedSet.of(correctAbi, experimentalAbi))
                     .withoutExtraDeps(),
                 getSourcePathResolver(),
-                abi1.getSourcePathToOutput(),
-                abi2.getSourcePathToOutput(),
+                correctAbi.getSourcePathToOutput(),
+                experimentalAbi.getSourcePathToOutput(),
                 Preconditions.checkNotNull(getJavaBuckConfig()).getSourceAbiVerificationMode()));
   }
 
