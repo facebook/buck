@@ -105,6 +105,24 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
   }
 
   /**
+   * Marks validation errors if given method is not static, or does not return an {@link
+   * EndToEndEnvironment}
+   */
+  private void validateEnvironmentMethod(
+      FrameworkMethod environmentMethod, List<Throwable> errors) {
+    if (!environmentMethod.isStatic()) {
+      errors.add(
+          new AnnotationFormatError(
+              "Methods marked by @Environment or @EnvironmentFor must be static"));
+    }
+    if (!EndToEndEnvironment.class.isAssignableFrom(environmentMethod.getReturnType())) {
+      errors.add(
+          new AnnotationFormatError(
+              "Methods marked by @Environment or @EnvironmentFor must return an EndToEndEnvironment"));
+    }
+  }
+
+  /**
    * Marks validation errors in errors if:
    *
    * <ul>
@@ -131,13 +149,8 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
                   + "@EnvironmentFor(\"testNameShouldBuild\")\n"
                   + "EndToEndEnvironment createEndToEndEnvironmentForCase() {\n\n}"));
     } else {
-      // TODO: validate method is static
       FrameworkMethod environmentMethod = environmentMethods.get(0);
-      if (environmentMethod.getReturnType() != EndToEndEnvironment.class) {
-        errors.add(
-            new IllegalArgumentException(
-                "Methods marked by @Environment must return an EndToEndEnvironment"));
-      }
+      validateEnvironmentMethod(environmentMethod, errors);
     }
   }
 
@@ -152,10 +165,7 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
     List<FrameworkMethod> environmentForMethods =
         getTestClass().getAnnotatedMethods(EnvironmentFor.class);
     for (FrameworkMethod environmentForMethod : environmentForMethods) {
-      if (environmentForMethod.getReturnType() != EndToEndEnvironment.class) {
-        errors.add(
-            new Exception("Methods marked by @Environment must return an EndToEndEnvironment"));
-      }
+      validateEnvironmentMethod(environmentForMethod, errors);
     }
     // TODO: Handle case where environment for for two tests, tests that don't exist
   }
