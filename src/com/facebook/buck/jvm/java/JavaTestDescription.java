@@ -52,6 +52,7 @@ import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
@@ -242,7 +243,8 @@ public class JavaTestDescription
         CxxPlatform cxxPlatform) {
       if (useCxxLibraries.orElse(false)) {
         SymlinkTree nativeLibsSymlinkTree =
-            buildNativeLibsSymlinkTreeRule(buildTarget, projectFilesystem, params, cxxPlatform);
+            buildNativeLibsSymlinkTreeRule(
+                buildTarget, projectFilesystem, ruleFinder, params, cxxPlatform);
 
         // If the cxxLibraryWhitelist is present, remove symlinks that were not requested.
         // They could point to old, invalid versions of the library in question.
@@ -266,7 +268,9 @@ public class JavaTestDescription
                   nativeLibsSymlinkTree
                       .getProjectFilesystem()
                       .relativize(nativeLibsSymlinkTree.getRoot()),
-                  filteredLinks.build());
+                  filteredLinks.build(),
+                  ImmutableMultimap.of(),
+                  ruleFinder);
         }
 
         resolver.addToIndex(nativeLibsSymlinkTree);
@@ -295,11 +299,13 @@ public class JavaTestDescription
     public static SymlinkTree buildNativeLibsSymlinkTreeRule(
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
+        SourcePathRuleFinder ruleFinder,
         BuildRuleParams buildRuleParams,
         CxxPlatform cxxPlatform) {
       return CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
           buildTarget,
           projectFilesystem,
+          ruleFinder,
           cxxPlatform,
           buildRuleParams.getBuildDeps(),
           r -> r instanceof JavaLibrary ? Optional.of(r.getBuildDeps()) : Optional.empty());

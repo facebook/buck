@@ -204,12 +204,14 @@ public class PrebuiltCxxLibraryDescription
   private static HeaderSymlinkTree createExportedHeaderSymlinkTreeBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      SourcePathRuleFinder ruleFinder,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       PrebuiltCxxLibraryDescriptionArg args) {
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
+        ruleFinder,
         resolver,
         cxxPlatform,
         parseExportedHeaders(buildTarget, resolver, cxxPlatform, args),
@@ -437,7 +439,12 @@ public class PrebuiltCxxLibraryDescription
           buildTarget.withoutFlavors(type.get().getKey(), platform.get().getKey());
       if (type.get().getValue() == Type.EXPORTED_HEADERS) {
         return createExportedHeaderSymlinkTreeBuildRule(
-            buildTarget, projectFilesystem, ruleResolver, platform.get().getValue(), args);
+            buildTarget,
+            projectFilesystem,
+            new SourcePathRuleFinder(ruleResolver),
+            ruleResolver,
+            platform.get().getValue(),
+            args);
       } else if (type.get().getValue() == Type.SHARED) {
         return createSharedLibraryBuildRule(
             buildTarget,

@@ -346,6 +346,7 @@ public class RustCompileUtils {
               CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
                   buildTarget,
                   projectFilesystem,
+                  ruleFinder,
                   cxxPlatform,
                   params.getBuildDeps(),
                   r ->

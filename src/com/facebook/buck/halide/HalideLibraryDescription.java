@@ -310,6 +310,7 @@ public class HalideLibraryDescription
       return CxxDescriptionEnhancer.createHeaderSymlinkTree(
           buildTarget,
           projectFilesystem,
+          ruleFinder,
           resolver,
           cxxPlatform,
           headersBuilder.build(),

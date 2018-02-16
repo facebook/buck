@@ -88,7 +88,7 @@ public class DBinaryDescription
 
     if (buildTarget.getFlavors().contains(SOURCE_LINK_TREE)) {
       return DDescriptionUtils.createSourceSymlinkTree(
-          buildTarget, projectFilesystem, pathResolver, args.getSrcs());
+          buildTarget, projectFilesystem, pathResolver, ruleFinder, args.getSrcs());
     }
 
     SymlinkTree sourceTree =

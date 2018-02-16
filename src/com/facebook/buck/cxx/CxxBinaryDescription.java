@@ -91,6 +91,7 @@ public class CxxBinaryDescription
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
+        ruleFinder,
         resolver,
         cxxPlatform,
         CxxDescriptionEnhancer.parseHeaders(

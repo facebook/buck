@@ -249,6 +249,7 @@ public class AppleLibraryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       CellPathResolver cellRoots,
       CxxLibraryDescription.CommonArg args,
       Optional<AppleLibrarySwiftDelegate> swiftDelegate) {
@@ -264,6 +265,7 @@ public class AppleLibraryDescription
                 AppleLibraryDescriptionSwiftEnhancer.createObjCGeneratedHeaderBuildRule(
                     buildTarget,
                     projectFilesystem,
+                    ruleFinder,
                     resolver,
                     cxxPlatform,
                     HeaderVisibility.PUBLIC));
@@ -275,6 +277,7 @@ public class AppleLibraryDescription
                 AppleLibraryDescriptionSwiftEnhancer.createObjCGeneratedHeaderBuildRule(
                     buildTarget,
                     projectFilesystem,
+                    ruleFinder,
                     resolver,
                     cxxPlatform,
                     HeaderVisibility.PRIVATE));
@@ -300,7 +303,6 @@ public class AppleLibraryDescription
                                 .getPreprocessorInputsForAppleLibrary(
                                     buildTarget, resolver, cxxPlatform));
 
-            SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
             return Optional.of(
                 AppleLibraryDescriptionSwiftEnhancer.createSwiftCompileRule(
                     buildTarget,
@@ -337,7 +339,14 @@ public class AppleLibraryDescription
 
     Optional<BuildRule> swiftRule =
         createSwiftBuildRule(
-            buildTarget, projectFilesystem, params, resolver, cellRoots, args, Optional.empty());
+            buildTarget,
+            projectFilesystem,
+            params,
+            resolver,
+            new SourcePathRuleFinder(resolver),
+            cellRoots,
+            args,
+            Optional.empty());
     if (swiftRule.isPresent()) {
       return swiftRule.get();
     }

@@ -60,6 +60,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -159,7 +160,14 @@ public class AppleTestDescription
     if (!appleConfig.shouldUseSwiftDelegate()) {
       Optional<BuildRule> buildRule =
           appleLibraryDescription.createSwiftBuildRule(
-              buildTarget, projectFilesystem, params, resolver, cellRoots, args, Optional.of(this));
+              buildTarget,
+              projectFilesystem,
+              params,
+              resolver,
+              new SourcePathRuleFinder(resolver),
+              cellRoots,
+              args,
+              Optional.of(this));
 
       if (buildRule.isPresent()) {
         return buildRule.get();

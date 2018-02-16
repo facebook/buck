@@ -134,6 +134,7 @@ public class CxxLuaExtensionDescription
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
             buildTarget,
             projectFilesystem,
+            ruleFinder,
             ruleResolver,
             cxxPlatform,
             headers,

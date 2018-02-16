@@ -338,6 +338,7 @@ public final class CxxInferEnhancer {
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
             target,
             filesystem,
+            ruleFinder,
             ruleResolver,
             cxxPlatform,
             headers,

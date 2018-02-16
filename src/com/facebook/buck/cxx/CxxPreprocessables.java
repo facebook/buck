@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.RichStream;
@@ -155,17 +156,18 @@ public class CxxPreprocessables {
   public static HeaderSymlinkTree createHeaderSymlinkTreeBuildRule(
       BuildTarget target,
       ProjectFilesystem filesystem,
+      SourcePathRuleFinder ruleFinder,
       Path root,
       ImmutableMap<Path, SourcePath> links,
       HeaderMode headerMode) {
     switch (headerMode) {
       case SYMLINK_TREE_WITH_HEADER_MAP:
-        return HeaderSymlinkTreeWithHeaderMap.create(target, filesystem, root, links);
+        return HeaderSymlinkTreeWithHeaderMap.create(target, filesystem, root, links, ruleFinder);
       case HEADER_MAP_ONLY:
-        return new DirectHeaderMap(target, filesystem, root, links);
+        return new DirectHeaderMap(target, filesystem, root, links, ruleFinder);
       default:
       case SYMLINK_TREE_ONLY:
-        return new HeaderSymlinkTree(target, filesystem, root, links);
+        return new HeaderSymlinkTree(target, filesystem, root, links, ruleFinder);
     }
   }
 

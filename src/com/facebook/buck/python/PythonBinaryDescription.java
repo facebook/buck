@@ -57,6 +57,7 @@ import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -135,6 +136,7 @@ public class PythonBinaryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
@@ -185,7 +187,9 @@ public class PythonBinaryDescription
                                                     .getRelativePath(sourcePath)
                                                     .getFileName()),
                                     sourcePath -> sourcePath)))
-                    .build()));
+                    .build(),
+                ImmutableMultimap.of(),
+                ruleFinder));
 
     return new PythonInPlaceBinary(
         buildTarget,
@@ -226,6 +230,7 @@ public class PythonBinaryDescription
             projectFilesystem,
             params,
             resolver,
+            ruleFinder,
             pathResolver,
             pythonPlatform,
             cxxPlatform,

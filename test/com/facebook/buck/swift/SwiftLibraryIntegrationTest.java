@@ -95,7 +95,7 @@ public class SwiftLibraryIntegrationTest {
 
     HeaderSymlinkTreeWithHeaderMap symlinkTreeBuildRule =
         HeaderSymlinkTreeWithHeaderMap.create(
-            symlinkTarget, projectFilesystem, symlinkTreeRoot, links);
+            symlinkTarget, projectFilesystem, symlinkTreeRoot, links, ruleFinder);
     resolver.addToIndex(symlinkTreeBuildRule);
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");

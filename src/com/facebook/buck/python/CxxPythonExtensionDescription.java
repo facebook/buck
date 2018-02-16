@@ -180,6 +180,7 @@ public class CxxPythonExtensionDescription
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
             target,
             projectFilesystem,
+            ruleFinder,
             ruleResolver,
             cxxPlatform,
             headers,

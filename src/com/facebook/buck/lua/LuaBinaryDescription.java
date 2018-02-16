@@ -76,6 +76,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -518,6 +519,7 @@ public class LuaBinaryDescription
       BuildTarget linkTreeTarget,
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       Path root,
       ImmutableMap<String, SourcePath> components) {
     return resolver.addToIndex(
@@ -526,7 +528,9 @@ public class LuaBinaryDescription
             linkTreeTarget,
             filesystem,
             root,
-            MoreMaps.transformKeys(components, MorePaths.toPathFn(root.getFileSystem()))));
+            MoreMaps.transformKeys(components, MorePaths.toPathFn(root.getFileSystem())),
+            ImmutableMultimap.of(),
+            ruleFinder));
   }
 
   /**
@@ -568,6 +572,7 @@ public class LuaBinaryDescription
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       final SourcePath starter,
       final LuaPackageComponents components) {
@@ -579,6 +584,7 @@ public class LuaBinaryDescription
                 getModulesSymlinkTreeTarget(buildTarget),
                 projectFilesystem,
                 resolver,
+                ruleFinder,
                 getModulesSymlinkTreeRoot(buildTarget, projectFilesystem),
                 components.getModules()));
 
@@ -602,6 +608,7 @@ public class LuaBinaryDescription
                   getPythonModulesSymlinkTreeTarget(buildTarget),
                   projectFilesystem,
                   resolver,
+                  ruleFinder,
                   getPythonModulesSymlinkTreeRoot(buildTarget, projectFilesystem),
                   pythonModules));
       pythonModulesLinktree.add(symlinkTree);
@@ -615,6 +622,7 @@ public class LuaBinaryDescription
                   getNativeLibsSymlinkTreeTarget(buildTarget),
                   projectFilesystem,
                   resolver,
+                  ruleFinder,
                   getNativeLibsSymlinkTreeRoot(buildTarget, projectFilesystem),
                   addVersionLessLibraries(cxxPlatform, components.getNativeLibraries())));
       nativeLibsLinktree.add(symlinkTree);
@@ -727,6 +735,7 @@ public class LuaBinaryDescription
             buildTarget,
             projectFilesystem,
             resolver,
+            ruleFinder,
             luaPlatform.getCxxPlatform(),
             starter,
             components);
