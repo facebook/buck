@@ -23,7 +23,7 @@
 # level (before passing them to the console / log files / etc.)
 #
 # If you want to enable more verbose logging, do it here.
-.level=FINE
+.level=INFO
 
 # Enable console logging handler and file handler to write rotating log files under
 # buck-out/log/buck-*.log in the project(s) being used.
