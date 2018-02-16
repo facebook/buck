@@ -354,7 +354,6 @@ public class PythonTestDescription
             projectFilesystem,
             params,
             resolver,
-            pathResolver,
             ruleFinder,
             pythonPlatform,
             cxxPlatform,

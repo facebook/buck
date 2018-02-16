@@ -371,6 +371,34 @@ public class PythonBinaryIntegrationTest {
     assumeThat(packageStyle, Matchers.is(PackageStyle.INPLACE));
 
     workspace.runBuckCommand("run", "//:main_module_with_prebuilt_dep_bin").assertSuccess();
+
+    Path linkTreeDir =
+        workspace.resolve(
+            workspace
+                .getBuckPaths()
+                .getGenDir()
+                .resolve("main_module_with_prebuilt_dep_bin#link-tree"));
+    Path originalWhlDir =
+        workspace.resolve(
+            workspace
+                .getBuckPaths()
+                .getGenDir()
+                .resolve("external_sources")
+                .resolve("__whl_dep__extracted"));
+
+    ImmutableSet<Path> expectedPaths =
+        ImmutableSet.of(
+            Paths.get("wheel_package", "my_wheel.py"),
+            Paths.get("wheel_package", "__init__.py"),
+            Paths.get("wheel_package-0.0.1.dist-info", "DESCRIPTION.rst"));
+
+    for (Path path : expectedPaths) {
+      assertTrue(Files.exists(linkTreeDir.resolve(path)));
+      assertTrue(Files.isSameFile(linkTreeDir.resolve(path), originalWhlDir.resolve(path)));
+    }
+    ImmutableList<String> links =
+        Files.walk(linkTreeDir).map(Path::toString).collect(ImmutableList.toImmutableList());
+    assertThat(links, everyItem(not(endsWith(".whl"))));
   }
 
   /**

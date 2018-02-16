@@ -61,7 +61,6 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -137,7 +136,6 @@ public class PythonBinaryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       String mainModule,
@@ -169,26 +167,8 @@ public class PythonBinaryDescription
                     .putAll(components.getModules())
                     .putAll(components.getResources())
                     .putAll(components.getNativeLibraries())
-                    .putAll(
-                        components
-                            .getPrebuiltLibraries()
-                            .stream()
-                            // Get the prebuilt libraries, and stick them in a directory that can be
-                            // added to the sys.path of the in-place executor. Use a subdir so that
-                            // we can just glob on '*' and not have to maintain a list of
-                            // whitelisted
-                            // extensions or anything in the inplace python template file.
-                            .collect(
-                                ImmutableMap.toImmutableMap(
-                                    sourcePath ->
-                                        Paths.get(PythonInPlaceBinary.PREBUILT_PYTHON_RULES_SUBDIR)
-                                            .resolve(
-                                                pathResolver
-                                                    .getRelativePath(sourcePath)
-                                                    .getFileName()),
-                                    sourcePath -> sourcePath)))
                     .build(),
-                ImmutableMultimap.of(),
+                components.getModuleDirs(),
                 ruleFinder));
 
     return new PythonInPlaceBinary(
@@ -212,7 +192,6 @@ public class PythonBinaryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
@@ -231,7 +210,6 @@ public class PythonBinaryDescription
             params,
             resolver,
             ruleFinder,
-            pathResolver,
             pythonPlatform,
             cxxPlatform,
             mainModule,
@@ -368,7 +346,6 @@ public class PythonBinaryDescription
         projectFilesystem,
         params,
         resolver,
-        pathResolver,
         ruleFinder,
         pythonPlatform,
         cxxPlatform,
