@@ -231,7 +231,6 @@ public class CxxPythonExtensionDescriptionTest {
                 rule.getSourcePathToOutput()),
             ImmutableMap.of(),
             ImmutableMap.of(),
-            ImmutableSet.of(),
             ImmutableMultimap.of(),
             Optional.of(false));
     assertEquals(expectedComponents, actualComponent);

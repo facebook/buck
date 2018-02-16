@@ -151,6 +151,7 @@ public class PexStep extends ShellStep {
                   "modules", modulesBuilder.build(),
                   "resources", resourcesBuilder.build(),
                   "nativeLibraries", nativeLibrariesBuilder.build(),
+                  // prebuiltLibraries key kept for compatibility
                   "prebuiltLibraries", ImmutableList.<String>of())));
     } catch (IOException e) {
       throw new RuntimeException(e);

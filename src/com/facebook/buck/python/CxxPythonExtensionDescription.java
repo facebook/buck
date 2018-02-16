@@ -488,7 +488,6 @@ public class CxxPythonExtensionDescription
             ImmutableMap.of(module, output),
             ImmutableMap.of(),
             ImmutableMap.of(),
-            ImmutableSet.of(),
             ImmutableMultimap.of(),
             Optional.of(false));
       }

@@ -292,7 +292,6 @@ public class PythonBinaryDescription
             modules.build(),
             /* resources */ ImmutableMap.of(),
             /* nativeLibraries */ ImmutableMap.of(),
-            /* prebuiltLibraries */ ImmutableSet.of(),
             /* moduleDirs */ ImmutableMultimap.of(),
             /* zipSafe */ args.getZipSafe());
 

@@ -27,7 +27,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -44,7 +43,6 @@ public class PythonPackageableComponentsTest {
             ImmutableMap.of(Paths.get("test"), FakeSourcePath.of("sourceA")),
             ImmutableMap.of(),
             ImmutableMap.of(),
-            ImmutableSet.of(),
             ImmutableMultimap.of(),
             Optional.of(true));
     PythonPackageComponents compB =
@@ -52,7 +50,6 @@ public class PythonPackageableComponentsTest {
             ImmutableMap.of(Paths.get("test2"), FakeSourcePath.of("sourceB")),
             ImmutableMap.of(),
             ImmutableMap.of(),
-            ImmutableSet.of(),
             ImmutableMultimap.of(),
             Optional.of(false));
 
@@ -89,7 +86,6 @@ public class PythonPackageableComponentsTest {
             ImmutableMap.of(dest, FakeSourcePath.of("sourceA")),
             ImmutableMap.of(),
             ImmutableMap.of(),
-            ImmutableSet.of(),
             ImmutableMultimap.of(),
             Optional.empty());
     PythonPackageComponents compB =
@@ -97,7 +93,6 @@ public class PythonPackageableComponentsTest {
             ImmutableMap.of(dest, FakeSourcePath.of("sourceB")),
             ImmutableMap.of(),
             ImmutableMap.of(),
-            ImmutableSet.of(),
             ImmutableMultimap.of(),
             Optional.empty());
     PythonPackageComponents.Builder builder = new PythonPackageComponents.Builder(me);
@@ -121,7 +116,6 @@ public class PythonPackageableComponentsTest {
             ImmutableMap.of(dest, path),
             ImmutableMap.of(),
             ImmutableMap.of(),
-            ImmutableSet.of(),
             ImmutableMultimap.of(),
             Optional.empty());
     PythonPackageComponents compB =
@@ -129,7 +123,6 @@ public class PythonPackageableComponentsTest {
             ImmutableMap.of(dest, path),
             ImmutableMap.of(),
             ImmutableMap.of(),
-            ImmutableSet.of(),
             ImmutableMultimap.of(),
             Optional.empty());
     PythonPackageComponents.Builder builder = new PythonPackageComponents.Builder(me);
@@ -160,7 +153,6 @@ public class PythonPackageableComponentsTest {
                 FakeSourcePath.of("nativeA"),
                 Paths.get("nativeB.so"),
                 FakeSourcePath.of("nativeB")),
-            ImmutableSet.of(FakeSourcePath.of("archiveA.whl"), FakeSourcePath.of("archiveB.whl")),
             ImmutableSetMultimap.of(
                 Paths.get(""),
                 FakeSourcePath.of("extractedA.whl"),
@@ -173,7 +165,6 @@ public class PythonPackageableComponentsTest {
     builder.addResources(ImmutableMap.of(Paths.get("barA"), FakeSourcePath.of("resA")), them);
     builder.addNativeLibraries(
         ImmutableMap.of(Paths.get("nativeA.so"), FakeSourcePath.of("nativeA")), them);
-    builder.addPrebuiltLibraries(ImmutableSet.of(FakeSourcePath.of("archiveA.whl")));
     builder.addModuleDirs(
         ImmutableSetMultimap.of(Paths.get(""), FakeSourcePath.of("extractedA.whl")));
 
@@ -181,7 +172,6 @@ public class PythonPackageableComponentsTest {
     builder.addResources(ImmutableMap.of(Paths.get("barB"), FakeSourcePath.of("resB")), them);
     builder.addNativeLibraries(
         ImmutableMap.of(Paths.get("nativeB.so"), FakeSourcePath.of("nativeB")), them);
-    builder.addPrebuiltLibraries(ImmutableSet.of(FakeSourcePath.of("archiveB.whl")));
     builder.addModuleDirs(
         ImmutableSetMultimap.of(Paths.get(""), FakeSourcePath.of("extractedB.whl")));
 

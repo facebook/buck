@@ -309,7 +309,6 @@ public class PythonTestDescription
                 .build(),
             resources,
             ImmutableMap.of(),
-            ImmutableSet.of(),
             ImmutableMultimap.of(),
             args.getZipSafe());
     ImmutableList<BuildRule> deps =

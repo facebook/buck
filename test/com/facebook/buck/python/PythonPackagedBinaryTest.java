@@ -45,7 +45,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -98,7 +97,6 @@ public class PythonPackagedBinaryTest {
                     Paths.get(mod2), PathSourcePath.of(projectFilesystem, src2)),
                 ImmutableMap.of(),
                 ImmutableMap.of(),
-                ImmutableSet.of(),
                 ImmutableMultimap.of(),
                 Optional.empty()),
             ImmutableSortedSet.of(),

@@ -36,7 +36,6 @@ import com.facebook.buck.unarchive.UnzipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -76,9 +75,6 @@ public class PrebuiltPythonLibrary extends AbstractBuildRuleWithDeclaredAndExtra
         ImmutableMap.of(),
         ImmutableMap.of(),
         ImmutableMap.of(),
-        // TODO: We'll be removing 'prebuiltLibraries' in a subsequent diff after
-        //       everything stops using it
-        ImmutableSet.of(binarySrc),
         ImmutableSetMultimap.of(Paths.get(""), Objects.requireNonNull(getSourcePathToOutput())),
         Optional.empty());
   }
