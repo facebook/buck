@@ -265,8 +265,8 @@ public class SplitZipStep implements Step {
       String internalClassName =
           Preconditions.checkNotNull(deobfuscate.apply(classFileName.replaceAll("\\.class$", "")));
 
-      return primaryDexClassNames.contains(internalClassName) ||
-          primaryDexFilter.matches(internalClassName);
+      return primaryDexClassNames.contains(internalClassName)
+          || primaryDexFilter.matches(internalClassName);
     };
   }
 
@@ -394,7 +394,8 @@ public class SplitZipStep implements Step {
       throws IOException {
 
     Function<String, String> obfuscationFunction = translatorFactory.createObfuscationFunction();
-    Function<String, String> deObfuscationFunction = translatorFactory.createDeobfuscationFunction();
+    Function<String, String> deObfuscationFunction =
+        translatorFactory.createDeobfuscationFunction();
 
     ImmutableList<Type> scenarioClasses =
         filesystem
@@ -410,10 +411,7 @@ public class SplitZipStep implements Step {
     FirstOrderHelper.addTypesAndDependencies(scenarioClasses, classesSupplier.get(), classBuilder);
 
     builder.addAll(
-        classBuilder.build()
-            .stream()
-            .map(deObfuscationFunction)
-            .collect(Collectors.toSet()));
+        classBuilder.build().stream().map(deObfuscationFunction).collect(Collectors.toSet()));
   }
 
   @VisibleForTesting
