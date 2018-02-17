@@ -971,15 +971,26 @@ public class BuildCommand extends AbstractCommand {
             distBuildClientEventListener.getDefaultCacheMissRequestKeys();
         ArtifactCacheBuckConfig artifactCacheBuckConfig =
             ArtifactCacheBuckConfig.of(distBuildConfig.getBuckConfig());
-        List<RuleKeyLogEntry> ruleKeyLogs =
-            distBuildService.fetchRuleKeyLogs(
-                cacheMissRequestKeys,
-                artifactCacheBuckConfig.getRepository(),
-                artifactCacheBuckConfig.getScheduleType(),
-                true /* distributedBuildModeEnabled */);
-        params
-            .getBuckEventBus()
-            .post(distBuildClientEventListener.createDistBuildClientCacheResultsEvent(ruleKeyLogs));
+
+        LOG.info(
+            String.format(
+                "Fetching rule key logs for [%d] cache misses", cacheMissRequestKeys.size()));
+        if (cacheMissRequestKeys.size() > 0) {
+          List<RuleKeyLogEntry> ruleKeyLogs =
+              distBuildService.fetchRuleKeyLogs(
+                  cacheMissRequestKeys,
+                  artifactCacheBuckConfig.getRepository(),
+                  artifactCacheBuckConfig.getScheduleType(),
+                  true /* distributedBuildModeEnabled */);
+          params
+              .getBuckEventBus()
+              .post(
+                  distBuildClientEventListener.createDistBuildClientCacheResultsEvent(ruleKeyLogs));
+        }
+        LOG.info(
+            String.format(
+                "Fetched rule key logs for [%d] cache misses", cacheMissRequestKeys.size()));
+
       } catch (Exception ex) {
         LOG.error("Failed to publish distributed build client cache request event", ex);
       }
