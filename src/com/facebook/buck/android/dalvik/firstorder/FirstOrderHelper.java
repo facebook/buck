@@ -43,7 +43,7 @@ public class FirstOrderHelper {
     helper.addDependencies(allClasses);
   }
 
-  private ImmutableSet<String> addDependencies(Iterable<ClassNode> allClasses) {
+  private void addDependencies(Iterable<ClassNode> allClasses) {
     for (ClassNode classNode : allClasses) {
       FirstOrderVisitorContext context = new FirstOrderVisitorContext();
       classNode.accept(context.classVisitor);
@@ -62,8 +62,6 @@ public class FirstOrderHelper {
     for (Type type : scenarioTypes) {
       addFirstOrderTypes(type);
     }
-
-    return resultBuilder.build();
   }
 
   private void addFirstOrderTypes(Type type) {
