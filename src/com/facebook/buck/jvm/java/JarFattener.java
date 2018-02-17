@@ -25,10 +25,13 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -58,7 +61,7 @@ import javax.xml.bind.JAXBException;
 
 /** Build a fat JAR that packages an inner JAR along with any required native libraries. */
 public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements BinaryBuildRule {
+    implements BinaryBuildRule, CacheableBuildRule {
 
   private static final String FAT_JAR_INNER_JAR = "inner.jar";
   private static final String FAT_JAR_NATIVE_LIBRARY_RESOURCE_ROOT = "nativelibs";
@@ -70,7 +73,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public static final String FAT_JAR_MAIN_SRC_RESOURCE =
       "com/facebook/buck/jvm/java/FatJarMain.java";
 
-  private final SourcePathRuleFinder ruleFinder;
+  private SourcePathRuleFinder ruleFinder;
   @AddToRuleKey private final Javac javac;
   @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final SourcePath innerJar;
@@ -271,5 +274,13 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   public ImmutableMap<String, SourcePath> getNativeLibraries() {
     return nativeLibraries;
+  }
+
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
+    this.ruleFinder = ruleFinder;
   }
 }

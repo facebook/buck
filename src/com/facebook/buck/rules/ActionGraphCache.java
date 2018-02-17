@@ -32,6 +32,7 @@ import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.randomizedtrial.RandomizedTrial;
 import com.facebook.buck.util.timing.Clock;
@@ -50,6 +51,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ForkJoinPool;
+import java.util.function.Predicate;
 import java.util.stream.StreamSupport;
 
 /**
@@ -60,9 +62,11 @@ public class ActionGraphCache {
   private static final Logger LOG = Logger.get(ActionGraphCache.class);
 
   private Cache<TargetGraph, ActionGraphAndResolver> previousActionGraphs;
+  private ActionGraphNodeCache nodeCache;
 
-  public ActionGraphCache(int maxEntries) {
+  public ActionGraphCache(int maxEntries, int maxNodeCacheEntries) {
     previousActionGraphs = CacheBuilder.newBuilder().maximumSize(maxEntries).build();
+    nodeCache = new ActionGraphNodeCache(maxNodeCacheEntries);
   }
 
   /** Create an ActionGraph, using options extracted from a BuckConfig. */
@@ -81,6 +85,7 @@ public class ActionGraphCache {
         buckConfig.getActionGraphParallelizationMode(),
         Optional.empty(),
         buckConfig.getShouldInstrumentActionGraph(),
+        buckConfig.isActionGraphNodeCacheEnabled(),
         poolSupplier);
   }
 
@@ -101,6 +106,7 @@ public class ActionGraphCache {
         buckConfig.getActionGraphParallelizationMode(),
         ruleKeyLogger,
         buckConfig.getShouldInstrumentActionGraph(),
+        buckConfig.isActionGraphNodeCacheEnabled(),
         poolSupplier);
   }
 
@@ -112,6 +118,7 @@ public class ActionGraphCache {
       RuleKeyConfiguration ruleKeyConfiguration,
       ActionGraphParallelizationMode parallelizationMode,
       final boolean shouldInstrumentGraphBuilding,
+      final boolean isActionGraphNodeCacheEnabled,
       CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier) {
     return getActionGraph(
         eventBus,
@@ -122,6 +129,7 @@ public class ActionGraphCache {
         parallelizationMode,
         Optional.empty(),
         shouldInstrumentGraphBuilding,
+        isActionGraphNodeCacheEnabled,
         poolSupplier);
   }
 
@@ -147,6 +155,7 @@ public class ActionGraphCache {
       ActionGraphParallelizationMode parallelizationMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       final boolean shouldInstrumentGraphBuilding,
+      final boolean isActionGraphNodeCacheEnabled,
       CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
@@ -167,6 +176,7 @@ public class ActionGraphCache {
               parallelizationMode,
               ruleKeyLogger,
               shouldInstrumentGraphBuilding,
+              isActionGraphNodeCacheEnabled,
               poolSupplier);
         }
         out = cachedActionGraph;
@@ -191,6 +201,7 @@ public class ActionGraphCache {
                     targetGraph,
                     parallelizationMode,
                     shouldInstrumentGraphBuilding,
+                    isActionGraphNodeCacheEnabled,
                     poolSupplier));
         out = freshActionGraph.getSecond();
         if (!skipActionGraphCache) {
@@ -214,11 +225,12 @@ public class ActionGraphCache {
    * @param parallelizationMode
    * @return a {@link ActionGraphAndResolver}
    */
-  public static ActionGraphAndResolver getFreshActionGraph(
+  public ActionGraphAndResolver getFreshActionGraph(
       final BuckEventBus eventBus,
       final TargetGraph targetGraph,
       ActionGraphParallelizationMode parallelizationMode,
       final boolean shouldInstrumentGraphBuilding,
+      final boolean isActionGraphNodeCacheEnabled,
       CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier) {
     TargetNodeToBuildRuleTransformer transformer = new DefaultTargetNodeToBuildRuleTransformer();
     return getFreshActionGraph(
@@ -227,6 +239,7 @@ public class ActionGraphCache {
         targetGraph,
         parallelizationMode,
         shouldInstrumentGraphBuilding,
+        isActionGraphNodeCacheEnabled,
         poolSupplier);
   }
 
@@ -241,12 +254,13 @@ public class ActionGraphCache {
    * @param parallelizationMode
    * @return It returns a {@link ActionGraphAndResolver}
    */
-  public static ActionGraphAndResolver getFreshActionGraph(
+  public ActionGraphAndResolver getFreshActionGraph(
       final BuckEventBus eventBus,
       final TargetNodeToBuildRuleTransformer transformer,
       final TargetGraph targetGraph,
       ActionGraphParallelizationMode parallelizationMode,
       final boolean shouldInstrumentGraphBuilding,
+      final boolean isActionGraphNodeCacheEnabled,
       CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
@@ -258,18 +272,20 @@ public class ActionGraphCache {
             targetGraph,
             parallelizationMode,
             shouldInstrumentGraphBuilding,
+            isActionGraphNodeCacheEnabled,
             poolSupplier);
 
     eventBus.post(ActionGraphEvent.finished(started, actionGraph.getActionGraph().getSize()));
     return actionGraph;
   }
 
-  private static ActionGraphAndResolver createActionGraph(
+  private ActionGraphAndResolver createActionGraph(
       final BuckEventBus eventBus,
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
       ActionGraphParallelizationMode parallelizationMode,
       final boolean shouldInstrumentGraphBuilding,
+      final boolean isActionGraphNodeCacheEnabled,
       CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier) {
 
     switch (parallelizationMode) {
@@ -301,10 +317,15 @@ public class ActionGraphCache {
     }
     switch (parallelizationMode) {
       case ENABLED:
-        return createActionGraphInParallel(eventBus, transformer, targetGraph, poolSupplier.get());
+        return createActionGraphInParallel(
+            eventBus, transformer, targetGraph, isActionGraphNodeCacheEnabled, poolSupplier.get());
       case DISABLED:
         return createActionGraphSerially(
-            eventBus, transformer, targetGraph, shouldInstrumentGraphBuilding);
+            eventBus,
+            transformer,
+            targetGraph,
+            shouldInstrumentGraphBuilding,
+            isActionGraphNodeCacheEnabled);
       case EXPERIMENT_UNSTABLE:
       case EXPERIMENT:
         throw new AssertionError(
@@ -313,40 +334,62 @@ public class ActionGraphCache {
     throw new AssertionError("Unexpected parallelization mode value: " + parallelizationMode);
   }
 
-  private static ActionGraphAndResolver createActionGraphInParallel(
+  private ActionGraphAndResolver createActionGraphInParallel(
       final BuckEventBus eventBus,
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
+      final boolean isActionGraphNodeCacheEnabled,
       ForkJoinPool pool) {
     BuildRuleResolver resolver =
         new MultiThreadedBuildRuleResolver(pool, targetGraph, transformer, eventBus);
     HashMap<BuildTarget, CompletableFuture<BuildRule>> futures = new HashMap<>();
 
-    new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(targetGraph) {
-      @Override
-      public void visit(TargetNode<?, ?> node) {
-        CompletableFuture<BuildRule>[] depFutures =
-            targetGraph
-                .getOutgoingNodesFor(node)
-                .stream()
-                .map(dep -> Preconditions.checkNotNull(futures.get(dep.getBuildTarget())))
-                .<CompletableFuture<BuildRule>>toArray(CompletableFuture[]::new);
-        futures.put(
-            node.getBuildTarget(),
-            CompletableFuture.allOf(depFutures)
-                .thenApplyAsync(ignored -> resolver.requireRule(node.getBuildTarget()), pool));
-      }
-    }.traverse();
-
-    // Wait for completion. The results are ignored as we only care about the rules populated in
-    // the
-    // resolver, which is a superset of the rules generated directly from target nodes.
+    if (isActionGraphNodeCacheEnabled) {
+      nodeCache.prepareForTargetGraphWalk(targetGraph, resolver);
+    }
     try {
-      CompletableFuture.allOf(futures.values().toArray(new CompletableFuture[futures.size()]))
-          .join();
-    } catch (CompletionException e) {
-      Throwables.throwIfUnchecked(e.getCause());
-      throw new IllegalStateException("unexpected checked exception", e);
+      // Don't descend into a node's children if we're loading that node from the cache, as the
+      // entire subgraph will be fetched at once.
+      Predicate<TargetNode<?, ?>> shouldExploreChildren =
+          node -> !isActionGraphNodeCacheEnabled || !nodeCache.containsKey(node);
+
+      LOG.debug("start target graph walk");
+      new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(targetGraph) {
+        @Override
+        public void visit(TargetNode<?, ?> node) {
+          // If we're loading this node from cache, we don't need to wait on our children, as the
+          // entire subgraph will be loaded from cache.
+          CompletableFuture<BuildRule>[] depFutures =
+              (isActionGraphNodeCacheEnabled && nodeCache.containsKey(node))
+                  ? RichStream.of().<CompletableFuture<BuildRule>>toArray(CompletableFuture[]::new)
+                  : targetGraph
+                      .getOutgoingNodesFor(node)
+                      .stream()
+                      .map(dep -> Preconditions.checkNotNull(futures.get(dep.getBuildTarget())))
+                      .<CompletableFuture<BuildRule>>toArray(CompletableFuture[]::new);
+          futures.put(
+              node.getBuildTarget(),
+              CompletableFuture.allOf(depFutures)
+                  .thenApplyAsync(
+                      ignored -> requireRule(resolver, node, isActionGraphNodeCacheEnabled), pool));
+        }
+      }.traverse(shouldExploreChildren);
+
+      // Wait for completion. The results are ignored as we only care about the rules populated in
+      // the
+      // resolver, which is a superset of the rules generated directly from target nodes.
+      try {
+        CompletableFuture.allOf(futures.values().toArray(new CompletableFuture[futures.size()]))
+            .join();
+      } catch (CompletionException e) {
+        Throwables.throwIfUnchecked(e.getCause());
+        throw new IllegalStateException("unexpected checked exception", e);
+      }
+      LOG.debug("end target graph walk");
+    } finally {
+      if (isActionGraphNodeCacheEnabled) {
+        nodeCache.finishTargetGraphWalk(resolver);
+      }
     }
 
     return ActionGraphAndResolver.builder()
@@ -355,43 +398,74 @@ public class ActionGraphCache {
         .build();
   }
 
-  private static ActionGraphAndResolver createActionGraphSerially(
+  private ActionGraphAndResolver createActionGraphSerially(
       final BuckEventBus eventBus,
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
-      final boolean shouldInstrumentGraphBuilding) {
+      final boolean shouldInstrumentGraphBuilding,
+      final boolean isActionGraphNodeCacheEnabled) {
+    // TODO: Reduce duplication between the serial and parallel creation methods.
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(targetGraph, transformer, eventBus);
-    new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(targetGraph) {
-      @Override
-      public void visit(TargetNode<?, ?> node) {
-        if (shouldInstrumentGraphBuilding) {
-          Clock clock = new DefaultClock();
-          try (Scope ignored =
-              ActionGraphPerfStatEvent.start(
-                  clock,
-                  eventBus,
-                  () -> Iterables.size(resolver.getBuildRules()),
-                  () ->
-                      StreamSupport.stream(resolver.getBuildRules().spliterator(), true)
-                          .filter(
-                              rule ->
-                                  rule instanceof NoopBuildRule
-                                      || rule instanceof NoopBuildRuleWithDeclaredAndExtraDeps)
-                          .count(),
-                  node.getDescription().getClass().getName(),
-                  node.getBuildTarget().getFullyQualifiedName())) {
-            resolver.requireRule(node.getBuildTarget());
+
+    if (isActionGraphNodeCacheEnabled) {
+      nodeCache.prepareForTargetGraphWalk(targetGraph, resolver);
+    }
+    try {
+      // Don't descend into a node's children if we're loading that node from the cache, as the
+      // entire
+      // subgraph will be fetched at once.
+      Predicate<TargetNode<?, ?>> shouldExploreChildren =
+          node -> !isActionGraphNodeCacheEnabled || !nodeCache.containsKey(node);
+
+      LOG.debug("start target graph walk");
+      new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(targetGraph) {
+        @Override
+        public void visit(TargetNode<?, ?> node) {
+          if (shouldInstrumentGraphBuilding) {
+            Clock clock = new DefaultClock();
+            try (Scope ignored =
+                ActionGraphPerfStatEvent.start(
+                    clock,
+                    eventBus,
+                    () -> Iterables.size(resolver.getBuildRules()),
+                    () ->
+                        StreamSupport.stream(resolver.getBuildRules().spliterator(), true)
+                            .filter(
+                                rule ->
+                                    rule instanceof NoopBuildRule
+                                        || rule instanceof NoopBuildRuleWithDeclaredAndExtraDeps)
+                            .count(),
+                    node.getDescription().getClass().getName(),
+                    node.getBuildTarget().getFullyQualifiedName())) {
+              requireRule(resolver, node, isActionGraphNodeCacheEnabled);
+            }
+          } else {
+            requireRule(resolver, node, isActionGraphNodeCacheEnabled);
           }
-        } else {
-          resolver.requireRule(node.getBuildTarget());
         }
+      }.traverse(shouldExploreChildren);
+      LOG.debug("end target graph walk");
+    } finally {
+      if (isActionGraphNodeCacheEnabled) {
+        nodeCache.finishTargetGraphWalk(resolver);
       }
-    }.traverse();
+    }
+
     return ActionGraphAndResolver.builder()
         .setActionGraph(new ActionGraph(resolver.getBuildRules()))
         .setResolver(resolver)
         .build();
+  }
+
+  private BuildRule requireRule(
+      BuildRuleResolver resolver,
+      TargetNode<?, ?> targetNode,
+      boolean isActionGraphNodeCacheEnabled) {
+    if (isActionGraphNodeCacheEnabled) {
+      return nodeCache.requireRule(targetNode, resolver);
+    }
+    return resolver.requireRule(targetNode.getBuildTarget());
   }
 
   private static Map<BuildRule, RuleKey> getRuleKeysFromBuildRules(
@@ -433,6 +507,7 @@ public class ActionGraphCache {
       ActionGraphParallelizationMode parallelizationMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       final boolean shouldInstrumentGraphBuilding,
+      final boolean isActionGraphNodeCacheEnabled,
       CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier) {
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(eventBus, PerfEventId.of("ActionGraphCacheCheck"))) {
@@ -448,6 +523,7 @@ public class ActionGraphCache {
                   targetGraph,
                   parallelizationMode,
                   shouldInstrumentGraphBuilding,
+                  isActionGraphNodeCacheEnabled,
                   poolSupplier));
 
       Map<BuildRule, RuleKey> lastActionGraphRuleKeys =

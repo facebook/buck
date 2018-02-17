@@ -23,15 +23,17 @@ import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import java.util.stream.Stream;
 
 public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements PythonPackagable, HasRuntimeDeps {
+    implements PythonPackagable, HasRuntimeDeps, CacheableBuildRule {
 
-  private final BuildRuleResolver resolver;
+  private BuildRuleResolver resolver;
 
   PythonLibrary(
       BuildTarget buildTarget,
@@ -74,5 +76,13 @@ public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return getDeclaredDeps().stream().map(BuildRule::getBuildTarget);
+  }
+
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
+    this.resolver = ruleResolver;
   }
 }

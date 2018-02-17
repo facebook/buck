@@ -26,6 +26,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
@@ -95,7 +96,7 @@ import java.util.stream.Stream;
  * of the file to be saved.
  */
 public class ExportFile extends AbstractBuildRule
-    implements HasOutputName, HasRuntimeDeps, SupportsInputBasedRuleKey {
+    implements HasOutputName, HasRuntimeDeps, SupportsInputBasedRuleKey, CacheableBuildRule {
 
   @AddToRuleKey private final String name;
   @AddToRuleKey private final ExportFileDescription.Mode mode;

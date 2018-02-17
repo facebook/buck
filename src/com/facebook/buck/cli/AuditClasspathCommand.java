@@ -181,12 +181,16 @@ public class AuditClasspathCommand extends AbstractCommand {
 
     BuildRuleResolver resolver =
         Preconditions.checkNotNull(
-                ActionGraphCache.getFreshActionGraph(
-                    params.getBuckEventBus(),
-                    targetGraph,
-                    params.getBuckConfig().getActionGraphParallelizationMode(),
-                    params.getBuckConfig().getShouldInstrumentActionGraph(),
-                    poolSupplier))
+                new ActionGraphCache(
+                        params.getBuckConfig().getMaxActionGraphCacheEntries(),
+                        params.getBuckConfig().getMaxActionGraphNodeCacheEntries())
+                    .getFreshActionGraph(
+                        params.getBuckEventBus(),
+                        targetGraph,
+                        params.getBuckConfig().getActionGraphParallelizationMode(),
+                        params.getBuckConfig().getShouldInstrumentActionGraph(),
+                        params.getBuckConfig().isActionGraphNodeCacheEnabled(),
+                        poolSupplier))
             .getResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
@@ -227,12 +231,16 @@ public class AuditClasspathCommand extends AbstractCommand {
 
     BuildRuleResolver resolver =
         Preconditions.checkNotNull(
-                ActionGraphCache.getFreshActionGraph(
-                    params.getBuckEventBus(),
-                    targetGraph,
-                    params.getBuckConfig().getActionGraphParallelizationMode(),
-                    params.getBuckConfig().getShouldInstrumentActionGraph(),
-                    poolSupplier))
+                new ActionGraphCache(
+                        params.getBuckConfig().getMaxActionGraphCacheEntries(),
+                        params.getBuckConfig().getMaxActionGraphNodeCacheEntries())
+                    .getFreshActionGraph(
+                        params.getBuckEventBus(),
+                        targetGraph,
+                        params.getBuckConfig().getActionGraphParallelizationMode(),
+                        params.getBuckConfig().getShouldInstrumentActionGraph(),
+                        params.getBuckConfig().isActionGraphNodeCacheEnabled(),
+                        poolSupplier))
             .getResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));

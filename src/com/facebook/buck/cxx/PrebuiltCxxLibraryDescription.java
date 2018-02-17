@@ -405,7 +405,7 @@ public class PrebuiltCxxLibraryDescription
       BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      final BuildRuleResolver ruleResolver,
+      final BuildRuleResolver ruleResolverLocal,
       CellPathResolver cellRoots,
       final PrebuiltCxxLibraryDescriptionArg args) {
 
@@ -441,8 +441,8 @@ public class PrebuiltCxxLibraryDescription
         return createExportedHeaderSymlinkTreeBuildRule(
             buildTarget,
             projectFilesystem,
-            new SourcePathRuleFinder(ruleResolver),
-            ruleResolver,
+            new SourcePathRuleFinder(ruleResolverLocal),
+            ruleResolverLocal,
             platform.get().getValue(),
             args);
       } else if (type.get().getValue() == Type.SHARED) {
@@ -450,7 +450,7 @@ public class PrebuiltCxxLibraryDescription
             buildTarget,
             projectFilesystem,
             params,
-            ruleResolver,
+            ruleResolverLocal,
             cellRoots,
             platform.get().getValue(),
             selectedVersions,
@@ -460,7 +460,7 @@ public class PrebuiltCxxLibraryDescription
         return createSharedLibraryInterface(
             baseTarget,
             projectFilesystem,
-            ruleResolver,
+            ruleResolverLocal,
             cellRoots,
             platform.get().getValue(),
             selectedVersions,
@@ -484,7 +484,7 @@ public class PrebuiltCxxLibraryDescription
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
     final PrebuiltCxxLibraryPaths paths = getPaths(buildTarget, args, versionSubdir);
-    return new PrebuiltCxxLibrary(buildTarget, projectFilesystem, params) {
+    return new PrebuiltCxxLibrary(buildTarget, projectFilesystem, params, ruleResolverLocal) {
 
       private final LoadingCache<NativeLinkableCacheKey, NativeLinkableInput> nativeLinkableCache =
           NativeLinkable.getNativeLinkableInputCache(this::getNativeLinkableInputUncached);

@@ -63,5 +63,7 @@ abstract class AbstractDelegateAndGraphsInitializerArgs {
 
   public abstract boolean getShouldInstrumentActionGraph();
 
+  public abstract boolean isActionGraphNodeCacheEnabled();
+
   public abstract DistBuildConfig getDistBuildConfig();
 }

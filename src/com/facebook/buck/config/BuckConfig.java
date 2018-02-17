@@ -559,6 +559,14 @@ public class BuckConfig implements ConfigPathGetter {
     return getInteger("cache", "max_action_graph_cache_entries").orElse(1);
   }
 
+  public boolean isActionGraphNodeCacheEnabled() {
+    return getBooleanValue("cache", "action_graph_node_cache_enabled", false);
+  }
+
+  public int getMaxActionGraphNodeCacheEntries() {
+    return getInteger("cache", "max_action_graph_node_cache_entries").orElse(10000);
+  }
+
   public Optional<String> getRepository() {
     return config.get("cache", "repository");
   }

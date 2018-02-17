@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import static org.junit.Assert.assertNotNull;
+
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -30,6 +32,10 @@ public class FakeTargetNodeBuilder
     super(description, target);
   }
 
+  public static FakeTargetNodeBuilder newBuilder(FakeDescription description, BuildTarget target) {
+    return new FakeTargetNodeBuilder(description, target);
+  }
+
   public static FakeTargetNodeBuilder newBuilder(BuildRule rule) {
     return new FakeTargetNodeBuilder(new FakeDescription(rule), rule.getBuildTarget());
   }
@@ -40,10 +46,14 @@ public class FakeTargetNodeBuilder
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractFakeTargetNodeArg extends CommonDescriptionArg {}
+  interface AbstractFakeTargetNodeArg extends CommonDescriptionArg, HasDeclaredDeps {}
 
   public static class FakeDescription implements Description<FakeTargetNodeArg> {
     private final BuildRule rule;
+
+    public FakeDescription() {
+      this.rule = null;
+    }
 
     public FakeDescription(BuildRule rule) {
       this.rule = rule;
@@ -63,6 +73,7 @@ public class FakeTargetNodeBuilder
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
         FakeTargetNodeArg args) {
+      assertNotNull(rule);
       return rule;
     }
   }

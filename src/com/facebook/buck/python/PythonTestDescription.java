@@ -35,6 +35,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
@@ -171,47 +172,47 @@ public class PythonTestDescription
                 .orElse(cxxPlatformsProvider.getDefaultCxxPlatform()));
   }
 
+  private static class PythonTestMainRule extends AbstractBuildRule implements CacheableBuildRule {
+    private final Path output =
+        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/__test_main__.py");
+
+    public PythonTestMainRule(BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
+      super(buildTarget, projectFilesystem);
+    }
+
+    @Override
+    public SortedSet<BuildRule> getBuildDeps() {
+      return ImmutableSortedSet.of();
+    }
+
+    @Override
+    public ImmutableList<? extends Step> getBuildSteps(
+        BuildContext context, BuildableContext buildableContext) {
+      buildableContext.recordArtifact(output);
+      return ImmutableList.of(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())),
+          new WriteFileStep(
+              getProjectFilesystem(),
+              Resources.asByteSource(
+                  Resources.getResource(PythonTestDescription.class, "__test_main__.py")),
+              output,
+              /* executable */ false));
+    }
+
+    @Override
+    public SourcePath getSourcePathToOutput() {
+      return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
+    }
+  }
+
   private SourcePath requireTestMain(
       BuildTarget baseTarget, ProjectFilesystem filesystem, BuildRuleResolver ruleResolver) {
     BuildRule testMainRule =
         ruleResolver.computeIfAbsent(
             baseTarget.withFlavors(InternalFlavor.of("python-test-main")),
-            target ->
-                new AbstractBuildRule(target, filesystem) {
-
-                  private final Path output =
-                      BuildTargets.getGenPath(
-                          getProjectFilesystem(), getBuildTarget(), "%s/__test_main__.py");
-
-                  @Override
-                  public SortedSet<BuildRule> getBuildDeps() {
-                    return ImmutableSortedSet.of();
-                  }
-
-                  @Override
-                  public ImmutableList<? extends Step> getBuildSteps(
-                      BuildContext context, BuildableContext buildableContext) {
-                    buildableContext.recordArtifact(output);
-                    return ImmutableList.of(
-                        MkdirStep.of(
-                            BuildCellRelativePath.fromCellRelativePath(
-                                context.getBuildCellRootPath(),
-                                getProjectFilesystem(),
-                                output.getParent())),
-                        new WriteFileStep(
-                            getProjectFilesystem(),
-                            Resources.asByteSource(
-                                Resources.getResource(
-                                    PythonTestDescription.class, "__test_main__.py")),
-                            output,
-                            /* executable */ false));
-                  }
-
-                  @Override
-                  public SourcePath getSourcePathToOutput() {
-                    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
-                  }
-                });
+            target -> new PythonTestMainRule(target, filesystem));
     return Preconditions.checkNotNull(testMainRule.getSourcePathToOutput());
   }
 

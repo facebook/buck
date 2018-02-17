@@ -26,8 +26,10 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableSupport;
+import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -44,9 +46,9 @@ import java.util.Optional;
 
 /** Build a shared library interface from an ELF shared library. */
 class ElfSharedLibraryInterface extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements SupportsInputBasedRuleKey {
+    implements SupportsInputBasedRuleKey, CacheableBuildRule {
 
-  private final SourcePathResolver pathResolver;
+  private SourcePathResolver pathResolver;
 
   @AddToRuleKey private final Tool objcopy;
 
@@ -180,5 +182,13 @@ class ElfSharedLibraryInterface extends AbstractBuildRuleWithDeclaredAndExtraDep
   public SourcePath getSourcePathToOutput() {
     return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(), getOutputDir().resolve(getSharedAbiLibraryName()));
+  }
+
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
+    this.pathResolver = pathResolver;
   }
 }

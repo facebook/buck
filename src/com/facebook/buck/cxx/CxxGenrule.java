@@ -22,13 +22,18 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.shell.Genrule;
 
-public class CxxGenrule extends NoopBuildRuleWithDeclaredAndExtraDeps implements HasOutputName {
+/** Genrule with C++ aware macros. */
+public class CxxGenrule extends NoopBuildRuleWithDeclaredAndExtraDeps
+    implements HasOutputName, CacheableBuildRule {
 
-  private final BuildRuleResolver resolver;
+  private BuildRuleResolver resolver;
   private final String output;
 
   public CxxGenrule(
@@ -52,5 +57,13 @@ public class CxxGenrule extends NoopBuildRuleWithDeclaredAndExtraDeps implements
         (Genrule)
             resolver.requireRule(getBuildTarget().withAppendedFlavors(cxxPlatform.getFlavor()));
     return rule.getSourcePathToOutput();
+  }
+
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
+    this.resolver = ruleResolver;
   }
 }

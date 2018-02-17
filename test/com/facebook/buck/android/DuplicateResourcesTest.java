@@ -244,19 +244,21 @@ public class DuplicateResourcesTest {
             keystore);
 
     ActionGraphAndResolver actionGraphAndResolver =
-        ActionGraphCache.getFreshActionGraph(
-            BuckEventBusForTests.newInstance(
-                new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1))),
-            new DefaultTargetNodeToBuildRuleTransformer(),
-            targetGraph,
-            ActionGraphParallelizationMode.DISABLED,
-            false,
-            CloseableMemoizedSupplier.of(
-                () -> {
-                  throw new IllegalStateException(
-                      "should not use parallel executor for single threaded action graph construction in test");
-                },
-                ignored -> {}));
+        new ActionGraphCache(1, 1)
+            .getFreshActionGraph(
+                BuckEventBusForTests.newInstance(
+                    new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1))),
+                new DefaultTargetNodeToBuildRuleTransformer(),
+                targetGraph,
+                ActionGraphParallelizationMode.DISABLED,
+                false,
+                false,
+                CloseableMemoizedSupplier.of(
+                    () -> {
+                      throw new IllegalStateException(
+                          "should not use parallel executor for single threaded action graph construction in test");
+                    },
+                    ignored -> {}));
 
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(

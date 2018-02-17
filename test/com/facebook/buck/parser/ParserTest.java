@@ -2641,17 +2641,19 @@ public class ParserTest {
 
   private BuildRuleResolver buildActionGraph(BuckEventBus eventBus, TargetGraph targetGraph) {
     return Preconditions.checkNotNull(
-            ActionGraphCache.getFreshActionGraph(
-                eventBus,
-                targetGraph,
-                ActionGraphParallelizationMode.DISABLED,
-                false,
-                CloseableMemoizedSupplier.of(
-                    () -> {
-                      throw new IllegalStateException(
-                          "should not use parallel executor for action graph construction in test");
-                    },
-                    ignored -> {})))
+            new ActionGraphCache(1, 1)
+                .getFreshActionGraph(
+                    eventBus,
+                    targetGraph,
+                    ActionGraphParallelizationMode.DISABLED,
+                    false,
+                    false,
+                    CloseableMemoizedSupplier.of(
+                        () -> {
+                          throw new IllegalStateException(
+                              "should not use parallel executor for action graph construction in test");
+                        },
+                        ignored -> {})))
         .getResolver();
   }
 

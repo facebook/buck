@@ -24,6 +24,7 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
@@ -36,7 +37,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public abstract class PythonBinary extends AbstractBuildRule
-    implements BinaryBuildRule, HasRuntimeDeps {
+    implements BinaryBuildRule, HasRuntimeDeps, CacheableBuildRule {
 
   private final Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps;
   private final PythonPlatform pythonPlatform;

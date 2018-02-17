@@ -155,6 +155,7 @@ public class DelegateAndGraphsInitializer {
                   ActionGraphParallelizationMode.DISABLED,
                   Optional.empty(),
                   args.getShouldInstrumentActionGraph(),
+                  args.isActionGraphNodeCacheEnabled(),
                   CloseableMemoizedSupplier.of(
                       () -> {
                         throw new IllegalStateException(

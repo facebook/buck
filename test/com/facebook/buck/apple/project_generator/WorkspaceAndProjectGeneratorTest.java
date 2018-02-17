@@ -965,10 +965,12 @@ public class WorkspaceAndProjectGeneratorTest {
   private Function<TargetNode<?, ?>, BuildRuleResolver> getBuildRuleResolverForNodeFunction(
       final TargetGraph targetGraph) {
     return input ->
-        ActionGraphCache.getFreshActionGraph(
+        new ActionGraphCache(1, 1)
+            .getFreshActionGraph(
                 BuckEventBusForTests.newInstance(),
                 targetGraph.getSubgraph(ImmutableSet.of(input)),
                 ActionGraphParallelizationMode.DISABLED,
+                false,
                 false,
                 CloseableMemoizedSupplier.of(
                     () -> {

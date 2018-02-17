@@ -54,7 +54,8 @@ import java.util.logging.Level;
 import java.util.stream.Stream;
 
 /** Creates a tree of symlinks inside of a given directory */
-public class SymlinkTree implements BuildRule, HasRuntimeDeps, SupportsInputBasedRuleKey {
+public class SymlinkTree
+    implements BuildRule, HasRuntimeDeps, SupportsInputBasedRuleKey, CacheableBuildRule {
 
   private final String category;
   private final Path root;

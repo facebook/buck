@@ -22,12 +22,15 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.AlterRuleKeys;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
@@ -104,16 +107,18 @@ public class ModernBuildRule<T extends Buildable>
     implements BuildRule,
         HasRuntimeDeps,
         SupportsInputBasedRuleKey,
+        CacheableBuildRule,
         InitializableFromDisk<ModernBuildRule.DataHolder> {
   private final BuildTarget buildTarget;
   private final ProjectFilesystem filesystem;
-  private final InputRuleResolver inputRuleResolver;
   private final BuildOutputInitializer<DataHolder> buildOutputInitializer;
   private final OutputPathResolver outputPathResolver;
 
   private final Supplier<ImmutableSortedSet<BuildRule>> deps;
   private final T buildable;
   private final ClassInfo<T> classInfo;
+
+  private InputRuleResolver inputRuleResolver;
 
   protected ModernBuildRule(
       BuildTarget buildTarget,
@@ -163,6 +168,13 @@ public class ModernBuildRule<T extends Buildable>
     return null;
   }
 
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
+    this.inputRuleResolver = new DefaultInputRuleResolver(ruleFinder);
+  }
   // -----------------------------------------------------------------------------------------------
   // ---------- These function's behaviors can be changed with interfaces on the Buildable ---------
   // -----------------------------------------------------------------------------------------------
