@@ -17,6 +17,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig.SourceAbiVerificationMode;
+import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -70,6 +71,8 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
   Optional<CompileAgainstLibraryType> getCompileAgainst();
 
   Optional<SourceAbiVerificationMode> getSourceAbiVerificationMode();
+
+  Optional<UnusedDependenciesAction> getOnUnusedDependencies();
 
   @Value.Derived
   @Nullable

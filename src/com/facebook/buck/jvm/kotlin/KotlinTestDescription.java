@@ -94,6 +94,7 @@ public class KotlinTestDescription implements Description<KotlinTestDescriptionA
                 projectFilesystem,
                 params,
                 resolver,
+                cellRoots,
                 kotlinBuckConfig,
                 javaBuckConfig,
                 args)

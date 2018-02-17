@@ -82,6 +82,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
                 projectFilesystem,
                 params,
                 resolver,
+                cellRoots,
                 new GroovyConfiguredCompilerFactory(groovyBuckConfig),
                 javaBuckConfig,
                 args)

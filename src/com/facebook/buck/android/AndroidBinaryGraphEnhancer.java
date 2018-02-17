@@ -110,6 +110,7 @@ public class AndroidBinaryGraphEnhancer {
   private final Optional<BuildTarget> nativeLibraryMergeCodeGenerator;
   private final BuildRuleResolver ruleResolver;
   private final SourcePathRuleFinder ruleFinder;
+  private final CellPathResolver cellPathResolver;
   private final PackageType packageType;
   private final boolean shouldPreDex;
   private final DexSplitMode dexSplitMode;
@@ -194,6 +195,7 @@ public class AndroidBinaryGraphEnhancer {
     this.originalDeps = originalParams.getBuildDeps();
     this.ruleResolver = ruleResolver;
     this.ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    this.cellPathResolver = cellPathResolver;
     this.packageType = packageType;
     this.shouldPreDex = shouldPreDex;
     this.dexSplitMode = dexSplitMode;
@@ -328,6 +330,7 @@ public class AndroidBinaryGraphEnhancer {
                   projectFilesystem,
                   paramsForCompileGenCode,
                   ruleResolver,
+                  cellPathResolver,
                   new JavaConfiguredCompilerFactory(javaBuckConfig),
                   javaBuckConfig,
                   null)
@@ -415,6 +418,7 @@ public class AndroidBinaryGraphEnhancer {
                 projectFilesystem,
                 paramsForCompileUberRDotJava,
                 ruleResolver,
+                cellPathResolver,
                 new JavaConfiguredCompilerFactory(javaBuckConfig),
                 javaBuckConfig,
                 null)

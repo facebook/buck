@@ -58,6 +58,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
@@ -1257,12 +1258,14 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         .map(BuildRule::getBuildTarget)
         .forEach(depsBuilder::addExportedDepTargets);
 
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultJavaLibrary defaultJavaLibrary =
         DefaultJavaLibrary.rulesBuilder(
                 buildTarget,
-                new FakeProjectFilesystem(),
+                filesystem,
                 buildRuleParams,
                 ruleResolver,
+                TestCellBuilder.createCellRoots(filesystem),
                 new JavaConfiguredCompilerFactory(testJavaBuckConfig),
                 testJavaBuckConfig,
                 null)
@@ -1562,6 +1565,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                   projectFilesystem,
                   buildRuleParams,
                   ruleResolver,
+                  TestCellBuilder.createCellRoots(projectFilesystem),
                   new JavaConfiguredCompilerFactory(testJavaBuckConfig),
                   testJavaBuckConfig,
                   null)

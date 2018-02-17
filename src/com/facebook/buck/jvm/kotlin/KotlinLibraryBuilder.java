@@ -22,6 +22,7 @@ import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 
 final class KotlinLibraryBuilder {
   private KotlinLibraryBuilder() {}
@@ -31,6 +32,7 @@ final class KotlinLibraryBuilder {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
+      CellPathResolver cellPathResolver,
       KotlinBuckConfig kotlinBuckConfig,
       JavaBuckConfig javaBuckConfig,
       KotlinLibraryDescription.CoreArg args) {
@@ -39,6 +41,7 @@ final class KotlinLibraryBuilder {
         projectFilesystem,
         params,
         buildRuleResolver,
+        cellPathResolver,
         new KotlinConfiguredCompilerFactory(kotlinBuckConfig, javaBuckConfig),
         javaBuckConfig,
         args);

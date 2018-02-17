@@ -190,6 +190,7 @@ public class JavaLibraryDescription
                 projectFilesystem,
                 params,
                 resolver,
+                cellRoots,
                 new JavaConfiguredCompilerFactory(javaBuckConfig),
                 javaBuckConfig,
                 args)

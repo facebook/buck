@@ -93,6 +93,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescriptionA
                 projectFilesystem,
                 params,
                 resolver,
+                cellRoots,
                 new GroovyConfiguredCompilerFactory(groovyBuckConfig),
                 javaBuckConfig,
                 args)

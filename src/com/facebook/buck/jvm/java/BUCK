@@ -285,6 +285,7 @@ java_library_with_plugins(
     name = "rules",
     srcs = [
         "AbstractDefaultJavaLibraryClasspaths.java",
+        "AbstractUnusedDependenciesFinder.java",
         "BuiltInJavac.java",
         "CalculateAbi.java",
         "CalculateClassAbi.java",
@@ -325,6 +326,7 @@ java_library_with_plugins(
         "MaybeRequiredForSourceOnlyAbiArg.java",
         "PrebuiltJar.java",
         "PrebuiltJarDescription.java",
+        "UnusedDependenciesFinderFactory.java",
         "ZipArchiveDependencySupplier.java",
     ],
     exported_deps = [

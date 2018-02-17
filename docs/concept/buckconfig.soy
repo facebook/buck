@@ -2330,6 +2330,23 @@ cxx_library(
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'java' /}
+  {param name: 'unused_dependencies_action' /}
+  {param example_value: 'warn' /}
+  {param description}
+     <p>Action performed when Buck detects that some dependencies are not used during Java compilation.</p>
+     <p>Note that this feature is experimental and does not handle runtime dependencies.</p>
+     <p>The valid values are:
+       <ul>
+         <li><code>ignore</code> (default): ignore unused dependencies,</li>
+         <li><code>warn</code>: emit a warning to the console,</li>
+         <li><code>fail</code>: fail the compilation.</li>
+       </ul>
+     </p>
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'kotlin' /}
   {param description}

@@ -87,6 +87,7 @@ public class ScalaLibraryDescription
                 projectFilesystem,
                 rawParams,
                 resolver,
+                cellRoots,
                 scalaBuckConfig,
                 javaBuckConfig,
                 args)

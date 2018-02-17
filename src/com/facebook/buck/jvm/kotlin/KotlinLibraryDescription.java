@@ -133,6 +133,7 @@ public class KotlinLibraryDescription
                 projectFilesystem,
                 params,
                 resolver,
+                cellRoots,
                 kotlinBuckConfig,
                 javaBuckConfig,
                 args)

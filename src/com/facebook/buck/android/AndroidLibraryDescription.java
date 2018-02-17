@@ -117,6 +117,7 @@ public class AndroidLibraryDescription
             projectFilesystem,
             params,
             resolver,
+            cellRoots,
             javaBuckConfig,
             javacOptions,
             args,

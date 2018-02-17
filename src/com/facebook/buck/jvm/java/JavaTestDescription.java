@@ -134,6 +134,7 @@ public class JavaTestDescription
                 projectFilesystem,
                 params,
                 resolver,
+                cellRoots,
                 new JavaConfiguredCompilerFactory(javaBuckConfig),
                 javaBuckConfig,
                 args)

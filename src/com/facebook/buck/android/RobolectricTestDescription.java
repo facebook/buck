@@ -169,6 +169,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                     projectFilesystem,
                     params,
                     resolver,
+                    cellRoots,
                     compilerFactory.getCompiler(
                         args.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA)),
                     javaBuckConfig,

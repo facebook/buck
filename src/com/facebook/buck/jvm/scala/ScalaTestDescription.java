@@ -112,6 +112,7 @@ public class ScalaTestDescription
                 projectFilesystem,
                 params,
                 resolver,
+                cellRoots,
                 config,
                 javaBuckConfig,
                 args)
