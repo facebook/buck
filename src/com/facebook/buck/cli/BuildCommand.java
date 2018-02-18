@@ -966,33 +966,8 @@ public class BuildCommand extends AbstractCommand {
 
       // Publish details about all default rule keys that were cache misses.
       // A non-zero value suggests a problem that needs investigating.
-      try {
-        Set<String> cacheMissRequestKeys =
-            distBuildClientEventListener.getDefaultCacheMissRequestKeys();
-        ArtifactCacheBuckConfig artifactCacheBuckConfig =
-            ArtifactCacheBuckConfig.of(distBuildConfig.getBuckConfig());
-
-        LOG.info(
-            String.format(
-                "Fetching rule key logs for [%d] cache misses", cacheMissRequestKeys.size()));
-        if (cacheMissRequestKeys.size() > 0) {
-          List<RuleKeyLogEntry> ruleKeyLogs =
-              distBuildService.fetchRuleKeyLogs(
-                  cacheMissRequestKeys,
-                  artifactCacheBuckConfig.getRepository(),
-                  artifactCacheBuckConfig.getScheduleType(),
-                  true /* distributedBuildModeEnabled */);
-          params
-              .getBuckEventBus()
-              .post(
-                  distBuildClientEventListener.createDistBuildClientCacheResultsEvent(ruleKeyLogs));
-        }
-        LOG.info(
-            String.format(
-                "Fetched rule key logs for [%d] cache misses", cacheMissRequestKeys.size()));
-
-      } catch (Exception ex) {
-        LOG.error("Failed to publish distributed build client cache request event", ex);
+      if (distBuildConfig.isCacheMissAnalysisEnabled()) {
+        performCacheMissAnalysis(params, distBuildConfig, distBuildService);
       }
 
       boolean ruleKeyConsistencyChecksPassedOrSkipped =
@@ -1024,6 +999,40 @@ public class BuildCommand extends AbstractCommand {
       }
 
       return ExitCode.map(finalExitCode);
+    }
+  }
+
+  private void performCacheMissAnalysis(
+      CommandRunnerParams params,
+      DistBuildConfig distBuildConfig,
+      DistBuildService distBuildService) {
+    try {
+      Set<String> cacheMissRequestKeys =
+          distBuildClientEventListener.getDefaultCacheMissRequestKeys();
+      ArtifactCacheBuckConfig artifactCacheBuckConfig =
+          ArtifactCacheBuckConfig.of(distBuildConfig.getBuckConfig());
+
+      LOG.info(
+          String.format(
+              "Fetching rule key logs for [%d] cache misses", cacheMissRequestKeys.size()));
+      if (cacheMissRequestKeys.size() > 0) {
+        // TODO(alisdair): requests should be batched for high key counts.
+        List<RuleKeyLogEntry> ruleKeyLogs =
+            distBuildService.fetchRuleKeyLogs(
+                cacheMissRequestKeys,
+                artifactCacheBuckConfig.getRepository(),
+                artifactCacheBuckConfig.getScheduleType(),
+                true /* distributedBuildModeEnabled */);
+        params
+            .getBuckEventBus()
+            .post(distBuildClientEventListener.createDistBuildClientCacheResultsEvent(ruleKeyLogs));
+      }
+      LOG.info(
+          String.format(
+              "Fetched rule key logs for [%d] cache misses", cacheMissRequestKeys.size()));
+
+    } catch (Exception ex) {
+      LOG.error("Failed to publish distributed build client cache request event", ex);
     }
   }
 
