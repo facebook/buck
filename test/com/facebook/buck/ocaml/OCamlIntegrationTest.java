@@ -543,6 +543,24 @@ public class OCamlIntegrationTest {
     assertEquals("42!\n", out);
   }
 
+  @Test
+  public void testOcamlDepFlagMacros() throws IOException {
+    BuildTarget binary =
+        BuildTargetFactory.newInstance(workspace.getDestPath(), "//ocamldep_flags:main");
+    BuildTarget lib =
+        BuildTargetFactory.newInstance(workspace.getDestPath(), "//ocamldep_flags:code");
+    ImmutableSet<BuildTarget> targets = ImmutableSet.of(binary, lib);
+
+    workspace.runBuckCommand("build", binary.toString()).assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    assertTrue(buildLog.getAllTargets().containsAll(targets));
+    buildLog.assertTargetBuiltLocally(binary.toString());
+
+    // Make sure the ppx flag worked
+    String out = workspace.runBuckCommand("run", binary.toString()).getStdout();
+    assertEquals("142!\n", out);
+  }
+
   private String getOcamlVersion(ProjectWorkspace workspace)
       throws IOException, InterruptedException {
     Path ocamlc =

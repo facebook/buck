@@ -86,6 +86,7 @@ public class OcamlBinaryDescription
               ocamlBuckConfig.getWarningsFlags().orElse("") + args.getWarningsFlags().orElse("")));
     }
     ImmutableList<String> linkerFlags = args.getLinkerFlags();
+
     return OcamlRuleBuilder.createBuildRule(
         toolchainProvider,
         ocamlBuckConfig,
@@ -98,6 +99,7 @@ public class OcamlBinaryDescription
         args.getBytecodeOnly().orElse(false),
         flags.build(),
         linkerFlags,
+        args.getOcamldepFlags(),
         /*buildNativePlugin*/ false);
   }
 
@@ -123,6 +125,8 @@ public class OcamlBinaryDescription
     ImmutableList<StringWithMacros> getCompilerFlags();
 
     ImmutableList<String> getLinkerFlags();
+
+    ImmutableList<String> getOcamldepFlags();
 
     Optional<String> getWarningsFlags();
 

@@ -103,6 +103,7 @@ public class OcamlLibraryDescription
         bytecodeOnly,
         flags.build(),
         linkerflags,
+        args.getOcamldepFlags(),
         nativePlugin);
   }
 
@@ -126,6 +127,8 @@ public class OcamlLibraryDescription
     ImmutableList<OcamlSource> getSrcs();
 
     ImmutableList<StringWithMacros> getCompilerFlags();
+
+    ImmutableList<String> getOcamldepFlags();
 
     ImmutableList<String> getLinkerFlags();
 
