@@ -192,10 +192,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     ImmutableSortedSet<Path> sources =
         ImmutableSortedSet.<Path>naturalOrder()
             .add(outputDirectory)
-            .add(stubsOutput)
-            .add(classesOutput)
             .add(kaptGenerated)
-            .add(incrementalData)
             .add(apGenerated)
             .addAll(sourceFilePaths)
             .build();
