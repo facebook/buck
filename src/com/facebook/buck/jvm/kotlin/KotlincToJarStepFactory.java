@@ -43,7 +43,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSortedSet;
@@ -59,7 +58,6 @@ import java.util.stream.Collectors;
 
 public class KotlincToJarStepFactory extends CompileToJarStepFactory implements AddsToRuleKey {
 
-  private static final PathOrGlobMatcher JAVA_PATH_MATCHER = new PathOrGlobMatcher("**.java");
   private static final PathOrGlobMatcher KOTLIN_PATH_MATCHER = new PathOrGlobMatcher("**.kt");
 
   @AddToRuleKey private final Kotlinc kotlinc;

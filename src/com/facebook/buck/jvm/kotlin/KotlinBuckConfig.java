@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
@@ -26,7 +25,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nullable;
 

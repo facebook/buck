@@ -1,7 +1,6 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableMultiset;
 import java.io.IOException;
