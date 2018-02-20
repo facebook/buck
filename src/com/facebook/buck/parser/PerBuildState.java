@@ -57,8 +57,8 @@ import java.util.concurrent.atomic.AtomicLong;
 public class PerBuildState implements AutoCloseable {
   private static final Logger LOG = Logger.get(PerBuildState.class);
 
-  private final Parser parser;
   private final TypeCoercerFactory typeCoercerFactory;
+  private final DaemonicParserState daemonicParserState;
   private final AtomicLong parseProcessedBytes = new AtomicLong();
   private final BuckEventBus eventBus;
   private final ParserPythonInterpreterProvider parserPythonInterpreterProvider;
@@ -91,9 +91,9 @@ public class PerBuildState implements AutoCloseable {
   }
 
   public PerBuildState(
-      Parser parser,
       TypeCoercerFactory typeCoercerFactory,
       ConstructorArgMarshaller marshaller,
+      DaemonicParserState daemonicParserState,
       BuckEventBus eventBus,
       ExecutableFinder executableFinder,
       ListeningExecutorService executorService,
@@ -102,8 +102,8 @@ public class PerBuildState implements AutoCloseable {
       boolean enableProfiling,
       SpeculativeParsing speculativeParsing) {
     this(
-        parser,
         typeCoercerFactory,
+        daemonicParserState,
         marshaller,
         eventBus,
         new ParserPythonInterpreterProvider(rootCell.getBuckConfig(), executableFinder),
@@ -115,8 +115,8 @@ public class PerBuildState implements AutoCloseable {
   }
 
   PerBuildState(
-      Parser parser,
       TypeCoercerFactory typeCoercerFactory,
+      DaemonicParserState daemonicParserState,
       ConstructorArgMarshaller marshaller,
       BuckEventBus eventBus,
       ParserPythonInterpreterProvider parserPythonInterpreterProvider,
@@ -126,8 +126,8 @@ public class PerBuildState implements AutoCloseable {
       boolean enableProfiling,
       SpeculativeParsing speculativeParsing) {
 
-    this.parser = parser;
     this.typeCoercerFactory = typeCoercerFactory;
+    this.daemonicParserState = daemonicParserState;
     this.eventBus = eventBus;
     this.parserPythonInterpreterProvider = parserPythonInterpreterProvider;
     this.enableProfiling = enableProfiling;
@@ -153,13 +153,13 @@ public class PerBuildState implements AutoCloseable {
 
     this.rawNodeParsePipeline =
         new RawNodeParsePipeline(
-            parser.getPermState().getRawNodeCache(), projectBuildFileParserPool, executorService);
+            daemonicParserState.getRawNodeCache(), projectBuildFileParserPool, executorService);
     this.targetNodeParsePipeline =
         new TargetNodeParsePipeline(
-            parser.getPermState().getOrCreateNodeCache(TargetNode.class),
+            daemonicParserState.getOrCreateNodeCache(TargetNode.class),
             DefaultParserTargetNodeFactory.createForParser(
                 marshaller,
-                parser.getPermState().getBuildFileTrees(),
+                daemonicParserState.getBuildFileTrees(),
                 symlinkCheckers,
                 new TargetNodeFactory(typeCoercerFactory),
                 rootCell.getRuleKeyConfiguration()),
@@ -382,7 +382,7 @@ public class PerBuildState implements AutoCloseable {
     Set<Path> buildInputPathsUnderSymlinkCopy = new HashSet<>(buildInputPathsUnderSymlink);
     buildInputPathsUnderSymlink.clear();
     for (Path buildFilePath : buildInputPathsUnderSymlinkCopy) {
-      parser.getPermState().invalidatePath(buildFilePath);
+      daemonicParserState.invalidatePath(buildFilePath);
     }
   }
 }

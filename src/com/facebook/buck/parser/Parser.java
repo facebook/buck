@@ -109,7 +109,7 @@ public class Parser {
         new ParserPythonInterpreterProvider(parserConfig, executableFinder);
   }
 
-  protected DaemonicParserState getPermState() {
+  public DaemonicParserState getPermState() {
     return permState;
   }
 
@@ -140,8 +140,8 @@ public class Parser {
 
     try (PerBuildState state =
         new PerBuildState(
-            this,
             typeCoercerFactory,
+            permState,
             marshaller,
             eventBus,
             parserPythonInterpreterProvider,
@@ -163,8 +163,8 @@ public class Parser {
       throws BuildFileParseException, BuildTargetException {
     try (PerBuildState state =
         new PerBuildState(
-            this,
             typeCoercerFactory,
+            permState,
             marshaller,
             eventBus,
             parserPythonInterpreterProvider,
@@ -224,8 +224,8 @@ public class Parser {
 
     try (PerBuildState state =
         new PerBuildState(
-            this,
             typeCoercerFactory,
+            permState,
             marshaller,
             eventBus,
             parserPythonInterpreterProvider,
@@ -265,8 +265,8 @@ public class Parser {
 
     try (final PerBuildState state =
         new PerBuildState(
-            this,
             typeCoercerFactory,
+            permState,
             marshaller,
             eventBus,
             parserPythonInterpreterProvider,
@@ -391,8 +391,8 @@ public class Parser {
 
     try (PerBuildState state =
         new PerBuildState(
-            this,
             typeCoercerFactory,
+            permState,
             marshaller,
             eventBus,
             parserPythonInterpreterProvider,
@@ -433,8 +433,8 @@ public class Parser {
 
     try (PerBuildState state =
         new PerBuildState(
-            this,
             typeCoercerFactory,
+            permState,
             marshaller,
             eventBus,
             parserPythonInterpreterProvider,

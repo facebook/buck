@@ -189,9 +189,9 @@ public class ParserTest {
       throws InterruptedException, BuildFileParseException {
     try (PerBuildState state =
         new PerBuildState(
-            parser,
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
+            parser.getPermState(),
             eventBus,
             executableFinder,
             executor,

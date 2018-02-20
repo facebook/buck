@@ -104,9 +104,9 @@ public class BuckQueryEnvironmentTest {
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     parserState =
         new PerBuildState(
-            parser,
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
+            parser.getPermState(),
             eventBus,
             executableFinder,
             executor,

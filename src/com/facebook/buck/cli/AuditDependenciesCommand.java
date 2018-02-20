@@ -102,9 +102,9 @@ public class AuditDependenciesCommand extends AbstractCommand {
             new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig()));
         PerBuildState parserState =
             new PerBuildState(
-                params.getParser(),
                 params.getTypeCoercerFactory(),
                 new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
+                params.getParser().getPermState(),
                 params.getBuckEventBus(),
                 params.getExecutableFinder(),
                 pool.getListeningExecutorService(),
