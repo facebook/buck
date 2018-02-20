@@ -75,6 +75,7 @@ public class AuditTestsCommand extends AbstractCommand {
         PerBuildState parserState =
             new PerBuildState(
                 params.getParser(),
+                params.getTypeCoercerFactory(),
                 params.getBuckEventBus(),
                 params.getExecutableFinder(),
                 pool.getListeningExecutorService(),

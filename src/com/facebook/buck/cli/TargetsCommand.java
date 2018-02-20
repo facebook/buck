@@ -777,6 +777,7 @@ public class TargetsCommand extends AbstractCommand {
     try (PerBuildState state =
         new PerBuildState(
             params.getParser(),
+            params.getTypeCoercerFactory(),
             params.getBuckEventBus(),
             params.getExecutableFinder(),
             executor,

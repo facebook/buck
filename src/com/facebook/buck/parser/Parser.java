@@ -113,10 +113,6 @@ public class Parser {
     return permState;
   }
 
-  protected TypeCoercerFactory getTypeCoercerFactory() {
-    return typeCoercerFactory;
-  }
-
   protected ConstructorArgMarshaller getMarshaller() {
     return marshaller;
   }
@@ -149,6 +145,7 @@ public class Parser {
     try (PerBuildState state =
         new PerBuildState(
             this,
+            typeCoercerFactory,
             eventBus,
             parserPythonInterpreterProvider,
             executor,
@@ -170,6 +167,7 @@ public class Parser {
     try (PerBuildState state =
         new PerBuildState(
             this,
+            typeCoercerFactory,
             eventBus,
             parserPythonInterpreterProvider,
             executor,
@@ -229,6 +227,7 @@ public class Parser {
     try (PerBuildState state =
         new PerBuildState(
             this,
+            typeCoercerFactory,
             eventBus,
             parserPythonInterpreterProvider,
             executor,
@@ -268,6 +267,7 @@ public class Parser {
     try (final PerBuildState state =
         new PerBuildState(
             this,
+            typeCoercerFactory,
             eventBus,
             parserPythonInterpreterProvider,
             executor,
@@ -392,6 +392,7 @@ public class Parser {
     try (PerBuildState state =
         new PerBuildState(
             this,
+            typeCoercerFactory,
             eventBus,
             parserPythonInterpreterProvider,
             executor,
@@ -432,6 +433,7 @@ public class Parser {
     try (PerBuildState state =
         new PerBuildState(
             this,
+            typeCoercerFactory,
             eventBus,
             parserPythonInterpreterProvider,
             executor,

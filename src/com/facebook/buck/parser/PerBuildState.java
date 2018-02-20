@@ -31,6 +31,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
@@ -56,6 +57,7 @@ public class PerBuildState implements AutoCloseable {
   private static final Logger LOG = Logger.get(PerBuildState.class);
 
   private final Parser parser;
+  private final TypeCoercerFactory typeCoercerFactory;
   private final AtomicLong parseProcessedBytes = new AtomicLong();
   private final BuckEventBus eventBus;
   private final ParserPythonInterpreterProvider parserPythonInterpreterProvider;
@@ -89,6 +91,7 @@ public class PerBuildState implements AutoCloseable {
 
   public PerBuildState(
       Parser parser,
+      TypeCoercerFactory typeCoercerFactory,
       BuckEventBus eventBus,
       ExecutableFinder executableFinder,
       ListeningExecutorService executorService,
@@ -98,6 +101,7 @@ public class PerBuildState implements AutoCloseable {
       SpeculativeParsing speculativeParsing) {
     this(
         parser,
+        typeCoercerFactory,
         eventBus,
         new ParserPythonInterpreterProvider(rootCell.getBuckConfig(), executableFinder),
         executorService,
@@ -109,6 +113,7 @@ public class PerBuildState implements AutoCloseable {
 
   PerBuildState(
       Parser parser,
+      TypeCoercerFactory typeCoercerFactory,
       BuckEventBus eventBus,
       ParserPythonInterpreterProvider parserPythonInterpreterProvider,
       ListeningExecutorService executorService,
@@ -118,6 +123,7 @@ public class PerBuildState implements AutoCloseable {
       SpeculativeParsing speculativeParsing) {
 
     this.parser = parser;
+    this.typeCoercerFactory = typeCoercerFactory;
     this.eventBus = eventBus;
     this.parserPythonInterpreterProvider = parserPythonInterpreterProvider;
     this.enableProfiling = enableProfiling;
@@ -151,7 +157,7 @@ public class PerBuildState implements AutoCloseable {
                 parser.getMarshaller(),
                 parser.getPermState().getBuildFileTrees(),
                 symlinkCheckers,
-                new TargetNodeFactory(parser.getPermState().getTypeCoercerFactory()),
+                new TargetNodeFactory(typeCoercerFactory),
                 rootCell.getRuleKeyConfiguration()),
             parserConfig.getEnableParallelParsing()
                 ? executorService
@@ -210,7 +216,7 @@ public class PerBuildState implements AutoCloseable {
       Cell cell, Iterable<Description<?>> descriptions) {
     return ProjectBuildFileParserFactory.createBuildFileParser(
         cell,
-        this.parser.getTypeCoercerFactory(),
+        typeCoercerFactory,
         console,
         eventBus,
         parserPythonInterpreterProvider,
