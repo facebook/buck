@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -23,6 +24,7 @@ import com.facebook.buck.rules.RulePipelineState;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.PathHelper;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -125,25 +127,37 @@ public class JavacPipelineState implements RulePipelineState {
                   .map(ResolvedJavacPluginProperties::getJavacPluginJsr199Fields)
                   .collect(Collectors.toList()));
 
-      invocation =
-          getJavac()
-              .newBuildInvocation(
-                  javacExecutionContext,
-                  resolver,
-                  invokingRule,
-                  getOptions(context, compilerParameters.getClasspathEntries()),
-                  pluginFields,
-                  compilerParameters.getSourceFilePaths(),
-                  compilerParameters.getPathToSourcesList(),
-                  compilerParameters.getWorkingDirectory(),
-                  compilerParameters.shouldTrackClassUsage(),
-                  abiJarParameters,
-                  libraryJarParameters,
-                  compilerParameters.getAbiGenerationMode(),
-                  compilerParameters.getAbiCompatibilityMode(),
-                  compilerParameters.getSourceOnlyAbiRuleInfo());
+      /* When compiling a kotlin project, we can't know if there will or not have annotation
+         processors that generates java source files to compile. So we pass the directories
+         where potencially generated files will be, and here, which runs after all kotlin steps
+         we filter for only java files, or don't invoke the compiler, if there aren't any */
+      ImmutableSortedSet<Path> sourcePaths = ImmutableSortedSet.copyOf(
+          PathHelper.flatmapDirectories(filesystem, compilerParameters.getSourceFilePaths())
+          .stream()
+          .filter(input -> new PathOrGlobMatcher("**.java").matches(input))
+          .collect(Collectors.toSet()));
 
-      closeables.add(invocation);
+      if (!sourcePaths.isEmpty()) {
+        invocation =
+            getJavac()
+                .newBuildInvocation(
+                    javacExecutionContext,
+                    resolver,
+                    invokingRule,
+                    getOptions(context, compilerParameters.getClasspathEntries()),
+                    pluginFields,
+                    sourcePaths,
+                    compilerParameters.getPathToSourcesList(),
+                    compilerParameters.getWorkingDirectory(),
+                    compilerParameters.shouldTrackClassUsage(),
+                    abiJarParameters,
+                    libraryJarParameters,
+                    compilerParameters.getAbiGenerationMode(),
+                    compilerParameters.getAbiCompatibilityMode(),
+                    compilerParameters.getSourceOnlyAbiRuleInfo());
+
+        closeables.add(invocation);
+      }
     }
 
     return invocation;

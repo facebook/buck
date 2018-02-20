@@ -43,7 +43,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSortedSet;
@@ -59,7 +58,6 @@ import java.util.stream.Collectors;
 
 public class KotlincToJarStepFactory extends CompileToJarStepFactory implements AddsToRuleKey {
 
-  private static final PathOrGlobMatcher JAVA_PATH_MATCHER = new PathOrGlobMatcher("**.java");
   private static final PathOrGlobMatcher KOTLIN_PATH_MATCHER = new PathOrGlobMatcher("**.kt");
 
   @AddToRuleKey private final Kotlinc kotlinc;
@@ -192,10 +190,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     ImmutableSortedSet<Path> sources =
         ImmutableSortedSet.<Path>naturalOrder()
             .add(outputDirectory)
-            .add(stubsOutput)
-            .add(classesOutput)
             .add(kaptGenerated)
-            .add(incrementalData)
             .add(apGenerated)
             .addAll(sourceFilePaths)
             .build();
@@ -207,34 +202,27 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 .filter(input -> !KOTLIN_PATH_MATCHER.matches(input))
                 .collect(Collectors.toSet()));
 
-    // Only invoke javac if we have java files.
-    // Here we never run the annotation processor, kotlinc handles that. There is a special case
-    // where if the kotlin code does not contain annotations that need to generate code, we could
-    // use the annotation processor for java instead which would perform faster than kapt. This is
-    // too difficult to determine from here alone.
-    if (!javaSourceFiles.isEmpty()) {
-      CompilerParameters javacParameters =
-          CompilerParameters.builder()
-              .from(parameters)
-              .setClasspathEntries(
-                  ImmutableSortedSet.<Path>naturalOrder()
-                      .add(projectFilesystem.resolve(outputDirectory))
-                      .addAll(
-                          Optional.ofNullable(extraClassPath.getExtraClasspath())
-                              .orElse(ImmutableList.of()))
-                      .addAll(declaredClasspathEntries)
-                      .build())
-              .setSourceFilePaths(javaSourceFiles)
-              .build();
-      new JavacToJarStepFactory(
-          resolver,
-          ruleFinder,
-          projectFilesystem,
-          javac,
-          javacOptions.withAnnotationProcessingParams(AnnotationProcessingParams.EMPTY),
-          extraClassPath)
-          .createCompileStep(buildContext, invokingRule, javacParameters, steps, buildableContext);
-    }
+    CompilerParameters javacParameters =
+        CompilerParameters.builder()
+            .from(parameters)
+            .setClasspathEntries(
+                ImmutableSortedSet.<Path>naturalOrder()
+                    .add(projectFilesystem.resolve(outputDirectory))
+                    .addAll(
+                        Optional.ofNullable(extraClassPath.getExtraClasspath())
+                            .orElse(ImmutableList.of()))
+                    .addAll(declaredClasspathEntries)
+                    .build())
+            .setSourceFilePaths(javaSourceFiles)
+            .build();
+    new JavacToJarStepFactory(
+        resolver,
+        ruleFinder,
+        projectFilesystem,
+        javac,
+        javacOptions.withAnnotationProcessingParams(AnnotationProcessingParams.EMPTY),
+        extraClassPath)
+        .createCompileStep(buildContext, invokingRule, javacParameters, steps, buildableContext);
   }
 
   private void addAnnotationGenFolderStep(
