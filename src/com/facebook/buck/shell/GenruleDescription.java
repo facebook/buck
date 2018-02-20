@@ -30,10 +30,12 @@ import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.versions.VersionRoot;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-public class GenruleDescription extends AbstractGenruleDescription<GenruleDescriptionArg> {
+public class GenruleDescription extends AbstractGenruleDescription<GenruleDescriptionArg>
+    implements VersionRoot<GenruleDescriptionArg> {
 
   private final BuckConfig buckConfig;
 
