@@ -16,7 +16,6 @@
 
 package com.facebook.buck.distributed.build_slave;
 
-import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.distributed.DistBuildCachingEngineDelegate;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
@@ -44,6 +43,7 @@ import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -55,6 +55,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.concurrent.ForkJoinPool;
 
 /** Initializes the build engine delegate, the target graph and the action graph. */
 public class DelegateAndGraphsInitializer {
@@ -144,6 +145,10 @@ public class DelegateAndGraphsInitializer {
       throws IOException, InterruptedException {
     args.getTimingStatsTracker().startTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
     try {
+      LOG.info(
+          String.format(
+              "Parallel action graph mode: [%s]. Parallel action graph threads [%d]",
+              args.getActionGraphParallelizationMode(), args.getMaxActionGraphParallelism()));
       ActionGraphAndResolver actionGraphAndResolver =
           args.getActionGraphCache()
               .getActionGraph(
@@ -152,16 +157,20 @@ public class DelegateAndGraphsInitializer {
                   /* skipActionGraphCache */ false,
                   Preconditions.checkNotNull(targetGraph),
                   args.getRuleKeyConfiguration(),
-                  ActionGraphParallelizationMode.DISABLED,
+                  args.getActionGraphParallelizationMode(),
                   Optional.empty(),
                   args.getShouldInstrumentActionGraph(),
                   args.isActionGraphNodeCacheEnabled(),
                   CloseableMemoizedSupplier.of(
                       () -> {
-                        throw new IllegalStateException(
-                            "should not use parallel executor for action graph construction in distributed slave build");
+                        int threadCount = args.getMaxActionGraphParallelism();
+                        LOG.info(
+                            String.format(
+                                "Creating parallel action graph construction pool with [%d] threads.",
+                                threadCount));
+                        return MostExecutors.forkJoinPoolWithThreadLimit(threadCount, 16);
                       },
-                      ignored -> {}));
+                      ForkJoinPool::shutdownNow));
       return actionGraphAndResolver;
     } finally {
       args.getTimingStatsTracker().stopTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);

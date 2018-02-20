@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.FileContentsProvider;
@@ -66,4 +67,8 @@ abstract class AbstractDelegateAndGraphsInitializerArgs {
   public abstract boolean isActionGraphNodeCacheEnabled();
 
   public abstract DistBuildConfig getDistBuildConfig();
+
+  public abstract int getMaxActionGraphParallelism();
+
+  public abstract ActionGraphParallelizationMode getActionGraphParallelizationMode();
 }
