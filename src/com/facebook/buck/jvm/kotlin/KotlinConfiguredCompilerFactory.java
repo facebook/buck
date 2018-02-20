@@ -65,6 +65,7 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         ruleFinder,
         projectFilesystem,
         kotlinBuckConfig.getKotlinc(),
+        kotlinBuckConfig.getKotlinHomeLibraries(),
         Preconditions.checkNotNull((KotlinLibraryDescription.CoreArg) args)
             .getExtraKotlincArguments(),
         extraClasspathProvider,

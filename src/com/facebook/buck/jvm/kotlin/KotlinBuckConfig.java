@@ -21,6 +21,7 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -57,6 +58,17 @@ public class KotlinBuckConfig {
           getPathToAP(),
           getPathToStdlibJar());
     }
+  }
+
+  public ImmutableSortedSet<Path> getKotlinHomeLibraries() {
+    return ImmutableSortedSet.copyOf(
+        ImmutableSortedSet.of(
+            getPathToStdlibJar(),
+            getPathToReflectJar(),
+            getPathToScriptRuntimeJar(),
+            getPathToCompilerJar()
+        )
+    );
   }
 
   Path getPathToCompilerBinary() {

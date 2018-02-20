@@ -26,6 +26,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ClassLoaderCache;
+//import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -141,6 +142,13 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
             .map(p -> ((PathSourcePath) p).getRelativePath())
             .map(Path::toFile)
             .collect(Collectors.toSet());
+
+//    if (!compilerIdPaths.isEmpty()) {
+//      throw new HumanReadableException(compilerIdPaths
+//          .stream()
+//          .map(File::getPath)
+//          .reduce("Classpath to kotlin in memory compiler\n", (s, s2) -> s + ", " + s2));
+//    }
 
     try {
       Object compilerShim =

@@ -41,6 +41,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+//import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -60,9 +61,12 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
   private static final PathOrGlobMatcher KOTLIN_PATH_MATCHER = new PathOrGlobMatcher("**.kt");
 
-  @AddToRuleKey private final Kotlinc kotlinc;
-  @AddToRuleKey private final ImmutableList<String> extraArguments;
-  @AddToRuleKey private final ExtraClasspathProvider extraClassPath;
+  @AddToRuleKey
+  private final Kotlinc kotlinc;
+  @AddToRuleKey
+  private final ImmutableList<String> extraArguments;
+  @AddToRuleKey
+  private final ExtraClasspathProvider extraClassPath;
 
   private static final String COMPILER_BUILTINS = "-Xadd-compiler-builtins";
   private static final String LOAD_BUILTINS_FROM = "-Xload-builtins-from-dependencies";
@@ -85,6 +89,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   private static final String KAPT_GENERATED = "kapt.kotlin.generated";
   private static final String MODULE_NAME = "-module-name";
 
+  private final ImmutableSortedSet<Path> kotlinHomeLibraries;
   private final Javac javac;
   private final JavacOptions javacOptions;
 
@@ -93,12 +98,14 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       SourcePathRuleFinder ruleFinder,
       ProjectFilesystem projectFilesystem,
       Kotlinc kotlinc,
+      ImmutableSortedSet<Path> kotlinHomeLibraries,
       ImmutableList<String> extraArguments,
       ExtraClasspathProvider extraClassPath,
       Javac javac,
       JavacOptions javacOptions) {
     super(resolver, ruleFinder, projectFilesystem);
     this.kotlinc = kotlinc;
+    this.kotlinHomeLibraries = kotlinHomeLibraries;
     this.extraArguments = extraArguments;
     this.extraClassPath = extraClassPath;
     this.javac = javac;
@@ -151,6 +158,15 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
           incrementalData);
       addCreateFolderStep(steps, projectFilesystem, buildableContext, buildContext, apGenerated);
 
+
+      ImmutableSortedSet<Path> allClasspaths = ImmutableSortedSet.<Path>naturalOrder()
+          .addAll(
+              Optional.ofNullable(extraClassPath.getExtraClasspath())
+                  .orElse(ImmutableList.of()))
+          .addAll(declaredClasspathEntries)
+          .addAll(kotlinHomeLibraries)
+          .build();
+
       boolean generatingCode = !javacOptions.getAnnotationProcessingParams().isEmpty();
       if (generatingCode) {
         addAnnotationGenFolderStep(
@@ -161,7 +177,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             sourceFilePaths,
             pathToSrcsList,
             sourcePaths,
-            declaredClasspathEntries,
+            allClasspaths,
             kaptGenerated,
             stubsOutput,
             incrementalData,
@@ -170,18 +186,21 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             resolver);
       }
 
+//      if (!allClasspaths.isEmpty()) {
+//        throw new HumanReadableException(
+//            allClasspaths
+//                .stream()
+//                .map(Path::toString)
+//                .reduce("Classpath to kotlin compiler\n", (s, s2) -> s + ", " + s2));
+//      }
+
       steps.add(
           new KotlincStep(
               invokingRule,
               outputDirectory,
               sourcePaths,
               pathToSrcsList,
-              ImmutableSortedSet.<Path>naturalOrder()
-                  .addAll(
-                      Optional.ofNullable(extraClassPath.getExtraClasspath())
-                          .orElse(ImmutableList.of()))
-                  .addAll(declaredClasspathEntries)
-                  .build(),
+              allClasspaths,
               kotlinc,
               extraArguments,
               projectFilesystem));
