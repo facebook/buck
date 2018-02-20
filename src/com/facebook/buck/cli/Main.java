@@ -177,6 +177,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -205,10 +206,10 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
@@ -1892,12 +1893,20 @@ public final class Main {
 
   public static final class DaemonBootstrap {
     private static final int AFTER_COMMAND_AUTO_GC_DELAY_MS = 5000;
+    private static final int SUBSEQUENT_GC_DELAY_MS = 10000;
     private static @Nullable DaemonKillers daemonKillers;
-    private static AtomicReference<ScheduledFuture<?>> scheduledGC = new AtomicReference<>();
+    private static AtomicInteger activeTasks = new AtomicInteger(0);
 
     /** Single thread for running short-lived tasks outside the command context. */
     private static final ScheduledExecutorService housekeepingExecutorService =
         Executors.newSingleThreadScheduledExecutor();
+
+    private static final boolean isCMS =
+        ManagementFactory.getGarbageCollectorMXBeans()
+            .stream()
+            .filter(GarbageCollectorMXBean::isValid)
+            .map(GarbageCollectorMXBean::getName)
+            .anyMatch(Predicate.isEqual("ConcurrentMarkSweep"));
 
     public static void main(String[] args) {
       try {
@@ -1935,20 +1944,37 @@ public final class Main {
       return Preconditions.checkNotNull(daemonKillers, "Daemon killers should be initialized.");
     }
 
-    static void cancelGC() {
-      ScheduledFuture<?> oldScheduledGC = scheduledGC.getAndSet(null);
-      if (oldScheduledGC != null) {
-        oldScheduledGC.cancel(false);
-      }
+    static void commandStarted() {
+      activeTasks.incrementAndGet();
     }
 
-    static void scheduleGC() {
-      ScheduledFuture<?> oldScheduledGC =
-          scheduledGC.getAndSet(
-              housekeepingExecutorService.schedule(
-                  System::gc, AFTER_COMMAND_AUTO_GC_DELAY_MS, TimeUnit.MILLISECONDS));
-      if (oldScheduledGC != null) {
-        oldScheduledGC.cancel(false);
+    static void commandFinished() {
+      // Concurrent Mark and Sweep (CMS) garbage collector releases memory to operating system
+      // in multiple steps, even given that full collection is performed at each step. So if CMS
+      // collector is used we call System.gc() up to 4 times with some interval, and call it
+      // just once for any other major collector.
+      // With Java 9 we could just use -XX:-ShrinkHeapInSteps flag.
+      int nTimes = isCMS ? 4 : 1;
+
+      housekeepingExecutorService.schedule(
+          () -> collectGarbage(nTimes), AFTER_COMMAND_AUTO_GC_DELAY_MS, TimeUnit.MILLISECONDS);
+    }
+
+    private static void collectGarbage(int nTimes) {
+      int tasks = activeTasks.decrementAndGet();
+      if (tasks > 0) {
+        return;
+      }
+      // Potentially there is a race condition - new command comes exactly at this point and got
+      // under GC right away. Unlucky. We ignore that.
+      System.gc();
+
+      // schedule next collection to release more memory to operating system if garbage collector
+      // releases it in steps
+      if (nTimes > 1) {
+        activeTasks.incrementAndGet();
+        housekeepingExecutorService.schedule(
+            () -> collectGarbage(nTimes - 1), SUBSEQUENT_GC_DELAY_MS, TimeUnit.MILLISECONDS);
       }
     }
   }
@@ -2019,12 +2045,12 @@ public final class Main {
     obtainResourceFileLock();
     try (IdleKiller.CommandExecutionScope ignored =
         DaemonBootstrap.getDaemonKillers().newCommandExecutionScope()) {
-      DaemonBootstrap.cancelGC();
+      DaemonBootstrap.commandStarted();
       new Main(context.out, context.err, context.in, Optional.of(context))
           .runMainThenExit(context.getArgs(), System.nanoTime());
     } finally {
       // Reclaim memory after a command finishes.
-      DaemonBootstrap.scheduleGC();
+      DaemonBootstrap.commandFinished();
     }
   }
 
