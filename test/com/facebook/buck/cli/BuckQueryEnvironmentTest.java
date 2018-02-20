@@ -106,6 +106,7 @@ public class BuckQueryEnvironmentTest {
         new PerBuildState(
             parser,
             typeCoercerFactory,
+            new ConstructorArgMarshaller(typeCoercerFactory),
             eventBus,
             executableFinder,
             executor,

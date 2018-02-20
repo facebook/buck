@@ -113,10 +113,6 @@ public class Parser {
     return permState;
   }
 
-  protected ConstructorArgMarshaller getMarshaller() {
-    return marshaller;
-  }
-
   @VisibleForTesting
   static ImmutableSet<Map<String, Object>> getRawTargetNodes(
       PerBuildState state, Cell cell, Path buildFile) throws BuildFileParseException {
@@ -146,6 +142,7 @@ public class Parser {
         new PerBuildState(
             this,
             typeCoercerFactory,
+            marshaller,
             eventBus,
             parserPythonInterpreterProvider,
             executor,
@@ -168,6 +165,7 @@ public class Parser {
         new PerBuildState(
             this,
             typeCoercerFactory,
+            marshaller,
             eventBus,
             parserPythonInterpreterProvider,
             executor,
@@ -228,6 +226,7 @@ public class Parser {
         new PerBuildState(
             this,
             typeCoercerFactory,
+            marshaller,
             eventBus,
             parserPythonInterpreterProvider,
             executor,
@@ -268,6 +267,7 @@ public class Parser {
         new PerBuildState(
             this,
             typeCoercerFactory,
+            marshaller,
             eventBus,
             parserPythonInterpreterProvider,
             executor,
@@ -393,6 +393,7 @@ public class Parser {
         new PerBuildState(
             this,
             typeCoercerFactory,
+            marshaller,
             eventBus,
             parserPythonInterpreterProvider,
             executor,
@@ -434,6 +435,7 @@ public class Parser {
         new PerBuildState(
             this,
             typeCoercerFactory,
+            marshaller,
             eventBus,
             parserPythonInterpreterProvider,
             executor,

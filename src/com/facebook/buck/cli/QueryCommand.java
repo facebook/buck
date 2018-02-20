@@ -29,6 +29,7 @@ import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
@@ -163,6 +164,7 @@ public class QueryCommand extends AbstractCommand {
             new PerBuildState(
                 params.getParser(),
                 params.getTypeCoercerFactory(),
+                new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
                 params.getBuckEventBus(),
                 params.getExecutableFinder(),
                 pool.getListeningExecutorService(),

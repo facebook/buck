@@ -31,6 +31,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
+import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
@@ -92,6 +93,7 @@ public class PerBuildState implements AutoCloseable {
   public PerBuildState(
       Parser parser,
       TypeCoercerFactory typeCoercerFactory,
+      ConstructorArgMarshaller marshaller,
       BuckEventBus eventBus,
       ExecutableFinder executableFinder,
       ListeningExecutorService executorService,
@@ -102,6 +104,7 @@ public class PerBuildState implements AutoCloseable {
     this(
         parser,
         typeCoercerFactory,
+        marshaller,
         eventBus,
         new ParserPythonInterpreterProvider(rootCell.getBuckConfig(), executableFinder),
         executorService,
@@ -114,6 +117,7 @@ public class PerBuildState implements AutoCloseable {
   PerBuildState(
       Parser parser,
       TypeCoercerFactory typeCoercerFactory,
+      ConstructorArgMarshaller marshaller,
       BuckEventBus eventBus,
       ParserPythonInterpreterProvider parserPythonInterpreterProvider,
       ListeningExecutorService executorService,
@@ -154,7 +158,7 @@ public class PerBuildState implements AutoCloseable {
         new TargetNodeParsePipeline(
             parser.getPermState().getOrCreateNodeCache(TargetNode.class),
             DefaultParserTargetNodeFactory.createForParser(
-                parser.getMarshaller(),
+                marshaller,
                 parser.getPermState().getBuildFileTrees(),
                 symlinkCheckers,
                 new TargetNodeFactory(typeCoercerFactory),

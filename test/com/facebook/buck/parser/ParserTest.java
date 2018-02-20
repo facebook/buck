@@ -191,6 +191,7 @@ public class ParserTest {
         new PerBuildState(
             parser,
             typeCoercerFactory,
+            new ConstructorArgMarshaller(typeCoercerFactory),
             eventBus,
             executableFinder,
             executor,
