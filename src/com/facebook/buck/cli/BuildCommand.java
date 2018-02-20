@@ -24,6 +24,8 @@ import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientSt
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.POST_DISTRIBUTED_BUILD_LOCAL_STEPS;
 import static com.facebook.buck.util.concurrent.MostExecutors.newMultiThreadExecutor;
 
+import com.facebook.buck.apple.AppleBundle;
+import com.facebook.buck.apple.AppleDsym;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.cli.output.Mode;
 import com.facebook.buck.command.Build;
@@ -644,6 +646,26 @@ public class BuildCommand extends AbstractCommand {
     return ExitCode.SUCCESS;
   }
 
+  private void symLinkBuildRuleResult(
+      SourcePathResolver pathResolver,
+      BuckConfig buckConfig,
+      Path lastOutputDirPath,
+      BuildRule rule)
+      throws IOException {
+    Optional<Path> outputPath =
+        TargetsCommand.getUserFacingOutputPath(
+            pathResolver, rule, buckConfig.getBuckOutCompatLink());
+    if (outputPath.isPresent()) {
+      Path absolutePath = outputPath.get();
+      Path destPath = lastOutputDirPath.relativize(absolutePath);
+      Path linkPath = lastOutputDirPath.resolve(absolutePath.getFileName());
+      // Don't overwrite existing symlink in case there are duplicate names.
+      if (!Files.exists(linkPath)) {
+        Files.createSymbolicLink(linkPath, destPath);
+      }
+    }
+  }
+
   private void symLinkBuildResults(
       CommandRunnerParams params, ActionGraphAndResolver actionGraphAndResolver)
       throws IOException {
@@ -659,18 +681,16 @@ public class BuildCommand extends AbstractCommand {
 
     for (BuildTarget buildTarget : buildTargets) {
       BuildRule rule = actionGraphAndResolver.getResolver().requireRule(buildTarget);
-      Optional<Path> outputPath =
-          TargetsCommand.getUserFacingOutputPath(
-              pathResolver, rule, params.getBuckConfig().getBuckOutCompatLink());
-      if (outputPath.isPresent()) {
-        Path absolutePath = outputPath.get();
-        Path destPath = lastOutputDirPath.relativize(absolutePath);
-        Path linkPath = lastOutputDirPath.resolve(absolutePath.getFileName());
-        // Don't overwrite existing symlink in case there are duplicate names.
-        if (!Files.exists(linkPath)) {
-          Files.createSymbolicLink(linkPath, destPath);
+      // If it's an apple bundle, we'd like to also link the dSYM file over here.
+      if (rule instanceof AppleBundle) {
+        AppleBundle bundle = (AppleBundle) rule;
+        Optional<AppleDsym> dsym = bundle.getAppleDsym();
+        if (dsym.isPresent()) {
+          symLinkBuildRuleResult(
+              pathResolver, params.getBuckConfig(), lastOutputDirPath, dsym.get());
         }
       }
+      symLinkBuildRuleResult(pathResolver, params.getBuckConfig(), lastOutputDirPath, rule);
     }
   }
 

@@ -317,6 +317,10 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return binary;
   }
 
+  public Optional<AppleDsym> getAppleDsym() {
+    return appleDsym;
+  }
+
   public boolean isLegacyWatchApp() {
     return extension.equals(AppleBundleExtension.APP.toFileExtension())
         && binary.isPresent()
