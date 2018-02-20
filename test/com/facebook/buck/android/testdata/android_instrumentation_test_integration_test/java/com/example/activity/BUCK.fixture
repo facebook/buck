@@ -1,5 +1,0 @@
-android_library(
-    name = "activity",
-    srcs = glob(["*.java"]),
-    visibility = ["PUBLIC"],
-)
