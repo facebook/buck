@@ -43,16 +43,16 @@ public interface HasJavaAbi {
   Flavor SOURCE_ONLY_ABI_FLAVOR = InternalFlavor.of("source-only-abi");
   Flavor VERIFIED_SOURCE_ABI_FLAVOR = InternalFlavor.of("verified-source-abi");
 
-  static BuildTarget getClassAbiJar(BuildTarget libraryTarget) {
-    Preconditions.checkArgument(isLibraryTarget(libraryTarget));
-    return libraryTarget.withAppendedFlavors(CLASS_ABI_FLAVOR);
-  }
-
   static boolean isAbiTarget(BuildTarget target) {
     return isClassAbiTarget(target)
         || isSourceAbiTarget(target)
         || isSourceOnlyAbiTarget(target)
         || isVerifiedSourceAbiTarget(target);
+  }
+
+  static BuildTarget getClassAbiJar(BuildTarget libraryTarget) {
+    Preconditions.checkArgument(isLibraryTarget(libraryTarget));
+    return libraryTarget.withAppendedFlavors(CLASS_ABI_FLAVOR);
   }
 
   static boolean isClassAbiTarget(BuildTarget target) {

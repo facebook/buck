@@ -17,10 +17,13 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.jvm.core.HasClasspathEntries;
+import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.HasSources;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -30,32 +33,33 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 import java.io.File;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
- * Used to expand the macro {@literal $(classpath //some:target)} to the transitive classpath of
- * that target, expanding all paths to be absolute.
+ * Used to expand the macro {@literal $(abi_jar_path //some:target)} to the transitive abi's jars
+ * path of that target, expanding all paths to be absolute.
  */
-public class ClasspathMacroExpander extends BuildTargetMacroExpander<ClasspathMacro> {
+public class ClasspathAbiMacroExpander extends BuildTargetMacroExpander<ClasspathAbiMacro> {
 
   @Override
-  public Class<ClasspathMacro> getInputClass() {
-    return ClasspathMacro.class;
+  public Class<ClasspathAbiMacro> getInputClass() {
+    return ClasspathAbiMacro.class;
   }
 
   @Override
-  protected ClasspathMacro parse(
+  protected ClasspathAbiMacro parse(
       BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
       throws MacroException {
-    return ClasspathMacro.of(parseBuildTarget(target, cellNames, input));
+    return ClasspathAbiMacro.of(parseBuildTarget(target, cellNames, input));
   }
 
   private HasClasspathEntries getHasClasspathEntries(BuildRule rule) throws MacroException {
     if (!(rule instanceof HasClasspathEntries)) {
       throw new MacroException(
           String.format(
-              "%s used in classpath macro does not correspond to a rule with a java classpath",
+              "%s used in abi_jar_path macro does not correspond to a rule with a java classpath",
               rule.getBuildTarget()));
     }
     return (HasClasspathEntries) rule;
@@ -66,25 +70,59 @@ public class ClasspathMacroExpander extends BuildTargetMacroExpander<ClasspathMa
     return new ClassPathWriteToFileArg(target, prefix, delegate);
   }
 
-  @Override
-  protected Arg expand(SourcePathResolver resolver, ClasspathMacro ignored, BuildRule rule)
-      throws MacroException {
-    return new ClasspathArg(
-        getHasClasspathEntries(rule)
-            .getTransitiveClasspathDeps()
-            .stream()
-            .map(BuildRule::getSourcePathToOutput)
-            .filter(Objects::nonNull)
-            .sorted()
-            .collect(ImmutableList.toImmutableList()));
+  private SourcePath getJarPath(BuildRule rule, BuildRuleResolver ruleResolver) {
+    SourcePath jarPath = null;
+
+    if (rule instanceof HasSources && rule instanceof HasJavaAbi) {
+      HasJavaAbi javaAbiRule = (HasJavaAbi) rule;
+      Optional<BuildTarget> optionalBuildTarget = javaAbiRule.getAbiJar();
+      if (optionalBuildTarget.isPresent()) {
+        jarPath = ruleResolver.requireRule(optionalBuildTarget.get()).getSourcePathToOutput();
+      }
+    }
+
+    if (jarPath == null) {
+      jarPath = rule.getSourcePathToOutput();
+    }
+
+    return jarPath;
   }
 
-  // javac is the canonical reader of classpaths, and its code for reading classpaths from
-  // files is a little weird:
-  // http://hg.openjdk.java.net/jdk7/jdk7/langtools/file/ce654f4ecfd8/src/share/classes/com/sun/tools/javac/main/CommandLine.java#l74
-  // The # characters that might be present in classpaths due to flavoring would be read as
-  // comments. As a simple workaround, we quote the entire classpath.
+  @Override
+  protected Arg expand(SourcePathResolver resolver, ClasspathAbiMacro macro, BuildRule rule)
+      throws MacroException {
+    throw new MacroException(
+        "expand(BuildRuleResolver ruleResolver, ClasspathAbiMacro input) should be called instead");
+  }
+
+  @Override
+  public Arg expandFrom(
+      BuildTarget target,
+      CellPathResolver cellNames,
+      BuildRuleResolver resolver,
+      ClasspathAbiMacro input)
+      throws MacroException {
+
+    BuildRule inputRule = resolve(resolver, input);
+    return expand(resolver, inputRule);
+  }
+
+  protected Arg expand(BuildRuleResolver ruleResolver, BuildRule inputRule) throws MacroException {
+
+    ImmutableList<SourcePath> jarPaths =
+        getHasClasspathEntries(inputRule)
+            .getTransitiveClasspathDeps()
+            .stream()
+            .map(d -> getJarPath(d, ruleResolver))
+            .filter(Objects::nonNull)
+            .sorted()
+            .collect(ImmutableList.toImmutableList());
+
+    return new AbiJarPathArg(jarPaths);
+  }
+
   private static class ClassPathWriteToFileArg extends WriteToFileArg {
+
     ClassPathWriteToFileArg(BuildTarget target, String prefix, Arg delegate) {
       super(target, prefix, delegate);
     }
@@ -95,10 +133,11 @@ public class ClasspathMacroExpander extends BuildTargetMacroExpander<ClasspathMa
     }
   }
 
-  private class ClasspathArg implements Arg {
+  private class AbiJarPathArg implements Arg {
+
     @AddToRuleKey private final ImmutableList<SourcePath> classpath;
 
-    ClasspathArg(ImmutableList<SourcePath> collect) {
+    AbiJarPathArg(ImmutableList<SourcePath> collect) {
       this.classpath = collect;
     }
 
