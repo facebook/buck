@@ -25,9 +25,9 @@ import com.facebook.buck.slb.NoHealthyServersException;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Maps;
 import java.io.IOException;
-import java.util.Set;
+import java.util.Map;
 import java.util.regex.Matcher;
 
 public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
@@ -160,14 +160,7 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
     private void reportFetchFailure(RuleKey ruleKey, IOException e, String msg) {
       if (isNoHealthyServersException(e)) {
         errorReporter.reportFailureToEventBus(
-            "NoHealthyServers",
-            String.format(
-                "\n"
-                    + "Failed to fetch %s over %s:\n"
-                    + "Buck encountered a critical network failure.\n"
-                    + "Please check your network connection and retry."
-                    + "\n",
-                ruleKey, name));
+            "NoHealthyServers", String.format("Failed to fetch %s over %s\n", ruleKey, name));
       } else {
         String key = String.format("store:%s", e.getClass().getSimpleName());
         errorReporter.reportFailure(e, key, msg);
@@ -227,29 +220,35 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
   }
 
   private static class ErrorReporter {
+
     private final EventDispatcher dispatcher;
     private final String errorTextTemplate;
-    private final Set<String> seenErrors = Sets.newConcurrentHashSet();
+    // If we encounter more errors than this limit print the message.
+    private final int errorTextLimit;
+    private final Map<String, Integer> seenErrors = Maps.newConcurrentMap();
     private final String name;
 
     public ErrorReporter(NetworkCacheArgs args) {
       dispatcher = args.getBuckEventBus();
       errorTextTemplate = args.getErrorTextTemplate();
+      errorTextLimit = args.getErrorTextLimit();
       name = args.getCacheName();
     }
 
     private void reportFailure(String errorKey, String message) {
-      LOG.warn(message);
+      LOG.debug(message);
       reportFailureToEventBus(errorKey, message);
     }
 
     private void reportFailure(Exception exception, String errorKey, String message) {
-      LOG.warn(exception, message);
+      LOG.debug(exception, message);
       reportFailureToEventBus(errorKey, message);
     }
 
     private void reportFailureToEventBus(String errorKey, String message) {
-      if (seenErrors.add(errorKey)) {
+      int timesSeenThisError = seenErrors.getOrDefault(errorKey, 0) + 1;
+      if (timesSeenThisError > errorTextLimit) {
+        timesSeenThisError = 0;
         dispatcher.post(
             ConsoleEvent.warning(
                 errorTextTemplate
@@ -258,6 +257,7 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
                     .replaceAll("\\\\n", Matcher.quoteReplacement("\n"))
                     .replaceAll("\\{error_message}", Matcher.quoteReplacement(message))));
       }
+      seenErrors.put(errorKey, timesSeenThisError);
     }
   }
 

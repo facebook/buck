@@ -563,6 +563,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
             .setHttpWriteExecutorService(httpWriteExecutorService)
             .setHttpFetchExecutorService(httpFetchExecutorService)
             .setErrorTextTemplate(cacheDescription.getErrorMessageFormat())
+            .setErrorTextLimit(cacheDescription.getErrorMessageLimit())
             .build());
   }
 

@@ -77,6 +77,7 @@ public class HttpArtifactCacheTest {
       MoreExecutors.newDirectExecutorService();
   private static final String ERROR_TEXT_TEMPLATE =
       "{cache_name} encountered an error: {error_message}";
+  private static final int ERROR_TEXT_LIMIT = 100;
 
   private NetworkCacheArgs.Builder argsBuilder;
 
@@ -136,7 +137,8 @@ public class HttpArtifactCacheTest {
             .setBuckEventBus(BUCK_EVENT_BUS)
             .setHttpWriteExecutorService(DIRECT_EXECUTOR_SERVICE)
             .setHttpFetchExecutorService(DIRECT_EXECUTOR_SERVICE)
-            .setErrorTextTemplate(ERROR_TEXT_TEMPLATE);
+            .setErrorTextTemplate(ERROR_TEXT_TEMPLATE)
+            .setErrorTextLimit(ERROR_TEXT_LIMIT);
   }
 
   @Test
@@ -504,7 +506,7 @@ public class HttpArtifactCacheTest {
   }
 
   @Test
-  public void errorTextReplaced() throws InterruptedException {
+  public void errorTextReplaced() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     final String cacheName = "http cache";
     final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
@@ -548,11 +550,15 @@ public class HttpArtifactCacheTest {
                 }));
     HttpArtifactCache cache = new HttpArtifactCache(argsBuilder.build());
     Path output = Paths.get("output/file");
-    CacheResult result =
-        Futures.getUnchecked(cache.fetchAsync(ruleKey, LazyPath.ofInstance(output)));
-    assertEquals(CacheResultType.ERROR, result.getType());
-    assertEquals(Optional.empty(), filesystem.readFileIfItExists(output));
+
+    for (int i = 0; i < ERROR_TEXT_LIMIT + 1; ++i) {
+      CacheResult result =
+          Futures.getUnchecked(cache.fetchAsync(ruleKey, LazyPath.ofInstance(output)));
+      assertEquals(CacheResultType.ERROR, result.getType());
+      assertEquals(Optional.empty(), filesystem.readFileIfItExists(output));
+    }
     assertTrue(consoleEventReceived.get());
+
     cache.close();
   }
 

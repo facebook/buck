@@ -982,6 +982,19 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'cache' /}
+  {param name: 'http_error_message_limit' /}
+  {param example_value}
+    100
+  {/param}
+  {param description}
+    This setting allows to set after how many errors Buck
+    will print the <code>http_error_message_format</code>. Every time it prints it the counter
+    resets to 0 to avoid spamming the console.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
   {param name: 'http_max_store_attempts' /}
   {param example_value: '1' /}
   {param description}

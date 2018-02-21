@@ -58,6 +58,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   private static final String HTTP_READ_HEADERS_FIELD_NAME = "http_read_headers";
   private static final String HTTP_WRITE_HEADERS_FIELD_NAME = "http_write_headers";
   private static final String HTTP_CACHE_ERROR_MESSAGE_NAME = "http_error_message_format";
+  private static final String HTTP_CACHE_ERROR_MESSAGE_LIMIT_NAME = "http_error_message_limit";
   private static final String HTTP_MAX_STORE_SIZE = "http_max_store_size";
   private static final String HTTP_THREAD_POOL_SIZE = "http_thread_pool_size";
   private static final String HTTP_THREAD_POOL_KEEP_ALIVE_DURATION_MILLIS =
@@ -74,6 +75,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
           HTTP_READ_HEADERS_FIELD_NAME,
           HTTP_WRITE_HEADERS_FIELD_NAME,
           HTTP_CACHE_ERROR_MESSAGE_NAME,
+          HTTP_CACHE_ERROR_MESSAGE_LIMIT_NAME,
           HTTP_MAX_STORE_SIZE);
   private static final String HTTP_MAX_FETCH_RETRIES = "http_max_fetch_retries";
   private static final String HTTP_MAX_STORE_ATTEMPTS = "http_max_store_attempts";
@@ -93,6 +95,8 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   private static final String DEFAULT_HTTP_WRITE_SHUTDOWN_TIMEOUT_SECONDS = "1800"; // 30 minutes
   private static final String DEFAULT_HTTP_CACHE_ERROR_MESSAGE =
       "{cache_name} cache encountered an error: {error_message}";
+  // After how many errors to show the HTTP_CACHE_ERROR_MESSAGE_NAME.
+  private static final int DEFAULT_HTTP_CACHE_ERROR_MESSAGE_LIMIT_NAME = 100;
   private static final int DEFAULT_HTTP_MAX_FETCH_RETRIES = 2;
   private static final int DEFAULT_HTTP_MAX_STORE_ATTEMPTS = 1; // Make a single request, no retries
   private static final long DEFAULT_HTTP_STORE_RETRY_INTERVAL = 1000;
@@ -223,6 +227,12 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     return buckConfig
         .getInteger(CACHE_SECTION_NAME, HTTP_MAX_STORE_ATTEMPTS)
         .orElse(DEFAULT_HTTP_MAX_STORE_ATTEMPTS);
+  }
+
+  public int getErrorMessageLimit() {
+    return buckConfig
+        .getInteger(CACHE_SECTION_NAME, HTTP_CACHE_ERROR_MESSAGE_LIMIT_NAME)
+        .orElse(DEFAULT_HTTP_CACHE_ERROR_MESSAGE_LIMIT_NAME);
   }
 
   public long getStoreRetryIntervalMillis() {
@@ -468,6 +478,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     builder.setErrorMessageFormat(
         getCacheErrorFormatMessage(
             CACHE_SECTION_NAME, HTTP_CACHE_ERROR_MESSAGE_NAME, DEFAULT_HTTP_CACHE_ERROR_MESSAGE));
+    builder.setErrorMessageLimit(getErrorMessageLimit());
     builder.setMaxStoreSize(buckConfig.getLong(CACHE_SECTION_NAME, HTTP_MAX_STORE_SIZE));
 
     return builder.build();

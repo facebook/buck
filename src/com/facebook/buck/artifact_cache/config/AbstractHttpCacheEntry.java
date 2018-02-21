@@ -44,6 +44,8 @@ abstract class AbstractHttpCacheEntry {
 
   public abstract String getErrorMessageFormat();
 
+  public abstract int getErrorMessageLimit();
+
   public abstract Optional<Long> getMaxStoreSize();
 
   // We're connected to a wifi hotspot that has been explicitly blacklisted from connecting to
