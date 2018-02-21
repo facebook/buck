@@ -25,7 +25,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -90,8 +89,7 @@ abstract class AbstractKnownBuildRuleTypes {
       ProcessExecutor processExecutor,
       ToolchainProvider toolchainProvider,
       PluginManager pluginManager,
-      SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory)
-      throws InterruptedException, IOException {
+      SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory) {
 
     KnownBuildRuleTypes.Builder builder = KnownBuildRuleTypes.builder();
 

@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import java.io.IOException;
 import org.immutables.value.Value;
 import org.pf4j.PluginManager;
 
@@ -38,7 +37,7 @@ abstract class AbstractDefaultKnownBuildRuleTypesFactory implements KnownBuildRu
   abstract SandboxExecutionStrategyFactory getSandboxExecutionStrategyFactory();
 
   @Override
-  public KnownBuildRuleTypes create(Cell cell) throws IOException, InterruptedException {
+  public KnownBuildRuleTypes create(Cell cell) {
     return KnownBuildRuleTypes.createInstance(
         cell.getBuckConfig(),
         getExecutor(),

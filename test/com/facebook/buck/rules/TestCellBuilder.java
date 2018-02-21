@@ -29,7 +29,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -42,7 +41,7 @@ public class TestCellBuilder {
   private CellConfig cellConfig;
   private Map<String, String> environment = new HashMap<>();
 
-  public TestCellBuilder() throws InterruptedException, IOException {
+  public TestCellBuilder() {
     filesystem = new FakeProjectFilesystem();
     cellConfig = CellConfig.of();
   }
@@ -72,7 +71,7 @@ public class TestCellBuilder {
     return this;
   }
 
-  public Cell build() throws IOException, InterruptedException {
+  public Cell build() {
     BuckConfig config =
         buckConfig == null
             ? FakeBuckConfig.builder().setFilesystem(filesystem).build()

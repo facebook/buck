@@ -16,14 +16,12 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import java.io.IOException;
 import javax.annotation.Nonnull;
 import org.immutables.value.Value;
 
@@ -41,23 +39,8 @@ abstract class AbstractKnownBuildRuleTypesProvider {
         .build(
             new CacheLoader<Cell, KnownBuildRuleTypes>() {
               @Override
-              public KnownBuildRuleTypes load(@Nonnull Cell cell) throws Exception {
-                try {
-                  return getKnownBuildRuleTypesFactory().create(cell);
-                } catch (IOException e) {
-                  throw new RuntimeException(
-                      String.format(
-                          "Creation of KnownBuildRuleTypes failed for Cell rooted at [%s].",
-                          cell.getFilesystem().getRootPath()),
-                      e);
-                } catch (InterruptedException e) {
-                  Threads.interruptCurrentThread();
-                  throw new RuntimeException(
-                      String.format(
-                          "Creation of KnownBuildRuleTypes failed for Cell rooted at [%s].",
-                          cell.getFilesystem().getRootPath()),
-                      e);
-                }
+              public KnownBuildRuleTypes load(@Nonnull Cell cell) {
+                return getKnownBuildRuleTypesFactory().create(cell);
               }
             });
   }
