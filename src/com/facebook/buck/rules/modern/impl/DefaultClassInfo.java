@@ -94,19 +94,12 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
   @Override
   public void computeDeps(
       T ruleImpl, InputRuleResolver inputRuleResolver, Consumer<BuildRule> depsBuilder) {
-    superInfo.ifPresent(
-        classInfo -> classInfo.computeDeps(ruleImpl, inputRuleResolver, depsBuilder));
-    for (FieldInfo<?> extractor : fields) {
-      extractor.extractDep(ruleImpl, inputRuleResolver, depsBuilder);
-    }
+    visit(ruleImpl, new DepsComputingVisitor(inputRuleResolver, depsBuilder));
   }
 
   @Override
   public void getOutputs(T ruleImpl, Consumer<OutputPath> dataBuilder) {
-    superInfo.ifPresent(classInfo -> classInfo.getOutputs(ruleImpl, dataBuilder));
-    for (FieldInfo<?> extractor : fields) {
-      extractor.extractOutput(ruleImpl, dataBuilder);
-    }
+    visit(ruleImpl, new OutputPathVisitor(dataBuilder));
   }
 
   @Override
@@ -137,15 +130,6 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
       Type type = field.getGenericType();
       ValueTypeInfo<?> valueTypeInfo = ValueTypeInfoFactory.forTypeToken(TypeToken.of(type));
       return new FieldInfo<>(field, valueTypeInfo);
-    }
-
-    void extractDep(
-        Buildable ruleImpl, InputRuleResolver inputRuleResolver, Consumer<BuildRule> builder) {
-      valueTypeInfo.extractDep(getValue(ruleImpl, field), inputRuleResolver, builder);
-    }
-
-    void extractOutput(Buildable ruleImpl, Consumer<OutputPath> builder) {
-      valueTypeInfo.extractOutput(getValue(ruleImpl, field), builder);
     }
 
     private T getValue(Buildable ruleImpl, Field field) {

@@ -16,13 +16,10 @@
 
 package com.facebook.buck.rules.modern.impl;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.modern.InputRuleResolver;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 class ValueTypeInfos {
   /** ValueTypeInfo for simple (String, int, etc) types. */
@@ -40,11 +37,6 @@ class ValueTypeInfos {
     public static final OutputPathValueTypeInfo INSTANCE = new OutputPathValueTypeInfo();
 
     @Override
-    public void extractOutput(OutputPath value, Consumer<OutputPath> builder) {
-      builder.accept(value);
-    }
-
-    @Override
     public <E extends Exception> void visit(OutputPath value, ValueVisitor<E> visitor) throws E {
       visitor.visitOutputPath(value);
     }
@@ -56,17 +48,6 @@ class ValueTypeInfos {
 
     OptionalValueTypeInfo(ValueTypeInfo<T> valueTypeInfo) {
       this.innerType = valueTypeInfo;
-    }
-
-    @Override
-    public void extractDep(
-        Optional<T> value, InputRuleResolver inputRuleResolver, Consumer<BuildRule> builder) {
-      value.ifPresent(o -> innerType.extractDep(o, inputRuleResolver, builder));
-    }
-
-    @Override
-    public void extractOutput(Optional<T> value, Consumer<OutputPath> builder) {
-      value.ifPresent(o -> innerType.extractOutput(o, builder));
     }
 
     @Override
@@ -82,18 +63,6 @@ class ValueTypeInfos {
 
     IterableValueTypeInfo(ValueTypeInfo<T> innerType) {
       this.innerType = innerType;
-    }
-
-    @Override
-    public void extractDep(
-        C value, InputRuleResolver inputRuleResolver, Consumer<BuildRule> builder) {
-      value.forEach(o -> innerType.extractDep(o, inputRuleResolver, builder));
-    }
-
-    @Override
-    public void extractOutput(C value, Consumer<OutputPath> builder) {
-      // TODO(cjhopman): should the name be modified to indicate position in the map?
-      value.forEach(o -> innerType.extractOutput(o, builder));
     }
   }
 

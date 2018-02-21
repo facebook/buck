@@ -16,20 +16,10 @@
 
 package com.facebook.buck.rules.modern.impl;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.modern.InputRuleResolver;
-import com.facebook.buck.rules.modern.OutputPath;
-import java.util.function.Consumer;
-
 /**
  * ValueTypeInfo&lt;T&gt; provides methods to extract deps, outputs, rulekeys from values of type T.
  */
 @SuppressWarnings("unused")
 interface ValueTypeInfo<T> {
-  default void extractDep(
-      T value, InputRuleResolver inputRuleResolver, Consumer<BuildRule> builder) {}
-
-  default void extractOutput(T value, Consumer<OutputPath> builder) {}
-
   <E extends Exception> void visit(T value, ValueVisitor<E> visitor) throws E;
 }

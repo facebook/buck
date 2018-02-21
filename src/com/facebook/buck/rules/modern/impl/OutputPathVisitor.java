@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -17,13 +17,25 @@
 package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.modern.OutputPath;
+import java.util.function.Consumer;
 
-/** ValueTypeInfo for SourcePaths. The SourcePath will be added to deps/inputs. */
-public class SourcePathValueTypeInfo implements ValueTypeInfo<SourcePath> {
-  public static SourcePathValueTypeInfo INSTANCE = new SourcePathValueTypeInfo();
+/** Visits all the referenced OutputPaths. */
+public class OutputPathVisitor extends AbstractValueVisitor<RuntimeException> {
+  private final Consumer<OutputPath> consumer;
+
+  public OutputPathVisitor(Consumer<OutputPath> consumer) {
+    this.consumer = consumer;
+  }
 
   @Override
-  public <E extends Exception> void visit(SourcePath value, ValueVisitor<E> visitor) throws E {
-    visitor.visitSourcePath(value);
+  public void visitOutputPath(OutputPath value) {
+    consumer.accept(value);
   }
+
+  @Override
+  public void visitSourcePath(SourcePath value) {}
+
+  @Override
+  public void visitSimple(Object value) {}
 }
