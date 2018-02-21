@@ -54,7 +54,7 @@ import javax.annotation.Nullable;
  * interfaces used by the build engine). Most of the overridden methods from
  * BuildRule/AbstractBuildRule are intentionally final to keep users on the safe path.
  *
- * <p>Deps, outputs and rulekeys are derived from the fields of the {@link Buildable}.
+ * <p>Deps, outputs, inputs and rulekeys are derived from the fields of the {@link Buildable}.
  *
  * <p>For simple ModernBuildRules (e.g. those that don't have any fields that can't be added to the
  * rulekey), the build rule class itself can (and should) implement Buildable. In this case, the
@@ -155,6 +155,20 @@ public class ModernBuildRule<T extends Buildable>
   private ImmutableSortedSet<BuildRule> computeDeps() {
     ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
     classInfo.computeDeps(buildable, inputRuleResolver, depsBuilder::add);
+    return depsBuilder.build();
+  }
+
+  /** Computes the inputs of the build rule. */
+  @SuppressWarnings("unused")
+  public ImmutableSortedSet<SourcePath> computeInputs() {
+    return computeInputs(getBuildable(), classInfo);
+  }
+
+  /** Computes the inputs of the build rule. */
+  public static <T extends Buildable> ImmutableSortedSet<SourcePath> computeInputs(
+      T buildable, ClassInfo<T> classInfo) {
+    ImmutableSortedSet.Builder<SourcePath> depsBuilder = ImmutableSortedSet.naturalOrder();
+    classInfo.getInputs(buildable, depsBuilder::add);
     return depsBuilder.build();
   }
 

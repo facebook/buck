@@ -18,6 +18,7 @@ package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.InputRuleResolver;
@@ -91,15 +92,23 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
     this.fields = fieldsBuilder.build();
   }
 
+  /** Computes the deps of the rule. */
   @Override
   public void computeDeps(
       T ruleImpl, InputRuleResolver inputRuleResolver, Consumer<BuildRule> depsBuilder) {
     visit(ruleImpl, new DepsComputingVisitor(inputRuleResolver, depsBuilder));
   }
 
+  /** Gets all the outputs referenced from the value. */
   @Override
   public void getOutputs(T ruleImpl, Consumer<OutputPath> dataBuilder) {
     visit(ruleImpl, new OutputPathVisitor(dataBuilder));
+  }
+
+  /** Gets all the inputs referenced from the value. */
+  @Override
+  public void getInputs(T ruleImpl, Consumer<SourcePath> inputsBuilder) {
+    visit(ruleImpl, new InputsVisitor(inputsBuilder));
   }
 
   @Override
