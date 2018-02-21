@@ -37,33 +37,70 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   @Override
   @Test
   public void set() {
-    assertEquals("present:value([!, hello, world])\nempty:value([])", stringify(new WithSet()));
+    assertEquals(
+        "present:Set<\n"
+            + "  string(!)\n"
+            + "  string(hello)\n"
+            + "  string(world)\n"
+            + ">\n"
+            + "empty:Set<\n"
+            + ">",
+        stringify(new WithSet()));
   }
 
   @Override
   @Test
   public void list() {
-    assertEquals("present:value([hello, world, !])\nempty:value([])", stringify(new WithList()));
+    assertEquals(
+        "present:List<\n"
+            + "  string(hello)\n"
+            + "  string(world)\n"
+            + "  string(!)\n"
+            + ">\n"
+            + "empty:List<\n"
+            + ">",
+        stringify(new WithList()));
   }
 
   @Override
   @Test
   public void optional() {
     assertEquals(
-        "present:value(Optional[hello])\nempty:value(Optional.empty)",
+        "present:Optional<\n" + "  string(hello)\n" + ">\n" + "empty:Optional.empty()",
         stringify(new WithOptional()));
   }
 
   @Override
   @Test
   public void simple() {
-    assertEquals("value:value(1)", stringify(new Simple()));
+    assertEquals(
+        "string:string(string)\n"
+            + "integer:integer(1)\n"
+            + "character:character(c)\n"
+            + "value:float(2.5)\n"
+            + "doubles:List<\n"
+            + "  double(1.1)\n"
+            + "  double(2.2)\n"
+            + "  double(3.3)\n"
+            + ">",
+        stringify(new Simple()));
   }
 
   @Override
   @Test
   public void superClass() {
-    assertEquals("value:value(1)\nnumber:value(2.3)", stringify(new Derived()));
+    assertEquals(
+        "string:string(string)\n"
+            + "integer:integer(1)\n"
+            + "character:character(c)\n"
+            + "value:float(2.5)\n"
+            + "doubles:List<\n"
+            + "  double(1.1)\n"
+            + "  double(2.2)\n"
+            + "  double(3.3)\n"
+            + ">\n"
+            + "number:double(2.3)",
+        stringify(new Derived()));
   }
 
   @Override
@@ -108,8 +145,8 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
             + "    >\n"
             + "  >\n"
             + ">\n"
-            + "string:value(hello)\n"
-            + "number:value(0)\n"
+            + "string:string(hello)\n"
+            + "number:integer(0)\n"
             + "outputs:List<\n"
             + "  OutputPath(hello.txt)\n"
             + "  OutputPath(world.txt)\n"
@@ -125,7 +162,12 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   @Override
   public void buildTarget() {
     assertEquals(
-        "target:path(/project/other)value(Optional[other])value(//some)value(target)value([flavor1, flavor2])",
+        "target:path(/project/other)Optional<\n"
+            + "  string(other)\n"
+            + ">string(//some)string(target)Set<\n"
+            + "  string(flavor1)\n"
+            + "  string(flavor2)\n"
+            + ">",
         stringify(new WithBuildTarget()));
   }
 

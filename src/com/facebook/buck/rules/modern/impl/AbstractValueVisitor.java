@@ -58,4 +58,51 @@ abstract class AbstractValueVisitor<E extends Exception> implements ValueVisitor
   public <T extends AddsToRuleKey> void visitDynamic(T value, ClassInfo<T> classInfo) throws E {
     classInfo.visit(value, this);
   }
+
+  protected abstract void visitSimple(Object value) throws E;
+
+  @Override
+  public void visitString(String value) throws E {
+    visitSimple(value);
+  }
+
+  @Override
+  public void visitCharacter(Character value) throws E {
+    visitSimple(value);
+  }
+
+  @Override
+  public void visitBoolean(Boolean value) throws E {
+    visitSimple(value);
+  }
+
+  @Override
+  public void visitByte(Byte value) throws E {
+    visitSimple(value);
+  }
+
+  @Override
+  public void visitShort(Short value) throws E {
+    visitSimple(value);
+  }
+
+  @Override
+  public void visitInteger(Integer value) throws E {
+    visitSimple(value);
+  }
+
+  @Override
+  public void visitLong(Long value) throws E {
+    visitSimple(value);
+  }
+
+  @Override
+  public void visitFloat(Float value) throws E {
+    visitSimple(value);
+  }
+
+  @Override
+  public void visitDouble(Double value) throws E {
+    visitSimple(value);
+  }
 }

@@ -90,11 +90,6 @@ public class StringifyingValueVisitor implements ValueVisitor<RuntimeException> 
   }
 
   @Override
-  public void visitSimple(Object value) {
-    append("value(%s)", value);
-  }
-
-  @Override
   public <T extends AddsToRuleKey> void visitDynamic(T value, ClassInfo<T> classInfo)
       throws RuntimeException {
     container(
@@ -102,6 +97,51 @@ public class StringifyingValueVisitor implements ValueVisitor<RuntimeException> 
         () -> {
           classInfo.visit(value, this);
         });
+  }
+
+  @Override
+  public void visitString(String value) {
+    append("string(%s)", value);
+  }
+
+  @Override
+  public void visitCharacter(Character value) {
+    append("character(%s)", value);
+  }
+
+  @Override
+  public void visitBoolean(Boolean value) {
+    append("boolean(%s)", value);
+  }
+
+  @Override
+  public void visitByte(Byte value) {
+    append("byte(%s)", value);
+  }
+
+  @Override
+  public void visitShort(Short value) {
+    append("short(%s)", value);
+  }
+
+  @Override
+  public void visitInteger(Integer value) {
+    append("integer(%s)", value);
+  }
+
+  @Override
+  public void visitLong(Long value) {
+    append("long(%s)", value);
+  }
+
+  @Override
+  public void visitFloat(Float value) {
+    append("float(%s)", value);
+  }
+
+  @Override
+  public void visitDouble(Double value) {
+    append("double(%s)", value);
   }
 
   private void container(String label, Runnable runner) {
@@ -137,7 +177,7 @@ public class StringifyingValueVisitor implements ValueVisitor<RuntimeException> 
   }
 
   @Override
-  public void visitPath(Path path) throws RuntimeException {
+  public void visitPath(Path path) {
     append("path(%s)", MorePaths.pathWithUnixSeparators(path));
   }
 }

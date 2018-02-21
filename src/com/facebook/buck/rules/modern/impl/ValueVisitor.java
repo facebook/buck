@@ -43,9 +43,25 @@ public interface ValueVisitor<E extends Exception> {
 
   <T> void visitField(Field field, T value, ValueTypeInfo<T> valueTypeInfo) throws E;
 
-  void visitSimple(Object value);
-
   <T extends AddsToRuleKey> void visitDynamic(T value, ClassInfo<T> classInfo) throws E;
 
   void visitPath(Path path) throws E;
+
+  void visitString(String value) throws E;
+
+  void visitCharacter(Character value) throws E;
+
+  void visitBoolean(Boolean value) throws E;
+
+  void visitByte(Byte value) throws E;
+
+  void visitShort(Short value) throws E;
+
+  void visitInteger(Integer value) throws E;
+
+  void visitLong(Long value) throws E;
+
+  void visitFloat(Float value) throws E;
+
+  void visitDouble(Double value) throws E;
 }

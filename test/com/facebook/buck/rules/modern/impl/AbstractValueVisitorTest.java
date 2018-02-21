@@ -120,7 +120,11 @@ abstract class AbstractValueVisitorTest {
   }
 
   public static class Simple implements FakeBuildable {
-    @AddToRuleKey private final int value = 1;
+    @AddToRuleKey private final String string = "string";
+    @AddToRuleKey private final int integer = 1;
+    @AddToRuleKey private final Character character = 'c';
+    @AddToRuleKey private final float value = 2.50f;
+    @AddToRuleKey private final ImmutableList<Double> doubles = ImmutableList.of(1.1, 2.2, 3.3);
   }
 
   public static class Derived extends Simple {

@@ -43,8 +43,8 @@ public class BuildTargetTypeInfo implements ValueTypeInfo<BuildTarget> {
     UnflavoredBuildTarget unflavored = value.getUnflavoredBuildTarget();
     visitor.visitPath(unflavored.getCellPath());
     Holder.cellNameTypeInfo.visit(unflavored.getCell(), visitor);
-    visitor.visitSimple(unflavored.getBaseName());
-    visitor.visitSimple(unflavored.getShortName());
+    visitor.visitString(unflavored.getBaseName());
+    visitor.visitString(unflavored.getShortName());
     Holder.flavorsTypeInfo.visit(
         value
             .getFlavors()

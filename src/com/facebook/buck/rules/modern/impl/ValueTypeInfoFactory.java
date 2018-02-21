@@ -24,7 +24,6 @@ import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ImmutableListValueType
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ImmutableSortedSetValueTypeInfo;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.OptionalValueTypeInfo;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.OutputPathValueTypeInfo;
-import com.facebook.buck.rules.modern.impl.ValueTypeInfos.SimpleValueTypeInfo;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
@@ -40,7 +39,6 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -83,6 +81,7 @@ class ValueTypeInfoFactory {
       Class<?> rawClass = Primitives.wrap((Class<?>) type);
       // These types need no processing for
       return rawClass.equals(String.class)
+          || rawClass.equals(Character.class)
           || rawClass.equals(Boolean.class)
           || rawClass.equals(Byte.class)
           || rawClass.equals(Short.class)
@@ -90,36 +89,8 @@ class ValueTypeInfoFactory {
           || rawClass.equals(Long.class)
           || rawClass.equals(Float.class)
           || rawClass.equals(Double.class);
-    } else if (type instanceof ParameterizedType) {
-      ParameterizedType parameterizedType = (ParameterizedType) type;
-      checkSupportedGeneric(parameterizedType);
-      Type[] typeArguments = parameterizedType.getActualTypeArguments();
-      return Arrays.stream(typeArguments).allMatch(ValueTypeInfoFactory::isSimpleType);
     }
-    throw new IllegalArgumentException(
-        String.format("%s is not a Class or ParameterizedType.", type.getTypeName()));
-  }
-
-  static void checkSupportedGeneric(ParameterizedType parameterizedType) {
-    Type rawType = parameterizedType.getRawType();
-    if (rawType instanceof Class<?>) {
-      Class<?> rawClass = (Class<?>) rawType;
-      if (rawClass.isAssignableFrom(ImmutableSet.class)) {
-        throw new IllegalArgumentException(
-            "Don't use ImmutableSet in Buildables. Use ImmutableSortedSet instead.");
-      } else if (rawClass.isAssignableFrom(ImmutableMap.class)) {
-        throw new IllegalArgumentException(
-            "Don't use ImmutableMap in Buildables. Use ImmutableSortedMap instead.");
-      } else if (rawClass.equals(Either.class)
-          || rawClass.equals(Pair.class)
-          || rawClass.equals(ImmutableList.class)
-          || rawClass.equals(ImmutableSortedSet.class)
-          || rawClass.equals(ImmutableSortedMap.class)
-          || rawClass.equals(Optional.class)) {
-        return;
-      }
-    }
-    throw new IllegalArgumentException("Unsupported type: " + parameterizedType);
+    return false;
   }
 
   private static ValueTypeInfo<?> computeTypeInfo(Type type) {
@@ -127,7 +98,7 @@ class ValueTypeInfoFactory {
     Preconditions.checkArgument(!(type instanceof WildcardType));
 
     if (isSimpleType(type)) {
-      return SimpleValueTypeInfo.INSTANCE;
+      return ValueTypeInfos.forSimpleType(type);
     } else if (type instanceof Class) {
       Class<?> rawClass = Primitives.wrap((Class<?>) type);
       if (rawClass.equals(Path.class)) {
