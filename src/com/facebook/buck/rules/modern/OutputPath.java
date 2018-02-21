@@ -47,4 +47,20 @@ public final class OutputPath implements AddsToRuleKey {
   Path getPath() {
     return path;
   }
+
+  public static Internals internals() {
+    return Internals.INSTANCE;
+  }
+
+  /**
+   * Provides access to internal implementation details of OutputPaths. Using this should be
+   * avoided.
+   */
+  public static class Internals {
+    private static final Internals INSTANCE = new Internals();
+
+    public Path getPath(OutputPath outputPath) {
+      return outputPath.getPath();
+    }
+  }
 }

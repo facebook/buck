@@ -18,7 +18,8 @@ package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.OutputPath;
-import com.facebook.buck.rules.modern.impl.ValueTypeInfos.IterableValueTypeInfo;
+import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ImmutableListValueTypeInfo;
+import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ImmutableSortedSetValueTypeInfo;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.OptionalValueTypeInfo;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.OutputPathValueTypeInfo;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.SimpleValueTypeInfo;
@@ -164,13 +165,13 @@ class ValueTypeInfoFactory {
       } else if (rawClass.equals(ImmutableList.class)) {
         Type[] typeArguments = ((ParameterizedType) type).getActualTypeArguments();
         Preconditions.checkState(typeArguments.length == 1);
-        return new IterableValueTypeInfo<>(forType(typeArguments[0]));
+        return new ImmutableListValueTypeInfo<>(forType(typeArguments[0]));
       } else if (rawClass.equals(ImmutableSortedSet.class)) {
         // SortedSet is tested second because it is a subclass of Set, and therefore can
         // be assigned to something of type Set, but not vice versa.
         Type[] typeArguments = ((ParameterizedType) type).getActualTypeArguments();
         Preconditions.checkState(typeArguments.length == 1);
-        return new IterableValueTypeInfo<>(forType(typeArguments[0]));
+        return new ImmutableSortedSetValueTypeInfo<>(forType(typeArguments[0]));
       } else if (rawClass.equals(ImmutableSortedMap.class)) {
         // TODO(cjhopman): handle ImmutableSortedMap
         throw new UnsupportedOperationException();

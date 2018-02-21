@@ -115,6 +115,16 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
     return type;
   }
 
+  @Override
+  public <E extends Exception> void visit(T buildable, ValueVisitor<E> visitor) throws E {
+    if (superInfo.isPresent()) {
+      superInfo.get().visit(buildable, visitor);
+    }
+    for (FieldInfo<?> extractor : fields) {
+      extractor.visit(buildable, visitor);
+    }
+  }
+
   private static class FieldInfo<T> {
     private Field field;
     private ValueTypeInfo<T> valueTypeInfo;
@@ -147,6 +157,10 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
       } catch (IllegalAccessException e) {
         throw new RuntimeException(e);
       }
+    }
+
+    public <E extends Exception> void visit(Buildable ruleImpl, ValueVisitor<E> visitor) throws E {
+      visitor.visitField(field, getValue(ruleImpl, field), valueTypeInfo);
     }
   }
 }

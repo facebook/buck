@@ -31,4 +31,6 @@ interface ValueTypeInfo<T> {
       T value, InputRuleResolver inputRuleResolver, Consumer<BuildRule> builder) {}
 
   default void extractOutput(String name, T value, BiConsumer<String, OutputPath> builder) {}
+
+  <E extends Exception> void visit(T value, ValueVisitor<E> visitor) throws E;
 }

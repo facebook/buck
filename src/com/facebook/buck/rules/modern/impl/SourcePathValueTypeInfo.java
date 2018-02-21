@@ -36,4 +36,9 @@ public class SourcePathValueTypeInfo implements ValueTypeInfo<SourcePath> {
   @Override
   public void extractOutput(
       String name, SourcePath value, BiConsumer<String, OutputPath> builder) {}
+
+  @Override
+  public <E extends Exception> void visit(SourcePath value, ValueVisitor<E> visitor) throws E {
+    visitor.visitSourcePath(value);
+  }
 }

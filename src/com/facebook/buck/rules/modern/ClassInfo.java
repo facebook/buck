@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.modern.impl.ValueVisitor;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -34,4 +35,6 @@ public interface ClassInfo<T extends Buildable> {
 
   /** Returns the rule typename for Buildables of this type. */
   String getType();
+
+  <E extends Exception> void visit(T buildable, ValueVisitor<E> visitor) throws E;
 }
