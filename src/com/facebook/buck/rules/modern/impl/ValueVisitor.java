@@ -23,6 +23,7 @@ import com.facebook.buck.rules.modern.OutputPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.lang.reflect.Field;
+import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -45,4 +46,6 @@ public interface ValueVisitor<E extends Exception> {
   void visitSimple(Object value);
 
   <T extends AddsToRuleKey> void visitDynamic(T value, ClassInfo<T> classInfo) throws E;
+
+  void visitPath(Path path) throws E;
 }

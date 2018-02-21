@@ -20,6 +20,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.InputRuleResolver;
 import com.facebook.buck.rules.modern.OutputPath;
+import java.nio.file.Path;
 import java.util.function.Consumer;
 
 /** Computes all the deps by visiting all referenced SourcePaths. */
@@ -43,4 +44,10 @@ public class DepsComputingVisitor extends AbstractValueVisitor<RuntimeException>
 
   @Override
   public void visitSimple(Object value) {}
+
+  @Override
+  public void visitPath(Path path) {
+    // TODO(cjhopman): Should this require some sort of explicit recognition that the Path doesn't
+    // contribute to deps?
+  }
 }

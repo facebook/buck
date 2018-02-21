@@ -133,4 +133,10 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
     expectLastCall().times(3);
     apply(value);
   }
+
+  @Test
+  @Override
+  public void buildTarget() {
+    apply(new WithBuildTarget());
+  }
 }

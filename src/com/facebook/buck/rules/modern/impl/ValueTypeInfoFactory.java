@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.OutputPath;
@@ -139,6 +140,8 @@ class ValueTypeInfoFactory {
         throw new UnsupportedOperationException();
       } else if (rawClass.equals(OutputPath.class)) {
         return OutputPathValueTypeInfo.INSTANCE;
+      } else if (BuildTarget.class.isAssignableFrom(rawClass)) {
+        return BuildTargetTypeInfo.INSTANCE;
       } else if (AddsToRuleKey.class.isAssignableFrom(rawClass)) {
         return DynamicTypeInfo.INSTANCE;
       }

@@ -18,6 +18,7 @@ package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.OutputPath;
+import java.nio.file.Path;
 import java.util.function.Consumer;
 
 /** Enumerates all the referenced SourcePaths. */
@@ -38,4 +39,10 @@ public class InputsVisitor extends AbstractValueVisitor<RuntimeException> {
 
   @Override
   public void visitSimple(Object value) {}
+
+  @Override
+  public void visitPath(Path path) throws RuntimeException {
+    // TODO(cjhopman): Should this require some sort of explicit recognition that the Path doesn't
+    // contribute to inputs?
+  }
 }

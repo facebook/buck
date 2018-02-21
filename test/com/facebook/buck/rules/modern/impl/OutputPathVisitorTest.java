@@ -106,4 +106,10 @@ public class OutputPathVisitorTest extends AbstractValueVisitorTest {
         ImmutableList.builder().addAll(value.outputs).add(value.otherOutput).build(),
         getOutputs(value));
   }
+
+  @Test
+  @Override
+  public void buildTarget() {
+    MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithBuildTarget()));
+  }
 }

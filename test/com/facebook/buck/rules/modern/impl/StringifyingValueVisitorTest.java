@@ -121,6 +121,14 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
         stringify(new Complex()));
   }
 
+  @Test
+  @Override
+  public void buildTarget() {
+    assertEquals(
+        "target:path(/project/other)value(Optional[other])value(//some)value(target)value([flavor1, flavor2])",
+        stringify(new WithBuildTarget()));
+  }
+
   private String stringify(Buildable value) {
     StringifyingValueVisitor visitor = new StringifyingValueVisitor();
     DefaultClassInfoFactory.forInstance(value).visit(value, visitor);

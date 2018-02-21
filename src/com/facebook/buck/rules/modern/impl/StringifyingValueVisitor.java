@@ -25,6 +25,7 @@ import com.facebook.buck.util.Scope;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.lang.reflect.Field;
+import java.nio.file.Path;
 import java.util.Optional;
 
 /** A ValueVisitor that can be used to construct a String representation of an object. */
@@ -133,5 +134,10 @@ public class StringifyingValueVisitor implements ValueVisitor<RuntimeException> 
 
   public String getValue() {
     return builder.toString().trim();
+  }
+
+  @Override
+  public void visitPath(Path path) throws RuntimeException {
+    append("path(%s)", MorePaths.pathWithUnixSeparators(path));
   }
 }

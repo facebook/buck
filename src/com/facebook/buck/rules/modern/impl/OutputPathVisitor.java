@@ -18,6 +18,7 @@ package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.OutputPath;
+import java.nio.file.Path;
 import java.util.function.Consumer;
 
 /** Visits all the referenced OutputPaths. */
@@ -38,4 +39,7 @@ public class OutputPathVisitor extends AbstractValueVisitor<RuntimeException> {
 
   @Override
   public void visitSimple(Object value) {}
+
+  @Override
+  public void visitPath(Path path) throws RuntimeException {}
 }

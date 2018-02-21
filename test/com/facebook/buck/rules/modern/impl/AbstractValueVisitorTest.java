@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
@@ -70,6 +71,9 @@ abstract class AbstractValueVisitorTest {
   @Test
   public abstract void complex();
 
+  @Test
+  public abstract void buildTarget();
+
   public interface FakeBuildable extends Buildable {
     @Override
     default ImmutableList<Step> getBuildSteps(
@@ -79,6 +83,13 @@ abstract class AbstractValueVisitorTest {
         BuildCellRelativePathFactory buildCellPathFactory) {
       return ImmutableList.of();
     }
+  }
+
+  public static class WithBuildTarget implements FakeBuildable {
+    @AddToRuleKey
+    final BuildTarget target =
+        BuildTargetFactory.newInstance(
+            Paths.get("/project/other"), "other//some:target#flavor1,flavor2");
   }
 
   public static class WithOutputPath implements FakeBuildable {
