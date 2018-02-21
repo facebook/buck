@@ -87,13 +87,6 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
             "All static fields of a Buildable's outer class must be final (%s.%s)",
             outerClazz.getSimpleName(),
             field.getName());
-        Preconditions.checkArgument(
-            ValueTypeInfoFactory.isSimpleType(field.getType()),
-            "Static members of Buildable's outer class must be \"simple\" (%s.%s)",
-            outerClazz.getSimpleName(),
-            field.getName());
-        FieldInfo<?> fieldInfo = FieldInfo.forField(field);
-        fieldsBuilder.add(fieldInfo);
       }
     }
     this.fields = fieldsBuilder.build();
