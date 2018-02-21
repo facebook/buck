@@ -88,7 +88,7 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
             outerClazz.getSimpleName(),
             field.getName());
         Preconditions.checkArgument(
-            FieldTypeInfoFactory.isSimpleType(field.getType()),
+            ValueTypeInfoFactory.isSimpleType(field.getType()),
             "Static members of Buildable's outer class must be \"simple\" (%s.%s)",
             outerClazz.getSimpleName(),
             field.getName());
@@ -124,26 +124,26 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
 
   private static class FieldInfo<T> {
     private Field field;
-    private FieldTypeInfo<T> fieldTypeInfo;
+    private ValueTypeInfo<T> valueTypeInfo;
 
-    FieldInfo(Field field, FieldTypeInfo<T> fieldTypeInfo) {
+    FieldInfo(Field field, ValueTypeInfo<T> valueTypeInfo) {
       this.field = field;
-      this.fieldTypeInfo = fieldTypeInfo;
+      this.valueTypeInfo = valueTypeInfo;
     }
 
     static FieldInfo<?> forField(Field field) {
       Type type = field.getGenericType();
-      FieldTypeInfo<?> fieldTypeInfo = FieldTypeInfoFactory.forFieldTypeToken(TypeToken.of(type));
-      return new FieldInfo<>(field, fieldTypeInfo);
+      ValueTypeInfo<?> valueTypeInfo = ValueTypeInfoFactory.forTypeToken(TypeToken.of(type));
+      return new FieldInfo<>(field, valueTypeInfo);
     }
 
     void extractDep(
         Buildable ruleImpl, InputRuleResolver inputRuleResolver, Consumer<BuildRule> builder) {
-      fieldTypeInfo.extractDep(getValue(ruleImpl, field), inputRuleResolver, builder);
+      valueTypeInfo.extractDep(getValue(ruleImpl, field), inputRuleResolver, builder);
     }
 
     void extractOutput(Buildable ruleImpl, BiConsumer<String, OutputPath> builder) {
-      fieldTypeInfo.extractOutput(field.getName(), getValue(ruleImpl, field), builder);
+      valueTypeInfo.extractOutput(field.getName(), getValue(ruleImpl, field), builder);
     }
 
     private T getValue(Buildable ruleImpl, Field field) {

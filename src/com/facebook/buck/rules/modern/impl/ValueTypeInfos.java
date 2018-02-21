@@ -23,13 +23,13 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-class FieldTypeInfos {
-  static class SimpleFieldTypeInfo implements FieldTypeInfo<Object> {
-    static final FieldTypeInfo<Object> INSTANCE = new SimpleFieldTypeInfo();
+class ValueTypeInfos {
+  static class SimpleValueTypeInfo implements ValueTypeInfo<Object> {
+    static final ValueTypeInfo<Object> INSTANCE = new SimpleValueTypeInfo();
   }
 
-  static class OutputPathFieldTypeInfo implements FieldTypeInfo<OutputPath> {
-    public static final OutputPathFieldTypeInfo INSTANCE = new OutputPathFieldTypeInfo();
+  static class OutputPathValueTypeInfo implements ValueTypeInfo<OutputPath> {
+    public static final OutputPathValueTypeInfo INSTANCE = new OutputPathValueTypeInfo();
 
     @Override
     public void extractOutput(
@@ -38,11 +38,11 @@ class FieldTypeInfos {
     }
   }
 
-  static class OptionalFieldTypeInfo<T> implements FieldTypeInfo<Optional<T>> {
-    private final FieldTypeInfo<T> innerType;
+  static class OptionalValueTypeInfo<T> implements ValueTypeInfo<Optional<T>> {
+    private final ValueTypeInfo<T> innerType;
 
-    OptionalFieldTypeInfo(FieldTypeInfo<T> fieldTypeInfo) {
-      this.innerType = fieldTypeInfo;
+    OptionalValueTypeInfo(ValueTypeInfo<T> valueTypeInfo) {
+      this.innerType = valueTypeInfo;
     }
 
     @Override
@@ -58,10 +58,10 @@ class FieldTypeInfos {
     }
   }
 
-  static class IterableFieldTypeInfo<T> implements FieldTypeInfo<Iterable<T>> {
-    private final FieldTypeInfo<T> innerType;
+  static class IterableValueTypeInfo<T> implements ValueTypeInfo<Iterable<T>> {
+    private final ValueTypeInfo<T> innerType;
 
-    IterableFieldTypeInfo(FieldTypeInfo<T> innerType) {
+    IterableValueTypeInfo(ValueTypeInfo<T> innerType) {
       this.innerType = innerType;
     }
 

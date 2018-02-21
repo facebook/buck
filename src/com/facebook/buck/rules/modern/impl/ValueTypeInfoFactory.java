@@ -18,6 +18,10 @@ package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.OutputPath;
+import com.facebook.buck.rules.modern.impl.ValueTypeInfos.IterableValueTypeInfo;
+import com.facebook.buck.rules.modern.impl.ValueTypeInfos.OptionalValueTypeInfo;
+import com.facebook.buck.rules.modern.impl.ValueTypeInfos.OutputPathValueTypeInfo;
+import com.facebook.buck.rules.modern.impl.ValueTypeInfos.SimpleValueTypeInfo;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
@@ -37,32 +41,31 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-class FieldTypeInfoFactory {
-  private static final ConcurrentHashMap<Type, FieldTypeInfo<?>> fieldTypesInfo =
+class ValueTypeInfoFactory {
+  private static final ConcurrentHashMap<Type, ValueTypeInfo<?>> typeInfos =
       new ConcurrentHashMap<>();
 
   @SuppressWarnings("unchecked")
-  static <T> FieldTypeInfo<T> forFieldTypeToken(TypeToken<T> typeToken) {
-    return (FieldTypeInfo<T>) forFieldType(typeToken.getType());
+  static <T> ValueTypeInfo<T> forTypeToken(TypeToken<T> typeToken) {
+    return (ValueTypeInfo<T>) forType(typeToken.getType());
   }
 
   // TODO(cjhopman): Figure out if we can use TypeToken throughout.
-  static FieldTypeInfo<?> forFieldType(Type type) {
-    FieldTypeInfo<?> info = fieldTypesInfo.get(type);
+  static ValueTypeInfo<?> forType(Type type) {
+    ValueTypeInfo<?> info = typeInfos.get(type);
     if (info != null) {
       return info;
     }
     try {
       if (type instanceof ParameterizedType) {
         for (Type t : ((ParameterizedType) type).getActualTypeArguments()) {
-          // Ensure that each required type argument's FieldTypeInfo is already computed.
-          forFieldType(t);
+          // Ensure that each required type argument's ValueTypeInfo is already computed.
+          forType(t);
         }
       }
-      return fieldTypesInfo.computeIfAbsent(type, FieldTypeInfoFactory::computeFieldTypeInfo);
+      return typeInfos.computeIfAbsent(type, ValueTypeInfoFactory::computeTypeInfo);
     } catch (Exception t) {
-      throw new RuntimeException(
-          "Failed getting field type info for type " + type.getTypeName(), t);
+      throw new RuntimeException("Failed getting type info for type " + type.getTypeName(), t);
     }
   }
 
@@ -87,7 +90,7 @@ class FieldTypeInfoFactory {
       ParameterizedType parameterizedType = (ParameterizedType) type;
       checkSupportedGeneric(parameterizedType);
       Type[] typeArguments = parameterizedType.getActualTypeArguments();
-      return Arrays.stream(typeArguments).allMatch(FieldTypeInfoFactory::isSimpleType);
+      return Arrays.stream(typeArguments).allMatch(ValueTypeInfoFactory::isSimpleType);
     }
     throw new IllegalArgumentException(
         String.format("%s is not a Class or ParameterizedType.", type.getTypeName()));
@@ -115,19 +118,19 @@ class FieldTypeInfoFactory {
     throw new IllegalArgumentException("Unsupported type: " + parameterizedType);
   }
 
-  private static FieldTypeInfo<?> computeFieldTypeInfo(Type type) {
+  private static ValueTypeInfo<?> computeTypeInfo(Type type) {
     Preconditions.checkArgument(!(type instanceof TypeVariable));
     Preconditions.checkArgument(!(type instanceof WildcardType));
 
     if (isSimpleType(type)) {
-      return FieldTypeInfos.SimpleFieldTypeInfo.INSTANCE;
+      return SimpleValueTypeInfo.INSTANCE;
     } else if (type instanceof Class) {
       Class<?> rawClass = Primitives.wrap((Class<?>) type);
       if (rawClass.equals(Path.class)) {
         throw new IllegalArgumentException(
-            "Buildables should not have Path fields. Use SourcePath or OutputPath instead");
+            "Buildables should not have Path references. Use SourcePath or OutputPath instead");
       } else if (SourcePath.class.isAssignableFrom(rawClass)) {
-        return SourcePathFieldTypeInfo.INSTANCE;
+        return SourcePathValueTypeInfo.INSTANCE;
       }
 
       if (rawClass.isEnum()) {
@@ -136,7 +139,7 @@ class FieldTypeInfoFactory {
       }
 
       if (rawClass.equals(OutputPath.class)) {
-        return FieldTypeInfos.OutputPathFieldTypeInfo.INSTANCE;
+        return OutputPathValueTypeInfo.INSTANCE;
       }
     } else if (type instanceof ParameterizedType) {
       // This is a parameterized type where one of the parameters requires special handling (i.e.
@@ -161,22 +164,22 @@ class FieldTypeInfoFactory {
       } else if (rawClass.equals(ImmutableList.class)) {
         Type[] typeArguments = ((ParameterizedType) type).getActualTypeArguments();
         Preconditions.checkState(typeArguments.length == 1);
-        return new FieldTypeInfos.IterableFieldTypeInfo<>(forFieldType(typeArguments[0]));
+        return new IterableValueTypeInfo<>(forType(typeArguments[0]));
       } else if (rawClass.equals(ImmutableSortedSet.class)) {
         // SortedSet is tested second because it is a subclass of Set, and therefore can
         // be assigned to something of type Set, but not vice versa.
         Type[] typeArguments = ((ParameterizedType) type).getActualTypeArguments();
         Preconditions.checkState(typeArguments.length == 1);
-        return new FieldTypeInfos.IterableFieldTypeInfo<>(forFieldType(typeArguments[0]));
+        return new IterableValueTypeInfo<>(forType(typeArguments[0]));
       } else if (rawClass.equals(ImmutableSortedMap.class)) {
         // TODO(cjhopman): handle ImmutableSortedMap
         throw new UnsupportedOperationException();
       } else if (rawClass.equals(Optional.class)) {
         Type[] typeArguments = ((ParameterizedType) type).getActualTypeArguments();
         Preconditions.checkState(typeArguments.length == 1);
-        return new FieldTypeInfos.OptionalFieldTypeInfo<>(forFieldType(typeArguments[0]));
+        return new OptionalValueTypeInfo<>(forType(typeArguments[0]));
       }
     }
-    throw new IllegalArgumentException("Cannot create FieldTypeInfo for type: " + type);
+    throw new IllegalArgumentException("Cannot create ValueTypeInfo for type: " + type);
   }
 }

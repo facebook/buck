@@ -23,10 +23,10 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
- * FieldTypeInfo&lt;T&gt; provides methods to extract deps, outputs, rulekeys from fields of type T.
+ * ValueTypeInfo&lt;T&gt; provides methods to extract deps, outputs, rulekeys from values of type T.
  */
 @SuppressWarnings("unused")
-interface FieldTypeInfo<T> {
+interface ValueTypeInfo<T> {
   default void extractDep(
       T value, InputRuleResolver inputRuleResolver, Consumer<BuildRule> builder) {}
 

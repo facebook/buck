@@ -51,7 +51,7 @@ import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-public class FieldTypeInfosTest {
+public class ValueTypeInfosTest {
   private InputRuleResolver inputRuleResolver = createStrictMock(InputRuleResolver.class);
 
   @SuppressWarnings("unchecked")
@@ -64,8 +64,8 @@ public class FieldTypeInfosTest {
 
   @Test
   public void testInteger() {
-    FieldTypeInfo<Integer> typeInfo =
-        FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<Integer>() {});
+    ValueTypeInfo<Integer> typeInfo =
+        ValueTypeInfoFactory.forTypeToken(new TypeToken<Integer>() {});
 
     int value = 1;
     replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
@@ -76,8 +76,7 @@ public class FieldTypeInfosTest {
 
   @Test
   public void testString() {
-    FieldTypeInfo<String> typeInfo =
-        FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<String>() {});
+    ValueTypeInfo<String> typeInfo = ValueTypeInfoFactory.forTypeToken(new TypeToken<String>() {});
 
     String value = "hello";
     replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
@@ -88,18 +87,18 @@ public class FieldTypeInfosTest {
 
   @Test(expected = RuntimeException.class)
   public void testPath() {
-    FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<Path>() {});
+    ValueTypeInfoFactory.forTypeToken(new TypeToken<Path>() {});
   }
 
   @Test(expected = RuntimeException.class)
   public void testObject() {
-    FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<Object>() {});
+    ValueTypeInfoFactory.forTypeToken(new TypeToken<Object>() {});
   }
 
   @Test
   public void testSet() {
     try {
-      FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<Set<String>>() {});
+      ValueTypeInfoFactory.forTypeToken(new TypeToken<Set<String>>() {});
       fail();
     } catch (Exception e) {
       assertThat(
@@ -113,28 +112,28 @@ public class FieldTypeInfosTest {
 
   @Test(expected = RuntimeException.class)
   public void testSortedSet() {
-    FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<SortedSet<String>>() {});
+    ValueTypeInfoFactory.forTypeToken(new TypeToken<SortedSet<String>>() {});
   }
 
   @Test(expected = RuntimeException.class)
   public void testImmutableSet() {
-    FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<ImmutableSet<String>>() {});
+    ValueTypeInfoFactory.forTypeToken(new TypeToken<ImmutableSet<String>>() {});
   }
 
   @Test(expected = RuntimeException.class)
   public void testRandomType() {
-    FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<FieldTypeInfos>() {});
+    ValueTypeInfoFactory.forTypeToken(new TypeToken<ValueTypeInfos>() {});
   }
 
   @Test(expected = RuntimeException.class)
   public void testBadNestedTypeParamater() {
-    FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<Optional<Optional<Path>>>() {});
+    ValueTypeInfoFactory.forTypeToken(new TypeToken<Optional<Optional<Path>>>() {});
   }
 
   @Test
   public void testPathSourcePath() {
-    FieldTypeInfo<SourcePath> typeInfo =
-        FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<SourcePath>() {});
+    ValueTypeInfo<SourcePath> typeInfo =
+        ValueTypeInfoFactory.forTypeToken(new TypeToken<SourcePath>() {});
 
     PathSourcePath sourcePath = FakeSourcePath.of(filesystem, "path");
     EasyMock.expect(inputRuleResolver.resolve(sourcePath)).andReturn(Optional.empty());
@@ -147,8 +146,8 @@ public class FieldTypeInfosTest {
 
   @Test
   public void testBuildTargetSourcePath() {
-    FieldTypeInfo<SourcePath> typeInfo =
-        FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<SourcePath>() {});
+    ValueTypeInfo<SourcePath> typeInfo =
+        ValueTypeInfoFactory.forTypeToken(new TypeToken<SourcePath>() {});
 
     BuildTarget target = BuildTarget.of(Paths.get("some"), "//some", "name");
     BuildRule rule = new FakeBuildRule(target, ImmutableSortedSet.of());
@@ -165,8 +164,8 @@ public class FieldTypeInfosTest {
 
   @Test
   public void testOptional() {
-    FieldTypeInfo<Optional<SourcePath>> typeInfo =
-        FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<Optional<SourcePath>>() {});
+    ValueTypeInfo<Optional<SourcePath>> typeInfo =
+        ValueTypeInfoFactory.forTypeToken(new TypeToken<Optional<SourcePath>>() {});
 
     BuildTarget target = BuildTarget.of(Paths.get("some"), "//some", "name");
     BuildRule rule = new FakeBuildRule(target, ImmutableSortedSet.of());
@@ -184,8 +183,8 @@ public class FieldTypeInfosTest {
 
   @Test
   public void testEmptyOptional() {
-    FieldTypeInfo<Optional<SourcePath>> typeInfo =
-        FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<Optional<SourcePath>>() {});
+    ValueTypeInfo<Optional<SourcePath>> typeInfo =
+        ValueTypeInfoFactory.forTypeToken(new TypeToken<Optional<SourcePath>>() {});
 
     Optional<SourcePath> value = Optional.empty();
     replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
@@ -196,8 +195,8 @@ public class FieldTypeInfosTest {
 
   @Test
   public void testImmutableList() {
-    FieldTypeInfo<ImmutableList<SourcePath>> typeInfo =
-        FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<ImmutableList<SourcePath>>() {});
+    ValueTypeInfo<ImmutableList<SourcePath>> typeInfo =
+        ValueTypeInfoFactory.forTypeToken(new TypeToken<ImmutableList<SourcePath>>() {});
 
     BuildTarget target = BuildTarget.of(Paths.get("some"), "//some", "name");
     BuildRule rule = new FakeBuildRule(target, ImmutableSortedSet.of());

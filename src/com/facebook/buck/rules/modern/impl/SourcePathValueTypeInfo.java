@@ -23,9 +23,9 @@ import com.facebook.buck.rules.modern.OutputPath;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-/** FieldTypeInfo for SourcePaths. The SourcePath will be added to deps/inputs. */
-public class SourcePathFieldTypeInfo implements FieldTypeInfo<SourcePath> {
-  public static SourcePathFieldTypeInfo INSTANCE = new SourcePathFieldTypeInfo();
+/** ValueTypeInfo for SourcePaths. The SourcePath will be added to deps/inputs. */
+public class SourcePathValueTypeInfo implements ValueTypeInfo<SourcePath> {
+  public static SourcePathValueTypeInfo INSTANCE = new SourcePathValueTypeInfo();
 
   @Override
   public void extractDep(
