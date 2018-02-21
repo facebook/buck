@@ -242,8 +242,6 @@ final class Daemon implements Closeable {
     // so needs to be left in a consistent state even if the current command is interrupted
     // due to a client disconnection.
     synchronized (parser) {
-      LOG.debug("Nailgun server is shutting down");
-
       // signal to the main thread that we want to exit
       threadToInterrupt.interrupt();
     }

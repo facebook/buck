@@ -155,7 +155,6 @@ import com.facebook.buck.worker.WorkerProcessPool;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -1311,15 +1310,15 @@ public final class Main {
     Thread mainThread = Thread.currentThread();
     context.addClientListener(
         reason -> {
+          LOG.info("Nailgun client disconnected with " + reason.toString());
           if (Main.isSessionLeader && Main.commandSemaphoreNgClient.orElse(null) == context) {
-            LOG.info(
-                "Killing background processes on nailgun client disconnection"
-                    + Throwables.getStackTraceAsString(new Throwable()));
             // Process no longer wants work done on its behalf.
+            LOG.debug("Killing background processes on client disconnect");
             BgProcessKiller.killBgProcesses();
           }
 
           if (reason != NGClientDisconnectReason.SESSION_SHUTDOWN) {
+            LOG.debug("Killing all Buck jobs on client disconnect by interrupting the main thread");
             // signal daemon to complete required tasks and interrupt main thread
             // this will hopefully trigger InterruptedException and program shutdown
             daemon.interruptOnClientExit(mainThread);
