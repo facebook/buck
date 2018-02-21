@@ -38,7 +38,7 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
 
   private void apply(Buildable value) {
     replay(inputsConsumer);
-    DefaultClassInfoFactory.forBuildable(value).getInputs(value, inputsConsumer);
+    DefaultClassInfoFactory.forInstance(value).getInputs(value, inputsConsumer);
     verify(inputsConsumer);
   }
 
@@ -60,6 +60,14 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
   @Test
   public void set() {
     apply(new WithSet());
+  }
+
+  @Override
+  @Test
+  public void addsToRuleKey() {
+    inputsConsumer.accept(anyObject());
+    expectLastCall().times(3);
+    apply(new WithAddsToRuleKey());
   }
 
   static class WithSourcePathList implements FakeBuildable {
@@ -110,7 +118,7 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
   public void complex() {
     Complex value = new Complex();
     inputsConsumer.accept(anyObject());
-    expectLastCall().times(2);
+    expectLastCall().times(3);
     apply(value);
   }
 }

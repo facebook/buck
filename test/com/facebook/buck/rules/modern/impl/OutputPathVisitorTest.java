@@ -29,7 +29,7 @@ public class OutputPathVisitorTest extends AbstractValueVisitorTest {
 
   private ImmutableList<OutputPath> getOutputs(Buildable value) {
     ImmutableList.Builder<OutputPath> builder = ImmutableList.builder();
-    DefaultClassInfoFactory.forBuildable(value).getOutputs(value, builder::add);
+    DefaultClassInfoFactory.forInstance(value).getOutputs(value, builder::add);
     return builder.build();
   }
 
@@ -50,6 +50,12 @@ public class OutputPathVisitorTest extends AbstractValueVisitorTest {
   @Test
   public void set() {
     MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithSet()));
+  }
+
+  @Override
+  @Test
+  public void addsToRuleKey() {
+    MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithAddsToRuleKey()));
   }
 
   static class WithOutputPathList implements FakeBuildable {

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ImmutableListValueTypeInfo;
@@ -43,6 +44,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 class ValueTypeInfoFactory {
+
   private static final ConcurrentHashMap<Type, ValueTypeInfo<?>> typeInfos =
       new ConcurrentHashMap<>();
 
@@ -132,15 +134,13 @@ class ValueTypeInfoFactory {
             "Buildables should not have Path references. Use SourcePath or OutputPath instead");
       } else if (SourcePath.class.isAssignableFrom(rawClass)) {
         return SourcePathValueTypeInfo.INSTANCE;
-      }
-
-      if (rawClass.isEnum()) {
+      } else if (rawClass.isEnum()) {
         // TODO(cjhopman): handle enums
         throw new UnsupportedOperationException();
-      }
-
-      if (rawClass.equals(OutputPath.class)) {
+      } else if (rawClass.equals(OutputPath.class)) {
         return OutputPathValueTypeInfo.INSTANCE;
+      } else if (AddsToRuleKey.class.isAssignableFrom(rawClass)) {
+        return DynamicTypeInfo.INSTANCE;
       }
     } else if (type instanceof ParameterizedType) {
       // This is a parameterized type where one of the parameters requires special handling (i.e.
@@ -179,6 +179,8 @@ class ValueTypeInfoFactory {
         Type[] typeArguments = ((ParameterizedType) type).getActualTypeArguments();
         Preconditions.checkState(typeArguments.length == 1);
         return new OptionalValueTypeInfo<>(forType(typeArguments[0]));
+      } else if (AddsToRuleKey.class.isAssignableFrom(rawClass)) {
+        return DynamicTypeInfo.INSTANCE;
       }
     }
     throw new IllegalArgumentException("Cannot create ValueTypeInfo for type: " + type);

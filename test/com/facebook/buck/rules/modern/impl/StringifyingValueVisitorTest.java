@@ -25,51 +25,73 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   @Override
   @Test
   public void outputPath() {
-    assertEquals("output:OutputPath(some/path)\n", stringify(new WithOutputPath()));
+    assertEquals("output:OutputPath(some/path)", stringify(new WithOutputPath()));
   }
 
   @Override
   @Test
   public void sourcePath() {
-    assertEquals("path:SourcePath(/project/root/some/path)\n", stringify(new WithSourcePath()));
+    assertEquals("path:SourcePath(/project/root/some/path)", stringify(new WithSourcePath()));
   }
 
   @Override
   @Test
   public void set() {
-    assertEquals("present:value([!, hello, world])\nempty:value([])\n", stringify(new WithSet()));
+    assertEquals("present:value([!, hello, world])\nempty:value([])", stringify(new WithSet()));
   }
 
   @Override
   @Test
   public void list() {
-    assertEquals("present:value([hello, world, !])\nempty:value([])\n", stringify(new WithList()));
+    assertEquals("present:value([hello, world, !])\nempty:value([])", stringify(new WithList()));
   }
 
   @Override
   @Test
   public void optional() {
     assertEquals(
-        "present:value(Optional[hello])\nempty:value(Optional.empty)\n",
+        "present:value(Optional[hello])\nempty:value(Optional.empty)",
         stringify(new WithOptional()));
   }
 
   @Override
   @Test
   public void simple() {
-    assertEquals("value:value(1)\n", stringify(new Simple()));
+    assertEquals("value:value(1)", stringify(new Simple()));
   }
 
   @Override
   @Test
   public void superClass() {
-    assertEquals("value:value(1)\nnumber:value(2.3)\n", stringify(new Derived()));
+    assertEquals("value:value(1)\nnumber:value(2.3)", stringify(new Derived()));
   }
 
   @Override
   @Test
   public void empty() {
     assertEquals("", stringify(new Empty()));
+  }
+
+  @Override
+  @Test
+  public void addsToRuleKey() {
+    assertEquals(
+        "nested:com.facebook.buck.rules.modern.impl.AbstractValueVisitorTest$NestedAppendable<\n"
+            + "  appendable:Optional<\n"
+            + "    com.facebook.buck.rules.modern.impl.AbstractValueVisitorTest$Appendable<\n"
+            + "      sp:SourcePath(/project/root/appendable.path)\n"
+            + "    >\n"
+            + "  >\n"
+            + ">\n"
+            + "list:List<\n"
+            + "  com.facebook.buck.rules.modern.impl.AbstractValueVisitorTest$Appendable<\n"
+            + "    sp:SourcePath(/project/root/appendable.path)\n"
+            + "  >\n"
+            + "  com.facebook.buck.rules.modern.impl.AbstractValueVisitorTest$Appendable<\n"
+            + "    sp:SourcePath(/project/root/appendable.path)\n"
+            + "  >\n"
+            + ">",
+        stringify(new WithAddsToRuleKey()));
   }
 
   @Override
@@ -92,13 +114,16 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
             + "  OutputPath(hello.txt)\n"
             + "  OutputPath(world.txt)\n"
             + ">\n"
-            + "otherOutput:OutputPath(other.file)\n",
+            + "otherOutput:OutputPath(other.file)\n"
+            + "appendable:com.facebook.buck.rules.modern.impl.AbstractValueVisitorTest$Appendable<\n"
+            + "  sp:SourcePath(/project/root/appendable.path)\n"
+            + ">",
         stringify(new Complex()));
   }
 
   private String stringify(Buildable value) {
     StringifyingValueVisitor visitor = new StringifyingValueVisitor();
-    DefaultClassInfoFactory.forBuildable(value).visit(value, visitor);
+    DefaultClassInfoFactory.forInstance(value).visit(value, visitor);
     return visitor.getValue();
   }
 }

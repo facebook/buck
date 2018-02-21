@@ -17,7 +17,9 @@
 package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.util.Scope;
 import com.google.common.collect.ImmutableList;
@@ -43,9 +45,9 @@ public class StringifyingValueVisitor implements ValueVisitor<RuntimeException> 
 
   @Override
   public <T> void visitField(Field field, T value, ValueTypeInfo<T> valueTypeInfo) {
+    newline();
     append("%s:", field.getName());
     valueTypeInfo.visit(value, this);
-    newline();
   }
 
   @Override
@@ -91,6 +93,16 @@ public class StringifyingValueVisitor implements ValueVisitor<RuntimeException> 
     append("value(%s)", value);
   }
 
+  @Override
+  public <T extends AddsToRuleKey> void visitDynamic(T value, ClassInfo<T> classInfo)
+      throws RuntimeException {
+    container(
+        String.format("%s", value.getClass().getName()),
+        () -> {
+          classInfo.visit(value, this);
+        });
+  }
+
   private void container(String label, Runnable runner) {
     append("%s<", label);
     indent++;
@@ -120,6 +132,6 @@ public class StringifyingValueVisitor implements ValueVisitor<RuntimeException> 
   }
 
   public String getValue() {
-    return builder.toString();
+    return builder.toString().trim();
   }
 }

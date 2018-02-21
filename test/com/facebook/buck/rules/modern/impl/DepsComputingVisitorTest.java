@@ -44,7 +44,7 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
 
   private void apply(Buildable value) {
     replay(depsBuilder, inputRuleResolver);
-    DefaultClassInfoFactory.forBuildable(value).computeDeps(value, inputRuleResolver, depsBuilder);
+    DefaultClassInfoFactory.forInstance(value).computeDeps(value, inputRuleResolver, depsBuilder);
     verify(depsBuilder, inputRuleResolver);
   }
 
@@ -68,6 +68,16 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
   @Test
   public void set() {
     apply(new WithSet());
+  }
+
+  @Override
+  @Test
+  public void addsToRuleKey() {
+    WithAddsToRuleKey value = new WithAddsToRuleKey();
+    expect(inputRuleResolver.resolve(FakeSourcePath.of(rootFilesystem, "appendable.path")))
+        .andReturn(Optional.empty())
+        .times(3);
+    apply(value);
   }
 
   static class WithSourcePathList implements FakeBuildable {
@@ -120,7 +130,7 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
   public void complex() {
     Complex value = new Complex();
     expect(inputRuleResolver.resolve(anyObject())).andReturn(Optional.empty());
-    expectLastCall().times(2);
+    expectLastCall().times(3);
     apply(value);
   }
 }

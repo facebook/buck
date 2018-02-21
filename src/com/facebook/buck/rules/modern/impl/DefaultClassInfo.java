@@ -17,9 +17,9 @@
 package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.InputRuleResolver;
 import com.facebook.buck.rules.modern.OutputPath;
@@ -33,7 +33,10 @@ import java.lang.reflect.Type;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
+/**
+ * Default implementation of ClassInfo. Computes values simply by visiting all referenced fields.
+ */
+class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
   private final String type;
   private final Optional<ClassInfo<? super T>> superInfo;
   private final ImmutableList<FieldInfo<?>> fields;
@@ -48,7 +51,7 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
       field.setAccessible(true);
       Preconditions.checkArgument(
           Modifier.isFinal(field.getModifiers()),
-          "All fields of a Buildable must be final (%s.%s)",
+          "All fields referenced from a ModernBuildRule must be final (%s.%s)",
           clazz.getSimpleName(),
           field.getName());
 
@@ -60,7 +63,7 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
 
       Preconditions.checkState(
           addAnnotation != null,
-          "All fields of a Buildable must be annotated with @AddsToRuleKey. %s.%s is missing this annotation.",
+          "All fields referenced from a ModernBuildRule must be annotated with @AddsToRuleKey. %s.%s is missing this annotation.",
           clazz.getName(),
           field.getName());
 
@@ -101,14 +104,14 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
 
   /** Gets all the outputs referenced from the value. */
   @Override
-  public void getOutputs(T ruleImpl, Consumer<OutputPath> dataBuilder) {
-    visit(ruleImpl, new OutputPathVisitor(dataBuilder));
+  public void getOutputs(T value, Consumer<OutputPath> dataBuilder) {
+    visit(value, new OutputPathVisitor(dataBuilder));
   }
 
   /** Gets all the inputs referenced from the value. */
   @Override
-  public void getInputs(T ruleImpl, Consumer<SourcePath> inputsBuilder) {
-    visit(ruleImpl, new InputsVisitor(inputsBuilder));
+  public void getInputs(T value, Consumer<SourcePath> inputsBuilder) {
+    visit(value, new InputsVisitor(inputsBuilder));
   }
 
   @Override
@@ -117,12 +120,12 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
   }
 
   @Override
-  public <E extends Exception> void visit(T buildable, ValueVisitor<E> visitor) throws E {
+  public <E extends Exception> void visit(T value, ValueVisitor<E> visitor) throws E {
     if (superInfo.isPresent()) {
-      superInfo.get().visit(buildable, visitor);
+      superInfo.get().visit(value, visitor);
     }
     for (FieldInfo<?> extractor : fields) {
-      extractor.visit(buildable, visitor);
+      extractor.visit(value, visitor);
     }
   }
 
@@ -141,18 +144,18 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
       return new FieldInfo<>(field, valueTypeInfo);
     }
 
-    private T getValue(Buildable ruleImpl, Field field) {
+    private T getValue(AddsToRuleKey value, Field field) {
       try {
         @SuppressWarnings("unchecked")
-        T value = (T) field.get(ruleImpl);
-        return value;
+        T converted = (T) field.get(value);
+        return converted;
       } catch (IllegalAccessException e) {
         throw new RuntimeException(e);
       }
     }
 
-    public <E extends Exception> void visit(Buildable ruleImpl, ValueVisitor<E> visitor) throws E {
-      visitor.visitField(field, getValue(ruleImpl, field), valueTypeInfo);
+    public <E extends Exception> void visit(AddsToRuleKey value, ValueVisitor<E> visitor) throws E {
+      visitor.visitField(field, getValue(value, field), valueTypeInfo);
     }
   }
 }

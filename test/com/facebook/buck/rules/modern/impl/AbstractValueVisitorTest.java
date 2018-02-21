@@ -19,6 +19,7 @@ package com.facebook.buck.rules.modern.impl;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -59,6 +60,9 @@ abstract class AbstractValueVisitorTest {
 
   @Test
   public abstract void superClass();
+
+  @Test
+  public abstract void addsToRuleKey();
 
   @Test
   public abstract void empty();
@@ -114,6 +118,22 @@ abstract class AbstractValueVisitorTest {
 
   public static class Empty implements FakeBuildable {}
 
+  public static class Appendable implements AddsToRuleKey {
+    @AddToRuleKey final SourcePath sp = FakeSourcePath.of(rootFilesystem, "appendable.path");
+  }
+
+  public static class NestedAppendable implements AddsToRuleKey {
+    @AddToRuleKey final Optional<Appendable> appendable = Optional.of(new Appendable());
+  }
+
+  public static class WithAddsToRuleKey implements FakeBuildable {
+    @AddToRuleKey final NestedAppendable nested = new NestedAppendable();
+
+    @AddToRuleKey
+    private final ImmutableList<AddsToRuleKey> list =
+        ImmutableList.of(new Appendable(), new Appendable());
+  }
+
   public static class Complex implements FakeBuildable {
     @AddToRuleKey
     final Optional<ImmutableList<ImmutableSortedSet<SourcePath>>> value =
@@ -133,5 +153,7 @@ abstract class AbstractValueVisitorTest {
         ImmutableList.of(new OutputPath("hello.txt"), new OutputPath("world.txt"));
 
     @AddToRuleKey final OutputPath otherOutput = new OutputPath("other.file");
+
+    @AddToRuleKey final AddsToRuleKey appendable = new Appendable();
   }
 }

@@ -16,7 +16,9 @@
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -41,4 +43,6 @@ public interface ValueVisitor<E extends Exception> {
   <T> void visitField(Field field, T value, ValueTypeInfo<T> valueTypeInfo) throws E;
 
   void visitSimple(Object value);
+
+  <T extends AddsToRuleKey> void visitDynamic(T value, ClassInfo<T> classInfo) throws E;
 }

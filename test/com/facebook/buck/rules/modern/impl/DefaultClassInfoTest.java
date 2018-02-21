@@ -129,7 +129,7 @@ public class DefaultClassInfoTest {
         new DerivedClass(
             targetSourcePath1,
             ImmutableList.of(targetSourcePath2, targetSourcePath3, pathSourcePath));
-    ClassInfo<DerivedClass> classInfo = DefaultClassInfoFactory.forBuildable(buildable);
+    ClassInfo<DerivedClass> classInfo = DefaultClassInfoFactory.forInstance(buildable);
     assertEquals("derived_class", classInfo.getType());
 
     expect(
@@ -176,10 +176,10 @@ public class DefaultClassInfoTest {
   @Test(expected = Exception.class)
   public void testLambdaBuildable() {
     try {
-      DefaultClassInfoFactory.forBuildable(
-          (buildContext, filesystem, outputPathResolver, buildCellPathFactory) -> null);
+      DefaultClassInfoFactory.forInstance(
+          (Buildable) (buildContext, filesystem, outputPathResolver, buildCellPathFactory) -> null);
     } catch (Exception e) {
-      assertThat(e.getMessage(), Matchers.containsString("cannot be synthetic"));
+      assertThat(e.getMessage(), Matchers.containsString("cannot be or reference synthetic"));
       assertThat(e.getMessage(), Matchers.containsString("DefaultClassInfoTest"));
       throw e;
     }
@@ -188,9 +188,10 @@ public class DefaultClassInfoTest {
   @Test(expected = Exception.class)
   public void testAnonymousBuildable() {
     try {
-      DefaultClassInfoFactory.forBuildable(new NoOpBuildable() {});
+      DefaultClassInfoFactory.forInstance(new NoOpBuildable() {});
     } catch (Exception e) {
-      assertThat(e.getMessage(), Matchers.containsString("cannot be anonymous classes"));
+      assertThat(
+          e.getMessage(), Matchers.containsString("cannot be or reference anonymous classes"));
       assertThat(e.getMessage(), Matchers.containsString("DefaultClassInfoTest"));
       throw e;
     }
@@ -200,9 +201,9 @@ public class DefaultClassInfoTest {
   public void testLocalBuildable() {
     try {
       class LocalBuildable extends NoOpBuildable {}
-      DefaultClassInfoFactory.forBuildable(new LocalBuildable());
+      DefaultClassInfoFactory.forInstance(new LocalBuildable());
     } catch (Exception e) {
-      assertThat(e.getMessage(), Matchers.containsString("cannot be local classes"));
+      assertThat(e.getMessage(), Matchers.containsString("cannot be or reference local classes"));
       assertThat(e.getMessage(), Matchers.containsString("LocalBuildable"));
       throw e;
     }
@@ -213,9 +214,11 @@ public class DefaultClassInfoTest {
   @Test(expected = Exception.class)
   public void testNonStaticInner() {
     try {
-      DefaultClassInfoFactory.forBuildable(new NonStaticInnerBuildable());
+      DefaultClassInfoFactory.forInstance(new NonStaticInnerBuildable());
     } catch (Exception e) {
-      assertThat(e.getMessage(), Matchers.containsString("cannot be inner non-static classes"));
+      assertThat(
+          e.getMessage(),
+          Matchers.containsString("cannot be or reference inner non-static classes"));
       assertThat(e.getMessage(), Matchers.containsString("NonStaticInnerBuildable"));
       throw e;
     }
@@ -228,7 +231,7 @@ public class DefaultClassInfoTest {
   @Test(expected = Exception.class)
   public void testNonFinalField() {
     try {
-      DefaultClassInfoFactory.forBuildable(new NonFinalFieldBuildable());
+      DefaultClassInfoFactory.forInstance(new NonFinalFieldBuildable());
     } catch (Exception e) {
       assertThat(
           e.getMessage(), Matchers.containsString("must be final (NonFinalFieldBuildable.value)"));
@@ -244,7 +247,7 @@ public class DefaultClassInfoTest {
   @Test(expected = Exception.class)
   public void testNonFinalStaticField() {
     try {
-      DefaultClassInfoFactory.forBuildable(new NonFinalStaticFieldBuildable());
+      DefaultClassInfoFactory.forInstance(new NonFinalStaticFieldBuildable());
     } catch (Exception e) {
       assertThat(
           e.getMessage(),
@@ -263,7 +266,7 @@ public class DefaultClassInfoTest {
   @Test(expected = Exception.class)
   public void testBadBase() {
     try {
-      DefaultClassInfoFactory.forBuildable(new DerivedFromBadBased());
+      DefaultClassInfoFactory.forInstance(new DerivedFromBadBased());
     } catch (Exception e) {
       assertThat(e.getMessage(), Matchers.containsString("must be final (BadBase.value)"));
       assertThat(e.getMessage(), Matchers.containsString("DerivedFromBadBased"));
@@ -274,7 +277,7 @@ public class DefaultClassInfoTest {
   @Test
   public void testSimpleModernBuildRule() {
     // Just tests that we can construct a class info from a "direct" ModernBuildRule.
-    DefaultClassInfoFactory.forBuildable(
+    DefaultClassInfoFactory.forInstance(
         new NoOpModernBuildRule(
             BuildTargetFactory.newInstance("//some:target"),
             new FakeProjectFilesystem(),

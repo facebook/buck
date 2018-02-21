@@ -149,7 +149,7 @@ public class ModernBuildRule<T extends Buildable>
     this.outputPathResolver =
         new DefaultOutputPathResolver(this.getProjectFilesystem(), this.getBuildTarget());
     this.buildable = buildableSource.transform(b -> b, clz -> clz.cast(this));
-    this.classInfo = DefaultClassInfoFactory.forBuildable(this.buildable);
+    this.classInfo = DefaultClassInfoFactory.forInstance(this.buildable);
   }
 
   private ImmutableSortedSet<BuildRule> computeDeps() {
