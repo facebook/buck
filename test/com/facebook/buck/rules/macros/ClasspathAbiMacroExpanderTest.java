@@ -144,7 +144,6 @@ public class ClasspathAbiMacroExpanderTest {
             targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildRule rule = ruleResolver.requireRule(ruleNode.getBuildTarget());
-    BuildRule dep = ruleResolver.requireRule(depNode.getBuildTarget());
 
     BuildTarget forTarget = BuildTargetFactory.newInstance("//:rule");
     CellPathResolver cellRoots = createCellRoots(filesystem);

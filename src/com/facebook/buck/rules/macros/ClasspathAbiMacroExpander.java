@@ -38,7 +38,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
- * Used to expand the macro {@literal $(abi_jar_path //some:target)} to the transitive abi's jars
+ * Used to expand the macro {@literal $(classpath_abi //some:target)} to the transitive abi's jars
  * path of that target, expanding all paths to be absolute.
  */
 public class ClasspathAbiMacroExpander extends BuildTargetMacroExpander<ClasspathAbiMacro> {
@@ -59,7 +59,7 @@ public class ClasspathAbiMacroExpander extends BuildTargetMacroExpander<Classpat
     if (!(rule instanceof HasClasspathEntries)) {
       throw new MacroException(
           String.format(
-              "%s used in abi_jar_path macro does not correspond to a rule with a java classpath",
+              "%s used in classpath_abi macro does not correspond to a rule with a java classpath",
               rule.getBuildTarget()));
     }
     return (HasClasspathEntries) rule;

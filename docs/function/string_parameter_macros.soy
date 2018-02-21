@@ -26,6 +26,7 @@ The following macros are supported:
 {literal}
 <ul>
   <li><code>$(classpath //:foo)</code> expands to the set of jars that are in the classpath of the given target</li>
+  <li><code>$(classpath_abi //:foo)</code> expands to the set of class abi jars that are in the classpath of the given target</li>
   <li><code>$(exe //:foo)</code> expands to the executable output of given target if it exists</li>
   <li><code>$(location //:foo)</code> expands to the output file or directory of the given target</li>
   <li><code>$(location //:foo[output])</code> expands to the named output file or directory of the given target, for rules that expose supplementary outputs.</li>
