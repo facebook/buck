@@ -85,7 +85,7 @@ public class ClasspathMacroExpander extends BuildTargetMacroExpander<ClasspathMa
   // The # characters that might be present in classpaths due to flavoring would be read as
   // comments. As a simple workaround, we quote the entire classpath.
   private static class ClassPathWriteToFileArg extends WriteToFileArg {
-    ClassPathWriteToFileArg(BuildTarget target, String prefix, Arg delegate) {
+    public ClassPathWriteToFileArg(BuildTarget target, String prefix, Arg delegate) {
       super(target, prefix, delegate);
     }
 
@@ -98,7 +98,7 @@ public class ClasspathMacroExpander extends BuildTargetMacroExpander<ClasspathMa
   private class ClasspathArg implements Arg {
     @AddToRuleKey private final ImmutableList<SourcePath> classpath;
 
-    ClasspathArg(ImmutableList<SourcePath> collect) {
+    public ClasspathArg(ImmutableList<SourcePath> collect) {
       this.classpath = collect;
     }
 
@@ -107,7 +107,7 @@ public class ClasspathMacroExpander extends BuildTargetMacroExpander<ClasspathMa
       consumer.accept(
           classpath
               .stream()
-              .map(pathResolver::getAbsolutePath)
+              .map(dep -> pathResolver.getAbsolutePath(dep))
               .map(Object::toString)
               .sorted(Ordering.natural())
               .collect(Collectors.joining(File.pathSeparator)));
