@@ -44,7 +44,6 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.easymock.EasyMock;
@@ -58,7 +57,7 @@ public class ValueTypeInfosTest {
   private Consumer<BuildRule> buildRuleConsumer = createStrictMock(Consumer.class);
 
   @SuppressWarnings("unchecked")
-  private BiConsumer<String, OutputPath> outputConsumer = createStrictMock(BiConsumer.class);
+  private Consumer<OutputPath> outputConsumer = createStrictMock(Consumer.class);
 
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -70,7 +69,7 @@ public class ValueTypeInfosTest {
     int value = 1;
     replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
-    typeInfo.extractOutput("", value, outputConsumer);
+    typeInfo.extractOutput(value, outputConsumer);
     verify(inputRuleResolver, buildRuleConsumer, outputConsumer);
   }
 
@@ -81,7 +80,7 @@ public class ValueTypeInfosTest {
     String value = "hello";
     replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
-    typeInfo.extractOutput("", value, outputConsumer);
+    typeInfo.extractOutput(value, outputConsumer);
     verify(inputRuleResolver, buildRuleConsumer, outputConsumer);
   }
 
@@ -140,7 +139,7 @@ public class ValueTypeInfosTest {
 
     replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
     typeInfo.extractDep(sourcePath, inputRuleResolver, buildRuleConsumer);
-    typeInfo.extractOutput("", sourcePath, outputConsumer);
+    typeInfo.extractOutput(sourcePath, outputConsumer);
     verify(inputRuleResolver, buildRuleConsumer, outputConsumer);
   }
 
@@ -158,7 +157,7 @@ public class ValueTypeInfosTest {
 
     replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
     typeInfo.extractDep(sourcePath, inputRuleResolver, buildRuleConsumer);
-    typeInfo.extractOutput("", sourcePath, outputConsumer);
+    typeInfo.extractOutput(sourcePath, outputConsumer);
     verify(inputRuleResolver, buildRuleConsumer, outputConsumer);
   }
 
@@ -177,7 +176,7 @@ public class ValueTypeInfosTest {
 
     replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
-    typeInfo.extractOutput("", value, outputConsumer);
+    typeInfo.extractOutput(value, outputConsumer);
     verify(inputRuleResolver, buildRuleConsumer, outputConsumer);
   }
 
@@ -189,7 +188,7 @@ public class ValueTypeInfosTest {
     Optional<SourcePath> value = Optional.empty();
     replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
-    typeInfo.extractOutput("", value, outputConsumer);
+    typeInfo.extractOutput(value, outputConsumer);
     verify(inputRuleResolver, buildRuleConsumer, outputConsumer);
   }
 
@@ -212,7 +211,7 @@ public class ValueTypeInfosTest {
 
     replay(inputRuleResolver, buildRuleConsumer, outputConsumer);
     typeInfo.extractDep(value, inputRuleResolver, buildRuleConsumer);
-    typeInfo.extractOutput("", value, outputConsumer);
+    typeInfo.extractOutput(value, outputConsumer);
     verify(inputRuleResolver, buildRuleConsumer, outputConsumer);
   }
 }

@@ -18,7 +18,6 @@ package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.modern.impl.ValueVisitor;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -31,7 +30,7 @@ public interface ClassInfo<T extends Buildable> {
       T ruleImpl, InputRuleResolver inputRuleResolver, Consumer<BuildRule> depsBuilder);
 
   /** Adds all outputPaths in ruleImpl to the dataBuilder. */
-  void getOutputs(T ruleImpl, BiConsumer<String, OutputPath> dataBuilder);
+  void getOutputs(T ruleImpl, Consumer<OutputPath> dataBuilder);
 
   /** Returns the rule typename for Buildables of this type. */
   String getType();

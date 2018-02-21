@@ -19,7 +19,6 @@ package com.facebook.buck.rules.modern.impl;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.modern.InputRuleResolver;
 import com.facebook.buck.rules.modern.OutputPath;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -30,7 +29,7 @@ interface ValueTypeInfo<T> {
   default void extractDep(
       T value, InputRuleResolver inputRuleResolver, Consumer<BuildRule> builder) {}
 
-  default void extractOutput(String name, T value, BiConsumer<String, OutputPath> builder) {}
+  default void extractOutput(T value, Consumer<OutputPath> builder) {}
 
   <E extends Exception> void visit(T value, ValueVisitor<E> visitor) throws E;
 }

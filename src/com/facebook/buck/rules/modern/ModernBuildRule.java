@@ -249,7 +249,7 @@ public class ModernBuildRule<T extends Buildable>
     buildableContext.recordArtifact(outputPathResolver.getRootPath());
     // All the outputs are already forced to be within getGenDirectory(), and so this recording
     // isn't actually necessary.
-    classInfo.getOutputs(buildable, (name, output) -> recordOutput(buildableContext, output));
+    classInfo.getOutputs(buildable, output -> recordOutput(buildableContext, output));
     return stepBuilder.build();
   }
 

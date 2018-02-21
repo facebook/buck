@@ -20,7 +20,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.InputRuleResolver;
 import com.facebook.buck.rules.modern.OutputPath;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /** ValueTypeInfo for SourcePaths. The SourcePath will be added to deps/inputs. */
@@ -34,8 +33,7 @@ public class SourcePathValueTypeInfo implements ValueTypeInfo<SourcePath> {
   }
 
   @Override
-  public void extractOutput(
-      String name, SourcePath value, BiConsumer<String, OutputPath> builder) {}
+  public void extractOutput(SourcePath value, Consumer<OutputPath> builder) {}
 
   @Override
   public <E extends Exception> void visit(SourcePath value, ValueVisitor<E> visitor) throws E {

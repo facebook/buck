@@ -30,7 +30,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.Optional;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
@@ -103,7 +102,7 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
   }
 
   @Override
-  public void getOutputs(T ruleImpl, BiConsumer<String, OutputPath> dataBuilder) {
+  public void getOutputs(T ruleImpl, Consumer<OutputPath> dataBuilder) {
     superInfo.ifPresent(classInfo -> classInfo.getOutputs(ruleImpl, dataBuilder));
     for (FieldInfo<?> extractor : fields) {
       extractor.extractOutput(ruleImpl, dataBuilder);
@@ -145,8 +144,8 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
       valueTypeInfo.extractDep(getValue(ruleImpl, field), inputRuleResolver, builder);
     }
 
-    void extractOutput(Buildable ruleImpl, BiConsumer<String, OutputPath> builder) {
-      valueTypeInfo.extractOutput(field.getName(), getValue(ruleImpl, field), builder);
+    void extractOutput(Buildable ruleImpl, Consumer<OutputPath> builder) {
+      valueTypeInfo.extractOutput(getValue(ruleImpl, field), builder);
     }
 
     private T getValue(Buildable ruleImpl, Field field) {

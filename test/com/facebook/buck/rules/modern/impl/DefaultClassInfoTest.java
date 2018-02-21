@@ -53,7 +53,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
 import java.util.Optional;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -66,7 +65,7 @@ public class DefaultClassInfoTest {
   private Consumer<BuildRule> buildRuleConsumer = createStrictMock(Consumer.class);
 
   @SuppressWarnings("unchecked")
-  private BiConsumer<String, OutputPath> outputConsumer = createStrictMock(BiConsumer.class);
+  private Consumer<OutputPath> outputConsumer = createStrictMock(Consumer.class);
 
   private RuleKeyObjectSink ruleKeyObjectSink = createStrictMock(RuleKeyObjectSink.class);
 
@@ -167,7 +166,7 @@ public class DefaultClassInfoTest {
     classInfo.computeDeps(buildable, inputRuleResolver, buildRuleConsumer);
     verify(inputRuleResolver, buildRuleConsumer);
 
-    outputConsumer.accept("baseOutputPath", buildable.baseOutputPath);
+    outputConsumer.accept(buildable.baseOutputPath);
 
     replay(outputConsumer);
     classInfo.getOutputs(buildable, outputConsumer);

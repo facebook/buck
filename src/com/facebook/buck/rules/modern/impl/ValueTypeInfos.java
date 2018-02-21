@@ -22,7 +22,6 @@ import com.facebook.buck.rules.modern.OutputPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 class ValueTypeInfos {
@@ -41,9 +40,8 @@ class ValueTypeInfos {
     public static final OutputPathValueTypeInfo INSTANCE = new OutputPathValueTypeInfo();
 
     @Override
-    public void extractOutput(
-        String name, OutputPath value, BiConsumer<String, OutputPath> builder) {
-      builder.accept(name, value);
+    public void extractOutput(OutputPath value, Consumer<OutputPath> builder) {
+      builder.accept(value);
     }
 
     @Override
@@ -67,9 +65,8 @@ class ValueTypeInfos {
     }
 
     @Override
-    public void extractOutput(
-        String name, Optional<T> value, BiConsumer<String, OutputPath> builder) {
-      value.ifPresent(o -> innerType.extractOutput(name, o, builder));
+    public void extractOutput(Optional<T> value, Consumer<OutputPath> builder) {
+      value.ifPresent(o -> innerType.extractOutput(o, builder));
     }
 
     @Override
@@ -94,9 +91,9 @@ class ValueTypeInfos {
     }
 
     @Override
-    public void extractOutput(String name, C value, BiConsumer<String, OutputPath> builder) {
+    public void extractOutput(C value, Consumer<OutputPath> builder) {
       // TODO(cjhopman): should the name be modified to indicate position in the map?
-      value.forEach(o -> innerType.extractOutput(name, o, builder));
+      value.forEach(o -> innerType.extractOutput(o, builder));
     }
   }
 
