@@ -22,13 +22,11 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.RuleDepsCache;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -54,8 +52,8 @@ public class CacheOptimizedBuildTargetsQueueFactory {
   private static final Logger LOG = Logger.get(CacheOptimizedBuildTargetsQueueFactory.class);
 
   private final BuildRuleResolver resolver;
-  private final SourcePathRuleFinder ruleFinder;
   private final ArtifactCacheByBuildRule artifactCache;
+  private final RuleDepsCache ruleDepsCache;
   private final boolean isDeepBuild;
 
   private class GraphTraversalData {
@@ -70,12 +68,13 @@ public class CacheOptimizedBuildTargetsQueueFactory {
   public CacheOptimizedBuildTargetsQueueFactory(
       BuildRuleResolver resolver,
       ArtifactCacheByBuildRule artifactCache,
-      boolean isDeepRemoteBuild) {
+      boolean isDeepRemoteBuild,
+      RuleDepsCache ruleDepsCache) {
     this.resolver = resolver;
     this.artifactCache = artifactCache;
     this.isDeepBuild = isDeepRemoteBuild;
+    this.ruleDepsCache = ruleDepsCache;
 
-    this.ruleFinder = new SourcePathRuleFinder(resolver);
     if (isDeepBuild) {
       LOG.info("Deep build requested. Will not prune BuildTargetsQueue using the remote cache.");
     }
@@ -120,18 +119,11 @@ public class CacheOptimizedBuildTargetsQueueFactory {
         .collect(Collectors.toCollection(LinkedList::new));
   }
 
-  private Stream<BuildRule> getRuntimeDeps(BuildRule rule) {
-    if (!(rule instanceof HasRuntimeDeps)) {
-      return Stream.<BuildRule>builder().build();
-    }
-
-    Stream<BuildTarget> runtimeDepPaths = ((HasRuntimeDeps) rule).getRuntimeDeps(ruleFinder);
-    return resolver.getAllRulesStream(runtimeDepPaths.collect(ImmutableSet.toImmutableSet()));
-  }
-
   private boolean hasMissingCachableRuntimeDeps(BuildRule rule) {
     Stream<BuildRule> missingCachableRuntimeDeps =
-        getRuntimeDeps(rule)
+        ruleDepsCache
+            .getRuntimeDeps(rule)
+            .stream()
             .filter(
                 dependency ->
                     dependency.isCacheable()
@@ -161,7 +153,7 @@ public class CacheOptimizedBuildTargetsQueueFactory {
 
   private void uploadRuleAndRuntimeDeps(BuildRule rule) {
     uploadRuleIfRequired(rule);
-    getRuntimeDeps(rule).forEach(this::uploadRuleIfRequired);
+    ruleDepsCache.getRuntimeDeps(rule).forEach(this::uploadRuleIfRequired);
   }
 
   private GraphTraversalData traverseActionGraph(Queue<BuildRule> buildRulesToProcess) {
@@ -178,21 +170,10 @@ public class CacheOptimizedBuildTargetsQueueFactory {
 
       results.allForwardDeps.put(target, new HashSet<>());
 
-      ImmutableSortedSet.Builder<BuildRule> allDependencies = ImmutableSortedSet.naturalOrder();
+      // Get all build dependencies (regular and runtime)
+      ImmutableSet<BuildRule> allDeps = ImmutableSet.copyOf(ruleDepsCache.get(rule));
 
-      // Get all standard build dependencies
-      allDependencies.addAll(rule.getBuildDeps());
-
-      // Optionally add in any run-time deps
-      if (rule instanceof HasRuntimeDeps) {
-        LOG.verbose(String.format("[%s] has runtime deps", ruleToTarget(rule)));
-        allDependencies.addAll(getRuntimeDeps(rule).collect(Collectors.toList()));
-      }
-
-      ImmutableSet<BuildRule> allDeps = allDependencies.build();
       for (BuildRule dependencyRule : allDeps) {
-        String dependencyTarget = ruleToTarget(dependencyRule);
-
         // Uploads need to happen regardless of something needs to be scheduled or not.
         // If it is not scheduled, distributed build must be planning to use it.
         // If it is scheduled and we have it locally, distributed build is going to benefit from it.
@@ -211,6 +192,7 @@ public class CacheOptimizedBuildTargetsQueueFactory {
           continue;
         }
 
+        String dependencyTarget = ruleToTarget(dependencyRule);
         if (!results.allReverseDeps.containsKey(dependencyTarget)) {
           results.allReverseDeps.put(dependencyTarget, new HashSet<>());
         }
@@ -230,12 +212,15 @@ public class CacheOptimizedBuildTargetsQueueFactory {
   private GraphTraversalData traverseGraphFromTopLevelUsingAvailableCaches(
       Iterable<BuildTarget> topLevelTargets) {
     // Start with a set of every node in the graph
+    LOG.debug("Recording all rules.");
     Set<BuildRule> prunedRules = findAllRulesInGraph(topLevelTargets);
 
+    LOG.debug("Processing top-level targets.");
     Queue<BuildRule> buildRulesToProcess = processTopLevelTargets(topLevelTargets);
 
     if (!buildRulesToProcess.isEmpty() && !isDeepBuild) {
       // Check the cache for everything we are going to need upfront.
+      LOG.debug("Pre-warming remote cache contains for all known rules.");
       artifactCache.prewarmRemoteContainsForAllKnownRules();
     }
     LOG.debug("Traversing %d top-level targets now.", buildRulesToProcess.size());
@@ -264,8 +249,7 @@ public class CacheOptimizedBuildTargetsQueueFactory {
       }
       allRules.add(buildRule);
 
-      rulesToProcess.addAll(buildRule.getBuildDeps());
-      rulesToProcess.addAll(getRuntimeDeps(buildRule).collect(Collectors.toList()));
+      rulesToProcess.addAll(ruleDepsCache.get(buildRule));
     }
 
     return allRules;
@@ -306,6 +290,7 @@ public class CacheOptimizedBuildTargetsQueueFactory {
       Iterable<BuildTarget> targetsToBuild,
       CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher,
       int mostBuildRulesFinishedPercentageThreshold) {
+    LOG.info("Starting to create the %s.", BuildTargetsQueue.class.getName());
     GraphTraversalData results = traverseGraphFromTopLevelUsingAvailableCaches(targetsToBuild);
 
     // Notify distributed build clients that they should not wait for any of the nodes that were
@@ -355,6 +340,7 @@ public class CacheOptimizedBuildTargetsQueueFactory {
 
     // Wait for local uploads (in case of local coordinator) to finish.
     try {
+      LOG.info("Waiting for cache uploads to finish.");
       Futures.allAsList(artifactCache.getAllUploadRuleFutures()).get();
     } catch (InterruptedException | ExecutionException e) {
       LOG.error(e, "Failed to upload artifacts from the local cache.");
