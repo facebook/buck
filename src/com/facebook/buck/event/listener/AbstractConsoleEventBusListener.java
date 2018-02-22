@@ -710,6 +710,14 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     buildRuleThreadTracker.didResumeBuildRule(resumed);
   }
 
+  @SuppressWarnings("unused")
+  @Subscribe
+  private void resetLocalBuildStats(BuildEvent.Reset reset) {
+    buildRuleThreadTracker.reset();
+    progressEstimator.ifPresent(ProgressEstimator::resetBuildData);
+    numRulesCompleted.set(0);
+  }
+
   @Subscribe
   public void buildRuleSuspended(BuildRuleEvent.Suspended suspended) {
     progressEstimator.ifPresent(ProgressEstimator::didSuspendRule);

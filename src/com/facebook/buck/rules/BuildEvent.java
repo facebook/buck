@@ -36,6 +36,10 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
     return new Started(ImmutableSet.copyOf(buildArgs));
   }
 
+  public static Reset reset() {
+    return new Reset();
+  }
+
   public static Finished finished(Started started, ExitCode exitCode) {
     return new Finished(started, exitCode);
   }
@@ -78,6 +82,23 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
 
     public ImmutableSet<String> getBuildArgs() {
       return buildArgs;
+    }
+  }
+
+  /** Event used to mark a fresh start for build completion estimation. */
+  public static class Reset extends BuildEvent {
+    protected Reset() {
+      super(EventKey.unique());
+    }
+
+    @Override
+    public String getEventName() {
+      return BUILD_RESET;
+    }
+
+    @Override
+    protected String getValueString() {
+      return "";
     }
   }
 

@@ -34,7 +34,6 @@ import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.rules.TestStatusMessageEvent;
 import com.facebook.buck.rules.TestSummaryEvent;
@@ -751,24 +750,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     } else {
       return Optional.empty();
     }
-  }
-
-  @Override
-  @Subscribe
-  public void buildRuleStarted(BuildRuleEvent.Started started) {
-    super.buildRuleStarted(started);
-  }
-
-  @Override
-  @Subscribe
-  public void buildRuleSuspended(BuildRuleEvent.Suspended suspended) {
-    super.buildRuleSuspended(suspended);
-  }
-
-  @Override
-  @Subscribe
-  public void buildRuleResumed(BuildRuleEvent.Resumed resumed) {
-    super.buildRuleResumed(resumed);
   }
 
   @Subscribe

@@ -763,7 +763,7 @@ public class SuperConsoleEventBusListenerTest {
   }
 
   @Test
-  public void testSimpleDistBuildWithProgress() throws IOException {
+  public void testDistBuildWithProgress() throws IOException {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
     BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
@@ -1002,6 +1002,9 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
+    eventBus.post(BuildEvent.reset());
+    eventBus.post(BuildEvent.ruleCountCalculated(ImmutableSet.of(), 5));
+
     timeMillis += 100;
     validateConsole(
         listener,
@@ -1009,7 +1012,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 1.3 sec (12%) local status: init (10% done); "
+            "Distributed Build... 1.3 sec (12%) local status: init (0% done); "
                 + "remote status: building, 10/80 jobs, 3.3% cache miss",
             " Server 0: Idle... built 5/10 jobs, 10.0% cache miss",
             " Server 1: Working on 5 jobs... built 5/20 jobs, 1 jobs failed, 0.0% cache miss"));
@@ -1138,7 +1141,7 @@ public class SuperConsoleEventBusListenerTest {
                 + " remote status: finished_successfully, 80/80 jobs,"
                 + " 3.3% cache miss, 1 [3.3%] cache errors, 1 upload errors",
             NO_DOWNLOAD_STRING,
-            "Local Build... 1.6 sec (20%) 2/10 jobs, 2 updated, 10.0% cache miss",
+            "Local Build... 1.6 sec (20%) 1/5 jobs, 1 updated, 20.0% cache miss",
             " - IDLE"));
 
     eventBus.postWithoutConfiguring(
@@ -1153,7 +1156,7 @@ public class SuperConsoleEventBusListenerTest {
             + " remote status: finished_successfully, 80/80 jobs,"
             + " 3.3% cache miss, 1 [3.3%] cache errors, 1 upload errors";
     final String buildingLine =
-        "Local Build: finished in 1.6 sec (100%) 2/10 jobs, 2 updated, 10.0% cache miss";
+        "Local Build: finished in 1.6 sec (100%) 1/5 jobs, 1 updated, 20.0% cache miss";
     final String totalLine = "  Total time: 1.8 sec";
     timeMillis += 100;
     validateConsole(
