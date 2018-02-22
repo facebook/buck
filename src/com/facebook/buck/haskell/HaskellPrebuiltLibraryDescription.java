@@ -24,13 +24,11 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
@@ -62,12 +60,10 @@ public class HaskellPrebuiltLibraryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       final HaskellPrebuiltLibraryDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
-    return new PrebuiltHaskellLibrary(buildTarget, projectFilesystem, params) {
+    return new PrebuiltHaskellLibrary(buildTarget, context.getProjectFilesystem(), params) {
 
       private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
           transitiveCxxPreprocessorInputCache =

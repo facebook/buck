@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -69,13 +68,12 @@ public class DLibraryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       DLibraryDescriptionArg args) {
     BuildRuleResolver buildRuleResolver = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     if (buildTarget.getFlavors().contains(DDescriptionUtils.SOURCE_LINK_TREE)) {
       return DDescriptionUtils.createSourceSymlinkTree(

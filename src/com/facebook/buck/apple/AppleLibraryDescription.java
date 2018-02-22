@@ -327,26 +327,24 @@ public class AppleLibraryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       AppleLibraryDescriptionArg args) {
     TargetGraph targetGraph = context.getTargetGraph();
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
     if (type.isPresent() && type.get().getValue().equals(Type.FRAMEWORK)) {
       return createFrameworkBundleBuildRule(
-          targetGraph, buildTarget, projectFilesystem, params, resolver, args);
+          targetGraph, buildTarget, context.getProjectFilesystem(), params, resolver, args);
     }
 
     Optional<BuildRule> swiftRule =
         createSwiftBuildRule(
             buildTarget,
-            projectFilesystem,
+            context.getProjectFilesystem(),
             params,
             resolver,
             new SourcePathRuleFinder(resolver),
-            cellRoots,
+            context.getCellPathResolver(),
             args,
             Optional.empty());
     if (swiftRule.isPresent()) {
@@ -356,10 +354,8 @@ public class AppleLibraryDescription
     return createLibraryBuildRule(
         context,
         buildTarget,
-        projectFilesystem,
         params,
         resolver,
-        cellRoots,
         args,
         args.getLinkStyle(),
         Optional.empty(),
@@ -427,17 +423,13 @@ public class AppleLibraryDescription
   }
 
   /**
-   * @param projectFilesystem
-   * @param cellRoots The roots of known cells.
    * @param bundleLoader The binary in which the current library will be (dynamically) loaded into.
    */
   public <A extends AppleNativeTargetDescriptionArg> BuildRule createLibraryBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      CellPathResolver cellRoots,
       A args,
       Optional<Linker.LinkableDepType> linkableDepType,
       Optional<SourcePath> bundleLoader,
@@ -457,10 +449,8 @@ public class AppleLibraryDescription
         requireUnstrippedBuildRule(
             context,
             unstrippedBuildTarget,
-            projectFilesystem,
             params,
             resolver,
-            cellRoots,
             args,
             linkableDepType,
             bundleLoader,
@@ -492,7 +482,7 @@ public class AppleLibraryDescription
     BuildRule strippedBinaryRule =
         CxxDescriptionEnhancer.createCxxStripRule(
             strippedBuildTarget,
-            projectFilesystem,
+            context.getProjectFilesystem(),
             resolver,
             flavoredStripStyle.orElse(StripStyle.NON_GLOBAL_SYMBOLS),
             unstrippedBinaryRule,
@@ -500,7 +490,7 @@ public class AppleLibraryDescription
 
     return AppleDescriptions.createAppleDebuggableBinary(
         unstrippedBuildTarget,
-        projectFilesystem,
+        context.getProjectFilesystem(),
         resolver,
         strippedBinaryRule,
         (HasAppleDebugSymbolDeps) unstrippedBinaryRule,
@@ -515,10 +505,8 @@ public class AppleLibraryDescription
   private <A extends AppleNativeTargetDescriptionArg> BuildRule requireUnstrippedBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      CellPathResolver cellRoots,
       A args,
       Optional<Linker.LinkableDepType> linkableDepType,
       Optional<SourcePath> bundleLoader,
@@ -535,10 +523,8 @@ public class AppleLibraryDescription
             requireSingleArchUnstrippedBuildRule(
                 context,
                 thinTarget,
-                projectFilesystem,
                 params,
                 resolver,
-                cellRoots,
                 args,
                 linkableDepType,
                 bundleLoader,
@@ -551,7 +537,7 @@ public class AppleLibraryDescription
           buildTarget.withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors());
       return MultiarchFileInfos.requireMultiarchRule(
           multiarchBuildTarget,
-          projectFilesystem,
+          context.getProjectFilesystem(),
           // In the same manner that debug flavors are omitted from single-arch constituents, they
           // are omitted here as well.
           params,
@@ -562,10 +548,8 @@ public class AppleLibraryDescription
       return requireSingleArchUnstrippedBuildRule(
           context,
           buildTarget,
-          projectFilesystem,
           params,
           resolver,
-          cellRoots,
           args,
           linkableDepType,
           bundleLoader,
@@ -580,10 +564,8 @@ public class AppleLibraryDescription
       BuildRule requireSingleArchUnstrippedBuildRule(
           BuildRuleCreationContext context,
           BuildTarget buildTarget,
-          ProjectFilesystem projectFilesystem,
           BuildRuleParams params,
           BuildRuleResolver resolver,
-          CellPathResolver cellRoots,
           A args,
           Optional<Linker.LinkableDepType> linkableDepType,
           Optional<SourcePath> bundleLoader,
@@ -599,9 +581,7 @@ public class AppleLibraryDescription
     final BuildRuleParams newParams;
     Optional<BuildRule> swiftCompanionBuildRule =
         swiftDelegate.flatMap(
-            swift ->
-                swift.createCompanionBuildRule(
-                    context, buildTarget, projectFilesystem, params, resolver, cellRoots, args));
+            swift -> swift.createCompanionBuildRule(context, buildTarget, params, resolver, args));
     if (swiftCompanionBuildRule.isPresent() && isSwiftTarget(buildTarget)) {
       // when creating a swift target, there is no need to proceed with apple library rules
       return swiftCompanionBuildRule.get();
@@ -626,10 +606,10 @@ public class AppleLibraryDescription
               swiftDelegate.isPresent() ? Optional.empty() : Optional.of(this);
           return cxxLibraryFactory.createBuildRule(
               unstrippedTarget1,
-              projectFilesystem,
+              context.getProjectFilesystem(),
               newParams,
               resolver,
-              cellRoots,
+              context.getCellPathResolver(),
               delegateArg.build(),
               linkableDepType,
               bundleLoader,

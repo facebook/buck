@@ -67,11 +67,13 @@ public class AndroidManifestDescriptionTest {
     BuildRule androidManifest =
         new AndroidManifestDescription(new AndroidManifestFactory())
             .createBuildRule(
-                ImmutableBuildRuleCreationContext.of(TargetGraph.EMPTY, buildRuleResolver),
+                ImmutableBuildRuleCreationContext.of(
+                    TargetGraph.EMPTY,
+                    buildRuleResolver,
+                    projectFilesystem,
+                    TestCellBuilder.createCellRoots(projectFilesystem)),
                 buildTarget,
-                projectFilesystem,
                 params,
-                TestCellBuilder.createCellRoots(projectFilesystem),
                 arg);
 
     assertEquals(ImmutableSortedSet.of(ruleWithOutput), androidManifest.getBuildDeps());

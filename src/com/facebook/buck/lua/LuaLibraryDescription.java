@@ -17,13 +17,11 @@
 package com.facebook.buck.lua;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
@@ -51,14 +49,12 @@ public class LuaLibraryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       final LuaLibraryDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     final SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-    return new LuaLibrary(buildTarget, projectFilesystem, params) {
+    return new LuaLibrary(buildTarget, context.getProjectFilesystem(), params) {
 
       @Override
       public Iterable<BuildRule> getLuaPackageDeps(CxxPlatform cxxPlatform) {

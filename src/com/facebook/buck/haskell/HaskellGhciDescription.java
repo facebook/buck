@@ -324,17 +324,15 @@ public class HaskellGhciDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      final CellPathResolver cellPathResolver,
       HaskellGhciDescriptionArg args) {
 
     HaskellPlatform platform = getPlatform(buildTarget, args);
     return HaskellDescriptionUtils.requireGhciRule(
         buildTarget,
-        projectFilesystem,
+        context.getProjectFilesystem(),
         params,
-        cellPathResolver,
+        context.getCellPathResolver(),
         context.getBuildRuleResolver(),
         platform,
         cxxBuckConfig,

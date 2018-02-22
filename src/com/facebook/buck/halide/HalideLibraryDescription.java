@@ -283,9 +283,7 @@ public class HalideLibraryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       HalideLibraryDescriptionArg args) {
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
     FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
@@ -296,6 +294,7 @@ public class HalideLibraryDescription
     ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(buildTarget.getFlavors());
     CxxPlatform cxxPlatform =
         cxxPlatforms.getValue(flavors).orElse(cxxPlatformsProvider.getDefaultCxxPlatform());
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     if (flavors.contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)) {
       ImmutableMap.Builder<Path, SourcePath> headersBuilder = ImmutableMap.builder();
@@ -333,7 +332,7 @@ public class HalideLibraryDescription
           resolver,
           pathResolver,
           ruleFinder,
-          cellRoots,
+          context.getCellPathResolver(),
           cxxPlatformsProvider,
           hostCxxPlatform,
           args.getSrcs(),

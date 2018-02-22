@@ -109,11 +109,10 @@ public class ApplePackageDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       ApplePackageDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     final BuildRule bundle =
         resolver.getRule(propagateFlavorsToTarget(buildTarget, args.getBundle()));
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -122,7 +121,7 @@ public class ApplePackageDescription
         getApplePackageConfig(
             buildTarget,
             MacroArg.toMacroArgFunction(
-                PARSE_TIME_MACRO_HANDLER, buildTarget, cellRoots, resolver));
+                PARSE_TIME_MACRO_HANDLER, buildTarget, context.getCellPathResolver(), resolver));
 
     if (applePackageConfigAndPlatformInfo.isPresent()) {
       return new ExternallyBuiltApplePackage(

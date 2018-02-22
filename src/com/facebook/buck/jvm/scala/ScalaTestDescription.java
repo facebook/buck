@@ -74,12 +74,11 @@ public class ScalaTestDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams rawParams,
-      CellPathResolver cellRoots,
       ScalaTestDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
         new JavaTestDescription.CxxLibraryEnhancement(
             buildTarget,
@@ -106,6 +105,7 @@ public class ScalaTestDescription
             resolver,
             args);
 
+    CellPathResolver cellRoots = context.getCellPathResolver();
     DefaultJavaLibraryRules scalaLibraryBuilder =
         ScalaLibraryBuilder.newInstance(
                 javaLibraryBuildTarget,

@@ -17,12 +17,10 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
@@ -46,9 +44,7 @@ public class AndroidAppModularityDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       AndroidAppModularityDescriptionArg args) {
     APKModuleGraph apkModuleGraph =
         new APKModuleGraph(
@@ -61,7 +57,10 @@ public class AndroidAppModularityDescription
     AndroidAppModularityGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
     return new AndroidAppModularity(
-        buildTarget, projectFilesystem, params.withExtraDeps(result.getFinalDeps()), result);
+        buildTarget,
+        context.getProjectFilesystem(),
+        params.withExtraDeps(result.getFinalDeps()),
+        result);
   }
 
   @BuckStyleImmutable

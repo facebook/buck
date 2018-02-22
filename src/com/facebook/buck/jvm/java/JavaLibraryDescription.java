@@ -30,7 +30,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.HasProvidedDeps;
@@ -88,9 +87,7 @@ public class JavaLibraryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       JavaLibraryDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -98,6 +95,7 @@ public class JavaLibraryDescription
     // creating the action graph from the target graph.
 
     ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     if (flavors.contains(Javadoc.DOC_JAR)) {
       BuildTarget unflavored = BuildTarget.of(buildTarget.getUnflavoredBuildTarget());
@@ -190,7 +188,7 @@ public class JavaLibraryDescription
                 projectFilesystem,
                 params,
                 resolver,
-                cellRoots,
+                context.getCellPathResolver(),
                 new JavaConfiguredCompilerFactory(javaBuckConfig),
                 javaBuckConfig,
                 args)

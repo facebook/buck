@@ -80,12 +80,11 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       RobolectricTestDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     if (HasJavaAbi.isClassAbiTarget(buildTarget)) {
       Preconditions.checkArgument(
@@ -161,6 +160,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
     BuildTarget testLibraryBuildTarget =
         buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+    CellPathResolver cellRoots = context.getCellPathResolver();
 
     JavaLibrary testsLibrary =
         resolver.addToIndex(

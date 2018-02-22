@@ -189,9 +189,7 @@ public class AppleBinaryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       AppleBinaryDescriptionArg args) {
     FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain =
         getAppleCxxPlatformsFlavorDomain();
@@ -199,7 +197,7 @@ public class AppleBinaryDescription
       return createBundleBuildRule(
           context.getTargetGraph(),
           buildTarget,
-          projectFilesystem,
+          context.getProjectFilesystem(),
           params,
           context.getBuildRuleResolver(),
           appleCxxPlatformsFlavorDomain,
@@ -208,10 +206,10 @@ public class AppleBinaryDescription
       return createBinaryBuildRule(
           context,
           buildTarget,
-          projectFilesystem,
+          context.getProjectFilesystem(),
           params,
           context.getBuildRuleResolver(),
-          cellRoots,
+          context.getCellPathResolver(),
           appleCxxPlatformsFlavorDomain,
           args);
     }
@@ -462,14 +460,7 @@ public class AppleBinaryDescription
           Optional<BuildRule> swiftCompanionBuildRule =
               swiftDelegate.flatMap(
                   swift ->
-                      swift.createCompanionBuildRule(
-                          context,
-                          buildTarget,
-                          projectFilesystem,
-                          params,
-                          resolver,
-                          cellRoots,
-                          args));
+                      swift.createCompanionBuildRule(context, buildTarget, params, resolver, args));
           if (swiftCompanionBuildRule.isPresent()
               && SwiftLibraryDescription.isSwiftTarget(buildTarget)) {
             // when creating a swift target, there is no need to proceed with apple binary rules,

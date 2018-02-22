@@ -16,14 +16,12 @@
 
 package com.facebook.buck.versions;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.HasTests;
@@ -105,9 +103,7 @@ public class VersionPropagatorBuilder
     public BuildRule createBuildRule(
         BuildRuleCreationContext context,
         BuildTarget buildTarget,
-        ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
-        CellPathResolver cellRoots,
         VersionPropagatorDescriptionArg args) {
       throw new IllegalStateException();
     }

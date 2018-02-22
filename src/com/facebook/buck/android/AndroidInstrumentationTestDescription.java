@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasContacts;
@@ -62,9 +61,7 @@ public class AndroidInstrumentationTestDescription
   public AndroidInstrumentationTest createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       AndroidInstrumentationTestDescriptionArg args) {
     BuildRule apk = context.getBuildRuleResolver().getRule(args.getApk());
     if (!(apk instanceof HasInstallableApk)) {
@@ -74,6 +71,7 @@ public class AndroidInstrumentationTestDescription
           buildTarget, apk.getFullyQualifiedName(), apk.getType());
     }
 
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     return new AndroidInstrumentationTest(
         buildTarget,
         projectFilesystem,

@@ -20,7 +20,6 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -69,9 +68,7 @@ public class GoBinaryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       GoBinaryDescriptionArg args) {
     GoToolchain goToolchain = getGoToolchain();
     GoPlatform platform =
@@ -82,7 +79,7 @@ public class GoBinaryDescription
 
     return GoDescriptors.createGoBinaryRule(
         buildTarget,
-        projectFilesystem,
+        context.getProjectFilesystem(),
         params,
         context.getBuildRuleResolver(),
         goBuckConfig,

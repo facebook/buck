@@ -27,7 +27,6 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -129,9 +128,7 @@ public class AppleBundleDescription
   public AppleBundle createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       AppleBundleDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     AppleDebugFormat flavoredDebugFormat =
@@ -155,7 +152,7 @@ public class AppleBundleDescription
         getAppleCxxPlatformFlavorDomain(),
         context.getTargetGraph(),
         buildTarget,
-        projectFilesystem,
+        context.getProjectFilesystem(),
         params,
         resolver,
         toolchainProvider.getByName(

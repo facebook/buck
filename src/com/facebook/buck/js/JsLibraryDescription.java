@@ -93,9 +93,7 @@ public class JsLibraryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       JsLibraryDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
 
@@ -118,6 +116,8 @@ public class JsLibraryDescription
     final Optional<Either<SourcePath, Pair<SourcePath, String>>> file =
         JsFlavors.extractSourcePath(sourcesToFlavors.inverse(), buildTarget.getFlavors().stream());
 
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    CellPathResolver cellRoots = context.getCellPathResolver();
     final WorkerTool worker = resolver.getRuleWithType(args.getWorker(), WorkerTool.class);
     if (file.isPresent()) {
       return buildTarget.getFlavors().contains(JsFlavors.RELEASE)

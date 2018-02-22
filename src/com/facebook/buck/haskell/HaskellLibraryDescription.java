@@ -658,12 +658,11 @@ public class HaskellLibraryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       final HaskellLibraryDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     HaskellPlatformsProvider haskellPlatformsProvider = getHaskellPlatformsProvider();
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     FlavorDomain<HaskellPlatform> platforms = haskellPlatformsProvider.getHaskellPlatforms();
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -754,7 +753,7 @@ public class HaskellLibraryDescription
               buildTarget,
               projectFilesystem,
               params,
-              cellRoots,
+              context.getCellPathResolver(),
               resolver,
               platform,
               cxxBuckConfig,

@@ -767,14 +767,13 @@ public class LuaBinaryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       LuaBinaryDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     LuaPlatform luaPlatform = getPlatform(buildTarget, args);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     FlavorDomain<PythonPlatform> pythonPlatforms =
         toolchainProvider
             .getByName(PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.class)
@@ -805,7 +804,7 @@ public class LuaBinaryDescription
             resolver.getAllRules(
                 LuaUtil.getDeps(
                     luaPlatform.getCxxPlatform(), args.getDeps(), args.getPlatformDeps())),
-            cellRoots);
+            context.getCellPathResolver());
     LuaPlatform.PackageStyle packageStyle =
         args.getPackageStyle().orElse(luaPlatform.getPackageStyle());
     Tool binary =

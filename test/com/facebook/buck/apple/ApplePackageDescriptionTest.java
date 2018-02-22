@@ -84,11 +84,13 @@ public class ApplePackageDescriptionTest {
     resolver.requireAllRules(implicitDeps.build());
     BuildRule rule =
         description.createBuildRule(
-            ImmutableBuildRuleCreationContext.of(graph, resolver),
+            ImmutableBuildRuleCreationContext.of(
+                graph,
+                resolver,
+                projectFilesystem,
+                TestCellBuilder.createCellRoots(projectFilesystem)),
             packageBuildTarget,
-            projectFilesystem,
             TestBuildRuleParams.create(),
-            TestCellBuilder.createCellRoots(projectFilesystem),
             arg);
 
     assertThat(rule, instanceOf(ExternallyBuiltApplePackage.class));
@@ -137,11 +139,13 @@ public class ApplePackageDescriptionTest {
     resolver.requireAllRules(implicitDeps.build());
     BuildRule rule =
         description.createBuildRule(
-            ImmutableBuildRuleCreationContext.of(graph, resolver),
+            ImmutableBuildRuleCreationContext.of(
+                graph,
+                resolver,
+                projectFilesystem,
+                TestCellBuilder.createCellRoots(projectFilesystem)),
             packageBuildTarget,
-            projectFilesystem,
             params,
-            TestCellBuilder.createCellRoots(projectFilesystem),
             arg);
 
     assertThat(rule.getBuildDeps(), hasItem(resolver.getRule(exportFileBuildTarget)));

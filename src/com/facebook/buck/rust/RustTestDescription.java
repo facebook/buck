@@ -76,10 +76,9 @@ public class RustTestDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       RustTestDescriptionArg args) {
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     BuildTarget exeTarget = buildTarget.withAppendedFlavors(InternalFlavor.of("unittest"));
 
     Optional<Map.Entry<Flavor, RustBinaryDescription.Type>> type =

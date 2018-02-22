@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableSupport;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasTests;
@@ -147,18 +146,18 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       final T args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     Optional<ImmutableList<AbstractMacroExpander<? extends Macro, ?>>> maybeExpanders =
-        getMacroHandler(buildTarget, projectFilesystem, resolver, context.getTargetGraph(), args);
+        getMacroHandler(
+            buildTarget, context.getProjectFilesystem(), resolver, context.getTargetGraph(), args);
     if (maybeExpanders.isPresent()) {
       ImmutableList<AbstractMacroExpander<? extends Macro, ?>> expanders = maybeExpanders.get();
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       StringWithMacrosConverter converter =
-          StringWithMacrosConverter.of(buildTarget, cellRoots, resolver, expanders);
+          StringWithMacrosConverter.of(
+              buildTarget, context.getCellPathResolver(), resolver, expanders);
       Function<StringWithMacros, Arg> toArg =
           str -> {
             Arg arg = converter.convert(str);
@@ -174,7 +173,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       final Optional<Arg> cmdExe = args.getCmdExe().map(toArg);
       return createBuildRule(
           buildTarget,
-          projectFilesystem,
+          context.getProjectFilesystem(),
           params.withExtraDeps(
               Stream.concat(
                       ruleFinder.filterBuildRuleInputs(args.getSrcs()).stream(),
@@ -194,7 +193,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     }
     return createBuildRule(
         buildTarget,
-        projectFilesystem,
+        context.getProjectFilesystem(),
         params,
         resolver,
         args,

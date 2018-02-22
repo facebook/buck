@@ -16,14 +16,12 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.google.common.base.Preconditions;
@@ -48,16 +46,15 @@ public class CoreDataModelDescription implements Description<AppleWrapperResourc
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       AppleWrapperResourceArg args) {
     String extension = Files.getFileExtension(args.getPath().getFileName().toString());
     Preconditions.checkArgument(
         CORE_DATA_MODEL_EXTENSION.equals(extension)
             || VERSIONED_CORE_DATA_MODEL_EXTENSION.equals(extension));
 
-    return new NoopBuildRuleWithDeclaredAndExtraDeps(buildTarget, projectFilesystem, params);
+    return new NoopBuildRuleWithDeclaredAndExtraDeps(
+        buildTarget, context.getProjectFilesystem(), params);
   }
 
   public static boolean isVersionedDataModel(AppleWrapperResourceArg arg) {

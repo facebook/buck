@@ -23,7 +23,6 @@ import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableSupport;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasContacts;
@@ -78,14 +77,14 @@ public class ShTestDescription implements Description<ShTestDescriptionArg> {
   public ShTest createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       ShTestDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.of(buildTarget, cellRoots, resolver, MACRO_EXPANDERS);
+        StringWithMacrosConverter.of(
+            buildTarget, context.getCellPathResolver(), resolver, MACRO_EXPANDERS);
     ImmutableList<Arg> testArgs =
         Stream.concat(
                 Optionals.toStream(args.getTest()).map(SourcePathArg::of),

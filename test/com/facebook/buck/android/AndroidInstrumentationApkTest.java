@@ -147,11 +147,13 @@ public class AndroidInstrumentationApkTest {
                     new DxConfig(FakeBuckConfig.builder().build()),
                     new ApkConfig(FakeBuckConfig.builder().build()))
                 .createBuildRule(
-                    ImmutableBuildRuleCreationContext.of(TargetGraph.EMPTY, ruleResolver),
+                    ImmutableBuildRuleCreationContext.of(
+                        TargetGraph.EMPTY,
+                        ruleResolver,
+                        projectFilesystem,
+                        TestCellBuilder.createCellRoots(projectFilesystem)),
                     buildTarget,
-                    projectFilesystem,
                     params,
-                    TestCellBuilder.createCellRoots(projectFilesystem),
                     arg);
 
     assertEquals(

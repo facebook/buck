@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.scala;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -65,9 +64,7 @@ public class ScalaLibraryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams rawParams,
-      CellPathResolver cellRoots,
       ScalaLibraryDescriptionArg args) {
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
@@ -75,17 +72,17 @@ public class ScalaLibraryDescription
                 .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                 .getJavacOptions(),
             buildTarget,
-            projectFilesystem,
+            context.getProjectFilesystem(),
             context.getBuildRuleResolver(),
             args);
 
     DefaultJavaLibraryRules scalaLibraryBuilder =
         ScalaLibraryBuilder.newInstance(
                 buildTarget,
-                projectFilesystem,
+                context.getProjectFilesystem(),
                 rawParams,
                 context.getBuildRuleResolver(),
-                cellRoots,
+                context.getCellPathResolver(),
                 scalaBuckConfig,
                 javaBuckConfig,
                 args)

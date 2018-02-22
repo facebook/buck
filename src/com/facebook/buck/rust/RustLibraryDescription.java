@@ -135,13 +135,12 @@ public class RustLibraryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       RustLibraryDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     ImmutableList.Builder<String> rustcArgs = ImmutableList.builder();
 

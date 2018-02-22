@@ -16,11 +16,9 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
@@ -40,12 +38,15 @@ public class ShBinaryDescription implements Description<ShBinaryDescriptionArg> 
   public ShBinary createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       ShBinaryDescriptionArg args) {
     return new ShBinary(
-        buildTarget, cellRoots, projectFilesystem, params, args.getMain(), args.getResources());
+        buildTarget,
+        context.getCellPathResolver(),
+        context.getProjectFilesystem(),
+        params,
+        args.getMain(),
+        args.getResources());
   }
 
   @BuckStyleImmutable

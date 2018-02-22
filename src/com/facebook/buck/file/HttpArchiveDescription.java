@@ -24,7 +24,6 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
@@ -68,9 +67,7 @@ public class HttpArchiveDescription implements Description<HttpArchiveDescriptio
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       HttpArchiveDescriptionArg args) {
 
     HashCode sha256 =
@@ -84,6 +81,8 @@ public class HttpArchiveDescription implements Description<HttpArchiveDescriptio
         args.getType()
             .map(t -> getTypeFromType(t, buildTarget))
             .orElseGet(() -> getTypeFromFilename(args.getUrls(), buildTarget));
+
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     // Setup the implicit download rule
     BuildTarget httpFileTarget = buildTarget.withAppendedFlavors(ARCHIVE_DOWNLOAD);

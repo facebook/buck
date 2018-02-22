@@ -16,12 +16,10 @@
 
 package com.facebook.buck.graphql;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
@@ -40,12 +38,10 @@ public class GraphqlLibraryDescription implements Description<GraphqlLibraryDesc
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       GraphqlLibraryDescriptionArg args) {
 
-    return new GraphqlLibrary(buildTarget, projectFilesystem, params, args.getSrcs());
+    return new GraphqlLibrary(buildTarget, context.getProjectFilesystem(), params, args.getSrcs());
   }
 
   @BuckStyleImmutable

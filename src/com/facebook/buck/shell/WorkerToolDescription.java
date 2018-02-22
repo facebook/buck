@@ -17,7 +17,6 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BinaryBuildRule;
@@ -83,9 +82,7 @@ public class WorkerToolDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       WorkerToolDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
 
@@ -113,7 +110,8 @@ public class WorkerToolDescription
             .collect(ImmutableList.toImmutableList()));
 
     Function<String, Arg> toArg =
-        MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);
+        MacroArg.toMacroArgFunction(
+            MACRO_HANDLER, buildTarget, context.getCellPathResolver(), resolver);
 
     if (args.getArgs().isLeft()) {
       builder.addArg(
@@ -145,7 +143,7 @@ public class WorkerToolDescription
     CommandTool tool = builder.build();
     return new DefaultWorkerTool(
         buildTarget,
-        projectFilesystem,
+        context.getProjectFilesystem(),
         new SourcePathRuleFinder(resolver),
         tool,
         maxWorkers,

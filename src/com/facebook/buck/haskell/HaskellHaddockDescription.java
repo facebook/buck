@@ -16,7 +16,6 @@
 package com.facebook.buck.haskell;
 
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -64,9 +63,7 @@ public class HaskellHaddockDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget baseTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      final CellPathResolver cellPathResolver,
       HaskellHaddockDescriptionArg args) {
     String name = baseTarget.getShortName();
     LOG.info("Creating Haddock " + name);
@@ -96,7 +93,7 @@ public class HaskellHaddockDescription
     return resolver.addToIndex(
         HaskellHaddockRule.from(
             baseTarget,
-            projectFilesystem,
+            context.getProjectFilesystem(),
             params,
             ruleFinder,
             platform.getHaddock().resolve(resolver),

@@ -185,9 +185,7 @@ public class GoTestDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       GoTestDescriptionArg args) {
     GoToolchain goToolchain = getGoToolchain();
     GoPlatform platform =
@@ -199,6 +197,7 @@ public class GoTestDescription
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     GoTestCoverStep.Mode coverageMode;
     ImmutableSortedSet.Builder<BuildRule> extraDeps = ImmutableSortedSet.<BuildRule>naturalOrder();

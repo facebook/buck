@@ -116,12 +116,11 @@ public class GoLibraryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       GoLibraryDescriptionArg args) {
     GoToolchain goToolchain = getGoToolchain();
     Optional<GoPlatform> platform = goToolchain.getPlatformFlavorDomain().getValue(buildTarget);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     if (platform.isPresent()) {
       return GoDescriptors.createGoCompileRule(

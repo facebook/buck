@@ -280,22 +280,19 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       CxxGenruleDescriptionArg args) {
     Optional<CxxPlatform> cxxPlatform = getCxxPlatforms().getValue(buildTarget);
     if (cxxPlatform.isPresent()) {
       return super.createBuildRule(
-          context,
-          buildTarget.withAppendedFlavors(cxxPlatform.get().getFlavor()),
-          projectFilesystem,
-          params,
-          cellRoots,
-          args);
+          context, buildTarget.withAppendedFlavors(cxxPlatform.get().getFlavor()), params, args);
     }
     return new CxxGenrule(
-        buildTarget, projectFilesystem, params, context.getBuildRuleResolver(), args.getOut());
+        buildTarget,
+        context.getProjectFilesystem(),
+        params,
+        context.getBuildRuleResolver(),
+        args.getOut());
   }
 
   @Override

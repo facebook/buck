@@ -18,7 +18,6 @@ package com.facebook.buck.gwt;
 
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.gwt.GwtBinary.Style;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
@@ -26,7 +25,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
@@ -73,9 +71,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescriptionArg
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       GwtBinaryDescriptionArg args) {
 
     BuildRuleResolver resolver = context.getBuildRuleResolver();
@@ -120,7 +116,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescriptionArg
 
                         return new GwtModule(
                             gwtModuleTarget,
-                            projectFilesystem,
+                            context.getProjectFilesystem(),
                             params.withDeclaredDeps(deps).withoutExtraDeps(),
                             ruleFinder,
                             filesForGwtModule);
@@ -144,7 +140,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescriptionArg
 
     return new GwtBinary(
         buildTarget,
-        projectFilesystem,
+        context.getProjectFilesystem(),
         params.withExtraDeps(extraDeps.build()),
         args.getModules(),
         toolchainProvider

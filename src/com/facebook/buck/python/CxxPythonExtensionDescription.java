@@ -401,11 +401,11 @@ public class CxxPythonExtensionDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       final CxxPythonExtensionDescriptionArg args) {
     BuildRuleResolver ruleResolverLocal = context.getBuildRuleResolver();
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    CellPathResolver cellRoots = context.getCellPathResolver();
 
     // See if we're building a particular "type" of this library, and if so, extract it as an enum.
     final Optional<Type> type = LIBRARY_TYPE.getValue(buildTarget);

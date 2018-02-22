@@ -125,11 +125,13 @@ public class AppleBuildRulesTest {
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule libraryRule =
         FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION.createBuildRule(
-            ImmutableBuildRuleCreationContext.of(TargetGraph.EMPTY, buildRuleResolver),
+            ImmutableBuildRuleCreationContext.of(
+                TargetGraph.EMPTY,
+                buildRuleResolver,
+                projectFilesystem,
+                TestCellBuilder.createCellRoots(projectFilesystem)),
             buildTarget,
-            projectFilesystem,
             params,
-            TestCellBuilder.createCellRoots(projectFilesystem),
             AppleLibraryDescriptionArg.builder().setName("lib").build());
 
     assertFalse(AppleBuildRules.isXcodeTargetTestBuildRule(libraryRule));

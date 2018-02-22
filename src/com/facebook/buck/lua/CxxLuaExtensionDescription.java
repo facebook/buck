@@ -280,12 +280,12 @@ public class CxxLuaExtensionDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       final CxxLuaExtensionDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     FlavorDomain<LuaPlatform> luaPlatforms = getLuaPlatformsProvider().getLuaPlatforms();
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    CellPathResolver cellRoots = context.getCellPathResolver();
 
     // See if we're building a particular "type" of this library, and if so, extract
     // it as an enum.

@@ -18,12 +18,10 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
@@ -54,9 +52,7 @@ public class AuditBuildRuleTypesCommandTest {
     public BuildRule createBuildRule(
         BuildRuleCreationContext context,
         BuildTarget buildTarget,
-        ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
-        CellPathResolver cellRoots,
         CommonDescriptionArg args) {
       return null;
     }

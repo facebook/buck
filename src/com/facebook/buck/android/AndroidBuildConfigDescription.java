@@ -32,7 +32,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
@@ -70,9 +69,7 @@ public class AndroidBuildConfigDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       AndroidBuildConfigDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -82,14 +79,14 @@ public class AndroidBuildConfigDescription
       return CalculateClassAbi.of(
           buildTarget,
           ruleFinder,
-          projectFilesystem,
+          context.getProjectFilesystem(),
           params,
           Preconditions.checkNotNull(configRule.getSourcePathToOutput()));
     }
 
     return createBuildRule(
         buildTarget,
-        projectFilesystem,
+        context.getProjectFilesystem(),
         params,
         args.getPackage(),
         args.getValues(),

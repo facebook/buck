@@ -21,7 +21,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
@@ -50,9 +49,7 @@ public class ExportFileDescription
   public ExportFile createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       ExportFileDescriptionArg args) {
     Mode mode = args.getMode().orElse(Mode.COPY);
 
@@ -70,6 +67,7 @@ public class ExportFileDescription
     SourcePath src;
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(context.getBuildRuleResolver());
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     if (args.getSrc().isPresent()) {
       if (mode == ExportFileDescription.Mode.REFERENCE
           && !pathResolver.getFilesystem(args.getSrc().get()).equals(projectFilesystem)) {

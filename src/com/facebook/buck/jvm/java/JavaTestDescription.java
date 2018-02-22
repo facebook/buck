@@ -100,11 +100,11 @@ public class JavaTestDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       JavaTestDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    CellPathResolver cellRoots = context.getCellPathResolver();
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
             toolchainProvider

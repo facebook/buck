@@ -86,14 +86,9 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
             ruleResolver.requireAllRules(targetGraphOnlyDeps));
 
     BuildRuleCreationContext context =
-        ImmutableBuildRuleCreationContext.of(targetGraph, ruleResolver);
+        ImmutableBuildRuleCreationContext.of(
+            targetGraph, ruleResolver, targetNode.getFilesystem(), targetNode.getCellNames());
 
-    return description.createBuildRule(
-        context,
-        targetNode.getBuildTarget(),
-        targetNode.getFilesystem(),
-        params,
-        targetNode.getCellNames(),
-        arg);
+    return description.createBuildRule(context, targetNode.getBuildTarget(), params, arg);
   }
 }

@@ -72,14 +72,13 @@ public class DTestDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       DTestDescriptionArg args) {
 
     BuildRuleResolver buildRuleResolver = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     if (buildTarget.getFlavors().contains(SOURCE_LINK_TREE)) {
       return DDescriptionUtils.createSourceSymlinkTree(
@@ -100,7 +99,7 @@ public class DTestDescription
 
     BuildRule binaryRule =
         DDescriptionUtils.createNativeLinkable(
-            cellRoots,
+            context.getCellPathResolver(),
             binaryTarget,
             projectFilesystem,
             params,

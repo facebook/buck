@@ -38,7 +38,6 @@ import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableSupport;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
@@ -333,10 +332,9 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
   public NdkLibrary createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       NdkLibraryDescriptionArg args) {
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     Pair<String, Iterable<BuildRule>> makefilePair =
         generateMakefile(projectFilesystem, params, context.getBuildRuleResolver());
 
@@ -359,7 +357,8 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
         args.getFlags(),
         args.getIsAsset(),
         androidNdk.getNdkVersion(),
-        MACRO_HANDLER.getExpander(buildTarget, cellRoots, context.getBuildRuleResolver()));
+        MACRO_HANDLER.getExpander(
+            buildTarget, context.getCellPathResolver(), context.getBuildRuleResolver()));
   }
 
   @BuckStyleImmutable

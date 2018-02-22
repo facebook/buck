@@ -77,14 +77,13 @@ public class DBinaryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       DBinaryDescriptionArg args) {
 
     BuildRuleResolver buildRuleResolver = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     if (buildTarget.getFlavors().contains(SOURCE_LINK_TREE)) {
       return DDescriptionUtils.createSourceSymlinkTree(
@@ -99,7 +98,7 @@ public class DBinaryDescription
     // rule to the index.
     CxxLink nativeLinkable =
         DDescriptionUtils.createNativeLinkable(
-            cellRoots,
+            context.getCellPathResolver(),
             buildTarget.withAppendedFlavors(BINARY_FLAVOR),
             projectFilesystem,
             params,

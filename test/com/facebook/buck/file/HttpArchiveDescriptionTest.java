@@ -67,12 +67,11 @@ public class HttpArchiveDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance(targetName);
     return (HttpArchive)
         description.createBuildRule(
-            ImmutableBuildRuleCreationContext.of(targetGraph, buildRuleResolver),
+            ImmutableBuildRuleCreationContext.of(
+                targetGraph, buildRuleResolver, filesystem, TestCellPathResolver.get(filesystem)),
             target,
-            filesystem,
             new BuildRuleParams(
                 ImmutableSortedSet::of, ImmutableSortedSet::of, ImmutableSortedSet.of()),
-            TestCellPathResolver.get(filesystem),
             args);
   }
 

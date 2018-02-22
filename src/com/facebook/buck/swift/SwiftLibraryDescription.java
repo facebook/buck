@@ -149,9 +149,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       SwiftLibraryDescriptionArg args) {
 
     Optional<LinkerMapMode> flavoredLinkerMapMode =
@@ -186,6 +184,8 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
     FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain =
         swiftPlatformsProvider.getSwiftCxxPlatforms();
 
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    CellPathResolver cellRoots = context.getCellPathResolver();
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     if (!buildFlavors.contains(SWIFT_COMPANION_FLAVOR) && platform.isPresent()) {
       final CxxPlatform cxxPlatform = platform.get().getValue();
@@ -389,10 +389,8 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
   public Optional<BuildRule> createCompanionBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       final BuildRuleResolver resolver,
-      CellPathResolver cellRoots,
       CxxLibraryDescription.CommonArg args) {
     if (!isSwiftTarget(buildTarget)) {
       boolean hasSwiftSource =
@@ -415,9 +413,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
     SwiftLibraryDescriptionArg delegateArgs = delegateArgsBuilder.build();
     if (!delegateArgs.getSrcs().isEmpty()) {
       return Optional.of(
-          resolver.addToIndex(
-              createBuildRule(
-                  context, buildTarget, projectFilesystem, params, cellRoots, delegateArgs)));
+          resolver.addToIndex(createBuildRule(context, buildTarget, params, delegateArgs)));
     } else {
       return Optional.empty();
     }

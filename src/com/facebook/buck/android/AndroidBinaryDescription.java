@@ -161,9 +161,7 @@ public class AndroidBinaryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       AndroidBinaryDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
 
@@ -264,6 +262,8 @@ public class AndroidBinaryDescription
       JavaOptionsProvider javaOptionsProvider =
           toolchainProvider.getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class);
 
+      CellPathResolver cellRoots = context.getCellPathResolver();
+
       NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs =
           NonPredexedDexBuildableArgs.builder()
               .setProguardAgentPath(proGuardConfig.getProguardAgentPath())
@@ -291,6 +291,8 @@ public class AndroidBinaryDescription
       AndroidPlatformTarget androidPlatformTarget =
           toolchainProvider.getByName(
               AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+
+      ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
       AndroidBinaryGraphEnhancer graphEnhancer =
           new AndroidBinaryGraphEnhancer(

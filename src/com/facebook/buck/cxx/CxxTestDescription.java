@@ -146,9 +146,7 @@ public class CxxTestDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget inputBuildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       final CxxTestDescriptionArg args) {
     Optional<StripStyle> flavoredStripStyle = StripStyle.FLAVOR_DOMAIN.getValue(inputBuildTarget);
     Optional<LinkerMapMode> flavoredLinkerMapMode =
@@ -162,6 +160,8 @@ public class CxxTestDescription
     CxxPlatform cxxPlatform = getCxxPlatform(buildTarget, args);
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    CellPathResolver cellRoots = context.getCellPathResolver();
 
     if (buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       CxxLinkAndCompileRules cxxLinkAndCompileRules =

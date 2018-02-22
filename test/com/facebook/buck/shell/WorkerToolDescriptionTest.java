@@ -106,11 +106,13 @@ public class WorkerToolDescriptionTest {
             ImmutableSortedSet.of());
     return (WorkerTool)
         workerToolDescription.createBuildRule(
-            ImmutableBuildRuleCreationContext.of(targetGraph, resolver),
+            ImmutableBuildRuleCreationContext.of(
+                targetGraph,
+                resolver,
+                projectFilesystem,
+                TestCellBuilder.createCellRoots(projectFilesystem)),
             buildTarget,
-            projectFilesystem,
             params,
-            TestCellBuilder.createCellRoots(projectFilesystem),
             args);
   }
 }

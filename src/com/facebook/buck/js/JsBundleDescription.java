@@ -34,7 +34,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
@@ -102,11 +101,10 @@ public class JsBundleDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       JsBundleDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     final ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
 
     // Source maps are exposed individually using a special flavor
@@ -202,7 +200,7 @@ public class JsBundleDescription
         paramsWithLibraries,
         libraries,
         entryPoints,
-        JsUtil.getExtraJson(args, buildTarget, resolver, cellRoots),
+        JsUtil.getExtraJson(args, buildTarget, resolver, context.getCellPathResolver()),
         libraryPathGroups,
         bundleName,
         resolver.getRuleWithType(args.getWorker(), WorkerTool.class));

@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.InstallTrigger;
@@ -102,11 +101,10 @@ public class InstallTriggerIntegrationTest {
     public BuildRule createBuildRule(
         BuildRuleCreationContext context,
         BuildTarget buildTarget,
-        ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
-        CellPathResolver cellRoots,
         InstallTriggerDescriptionArg args) {
-      return new InstallTriggerRule(buildTarget, projectFilesystem, params.getBuildDeps());
+      return new InstallTriggerRule(
+          buildTarget, context.getProjectFilesystem(), params.getBuildDeps());
     }
 
     private static class InstallTriggerRule extends AbstractBuildRule implements NoopInstallable {

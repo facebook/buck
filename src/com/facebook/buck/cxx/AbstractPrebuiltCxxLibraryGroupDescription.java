@@ -32,7 +32,6 @@ import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CacheableBuildRule;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
@@ -165,14 +164,12 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       final PrebuiltCxxLibraryGroupDescriptionArg args) {
     BuildRuleResolver resolverLocal = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinderLocal = new SourcePathRuleFinder(resolverLocal);
     return new CustomPrebuiltCxxLibrary(
-        buildTarget, projectFilesystem, params, resolverLocal, ruleFinderLocal) {
+        buildTarget, context.getProjectFilesystem(), params, resolverLocal, ruleFinderLocal) {
 
       private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
           transitiveCxxPreprocessorInputCache =

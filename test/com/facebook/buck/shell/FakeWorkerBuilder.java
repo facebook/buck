@@ -22,7 +22,6 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
@@ -103,11 +102,9 @@ public class FakeWorkerBuilder
     public BuildRule createBuildRule(
         BuildRuleCreationContext context,
         BuildTarget buildTarget,
-        ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
-        CellPathResolver cellRoots,
         FakeWorkerDescriptionArg args) {
-      return new FakeWorkerTool(buildTarget, projectFilesystem, params);
+      return new FakeWorkerTool(buildTarget, context.getProjectFilesystem(), params);
     }
 
     @BuckStyleImmutable

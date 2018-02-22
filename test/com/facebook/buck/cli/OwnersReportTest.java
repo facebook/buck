@@ -37,7 +37,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.Description;
@@ -84,11 +83,9 @@ public class OwnersReportTest {
     public BuildRule createBuildRule(
         BuildRuleCreationContext context,
         BuildTarget buildTarget,
-        ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
-        CellPathResolver cellRoots,
         FakeRuleDescriptionArg args) {
-      return new FakeBuildRule(buildTarget, projectFilesystem, params);
+      return new FakeBuildRule(buildTarget, context.getProjectFilesystem(), params);
     }
 
     @BuckStyleImmutable

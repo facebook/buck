@@ -16,13 +16,11 @@
 
 package com.facebook.buck.dotnet;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasSrcs;
@@ -44,9 +42,7 @@ public class CsharpLibraryDescription implements Description<CsharpLibraryDescri
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       CsharpLibraryDescriptionArg args) {
 
     BuildRuleResolver resolver = context.getBuildRuleResolver();
@@ -61,7 +57,7 @@ public class CsharpLibraryDescription implements Description<CsharpLibraryDescri
 
     return new CsharpLibrary(
         buildTarget,
-        projectFilesystem,
+        context.getProjectFilesystem(),
         params,
         args.getDllName(),
         args.getSrcs(),

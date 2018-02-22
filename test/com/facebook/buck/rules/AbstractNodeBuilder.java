@@ -123,11 +123,9 @@ public abstract class AbstractNodeBuilder<
     TBuildRule rule =
         (TBuildRule)
             description.createBuildRule(
-                ImmutableBuildRuleCreationContext.of(targetGraph, resolver),
+                ImmutableBuildRuleCreationContext.of(targetGraph, resolver, filesystem, cellRoots),
                 target,
-                filesystem,
                 params,
-                cellRoots,
                 builtArg);
     resolver.addToIndex(rule);
     return rule;

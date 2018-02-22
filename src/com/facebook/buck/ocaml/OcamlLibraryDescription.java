@@ -18,7 +18,6 @@ package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
@@ -68,16 +67,17 @@ public class OcamlLibraryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       OcamlLibraryDescriptionArg args) {
 
     ImmutableList<OcamlSource> srcs = args.getSrcs();
     ImmutableList.Builder<Arg> flags = ImmutableList.builder();
     flags.addAll(
         OcamlDescriptionEnhancer.toStringWithMacrosArgs(
-            buildTarget, cellRoots, context.getBuildRuleResolver(), args.getCompilerFlags()));
+            buildTarget,
+            context.getCellPathResolver(),
+            context.getBuildRuleResolver(),
+            args.getCompilerFlags()));
     if (ocamlBuckConfig.getWarningsFlags().isPresent() || args.getWarningsFlags().isPresent()) {
       flags.addAll(
           StringArg.from(
@@ -93,7 +93,7 @@ public class OcamlLibraryDescription
         toolchainProvider,
         ocamlBuckConfig,
         buildTarget,
-        projectFilesystem,
+        context.getProjectFilesystem(),
         params,
         context.getBuildRuleResolver(),
         srcs,

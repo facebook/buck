@@ -20,7 +20,6 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
@@ -76,9 +75,7 @@ public class RustBinaryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       RustBinaryDescriptionArg args) {
     Linker.LinkableDepType linkStyle =
         RustCompileUtils.getLinkStyle(buildTarget, args.getLinkStyle());
@@ -92,7 +89,7 @@ public class RustBinaryDescription
 
     return RustCompileUtils.createBinaryBuildRule(
         buildTarget,
-        projectFilesystem,
+        context.getProjectFilesystem(),
         params,
         context.getBuildRuleResolver(),
         rustBuckConfig,

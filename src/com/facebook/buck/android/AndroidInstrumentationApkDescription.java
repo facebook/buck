@@ -28,7 +28,6 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactory;
@@ -38,7 +37,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
@@ -92,9 +90,7 @@ public class AndroidInstrumentationApkDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       AndroidInstrumentationApkDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     params = params.withoutExtraDeps();
@@ -161,9 +157,9 @@ public class AndroidInstrumentationApkDescription
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
             toolchainProvider,
-            cellRoots,
+            context.getCellPathResolver(),
             buildTarget,
-            projectFilesystem,
+            context.getProjectFilesystem(),
             androidPlatformTarget,
             params,
             resolver,
@@ -223,7 +219,7 @@ public class AndroidInstrumentationApkDescription
         new AndroidBinaryFilesInfo(enhancementResult, EnumSet.noneOf(ExopackageMode.class), false);
     return new AndroidInstrumentationApk(
         buildTarget,
-        projectFilesystem,
+        context.getProjectFilesystem(),
         toolchainProvider.getByName(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class),
         androidPlatformTarget,
         params,

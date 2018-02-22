@@ -18,7 +18,6 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
@@ -77,12 +76,10 @@ public class PythonLibraryDescription
   public PythonLibrary createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       PythonLibraryDescriptionArg args) {
     return new PythonLibrary(
-        buildTarget, projectFilesystem, params, context.getBuildRuleResolver());
+        buildTarget, context.getProjectFilesystem(), params, context.getBuildRuleResolver());
   }
 
   @Override

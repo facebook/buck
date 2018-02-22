@@ -109,15 +109,13 @@ public class CxxBinaryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       CxxBinaryDescriptionArg args) {
     return cxxBinaryFactory.createBuildRule(
         buildTarget,
-        projectFilesystem,
+        context.getProjectFilesystem(),
         context.getBuildRuleResolver(),
-        cellRoots,
+        context.getCellPathResolver(),
         args,
         ImmutableSortedSet.of());
   }

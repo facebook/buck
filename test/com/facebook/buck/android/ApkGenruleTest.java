@@ -157,11 +157,13 @@ public class ApkGenruleTest {
     ApkGenrule apkGenrule =
         (ApkGenrule)
             description.createBuildRule(
-                ImmutableBuildRuleCreationContext.of(TargetGraph.EMPTY, ruleResolver),
+                ImmutableBuildRuleCreationContext.of(
+                    TargetGraph.EMPTY,
+                    ruleResolver,
+                    projectFilesystem,
+                    TestCellBuilder.createCellRoots(projectFilesystem)),
                 buildTarget,
-                projectFilesystem,
                 params,
-                TestCellBuilder.createCellRoots(projectFilesystem),
                 arg);
     ruleResolver.addToIndex(apkGenrule);
 

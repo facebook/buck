@@ -16,12 +16,10 @@
 
 package com.facebook.buck.versions;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -43,9 +41,7 @@ abstract class AbstractVersionedAliasDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       VersionedAliasDescriptionArg args) {
     throw new IllegalStateException(
         String.format("%s: `versioned_alias()` rules cannot produce build rules", buildTarget));

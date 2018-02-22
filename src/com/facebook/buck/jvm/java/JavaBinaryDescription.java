@@ -89,9 +89,7 @@ public class JavaBinaryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       JavaBinaryDescriptionArg args) {
 
     BuildRuleResolver resolver = context.getBuildRuleResolver();
@@ -111,6 +109,7 @@ public class JavaBinaryDescription
         toolchainProvider
             .getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class)
             .getJavaOptions();
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     // Construct the build rule to build the binary JAR.
     ImmutableSet<JavaLibrary> transitiveClasspathDeps =

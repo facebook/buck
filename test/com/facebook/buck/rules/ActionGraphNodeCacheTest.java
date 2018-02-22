@@ -22,7 +22,6 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeTargetNodeBuilder.FakeDescription;
@@ -359,11 +358,9 @@ public class ActionGraphNodeCacheTest {
           public BuildRule createBuildRule(
               BuildRuleCreationContext context,
               BuildTarget buildTarget,
-              ProjectFilesystem projectFilesystem,
               BuildRuleParams params,
-              CellPathResolver cellRoots,
               FakeTargetNodeArg args) {
-            return new FakeCacheableBuildRule(buildTarget, projectFilesystem, params);
+            return new FakeCacheableBuildRule(buildTarget, context.getProjectFilesystem(), params);
           }
         },
         deps);
@@ -401,11 +398,10 @@ public class ActionGraphNodeCacheTest {
           public BuildRule createBuildRule(
               BuildRuleCreationContext context,
               BuildTarget buildTarget,
-              ProjectFilesystem projectFilesystem,
               BuildRuleParams params,
-              CellPathResolver cellRoots,
               FakeTargetNodeArg args) {
-            BuildRule buildRule = new FakeBuildRule(buildTarget, projectFilesystem, params);
+            BuildRule buildRule =
+                new FakeBuildRule(buildTarget, context.getProjectFilesystem(), params);
             assertFalse(buildRule instanceof CacheableBuildRule);
             return buildRule;
           }

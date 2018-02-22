@@ -17,12 +17,10 @@
 package com.facebook.buck.file;
 
 import com.facebook.buck.file.downloader.Downloader;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -57,9 +55,7 @@ public class HttpFileDescription implements Description<HttpFileDescriptionArg> 
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       HttpFileDescriptionArg args) {
 
     HashCode sha256 =
@@ -74,7 +70,7 @@ public class HttpFileDescription implements Description<HttpFileDescriptionArg> 
     if (executable) {
       return new HttpFileBinary(
           buildTarget,
-          projectFilesystem,
+          context.getProjectFilesystem(),
           params,
           downloaderSupplier.get(),
           args.getUrls(),
@@ -83,7 +79,7 @@ public class HttpFileDescription implements Description<HttpFileDescriptionArg> 
     }
     return new HttpFile(
         buildTarget,
-        projectFilesystem,
+        context.getProjectFilesystem(),
         params,
         downloaderSupplier.get(),
         args.getUrls(),

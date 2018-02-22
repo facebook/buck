@@ -152,11 +152,10 @@ public class AppleTestDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       AppleTestDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     if (!appleConfig.shouldUseSwiftDelegate()) {
       Optional<BuildRule> buildRule =
           appleLibraryDescription.createSwiftBuildRule(
@@ -165,7 +164,7 @@ public class AppleTestDescription
               params,
               resolver,
               new SourcePathRuleFinder(resolver),
-              cellRoots,
+              context.getCellPathResolver(),
               args,
               Optional.of(this));
 
@@ -264,10 +263,8 @@ public class AppleTestDescription
     BuildRule library =
         createTestLibraryRule(
             context,
-            projectFilesystem,
             params,
             resolver,
-            cellRoots,
             args,
             testHostWithTargetApp.flatMap(TestHostInfo::getTestHostAppBinarySourcePath),
             testHostWithTargetApp.map(TestHostInfo::getBlacklist).orElse(ImmutableSet.of()),
@@ -430,10 +427,8 @@ public class AppleTestDescription
 
   private BuildRule createTestLibraryRule(
       BuildRuleCreationContext context,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      CellPathResolver cellRoots,
       AppleTestDescriptionArg args,
       Optional<SourcePath> testHostAppBinarySourcePath,
       ImmutableSet<BuildTarget> blacklist,
@@ -452,10 +447,8 @@ public class AppleTestDescription
           appleLibraryDescription.createLibraryBuildRule(
               context,
               libraryTarget,
-              projectFilesystem,
               params,
               resolver,
-              cellRoots,
               args,
               // For now, instead of building all deps as dylibs and fixing up their install_names,
               // we'll just link them statically.

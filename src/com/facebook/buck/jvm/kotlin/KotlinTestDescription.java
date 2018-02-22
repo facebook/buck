@@ -33,7 +33,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -70,12 +69,11 @@ public class KotlinTestDescription implements Description<KotlinTestDescriptionA
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       KotlinTestDescriptionArg args) {
     BuildTarget testsLibraryBuildTarget =
         buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     JavacOptions javacOptions =
@@ -94,7 +92,7 @@ public class KotlinTestDescription implements Description<KotlinTestDescriptionA
                 projectFilesystem,
                 params,
                 resolver,
-                cellRoots,
+                context.getCellPathResolver(),
                 kotlinBuckConfig,
                 javaBuckConfig,
                 args)
@@ -110,7 +108,7 @@ public class KotlinTestDescription implements Description<KotlinTestDescriptionA
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)
-            .setCellPathResolver(cellRoots)
+            .setCellPathResolver(context.getCellPathResolver())
             .setResolver(resolver)
             .setExpanders(JavaTestDescription.MACRO_EXPANDERS)
             .build();

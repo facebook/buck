@@ -403,9 +403,7 @@ public class PrebuiltCxxLibraryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       final PrebuiltCxxLibraryDescriptionArg args) {
 
     // See if we're building a particular "type" of this library, and if so, extract
@@ -429,6 +427,8 @@ public class PrebuiltCxxLibraryDescription
                         selectedVersions.get()))
             : Optional.empty();
 
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    CellPathResolver cellRoots = context.getCellPathResolver();
     BuildRuleResolver ruleResolverLocal = context.getBuildRuleResolver();
     // If we *are* building a specific type of this lib, call into the type specific
     // rule builder methods.  Currently, we only support building a shared lib from the

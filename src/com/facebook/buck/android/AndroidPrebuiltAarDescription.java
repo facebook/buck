@@ -35,7 +35,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
@@ -98,12 +97,11 @@ public class AndroidPrebuiltAarDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       AndroidPrebuiltAarDescriptionArg args) {
     BuildRuleResolver buildRuleResolver = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     ImmutableSet<Flavor> flavors = buildTarget.getFlavors();
     if (flavors.contains(AAR_UNZIP_FLAVOR)) {

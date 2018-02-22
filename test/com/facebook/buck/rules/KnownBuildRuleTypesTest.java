@@ -104,9 +104,7 @@ public class KnownBuildRuleTypesTest {
     public BuildRule createBuildRule(
         BuildRuleCreationContext context,
         BuildTarget buildTarget,
-        ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
-        CellPathResolver cellRoots,
         KnownRuleTestDescriptionArg args) {
       return null;
     }
@@ -132,11 +130,13 @@ public class KnownBuildRuleTypesTest {
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     return (DefaultJavaLibrary)
         description.createBuildRule(
-            ImmutableBuildRuleCreationContext.of(TargetGraph.EMPTY, resolver),
+            ImmutableBuildRuleCreationContext.of(
+                TargetGraph.EMPTY,
+                resolver,
+                projectFilesystem,
+                TestCellBuilder.createCellRoots(projectFilesystem)),
             buildTarget,
-            projectFilesystem,
             buildRuleParams,
-            TestCellBuilder.createCellRoots(projectFilesystem),
             arg);
   }
 

@@ -24,7 +24,6 @@ import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
@@ -213,16 +212,14 @@ public class CxxLibraryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       CxxLibraryDescriptionArg args) {
     return cxxLibraryFactory.createBuildRule(
         buildTarget,
-        projectFilesystem,
+        context.getProjectFilesystem(),
         params,
         context.getBuildRuleResolver(),
-        cellRoots,
+        context.getCellPathResolver(),
         args,
         args.getLinkStyle(),
         Optional.empty(),

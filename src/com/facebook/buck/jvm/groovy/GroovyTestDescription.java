@@ -69,12 +69,12 @@ public class GroovyTestDescription implements Description<GroovyTestDescriptionA
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       GroovyTestDescriptionArg args) {
     BuildTarget testsLibraryBuildTarget =
         buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    CellPathResolver cellRoots = context.getCellPathResolver();
 
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     JavacOptions javacOptions =

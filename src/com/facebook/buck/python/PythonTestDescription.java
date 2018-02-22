@@ -220,9 +220,7 @@ public class PythonTestDescription
   public PythonTest createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       final PythonTestDescriptionArg args) {
 
     FlavorDomain<PythonPlatform> pythonPlatforms =
@@ -283,6 +281,8 @@ public class PythonTestDescription
     }
     ImmutableSet<String> testModules = testModulesBuilder.build();
 
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+
     // Construct a build rule to generate the test modules list source file and
     // add it to the build.
     BuildRule testModulesBuildRule =
@@ -319,6 +319,7 @@ public class PythonTestDescription
             .concat(args.getNeededCoverage().stream().map(NeededCoverageSpec::getBuildTarget))
             .map(resolver::getRule)
             .collect(ImmutableList.toImmutableList());
+    CellPathResolver cellRoots = context.getCellPathResolver();
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)

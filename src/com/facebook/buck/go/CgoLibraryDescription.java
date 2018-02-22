@@ -21,7 +21,6 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -82,9 +81,7 @@ public class CgoLibraryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       CgoLibraryDescriptionArg args) {
     GoToolchain goToolchain = getGoToolchain();
     GoPlatform platform =
@@ -99,10 +96,10 @@ public class CgoLibraryDescription
 
     return CGoLibrary.create(
         buildTarget,
-        projectFilesystem,
+        context.getProjectFilesystem(),
         resolver,
         pathResolver,
-        cellRoots,
+        context.getCellPathResolver(),
         cxxBuckConfig,
         getCxxPlatform(),
         platform,

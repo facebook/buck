@@ -88,13 +88,15 @@ public class RemoteFileDescriptionTest {
     exception.expectMessage(Matchers.containsString(target.getFullyQualifiedName()));
 
     description.createBuildRule(
-        ImmutableBuildRuleCreationContext.of(TargetGraph.EMPTY, ruleResolver),
+        ImmutableBuildRuleCreationContext.of(
+            TargetGraph.EMPTY,
+            ruleResolver,
+            filesystem,
+            TestCellBuilder.createCellRoots(filesystem)),
         target,
-        filesystem,
         RemoteFileBuilder.createBuilder(downloader, target)
             .from(arg)
             .createBuildRuleParams(ruleResolver),
-        TestCellBuilder.createCellRoots(filesystem),
         arg);
   }
 
@@ -113,13 +115,15 @@ public class RemoteFileDescriptionTest {
 
     BuildRule buildRule =
         description.createBuildRule(
-            ImmutableBuildRuleCreationContext.of(TargetGraph.EMPTY, ruleResolver),
+            ImmutableBuildRuleCreationContext.of(
+                TargetGraph.EMPTY,
+                ruleResolver,
+                filesystem,
+                TestCellBuilder.createCellRoots(filesystem)),
             target,
-            filesystem,
             RemoteFileBuilder.createBuilder(downloader, target)
                 .from(arg)
                 .createBuildRuleParams(ruleResolver),
-            TestCellBuilder.createCellRoots(filesystem),
             arg);
     ruleResolver.addToIndex(buildRule);
 

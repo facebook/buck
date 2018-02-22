@@ -124,11 +124,13 @@ public class AndroidManifestTest {
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     return description.createBuildRule(
-        ImmutableBuildRuleCreationContext.of(TargetGraph.EMPTY, buildRuleResolver),
+        ImmutableBuildRuleCreationContext.of(
+            TargetGraph.EMPTY,
+            buildRuleResolver,
+            projectFilesystem,
+            TestCellBuilder.createCellRoots(projectFilesystem)),
         MANIFEST_TARGET,
-        projectFilesystem,
         buildRuleParams,
-        TestCellBuilder.createCellRoots(projectFilesystem),
         arg);
   }
 

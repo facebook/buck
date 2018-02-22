@@ -258,9 +258,7 @@ public class PythonBinaryDescription
   public PythonBinary createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       PythonBinaryDescriptionArg args) {
     if (!(args.getMain().isPresent() ^ args.getMainModule().isPresent())) {
       throw new HumanReadableException(
@@ -311,6 +309,8 @@ public class PythonBinaryDescription
                         .<Flavor>map(InternalFlavor::of)
                         .orElse(pythonPlatforms.getFlavors().iterator().next())));
     CxxPlatform cxxPlatform = getCxxPlatform(buildTarget, args);
+    CellPathResolver cellRoots = context.getCellPathResolver();
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)

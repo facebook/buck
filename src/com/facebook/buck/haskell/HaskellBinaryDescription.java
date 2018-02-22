@@ -125,11 +125,11 @@ public class HaskellBinaryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       HaskellBinaryDescriptionArg args) {
 
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    CellPathResolver cellRoots = context.getCellPathResolver();
     HaskellPlatform platform = getPlatform(buildTarget, args);
 
     BuildRuleResolver resolver = context.getBuildRuleResolver();

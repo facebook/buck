@@ -84,10 +84,9 @@ public class AndroidLibraryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       AndroidLibraryDescriptionArg args) {
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     if (buildTarget.getFlavors().contains(JavaLibrary.SRC_JAR)) {
       return new JavaSourceJar(
           buildTarget, projectFilesystem, params, args.getSrcs(), args.getMavenCoords());
@@ -115,7 +114,7 @@ public class AndroidLibraryDescription
             projectFilesystem,
             params,
             context.getBuildRuleResolver(),
-            cellRoots,
+            context.getCellPathResolver(),
             javaBuckConfig,
             javacOptions,
             args,

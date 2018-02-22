@@ -32,7 +32,6 @@ import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildContext;
@@ -578,12 +577,10 @@ public class CommandAliasDescriptionTest {
     public BuildRule createBuildRule(
         BuildRuleCreationContext context,
         BuildTarget target,
-        ProjectFilesystem filesystem,
         BuildRuleParams params,
-        CellPathResolver cellRoots,
         CommandAliasDescriptionArg args) {
       CommandTool tool = new CommandTool.Builder().addArg(arg).addEnv("env", env).build();
-      return new TestBinary(target, filesystem, tool);
+      return new TestBinary(target, context.getProjectFilesystem(), tool);
     }
   }
 

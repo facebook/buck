@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import org.immutables.value.Value;
 
 /**
@@ -29,4 +30,10 @@ public interface BuildRuleCreationContext {
 
   @Value.Parameter
   BuildRuleResolver getBuildRuleResolver();
+
+  @Value.Parameter
+  ProjectFilesystem getProjectFilesystem();
+
+  @Value.Parameter
+  CellPathResolver getCellPathResolver();
 }

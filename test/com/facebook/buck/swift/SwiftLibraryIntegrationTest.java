@@ -125,11 +125,13 @@ public class SwiftLibraryIntegrationTest {
     SwiftCompile buildRule =
         (SwiftCompile)
             FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
-                ImmutableBuildRuleCreationContext.of(TargetGraph.EMPTY, resolver),
+                ImmutableBuildRuleCreationContext.of(
+                    TargetGraph.EMPTY,
+                    resolver,
+                    projectFilesystem,
+                    TestCellBuilder.createCellRoots(projectFilesystem)),
                 buildTarget,
-                projectFilesystem,
                 params,
-                TestCellBuilder.createCellRoots(projectFilesystem),
                 args);
 
     ImmutableList<String> swiftIncludeArgs = buildRule.getSwiftIncludeArgs(pathResolver);
@@ -151,11 +153,13 @@ public class SwiftLibraryIntegrationTest {
     SwiftCompile buildRule =
         (SwiftCompile)
             FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
-                ImmutableBuildRuleCreationContext.of(TargetGraph.EMPTY, resolver),
+                ImmutableBuildRuleCreationContext.of(
+                    TargetGraph.EMPTY,
+                    resolver,
+                    projectFilesystem,
+                    TestCellBuilder.createCellRoots(projectFilesystem)),
                 swiftCompileTarget,
-                projectFilesystem,
                 params,
-                TestCellBuilder.createCellRoots(projectFilesystem),
                 args);
     resolver.addToIndex(buildRule);
 
@@ -189,11 +193,13 @@ public class SwiftLibraryIntegrationTest {
     CxxLink linkRule =
         (CxxLink)
             FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
-                ImmutableBuildRuleCreationContext.of(targetGraph, resolver),
+                ImmutableBuildRuleCreationContext.of(
+                    targetGraph,
+                    resolver,
+                    projectFilesystem,
+                    TestCellBuilder.createCellRoots(projectFilesystem)),
                 buildTarget.withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR),
-                projectFilesystem,
                 params,
-                TestCellBuilder.createCellRoots(projectFilesystem),
                 args);
 
     assertThat(linkRule.getArgs(), Matchers.hasItem(objArg));

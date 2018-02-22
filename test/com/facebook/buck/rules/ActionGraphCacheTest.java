@@ -34,7 +34,6 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ExperimentEvent;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -536,11 +535,10 @@ public class ActionGraphCacheTest {
               public BuildRule createBuildRule(
                   BuildRuleCreationContext context,
                   BuildTarget buildTarget,
-                  ProjectFilesystem projectFilesystem,
                   BuildRuleParams params,
-                  CellPathResolver cellRoots,
                   FakeTargetNodeArg args) {
-                return new FakeCacheableBuildRule(buildTarget, projectFilesystem, params);
+                return new FakeCacheableBuildRule(
+                    buildTarget, context.getProjectFilesystem(), params);
               }
             },
             BuildTargetFactory.newInstance("//foo:" + name));

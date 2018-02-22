@@ -36,7 +36,6 @@ import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -101,11 +100,10 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams originalBuildRuleParams,
-      CellPathResolver cellRoots,
       AndroidAarDescriptionArg args) {
 
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     buildTarget.checkUnflavored();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -231,7 +229,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
     AndroidNativeLibsPackageableGraphEnhancer packageableGraphEnhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
             toolchainProvider,
-            cellRoots,
+            context.getCellPathResolver(),
             resolver,
             buildTarget,
             projectFilesystem,

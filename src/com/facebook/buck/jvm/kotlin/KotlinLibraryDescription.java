@@ -36,7 +36,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -80,10 +79,9 @@ public class KotlinLibraryDescription
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      CellPathResolver cellRoots,
       KotlinLibraryDescriptionArg args) {
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
 
@@ -133,7 +131,7 @@ public class KotlinLibraryDescription
                 projectFilesystem,
                 params,
                 resolver,
-                cellRoots,
+                context.getCellPathResolver(),
                 kotlinBuckConfig,
                 javaBuckConfig,
                 args)
