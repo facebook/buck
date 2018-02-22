@@ -402,7 +402,7 @@ public class ActionGraphCache {
       LOG.debug("end target graph walk");
     } finally {
       if (incrementalActionGraphMode == IncrementalActionGraphMode.ENABLED) {
-        nodeCache.finishTargetGraphWalk(resolver);
+        nodeCache.finishTargetGraphWalk();
       }
     }
 
@@ -464,7 +464,7 @@ public class ActionGraphCache {
       LOG.debug("end target graph walk");
     } finally {
       if (incrementalActionGraphMode == IncrementalActionGraphMode.ENABLED) {
-        nodeCache.finishTargetGraphWalk(resolver);
+        nodeCache.finishTargetGraphWalk();
       }
     }
 
@@ -479,7 +479,7 @@ public class ActionGraphCache {
       TargetNode<?, ?> targetNode,
       IncrementalActionGraphMode incrementalActionGraphMode) {
     if (incrementalActionGraphMode == IncrementalActionGraphMode.ENABLED) {
-      return nodeCache.requireRule(targetNode, resolver);
+      return nodeCache.requireRule(targetNode);
     }
     return resolver.requireRule(targetNode.getBuildTarget());
   }

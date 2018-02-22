@@ -19,15 +19,17 @@ package com.facebook.buck.rules;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.collect.SortedSets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.collect.Sets;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
@@ -65,7 +67,10 @@ public class ActionGraphNodeCache {
   private static final Logger LOG = Logger.get(ActionGraphNodeCache.class);
 
   private final Cache<BuildTarget, CacheEntry> buildRuleSubgraphCache;
+  private Map<BuildRule, SortedSet<BuildRule>> lastDepsCache = new ConcurrentHashMap<>();
+  private Map<BuildRule, SortedSet<BuildRule>> depsCache = new ConcurrentHashMap<>();
   @Nullable private BuildRuleResolver lastRuleResolver;
+  @Nullable private BuildRuleResolver ruleResolver;
   private boolean isTargetGraphWalkInProgress;
 
   public ActionGraphNodeCache(int maxEntries) {
@@ -82,7 +87,7 @@ public class ActionGraphNodeCache {
     // Validate our assumption that the cache has been properly invalidated, leaving only
     // unchanged target nodes cached.
     Preconditions.checkState(
-        cacheEntry.targetNode.equals(targetNode), "cache wasn't properly invalidated");
+        cacheEntry.getTargetNode().equals(targetNode), "cache wasn't properly invalidated");
     return true;
   }
 
@@ -90,15 +95,14 @@ public class ActionGraphNodeCache {
    * Adds the build rule for the given target node to the rule resolver. Fetches from cache if
    * available, and caches after creation if supported by the build rule.
    */
-  public BuildRule requireRule(TargetNode<?, ?> targetNode, BuildRuleResolver resolver) {
+  public BuildRule requireRule(TargetNode<?, ?> targetNode) {
     Preconditions.checkState(isTargetGraphWalkInProgress);
-
     BuildRule cachedBuildRule = getIfPresent(targetNode);
     if (cachedBuildRule != null) {
-      addBuildRuleSubgraphToIndex(cachedBuildRule, resolver);
+      addBuildRuleSubgraphToIndex(cachedBuildRule, ruleResolver);
       return cachedBuildRule;
     }
-    BuildRule newBuildRule = resolver.requireRule(targetNode.getBuildTarget());
+    BuildRule newBuildRule = ruleResolver.requireRule(targetNode.getBuildTarget());
     offerForCaching(targetNode, newBuildRule);
     return newBuildRule;
   }
@@ -116,7 +120,7 @@ public class ActionGraphNodeCache {
     // Validate our assumption that the cache has been properly invalidated, leaving only
     // unchanged target nodes cached.
     Preconditions.checkState(
-        cacheEntry.targetNode.equals(targetNode), "cache wasn't properly invalidated");
+        cacheEntry.getTargetNode().equals(targetNode), "cache wasn't properly invalidated");
 
     // Target graph node hasn't changed (no new deps, etc.), so return action graph subtree
     // from cache.
@@ -166,22 +170,34 @@ public class ActionGraphNodeCache {
     }
   }
 
-  private Set<BuildRule> getDeps(BuildRule buildRule) {
-    // TODO(jtorkkola): Cache deps, maybe by extending RuleDepsCache.
-    Preconditions.checkState(
-        buildRule instanceof CacheableBuildRule,
-        "expected %s to be a cacheable build rule",
-        buildRule.getFullyQualifiedName());
+  private SortedSet<BuildRule> getDeps(BuildRule buildRule) {
+    // Note: The caching of deps here is not just a performance optimization; it's also needed for
+    //       correctness. If a build rule remains in the cache, but doesn't get used for several
+    //       action graph constructions, the last {@see BuildRuleResolver} may not have that rule's
+    //       runtime deps, so we'd have a problem computing them. We rely on the deps cache to get
+    //       the right deps (including runtime deps) in this scenario. Note that every build rule's
+    //       deps will be in this cache, as we call {@see #updateRuleResolvers} for every build rule
+    //       in the cache.
+    return depsCache.computeIfAbsent(buildRule, this::computeDeps);
+  }
 
-    Set<BuildRule> deps =
-        Sets.union(
+  private SortedSet<BuildRule> computeDeps(BuildRule buildRule) {
+    // If we already computed deps last time, just transfer the result over from the last cache.
+    SortedSet<BuildRule> deps = lastDepsCache.get(buildRule);
+    if (deps != null) {
+      return deps;
+    }
+
+    deps =
+        SortedSets.union(
             buildRule.getBuildDeps(), ((CacheableBuildRule) buildRule).getImplicitDepsForCaching());
 
     // We need to use the rule resolver from the last action graph construction to find runtime
     // deps. These deps won't necessarily exist in the new rule resolver yet.
-    if (buildRule instanceof HasRuntimeDeps && lastRuleResolver != null) {
+    if (buildRule instanceof HasRuntimeDeps) {
+      Preconditions.checkNotNull(lastRuleResolver);
       deps =
-          Sets.union(
+          SortedSets.union(
               deps,
               lastRuleResolver.getAllRules(
                   RichStream.from(
@@ -201,6 +217,13 @@ public class ActionGraphNodeCache {
   public void prepareForTargetGraphWalk(TargetGraph targetGraph, BuildRuleResolver ruleResolver) {
     Preconditions.checkState(!isTargetGraphWalkInProgress);
     isTargetGraphWalkInProgress = true;
+
+    // We cache the last build rule resolver so we can grab runtimeDeps for cached rules from it.
+    lastRuleResolver = this.ruleResolver;
+    this.ruleResolver = ruleResolver;
+
+    lastDepsCache = depsCache;
+    depsCache = new ConcurrentHashMap<>();
 
     LOG.debug("begin cache invalidation for target graph walk");
     Stopwatch stopwatch = Stopwatch.createStarted();
@@ -277,6 +300,8 @@ public class ActionGraphNodeCache {
   }
 
   private void updateRuleResolvers(BuildRuleResolver ruleResolver) {
+    Stopwatch stopwatch = Stopwatch.createStarted();
+
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -288,6 +313,10 @@ public class ActionGraphNodeCache {
     for (CacheEntry entry : buildRuleSubgraphCache.asMap().values()) {
       updateRuleResolvers(entry.getBuildRule(), ruleResolver, ruleFinder, pathResolver, visited);
     }
+
+    LOG.debug(
+        "updating rule resolvers took %s secs",
+        String.valueOf(stopwatch.elapsed(TimeUnit.MILLISECONDS) / 1000.0));
   }
 
   private void updateRuleResolvers(
@@ -320,17 +349,14 @@ public class ActionGraphNodeCache {
   }
 
   /** Informs the cache that the current target graph walk is over. */
-  public void finishTargetGraphWalk(BuildRuleResolver ruleResolver) {
+  public void finishTargetGraphWalk() {
     Preconditions.checkState(isTargetGraphWalkInProgress);
     isTargetGraphWalkInProgress = false;
 
-    // Cache the last build rule resolver so we can grab runtimeDeps for cached rules from it when
-    // we create the next action graph. ({@see HasRuntimeDeps::getRuntimeDeps} takes a
-    // {@link SourcePathRuleFinder}, which wraps a build rule resolver, as an argument.)
-    lastRuleResolver = ruleResolver;
-
-    // TODO(jtorkkola): Check that all deps of cacheable rules are themselves cacheable here, so we
-    //                  can throw on the first action graph construction rather than the second. By
-    //                  this point, all runtimeDeps will be available. Need to cache deps first.
+    // TODO(jtorkkola): It'd be better to check that all deps of cacheable rules are themselves
+    //                  cacheable here during the first action graph construction, so we could error
+    //                  out as early as possible if a developer makes a build rule change without
+    //                  proper use of {@see CacheableBuildRule}. Unfortunately, computing all deps
+    //                  on the first iteration would slow down the first action graph construction.
   }
 }

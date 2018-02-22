@@ -50,8 +50,8 @@ public class ActionGraphNodeCacheTest {
     setUpTargetGraphAndResolver(node);
 
     cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
-    cache.requireRule(node, ruleResolver);
-    cache.finishTargetGraphWalk(ruleResolver);
+    cache.requireRule(node);
+    cache.finishTargetGraphWalk();
 
     assertTrue(cache.containsKey(node));
     assertTrue(ruleResolver.getRuleOptional(node.getBuildTarget()).isPresent());
@@ -63,8 +63,8 @@ public class ActionGraphNodeCacheTest {
     setUpTargetGraphAndResolver(node);
 
     cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
-    cache.requireRule(node, ruleResolver);
-    cache.finishTargetGraphWalk(ruleResolver);
+    cache.requireRule(node);
+    cache.finishTargetGraphWalk();
 
     assertFalse(cache.containsKey(node));
     assertTrue(ruleResolver.getRuleOptional(node.getBuildTarget()).isPresent());
@@ -80,10 +80,10 @@ public class ActionGraphNodeCacheTest {
     setUpTargetGraphAndResolver(node1, node2, node3);
 
     cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
-    cache.requireRule(node1, ruleResolver);
-    cache.requireRule(node2, ruleResolver);
-    cache.requireRule(node3, ruleResolver);
-    cache.finishTargetGraphWalk(ruleResolver);
+    cache.requireRule(node1);
+    cache.requireRule(node2);
+    cache.requireRule(node3);
+    cache.finishTargetGraphWalk();
 
     assertFalse(cache.containsKey(node1));
     assertTrue(cache.containsKey(node2));
@@ -96,16 +96,16 @@ public class ActionGraphNodeCacheTest {
     setUpTargetGraphAndResolver(originalNode);
 
     cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
-    BuildRule originalBuildRule = cache.requireRule(originalNode, ruleResolver);
-    cache.finishTargetGraphWalk(ruleResolver);
+    BuildRule originalBuildRule = cache.requireRule(originalNode);
+    cache.finishTargetGraphWalk();
 
     TargetNode<?, ?> newNode = createTargetNode("test1");
     assertEquals(originalNode, newNode);
     setUpTargetGraphAndResolver(newNode);
 
     cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
-    BuildRule newBuildRule = cache.requireRule(newNode, ruleResolver);
-    cache.finishTargetGraphWalk(ruleResolver);
+    BuildRule newBuildRule = cache.requireRule(newNode);
+    cache.finishTargetGraphWalk();
 
     assertSame(originalBuildRule, newBuildRule);
     assertTrue(ruleResolver.getRuleOptional(newNode.getBuildTarget()).isPresent());
@@ -118,16 +118,16 @@ public class ActionGraphNodeCacheTest {
     setUpTargetGraphAndResolver(originalNode);
 
     cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
-    BuildRule originalBuildRule = cache.requireRule(originalNode, ruleResolver);
-    cache.finishTargetGraphWalk(ruleResolver);
+    BuildRule originalBuildRule = cache.requireRule(originalNode);
+    cache.finishTargetGraphWalk();
 
     TargetNode<?, ?> depNode = createTargetNode("test2");
     TargetNode<?, ?> newNode = createTargetNode("test1", depNode);
     setUpTargetGraphAndResolver(newNode, depNode);
 
     cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
-    BuildRule newBuildRule = cache.requireRule(newNode, ruleResolver);
-    cache.finishTargetGraphWalk(ruleResolver);
+    BuildRule newBuildRule = cache.requireRule(newNode);
+    cache.finishTargetGraphWalk();
 
     assertNotSame(originalBuildRule, newBuildRule);
     assertTrue(ruleResolver.getRuleOptional(newNode.getBuildTarget()).isPresent());
@@ -144,13 +144,13 @@ public class ActionGraphNodeCacheTest {
     setUpTargetGraphAndResolver(node);
 
     cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
-    cache.requireRule(node, ruleResolver);
-    cache.finishTargetGraphWalk(ruleResolver);
+    cache.requireRule(node);
+    cache.finishTargetGraphWalk();
 
     BuildRuleResolver newRuleResolver = createBuildRuleResolver(targetGraph);
-    cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
-    cache.requireRule(node, newRuleResolver);
-    cache.finishTargetGraphWalk(newRuleResolver);
+    cache.prepareForTargetGraphWalk(targetGraph, newRuleResolver);
+    cache.requireRule(node);
+    cache.finishTargetGraphWalk();
 
     assertTrue(newRuleResolver.getRuleOptional(buildRule.getBuildTarget()).isPresent());
     assertTrue(newRuleResolver.getRuleOptional(buildRuleDep1.getBuildTarget()).isPresent());
@@ -167,10 +167,10 @@ public class ActionGraphNodeCacheTest {
     BuildRuleResolver originalRuleResolver = ruleResolver;
 
     cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
-    cache.requireRule(originalChildNode1, ruleResolver);
-    cache.requireRule(originalChildNode2, ruleResolver);
-    cache.requireRule(originalParentNode, ruleResolver);
-    cache.finishTargetGraphWalk(ruleResolver);
+    cache.requireRule(originalChildNode1);
+    cache.requireRule(originalChildNode2);
+    cache.requireRule(originalParentNode);
+    cache.finishTargetGraphWalk();
 
     TargetNode<?, ?> newChildNode1 = createTargetNode("child1", "new_label");
     TargetNode<?, ?> newChildNode2 = createTargetNode("child2");
@@ -178,10 +178,10 @@ public class ActionGraphNodeCacheTest {
     setUpTargetGraphAndResolver(newParentNode, newChildNode1, newChildNode2);
 
     cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
-    cache.requireRule(newChildNode1, ruleResolver);
-    cache.requireRule(newChildNode2, ruleResolver);
-    cache.requireRule(newParentNode, ruleResolver);
-    cache.finishTargetGraphWalk(ruleResolver);
+    cache.requireRule(newChildNode1);
+    cache.requireRule(newChildNode2);
+    cache.requireRule(newParentNode);
+    cache.finishTargetGraphWalk();
 
     assertTrue(ruleResolver.getRuleOptional(newParentNode.getBuildTarget()).isPresent());
     assertNotSame(
@@ -209,10 +209,10 @@ public class ActionGraphNodeCacheTest {
     BuildRuleResolver originalRuleResolver = ruleResolver;
 
     cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
-    cache.requireRule(originalChildNode1, ruleResolver);
-    cache.requireRule(originalChildNode2, ruleResolver);
-    cache.requireRule(originalParentNode, ruleResolver);
-    cache.finishTargetGraphWalk(ruleResolver);
+    cache.requireRule(originalChildNode1);
+    cache.requireRule(originalChildNode2);
+    cache.requireRule(originalParentNode);
+    cache.finishTargetGraphWalk();
 
     TargetNode<?, ?> newChildNode1 = createUncacheableTargetNode("child1");
     TargetNode<?, ?> newChildNode2 = createTargetNode("child2");
@@ -220,10 +220,10 @@ public class ActionGraphNodeCacheTest {
     setUpTargetGraphAndResolver(newParentNode, newChildNode1, newChildNode2);
 
     cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
-    cache.requireRule(newChildNode1, ruleResolver);
-    cache.requireRule(newChildNode2, ruleResolver);
-    cache.requireRule(newParentNode, ruleResolver);
-    cache.finishTargetGraphWalk(ruleResolver);
+    cache.requireRule(newChildNode1);
+    cache.requireRule(newChildNode2);
+    cache.requireRule(newParentNode);
+    cache.finishTargetGraphWalk();
 
     assertTrue(ruleResolver.getRuleOptional(newParentNode.getBuildTarget()).isPresent());
     assertNotSame(
@@ -251,16 +251,16 @@ public class ActionGraphNodeCacheTest {
 
     cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
     ruleResolver.addToIndex(childBuildRule);
-    cache.requireRule(originalNode, ruleResolver);
-    cache.finishTargetGraphWalk(ruleResolver);
+    cache.requireRule(originalNode);
+    cache.finishTargetGraphWalk();
 
     FakeCacheableBuildRule newParentBuildRule = new FakeCacheableBuildRule("test", runtimeDeps);
     TargetNode<?, ?> newNode = createTargetNode(newParentBuildRule);
     setUpTargetGraphAndResolver(newNode);
 
     cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
-    cache.requireRule(newNode, ruleResolver);
-    cache.finishTargetGraphWalk(ruleResolver);
+    cache.requireRule(newNode);
+    cache.finishTargetGraphWalk();
 
     assertTrue(ruleResolver.getRuleOptional(newNode.getBuildTarget()).isPresent());
     assertSame(parentBuildRule, ruleResolver.getRule(originalNode.getBuildTarget()));
@@ -279,13 +279,13 @@ public class ActionGraphNodeCacheTest {
     setUpTargetGraphAndResolver(node);
 
     cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
-    cache.requireRule(node, ruleResolver);
-    cache.finishTargetGraphWalk(ruleResolver);
+    cache.requireRule(node);
+    cache.finishTargetGraphWalk();
 
     BuildRuleResolver newRuleResolver = createBuildRuleResolver(targetGraph);
     cache.prepareForTargetGraphWalk(targetGraph, newRuleResolver);
-    cache.requireRule(node, ruleResolver);
-    cache.finishTargetGraphWalk(ruleResolver);
+    cache.requireRule(node);
+    cache.finishTargetGraphWalk();
 
     assertSame(newRuleResolver, buildRule.getRuleResolver());
     assertSame(newRuleResolver, buildRuleDep1.getRuleResolver());
@@ -303,18 +303,47 @@ public class ActionGraphNodeCacheTest {
     setUpTargetGraphAndResolver(node1, node2);
 
     cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
-    cache.requireRule(node1, ruleResolver);
-    cache.requireRule(node2, ruleResolver);
-    cache.finishTargetGraphWalk(ruleResolver);
+    cache.requireRule(node1);
+    cache.requireRule(node2);
+    cache.finishTargetGraphWalk();
 
     BuildRuleResolver newRuleResolver = createBuildRuleResolver(targetGraph);
     cache.prepareForTargetGraphWalk(targetGraph, newRuleResolver);
-    cache.requireRule(node2, newRuleResolver);
-    cache.finishTargetGraphWalk(ruleResolver);
+    cache.requireRule(node2);
+    cache.finishTargetGraphWalk();
 
     assertSame(newRuleResolver, buildRule.getRuleResolver());
     assertSame(newRuleResolver, buildRuleDep1.getRuleResolver());
     assertSame(newRuleResolver, buildRuleDep2.getRuleResolver());
+  }
+
+  @Test
+  public void runtimeDepsForOldCachedNodeLoadedFromCache() {
+    FakeCacheableBuildRule childBuildRule = new FakeCacheableBuildRule("test#child");
+    SortedSet<BuildTarget> runtimeDeps = ImmutableSortedSet.of(childBuildRule.getBuildTarget());
+    FakeCacheableBuildRule parentBuildRule = new FakeCacheableBuildRule("test", runtimeDeps);
+    TargetNode<?, ?> node1 = createTargetNode(parentBuildRule);
+    setUpTargetGraphAndResolver(node1);
+
+    cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
+    cache.requireRule(node1);
+    ruleResolver.addToIndex(childBuildRule);
+    cache.finishTargetGraphWalk();
+
+    TargetNode<?, ?> node2 = createTargetNode("test2");
+    setUpTargetGraphAndResolver(node2);
+
+    cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
+    cache.requireRule(node2);
+    cache.finishTargetGraphWalk();
+
+    setUpTargetGraphAndResolver(node1);
+    cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
+    cache.requireRule(node1);
+    cache.finishTargetGraphWalk();
+
+    assertTrue(ruleResolver.getRuleOptional(childBuildRule.getBuildTarget()).isPresent());
+    assertSame(childBuildRule, ruleResolver.getRuleOptional(childBuildRule.getBuildTarget()).get());
   }
 
   private TargetNode<?, ?> createTargetNode(String name, TargetNode<?, ?>... deps) {
