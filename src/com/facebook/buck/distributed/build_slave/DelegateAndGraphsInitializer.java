@@ -109,7 +109,7 @@ public class DelegateAndGraphsInitializer {
         .build();
   }
 
-  private TargetGraph createTargetGraph() throws IOException, InterruptedException {
+  private TargetGraph createTargetGraph() throws InterruptedException {
     args.getTimingStatsTracker().startTimer(SlaveEvents.TARGET_GRAPH_DESERIALIZATION_TIME);
     try {
       TargetGraph targetGraph = null;
@@ -247,6 +247,7 @@ public class DelegateAndGraphsInitializer {
             args.getRuleKeyConfiguration());
 
     return new DistBuildTargetGraphCodec(
+        Preconditions.checkNotNull(args.getExecutorService()),
         parserTargetNodeFactory,
         input -> {
           try {

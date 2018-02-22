@@ -22,6 +22,7 @@ import com.facebook.buck.distributed.thrift.BuildJobStateTargetNode;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -38,52 +39,83 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /** Saves and loads the {@link TargetNode}s needed for the build. */
 public class DistBuildTargetGraphCodec {
+  private static final Logger LOG = Logger.get(DistBuildTargetGraphCodec.class);
 
+  private ListeningExecutorService cpuExecutor;
   private final ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory;
   private final Function<? super TargetNode<?, ?>, ? extends Map<String, Object>> nodeToRawNode;
   private Set<String> topLevelTargets;
 
   public DistBuildTargetGraphCodec(
+      ListeningExecutorService cpuExecutor,
       ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory,
       Function<? super TargetNode<?, ?>, ? extends Map<String, Object>> nodeToRawNode,
       Set<String> topLevelTargets) {
+    this.cpuExecutor = cpuExecutor;
     this.parserTargetNodeFactory = parserTargetNodeFactory;
     this.nodeToRawNode = nodeToRawNode;
     this.topLevelTargets = topLevelTargets;
   }
 
   public BuildJobStateTargetGraph dump(
-      Collection<TargetNode<?, ?>> targetNodes, DistBuildCellIndexer cellIndexer) {
-    BuildJobStateTargetGraph result = new BuildJobStateTargetGraph();
+      Collection<TargetNode<?, ?>> targetNodes, DistBuildCellIndexer cellIndexer)
+      throws InterruptedException {
+    List<ListenableFuture<BuildJobStateTargetNode>> targetNodeFutures = new LinkedList<>();
 
     for (TargetNode<?, ?> targetNode : targetNodes) {
-      Map<String, Object> rawTargetNode = nodeToRawNode.apply(targetNode);
-      ProjectFilesystem projectFilesystem = targetNode.getFilesystem();
-
-      BuildJobStateTargetNode remoteNode = new BuildJobStateTargetNode();
-      remoteNode.setCellIndex(cellIndexer.getCellIndex(projectFilesystem.getRootPath()));
-      remoteNode.setBuildTarget(encodeBuildTarget(targetNode.getBuildTarget()));
-      try {
-        remoteNode.setRawNode(ObjectMappers.WRITER.writeValueAsString(rawTargetNode));
-      } catch (JsonProcessingException e) {
-        throw new RuntimeException(e);
-      }
-      result.addToNodes(remoteNode);
+      targetNodeFutures.add(asyncSerializeTargetNode(cellIndexer, targetNode));
     }
 
+    List<BuildJobStateTargetNode> serializedTargetNodes = null;
+    try {
+      serializedTargetNodes = Futures.allAsList(targetNodeFutures).get();
+    } catch (ExecutionException e) {
+      LOG.error(e, "Failed to serialize target graph into BuildJobStateTargetGraph");
+      throw new RuntimeException(e);
+    }
+
+    BuildJobStateTargetGraph result = new BuildJobStateTargetGraph();
+    result.setNodes(serializedTargetNodes);
+
     return result;
+  }
+
+  private ListenableFuture<BuildJobStateTargetNode> asyncSerializeTargetNode(
+      DistBuildCellIndexer cellIndexer, TargetNode<?, ?> targetNode) {
+    return cpuExecutor.submit(
+        () -> {
+          Map<String, Object> rawTargetNode = nodeToRawNode.apply(targetNode);
+          ProjectFilesystem projectFilesystem = targetNode.getFilesystem();
+
+          BuildJobStateTargetNode remoteNode = new BuildJobStateTargetNode();
+          remoteNode.setCellIndex(cellIndexer.getCellIndex(projectFilesystem.getRootPath()));
+          remoteNode.setBuildTarget(encodeBuildTarget(targetNode.getBuildTarget()));
+          try {
+            remoteNode.setRawNode(ObjectMappers.WRITER.writeValueAsString(rawTargetNode));
+          } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+          }
+          return remoteNode;
+        });
   }
 
   public static BuildJobStateBuildTarget encodeBuildTarget(BuildTarget buildTarget) {
@@ -122,58 +154,32 @@ public class DistBuildTargetGraphCodec {
       BuildJobStateTargetGraph remoteTargetGraph,
       Function<Integer, Cell> cellLookup,
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider)
-      throws IOException {
+      throws InterruptedException {
 
-    final Map<BuildTarget, TargetNode<?, ?>> index = new HashMap<>();
-    final Map<BuildTarget, TargetNode<?, ?>> graphNodes = new HashMap<>();
+    final ConcurrentMap<BuildTarget, TargetNode<?, ?>> index = new ConcurrentHashMap<>();
+    final ConcurrentMap<BuildTarget, TargetNode<?, ?>> graphNodes = new ConcurrentHashMap<>();
+    final ConcurrentMap<BuildTarget, Boolean> buildTargets = new ConcurrentHashMap<>();
 
-    ImmutableSet.Builder<BuildTarget> buildTargetsBuilder = ImmutableSet.builder();
+    List<ListenableFuture<Void>> processRemoteBuildTargetFutures = new LinkedList<>();
 
     for (BuildJobStateTargetNode remoteNode : remoteTargetGraph.getNodes()) {
-      Cell cell = cellLookup.apply(remoteNode.getCellIndex());
-      if (remoteNode.getCellIndex() == DistBuildCellIndexer.ROOT_CELL_INDEX) {
-        cell = cell.withCanonicalName(Optional.empty());
-      }
-
-      ProjectFilesystem projectFilesystem = cell.getFilesystem();
-      BuildTarget target = decodeBuildTarget(remoteNode.getBuildTarget(), cell);
-      if (topLevelTargets.contains(target.getFullyQualifiedName())) {
-        buildTargetsBuilder.add(target);
-      }
-
-      @SuppressWarnings("unchecked")
-      Map<String, Object> rawNode = ObjectMappers.readValue(remoteNode.getRawNode(), Map.class);
-      Path buildFilePath =
-          projectFilesystem.resolve(target.getBasePath()).resolve(cell.getBuildFileName());
-
-      TargetNode<?, ?> targetNode =
-          parserTargetNodeFactory.createTargetNode(
-              cell,
-              knownBuildRuleTypesProvider.get(cell),
-              buildFilePath,
-              target,
-              rawNode,
-              input -> SimplePerfEvent.scope(Optional.empty(), input));
-
-      MoreMaps.putCheckEquals(index, target, targetNode);
-      MoreMaps.putCheckEquals(graphNodes, target, targetNode);
-
-      if (target.isFlavored()) {
-        BuildTarget unflavoredTarget = BuildTarget.of(target.getUnflavoredBuildTarget());
-        TargetNode<?, ?> unflavoredTargetNode =
-            parserTargetNodeFactory.createTargetNode(
-                cell,
-                knownBuildRuleTypesProvider.get(cell),
-                buildFilePath,
-                unflavoredTarget,
-                rawNode,
-                input -> SimplePerfEvent.scope(Optional.empty(), input));
-
-        MoreMaps.putCheckEquals(index, unflavoredTarget, unflavoredTargetNode);
-      }
+      processRemoteBuildTargetFutures.add(
+          asyncProcessRemoteBuildTarget(
+              cellLookup,
+              knownBuildRuleTypesProvider,
+              index,
+              graphNodes,
+              buildTargets,
+              remoteNode));
     }
 
-    ImmutableSet<BuildTarget> buildTargets = buildTargetsBuilder.build();
+    try {
+      Futures.allAsList(processRemoteBuildTargetFutures).get();
+    } catch (ExecutionException e) {
+      LOG.error(e, "Failed to deserialize target graph nodes");
+      throw new RuntimeException(e);
+    }
+
     Preconditions.checkArgument(topLevelTargets.size() == buildTargets.size());
 
     ImmutableMap<BuildTarget, TargetNode<?, ?>> targetNodeIndex = ImmutableMap.copyOf(index);
@@ -196,7 +202,71 @@ public class DistBuildTargetGraphCodec {
 
     return TargetGraphAndBuildTargets.builder()
         .setTargetGraph(targetGraph)
-        .addAllBuildTargets(buildTargets)
+        .addAllBuildTargets(buildTargets.keySet())
         .build();
+  }
+
+  private ListenableFuture<Void> asyncProcessRemoteBuildTarget(
+      Function<Integer, Cell> cellLookup,
+      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
+      ConcurrentMap<BuildTarget, TargetNode<?, ?>> index,
+      ConcurrentMap<BuildTarget, TargetNode<?, ?>> graphNodes,
+      ConcurrentMap<BuildTarget, Boolean> buildTargets,
+      BuildJobStateTargetNode remoteNode) {
+    return cpuExecutor.submit(
+        () -> {
+          Cell cell = cellLookup.apply(remoteNode.getCellIndex());
+          if (remoteNode.getCellIndex() == DistBuildCellIndexer.ROOT_CELL_INDEX) {
+            cell = cell.withCanonicalName(Optional.empty());
+          }
+
+          ProjectFilesystem projectFilesystem = cell.getFilesystem();
+          BuildTarget target = decodeBuildTarget(remoteNode.getBuildTarget(), cell);
+          if (topLevelTargets.contains(target.getFullyQualifiedName())) {
+            buildTargets.put(target, true);
+          }
+
+          Map<String, Object> rawNode = getRawNode(remoteNode);
+
+          Path buildFilePath =
+              projectFilesystem.resolve(target.getBasePath()).resolve(cell.getBuildFileName());
+
+          TargetNode<?, ?> targetNode =
+              parserTargetNodeFactory.createTargetNode(
+                  cell,
+                  knownBuildRuleTypesProvider.get(cell),
+                  buildFilePath,
+                  target,
+                  rawNode,
+                  input -> SimplePerfEvent.scope(Optional.empty(), input));
+
+          MoreMaps.putIfAbsentCheckEquals(index, target, targetNode);
+          MoreMaps.putIfAbsentCheckEquals(graphNodes, target, targetNode);
+
+          if (target.isFlavored()) {
+            BuildTarget unflavoredTarget = BuildTarget.of(target.getUnflavoredBuildTarget());
+            TargetNode<?, ?> unflavoredTargetNode =
+                parserTargetNodeFactory.createTargetNode(
+                    cell,
+                    knownBuildRuleTypesProvider.get(cell),
+                    buildFilePath,
+                    unflavoredTarget,
+                    rawNode,
+                    input -> SimplePerfEvent.scope(Optional.empty(), input));
+
+            MoreMaps.putCheckEquals(index, unflavoredTarget, unflavoredTargetNode);
+          }
+
+          return null;
+        });
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Map<String, Object> getRawNode(BuildJobStateTargetNode remoteNode) {
+    try {
+      return ObjectMappers.readValue(remoteNode.getRawNode(), Map.class);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 }

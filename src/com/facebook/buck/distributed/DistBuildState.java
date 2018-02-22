@@ -249,7 +249,7 @@ public class DistBuildState {
 
   public TargetGraphAndBuildTargets createTargetGraph(
       DistBuildTargetGraphCodec codec, KnownBuildRuleTypesProvider knownBuildRuleTypesProvider)
-      throws IOException {
+      throws InterruptedException {
     return codec.createTargetGraph(
         remoteState.getTargetGraph(),
         key -> Preconditions.checkNotNull(cells.get(key)),

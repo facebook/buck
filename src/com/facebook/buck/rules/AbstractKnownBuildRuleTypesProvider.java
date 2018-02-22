@@ -25,7 +25,7 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import javax.annotation.Nonnull;
 import org.immutables.value.Value;
 
-/** Lazily constructs {@link KnownBuildRuleTypes} for {@link Cell}s. */
+/** Lazily constructs {@link KnownBuildRuleTypes} for {@link Cell}s. This is thread safe */
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractKnownBuildRuleTypesProvider {

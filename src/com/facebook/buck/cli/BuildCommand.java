@@ -697,9 +697,8 @@ public class BuildCommand extends AbstractCommand {
   private AsyncJobStateAndCells computeDistBuildState(
       final CommandRunnerParams params,
       ActionAndTargetGraphs graphs,
-      final ListeningExecutorService executorService,
-      Optional<ClientStatsTracker> clientStatsTracker)
-      throws IOException, InterruptedException {
+      final WeightedListeningExecutorService executorService,
+      Optional<ClientStatsTracker> clientStatsTracker) {
     DistBuildCellIndexer cellIndexer = new DistBuildCellIndexer(params.getCell());
 
     // Compute the file hashes.
@@ -741,6 +740,7 @@ public class BuildCommand extends AbstractCommand {
             params.getRuleKeyConfiguration());
     DistBuildTargetGraphCodec targetGraphCodec =
         new DistBuildTargetGraphCodec(
+            executorService,
             parserTargetNodeFactory,
             input -> {
               return params
