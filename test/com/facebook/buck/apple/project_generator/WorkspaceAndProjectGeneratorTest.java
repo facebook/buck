@@ -41,6 +41,7 @@ import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.config.IncrementalActionGraphMode;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -971,7 +972,7 @@ public class WorkspaceAndProjectGeneratorTest {
                 targetGraph.getSubgraph(ImmutableSet.of(input)),
                 ActionGraphParallelizationMode.DISABLED,
                 false,
-                false,
+                IncrementalActionGraphMode.DISABLED,
                 CloseableMemoizedSupplier.of(
                     () -> {
                       throw new IllegalStateException(

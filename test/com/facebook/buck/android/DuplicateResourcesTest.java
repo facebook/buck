@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeFalse;
 
 import com.facebook.buck.config.ActionGraphParallelizationMode;
+import com.facebook.buck.config.IncrementalActionGraphMode;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.jvm.java.KeystoreDescription;
@@ -252,7 +253,7 @@ public class DuplicateResourcesTest {
                 targetGraph,
                 ActionGraphParallelizationMode.DISABLED,
                 false,
-                false,
+                IncrementalActionGraphMode.DISABLED,
                 CloseableMemoizedSupplier.of(
                     () -> {
                       throw new IllegalStateException(

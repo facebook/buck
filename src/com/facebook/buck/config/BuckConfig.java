@@ -559,8 +559,9 @@ public class BuckConfig implements ConfigPathGetter {
     return getInteger("cache", "max_action_graph_cache_entries").orElse(1);
   }
 
-  public boolean isActionGraphNodeCacheEnabled() {
-    return getBooleanValue("cache", "action_graph_node_cache_enabled", false);
+  public IncrementalActionGraphMode getIncrementalActionGraphMode() {
+    return getEnum("cache", "incremental_action_graph", IncrementalActionGraphMode.class)
+        .orElse(IncrementalActionGraphMode.DEFAULT);
   }
 
   public int getMaxActionGraphNodeCacheEntries() {

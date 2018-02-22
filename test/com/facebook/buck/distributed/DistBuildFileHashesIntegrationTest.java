@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.config.IncrementalActionGraphMode;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
@@ -246,7 +247,7 @@ public class DistBuildFileHashesIntegrationTest {
             ActionGraphParallelizationMode.DISABLED,
             Optional.empty(),
             false,
-            false,
+            IncrementalActionGraphMode.DISABLED,
             CloseableMemoizedSupplier.of(
                 () -> {
                   throw new IllegalStateException(

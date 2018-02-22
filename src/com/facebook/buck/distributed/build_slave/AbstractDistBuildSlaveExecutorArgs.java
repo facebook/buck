@@ -163,8 +163,8 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
         .setKnownBuildRuleTypesProvider(this.getKnownBuildRuleTypesProvider())
         .setShouldInstrumentActionGraph(
             this.getDistBuildConfig().getBuckConfig().getShouldInstrumentActionGraph())
-        .setActionGraphNodeCacheEnabled(
-            this.getDistBuildConfig().getBuckConfig().isActionGraphNodeCacheEnabled())
+        .setIncrementalActionGraphMode(
+            this.getDistBuildConfig().getBuckConfig().getIncrementalActionGraphMode())
         .setDistBuildConfig(this.getDistBuildConfig())
         .setMaxActionGraphParallelism(this.getMaxActionGraphParallelism())
         .setActionGraphParallelizationMode(this.getActionGraphParallelizationMode())

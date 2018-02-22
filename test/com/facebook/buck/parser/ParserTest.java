@@ -44,6 +44,7 @@ import com.facebook.buck.apple.toolchain.impl.AppleToolchainProviderFactory;
 import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.config.IncrementalActionGraphMode;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.FakeBuckEventListener;
@@ -2695,7 +2696,7 @@ public class ParserTest {
                     targetGraph,
                     ActionGraphParallelizationMode.DISABLED,
                     false,
-                    false,
+                    IncrementalActionGraphMode.DISABLED,
                     CloseableMemoizedSupplier.of(
                         () -> {
                           throw new IllegalStateException(
