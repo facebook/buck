@@ -21,13 +21,12 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Splitter;
@@ -53,11 +52,10 @@ public class AuditBuildRuleTypesCommandTest {
 
     @Override
     public BuildRule createBuildRule(
-        TargetGraph targetGraph,
+        BuildRuleCreationContext context,
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
-        BuildRuleResolver resolver,
         CellPathResolver cellRoots,
         CommonDescriptionArg args) {
       return null;

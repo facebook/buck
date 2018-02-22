@@ -39,6 +39,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeTargetNodeBuilder;
+import com.facebook.buck.rules.ImmutableBuildRuleCreationContext;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -124,11 +125,10 @@ public class SwiftLibraryIntegrationTest {
     SwiftCompile buildRule =
         (SwiftCompile)
             FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
-                TargetGraph.EMPTY,
+                ImmutableBuildRuleCreationContext.of(TargetGraph.EMPTY, resolver),
                 buildTarget,
                 projectFilesystem,
                 params,
-                resolver,
                 TestCellBuilder.createCellRoots(projectFilesystem),
                 args);
 
@@ -151,11 +151,10 @@ public class SwiftLibraryIntegrationTest {
     SwiftCompile buildRule =
         (SwiftCompile)
             FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
-                TargetGraph.EMPTY,
+                ImmutableBuildRuleCreationContext.of(TargetGraph.EMPTY, resolver),
                 swiftCompileTarget,
                 projectFilesystem,
                 params,
-                resolver,
                 TestCellBuilder.createCellRoots(projectFilesystem),
                 args);
     resolver.addToIndex(buildRule);
@@ -185,14 +184,15 @@ public class SwiftLibraryIntegrationTest {
             pathResolver.getRelativePath(buildRule.getSourcePathToOutput()).resolve("bar.o"));
     assertThat(fileListArg.getPath(), Matchers.equalTo(fileListSourcePath));
 
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(FakeTargetNodeBuilder.build(buildRule));
     CxxLink linkRule =
         (CxxLink)
             FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
-                TargetGraphFactory.newInstance(FakeTargetNodeBuilder.build(buildRule)),
+                ImmutableBuildRuleCreationContext.of(targetGraph, resolver),
                 buildTarget.withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR),
                 projectFilesystem,
                 params,
-                resolver,
                 TestCellBuilder.createCellRoots(projectFilesystem),
                 args);
 

@@ -32,6 +32,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
@@ -39,7 +40,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
@@ -99,14 +99,14 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams originalBuildRuleParams,
-      BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AndroidAarDescriptionArg args) {
 
+    BuildRuleResolver resolver = context.getBuildRuleResolver();
     buildTarget.checkUnflavored();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     ImmutableSortedSet.Builder<BuildRule> aarExtraDepsBuilder =
@@ -127,7 +127,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
     aarExtraDepsBuilder.add(resolver.addToIndex(manifest));
 
     final APKModuleGraph apkModuleGraph =
-        new APKModuleGraph(targetGraph, buildTarget, Optional.empty());
+        new APKModuleGraph(context.getTargetGraph(), buildTarget, Optional.empty());
 
     /* assemble dirs */
     AndroidPackageableCollector collector =

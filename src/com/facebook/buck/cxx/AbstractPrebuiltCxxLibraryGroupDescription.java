@@ -28,6 +28,7 @@ import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.model.macros.MacroFinder;
 import com.facebook.buck.model.macros.MacroMatchResult;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CacheableBuildRule;
@@ -40,7 +41,6 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -163,13 +163,13 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      final BuildRuleResolver resolverLocal,
       CellPathResolver cellRoots,
       final PrebuiltCxxLibraryGroupDescriptionArg args) {
+    BuildRuleResolver resolverLocal = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinderLocal = new SourcePathRuleFinder(resolverLocal);
     return new CustomPrebuiltCxxLibrary(
         buildTarget, projectFilesystem, params, resolverLocal, ruleFinderLocal) {

@@ -26,6 +26,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -37,7 +38,6 @@ import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
@@ -75,14 +75,14 @@ public class PythonLibraryDescription
 
   @Override
   public PythonLibrary createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       PythonLibraryDescriptionArg args) {
-    return new PythonLibrary(buildTarget, projectFilesystem, params, resolver);
+    return new PythonLibrary(
+        buildTarget, projectFilesystem, params, context.getBuildRuleResolver());
   }
 
   @Override

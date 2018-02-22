@@ -22,6 +22,7 @@ import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableSupport;
@@ -144,15 +145,15 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
 
   @Override
   public BuildRule createBuildRule(
-      final TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       final T args) {
+    BuildRuleResolver resolver = context.getBuildRuleResolver();
     Optional<ImmutableList<AbstractMacroExpander<? extends Macro, ?>>> maybeExpanders =
-        getMacroHandler(buildTarget, projectFilesystem, resolver, targetGraph, args);
+        getMacroHandler(buildTarget, projectFilesystem, resolver, context.getTargetGraph(), args);
     if (maybeExpanders.isPresent()) {
       ImmutableList<AbstractMacroExpander<? extends Macro, ?>> expanders = maybeExpanders.get();
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);

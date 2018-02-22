@@ -27,6 +27,7 @@ import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BinaryWrapperRule;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableSupport;
@@ -38,7 +39,6 @@ import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -74,11 +74,10 @@ public class RustTestDescription
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       RustTestDescriptionArg args) {
     BuildTarget exeTarget = buildTarget.withAppendedFlavors(InternalFlavor.of("unittest"));
@@ -89,6 +88,7 @@ public class RustTestDescription
     boolean isCheck = type.map(t -> t.getValue().isCheck()).orElse(false);
 
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    BuildRuleResolver resolver = context.getBuildRuleResolver();
 
     BinaryWrapperRule testExeBuild =
         resolver.addToIndex(

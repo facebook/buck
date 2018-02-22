@@ -75,17 +75,15 @@ public interface Description<T> {
    *
    * @param buildTarget
    * @param projectFilesystem
-   * @param resolver For querying for build rules by their targets.
    * @param cellRoots The roots of known cells.
    * @param args A constructor argument, of type as returned by {@link #getConstructorArgType()}.
    * @return The {@link BuildRule} that describes the default flavour of the rule being described.
    */
   BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       T args);
 }

@@ -207,11 +207,10 @@ public class TargetNodeVisibilityTest {
 
     @Override
     public BuildRule createBuildRule(
-        TargetGraph targetGraph,
+        BuildRuleCreationContext context,
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
-        BuildRuleResolver resolver,
         CellPathResolver cellRoots,
         FakeRuleDescriptionArg args) {
       return new FakeBuildRule(buildTarget, projectFilesystem, params);

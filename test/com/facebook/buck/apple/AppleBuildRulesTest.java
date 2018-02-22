@@ -34,6 +34,7 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.ImmutableBuildRuleCreationContext;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -119,14 +120,15 @@ public class AppleBuildRulesTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:lib");
     BuildRuleParams params = TestBuildRuleParams.create();
+    BuildRuleResolver buildRuleResolver =
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule libraryRule =
         FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION.createBuildRule(
-            TargetGraph.EMPTY,
+            ImmutableBuildRuleCreationContext.of(TargetGraph.EMPTY, buildRuleResolver),
             buildTarget,
             projectFilesystem,
             params,
-            new SingleThreadedBuildRuleResolver(
-                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
             TestCellBuilder.createCellRoots(projectFilesystem),
             AppleLibraryDescriptionArg.builder().setName("lib").build());
 

@@ -18,8 +18,8 @@ package com.facebook.buck.ocaml;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
@@ -27,7 +27,6 @@ import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableList;
@@ -47,11 +46,10 @@ public class PrebuiltOcamlLibraryDescription
 
   @Override
   public OcamlLibrary createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       final PrebuiltOcamlLibraryDescriptionArg args) {
 
@@ -81,7 +79,7 @@ public class PrebuiltOcamlLibraryDescription
     final SourcePath bytecodeLibraryPath =
         PathSourcePath.of(projectFilesystem, libPath.resolve(bytecodeLib));
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(context.getBuildRuleResolver());
 
     return new PrebuiltOcamlLibrary(
         buildTarget,

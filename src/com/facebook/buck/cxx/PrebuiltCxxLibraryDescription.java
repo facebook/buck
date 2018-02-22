@@ -41,6 +41,7 @@ import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.model.macros.MacroFinder;
 import com.facebook.buck.model.macros.StringMacroCombiner;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -53,7 +54,6 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -401,11 +401,10 @@ public class PrebuiltCxxLibraryDescription
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      final BuildRuleResolver ruleResolverLocal,
       CellPathResolver cellRoots,
       final PrebuiltCxxLibraryDescriptionArg args) {
 
@@ -419,7 +418,7 @@ public class PrebuiltCxxLibraryDescription
             .getFlavorAndValue(buildTarget);
 
     Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
-        targetGraph.get(buildTarget).getSelectedVersions();
+        context.getTargetGraph().get(buildTarget).getSelectedVersions();
     final Optional<String> versionSubdir =
         selectedVersions.isPresent() && args.getVersionedSubDir().isPresent()
             ? Optional.of(
@@ -430,6 +429,7 @@ public class PrebuiltCxxLibraryDescription
                         selectedVersions.get()))
             : Optional.empty();
 
+    BuildRuleResolver ruleResolverLocal = context.getBuildRuleResolver();
     // If we *are* building a specific type of this lib, call into the type specific
     // rule builder methods.  Currently, we only support building a shared lib from the
     // pre-existing static lib, which we do here.

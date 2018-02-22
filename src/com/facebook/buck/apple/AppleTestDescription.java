@@ -48,6 +48,7 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
@@ -61,7 +62,6 @@ import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.swift.SwiftLibraryDescription;
@@ -150,13 +150,13 @@ public class AppleTestDescription
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AppleTestDescriptionArg args) {
+    BuildRuleResolver resolver = context.getBuildRuleResolver();
     if (!appleConfig.shouldUseSwiftDelegate()) {
       Optional<BuildRule> buildRule =
           appleLibraryDescription.createSwiftBuildRule(
@@ -263,7 +263,7 @@ public class AppleTestDescription
             .withAppendedFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor());
     BuildRule library =
         createTestLibraryRule(
-            targetGraph,
+            context,
             projectFilesystem,
             params,
             resolver,
@@ -284,7 +284,7 @@ public class AppleTestDescription
             cxxPlatformFlavorDomain,
             defaultCxxFlavor,
             appleCxxPlatformFlavorDomain,
-            targetGraph,
+            context.getTargetGraph(),
             buildTarget.withAppendedFlavors(
                 BUNDLE_FLAVOR,
                 debugFormat.getFlavor(),
@@ -429,7 +429,7 @@ public class AppleTestDescription
   }
 
   private BuildRule createTestLibraryRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -450,7 +450,7 @@ public class AppleTestDescription
     } else {
       library =
           appleLibraryDescription.createLibraryBuildRule(
-              targetGraph,
+              context,
               libraryTarget,
               projectFilesystem,
               params,

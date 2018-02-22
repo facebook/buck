@@ -32,6 +32,7 @@ import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
@@ -46,7 +47,6 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.NeededCoverageSpec;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -218,11 +218,10 @@ public class PythonTestDescription
 
   @Override
   public PythonTest createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       final PythonTestDescriptionArg args) {
 
@@ -231,6 +230,7 @@ public class PythonTestDescription
             .getByName(PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.class)
             .getPythonPlatforms();
 
+    BuildRuleResolver resolver = context.getBuildRuleResolver();
     PythonPlatform pythonPlatform =
         pythonPlatforms
             .getValue(buildTarget)
@@ -244,7 +244,7 @@ public class PythonTestDescription
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     Path baseModule = PythonUtil.getBasePath(buildTarget, args.getBaseModule());
     Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
-        targetGraph.get(buildTarget).getSelectedVersions();
+        context.getTargetGraph().get(buildTarget).getSelectedVersions();
 
     ImmutableMap<Path, SourcePath> srcs =
         PythonUtil.getModules(

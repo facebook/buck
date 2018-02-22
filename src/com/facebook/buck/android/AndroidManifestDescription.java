@@ -18,14 +18,13 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
@@ -45,15 +44,18 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
 
   @Override
   public AndroidManifest createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AndroidManifestDescriptionArg args) {
     return androidManifestFactory.createBuildRule(
-        buildTarget, projectFilesystem, resolver, args.getDeps(), args.getSkeleton());
+        buildTarget,
+        projectFilesystem,
+        context.getBuildRuleResolver(),
+        args.getDeps(),
+        args.getSkeleton());
   }
 
   @BuckStyleImmutable

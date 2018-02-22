@@ -51,6 +51,7 @@ import com.facebook.buck.model.Flavored;
 import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -61,7 +62,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -399,13 +399,13 @@ public class CxxPythonExtensionDescription
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      final BuildRuleResolver ruleResolverLocal,
       CellPathResolver cellRoots,
       final CxxPythonExtensionDescriptionArg args) {
+    BuildRuleResolver ruleResolverLocal = context.getBuildRuleResolver();
 
     // See if we're building a particular "type" of this library, and if so, extract it as an enum.
     final Optional<Type> type = LIBRARY_TYPE.getValue(buildTarget);

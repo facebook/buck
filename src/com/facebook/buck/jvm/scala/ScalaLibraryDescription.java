@@ -26,12 +26,11 @@ import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -64,11 +63,10 @@ public class ScalaLibraryDescription
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams rawParams,
-      final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       ScalaLibraryDescriptionArg args) {
     JavacOptions javacOptions =
@@ -78,7 +76,7 @@ public class ScalaLibraryDescription
                 .getJavacOptions(),
             buildTarget,
             projectFilesystem,
-            resolver,
+            context.getBuildRuleResolver(),
             args);
 
     DefaultJavaLibraryRules scalaLibraryBuilder =
@@ -86,7 +84,7 @@ public class ScalaLibraryDescription
                 buildTarget,
                 projectFilesystem,
                 rawParams,
-                resolver,
+                context.getBuildRuleResolver(),
                 cellRoots,
                 scalaBuckConfig,
                 javaBuckConfig,

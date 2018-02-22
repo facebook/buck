@@ -24,6 +24,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -90,13 +91,13 @@ public class JsLibraryDescription
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       JsLibraryDescriptionArg args) {
+    BuildRuleResolver resolver = context.getBuildRuleResolver();
 
     // this params object is used as base for the JsLibrary build rule, but also for all dynamically
     // created JsFile rules.
@@ -148,10 +149,10 @@ public class JsLibraryDescription
                 .get()
                 .getResolvedQuery()
                 .stream()
-                .filter(target -> JsUtil.isJsLibraryTarget(target, targetGraph));
+                .filter(target -> JsUtil.isJsLibraryTarget(target, context.getTargetGraph()));
         deps = Stream.concat(deps, jsLibraryTargetsInQuery);
       }
-      return new LibraryBuilder(targetGraph, resolver, buildTarget, params)
+      return new LibraryBuilder(context.getTargetGraph(), resolver, buildTarget, params)
           .setLibraryDependencies(deps)
           .build(projectFilesystem, worker);
     }

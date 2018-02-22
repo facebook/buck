@@ -44,6 +44,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -186,31 +187,30 @@ public class AppleBinaryDescription
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AppleBinaryDescriptionArg args) {
     FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain =
         getAppleCxxPlatformsFlavorDomain();
     if (buildTarget.getFlavors().contains(APP_FLAVOR)) {
       return createBundleBuildRule(
-          targetGraph,
+          context.getTargetGraph(),
           buildTarget,
           projectFilesystem,
           params,
-          resolver,
+          context.getBuildRuleResolver(),
           appleCxxPlatformsFlavorDomain,
           args);
     } else {
       return createBinaryBuildRule(
-          targetGraph,
+          context,
           buildTarget,
           projectFilesystem,
           params,
-          resolver,
+          context.getBuildRuleResolver(),
           cellRoots,
           appleCxxPlatformsFlavorDomain,
           args);
@@ -236,7 +236,7 @@ public class AppleBinaryDescription
   }
 
   private BuildRule createBinaryBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
@@ -252,7 +252,7 @@ public class AppleBinaryDescription
 
     BuildRule unstrippedBinaryRule =
         createBinary(
-            targetGraph,
+            context,
             unstrippedBinaryBuildTarget,
             projectFilesystem,
             params,
@@ -263,7 +263,7 @@ public class AppleBinaryDescription
 
     if (shouldWrapIntoAppleDebuggableBinary(buildTarget, unstrippedBinaryRule)) {
       return createAppleDebuggableBinary(
-          targetGraph,
+          context,
           buildTarget,
           projectFilesystem,
           params,
@@ -279,7 +279,7 @@ public class AppleBinaryDescription
   }
 
   private BuildRule createAppleDebuggableBinary(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
@@ -297,7 +297,7 @@ public class AppleBinaryDescription
                 .orElse(StripStyle.NON_GLOBAL_SYMBOLS.getFlavor()));
     BuildRule strippedBinaryRule =
         createBinary(
-            targetGraph,
+            context,
             strippedBinaryBuildTarget,
             projectFilesystem,
             params,
@@ -388,7 +388,7 @@ public class AppleBinaryDescription
   }
 
   private BuildRule createBinary(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
@@ -407,7 +407,7 @@ public class AppleBinaryDescription
       if (shouldUseStubBinary(buildTarget)) {
         BuildTarget thinTarget = Iterables.getFirst(fatBinaryInfo.get().getThinTargets(), null);
         return requireThinBinary(
-            targetGraph,
+            context,
             thinTarget,
             projectFilesystem,
             params,
@@ -421,7 +421,7 @@ public class AppleBinaryDescription
       for (BuildTarget thinTarget : fatBinaryInfo.get().getThinTargets()) {
         thinRules.add(
             requireThinBinary(
-                targetGraph,
+                context,
                 thinTarget,
                 projectFilesystem,
                 params,
@@ -434,7 +434,7 @@ public class AppleBinaryDescription
           buildTarget, projectFilesystem, params, resolver, fatBinaryInfo.get(), thinRules.build());
     } else {
       return requireThinBinary(
-          targetGraph,
+          context,
           buildTarget,
           projectFilesystem,
           params,
@@ -446,7 +446,7 @@ public class AppleBinaryDescription
   }
 
   private BuildRule requireThinBinary(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
@@ -463,7 +463,7 @@ public class AppleBinaryDescription
               swiftDelegate.flatMap(
                   swift ->
                       swift.createCompanionBuildRule(
-                          targetGraph,
+                          context,
                           buildTarget,
                           projectFilesystem,
                           params,

@@ -39,6 +39,7 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -277,25 +278,24 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       CxxGenruleDescriptionArg args) {
     Optional<CxxPlatform> cxxPlatform = getCxxPlatforms().getValue(buildTarget);
     if (cxxPlatform.isPresent()) {
       return super.createBuildRule(
-          targetGraph,
+          context,
           buildTarget.withAppendedFlavors(cxxPlatform.get().getFlavor()),
           projectFilesystem,
           params,
-          resolver,
           cellRoots,
           args);
     }
-    return new CxxGenrule(buildTarget, projectFilesystem, params, resolver, args.getOut());
+    return new CxxGenrule(
+        buildTarget, projectFilesystem, params, context.getBuildRuleResolver(), args.getOut());
   }
 
   @Override

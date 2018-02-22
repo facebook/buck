@@ -30,8 +30,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.Description;
@@ -42,7 +42,6 @@ import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
@@ -577,11 +576,10 @@ public class CommandAliasDescriptionTest {
 
     @Override
     public BuildRule createBuildRule(
-        TargetGraph targetGraph,
+        BuildRuleCreationContext context,
         BuildTarget target,
         ProjectFilesystem filesystem,
         BuildRuleParams params,
-        BuildRuleResolver resolver,
         CellPathResolver cellRoots,
         CommandAliasDescriptionArg args) {
       CommandTool tool = new CommandTool.Builder().addArg(arg).addEnv("env", env).build();

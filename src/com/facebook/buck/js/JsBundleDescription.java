@@ -31,6 +31,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -99,14 +100,13 @@ public class JsBundleDescription
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       JsBundleDescriptionArg args) {
-
+    BuildRuleResolver resolver = context.getBuildRuleResolver();
     final ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
 
     // Source maps are exposed individually using a special flavor
@@ -156,7 +156,7 @@ public class JsBundleDescription
 
     final Either<ImmutableSet<String>, String> entryPoint = args.getEntry();
     TransitiveLibraryDependencies libsResolver =
-        new TransitiveLibraryDependencies(buildTarget, targetGraph, resolver);
+        new TransitiveLibraryDependencies(buildTarget, context.getTargetGraph(), resolver);
     ImmutableSortedSet<JsLibrary> libraryDeps = libsResolver.collect(args.getDeps());
 
     BuildRuleParams paramsWithLibraries = params.copyAppendingExtraDeps(libraryDeps);

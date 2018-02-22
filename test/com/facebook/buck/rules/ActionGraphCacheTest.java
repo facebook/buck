@@ -534,11 +534,10 @@ public class ActionGraphCacheTest {
             new FakeDescription() {
               @Override
               public BuildRule createBuildRule(
-                  TargetGraph targetGraph,
+                  BuildRuleCreationContext context,
                   BuildTarget buildTarget,
                   ProjectFilesystem projectFilesystem,
                   BuildRuleParams params,
-                  BuildRuleResolver resolver,
                   CellPathResolver cellRoots,
                   FakeTargetNodeArg args) {
                 return new FakeCacheableBuildRule(buildTarget, projectFilesystem, params);

@@ -26,12 +26,14 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.ImmutableBuildRuleCreationContext;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -118,13 +120,14 @@ public class AndroidManifestTest {
             .setName("some_manifest")
             .setSkeleton(FakeSourcePath.of("java/com/example/AndroidManifestSkeleton.xml"))
             .build();
+    BuildRuleResolver buildRuleResolver =
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     return description.createBuildRule(
-        TargetGraph.EMPTY,
+        ImmutableBuildRuleCreationContext.of(TargetGraph.EMPTY, buildRuleResolver),
         MANIFEST_TARGET,
         projectFilesystem,
         buildRuleParams,
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
         TestCellBuilder.createCellRoots(projectFilesystem),
         arg);
   }

@@ -44,6 +44,7 @@ import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableSupport;
@@ -56,7 +57,6 @@ import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
@@ -147,11 +147,10 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       SwiftLibraryDescriptionArg args) {
 
@@ -187,6 +186,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
     FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain =
         swiftPlatformsProvider.getSwiftCxxPlatforms();
 
+    BuildRuleResolver resolver = context.getBuildRuleResolver();
     if (!buildFlavors.contains(SWIFT_COMPANION_FLAVOR) && platform.isPresent()) {
       final CxxPlatform cxxPlatform = platform.get().getValue();
       Optional<SwiftPlatform> swiftPlatform = swiftPlatformFlavorDomain.getValue(buildTarget);
@@ -387,7 +387,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
   }
 
   public Optional<BuildRule> createCompanionBuildRule(
-      final TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
@@ -417,13 +417,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
       return Optional.of(
           resolver.addToIndex(
               createBuildRule(
-                  targetGraph,
-                  buildTarget,
-                  projectFilesystem,
-                  params,
-                  resolver,
-                  cellRoots,
-                  delegateArgs)));
+                  context, buildTarget, projectFilesystem, params, cellRoots, delegateArgs)));
     } else {
       return Optional.empty();
     }
