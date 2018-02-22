@@ -451,7 +451,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       lines.add(stampedeIdLogLine.get());
     }
 
+    String localBuildLinePrefix = "Building";
+
     if (distBuildStarted != null) {
+      localBuildLinePrefix = "Local Build";
       long distBuildMs =
           logEventPair(
               "Distributed Build",
@@ -471,10 +474,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
               new DistBuildSlaveStateRenderer(
                   ansi, currentTimeMillis, ImmutableList.copyOf(distBuildSlaveTracker.values()));
         }
-        renderLines(renderer, lines, maxThreadLines, shouldAlwaysSortThreadsByTime);
+        int numLinesRendered =
+            renderLines(renderer, lines, maxThreadLines, shouldAlwaysSortThreadsByTime);
 
-        // We don't want to print anything else while dist-build is going on.
-        return lines.build();
+        if (numLinesRendered > 0) {
+          // We don't want to print anything else while dist-build is going on.
+          return lines.build();
+        }
       }
     }
 
@@ -499,7 +505,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     long totalBuildMs =
         logEventPair(
-            "Building",
+            localBuildLinePrefix,
             getOptionalBuildLineSuffix(),
             currentTimeMillis,
             offsetMs, // parseTime,
@@ -669,11 +675,17 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     return logEventLinesBuilder.build();
   }
 
-  public void renderLines(
+  /**
+   * Render lines using the provided {@param renderer}.
+   *
+   * @return the number of lines created.
+   */
+  public int renderLines(
       MultiStateRenderer renderer,
       ImmutableList.Builder<String> lines,
       int maxLines,
       boolean alwaysSortByTime) {
+    int numLinesRendered = 0;
     int threadCount = renderer.getExecutorCount();
     int fullLines = threadCount;
     boolean useCompressedLine = false;
@@ -690,6 +702,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       long threadId = threadIds.get(i);
       lineBuilder.delete(0, lineBuilder.length());
       lines.add(renderer.renderStatusLine(threadId, lineBuilder));
+      numLinesRendered++;
     }
     if (useCompressedLine) {
       lineBuilder.delete(0, lineBuilder.length());
@@ -706,7 +719,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         lineBuilder.append(renderer.renderShortStatus(threadId));
       }
       lines.add(lineBuilder.toString());
+      numLinesRendered++;
     }
+
+    return numLinesRendered;
   }
 
   private Optional<String> renderTestSuffix() {

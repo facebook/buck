@@ -846,7 +846,9 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 0.3 sec (0%) local status: init; remote status: init"));
+            "Distributed Build... 0.3 sec (0%) local status: init; remote status: init",
+            "Downloading... 0 artifacts, 0.00 bytes",
+            "Local Build... 0.2 sec (0%)"));
 
     timeMillis += 250;
     eventBus.postWithoutConfiguring(
@@ -864,7 +866,9 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 0.7 sec (0%) local status: init; remote status: queued"));
+            "Distributed Build... 0.7 sec (0%) local status: init; remote status: queued",
+            "Downloading... 0 artifacts, 0.00 bytes",
+            "Local Build... 0.6 sec (0%)"));
 
     timeMillis += 100;
     eventBus.postWithoutConfiguring(
@@ -882,7 +886,9 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 0.9 sec (0%) local status: init; remote status: building"));
+            "Distributed Build... 0.9 sec (0%) local status: init; remote status: building",
+            "Downloading... 0 artifacts, 0.00 bytes",
+            "Local Build... 0.8 sec (0%)"));
 
     BuildSlaveRunId buildSlaveRunId1 = new BuildSlaveRunId();
     buildSlaveRunId1.setId("slave1");
@@ -1079,7 +1085,7 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             distbuildLine,
             NO_DOWNLOAD_STRING,
-            "Building... 1.6 sec"));
+            "Local Build... 1.6 sec"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1088,7 +1094,7 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    final String buildingLine = "Building: finished in 1.6 sec";
+    final String buildingLine = "Local Build: finished in 1.6 sec";
     final String totalLine = "  Total time: 1.8 sec";
     timeMillis += 100;
     validateConsole(
