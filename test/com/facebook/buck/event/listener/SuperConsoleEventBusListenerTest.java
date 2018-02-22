@@ -848,7 +848,7 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             "Distributed Build... 0.3 sec (0%) local status: init; remote status: init",
             "Downloading... 0 artifacts, 0.00 bytes",
-            "Local Build... 0.2 sec (0%)"));
+            "Local Build... 0.2 sec"));
 
     timeMillis += 250;
     eventBus.postWithoutConfiguring(
@@ -859,6 +859,16 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
+    BuildEvent.RuleCountCalculated ruleCountCalculated =
+        BuildEvent.ruleCountCalculated(ImmutableSet.of(), 10);
+    eventBus.post(ruleCountCalculated);
+
+    FakeBuildRule fakeRule = new FakeBuildRule(fakeTarget, ImmutableSortedSet.of());
+    BuildRuleEvent.Started fakeRuleStarted = BuildRuleEvent.started(fakeRule, durationTracker);
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            fakeRuleStarted, timeMillis, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
     timeMillis += 100;
     validateConsole(
         listener,
@@ -866,15 +876,34 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 0.7 sec (0%) local status: init; remote status: queued",
+            "Distributed Build... 0.7 sec (0%) local status: init (0% done); remote status: queued",
             "Downloading... 0 artifacts, 0.00 bytes",
-            "Local Build... 0.6 sec (0%)"));
+            "Local Build... 0.6 sec (0%) 0/10 jobs, 0 updated, 0.0% cache miss",
+            " - //banana:stand... 0.1 sec (preparing)"));
 
     timeMillis += 100;
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             new DistBuildStatusEvent(
                 DistBuildStatus.builder().setStatus(BuildStatus.BUILDING.toString()).build()),
+            timeMillis,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            BuildRuleEvent.finished(
+                fakeRuleStarted,
+                BuildRuleKeys.of(new RuleKey("aaaa")),
+                BuildRuleStatus.SUCCESS,
+                CacheResult.miss(),
+                Optional.empty(),
+                Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
+                false,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()),
             timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -886,9 +915,10 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 0.9 sec (0%) local status: init; remote status: building",
+            "Distributed Build... 0.9 sec (0%) local status: init (10% done); remote status: building",
             "Downloading... 0 artifacts, 0.00 bytes",
-            "Local Build... 0.8 sec (0%)"));
+            "Local Build... 0.8 sec (10%) 1/10 jobs, 1 updated, 10.0% cache miss",
+            " - IDLE"));
 
     BuildSlaveRunId buildSlaveRunId1 = new BuildSlaveRunId();
     buildSlaveRunId1.setId("slave1");
@@ -913,6 +943,12 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
+    FakeBuildRule cachedRule = new FakeBuildRule(cachedTarget, ImmutableSortedSet.of());
+    BuildRuleEvent.Started cachedRuleStarted = BuildRuleEvent.started(cachedRule, durationTracker);
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            cachedRuleStarted, timeMillis, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
     timeMillis += 100;
     validateConsole(
         listener,
@@ -920,7 +956,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 1.1 sec (0%) local status: init; remote status: building",
+            "Distributed Build... 1.1 sec (0%) local status: init (10% done); remote status: building",
             " Server 0: Preparing: creating action graph ...",
             " Server 1: Preparing: creating action graph, materializing source files [128] ..."));
 
@@ -973,7 +1009,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 1.3 sec (12%) local status: init; "
+            "Distributed Build... 1.3 sec (12%) local status: init (10% done); "
                 + "remote status: building, 10/80 jobs, 3.3% cache miss",
             " Server 0: Idle... built 5/10 jobs, 10.0% cache miss",
             " Server 1: Working on 5 jobs... built 5/20 jobs, 1 jobs failed, 0.0% cache miss"));
@@ -1023,6 +1059,25 @@ public class SuperConsoleEventBusListenerTest {
             timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            BuildRuleEvent.finished(
+                cachedRuleStarted,
+                BuildRuleKeys.of(new RuleKey("bbbb")),
+                BuildRuleStatus.SUCCESS,
+                CacheResult.hit(
+                    ArtifactCacheMode.thrift_over_http.name(), ArtifactCacheMode.thrift_over_http),
+                Optional.empty(),
+                Optional.of(BuildRuleSuccessType.FETCHED_FROM_CACHE),
+                false,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()),
+            timeMillis,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
 
     timeMillis += 100;
     validateConsole(
@@ -1031,7 +1086,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 1.5 sec (62%) local status: building;"
+            "Distributed Build... 1.5 sec (62%) local status: building (20% done);"
                 + " remote status: custom, 50/80 jobs,"
                 + " 3.3% cache miss, 1 [3.4%] cache errors, 1 upload errors",
             " Server 0: Working on 1 jobs... built 9/10 jobs, 10.0% cache miss",
@@ -1073,19 +1128,18 @@ public class SuperConsoleEventBusListenerTest {
             /* threadId */ 0L));
 
     timeMillis += 100;
-    final String distbuildLine =
-        "Distributed Build: finished in 1.6 sec (100%) local status: building;"
-            + " remote status: finished_successfully, 80/80 jobs,"
-            + " 3.3% cache miss, 1 [3.3%] cache errors, 1 upload errors";
     validateConsole(
         listener,
         timeMillis,
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            distbuildLine,
+            "Distributed Build: finished in 1.6 sec (100%) local status: building (20% done);"
+                + " remote status: finished_successfully, 80/80 jobs,"
+                + " 3.3% cache miss, 1 [3.3%] cache errors, 1 upload errors",
             NO_DOWNLOAD_STRING,
-            "Local Build... 1.6 sec"));
+            "Local Build... 1.6 sec (20%) 2/10 jobs, 2 updated, 10.0% cache miss",
+            " - IDLE"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1094,7 +1148,12 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    final String buildingLine = "Local Build: finished in 1.6 sec";
+    final String distbuildLine =
+        "Distributed Build: finished in 1.6 sec (100%) local status: building (100% done);"
+            + " remote status: finished_successfully, 80/80 jobs,"
+            + " 3.3% cache miss, 1 [3.3%] cache errors, 1 upload errors";
+    final String buildingLine =
+        "Local Build: finished in 1.6 sec (100%) 2/10 jobs, 2 updated, 10.0% cache miss";
     final String totalLine = "  Total time: 1.8 sec";
     timeMillis += 100;
     validateConsole(

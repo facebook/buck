@@ -240,15 +240,20 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     return Optional.of(Math.floor(100 * buildRatio) / 100.0);
   }
 
+  /** Local build progress. */
+  protected Optional<Double> getApproximateLocalBuildProgress() {
+    if (progressEstimator.isPresent()) {
+      return progressEstimator.get().getApproximateBuildProgress();
+    } else {
+      return Optional.empty();
+    }
+  }
+
   protected Optional<Double> getApproximateBuildProgress() {
     if (distBuildStarted != null && distBuildFinished == null) {
       return getApproximateDistBuildProgress();
     } else {
-      if (progressEstimator.isPresent()) {
-        return progressEstimator.get().getApproximateBuildProgress();
-      } else {
-        return Optional.empty();
-      }
+      return getApproximateLocalBuildProgress();
     }
   }
 

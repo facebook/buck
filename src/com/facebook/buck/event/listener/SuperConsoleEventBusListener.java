@@ -511,7 +511,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             offsetMs, // parseTime,
             this.buildStarted,
             this.buildFinished,
-            getApproximateBuildProgress(),
+            getApproximateLocalBuildProgress(),
             Optional.empty(),
             lines);
 
@@ -654,7 +654,14 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       }
     }
 
-    String localStatus = String.format("local status: %s", stampedeLocalBuildStatus);
+    Optional<Double> localBuildProgress = getApproximateLocalBuildProgress();
+    String localBuildProgessString = "";
+    if (localBuildProgress.isPresent()) {
+      localBuildProgessString =
+          String.format(" (%d%% done)", Math.round(localBuildProgress.get() * 100));
+    }
+    String localStatus =
+        String.format("local status: %s%s", stampedeLocalBuildStatus, localBuildProgessString);
     parseLine = localStatus + "; " + Joiner.on(", ").join(columns);
     return Strings.isNullOrEmpty(parseLine) ? Optional.empty() : Optional.of(parseLine);
   }
