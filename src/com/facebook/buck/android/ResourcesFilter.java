@@ -111,7 +111,7 @@ public class ResourcesFilter extends AbstractBuildRule
   private final ImmutableList<SourcePath> resDirectories;
   private final ImmutableSet<SourcePath> whitelistedStringDirs;
   @AddToRuleKey private final ImmutableSet<String> locales;
-  @AddToRuleKey private final String localizedStringFileName;
+  @AddToRuleKey private final Optional<String> localizedStringFileName;
   @AddToRuleKey private final ResourceCompressionMode resourceCompressionMode;
   @AddToRuleKey private final FilterResourcesSteps.ResourceFilter resourceFilter;
   @AddToRuleKey private final Optional<Arg> postFilterResourcesCmd;
@@ -127,7 +127,7 @@ public class ResourcesFilter extends AbstractBuildRule
       ImmutableList<SourcePath> resDirectories,
       ImmutableSet<SourcePath> whitelistedStringDirs,
       ImmutableSet<String> locales,
-      String localizedStringFileName,
+      Optional<String> localizedStringFileName,
       ResourceCompressionMode resourceCompressionMode,
       FilterResourcesSteps.ResourceFilter resourceFilter,
       Optional<Arg> postFilterResourcesCmd) {
@@ -336,7 +336,7 @@ public class ResourcesFilter extends AbstractBuildRule
   FilterResourcesSteps createFilterResourcesSteps(
       ImmutableSet<Path> whitelistedStringDirs,
       ImmutableSet<String> locales,
-      String localizedStringFileName,
+      Optional<String> localizedStringFileName,
       ImmutableBiMap<Path, Path> resSourceToDestDirMap) {
     FilterResourcesSteps.Builder filterResourcesStepBuilder =
         FilterResourcesSteps.builder()

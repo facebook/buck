@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import org.hamcrest.Matchers;
@@ -76,7 +77,7 @@ public class FilterResourcesStepTest {
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
-            /* localizedStringsFileName */ null,
+            /* localizedStringFileName */ Optional.empty(),
             DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(ResourceFilters.Density.MDPI),
             FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
@@ -125,7 +126,10 @@ public class FilterResourcesStepTest {
   public void testWhitelistFilter() throws IOException, InterruptedException {
     Predicate<Path> filePredicate =
         getTestPathPredicate(
-            true, ImmutableSet.of(Paths.get("com/whitelisted/res")), ImmutableSet.of(), null);
+            true,
+            ImmutableSet.of(Paths.get("com/whitelisted/res")),
+            ImmutableSet.of(),
+            Optional.empty());
 
     assertTrue(filePredicate.test(Paths.get("com/example/res/drawables/image.png")));
     assertTrue(filePredicate.test(Paths.get("com/example/res/values/strings.xml")));
@@ -138,7 +142,8 @@ public class FilterResourcesStepTest {
   @Test
   public void testFilterLocales() throws IOException, InterruptedException {
     Predicate<Path> filePredicate =
-        getTestPathPredicate(false, ImmutableSet.of(), ImmutableSet.of("es", "es_US"), null);
+        getTestPathPredicate(
+            false, ImmutableSet.of(), ImmutableSet.of("es", "es_US"), Optional.empty());
 
     assertTrue(filePredicate.test(Paths.get("com/example/res/drawables/image.png")));
     assertTrue(filePredicate.test(Paths.get("com/example/res/values/strings.xml")));
@@ -156,7 +161,7 @@ public class FilterResourcesStepTest {
       throws IOException, InterruptedException {
     Predicate<Path> filePredicate =
         getTestPathPredicate(
-            false, ImmutableSet.of(), ImmutableSet.of("es", "es_US"), "localized.xml");
+            false, ImmutableSet.of(), ImmutableSet.of("es", "es_US"), Optional.of("localized.xml"));
 
     assertTrue(filePredicate.test(Paths.get("com/example/res/drawables/image.png")));
     assertTrue(filePredicate.test(Paths.get("com/example/res/values/localized.xml")));
@@ -176,7 +181,7 @@ public class FilterResourcesStepTest {
             true,
             ImmutableSet.of(Paths.get("com/example/res")),
             ImmutableSet.of("es", "es_US"),
-            null);
+            Optional.empty());
 
     assertTrue(filePredicate.test(Paths.get("com/example/res/drawables/image.png")));
     assertTrue(filePredicate.test(Paths.get("com/example/res/values/strings.xml")));
@@ -228,7 +233,7 @@ public class FilterResourcesStepTest {
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
-            /* localizedStringsFileName */ null,
+            /* localizedStringFileName */ Optional.empty(),
             DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(targetDensity),
             FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
@@ -276,7 +281,7 @@ public class FilterResourcesStepTest {
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
-            /* localizedStringsFileName */ null,
+            /* localizedStringFileName */ Optional.empty(),
             DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(targetDensity),
             FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
@@ -323,7 +328,7 @@ public class FilterResourcesStepTest {
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
-            /* localizedStringsFileName */ null,
+            /* localizedStringFileName */ Optional.empty(),
             DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(targetDensity),
             FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
@@ -379,7 +384,7 @@ public class FilterResourcesStepTest {
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
-            /* localizedStringsFileName */ null,
+            /* localizedStringFileName */ Optional.empty(),
             DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(targetDensityIncluded, targetDensityExcluded),
             FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
@@ -428,7 +433,7 @@ public class FilterResourcesStepTest {
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
-            /* localizedStringsFileName */ null,
+            /* localizedStringFileName */ Optional.empty(),
             DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(targetDensity),
             FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
@@ -460,7 +465,7 @@ public class FilterResourcesStepTest {
       boolean enableStringWhitelisting,
       ImmutableSet<Path> whitelistedStringDirs,
       ImmutableSet<String> locales,
-      String localizedStringsFileName)
+      Optional<String> localizedStringFileName)
       throws IOException, InterruptedException {
     FilterResourcesSteps step =
         new FilterResourcesSteps(
@@ -470,7 +475,7 @@ public class FilterResourcesStepTest {
             /* enableStringWhitelisting */ enableStringWhitelisting,
             /* whitelistedStringDirs */ whitelistedStringDirs,
             /* locales */ locales,
-            /* localizedStringsFileName */ localizedStringsFileName,
+            /* localizedStringFileName */ localizedStringFileName,
             DefaultFilteredDirectoryCopier.getInstance(),
             /* targetDensities */ null,
             FilterResourcesSteps.DefaultDrawableFinder.getInstance(),

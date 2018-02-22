@@ -682,7 +682,7 @@ public class AndroidBinaryDescription
 
     ImmutableSet<String> getLocales();
 
-    String getLocalizedStringFileName();
+    Optional<String> getLocalizedStringFileName();
 
     @Value.Default
     default boolean isBuildStringSourceMap() {

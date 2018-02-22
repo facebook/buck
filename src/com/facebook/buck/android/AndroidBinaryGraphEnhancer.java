@@ -148,7 +148,7 @@ public class AndroidBinaryGraphEnhancer {
       Optional<SourcePath> duplicateResourceWhitelistPath,
       Optional<String> resourceUnionPackage,
       ImmutableSet<String> locales,
-      String localizedStringFileName,
+      Optional<String> localizedStringFileName,
       Optional<SourcePath> manifest,
       Optional<SourcePath> manifestSkeleton,
       PackageType packageType,

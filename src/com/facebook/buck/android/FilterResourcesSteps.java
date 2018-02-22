@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -78,7 +79,7 @@ public class FilterResourcesSteps {
   private final boolean enableStringWhitelisting;
   private final ImmutableSet<Path> whitelistedStringDirs;
   private final ImmutableSet<String> locales;
-  private final String localizedStringsFileName;
+  private final String localizedStringFileName;
   private final FilteredDirectoryCopier filteredDirectoryCopier;
   private final CopyStep copyStep = new CopyStep();
   private final ScaleStep scaleStep = new ScaleStep();
@@ -113,7 +114,7 @@ public class FilterResourcesSteps {
       boolean enableStringWhitelisting,
       ImmutableSet<Path> whitelistedStringDirs,
       ImmutableSet<String> locales,
-      @Nullable String localizedStringsFileName,
+      Optional<String> localizedStringFileName,
       FilteredDirectoryCopier filteredDirectoryCopier,
       @Nullable Set<ResourceFilters.Density> targetDensities,
       @Nullable DrawableFinder drawableFinder,
@@ -128,8 +129,10 @@ public class FilterResourcesSteps {
     this.enableStringWhitelisting = enableStringWhitelisting;
     this.whitelistedStringDirs = whitelistedStringDirs;
     this.locales = locales;
-    this.localizedStringsFileName =
-        (localizedStringsFileName != null) ? localizedStringsFileName : DEFAULT_STRINGS_FILE_NAME;
+    this.localizedStringFileName =
+        localizedStringFileName.isPresent()
+            ? localizedStringFileName.get()
+            : DEFAULT_STRINGS_FILE_NAME;
     this.filteredDirectoryCopier = filteredDirectoryCopier;
     this.targetDensities = targetDensities;
     this.drawableFinder = drawableFinder;
@@ -216,7 +219,7 @@ public class FilterResourcesSteps {
           path -> {
             String filePath = MorePaths.pathWithUnixSeparators(path);
             Matcher matcher = NON_ENGLISH_STRINGS_FILE_PATH.matcher(filePath);
-            if (!matcher.matches() || !filePath.endsWith(localizedStringsFileName)) {
+            if (!matcher.matches() || !filePath.endsWith(localizedStringFileName)) {
               return true;
             }
 
@@ -463,7 +466,7 @@ public class FilterResourcesSteps {
     @Nullable private ProjectFilesystem filesystem;
     @Nullable private ImmutableBiMap<Path, Path> inResDirToOutResDirMap;
     @Nullable private ResourceFilter resourceFilter;
-    @Nullable private String localizedStringFileName;
+    private Optional<String> localizedStringFileName;
     private ImmutableSet<Path> whitelistedStringDirs = ImmutableSet.of();
     private ImmutableSet<String> locales = ImmutableSet.of();
     private boolean enableStringWhitelisting = false;
@@ -505,7 +508,7 @@ public class FilterResourcesSteps {
       return this;
     }
 
-    public Builder setLocalizedStringFileName(String fileName) {
+    public Builder setLocalizedStringFileName(Optional<String> fileName) {
       this.localizedStringFileName = fileName;
       return this;
     }
