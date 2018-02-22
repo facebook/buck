@@ -106,20 +106,21 @@ public class CacheOptimizedBuildTargetsQueueFactory {
   }
 
   private Queue<BuildRule> processTopLevelTargets(Iterable<BuildTarget> targetsToBuild) {
-    if (!isDeepBuild) {
-      artifactCache.prewarmRemoteContains(
-          RichStream.from(targetsToBuild)
-              .map(resolver::getRule)
-              .collect(ImmutableSet.toImmutableSet()));
-    }
-
     return RichStream.from(targetsToBuild)
         .map(resolver::getRule)
         .filter(this::doesRuleNeedToBeScheduled)
         .collect(Collectors.toCollection(LinkedList::new));
   }
 
+  private void prewarmRemoteCache(Set<BuildRule> rules) {
+    if (!isDeepBuild) {
+      artifactCache.prewarmRemoteContains(
+          rules.stream().filter(BuildRule::isCacheable).collect(ImmutableSet.toImmutableSet()));
+    }
+  }
+
   private boolean hasMissingCachableRuntimeDeps(BuildRule rule) {
+    prewarmRemoteCache(ruleDepsCache.getRuntimeDeps(rule));
     Stream<BuildRule> missingCachableRuntimeDeps =
         ruleDepsCache
             .getRuntimeDeps(rule)
@@ -213,7 +214,7 @@ public class CacheOptimizedBuildTargetsQueueFactory {
       Iterable<BuildTarget> topLevelTargets) {
     // Start with a set of every node in the graph
     LOG.debug("Recording all rules.");
-    Set<BuildRule> prunedRules = findAllRulesInGraph(topLevelTargets);
+    Set<BuildRule> allRules = findAllRulesInGraph(topLevelTargets);
 
     LOG.debug("Processing top-level targets.");
     Queue<BuildRule> buildRulesToProcess = processTopLevelTargets(topLevelTargets);
@@ -221,14 +222,14 @@ public class CacheOptimizedBuildTargetsQueueFactory {
     if (!buildRulesToProcess.isEmpty() && !isDeepBuild) {
       // Check the cache for everything we are going to need upfront.
       LOG.debug("Pre-warming remote cache contains for all known rules.");
-      artifactCache.prewarmRemoteContainsForAllKnownRules();
+      prewarmRemoteCache(allRules);
     }
     LOG.debug("Traversing %d top-level targets now.", buildRulesToProcess.size());
     GraphTraversalData graphTraversalData = traverseActionGraph(buildRulesToProcess);
 
     // Now remove the nodes that will be scheduled from set of all nodes, to find the pruned ones.
-    prunedRules.removeAll(graphTraversalData.visitedRules);
-    graphTraversalData.prunedRules.addAll(prunedRules);
+    graphTraversalData.prunedRules.addAll(allRules);
+    graphTraversalData.prunedRules.removeAll(graphTraversalData.visitedRules);
 
     return graphTraversalData;
   }

@@ -217,13 +217,18 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
   }
 
   @Override
-  public void prewarmRemoteContains(ImmutableSet<BuildRule> rulesToBeChecked) {
+  public synchronized void prewarmRemoteContains(ImmutableSet<BuildRule> rulesToBeChecked) {
+    @SuppressWarnings("PMD.PrematureDeclaration")
     Stopwatch stopwatch = Stopwatch.createStarted();
     Set<BuildRule> unseenRules =
         rulesToBeChecked
             .stream()
             .filter(rule -> !remoteCacheContainsFutures.containsKey(rule))
             .collect(Collectors.toSet());
+
+    if (unseenRules.size() == 0) {
+      return;
+    }
 
     LOG.info("Checking remote cache for [%d] new rules.", unseenRules.size());
     Map<BuildRule, ListenableFuture<RuleKey>> rulesToKeys =
