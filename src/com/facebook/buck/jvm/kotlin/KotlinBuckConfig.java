@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
@@ -30,6 +31,8 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 public class KotlinBuckConfig {
+
+  private static final Logger LOG = Logger.get(KotlinBuckConfig.class);
 
   private static final String SECTION = "kotlin";
 
@@ -66,8 +69,7 @@ public class KotlinBuckConfig {
             getPathToStdlibJar(),
             getPathToReflectJar(),
             getPathToScriptRuntimeJar(),
-            getPathToCompilerJar()
-        )
+            getPathToCompilerJar())
     );
   }
 
@@ -141,7 +143,14 @@ public class KotlinBuckConfig {
    * @return the Kotlin compiler jar path
    */
   Path getPathToCompilerJar() {
-    return getPathToJar("kotlin-compiler");
+    try {
+      return getPathToJar("kotlin-compiler-embeddable");
+    } catch (HumanReadableException e) {
+      LOG.warn("kotlin-compiler-embeddable.jar was not found in " + kotlinHome + " directory, this"
+          + " may result in kapt not working properly. Proceeding with kotlin-compiler.jar"
+      );
+      return getPathToJar("kotlin-compiler");
+    }
   }
 
   /**
@@ -150,7 +159,14 @@ public class KotlinBuckConfig {
    * @return the Kotlin annotation processing jar path
    */
   Path getPathToAP() {
-    return getPathToJar("kotlin-annotation-processing");
+    try {
+      return getPathToJar("kotlin-annotation-processing-gradle");
+    } catch (HumanReadableException e) {
+      LOG.warn("kotlin-annotation-processing-gradle.jar was not found in " + kotlinHome + " directory, this"
+          + " may result in kapt not working properly. Proceeding with kotlin-annotation-processing.jar"
+      );
+      return getPathToJar("kotlin-annotation-processing");
+    }
   }
 
   /**
