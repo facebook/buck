@@ -18,7 +18,6 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.HasJavaAbi;
-import com.facebook.buck.jvm.core.HasSources;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -32,7 +31,6 @@ import com.facebook.buck.rules.args.WriteToFileArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 import java.io.File;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -80,7 +78,7 @@ public class ClasspathAbiMacroExpander extends BuildTargetMacroExpander<Classpat
   private SourcePath getJarPath(BuildRule rule, BuildRuleResolver ruleResolver) {
     SourcePath jarPath = null;
 
-    if (rule instanceof HasSources && rule instanceof HasJavaAbi) {
+    if (rule instanceof HasJavaAbi) {
       HasJavaAbi javaAbiRule = (HasJavaAbi) rule;
       Optional<BuildTarget> optionalBuildTarget = javaAbiRule.getAbiJar();
       if (optionalBuildTarget.isPresent()) {
@@ -120,8 +118,8 @@ public class ClasspathAbiMacroExpander extends BuildTargetMacroExpander<Classpat
         getHasClasspathEntries(inputRule)
             .getTransitiveClasspathDeps()
             .stream()
+            .filter(d -> d.getSourcePathToOutput() != null)
             .map(d -> getJarPath(d, ruleResolver))
-            .filter(Objects::nonNull)
             .sorted()
             .collect(ImmutableList.toImmutableList());
 
