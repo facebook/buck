@@ -91,9 +91,15 @@ public class DelegateAndGraphsInitializer {
   }
 
   private DelegateAndGraphs createDelegateAndGraphs() throws IOException, InterruptedException {
+    LOG.info("Starting to preload source files.");
     StackedFileHashCaches stackedCaches = createStackedFileHashesAndPreload();
+    LOG.info("Finished pre-loading source files.");
+    LOG.info("Starting to create the target graph.");
     TargetGraph targetGraph = createTargetGraph();
+    LOG.info("Finished creating the target graph.");
+    LOG.info("Starting to create the action graph.");
     ActionGraphAndResolver actionGraphAndResolver = createActionGraphAndResolver(targetGraph);
+    LOG.info("Finished creating the action graph.");
     CachingBuildEngineDelegate engineDelegate =
         createBuildEngineDelegate(stackedCaches, actionGraphAndResolver);
     return DelegateAndGraphs.builder()
