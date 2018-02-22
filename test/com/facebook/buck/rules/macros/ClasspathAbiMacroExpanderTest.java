@@ -76,7 +76,7 @@ public class ClasspathAbiMacroExpanderTest {
         String.format(
             "%s" + File.separator + "%s",
             filesystem.getRootPath(),
-            "buck-out/gen/cheese/cake#class-abi/cake-abi.jar"));
+            new File("buck-out/gen/cheese/cake#class-abi/cake-abi.jar").toPath()));
   }
 
   @Test
@@ -103,9 +103,9 @@ public class ClasspathAbiMacroExpanderTest {
         String.format(
             "%s" + File.separator + "%s" + File.pathSeparatorChar + "%s" + File.separator + "%s",
             filesystem.getRootPath(),
-            "buck-out/gen/exciting/dep#class-abi/dep-abi.jar",
+            new File("buck-out/gen/exciting/dep#class-abi/dep-abi.jar").toPath(),
             filesystem.getRootPath(),
-            "buck-out/gen/exciting/target#class-abi/target-abi.jar"));
+            new File("buck-out/gen/exciting/target#class-abi/target-abi.jar").toPath()));
   }
 
   private JavaLibraryBuilder getLibraryBuilder(String target) {

@@ -31,9 +31,11 @@ import com.facebook.buck.rules.args.WriteToFileArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 import java.io.File;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 /**
  * Used to expand the macro {@literal $(classpath_abi //some:target)} to the transitive abi's jars
@@ -75,6 +77,7 @@ public class ClasspathAbiMacroExpander extends BuildTargetMacroExpander<Classpat
    * @param ruleResolver BuildRuleResolver
    * @return class abi jar or output jar if not found
    */
+  @Nullable
   private SourcePath getJarPath(BuildRule rule, BuildRuleResolver ruleResolver) {
     SourcePath jarPath = null;
 
@@ -120,6 +123,7 @@ public class ClasspathAbiMacroExpander extends BuildTargetMacroExpander<Classpat
             .stream()
             .filter(d -> d.getSourcePathToOutput() != null)
             .map(d -> getJarPath(d, ruleResolver))
+            .filter(Objects::nonNull)
             .sorted()
             .collect(ImmutableList.toImmutableList());
 
