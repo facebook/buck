@@ -23,18 +23,23 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.PathHelper;
+import com.facebook.buck.util.PathMatchers;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class KotlincStep implements Step {
+
   private static final String CLASSPATH_FLAG = "-classpath";
   private static final String DESTINATION_FLAG = "-d";
   private static final String INCLUDE_RUNTIME_FLAG = "-include-runtime";
@@ -85,12 +90,21 @@ public class KotlincStep implements Step {
         ExecutionContext firstOrderContext =
             context.createSubContext(stdout, stderr, Optional.of(verbosity))) {
 
+      /* Flatmaps directories into list of files, and filter for known file types */
+      ImmutableSortedSet<Path> allSourcePaths = ImmutableSortedSet.copyOf(
+          PathHelper.flatmapDirectories(filesystem, sourceFilePaths)
+              .stream()
+              .filter((Predicate<Path>) input ->
+                  PathMatchers.JAVA_PATH_MATCHER.matches(input) || PathMatchers.KOTLIN_PATH_MATCHER
+                      .matches(input))
+              .collect(Collectors.toSet()));
+
       int declaredDepsBuildResult =
           kotlinc.buildWithClasspath(
               firstOrderContext,
               invokingRule,
               getOptions(context, combinedClassPathEntries),
-              sourceFilePaths,
+              allSourcePaths,
               pathToSrcsList,
               Optional.empty(),
               filesystem);
@@ -163,7 +177,9 @@ public class KotlincStep implements Step {
     return builder.build();
   }
 
-  /** @return The classpath entries used to invoke javac. */
+  /**
+   * @return The classpath entries used to invoke javac.
+   */
   @VisibleForTesting
   ImmutableSortedSet<Path> getClasspathEntries() {
     return combinedClassPathEntries;
