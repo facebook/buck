@@ -409,6 +409,8 @@
     -->
     <element name="compiler-params" optional="true" />
     <sequential>
+      <mkdir dir="@{gensrcdir}" />
+      <mkdir dir="@{destdir}" />
       <javac srcdir="@{srcdir}"
              sourcepath=""
              destdir="@{destdir}"
