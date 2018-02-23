@@ -204,14 +204,14 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   }
 
   public int getHttpMaxConcurrentWrites() {
-    return Integer.valueOf(
+    return Integer.parseInt(
         buckConfig
             .getValue(CACHE_SECTION_NAME, "http_max_concurrent_writes")
             .orElse(DEFAULT_HTTP_MAX_CONCURRENT_WRITES));
   }
 
   public int getHttpWriterShutdownTimeout() {
-    return Integer.valueOf(
+    return Integer.parseInt(
         buckConfig
             .getValue(CACHE_SECTION_NAME, "http_writer_shutdown_timeout_seconds")
             .orElse(DEFAULT_HTTP_WRITE_SHUTDOWN_TIMEOUT_SECONDS));
