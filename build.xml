@@ -86,8 +86,15 @@
   <property name="ecj.compiler.path" value="${eclipse.dir}/ecj-4.7.1.jar" />
   <property name="error.prone.compiler" value="com.google.errorprone.ErrorProneAntCompilerAdapter" />
   <property name="error.prone.compiler.path" value="${third-party.dir}/java/errorprone/error_prone_ant-2.2.0.jar" />
-  <property name="buck.build.compiler" value="${ecj.compiler}" />
-  <property name="buck.build.compiler.jar.path" value="${ecj.compiler.path}" />
+  <!-- Control whether ErrorProne compiler is enabled. Disabled by default. -->
+  <property name="error.prone" value="false" />
+  <condition property="buck.build.compiler" value="${error.prone.compiler}" else="${ecj.compiler}">
+    <istrue value="${error.prone}" />
+  </condition>
+  <condition property="buck.build.compiler.jar.path" value="${error.prone.compiler.path}"
+    else="${ecj.compiler.path}">
+    <istrue value="${error.prone}" />
+  </condition>
 
   <!-- Javadoc in 1.8 became stricter about parsing the docs. This disables some of those checks -->
   <available property="jdk1.8" classname="java.util.stream.Stream"/>
