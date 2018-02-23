@@ -58,6 +58,11 @@ class ValueTypeInfos {
     public <E extends Exception> void visit(OutputPath value, ValueVisitor<E> visitor) throws E {
       visitor.visitOutputPath(value);
     }
+
+    @Override
+    public <E extends Exception> OutputPath create(ValueCreator<E> creator) throws E {
+      return creator.createOutputPath();
+    }
   }
 
   /** ValueTypeInfo for Optionals. */
@@ -71,6 +76,11 @@ class ValueTypeInfos {
     @Override
     public <E extends Exception> void visit(Optional<T> value, ValueVisitor<E> visitor) throws E {
       visitor.visitOptional(value, innerType);
+    }
+
+    @Override
+    public <E extends Exception> Optional<T> create(ValueCreator<E> creator) throws E {
+      return creator.createOptional(innerType);
     }
   }
 
@@ -96,6 +106,11 @@ class ValueTypeInfos {
         throws E {
       visitor.visitSet(value, innerType);
     }
+
+    @Override
+    public <E extends Exception> ImmutableSortedSet<T> create(ValueCreator<E> creator) throws E {
+      return creator.createSet(innerType);
+    }
   }
 
   /** ValueTypeInfo for ImmutableLists. */
@@ -109,6 +124,11 @@ class ValueTypeInfos {
         throws E {
       visitor.visitList(value, innerType);
     }
+
+    @Override
+    public <E extends Exception> ImmutableList<T> create(ValueCreator<E> creator) throws E {
+      return creator.createList(innerType);
+    }
   }
 
   private static class StringValueTypeInfo implements ValueTypeInfo<String> {
@@ -117,6 +137,11 @@ class ValueTypeInfos {
     @Override
     public <E extends Exception> void visit(String value, ValueVisitor<E> visitor) throws E {
       visitor.visitString(value);
+    }
+
+    @Override
+    public <E extends Exception> String create(ValueCreator<E> creator) throws E {
+      return creator.createString();
     }
   }
 
@@ -127,6 +152,11 @@ class ValueTypeInfos {
     public <E extends Exception> void visit(Character value, ValueVisitor<E> visitor) throws E {
       visitor.visitCharacter(value);
     }
+
+    @Override
+    public <E extends Exception> Character create(ValueCreator<E> creator) throws E {
+      return creator.createCharacter();
+    }
   }
 
   private static class BooleanValueTypeInfo implements ValueTypeInfo<Boolean> {
@@ -135,6 +165,11 @@ class ValueTypeInfos {
     @Override
     public <E extends Exception> void visit(Boolean value, ValueVisitor<E> visitor) throws E {
       visitor.visitBoolean(value);
+    }
+
+    @Override
+    public <E extends Exception> Boolean create(ValueCreator<E> creator) throws E {
+      return creator.createBoolean();
     }
   }
 
@@ -145,6 +180,11 @@ class ValueTypeInfos {
     public <E extends Exception> void visit(Byte value, ValueVisitor<E> visitor) throws E {
       visitor.visitByte(value);
     }
+
+    @Override
+    public <E extends Exception> Byte create(ValueCreator<E> creator) throws E {
+      return creator.createByte();
+    }
   }
 
   private static class ShortValueTypeInfo implements ValueTypeInfo<Short> {
@@ -153,6 +193,11 @@ class ValueTypeInfos {
     @Override
     public <E extends Exception> void visit(Short value, ValueVisitor<E> visitor) throws E {
       visitor.visitShort(value);
+    }
+
+    @Override
+    public <E extends Exception> Short create(ValueCreator<E> creator) throws E {
+      return creator.createShort();
     }
   }
 
@@ -163,6 +208,11 @@ class ValueTypeInfos {
     public <E extends Exception> void visit(Integer value, ValueVisitor<E> visitor) throws E {
       visitor.visitInteger(value);
     }
+
+    @Override
+    public <E extends Exception> Integer create(ValueCreator<E> creator) throws E {
+      return creator.createInteger();
+    }
   }
 
   private static class LongValueTypeInfo implements ValueTypeInfo<Long> {
@@ -171,6 +221,11 @@ class ValueTypeInfos {
     @Override
     public <E extends Exception> void visit(Long value, ValueVisitor<E> visitor) throws E {
       visitor.visitLong(value);
+    }
+
+    @Override
+    public <E extends Exception> Long create(ValueCreator<E> creator) throws E {
+      return creator.createLong();
     }
   }
 
@@ -181,6 +236,11 @@ class ValueTypeInfos {
     public <E extends Exception> void visit(Float value, ValueVisitor<E> visitor) throws E {
       visitor.visitFloat(value);
     }
+
+    @Override
+    public <E extends Exception> Float create(ValueCreator<E> creator) throws E {
+      return creator.createFloat();
+    }
   }
 
   private static class DoubleValueTypeInfo implements ValueTypeInfo<Double> {
@@ -189,6 +249,11 @@ class ValueTypeInfos {
     @Override
     public <E extends Exception> void visit(Double value, ValueVisitor<E> visitor) throws E {
       visitor.visitDouble(value);
+    }
+
+    @Override
+    public <E extends Exception> Double create(ValueCreator<E> creator) throws E {
+      return creator.createDouble();
     }
   }
 }

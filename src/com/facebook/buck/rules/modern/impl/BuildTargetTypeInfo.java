@@ -18,9 +18,12 @@ package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.reflect.TypeToken;
+import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.Optional;
 
@@ -52,5 +55,21 @@ public class BuildTargetTypeInfo implements ValueTypeInfo<BuildTarget> {
             .map(Flavor::getName)
             .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder())),
         visitor);
+  }
+
+  @Override
+  public <E extends Exception> BuildTarget create(ValueCreator<E> creator) throws E {
+    Path cellPath = creator.createPath();
+    Optional<String> cellName = Holder.cellNameTypeInfo.create(creator);
+    String baseName = creator.createString();
+    String shortName = creator.createString();
+    ImmutableList<Flavor> flavors =
+        Holder.flavorsTypeInfo
+            .create(creator)
+            .stream()
+            .map(InternalFlavor::of)
+            .collect(ImmutableList.toImmutableList());
+    return BuildTarget.of(
+        UnflavoredBuildTarget.of(cellPath, cellName, baseName, shortName), flavors);
   }
 }

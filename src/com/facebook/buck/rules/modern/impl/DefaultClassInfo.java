@@ -25,6 +25,7 @@ import com.facebook.buck.rules.modern.InputRuleResolver;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 import java.lang.reflect.Field;
@@ -67,7 +68,7 @@ class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
           clazz.getName(),
           field.getName());
 
-      FieldInfo<?> fieldInfo = FieldInfo.forField(field);
+      FieldInfo<?> fieldInfo = forField(field);
       fieldsBuilder.add(fieldInfo);
     }
 
@@ -129,33 +130,19 @@ class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
     }
   }
 
-  private static class FieldInfo<T> {
-    private Field field;
-    private ValueTypeInfo<T> valueTypeInfo;
+  @Override
+  public Optional<ClassInfo<? super T>> getSuperInfo() {
+    return superInfo;
+  }
 
-    FieldInfo(Field field, ValueTypeInfo<T> valueTypeInfo) {
-      this.field = field;
-      this.valueTypeInfo = valueTypeInfo;
-    }
+  @Override
+  public ImmutableCollection<FieldInfo<?>> getFieldInfos() {
+    return fields;
+  }
 
-    static FieldInfo<?> forField(Field field) {
-      Type type = field.getGenericType();
-      ValueTypeInfo<?> valueTypeInfo = ValueTypeInfoFactory.forTypeToken(TypeToken.of(type));
-      return new FieldInfo<>(field, valueTypeInfo);
-    }
-
-    private T getValue(AddsToRuleKey value, Field field) {
-      try {
-        @SuppressWarnings("unchecked")
-        T converted = (T) field.get(value);
-        return converted;
-      } catch (IllegalAccessException e) {
-        throw new RuntimeException(e);
-      }
-    }
-
-    public <E extends Exception> void visit(AddsToRuleKey value, ValueVisitor<E> visitor) throws E {
-      visitor.visitField(field, getValue(value, field), valueTypeInfo);
-    }
+  static FieldInfo<?> forField(Field field) {
+    Type type = field.getGenericType();
+    ValueTypeInfo<?> valueTypeInfo = ValueTypeInfoFactory.forTypeToken(TypeToken.of(type));
+    return new FieldInfo<>(field, valueTypeInfo);
   }
 }

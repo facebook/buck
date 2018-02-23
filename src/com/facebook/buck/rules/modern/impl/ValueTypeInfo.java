@@ -20,6 +20,8 @@ package com.facebook.buck.rules.modern.impl;
  * ValueTypeInfo&lt;T&gt; provides methods to extract deps, outputs, rulekeys from values of type T.
  */
 @SuppressWarnings("unused")
-interface ValueTypeInfo<T> {
+public interface ValueTypeInfo<T> {
   <E extends Exception> void visit(T value, ValueVisitor<E> visitor) throws E;
+
+  <E extends Exception> T create(ValueCreator<E> creator) throws E;
 }

@@ -26,4 +26,9 @@ public class SourcePathValueTypeInfo implements ValueTypeInfo<SourcePath> {
   public <E extends Exception> void visit(SourcePath value, ValueVisitor<E> visitor) throws E {
     visitor.visitSourcePath(value);
   }
+
+  @Override
+  public <E extends Exception> SourcePath create(ValueCreator<E> creator) throws E {
+    return creator.createSourcePath();
+  }
 }

@@ -42,13 +42,14 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-class ValueTypeInfoFactory {
+/** Creates ValueTypeInfos for given Types/TypeTokens. */
+public class ValueTypeInfoFactory {
 
   private static final ConcurrentHashMap<Type, ValueTypeInfo<?>> typeInfos =
       new ConcurrentHashMap<>();
 
   @SuppressWarnings("unchecked")
-  static <T> ValueTypeInfo<T> forTypeToken(TypeToken<T> typeToken) {
+  public static <T> ValueTypeInfo<T> forTypeToken(TypeToken<T> typeToken) {
     return (ValueTypeInfo<T>) forType(typeToken.getType());
   }
 

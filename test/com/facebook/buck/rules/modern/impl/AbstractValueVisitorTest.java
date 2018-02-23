@@ -41,38 +41,41 @@ abstract class AbstractValueVisitorTest {
   protected static final ProjectFilesystem rootFilesystem =
       new FakeProjectFilesystem(Paths.get("/project/root"));
 
-  @Test
-  public abstract void outputPath();
+  protected static final ProjectFilesystem otherFilesystem =
+      new FakeProjectFilesystem(Paths.get("/project/other"));
 
   @Test
-  public abstract void sourcePath();
+  public abstract void outputPath() throws Exception;
 
   @Test
-  public abstract void set();
+  public abstract void sourcePath() throws Exception;
 
   @Test
-  public abstract void list();
+  public abstract void set() throws Exception;
 
   @Test
-  public abstract void optional();
+  public abstract void list() throws Exception;
 
   @Test
-  public abstract void simple();
+  public abstract void optional() throws Exception;
 
   @Test
-  public abstract void superClass();
+  public abstract void simple() throws Exception;
 
   @Test
-  public abstract void addsToRuleKey();
+  public abstract void superClass() throws Exception;
 
   @Test
-  public abstract void empty();
+  public abstract void empty() throws Exception;
 
   @Test
-  public abstract void complex();
+  public abstract void addsToRuleKey() throws Exception;
 
   @Test
-  public abstract void buildTarget();
+  public abstract void complex() throws Exception;
+
+  @Test
+  public abstract void buildTarget() throws Exception;
 
   public interface FakeBuildable extends Buildable {
     @Override
@@ -89,7 +92,7 @@ abstract class AbstractValueVisitorTest {
     @AddToRuleKey
     final BuildTarget target =
         BuildTargetFactory.newInstance(
-            Paths.get("/project/other"), "other//some:target#flavor1,flavor2");
+            otherFilesystem.getRootPath(), "other//some:target#flavor1,flavor2");
   }
 
   public static class WithOutputPath implements FakeBuildable {
@@ -158,7 +161,8 @@ abstract class AbstractValueVisitorTest {
                 ImmutableSortedSet.of(
                     FakeSourcePath.of(rootFilesystem, "some/path"),
                     DefaultBuildTargetSourcePath.of(
-                        BuildTargetFactory.newInstance("//some/build:target")))));
+                        BuildTargetFactory.newInstance(
+                            rootFilesystem.getRootPath(), "//some/build:target")))));
 
     @AddToRuleKey private final String string = "hello";
     @AddToRuleKey private final int number = 0;

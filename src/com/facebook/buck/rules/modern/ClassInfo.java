@@ -19,7 +19,10 @@ package com.facebook.buck.rules.modern;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.modern.impl.FieldInfo;
 import com.facebook.buck.rules.modern.impl.ValueVisitor;
+import com.google.common.collect.ImmutableCollection;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -42,4 +45,8 @@ public interface ClassInfo<T extends AddsToRuleKey> {
   String getType();
 
   <E extends Exception> void visit(T value, ValueVisitor<E> visitor) throws E;
+
+  Optional<ClassInfo<? super T>> getSuperInfo();
+
+  ImmutableCollection<FieldInfo<?>> getFieldInfos();
 }

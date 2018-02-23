@@ -5,6 +5,7 @@ prebuilt_jar(
         "LICENSE",
     ],
     visibility = [
+        "//src/com/facebook/buck/rules/modern/...",
         "//third-party/java/easymock:easymock",
     ],
 )

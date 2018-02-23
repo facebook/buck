@@ -17,21 +17,37 @@
 package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.rules.AddsToRuleKey;
+import java.lang.reflect.Field;
 
-/**
- * This type info delegates to a ClassInfo looked up at runtime. It is used for fields of (static)
- * type that implement AddsToRuleKey.
- */
-public class DynamicTypeInfo implements ValueTypeInfo<AddsToRuleKey> {
-  public static final DynamicTypeInfo INSTANCE = new DynamicTypeInfo();
+/** Holds a java.lang.reflect.Field and a ValueTypeInfo for a field referenced from a Buildable. */
+public class FieldInfo<T> {
+  private Field field;
+  private ValueTypeInfo<T> valueTypeInfo;
 
-  @Override
-  public <E extends Exception> void visit(AddsToRuleKey value, ValueVisitor<E> visitor) throws E {
-    visitor.visitDynamic(value, DefaultClassInfoFactory.forInstance(value));
+  FieldInfo(Field field, ValueTypeInfo<T> valueTypeInfo) {
+    this.field = field;
+    this.valueTypeInfo = valueTypeInfo;
   }
 
-  @Override
-  public <E extends Exception> AddsToRuleKey create(ValueCreator<E> creator) throws E {
-    return creator.createDynamic();
+  private T getValue(AddsToRuleKey value, Field field) {
+    try {
+      @SuppressWarnings("unchecked")
+      T converted = (T) field.get(value);
+      return converted;
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public <E extends Exception> void visit(AddsToRuleKey value, ValueVisitor<E> visitor) throws E {
+    visitor.visitField(field, getValue(value, field), valueTypeInfo);
+  }
+
+  public ValueTypeInfo<T> getValueTypeInfo() {
+    return valueTypeInfo;
+  }
+
+  public Field getField() {
+    return field;
   }
 }
