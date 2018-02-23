@@ -85,6 +85,7 @@
   <property name="ecj.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter" />
   <property name="ecj.compiler.path" value="${eclipse.dir}/ecj-4.7.1.jar" />
   <property name="error.prone.compiler" value="com.google.errorprone.ErrorProneAntCompilerAdapter" />
+  <property name="error.prone.compiler.path" value="${third-party.dir}/java/errorprone/error_prone_ant-2.2.0.jar" />
   <property name="buck.build.compiler" value="${ecj.compiler}" />
   <property name="buck.build.compiler.jar.path" value="${ecj.compiler.path}" />
 
@@ -440,6 +441,9 @@
         </compilerclasspath>
         <compilerarg value="-s" />
         <compilerarg value="@{gensrcdir}" />
+        <!-- error-prone does not like referencing concrete immutables classes -->
+        <compilerarg value="-Xep:NonCanonicalStaticImport:OFF" compiler="${error.prone.compiler}" />
+        <!-- there is no point in checking generated code -->
         <compilerarg value="-XepDisableWarningsInGeneratedCode" compiler="${error.prone.compiler}" />
         <compiler-params />
       </javac>
