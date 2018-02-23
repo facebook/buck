@@ -118,17 +118,18 @@ public class DistBuildController {
     Pair<StampedeId, ListenableFuture<Void>> stampedeIdAndPendingPrepFuture = null;
     try {
       stampedeIdAndPendingPrepFuture =
-          preBuildPhase.runPreDistBuildLocalStepsAsync(
-              executorService,
-              projectFilesystem,
-              fileHashCache,
-              eventBus,
-              invocationInfo.getBuildId(),
-              buildMode,
-              numberOfMinions,
-              repository,
-              tenantId,
-              ruleKeyCalculatorFuture);
+          Preconditions.checkNotNull(
+              preBuildPhase.runPreDistBuildLocalStepsAsync(
+                  executorService,
+                  projectFilesystem,
+                  fileHashCache,
+                  eventBus,
+                  invocationInfo.getBuildId(),
+                  buildMode,
+                  numberOfMinions,
+                  repository,
+                  tenantId,
+                  ruleKeyCalculatorFuture));
     } catch (DistBuildService.DistBuildRejectedException ex) {
       eventBus.post(
           ConsoleEvent.createForMessageWithAnsiEscapeCodes(
@@ -141,7 +142,6 @@ public class DistBuildController {
           Preconditions.checkNotNull(stampedeIdReference.get()), ExitCode.PREPARATION_STEP_FAILED);
     }
 
-    stampedeIdAndPendingPrepFuture = Preconditions.checkNotNull(stampedeIdAndPendingPrepFuture);
     stampedeIdReference.set(stampedeIdAndPendingPrepFuture.getFirst());
 
     ListenableFuture<Void> pendingPrepFuture = stampedeIdAndPendingPrepFuture.getSecond();
