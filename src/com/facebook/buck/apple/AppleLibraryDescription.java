@@ -819,11 +819,6 @@ public class AppleLibraryDescription
     Optional<SourcePath> getInfoPlist();
 
     ImmutableMap<String, String> getInfoPlistSubstitutions();
-
-    @Value.Default
-    default boolean isModular() {
-      return false;
-    }
   }
 
   // CxxLibraryDescriptionDelegate
