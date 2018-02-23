@@ -101,6 +101,7 @@ public class RustCompileUtils {
     ImmutableList.Builder<Arg> linkerArgs = ImmutableList.builder();
 
     Stream.concat(rustConfig.getLinkerArgs(cxxPlatform).stream(), extraLinkerFlags.stream())
+        .filter(x -> !x.isEmpty())
         .map(StringArg::of)
         .forEach(linkerArgs::add);
 
