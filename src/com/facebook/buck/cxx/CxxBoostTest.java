@@ -207,7 +207,7 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
           String test = Joiner.on(".").join(testSuite) + "." + matcher.group(1);
           Preconditions.checkState(currentTest.isPresent() && currentTest.get().equals(test));
           String time = matcher.group(2);
-          times.put(test, time == null ? 0 : Long.valueOf(time));
+          times.put(test, time == null ? 0L : Long.parseLong(time));
           currentTest = Optional.empty();
         } else if (currentTest.isPresent()) {
           if (ERROR.matcher(line).matches()) {
