@@ -21,6 +21,7 @@ import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Cell;
@@ -43,9 +44,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -54,12 +57,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import javax.annotation.Nullable;
 
 /**
  * Responsible for extracting file hash and {@link RuleKey} information from the {@link ActionGraph}
  * and presenting it as a Thrift data structure.
  */
 public class DistBuildFileHashes {
+  private static final Logger LOG = Logger.get(DistBuildFileHashes.class);
+
   // Map<CellIndex, BuildJobStateFileHashes>.
   private final Map<Integer, RecordedFileHashes> remoteFileHashes;
   private final LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory> ruleKeyFactories;
@@ -158,10 +164,26 @@ public class DistBuildFileHashes {
       ListenableFuture<Void> ruleKeyComputationForSideEffect,
       final ImmutableList<RecordedFileHashes> remoteFileHashes,
       ListeningExecutorService executorService) {
-    return Futures.transform(
-        ruleKeyComputationForSideEffect,
-        input -> ImmutableList.copyOf(remoteFileHashes),
-        executorService);
+    ListenableFuture<ImmutableList<RecordedFileHashes>> asyncHashes =
+        Futures.transform(
+            ruleKeyComputationForSideEffect,
+            input -> ImmutableList.copyOf(remoteFileHashes),
+            executorService);
+    Futures.addCallback(
+        asyncHashes,
+        new FutureCallback<ImmutableList<RecordedFileHashes>>() {
+          @Override
+          public void onSuccess(@Nullable ImmutableList<RecordedFileHashes> result) {
+            LOG.info("Finished Stampede FileHashComputation successfully.");
+          }
+
+          @Override
+          public void onFailure(Throwable t) {
+            LOG.warn("Failed to compute FileHashes for Stampede.");
+          }
+        },
+        MoreExecutors.directExecutor());
+    return asyncHashes;
   }
 
   public List<BuildJobStateFileHashes> getFileHashes() throws IOException, InterruptedException {

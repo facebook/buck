@@ -18,6 +18,7 @@ package com.facebook.buck.distributed.build_client;
 
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.ExitCode;
+import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
@@ -49,6 +50,7 @@ public class DistBuildController {
   private final PostBuildPhase postBuildPhase;
   private final Console console;
 
+  private final ListenableFuture<BuildJobState> asyncJobState;
   private final AtomicReference<StampedeId> stampedeIdReference;
 
   /** Result of a distributed build execution. */
@@ -66,6 +68,7 @@ public class DistBuildController {
     this.stampedeIdReference = args.getStampedeIdReference();
     this.eventBus = args.getBuckEventBus();
     this.consoleEventsDispatcher = new ConsoleEventsDispatcher(eventBus);
+    this.asyncJobState = args.getAsyncJobState();
     this.preBuildPhase =
         new PreBuildPhase(
             args.getDistBuildService(),
@@ -111,7 +114,7 @@ public class DistBuildController {
       String repository,
       String tenantId,
       ListenableFuture<ParallelRuleKeyCalculator<RuleKey>> ruleKeyCalculatorFuture)
-      throws IOException, InterruptedException {
+      throws InterruptedException {
     Pair<StampedeId, ListenableFuture<Void>> stampedeIdAndPendingPrepFuture = null;
     try {
       stampedeIdAndPendingPrepFuture =
@@ -182,8 +185,9 @@ public class DistBuildController {
         consoleEventsDispatcher);
   }
 
-  private static ExecutionResult createFailedExecutionResult(
-      StampedeId stampedeId, ExitCode exitCode) {
+  private ExecutionResult createFailedExecutionResult(StampedeId stampedeId, ExitCode exitCode) {
+    LOG.warn("Stampede failed. Cancel async job state computation if that's still going on.");
+    asyncJobState.cancel(true);
     return new ExecutionResult(stampedeId, exitCode.getCode());
   }
 }

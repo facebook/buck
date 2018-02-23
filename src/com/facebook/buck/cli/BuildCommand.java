@@ -119,6 +119,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -758,8 +760,7 @@ public class BuildCommand extends AbstractCommand {
                 .map(t -> t.getFullyQualifiedName())
                 .collect(Collectors.toSet()));
 
-    return new AsyncJobStateAndCells(
-        distributedBuildFileHashes,
+    ListenableFuture<BuildJobState> asyncJobState =
         executorService.submit(
             () -> {
               try {
@@ -774,14 +775,35 @@ public class BuildCommand extends AbstractCommand {
                 LOG.info("Finished computing serializable distributed build state.");
                 return state;
               } catch (InterruptedException ex) {
+                distributedBuildFileHashes.cancel();
                 LOG.warn(
                     ex,
                     "Failed computing serializable distributed build state as interrupted. Local build probably finished first.");
                 Thread.currentThread().interrupt();
                 throw ex;
               }
-            }),
-        cellIndexer);
+            });
+
+    Futures.addCallback(
+        asyncJobState,
+        new FutureCallback<BuildJobState>() {
+          @Override
+          public void onSuccess(@Nullable BuildJobState result) {
+            LOG.info("Finished creating stampede BuildJobState.");
+          }
+
+          @Override
+          public void onFailure(Throwable t) {
+            // We need to cancel file hash computation here as well, in case the asyncJobState
+            // future didn't start at all, and hence wasn't able to cancel file hash computation
+            // itself.
+            LOG.warn("Failed to create stampede BuildJobState. Cancelling file hash computation.");
+            distributedBuildFileHashes.cancel();
+          }
+        },
+        MoreExecutors.directExecutor());
+
+    return new AsyncJobStateAndCells(asyncJobState, cellIndexer);
   }
 
   private ListeningExecutorService createStampedeControllerExecutorService(int maxThreads) {
@@ -971,7 +993,7 @@ public class BuildCommand extends AbstractCommand {
 
       // If local build finished before hashing was complete, it's important to cancel
       // related Futures to avoid this operation blocking forever.
-      stateAndCells.cancel();
+      asyncJobState.cancel(true);
 
       // stampedeControllerExecutor is now redundant. Kill it as soon as possible.
       killExecutor(
@@ -1384,23 +1406,13 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private static class AsyncJobStateAndCells {
-    final DistBuildFileHashes distributedBuildFileHashes;
     final ListenableFuture<BuildJobState> asyncJobState;
     final DistBuildCellIndexer distBuildCellIndexer;
 
     AsyncJobStateAndCells(
-        DistBuildFileHashes distributedBuildFileHashes,
-        ListenableFuture<BuildJobState> asyncJobState,
-        DistBuildCellIndexer cellIndexer) {
-      this.distributedBuildFileHashes = distributedBuildFileHashes;
+        ListenableFuture<BuildJobState> asyncJobState, DistBuildCellIndexer cellIndexer) {
       this.asyncJobState = asyncJobState;
       this.distBuildCellIndexer = cellIndexer;
-    }
-
-    // Cancels any ongoing Future operations
-    protected void cancel() {
-      distributedBuildFileHashes.cancel();
-      asyncJobState.cancel(true);
     }
   }
 
