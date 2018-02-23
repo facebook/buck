@@ -305,8 +305,12 @@ public class CacheOptimizedBuildTargetsQueueFactory {
                 .map(BuildRule::getFullyQualifiedName)
                 .collect(Collectors.toList()));
 
+    int numTotalCachableRules =
+        results.visitedRules.size() - results.uncachableTargets.size() + prunedTargets.size();
     LOG.info(
-        String.format("[%d] cacheable build rules were pruned from graph.", prunedTargets.size()));
+        String.format(
+            "[%d/%d] cacheable build rules were pruned from graph.",
+            prunedTargets.size(), numTotalCachableRules));
     coordinatorBuildRuleEventsPublisher.createBuildRuleStartedEvents(prunedTargets);
     coordinatorBuildRuleEventsPublisher.createBuildRuleCompletionEvents(prunedTargets);
 
