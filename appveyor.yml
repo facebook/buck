@@ -23,11 +23,11 @@ install:
 build: off
 
 build_script:
-  - "ant"
-  - "bin\\buck build buck"
+  - ant
+  - bin\buck build buck
 
 test_script:
-  - "bin\\buck test --all --test-selectors=':windows_failures.txt' --test-selectors=':windows_cxx_support.txt'"
+  - bin\buck test --all --test-selectors=:windows_failures.txt --test-selectors=:windows_cxx_support.txt
 
 artifacts:
   - path: buck-out\gen\programs\buck.pex
