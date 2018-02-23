@@ -749,9 +749,12 @@ public class NdkCxxPlatforms {
 
   private static ImmutableList<String> getCommonIncludes(NdkCxxToolchainPaths toolchainPaths) {
     ImmutableList.Builder<String> flags = new Builder<String>().add(
-        "-isystem", toolchainPaths.getNdkToolRoot().resolve("include").toString(),
-        "-isystem", toolchainPaths.getLibPath().resolve("include").toString(),
-        "-isystem", toolchainPaths.getIncludeSysroot().resolve("usr").resolve("include").toString(),
+        "-isystem",
+        toolchainPaths.getNdkToolRoot().resolve("include").toString(),
+        "-isystem",
+        toolchainPaths.getLibPath().resolve("include").toString(),
+        "-isystem",
+        toolchainPaths.getIncludeSysroot().resolve("usr").resolve("include").toString(),
         "-isystem",
         toolchainPaths.getIncludeSysroot().resolve("usr").resolve("include").resolve("linux")
             .toString());
