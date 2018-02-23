@@ -30,7 +30,7 @@ public enum IncrementalActionGraphMode implements WithProbability {
   EXPERIMENT(0.0),
   ;
 
-  public static IncrementalActionGraphMode DEFAULT = DISABLED;
+  public static final IncrementalActionGraphMode DEFAULT = DISABLED;
 
   private final double probability;
 

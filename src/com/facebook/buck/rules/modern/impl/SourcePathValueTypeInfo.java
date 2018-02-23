@@ -20,7 +20,7 @@ import com.facebook.buck.rules.SourcePath;
 
 /** ValueTypeInfo for SourcePaths. The SourcePath will be added to deps/inputs. */
 public class SourcePathValueTypeInfo implements ValueTypeInfo<SourcePath> {
-  public static SourcePathValueTypeInfo INSTANCE = new SourcePathValueTypeInfo();
+  public static final SourcePathValueTypeInfo INSTANCE = new SourcePathValueTypeInfo();
 
   @Override
   public <E extends Exception> void visit(SourcePath value, ValueVisitor<E> visitor) throws E {
