@@ -549,7 +549,7 @@ public class RealAndroidDevice implements AndroidDevice {
   private boolean supportsInstallDowngrade() {
     String value = device.getProperty("ro.build.version.sdk");
     try {
-      if (Integer.valueOf(value) >= 17) {
+      if (Integer.parseInt(value) >= 17) {
         return true;
       }
     } catch (NumberFormatException exn) {
