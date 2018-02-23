@@ -206,4 +206,12 @@ public class GoBinaryIntegrationTest {
     workspace.runBuckBuild("//:main").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:main");
   }
+
+  @Test
+  public void buildConstraints() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "build_constraints", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:family").assertSuccess();
+  }
 }

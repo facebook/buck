@@ -23,16 +23,16 @@ public class GoListStep extends ShellStep {
     XTestGoFiles
   }
 
-  private final GoToolchain goToolchain;
+  private final ImmutableList<String> listCommandPrefix;
   private final List<FileType> fileTypes;
 
   public GoListStep(
       BuildTarget buildTarget,
       Path workingDirectory,
-      GoToolchain goToolchain,
+      ImmutableList<String> listCommandPrefix,
       List<FileType> fileTypes) {
     super(Optional.of(buildTarget), workingDirectory);
-    this.goToolchain = goToolchain;
+    this.listCommandPrefix = listCommandPrefix;
     this.fileTypes = fileTypes;
   }
 
@@ -40,8 +40,7 @@ public class GoListStep extends ShellStep {
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> commandBuilder =
         ImmutableList.<String>builder()
-            .add(goToolchain.getGoRoot().resolve("bin").resolve("go").toString())
-            .add("list")
+            .addAll(listCommandPrefix)
             .add("-f")
             .add(
                 String.join(

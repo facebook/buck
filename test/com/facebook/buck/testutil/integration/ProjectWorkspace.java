@@ -412,9 +412,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
               "HOME",
 
               // TODO(#6586154): set TMP variable for ShellSteps
-              "TMP",
-
-              "GOPATH");
+              "TMP");
       Map<String, String> envBuilder = new HashMap<>();
       for (String variable : inheritedEnvVars) {
         String value = System.getenv(variable);

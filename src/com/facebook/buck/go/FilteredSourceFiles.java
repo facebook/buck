@@ -2,6 +2,7 @@ package com.facebook.buck.go;
 
 import com.facebook.buck.go.GoListStep.FileType;
 import com.facebook.buck.model.BuildTarget;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
@@ -17,19 +18,20 @@ public class FilteredSourceFiles implements Iterable<Path> {
   public FilteredSourceFiles(
       List<Path> rawSrcFiles,
       BuildTarget buildTarget,
-      GoToolchain goToolchain,
+      ImmutableList<String> listCommandPrefix,
       List<FileType> fileTypes) {
     this.rawSrcFiles = rawSrcFiles;
-    initFilterSteps(buildTarget, goToolchain, fileTypes);
+    initFilterSteps(buildTarget, listCommandPrefix, fileTypes);
   }
 
   private void initFilterSteps(
-      BuildTarget buildTarget, GoToolchain goToolchain, List<FileType> fileTypes) {
+      BuildTarget buildTarget, ImmutableList<String> listCommandPrefix, List<FileType> fileTypes) {
     filterSteps = new HashMap<>();
     for (Path srcFile : rawSrcFiles) {
       Path absPath = srcFile.getParent();
       if (!filterSteps.containsKey(absPath)) {
-        filterSteps.put(absPath, new GoListStep(buildTarget, absPath, goToolchain, fileTypes));
+        filterSteps.put(
+            absPath, new GoListStep(buildTarget, absPath, listCommandPrefix, fileTypes));
       }
     }
   }
