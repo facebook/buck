@@ -54,13 +54,13 @@ public class ClasspathAbiMacroExpanderTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void createMacroExpander() {
+  public void setUp() {
     this.expander = new ClasspathAbiMacroExpander();
     this.filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
   }
 
   @Test
-  public void shouldIncludeARuleIfNothingIsGiven() throws Exception {
+  public void testShouldIncludeARuleIfNothingIsGiven() throws Exception {
     final BuildRuleResolver ruleResolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
@@ -80,7 +80,7 @@ public class ClasspathAbiMacroExpanderTest {
   }
 
   @Test
-  public void shouldIncludeTransitiveDependencies() throws Exception {
+  public void testShouldIncludeTransitiveDependencies() throws Exception {
     TargetNode<?, ?> depNode =
         getLibraryBuilder("//exciting:dep").addSrc(Paths.get("Dep.java")).build();
 
@@ -114,7 +114,7 @@ public class ClasspathAbiMacroExpanderTest {
   }
 
   @Test(expected = MacroException.class)
-  public void shouldThrowAnExceptionWhenRuleToExpandDoesNotHaveAClasspath() throws Exception {
+  public void testShouldThrowAnExceptionWhenRuleToExpandDoesNotHaveAClasspath() throws Exception {
     BuildRuleResolver ruleResolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
@@ -129,7 +129,7 @@ public class ClasspathAbiMacroExpanderTest {
   }
 
   @Test
-  public void extractRuleKeyAppendables() throws Exception {
+  public void testExtractRuleKeyAppendables() throws Exception {
     TargetNode<?, ?> depNode =
         getLibraryBuilder("//exciting:dep").addSrc(Paths.get("Dep.java")).build();
     TargetNode<?, ?> ruleNode =
