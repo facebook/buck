@@ -471,7 +471,9 @@ public class FilterResourcesSteps {
     private ImmutableSet<String> locales = ImmutableSet.of();
     private boolean enableStringWhitelisting = false;
 
-    private Builder() {}
+    private Builder() {
+      this.localizedStringFileName = Optional.empty();
+    }
 
     public Builder setTarget(BuildTarget target) {
       this.target = target;
