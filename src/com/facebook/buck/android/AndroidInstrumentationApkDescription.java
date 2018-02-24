@@ -170,6 +170,7 @@ public class AndroidInstrumentationApkDescription
             Optional.empty(),
             /* resourceUnionPackage */ Optional.empty(),
             /* locales */ ImmutableSet.of(),
+            /* localizedStringFileName */ null,
             args.getManifest(),
             args.getManifestSkeleton(),
             PackageType.INSTRUMENTED,

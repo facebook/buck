@@ -111,6 +111,7 @@ public class ResourcesFilter extends AbstractBuildRule
   private final ImmutableList<SourcePath> resDirectories;
   private final ImmutableSet<SourcePath> whitelistedStringDirs;
   @AddToRuleKey private final ImmutableSet<String> locales;
+  @AddToRuleKey private final Optional<String> localizedStringFileName;
   @AddToRuleKey private final ResourceCompressionMode resourceCompressionMode;
   @AddToRuleKey private final FilterResourcesSteps.ResourceFilter resourceFilter;
   @AddToRuleKey private final Optional<Arg> postFilterResourcesCmd;
@@ -126,6 +127,7 @@ public class ResourcesFilter extends AbstractBuildRule
       ImmutableList<SourcePath> resDirectories,
       ImmutableSet<SourcePath> whitelistedStringDirs,
       ImmutableSet<String> locales,
+      Optional<String> localizedStringFileName,
       ResourceCompressionMode resourceCompressionMode,
       FilterResourcesSteps.ResourceFilter resourceFilter,
       Optional<Arg> postFilterResourcesCmd) {
@@ -136,6 +138,7 @@ public class ResourcesFilter extends AbstractBuildRule
     this.resDirectories = resDirectories;
     this.whitelistedStringDirs = whitelistedStringDirs;
     this.locales = locales;
+    this.localizedStringFileName = localizedStringFileName;
     this.resourceCompressionMode = resourceCompressionMode;
     this.resourceFilter = resourceFilter;
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
@@ -210,7 +213,8 @@ public class ResourcesFilter extends AbstractBuildRule
     ImmutableBiMap<Path, Path> inResDirToOutResDirMap =
         createInResDirToOutResDirMap(resPaths, filteredResDirectoriesBuilder);
     final FilterResourcesSteps filterResourcesSteps =
-        createFilterResourcesSteps(whitelistedStringPaths, locales, inResDirToOutResDirMap);
+        createFilterResourcesSteps(
+            whitelistedStringPaths, locales, localizedStringFileName, inResDirToOutResDirMap);
     steps.add(filterResourcesSteps.getCopyStep());
     maybeAddPostFilterCmdStep(context, buildableContext, steps, inResDirToOutResDirMap);
     steps.add(filterResourcesSteps.getScaleStep());
@@ -332,6 +336,7 @@ public class ResourcesFilter extends AbstractBuildRule
   FilterResourcesSteps createFilterResourcesSteps(
       ImmutableSet<Path> whitelistedStringDirs,
       ImmutableSet<String> locales,
+      Optional<String> localizedStringFileName,
       ImmutableBiMap<Path, Path> resSourceToDestDirMap) {
     FilterResourcesSteps.Builder filterResourcesStepBuilder =
         FilterResourcesSteps.builder()
@@ -346,6 +351,7 @@ public class ResourcesFilter extends AbstractBuildRule
     }
 
     filterResourcesStepBuilder.setLocales(locales);
+    filterResourcesStepBuilder.setLocalizedStringFileName(localizedStringFileName);
 
     return filterResourcesStepBuilder.build();
   }

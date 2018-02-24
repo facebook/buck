@@ -310,6 +310,7 @@ public class AndroidBinaryDescription
               args.getDuplicateResourceWhitelist(),
               args.getResourceUnionPackage(),
               addFallbackLocales(args.getLocales()),
+              args.getLocalizedStringFileName(),
               args.getManifest(),
               args.getManifestSkeleton(),
               packageType,
@@ -687,6 +688,8 @@ public class AndroidBinaryDescription
     Optional<String> getResourceUnionPackage();
 
     ImmutableSet<String> getLocales();
+
+    Optional<String> getLocalizedStringFileName();
 
     @Value.Default
     default boolean isBuildStringSourceMap() {

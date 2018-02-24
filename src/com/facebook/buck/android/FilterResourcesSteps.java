@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -68,7 +69,9 @@ public class FilterResourcesSteps {
 
   @VisibleForTesting
   static final Pattern NON_ENGLISH_STRINGS_FILE_PATH =
-      Pattern.compile("\\b|.*/res/values-([a-z]{2})(?:-r([A-Z]{2}))*/strings.xml");
+      Pattern.compile("\\b|.*/res/values-([a-z]{2})(?:-r([A-Z]{2}))*/.*.xml");
+
+  static final String DEFAULT_STRINGS_FILE_NAME = "strings.xml";
 
   private final ProjectFilesystem filesystem;
   private final ImmutableBiMap<Path, Path> inResDirToOutResDirMap;
@@ -76,6 +79,7 @@ public class FilterResourcesSteps {
   private final boolean enableStringWhitelisting;
   private final ImmutableSet<Path> whitelistedStringDirs;
   private final ImmutableSet<String> locales;
+  private final String localizedStringFileName;
   private final FilteredDirectoryCopier filteredDirectoryCopier;
   private final CopyStep copyStep = new CopyStep();
   private final ScaleStep scaleStep = new ScaleStep();
@@ -110,6 +114,7 @@ public class FilterResourcesSteps {
       boolean enableStringWhitelisting,
       ImmutableSet<Path> whitelistedStringDirs,
       ImmutableSet<String> locales,
+      Optional<String> localizedStringFileName,
       FilteredDirectoryCopier filteredDirectoryCopier,
       @Nullable Set<ResourceFilters.Density> targetDensities,
       @Nullable DrawableFinder drawableFinder,
@@ -124,6 +129,10 @@ public class FilterResourcesSteps {
     this.enableStringWhitelisting = enableStringWhitelisting;
     this.whitelistedStringDirs = whitelistedStringDirs;
     this.locales = locales;
+    this.localizedStringFileName =
+        localizedStringFileName.isPresent()
+            ? localizedStringFileName.get()
+            : DEFAULT_STRINGS_FILE_NAME;
     this.filteredDirectoryCopier = filteredDirectoryCopier;
     this.targetDensities = targetDensities;
     this.drawableFinder = drawableFinder;
@@ -208,9 +217,9 @@ public class FilterResourcesSteps {
     if (localeFilterEnabled || enableStringWhitelisting) {
       pathPredicates.add(
           path -> {
-            Matcher matcher =
-                NON_ENGLISH_STRINGS_FILE_PATH.matcher(MorePaths.pathWithUnixSeparators(path));
-            if (!matcher.matches()) {
+            String filePath = MorePaths.pathWithUnixSeparators(path);
+            Matcher matcher = NON_ENGLISH_STRINGS_FILE_PATH.matcher(filePath);
+            if (!matcher.matches() || !filePath.endsWith(localizedStringFileName)) {
               return true;
             }
 
@@ -457,11 +466,14 @@ public class FilterResourcesSteps {
     @Nullable private ProjectFilesystem filesystem;
     @Nullable private ImmutableBiMap<Path, Path> inResDirToOutResDirMap;
     @Nullable private ResourceFilter resourceFilter;
+    private Optional<String> localizedStringFileName;
     private ImmutableSet<Path> whitelistedStringDirs = ImmutableSet.of();
     private ImmutableSet<String> locales = ImmutableSet.of();
     private boolean enableStringWhitelisting = false;
 
-    private Builder() {}
+    private Builder() {
+      this.localizedStringFileName = Optional.empty();
+    }
 
     public Builder setTarget(BuildTarget target) {
       this.target = target;
@@ -498,6 +510,11 @@ public class FilterResourcesSteps {
       return this;
     }
 
+    public Builder setLocalizedStringFileName(Optional<String> fileName) {
+      this.localizedStringFileName = fileName;
+      return this;
+    }
+
     public FilterResourcesSteps build() {
       Preconditions.checkNotNull(filesystem);
       Preconditions.checkNotNull(resourceFilter);
@@ -510,6 +527,7 @@ public class FilterResourcesSteps {
           enableStringWhitelisting,
           whitelistedStringDirs,
           locales,
+          localizedStringFileName,
           DefaultFilteredDirectoryCopier.getInstance(),
           resourceFilter.getDensities(),
           DefaultDrawableFinder.getInstance(),
