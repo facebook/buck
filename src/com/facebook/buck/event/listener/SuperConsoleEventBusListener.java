@@ -653,16 +653,22 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       }
     }
 
-    Optional<Double> localBuildProgress = getApproximateLocalBuildProgress();
-    String localBuildProgessString = "";
-    if (localBuildProgress.isPresent()) {
-      localBuildProgessString =
-          String.format(" (%d%% done)", Math.round(localBuildProgress.get() * 100));
-    }
-    String localStatus =
-        String.format("local status: %s%s", stampedeLocalBuildStatus, localBuildProgessString);
+    String localStatus = createLocalStatus();
     parseLine = localStatus + "; " + Joiner.on(", ").join(columns);
     return Strings.isNullOrEmpty(parseLine) ? Optional.empty() : Optional.of(parseLine);
+  }
+
+  private String createLocalStatus() {
+    Optional<Double> localBuildProgress = getApproximateLocalBuildProgress();
+    String localBuildProgressString = "";
+    if (localBuildProgress.isPresent()) {
+      localBuildProgressString =
+          String.format(" (%d%% done)", Math.round(localBuildProgress.get() * 100));
+    }
+    synchronized (distBuildStatusLock) {
+      return String.format(
+          "local status: %s%s", stampedeLocalBuildStatus, localBuildProgressString);
+    }
   }
 
   /** Adds log messages for rendering. */
