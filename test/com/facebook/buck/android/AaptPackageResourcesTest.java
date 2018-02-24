@@ -216,6 +216,7 @@ public class AaptPackageResourcesTest {
             ImmutableList.of(resource1.getRes(), resource2.getRes()),
             ImmutableSet.of(),
             ImmutableSet.of(),
+            /* localizedStringFileName */ null,
             ResourcesFilter.ResourceCompressionMode.DISABLED,
             FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
             Optional.empty());
@@ -232,6 +233,7 @@ public class AaptPackageResourcesTest {
             ImmutableList.of(resource1.getRes(), resource2.getRes()),
             ImmutableSet.of(),
             ImmutableSet.of("some_locale"),
+            /* localizedStringFileName */ null,
             ResourcesFilter.ResourceCompressionMode.DISABLED,
             FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
             Optional.empty());
