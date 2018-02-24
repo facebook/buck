@@ -71,7 +71,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final SymlinkTree symlinkTree;
   private final Path output;
   private final GoToolchain goToolchain;
-  private final boolean includeTestFiles;
+  private final List<FileType> goFileTypes;
 
   public GoCompile(
       BuildTarget buildTarget,
@@ -86,7 +86,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       ImmutableList<String> assemblerFlags,
       GoPlatform platform,
       ImmutableList<SourcePath> extraAsmOutputs,
-      boolean includeTestFiles) {
+      List<FileType> goFileTypes) {
     super(buildTarget, projectFilesystem, params);
     this.importPathMap = importPathMap;
     this.srcs = srcs;
@@ -106,7 +106,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             getBuildTarget(),
             "%s/" + getBuildTarget().getShortName() + ".a");
     this.extraAsmOutputs = extraAsmOutputs;
-    this.includeTestFiles = includeTestFiles;
+    this.goFileTypes = goFileTypes;
   }
 
   @Override
@@ -168,18 +168,12 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     if (rawCompileSrcs.isEmpty()) {
       steps.add(new TouchStep(getProjectFilesystem(), output));
     } else {
-      List<FileType> compileFileTypes = new ArrayList<>();
-      compileFileTypes.add(FileType.GoFiles);
-      if (includeTestFiles) {
-        compileFileTypes.add(FileType.TestGoFiles);
-        compileFileTypes.add(FileType.XTestGoFiles);
-      }
       FilteredSourceFiles filteredCompileSrcs =
           new FilteredSourceFiles(
               rawCompileSrcs,
               getBuildTarget(),
-              goToolchain.getList().getCommandPrefix(pathResolver),
-              compileFileTypes);
+              goToolchain,
+              goFileTypes);
       steps.addAll(filteredCompileSrcs.getFilterSteps());
       steps.add(
           new GoCompileStep(
@@ -204,7 +198,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
           new FilteredSourceFiles(
               rawAsmSrcs,
               getBuildTarget(),
-              goToolchain.getList().getCommandPrefix(pathResolver),
+              goToolchain,
               Arrays.asList(FileType.SFiles));
       steps.addAll(filteredAsmSrcs.getFilterSteps());
       Path asmIncludeDir =

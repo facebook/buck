@@ -76,22 +76,8 @@ public abstract class AbstractGoToolchain implements Toolchain {
     return getGoTool("cover", "cover", "");
   }
 
-<<<<<<< HEAD
-  private Tool getGoTool(String configName, String toolName, String extraFlagsConfigKey) {
-=======
-  public Tool getList() {
-    Path toolPath = getGoRoot().resolve("bin").resolve("go");
-    CommandTool.Builder builder =
-        new CommandTool.Builder(
-            new HashedFileTool(() -> getGoBuckConfig().getDelegate().getPathSourcePath(toolPath)));
-    builder.addArg("list");
-    builder.addEnv("GOROOT", getGoRoot().toString());
-    return builder.build();
-  }
-
   private Tool getGoTool(
       final String configName, final String toolName, final String extraFlagsConfigKey) {
->>>>>>> 60350ecff1... Added integration test for build contraints
     Path toolPath = getGoBuckConfig().getPath(configName).orElse(getToolDir().resolve(toolName));
 
     CommandTool.Builder builder =

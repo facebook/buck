@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.go.GoListStep.FileType;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -42,6 +43,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -168,7 +170,7 @@ public class GoDescriptorsTest {
             goPlatform,
             ImmutableList.of(),
             ImmutableSortedSet.of(),
-            false);
+            Arrays.asList(FileType.GoFiles));
 
     Assert.assertTrue(
         compile

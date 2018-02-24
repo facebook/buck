@@ -19,6 +19,7 @@ package com.facebook.buck.go;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.file.WriteFile;
+import com.facebook.buck.go.GoListStep.FileType;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -52,6 +53,7 @@ import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -107,7 +109,7 @@ abstract class GoDescriptors {
       GoPlatform platform,
       Iterable<BuildTarget> deps,
       ImmutableSortedSet<BuildTarget> cgoDeps,
-      boolean includeTestFiles) {
+      List<FileType> goFileTypes) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -170,7 +172,7 @@ abstract class GoDescriptors {
         ImmutableList.copyOf(assemblerFlags),
         platform,
         extraAsmOutputsBuilder.build(),
-        includeTestFiles);
+        goFileTypes);
   }
 
   @VisibleForTesting
@@ -236,7 +238,7 @@ abstract class GoDescriptors {
                 .map(BuildRule::getBuildTarget)
                 .collect(ImmutableList.toImmutableList()),
             cgoDeps,
-            false);
+            Arrays.asList(FileType.GoFiles));
     resolver.addToIndex(library);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);

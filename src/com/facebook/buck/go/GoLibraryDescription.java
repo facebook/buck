@@ -16,6 +16,7 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.go.GoListStep.FileType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -44,6 +45,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -143,7 +145,7 @@ public class GoLibraryDescription
               .addAll(args.getExportedDeps())
               .build(),
           args.getCgoDeps(),
-          false);
+          Arrays.asList(FileType.GoFiles));
     }
 
     return new NoopBuildRuleWithDeclaredAndExtraDeps(buildTarget, projectFilesystem, params);

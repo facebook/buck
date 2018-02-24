@@ -107,7 +107,7 @@ public class GoCompileStep extends ShellStep {
 
       return commandBuilder.build();
     } else {
-      return ImmutableList.of();
+      return ImmutableList.of("echo", "No source files found in " + workingDirectory);
     }
   }
 
