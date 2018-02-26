@@ -40,12 +40,14 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
       ArtifactCacheEvent.Operation operation,
       Optional<String> target,
       ImmutableSet<RuleKey> ruleKeys,
-      ArtifactCacheEvent.InvocationType invocationType) {
-    super(eventKey, CACHE_MODE, operation, target, ruleKeys, invocationType);
+      ArtifactCacheEvent.InvocationType invocationType,
+      StoreType storeType) {
+    super(eventKey, CACHE_MODE, operation, target, ruleKeys, invocationType, storeType);
   }
 
   public static Started newFetchStartedEvent(RuleKey ruleKey) {
-    return new Started(ArtifactCacheEvent.Operation.FETCH, ImmutableSet.of(ruleKey));
+    return new Started(
+        ArtifactCacheEvent.Operation.FETCH, ImmutableSet.of(ruleKey), StoreType.NOT_APPLICABLE);
   }
 
   public static Started newStoreStartedEvent(Scheduled scheduled) {
@@ -53,8 +55,8 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
   }
 
   public static Scheduled newStoreScheduledEvent(
-      Optional<String> target, ImmutableSet<RuleKey> ruleKeys) {
-    return new Scheduled(ArtifactCacheEvent.Operation.STORE, target, ruleKeys);
+      Optional<String> target, ImmutableSet<RuleKey> ruleKeys, StoreType storeType) {
+    return new Scheduled(ArtifactCacheEvent.Operation.STORE, target, ruleKeys, storeType);
   }
 
   public static Shutdown newShutdownEvent() {
@@ -75,13 +77,15 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
     public Scheduled(
         ArtifactCacheEvent.Operation operation,
         Optional<String> target,
-        ImmutableSet<RuleKey> ruleKeys) {
+        ImmutableSet<RuleKey> ruleKeys,
+        StoreType storeType) {
       super(
           EventKey.unique(),
           operation,
           target,
           ruleKeys,
-          ArtifactCacheEvent.InvocationType.ASYNCHRONOUS);
+          ArtifactCacheEvent.InvocationType.ASYNCHRONOUS,
+          storeType);
     }
 
     @Override
@@ -98,17 +102,22 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
           event.getOperation(),
           event.getTarget(),
           event.getRuleKeys(),
-          event.getInvocationType());
+          event.getInvocationType(),
+          event.getStoreType());
     }
 
-    public Started(ArtifactCacheEvent.Operation operation, ImmutableSet<RuleKey> ruleKeys) {
+    public Started(
+        ArtifactCacheEvent.Operation operation,
+        ImmutableSet<RuleKey> ruleKeys,
+        StoreType storeType) {
       super(
           EventKey.unique(),
           CACHE_MODE,
           operation,
           Optional.empty(),
           ruleKeys,
-          ArtifactCacheEvent.InvocationType.SYNCHRONOUS);
+          ArtifactCacheEvent.InvocationType.SYNCHRONOUS,
+          storeType);
     }
 
     @Override
@@ -152,7 +161,8 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
           Preconditions.checkNotNull(target),
           event.getRuleKeys(),
           event.getInvocationType(),
-          data.getFetchResult());
+          data.getFetchResult(),
+          StoreType.NOT_APPLICABLE);
       this.startedEvent = event;
       this.requestDurationMillis = -1;
       this.fetchData = Optional.of(data);
@@ -167,7 +177,8 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
           event.getTarget(),
           event.getRuleKeys(),
           event.getInvocationType(),
-          Optional.empty());
+          Optional.empty(),
+          event.getStoreType());
       this.startedEvent = event;
       this.requestDurationMillis = -1;
       this.fetchData = Optional.empty();
@@ -226,6 +237,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
               startedEvent, target, fetchDataBuilder.build());
         } else {
           storeDataBuilder.setRuleKeys(startedEvent.getRuleKeys());
+          storeDataBuilder.setStoreType(startedEvent.getStoreType());
           return new HttpArtifactCacheEvent.Finished(startedEvent, storeDataBuilder.build());
         }
       }
@@ -283,13 +295,12 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
 
     Optional<String> getErrorMessage();
 
-    /** @return if the store was for an actual artifact of for a manifest. */
-    Optional<Boolean> wasStoreForManifest();
+    StoreType getStoreType();
   }
 
   static class MultiFetchStarted extends Started {
     public MultiFetchStarted(ImmutableSet<RuleKey> ruleKeys) {
-      super(Operation.MULTI_FETCH, ruleKeys);
+      super(Operation.MULTI_FETCH, ruleKeys, StoreType.NOT_APPLICABLE);
     }
   }
 }

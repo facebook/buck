@@ -16,6 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.artifact_cache.ArtifactCacheEvent.StoreType;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.EventDispatcher;
 import com.facebook.buck.log.Logger;
@@ -171,7 +172,9 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
     public StoreEvents storeScheduled(ArtifactInfo info, long artifactSizeBytes) {
       final HttpArtifactCacheEvent.Scheduled scheduled =
           HttpArtifactCacheEvent.newStoreScheduledEvent(
-              ArtifactCacheEvent.getTarget(info.getMetadata()), info.getRuleKeys());
+              ArtifactCacheEvent.getTarget(info.getMetadata()),
+              info.getRuleKeys(),
+              StoreType.fromArtifactInfo(info));
       dispatcher.post(scheduled);
 
       HttpArtifactCacheEvent.Started startedEvent =
@@ -195,7 +198,7 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
                   .setArtifactContentHash(result.getArtifactContentHash())
                   .setRequestSizeBytes(result.getRequestSizeBytes())
                   .setWasStoreSuccessful(result.getWasStoreSuccessful())
-                  .setWasStoreForManifest(info.isManifest());
+                  .setStoreType(StoreType.fromArtifactInfo(info));
               dispatcher.post(finishedEventBuilder.build());
             }
 
