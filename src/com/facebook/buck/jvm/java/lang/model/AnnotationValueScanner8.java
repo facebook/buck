@@ -14,10 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.jvm.java.abi;
+package com.facebook.buck.jvm.java.lang.model;
 
+import com.facebook.buck.util.liteinfersupport.Nullable;
 import java.util.List;
-import javax.annotation.Nullable;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.VariableElement;
