@@ -202,8 +202,10 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
       super(eventKey, cacheMode, operation, target, ruleKeys, invocationType, storeType);
       Preconditions.checkArgument(
           (!operation.equals(Operation.FETCH) || cacheResult.isPresent()),
-          "For FETCH operations, cacheResult must be non-null. "
-              + "For non-FETCH operations, cacheResult may be null.");
+          String.format(
+              "For FETCH operations, cacheResult must be non-null. For non-FETCH "
+                  + "operations, cacheResult may be null. The violating operation was %s for %s.",
+              operation.name(), storeType.name()));
       this.cacheResult = cacheResult;
     }
 
