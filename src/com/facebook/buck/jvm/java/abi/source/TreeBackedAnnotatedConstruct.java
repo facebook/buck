@@ -47,7 +47,8 @@ public class TreeBackedAnnotatedConstruct implements ArtificialAnnotatedConstruc
 
   @Override
   public <A extends Annotation> A getAnnotation(Class<A> annotationType) {
-    return underlyingConstruct.getAnnotation(annotationType);
+    return TreeBackedAnnotationFactory.create(underlyingConstruct, annotationType)
+        .orElseGet(() -> underlyingConstruct.getAnnotation(annotationType));
   }
 
   @Override
