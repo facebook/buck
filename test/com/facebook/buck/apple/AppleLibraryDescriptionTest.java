@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -24,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
@@ -119,5 +121,35 @@ public class AppleLibraryDescriptionTest {
     SourcePath expectedSwiftSourcePath =
         metadata.get().getSwiftSources().iterator().next().getSourcePath();
     assertSame(swiftSourcePath, expectedSwiftSourcePath);
+  }
+
+  @Test
+  public void modularObjcFlags() {
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//:library");
+    TargetNode<AppleLibraryDescriptionArg, ?> libNode =
+        new AppleLibraryBuilder(libTarget)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.m"))))
+            .setCompilerFlags(ImmutableList.of("-DDEBUG=1"))
+            .setModular(true)
+            .build();
+
+    BuildRuleResolver buildRuleResolver =
+        new SingleThreadedBuildRuleResolver(
+            TargetGraphFactory.newInstance(libNode), new DefaultTargetNodeToBuildRuleTransformer());
+
+    final SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
+
+    CxxLibraryDescriptionArg.Builder delegateArgBuilder =
+        CxxLibraryDescriptionArg.builder().from(libNode.getConstructorArg());
+
+    AppleDescriptions.populateCxxLibraryDescriptionArg(
+        pathResolver, delegateArgBuilder, libNode.getConstructorArg(), libTarget);
+    CxxLibraryDescriptionArg delegateArg = delegateArgBuilder.build();
+    assertThat(
+        delegateArg.getCompilerFlags(),
+        containsInAnyOrder(
+            StringWithMacrosUtils.format("-fmodule-name=library"),
+            StringWithMacrosUtils.format("-DDEBUG=1")));
   }
 }
