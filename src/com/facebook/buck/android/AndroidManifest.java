@@ -120,7 +120,11 @@ public class AndroidManifest extends AbstractBuildRule {
             getProjectFilesystem(),
             context.getSourcePathResolver().getAbsolutePath(skeletonFile),
             context.getSourcePathResolver().getAllAbsolutePaths(manifestFiles),
-            context.getSourcePathResolver().getRelativePath(getSourcePathToOutput())));
+            context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()),
+            getProjectFilesystem()
+                .resolve(
+                    BuildTargets.getScratchPath(
+                        getProjectFilesystem(), getBuildTarget(), "%s/merge-report.txt"))));
 
     buildableContext.recordArtifact(pathToOutputFile);
     return commands.build();

@@ -42,16 +42,19 @@ public class GenerateManifestStep implements Step {
   private final Path skeletonManifestPath;
   private final ImmutableSet<Path> libraryManifestPaths;
   private final Path outManifestPath;
+  private final Path mergeReportPath;
 
   public GenerateManifestStep(
       ProjectFilesystem filesystem,
       Path skeletonManifestPath,
       ImmutableSet<Path> libraryManifestPaths,
-      Path outManifestPath) {
+      Path outManifestPath,
+      Path mergeReportPath) {
     this.filesystem = filesystem;
     this.skeletonManifestPath = skeletonManifestPath;
     this.libraryManifestPaths = ImmutableSet.copyOf(libraryManifestPaths);
     this.outManifestPath = outManifestPath;
+    this.mergeReportPath = mergeReportPath;
   }
 
   @Override
@@ -103,6 +106,7 @@ public class GenerateManifestStep implements Step {
                   ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS,
                   ManifestMerger2.Invoker.Feature.SKIP_BLAME)
               .addLibraryManifests(Iterables.toArray(libraryManifestFiles, File.class))
+              .setMergeReportFile(mergeReportPath.toFile())
               .merge();
       if (mergingReport.getResult().isError()) {
         for (MergingReport.Record record : mergingReport.getLoggingRecords()) {

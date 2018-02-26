@@ -16,7 +16,9 @@
 
 package com.facebook.buck.android;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
@@ -57,9 +59,11 @@ public class GenerateManifestStepTest {
             .toImmutableSet();
 
     Path outputPath = tmpFolder.getRoot().resolve("AndroidManifest.xml");
+    Path mergeReportPath = tmpFolder.getRoot().resolve("merge-report.txt");
 
     GenerateManifestStep manifestCommand =
-        new GenerateManifestStep(filesystem, skeletonPath, libraryManifestFiles, outputPath);
+        new GenerateManifestStep(
+            filesystem, skeletonPath, libraryManifestFiles, outputPath, mergeReportPath);
     int result = manifestCommand.execute(context).getExitCode();
 
     assertEquals(0, result);
@@ -69,5 +73,9 @@ public class GenerateManifestStepTest {
     List<String> output = Files.lines(outputPath).collect(Collectors.toList());
 
     assertEquals(expected, output);
+
+    String report = new String(Files.readAllBytes(mergeReportPath));
+    assertThat(report, containsString("ADDED"));
+    assertThat(report, containsString("MERGED"));
   }
 }
