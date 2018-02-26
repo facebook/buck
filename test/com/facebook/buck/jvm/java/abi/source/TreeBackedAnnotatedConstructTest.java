@@ -197,11 +197,10 @@ public class TreeBackedAnnotatedConstructTest extends CompilerTreeApiParameteriz
               || realException instanceof AssertionError)) {
         realException = realException.getCause();
       }
-      // TODO(dreiss): Improve error messages.
       assertThat(realException.getMessage(), containsString("ForTreeBackedTest"));
       assertThat(realException.getMessage(), containsString("Foo"));
-      //      assertThat(realException.getMessage(), containsString("Bar"));
-      //      assertThat(realException.getMessage(), containsString("Baz"));
+      assertThat(realException.getMessage(), containsString("Bar"));
+      assertThat(realException.getMessage(), containsString("Baz"));
     }
   }
 
