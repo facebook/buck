@@ -28,6 +28,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import java.io.IOException;
 import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -75,7 +76,7 @@ public class GoBinaryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cgo", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand("run", "//src/cgo_test:bin");
+    ProcessResult result = workspace.runBuckCommand("run", "//src/cgo_test:bin", "-v", "4");
     result.assertSuccess();
     assertThat(result.getStdout(), Matchers.containsString("fmt: Go string"));
   }

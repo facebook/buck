@@ -1,3 +1,19 @@
+/*
+ * Copyright 2017-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
 package com.facebook.buck.go;
 
 import com.facebook.buck.model.BuildTarget;
@@ -5,6 +21,7 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProcessExecutor.Option;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -25,14 +42,17 @@ public class GoListStep extends ShellStep {
 
   private final GoToolchain goToolchain;
   private final List<FileType> fileTypes;
+  private final GoPlatform platform;
 
   public GoListStep(
       BuildTarget buildTarget,
       Path workingDirectory,
       GoToolchain goToolchain,
+      GoPlatform platform,
       List<FileType> fileTypes) {
     super(Optional.of(buildTarget), workingDirectory);
     this.goToolchain = goToolchain;
+    this.platform = platform;
     this.fileTypes = fileTypes;
   }
 
@@ -63,6 +83,17 @@ public class GoListStep extends ShellStep {
   protected void addOptions(ImmutableSet.Builder<Option> options) {
     super.addOptions(options);
     options.add(Option.EXPECTING_STD_OUT);
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+    return ImmutableMap.<String, String>builder()
+        // The GOROOT is set to /usr/local/go somehow on Travis CI, which doesn't exist.
+        // So it has to be explicitly overridden here to the correct path
+        .put("GOROOT", goToolchain.getGoRoot().toString())
+        .put("GOOS", platform.getGoOs())
+        .put("GOARCH", platform.getGoArch())
+        .build();
   }
 
   public Set<Path> getSourceFiles() {

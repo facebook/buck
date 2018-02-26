@@ -169,11 +169,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       steps.add(new TouchStep(getProjectFilesystem(), output));
     } else {
       FilteredSourceFiles filteredCompileSrcs =
-          new FilteredSourceFiles(
-              rawCompileSrcs,
-              getBuildTarget(),
-              goToolchain,
-              goFileTypes);
+          new FilteredSourceFiles(rawCompileSrcs, getBuildTarget(), goToolchain, platform, goFileTypes);
       steps.addAll(filteredCompileSrcs.getFilterSteps());
       steps.add(
           new GoCompileStep(
@@ -196,10 +192,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     if (!rawAsmSrcs.isEmpty()) {
       FilteredSourceFiles filteredAsmSrcs =
           new FilteredSourceFiles(
-              rawAsmSrcs,
-              getBuildTarget(),
-              goToolchain,
-              Arrays.asList(FileType.SFiles));
+              rawAsmSrcs, getBuildTarget(), goToolchain, platform, Arrays.asList(FileType.SFiles));
       steps.addAll(filteredAsmSrcs.getFilterSteps());
       Path asmIncludeDir =
           BuildTargets.getScratchPath(
