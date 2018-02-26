@@ -41,7 +41,7 @@ public class GenerateManifestStep implements Step {
   private final ProjectFilesystem filesystem;
   private final Path skeletonManifestPath;
   private final ImmutableSet<Path> libraryManifestPaths;
-  private Path outManifestPath;
+  private final Path outManifestPath;
 
   public GenerateManifestStep(
       ProjectFilesystem filesystem,
@@ -66,8 +66,8 @@ public class GenerateManifestStep implements Step {
       throw new HumanReadableException("Output Manifest filepath is missing");
     }
 
-    outManifestPath = filesystem.resolve(outManifestPath);
-    Files.createParentDirs(outManifestPath.toFile());
+    Path resolvedOutManifestPath = filesystem.resolve(outManifestPath);
+    Files.createParentDirs(resolvedOutManifestPath.toFile());
 
     List<File> libraryManifestFiles = new ArrayList<>();
 
@@ -88,7 +88,7 @@ public class GenerateManifestStep implements Step {
       // Convert line endings to Lf on Windows.
       xmlText = xmlText.replace("\r\n", "\n");
     }
-    filesystem.writeContentsToPath(xmlText, outManifestPath);
+    filesystem.writeContentsToPath(xmlText, resolvedOutManifestPath);
 
     return StepExecutionResults.SUCCESS;
   }
