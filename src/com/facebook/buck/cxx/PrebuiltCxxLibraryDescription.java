@@ -79,7 +79,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -723,13 +722,8 @@ public class PrebuiltCxxLibraryDescription
           Linker.LinkableDepType type,
           boolean forceLinkWhole,
           ImmutableSet<LanguageExtensions> languageExtensions) {
-        try {
-          return nativeLinkableCache.getUnchecked(
-              NativeLinkableCacheKey.of(
-                  cxxPlatform.getFlavor(), type, forceLinkWhole, cxxPlatform));
-        } catch (UncheckedExecutionException e) {
-          throw (HumanReadableException) e.getCause();
-        }
+        return nativeLinkableCache.getUnchecked(
+            NativeLinkableCacheKey.of(cxxPlatform.getFlavor(), type, forceLinkWhole, cxxPlatform));
       }
 
       @Override
