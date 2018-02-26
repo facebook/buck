@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -197,8 +198,8 @@ public class TreeBackedAnnotatedConstructTest extends CompilerTreeApiParameteriz
         realException = realException.getCause();
       }
       // TODO(dreiss): Improve error messages.
-      //      assertThat(realException.getMessage(), containsString("ForTreeBackedTest"));
-      //      assertThat(realException.getMessage(), containsString("Foo"));
+      assertThat(realException.getMessage(), containsString("ForTreeBackedTest"));
+      assertThat(realException.getMessage(), containsString("Foo"));
       //      assertThat(realException.getMessage(), containsString("Bar"));
       //      assertThat(realException.getMessage(), containsString("Baz"));
     }

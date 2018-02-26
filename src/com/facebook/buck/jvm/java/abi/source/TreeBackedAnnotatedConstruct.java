@@ -47,12 +47,28 @@ public class TreeBackedAnnotatedConstruct implements ArtificialAnnotatedConstruc
 
   @Override
   public <A extends Annotation> A getAnnotation(Class<A> annotationType) {
-    return TreeBackedAnnotationFactory.create(underlyingConstruct, annotationType)
-        .orElseGet(() -> underlyingConstruct.getAnnotation(annotationType));
+    return TreeBackedAnnotationFactory.createOrGetUnderlying(
+        this, underlyingConstruct, annotationType);
   }
 
   @Override
   public <A extends Annotation> A[] getAnnotationsByType(Class<A> annotationType) {
     return underlyingConstruct.getAnnotationsByType(annotationType);
+  }
+
+  /**
+   * Attempt to call {@link AnnotatedConstruct#getAnnotation(Class)} on the underlying construct,
+   * but throw a more useful exception if it throws.
+   */
+  /* package */ <A extends Annotation> A getAnnotationWithBetterErrors(Class<A> annotationType) {
+    try {
+      return underlyingConstruct.getAnnotation(annotationType);
+    } catch (RuntimeException e) {
+      throw new RuntimeException(
+          String.format(
+              "Exception when trying to get annotation %s from element %s.  ",
+              annotationType.getSimpleName(), this.toString()),
+          e);
+    }
   }
 }

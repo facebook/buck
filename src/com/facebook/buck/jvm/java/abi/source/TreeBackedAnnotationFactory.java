@@ -25,7 +25,6 @@ import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import javax.lang.model.AnnotatedConstruct;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -43,23 +42,26 @@ import javax.lang.model.util.AbstractAnnotationValueVisitor8;
  * processor requests a field that we can't fake, we have to fall back to the underlying annotation.
  */
 public class TreeBackedAnnotationFactory {
-  public static <A extends Annotation> Optional<A> create(
-      AnnotatedConstruct underlyingConstruct, Class<A> annotationType) {
+  public static <A extends Annotation> A createOrGetUnderlying(
+      TreeBackedAnnotatedConstruct annotatedConstruct,
+      AnnotatedConstruct underlyingConstruct,
+      Class<A> annotationType) {
     for (AnnotationMirror mirror : underlyingConstruct.getAnnotationMirrors()) {
       if (mirror.getAnnotationType().toString().equals(annotationType.getName()))
-        return Optional.of(
-            annotationType.cast(
-                Proxy.newProxyInstance(
-                    annotationType.getClassLoader(),
-                    new Class[] {annotationType},
-                    new Handler(underlyingConstruct, annotationType, mirror))));
+        return annotationType.cast(
+            Proxy.newProxyInstance(
+                annotationType.getClassLoader(),
+                new Class[] {annotationType},
+                new Handler(annotatedConstruct, annotationType, mirror)));
     }
-    return Optional.empty();
+    // Either the annotation doesn't exist or name comparison failed in some weird way.
+    // Either way, fall back to the underlying construct.
+    return annotatedConstruct.getAnnotationWithBetterErrors(annotationType);
   }
 
   static class Handler implements InvocationHandler {
-    /** Used as a fallback if we can't satisfy a request. */
-    private final AnnotatedConstruct underlyingConstruct;
+    /** Used to get the fallback if we can't satisfy a request. */
+    private final TreeBackedAnnotatedConstruct annotatedConstruct;
     /** Type of this annotation, which the caller can request. */
     private final Class<? extends Annotation> annotationType;
     /** Safe "bag of values" object that we use to supply values whenever possible. */
@@ -70,10 +72,10 @@ public class TreeBackedAnnotationFactory {
     @Nullable private Map<String, AnnotationValue> valueCache = null;
 
     public Handler(
-        AnnotatedConstruct underlyingConstruct,
+        TreeBackedAnnotatedConstruct annotatedConstruct,
         Class<? extends Annotation> annotationType,
         AnnotationMirror mirror) {
-      this.underlyingConstruct = underlyingConstruct;
+      this.annotatedConstruct = annotatedConstruct;
       this.annotationType = annotationType;
       this.mirror = mirror;
     }
@@ -119,7 +121,7 @@ public class TreeBackedAnnotationFactory {
     }
 
     private void populateAnnotation() {
-      annotationCache = underlyingConstruct.getAnnotation(annotationType);
+      annotationCache = annotatedConstruct.getAnnotationWithBetterErrors(annotationType);
     }
 
     private synchronized void populateValues() {
