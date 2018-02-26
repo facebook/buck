@@ -65,6 +65,7 @@ public abstract class AbstractWorkspace {
 
   protected Path destPath;
   private final Map<String, Map<String, String>> localConfigs = new HashMap<>();
+  private boolean firstTemplateAdded = false;
 
   /**
    * Constructor for AbstractWorkspace
@@ -211,6 +212,16 @@ public abstract class AbstractWorkspace {
     }
   }
 
+  private void postAddTemplateActions() throws IOException {
+    if (!firstTemplateAdded) {
+      firstTemplateAdded = true;
+      stampBuckVersion();
+      ensureNoLocalBuckConfig();
+      addDefaultLocalBuckConfigs();
+      ensureWatchmanConfig();
+    }
+  }
+
   /**
    * This will copy the template directory, renaming files named {@code foo.fixture} to {@code foo}
    * in the process. Files whose names end in {@code .expected} will not be copied.
@@ -233,8 +244,6 @@ public abstract class AbstractWorkspace {
               return path;
           }
         });
-
-    stampBuckVersion();
 
     if (Platform.detect() == Platform.WINDOWS) {
       // Hack for symlinks on Windows.
@@ -273,9 +282,7 @@ public abstract class AbstractWorkspace {
       Files.walkFileTree(destPath, copyDirVisitor);
     }
 
-    ensureNoLocalBuckConfig();
-    addDefaultLocalBuckConfigs();
-    ensureWatchmanConfig();
+    postAddTemplateActions();
   }
 
   /**
@@ -314,10 +321,7 @@ public abstract class AbstractWorkspace {
     Path templatePath = testDataFS.getPath(jarSplit[1].toString(), templateName);
 
     copyTemplateToWorkspace(provider, templatePath);
-    stampBuckVersion();
-    ensureNoLocalBuckConfig();
-    addDefaultLocalBuckConfigs();
-    ensureWatchmanConfig();
+    postAddTemplateActions();
   }
 
   private void addDirectoryContentToQueue(
