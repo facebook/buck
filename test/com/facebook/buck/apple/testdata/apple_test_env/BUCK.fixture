@@ -1,6 +1,6 @@
 kwargs = {}
 if read_config("testcase", "set_targetspecific_env", False):
-	kwargs['environment'] = {"FOO": "bar"}
+	kwargs['env'] = {"FOO": "bar"}
 
 apple_test(
     name = "foo",

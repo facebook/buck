@@ -346,7 +346,7 @@ public class AppleTestDescription
             .orElse(appleConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
         args.getIsUiTest(),
         args.getSnapshotReferenceImagesPath(),
-        args.getEnvironment());
+        args.getEnv());
   }
 
   private Optional<SourcePath> getXctool(
@@ -657,8 +657,8 @@ public class AppleTestDescription
     // Bundle related fields.
     ImmutableMap<String, String> getDestinationSpecifier();
 
-    // Bundle related fields.
-    Optional<ImmutableMap<String, String>> getEnvironment();
+    // Environment variables to set during the test run
+    Optional<ImmutableMap<String, String>> getEnv();
 
     @Override
     default Either<AppleBundleExtension, String> getExtension() {
