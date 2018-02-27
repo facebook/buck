@@ -9,7 +9,6 @@ environment:
 install:
   - cmd: choco install ant -y -f -i
   - cmd: refreshenv
-  - cmd: echo -Djna.nosys=true > .buckjavaargs.local
   - cmd: set GOROOT=
   - cmd: set PATH=%PATH:C:\go\bin;=%
   - cmd: set PATH=%PATH:C:\go\bin=%

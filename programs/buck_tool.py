@@ -623,6 +623,7 @@ class BuckTool(object):
             java_args = [
                 "-Xmx{0}m".format(JAVA_MAX_HEAP_SIZE_MB),
                 "-Djava.awt.headless=true",
+                "-Djna.nosys=true",
                 "-Djava.util.logging.config.class=com.facebook.buck.cli.bootstrapper.LogConfig",
                 "-Dbuck.test_util_no_tests_dir=true",
                 "-Dbuck.version_uid={0}".format(version_uid),
