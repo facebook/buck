@@ -809,7 +809,7 @@ class CachingBuildRuleBuilder {
         // These cache threads make it more likely to hit that problem when SuperConsole is aware
         // of them.
         Futures.transform(
-            performRuleKeyCacheCheck(),
+            performRuleKeyCacheCheck(/* cacheHitExpected */ false),
             cacheResult -> {
               rulekeyCacheResult.set(cacheResult);
               return getBuildResultForRuleKeyCacheResult(cacheResult);
@@ -937,7 +937,7 @@ class CachingBuildRuleBuilder {
               remoteBuildRuleCompletionWaiter.waitForBuildRuleToFinishRemotely(rule),
               (Void v) ->
                   Futures.transform(
-                      performRuleKeyCacheCheck(),
+                      performRuleKeyCacheCheck(/* cacheHitExpected */ true),
                       cacheResult -> {
                         rulekeyCacheResult.set(cacheResult);
                         return getBuildResultForRuleKeyCacheResult(cacheResult);
@@ -959,7 +959,8 @@ class CachingBuildRuleBuilder {
     return Optional.empty();
   }
 
-  private ListenableFuture<CacheResult> performRuleKeyCacheCheck() throws IOException {
+  private ListenableFuture<CacheResult> performRuleKeyCacheCheck(boolean cacheHitExpected)
+      throws IOException {
     long cacheRequestTimestampMillis = System.currentTimeMillis();
     return Futures.transform(
         buildCacheArtifactFetcher
@@ -978,7 +979,7 @@ class CachingBuildRuleBuilder {
                   .setRequestTimestampMillis(cacheRequestTimestampMillis)
                   .setTwoLevelContentHashKey(cacheResult.twoLevelContentHashKey())
                   .build();
-          eventBus.post(new RuleKeyCacheResultEvent(ruleKeyCacheResult));
+          eventBus.post(new RuleKeyCacheResultEvent(ruleKeyCacheResult, cacheHitExpected));
           return cacheResult;
         });
   }
