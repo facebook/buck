@@ -61,6 +61,7 @@ public class StampedeBuildClient {
       LocalBuildExecutorInvoker localBuildExecutorInvoker,
       DistBuildControllerInvoker distBuildControllerInvoker,
       boolean waitGracefullyForDistributedBuildThreadToFinish,
+      long distributedBuildThreadKillTimeoutSeconds,
       Optional<StampedeId> stampedeId) {
     stampedeId.ifPresent(id -> this.stampedeIdReference.set(id));
     this.eventBus = eventBus;
@@ -85,7 +86,8 @@ public class StampedeBuildClient {
             executorForDistBuildController,
             distBuildService,
             distBuildStartedEvent,
-            waitGracefullyForDistributedBuildThreadToFinish);
+            waitGracefullyForDistributedBuildThreadToFinish,
+            distributedBuildThreadKillTimeoutSeconds);
   }
 
   public StampedeBuildClient(
@@ -97,7 +99,8 @@ public class StampedeBuildClient {
       LocalBuildExecutorInvoker localBuildExecutorInvoker,
       DistBuildControllerArgs.Builder distBuildControllerAgrsBuilder,
       DistBuildControllerInvocationArgs distBuildControllerInvocationArgs,
-      boolean waitGracefullyForDistributedBuildThreadToFinish) {
+      boolean waitGracefullyForDistributedBuildThreadToFinish,
+      long distributedBuildThreadKillTimeoutSeconds) {
     this.eventBus = eventBus;
     this.remoteBuildRuleSynchronizer = new RemoteBuildRuleSynchronizer();
     this.racerBuildRunner =
@@ -121,7 +124,8 @@ public class StampedeBuildClient {
             executorForDistBuildController,
             distBuildService,
             distBuildStartedEvent,
-            waitGracefullyForDistributedBuildThreadToFinish);
+            waitGracefullyForDistributedBuildThreadToFinish,
+            distributedBuildThreadKillTimeoutSeconds);
   }
 
   /**
@@ -203,7 +207,8 @@ public class StampedeBuildClient {
       ExecutorService executorToRunDistBuildController,
       DistBuildService distBuildService,
       BuildEvent.DistBuildStarted distBuildStartedEvent,
-      boolean waitGracefullyForDistributedBuildThreadToFinish) {
+      boolean waitGracefullyForDistributedBuildThreadToFinish,
+      long distributedBuildThreadKillTimeoutSeconds) {
     Preconditions.checkNotNull(eventBus);
     Preconditions.checkNotNull(racerBuildRunner);
     Preconditions.checkNotNull(synchronizedBuildRunner);
@@ -223,7 +228,8 @@ public class StampedeBuildClient {
         distBuildStartedEvent,
         remoteBuildRuleSynchronizer,
         buildPhaseLatches,
-        waitGracefullyForDistributedBuildThreadToFinish);
+        waitGracefullyForDistributedBuildThreadToFinish,
+        distributedBuildThreadKillTimeoutSeconds);
   }
 
   private static DistBuildControllerInvoker createDistBuildControllerInvoker(

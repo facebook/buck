@@ -549,13 +549,10 @@ public class BuildCommand extends AbstractCommand {
 
           throw ex;
         } finally {
-          if (distBuildClientStatsTracker.hasStampedeId()) {
+          if (distributedBuildStateFile == null) {
             params
                 .getBuckEventBus()
                 .post(new DistBuildClientStatsEvent(distBuildClientStatsTracker.generateStats()));
-          } else {
-            LOG.error(
-                "Failed to published DistBuildClientStatsEvent as no Stampede ID was received");
           }
         }
         if (exitCode == ExitCode.SUCCESS) {
@@ -956,6 +953,8 @@ public class BuildCommand extends AbstractCommand {
       // TODO(alisdair): ensure minion build status recorded even if local build finishes first.
       boolean waitForDistBuildThreadToFinishGracefully =
           distBuildConfig.getLogMaterializationEnabled();
+      long distributedBuildThreadKillTimeoutSeconds =
+          distBuildConfig.getDistributedBuildThreadKillTimeoutSeconds();
 
       StampedeBuildClient stampedeBuildClient =
           new StampedeBuildClient(
@@ -967,7 +966,8 @@ public class BuildCommand extends AbstractCommand {
               localBuildExecutorInvoker,
               distBuildControllerArgsBuilder,
               distBuildControllerInvocationArgs,
-              waitForDistBuildThreadToFinishGracefully);
+              waitForDistBuildThreadToFinishGracefully,
+              distributedBuildThreadKillTimeoutSeconds);
 
       distBuildClientStats.startTimer(PERFORM_LOCAL_BUILD);
 
@@ -1032,12 +1032,6 @@ public class BuildCommand extends AbstractCommand {
       // Post distributed build phase starts POST_DISTRIBUTED_BUILD_LOCAL_STEPS counter internally.
       if (distributedBuildExitCode == 0) {
         distBuildClientStats.stopTimer(POST_DISTRIBUTED_BUILD_LOCAL_STEPS);
-      }
-
-      if (distBuildClientStats.hasStampedeId()) {
-        params
-            .getBuckEventBus()
-            .post(new DistBuildClientStatsEvent(distBuildClientStats.generateStats()));
       }
 
       return ExitCode.map(finalExitCode);

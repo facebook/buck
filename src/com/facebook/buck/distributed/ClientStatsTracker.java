@@ -118,9 +118,6 @@ public class ClientStatsTracker {
   }
 
   public synchronized DistBuildClientStats generateStats() {
-    // Without a Stampede ID there is nothing useful to record.
-    Preconditions.checkArgument(stampedeId.isPresent());
-
     if (!buckClientError) {
       generateStatsPreconditionChecksNoException();
     } else {

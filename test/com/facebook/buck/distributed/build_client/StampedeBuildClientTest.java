@@ -98,6 +98,7 @@ public class StampedeBuildClientTest {
   private CountDownLatch waitForRacingBuildCalledLatch;
   private CountDownLatch waitForSynchronizedBuildCalledLatch;
   private boolean waitGracefullyForDistributedBuildThreadToFinish;
+  private long distributedBuildThreadKillTimeoutSeconds;
   private Optional<StampedeId> stampedeId = Optional.empty();
 
   @Before
@@ -158,6 +159,7 @@ public class StampedeBuildClientTest {
     waitForRacingBuildCalledLatch = new CountDownLatch(1);
     waitForSynchronizedBuildCalledLatch = new CountDownLatch(1);
     waitGracefullyForDistributedBuildThreadToFinish = false;
+    distributedBuildThreadKillTimeoutSeconds = 0;
     createStampedBuildClient();
     buildClientExecutor = Executors.newSingleThreadExecutor();
   }
@@ -181,6 +183,7 @@ public class StampedeBuildClientTest {
             guardedLocalBuildExecutorInvoker,
             guardedDistBuildControllerInvoker,
             waitGracefullyForDistributedBuildThreadToFinish,
+            distributedBuildThreadKillTimeoutSeconds,
             stampedeId);
   }
 
