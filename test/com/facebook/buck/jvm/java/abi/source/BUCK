@@ -8,6 +8,7 @@ java_test(
         # we compile against a stub.
         "//third-party/java/jdk:compiler-tree-api",
     ],
+    required_for_source_only_abi = True,
     deps = [
         "//src/com/facebook/buck/jvm/java/abi/source:source",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",

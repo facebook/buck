@@ -16,8 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import java.io.IOException;
-
 /**
  * Contain items used to construct a {@link KnownBuildRuleTypes} that are shared between all {@link
  * Cell} instances.
@@ -26,5 +24,5 @@ import java.io.IOException;
 public interface KnownBuildRuleTypesFactory {
 
   /** @return a {@link KnownBuildRuleTypes} constructor for the given {@link Cell}. */
-  KnownBuildRuleTypes create(Cell cell) throws IOException, InterruptedException;
+  KnownBuildRuleTypes create(Cell cell);
 }

@@ -122,6 +122,9 @@ public class DistBuildConfig {
   private static final String ENABLE_ASYNC_LOGGING = "enable_async_logging";
   private static final boolean DEFAULT_ENABLE_ASYNC_LOGGING = true;
 
+  private static final String ENABLE_CACHE_MISS_ANALYSIS = "enable_cache_miss_analysis";
+  private static final boolean DEFAULT_ENABLE_CACHE_MISS_ANALYSIS = false;
+
   private static final String ALWAYS_WAIT_FOR_REMOTE_BUILD_BEFORE_PROCEEDING_LOCALLY =
       "always_wait_for_remote_build_before_proceeding_locally";
   private static final boolean DEFAULT_ALWAYS_WAIT_FOR_REMOTE_BUILD_BEFORE_PROCEEDING_LOCALLY =
@@ -155,6 +158,10 @@ public class DistBuildConfig {
   private static final boolean DEFAULT_STAMPEDE_BETA_TEST = false;
 
   private static final String AUTO_STAMPEDE_BUILD_MESSAGE = "auto_stampede_build_message";
+
+  private static final String FILE_MATERIALIZATION_TIMEOUT_SECS =
+      "pending_file_materialization_timeout_secs";
+  private static final long DEFAULT_FILE_MATERIALIZATION_TIMEOUT_SECS = 30;
 
   private final SlbBuckConfig frontendConfig;
   private final BuckConfig buckConfig;
@@ -289,6 +296,11 @@ public class DistBuildConfig {
         STAMPEDE_SECTION, ENABLE_ASYNC_LOGGING, DEFAULT_ENABLE_ASYNC_LOGGING);
   }
 
+  public boolean isCacheMissAnalysisEnabled() {
+    return buckConfig.getBooleanValue(
+        STAMPEDE_SECTION, ENABLE_CACHE_MISS_ANALYSIS, DEFAULT_ENABLE_CACHE_MISS_ANALYSIS);
+  }
+
   /**
    * If true, local Stampede client will wait for remote build of rule to complete before building
    * locally. If false, it will go ahead building locally if remote build of rule hasn't started
@@ -377,6 +389,12 @@ public class DistBuildConfig {
   public boolean isUploadFromLocalCacheEnabled() {
     return buckConfig.getBooleanValue(
         STAMPEDE_SECTION, ENABLE_UPLOADS_FROM_LOCAL_CACHE, DEFAULT_ENABLE_UPLOADS_FROM_LOCAL_CACHE);
+  }
+
+  public long getFileMaterializationTimeoutSecs() {
+    return buckConfig
+        .getLong(STAMPEDE_SECTION, FILE_MATERIALIZATION_TIMEOUT_SECS)
+        .orElse(DEFAULT_FILE_MATERIALIZATION_TIMEOUT_SECS);
   }
 
   /** Whether a non-distributed build should be automatically turned into a distributed one. */

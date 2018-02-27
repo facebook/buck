@@ -85,3 +85,13 @@ android_binary(
         "//android_prebuilt_aar-dep:aar-no-classes-dot-jar",
     ],
 )
+
+android_binary(
+    name = "app-dep-on-aar-without-res",
+    keystore = ":debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        ":aar",
+        "//prebuilt_aar_without_res:play-services-base-license",
+    ],
+)

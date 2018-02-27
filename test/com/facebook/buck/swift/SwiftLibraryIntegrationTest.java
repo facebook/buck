@@ -39,6 +39,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeTargetNodeBuilder;
+import com.facebook.buck.rules.ImmutableBuildRuleCreationContext;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -95,7 +96,7 @@ public class SwiftLibraryIntegrationTest {
 
     HeaderSymlinkTreeWithHeaderMap symlinkTreeBuildRule =
         HeaderSymlinkTreeWithHeaderMap.create(
-            symlinkTarget, projectFilesystem, symlinkTreeRoot, links);
+            symlinkTarget, projectFilesystem, symlinkTreeRoot, links, ruleFinder);
     resolver.addToIndex(symlinkTreeBuildRule);
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
@@ -124,12 +125,13 @@ public class SwiftLibraryIntegrationTest {
     SwiftCompile buildRule =
         (SwiftCompile)
             FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
-                TargetGraph.EMPTY,
+                ImmutableBuildRuleCreationContext.of(
+                    TargetGraph.EMPTY,
+                    resolver,
+                    projectFilesystem,
+                    TestCellBuilder.createCellRoots(projectFilesystem)),
                 buildTarget,
-                projectFilesystem,
                 params,
-                resolver,
-                TestCellBuilder.createCellRoots(projectFilesystem),
                 args);
 
     ImmutableList<String> swiftIncludeArgs = buildRule.getSwiftIncludeArgs(pathResolver);
@@ -151,12 +153,13 @@ public class SwiftLibraryIntegrationTest {
     SwiftCompile buildRule =
         (SwiftCompile)
             FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
-                TargetGraph.EMPTY,
+                ImmutableBuildRuleCreationContext.of(
+                    TargetGraph.EMPTY,
+                    resolver,
+                    projectFilesystem,
+                    TestCellBuilder.createCellRoots(projectFilesystem)),
                 swiftCompileTarget,
-                projectFilesystem,
                 params,
-                resolver,
-                TestCellBuilder.createCellRoots(projectFilesystem),
                 args);
     resolver.addToIndex(buildRule);
 
@@ -185,15 +188,18 @@ public class SwiftLibraryIntegrationTest {
             pathResolver.getRelativePath(buildRule.getSourcePathToOutput()).resolve("bar.o"));
     assertThat(fileListArg.getPath(), Matchers.equalTo(fileListSourcePath));
 
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(FakeTargetNodeBuilder.build(buildRule));
     CxxLink linkRule =
         (CxxLink)
             FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
-                TargetGraphFactory.newInstance(FakeTargetNodeBuilder.build(buildRule)),
+                ImmutableBuildRuleCreationContext.of(
+                    targetGraph,
+                    resolver,
+                    projectFilesystem,
+                    TestCellBuilder.createCellRoots(projectFilesystem)),
                 buildTarget.withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR),
-                projectFilesystem,
                 params,
-                resolver,
-                TestCellBuilder.createCellRoots(projectFilesystem),
                 args);
 
     assertThat(linkRule.getArgs(), Matchers.hasItem(objArg));

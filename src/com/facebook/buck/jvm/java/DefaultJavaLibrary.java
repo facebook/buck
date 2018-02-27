@@ -23,6 +23,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasClasspathDeps;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -102,6 +103,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @Nullable private final BuildTarget sourceOnlyAbiJar;
   @AddToRuleKey private final Optional<SourcePath> proguardConfig;
   @AddToRuleKey private final boolean requiredForSourceOnlyAbi;
+  @AddToRuleKey private final UnusedDependenciesAction unusedDependenciesAction;
+  private final Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory;
 
   // This is automatically added to the rule key by virtue of being returned from getBuildDeps.
   private final BuildDeps buildDeps;
@@ -127,6 +130,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
+      CellPathResolver cellPathResolver,
       ConfiguredCompilerFactory compilerFactory,
       @Nullable JavaBuckConfig javaBuckConfig,
       @Nullable JavaLibraryDescription.CoreArg args) {
@@ -135,6 +139,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         projectFilesystem,
         params,
         buildRuleResolver,
+        cellPathResolver,
         compilerFactory,
         javaBuckConfig,
         args);
@@ -159,10 +164,14 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       @Nullable BuildTarget sourceOnlyAbiJar,
       Optional<String> mavenCoords,
       ImmutableSortedSet<BuildTarget> tests,
-      boolean requiredForSourceOnlyAbi) {
+      boolean requiredForSourceOnlyAbi,
+      UnusedDependenciesAction unusedDependenciesAction,
+      Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory) {
     super(buildTarget, projectFilesystem);
     this.buildDeps = buildDeps;
     this.jarBuildStepsFactory = jarBuildStepsFactory;
+    this.unusedDependenciesAction = unusedDependenciesAction;
+    this.unusedDependenciesFinderFactory = unusedDependenciesFinderFactory;
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
     // and so only make sense for java library types.
@@ -318,8 +327,15 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @Override
   public final ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    return jarBuildStepsFactory.getBuildStepsForLibraryJar(
-        context, buildableContext, getBuildTarget());
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+
+    steps.addAll(
+        jarBuildStepsFactory.getBuildStepsForLibraryJar(
+            context, buildableContext, getBuildTarget()));
+
+    unusedDependenciesFinderFactory.ifPresent(factory -> steps.add(factory.create()));
+
+    return steps.build();
   }
 
   @Override

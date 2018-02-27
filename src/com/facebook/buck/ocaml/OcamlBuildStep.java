@@ -77,6 +77,11 @@ public class OcamlBuildStep implements Step {
     hasGeneratedSources =
         ocamlContext.getLexInput().size() > 0 || ocamlContext.getYaccInput().size() > 0;
 
+    ImmutableList<String> ocamlDepFlags = ImmutableList.<String>builder()
+      .addAll(this.ocamlContext.getIncludeFlags(/* isBytecode */ false, /* excludeDeps */ true))
+      .addAll(this.ocamlContext.getOcamlDepFlags())
+      .build();
+
     this.depToolStep =
         new OcamlDepToolStep(
             target,
@@ -84,7 +89,7 @@ public class OcamlBuildStep implements Step {
             this.ocamlContext.getSourcePathResolver(),
             this.ocamlContext.getOcamlDepTool().get(),
             ocamlContext.getMLInput(),
-            this.ocamlContext.getIncludeFlags(/* isBytecode */ false, /* excludeDeps */ true));
+            ocamlDepFlags);
   }
 
   @Override

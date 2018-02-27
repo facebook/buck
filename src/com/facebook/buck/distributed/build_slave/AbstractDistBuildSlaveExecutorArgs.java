@@ -18,6 +18,7 @@ package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.command.BuildExecutorArgs;
+import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildMode;
@@ -113,6 +114,10 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
 
   public abstract HealthCheckStatsTracker getHealthCheckStatsTracker();
 
+  public abstract int getMaxActionGraphParallelism();
+
+  public abstract ActionGraphParallelizationMode getActionGraphParallelizationMode();
+
   public int getBuildThreadCount() {
     return getState()
         .getRemoteRootCellConfig()
@@ -158,6 +163,11 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
         .setKnownBuildRuleTypesProvider(this.getKnownBuildRuleTypesProvider())
         .setShouldInstrumentActionGraph(
             this.getDistBuildConfig().getBuckConfig().getShouldInstrumentActionGraph())
+        .setIncrementalActionGraphMode(
+            this.getDistBuildConfig().getBuckConfig().getIncrementalActionGraphMode())
+        .setDistBuildConfig(this.getDistBuildConfig())
+        .setMaxActionGraphParallelism(this.getMaxActionGraphParallelism())
+        .setActionGraphParallelizationMode(this.getActionGraphParallelizationMode())
         .build();
   }
 

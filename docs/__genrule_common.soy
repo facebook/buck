@@ -35,7 +35,12 @@
       specified by this variable must always be written by this
       command. If not, the execution of this rule will be considered a
       failure, halting the build process.</dd>
+
+      <dt><code>TMP</code></dt>
+      <dd>A temporary directory which can be used for intermediate results and will not be
+      bundled into the output.</dd>
     </dl>
+    <br>
 
     It is also possible to expand references to other rules within the
     {sp}<code>cmd</code>, using builtin {call buck.string_parameter_macros /}.

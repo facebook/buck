@@ -17,23 +17,27 @@
 package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.InputRuleResolver;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.Optional;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
+/**
+ * Default implementation of ClassInfo. Computes values simply by visiting all referenced fields.
+ */
+class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
   private final String type;
   private final Optional<ClassInfo<? super T>> superInfo;
   private final ImmutableList<FieldInfo<?>> fields;
@@ -48,7 +52,7 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
       field.setAccessible(true);
       Preconditions.checkArgument(
           Modifier.isFinal(field.getModifiers()),
-          "All fields of a Buildable must be final (%s.%s)",
+          "All fields referenced from a ModernBuildRule must be final (%s.%s)",
           clazz.getSimpleName(),
           field.getName());
 
@@ -60,11 +64,11 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
 
       Preconditions.checkState(
           addAnnotation != null,
-          "All fields of a Buildable must be annotated with @AddsToRuleKey. %s.%s is missing this annotation.",
+          "All fields referenced from a ModernBuildRule must be annotated with @AddsToRuleKey. %s.%s is missing this annotation.",
           clazz.getName(),
           field.getName());
 
-      FieldInfo<?> fieldInfo = FieldInfo.forField(field);
+      FieldInfo<?> fieldInfo = forField(field);
       fieldsBuilder.add(fieldInfo);
     }
 
@@ -87,34 +91,28 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
             "All static fields of a Buildable's outer class must be final (%s.%s)",
             outerClazz.getSimpleName(),
             field.getName());
-        Preconditions.checkArgument(
-            FieldTypeInfoFactory.isSimpleType(field.getType()),
-            "Static members of Buildable's outer class must be \"simple\" (%s.%s)",
-            outerClazz.getSimpleName(),
-            field.getName());
-        FieldInfo<?> fieldInfo = FieldInfo.forField(field);
-        fieldsBuilder.add(fieldInfo);
       }
     }
     this.fields = fieldsBuilder.build();
   }
 
+  /** Computes the deps of the rule. */
   @Override
   public void computeDeps(
       T ruleImpl, InputRuleResolver inputRuleResolver, Consumer<BuildRule> depsBuilder) {
-    superInfo.ifPresent(
-        classInfo -> classInfo.computeDeps(ruleImpl, inputRuleResolver, depsBuilder));
-    for (FieldInfo<?> extractor : fields) {
-      extractor.extractDep(ruleImpl, inputRuleResolver, depsBuilder);
-    }
+    visit(ruleImpl, new DepsComputingVisitor(inputRuleResolver, depsBuilder));
   }
 
+  /** Gets all the outputs referenced from the value. */
   @Override
-  public void getOutputs(T ruleImpl, BiConsumer<String, OutputPath> dataBuilder) {
-    superInfo.ifPresent(classInfo -> classInfo.getOutputs(ruleImpl, dataBuilder));
-    for (FieldInfo<?> extractor : fields) {
-      extractor.extractOutput(ruleImpl, dataBuilder);
-    }
+  public void getOutputs(T value, Consumer<OutputPath> dataBuilder) {
+    visit(value, new OutputPathVisitor(dataBuilder));
+  }
+
+  /** Gets all the inputs referenced from the value. */
+  @Override
+  public void getInputs(T value, Consumer<SourcePath> inputsBuilder) {
+    visit(value, new InputsVisitor(inputsBuilder));
   }
 
   @Override
@@ -122,38 +120,29 @@ class DefaultClassInfo<T extends Buildable> implements ClassInfo<T> {
     return type;
   }
 
-  private static class FieldInfo<T> {
-    private Field field;
-    private FieldTypeInfo<T> fieldTypeInfo;
-
-    FieldInfo(Field field, FieldTypeInfo<T> fieldTypeInfo) {
-      this.field = field;
-      this.fieldTypeInfo = fieldTypeInfo;
+  @Override
+  public <E extends Exception> void visit(T value, ValueVisitor<E> visitor) throws E {
+    if (superInfo.isPresent()) {
+      superInfo.get().visit(value, visitor);
     }
-
-    static FieldInfo<?> forField(Field field) {
-      Type type = field.getGenericType();
-      FieldTypeInfo<?> fieldTypeInfo = FieldTypeInfoFactory.forFieldTypeToken(TypeToken.of(type));
-      return new FieldInfo<>(field, fieldTypeInfo);
+    for (FieldInfo<?> extractor : fields) {
+      extractor.visit(value, visitor);
     }
+  }
 
-    void extractDep(
-        Buildable ruleImpl, InputRuleResolver inputRuleResolver, Consumer<BuildRule> builder) {
-      fieldTypeInfo.extractDep(getValue(ruleImpl, field), inputRuleResolver, builder);
-    }
+  @Override
+  public Optional<ClassInfo<? super T>> getSuperInfo() {
+    return superInfo;
+  }
 
-    void extractOutput(Buildable ruleImpl, BiConsumer<String, OutputPath> builder) {
-      fieldTypeInfo.extractOutput(field.getName(), getValue(ruleImpl, field), builder);
-    }
+  @Override
+  public ImmutableCollection<FieldInfo<?>> getFieldInfos() {
+    return fields;
+  }
 
-    private T getValue(Buildable ruleImpl, Field field) {
-      try {
-        @SuppressWarnings("unchecked")
-        T value = (T) field.get(ruleImpl);
-        return value;
-      } catch (IllegalAccessException e) {
-        throw new RuntimeException(e);
-      }
-    }
+  static FieldInfo<?> forField(Field field) {
+    Type type = field.getGenericType();
+    ValueTypeInfo<?> valueTypeInfo = ValueTypeInfoFactory.forTypeToken(TypeToken.of(type));
+    return new FieldInfo<>(field, valueTypeInfo);
   }
 }

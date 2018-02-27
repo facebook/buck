@@ -305,7 +305,9 @@ public class CleanCommandTest extends EasyMockSupport {
         ImmutableMap.of(),
         new FakeExecutor(),
         CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION,
-        new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries()),
+        new ActionGraphCache(
+            buckConfig.getMaxActionGraphCacheEntries(),
+            buckConfig.getMaxActionGraphNodeCacheEntries()),
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory())),

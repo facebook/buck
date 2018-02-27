@@ -19,6 +19,8 @@ package com.facebook.buck.util;
 import static org.junit.Assert.*;
 
 import com.facebook.buck.util.exceptions.BuckExecutionException;
+import com.google.common.util.concurrent.UncheckedExecutionException;
+import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 import org.junit.Test;
 
@@ -47,6 +49,22 @@ public class ErrorLoggerTest {
   public void testWrappedException() {
     LoggedErrors errors =
         logException(new BuckExecutionException(new HumanReadableException("message")));
+    assertNull(errors.userVisibleInternal);
+    assertEquals("message", errors.userVisible);
+  }
+
+  @Test
+  public void testExecutionException() {
+    LoggedErrors errors =
+        logException(new ExecutionException(new HumanReadableException("message")));
+    assertNull(errors.userVisibleInternal);
+    assertEquals("message", errors.userVisible);
+  }
+
+  @Test
+  public void testUncheckedExecutionException() {
+    LoggedErrors errors =
+        logException(new UncheckedExecutionException(new HumanReadableException("message")));
     assertNull(errors.userVisibleInternal);
     assertEquals("message", errors.userVisible);
   }

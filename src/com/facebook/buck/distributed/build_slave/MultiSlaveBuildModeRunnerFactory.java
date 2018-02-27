@@ -71,14 +71,14 @@ public class MultiSlaveBuildModeRunnerFactory {
       BuckEventBus eventBus,
       ListeningExecutorService executorService,
       ArtifactCache remoteCache,
-      ListenableFuture<ParallelRuleKeyCalculator<RuleKey>> asyncRuleKeyCalculatorOptional,
+      ListenableFuture<ParallelRuleKeyCalculator<RuleKey>> asyncRuleKeyCalculator,
       HealthCheckStatsTracker healthCheckStatsTracker,
       Optional<BuildSlaveTimingStatsTracker> timingStatsTracker) {
 
     ListenableFuture<BuildTargetsQueue> queueFuture =
         Futures.transformAsync(
-            asyncRuleKeyCalculatorOptional,
-            ruleKeyCalculatorOptional ->
+            asyncRuleKeyCalculator,
+            ruleKeyCalculator ->
                 Futures.transform(
                     delegateAndGraphsFuture,
                     graphs -> {
@@ -91,13 +91,14 @@ public class MultiSlaveBuildModeRunnerFactory {
                               executorService,
                               remoteCache,
                               eventBus,
-                              ruleKeyCalculatorOptional,
+                              ruleKeyCalculator,
                               Optional.empty())) {
                         queue =
                             new CacheOptimizedBuildTargetsQueueFactory(
                                     graphs.getActionGraphAndResolver().getResolver(),
                                     artifactCache,
-                                    distBuildConfig.isDeepRemoteBuildEnabled())
+                                    distBuildConfig.isDeepRemoteBuildEnabled(),
+                                    ruleKeyCalculator.getRuleDepsCache())
                                 .createBuildTargetsQueue(
                                     topLevelTargetsToBuild,
                                     coordinatorBuildRuleEventsPublisher,

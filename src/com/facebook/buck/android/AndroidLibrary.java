@@ -25,15 +25,18 @@ import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JarBuildStepsFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.jvm.java.JavaLibraryDeps;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.UnusedDependenciesFinderFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildDeps;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -59,6 +62,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
+      CellPathResolver cellPathResolver,
       JavaBuckConfig javaBuckConfig,
       JavacOptions javacOptions,
       AndroidLibraryDescription.CoreArg args,
@@ -68,6 +72,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         projectFilesystem,
         params,
         buildRuleResolver,
+        cellPathResolver,
         javaBuckConfig,
         javacOptions,
         args,
@@ -90,7 +95,9 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       Optional<String> mavenCoords,
       Optional<SourcePath> manifestFile,
       ImmutableSortedSet<BuildTarget> tests,
-      boolean requiredForSourceOnlyAbi) {
+      boolean requiredForSourceOnlyAbi,
+      UnusedDependenciesAction unusedDependenciesAction,
+      Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory) {
     super(
         buildTarget,
         projectFilesystem,
@@ -105,7 +112,9 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         sourceOnlyAbiJar,
         mavenCoords,
         tests,
-        requiredForSourceOnlyAbi);
+        requiredForSourceOnlyAbi,
+        unusedDependenciesAction,
+        unusedDependenciesFinderFactory);
     this.manifestFile = manifestFile;
   }
 
@@ -129,6 +138,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
         BuildRuleResolver buildRuleResolver,
+        CellPathResolver cellPathResolver,
         JavaBuckConfig javaBuckConfig,
         JavacOptions javacOptions,
         AndroidLibraryDescription.CoreArg args,
@@ -140,6 +150,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               projectFilesystem,
               params,
               buildRuleResolver,
+              cellPathResolver,
               compilerFactory,
               javaBuckConfig,
               args);
@@ -160,7 +171,9 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                 @Nullable BuildTarget sourceOnlyAbiJar,
                 Optional<String> mavenCoords,
                 ImmutableSortedSet<BuildTarget> tests,
-                boolean requiredForSourceOnlyAbi) {
+                boolean requiredForSourceOnlyAbi,
+                UnusedDependenciesAction unusedDependenciesAction,
+                Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory) {
               return new AndroidLibrary(
                   buildTarget,
                   projectFilesystem,
@@ -176,7 +189,9 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   mavenCoords,
                   args.getManifest(),
                   tests,
-                  requiredForSourceOnlyAbi);
+                  requiredForSourceOnlyAbi,
+                  unusedDependenciesAction,
+                  unusedDependenciesFinderFactory);
             }
           });
       delegateBuilder.setJavacOptions(javacOptions);

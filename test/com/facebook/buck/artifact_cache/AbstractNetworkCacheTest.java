@@ -86,6 +86,7 @@ public class AbstractNetworkCacheTest {
                 .setHttpWriteExecutorService(service)
                 .setHttpFetchExecutorService(service)
                 .setErrorTextTemplate("super error message")
+                .setErrorTextLimit(100)
                 .setMaxStoreSizeBytes(maxArtifactSizeBytes)
                 .build()) {
           @Override

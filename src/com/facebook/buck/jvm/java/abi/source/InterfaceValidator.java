@@ -239,17 +239,28 @@ class InterfaceValidator {
           }
         } else {
           ResolvedType compilerResolvedType = compilerResolver.resolve(leafmostElementPath);
-          if (compilerResolvedType != null && compilerResolvedType.kind == ResolvedTypeKind.CRASH) {
-            reportMissingDeps(compilerResolvedType, leafmostElementPath);
-          } else {
-            TreeBackedResolvedType treeBackedResolvedType =
-                treeBackedResolver.resolve(leafmostElementPath);
-            if (!treeBackedResolvedType.isCorrect()) {
-              if (treeBackedResolvedType.isCorrectable()) {
-                treeBackedResolvedType.reportErrors(messageKind);
-              } else {
+          if (compilerResolvedType != null) {
+            switch (compilerResolvedType.kind) {
+              case CRASH:
                 reportMissingDeps(compilerResolvedType, leafmostElementPath);
-              }
+                break;
+              case RESOLVED_TYPE:
+                // Nothing to do; it would resolve fine
+                break;
+                // $CASES-OMITTED$
+              default:
+                {
+                  TreeBackedResolvedType treeBackedResolvedType =
+                      treeBackedResolver.resolve(leafmostElementPath);
+                  if (!treeBackedResolvedType.isCorrect()) {
+                    if (treeBackedResolvedType.isCorrectable()) {
+                      treeBackedResolvedType.reportErrors(messageKind);
+                    } else {
+                      reportMissingDeps(compilerResolvedType, leafmostElementPath);
+                    }
+                  }
+                }
+                break;
             }
           }
         }

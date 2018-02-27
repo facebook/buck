@@ -17,22 +17,38 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.python.toolchain.PythonPlatform;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.CacheableBuildRule;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.unarchive.UnzipStep;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
-public class PrebuiltPythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements PythonPackagable {
+public class PrebuiltPythonLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
+    implements PythonPackagable, CacheableBuildRule {
 
   @AddToRuleKey private final SourcePath binarySrc;
+  private final Path extractedOutput;
 
   public PrebuiltPythonLibrary(
       BuildTarget buildTarget,
@@ -41,6 +57,8 @@ public class PrebuiltPythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       SourcePath binarySrc) {
     super(buildTarget, projectFilesystem, params);
     this.binarySrc = binarySrc;
+    this.extractedOutput =
+        BuildTargets.getGenPath(projectFilesystem, buildTarget, "__%s__extracted");
   }
 
   @Override
@@ -58,7 +76,32 @@ public class PrebuiltPythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
         ImmutableMap.of(),
         ImmutableMap.of(),
         ImmutableMap.of(),
-        ImmutableSet.of(binarySrc),
+        ImmutableSetMultimap.of(Paths.get(""), Objects.requireNonNull(getSourcePathToOutput())),
         Optional.empty());
+  }
+
+  @Override
+  public ImmutableList<? extends Step> getBuildSteps(
+      BuildContext context, BuildableContext buildableContext) {
+    Builder<Step> builder = ImmutableList.builder();
+    buildableContext.recordArtifact(extractedOutput);
+
+    builder.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), extractedOutput)));
+    builder.add(
+        new UnzipStep(
+            getProjectFilesystem(),
+            context.getSourcePathResolver().getAbsolutePath(binarySrc),
+            extractedOutput,
+            Optional.empty()));
+    return builder.build();
+  }
+
+  @Nullable
+  @Override
+  public SourcePath getSourcePathToOutput() {
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), extractedOutput);
   }
 }

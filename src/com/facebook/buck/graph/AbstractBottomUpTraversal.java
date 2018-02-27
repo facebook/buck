@@ -16,6 +16,8 @@
 
 package com.facebook.buck.graph;
 
+import java.util.function.Predicate;
+
 /**
  * Class that performs a "bottom-up" traversal of a DAG. For any given node, every node to which it
  * has an outgoing edge will be visited before the given node.
@@ -29,10 +31,23 @@ public abstract class AbstractBottomUpTraversal<T, E extends Throwable> {
   }
 
   public final void traverse() throws E {
+    traverse(node -> true);
+  }
+
+  /**
+   * Perform the traversal.
+   *
+   * @param shouldExploreChildren Whether or not to explore a particular node's children. Used to
+   *     support short circuiting in the traversal.
+   * @throws E
+   */
+  public final void traverse(Predicate<T> shouldExploreChildren) throws E {
     Iterable<T> roots = graph.getNodesWithNoIncomingEdges();
     GraphTraversable<T> graphTraversable = node -> graph.getOutgoingNodesFor(node).iterator();
     try {
-      for (T node : new AcyclicDepthFirstPostOrderTraversal<>(graphTraversable).traverse(roots)) {
+      for (T node :
+          new AcyclicDepthFirstPostOrderTraversal<>(graphTraversable)
+              .traverse(roots, shouldExploreChildren)) {
         visit(node);
       }
     } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {

@@ -27,7 +27,6 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
@@ -42,17 +41,20 @@ public class GenerateManifestStep implements Step {
   private final ProjectFilesystem filesystem;
   private final Path skeletonManifestPath;
   private final ImmutableSet<Path> libraryManifestPaths;
-  private Path outManifestPath;
+  private final Path outManifestPath;
+  private final Path mergeReportPath;
 
   public GenerateManifestStep(
       ProjectFilesystem filesystem,
       Path skeletonManifestPath,
       ImmutableSet<Path> libraryManifestPaths,
-      Path outManifestPath) {
+      Path outManifestPath,
+      Path mergeReportPath) {
     this.filesystem = filesystem;
     this.skeletonManifestPath = skeletonManifestPath;
     this.libraryManifestPaths = ImmutableSet.copyOf(libraryManifestPaths);
     this.outManifestPath = outManifestPath;
+    this.mergeReportPath = mergeReportPath;
   }
 
   @Override
@@ -67,8 +69,8 @@ public class GenerateManifestStep implements Step {
       throw new HumanReadableException("Output Manifest filepath is missing");
     }
 
-    outManifestPath = filesystem.resolve(outManifestPath);
-    Files.createParentDirs(outManifestPath.toFile());
+    Path resolvedOutManifestPath = filesystem.resolve(outManifestPath);
+    Files.createParentDirs(resolvedOutManifestPath.toFile());
 
     List<File> libraryManifestFiles = new ArrayList<>();
 
@@ -89,7 +91,7 @@ public class GenerateManifestStep implements Step {
       // Convert line endings to Lf on Windows.
       xmlText = xmlText.replace("\r\n", "\n");
     }
-    filesystem.writeContentsToPath(xmlText, outManifestPath);
+    filesystem.writeContentsToPath(xmlText, resolvedOutManifestPath);
 
     return StepExecutionResults.SUCCESS;
   }
@@ -104,6 +106,7 @@ public class GenerateManifestStep implements Step {
                   ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS,
                   ManifestMerger2.Invoker.Feature.SKIP_BLAME)
               .addLibraryManifests(Iterables.toArray(libraryManifestFiles, File.class))
+              .setMergeReportFile(mergeReportPath.toFile())
               .merge();
       if (mergingReport.getResult().isError()) {
         for (MergingReport.Record record : mergingReport.getLoggingRecords()) {
@@ -125,23 +128,6 @@ public class GenerateManifestStep implements Step {
   @Override
   public String getShortName() {
     return "generate_manifest";
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof GenerateManifestStep)) {
-      return false;
-    }
-
-    GenerateManifestStep that = (GenerateManifestStep) obj;
-    return Objects.equal(this.skeletonManifestPath, that.skeletonManifestPath)
-        && Objects.equal(this.libraryManifestPaths, that.libraryManifestPaths)
-        && Objects.equal(this.outManifestPath, that.outManifestPath);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(skeletonManifestPath, libraryManifestPaths, outManifestPath);
   }
 
   private static class ManifestMergerLogger extends BuckEventAndroidLogger implements ILogger {

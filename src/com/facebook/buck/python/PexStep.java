@@ -22,16 +22,21 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.python.toolchain.PythonVersion;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
 
 public class PexStep extends ShellStep {
@@ -52,6 +57,7 @@ public class PexStep extends ShellStep {
   private final String entry;
 
   // The map of modules to sources to package into the PEX.
+  // This includes extracted prebuilt archives
   private final ImmutableMap<Path, Path> modules;
 
   // The map of resources to include in the PEX.
@@ -63,12 +69,10 @@ public class PexStep extends ShellStep {
   // The map of native libraries to include in the PEX.
   private final ImmutableMap<Path, Path> nativeLibraries;
 
-  // The list of prebuilt python libraries to add to the PEX.
-  private final ImmutableSet<Path> prebuiltLibraries;
-
   // The list of native libraries to preload into the interpreter.
   private final ImmutableSet<String> preloadLibraries;
 
+  private final ImmutableMultimap<Path, Path> moduleDirs;
   private final boolean zipSafe;
 
   public PexStep(
@@ -84,7 +88,7 @@ public class PexStep extends ShellStep {
       ImmutableMap<Path, Path> modules,
       ImmutableMap<Path, Path> resources,
       ImmutableMap<Path, Path> nativeLibraries,
-      ImmutableSet<Path> prebuiltLibraries,
+      ImmutableMultimap<Path, Path> moduleDirs,
       ImmutableSet<String> preloadLibraries,
       boolean zipSafe) {
     super(Optional.of(buildTarget), filesystem.getRootPath());
@@ -100,8 +104,8 @@ public class PexStep extends ShellStep {
     this.modules = modules;
     this.resources = resources;
     this.nativeLibraries = nativeLibraries;
-    this.prebuiltLibraries = prebuiltLibraries;
     this.preloadLibraries = preloadLibraries;
+    this.moduleDirs = moduleDirs;
     this.zipSafe = zipSafe;
   }
 
@@ -129,6 +133,8 @@ public class PexStep extends ShellStep {
     for (ImmutableMap.Entry<Path, Path> ent : resolvedModules.entrySet()) {
       modulesBuilder.put(ent.getKey().toString(), ent.getValue().toString());
     }
+    addResolvedModuleDirsSources(modulesBuilder);
+
     ImmutableMap.Builder<String, String> resourcesBuilder = ImmutableMap.builder();
     for (ImmutableMap.Entry<Path, Path> ent : resources.entrySet()) {
       resourcesBuilder.put(ent.getKey().toString(), ent.getValue().toString());
@@ -137,10 +143,7 @@ public class PexStep extends ShellStep {
     for (ImmutableMap.Entry<Path, Path> ent : nativeLibraries.entrySet()) {
       nativeLibrariesBuilder.put(ent.getKey().toString(), ent.getValue().toString());
     }
-    ImmutableList.Builder<String> prebuiltLibrariesBuilder = ImmutableList.builder();
-    for (Path req : prebuiltLibraries) {
-      prebuiltLibrariesBuilder.add(req.toString());
-    }
+
     try {
       return Optional.of(
           ObjectMappers.WRITER.writeValueAsString(
@@ -148,7 +151,8 @@ public class PexStep extends ShellStep {
                   "modules", modulesBuilder.build(),
                   "resources", resourcesBuilder.build(),
                   "nativeLibraries", nativeLibrariesBuilder.build(),
-                  "prebuiltLibraries", prebuiltLibrariesBuilder.build())));
+                  // prebuiltLibraries key kept for compatibility
+                  "prebuiltLibraries", ImmutableList.<String>of())));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -215,5 +219,34 @@ public class PexStep extends ShellStep {
   @VisibleForTesting
   protected ImmutableList<String> getCommandPrefix() {
     return commandPrefix;
+  }
+
+  /** Add a mapping of location in the python root -> location on the filesystem of moduleDirs */
+  private void addResolvedModuleDirsSources(ImmutableMap.Builder<String, String> pathBuilder) {
+    moduleDirs
+        .entries()
+        .forEach(
+            entry -> {
+              Path originalDirPath = entry.getValue();
+              try {
+                filesystem.walkFileTree(
+                    originalDirPath,
+                    new SimpleFileVisitor<Path>() {
+                      @Override
+                      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                        Path relativeToRealRoot = originalDirPath.relativize(file);
+                        pathBuilder.put(
+                            entry.getKey().resolve(relativeToRealRoot).toString(), file.toString());
+                        return FileVisitResult.CONTINUE;
+                      }
+                    });
+              } catch (IOException e) {
+                throw new HumanReadableException(
+                    e,
+                    "Could not traverse %s to build python package: %s",
+                    originalDirPath,
+                    e.getMessage());
+              }
+            });
   }
 }

@@ -26,17 +26,19 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.SetMultimap;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import org.immutables.value.Value;
 
 @Value.Immutable(builder = false, singleton = true)
@@ -55,10 +57,12 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
   @Value.Parameter
   public abstract Map<Path, SourcePath> getNativeLibraries();
 
-  // Pre-built python libraries (eggs, wheels). Note that source distributions
-  // will not work!
+  // Directories that pre-built python libraries are extracted to. Note that these
+  // can refer to the same libraries that are in getPrebuiltLibraries, but these are
+  // directories instead of archives. The key of this map is where to link the contents
+  // of the directory within the archive relative to its root
   @Value.Parameter
-  public abstract Set<SourcePath> getPrebuiltLibraries();
+  public abstract ImmutableMultimap<Path, SourcePath> getModuleDirs();
 
   @Value.Parameter
   public abstract Optional<Boolean> isZipSafe();
@@ -97,7 +101,8 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
     deps.addAll(ruleFinder.filterBuildRuleInputs(getModules().values()));
     deps.addAll(ruleFinder.filterBuildRuleInputs(getResources().values()));
     deps.addAll(ruleFinder.filterBuildRuleInputs(getNativeLibraries().values()));
-    deps.addAll(ruleFinder.filterBuildRuleInputs(getPrebuiltLibraries()));
+    deps.addAll(ruleFinder.filterBuildRuleInputs(getModuleDirs().values()));
+
     return deps.build();
   }
 
@@ -114,7 +119,7 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
     private final Map<Path, SourcePath> modules = new HashMap<>();
     private final Map<Path, SourcePath> resources = new HashMap<>();
     private final Map<Path, SourcePath> nativeLibraries = new HashMap<>();
-    private final Set<SourcePath> prebuiltLibraries = new LinkedHashSet<>();
+    private final SetMultimap<Path, SourcePath> moduleDirs = HashMultimap.create();
     private Optional<Boolean> zipSafe = Optional.empty();
 
     // Bookkeeping used to for error handling in the presence of duplicate
@@ -187,8 +192,8 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
       return add("native library", nativeLibraries, nativeLibrarySources, sources, from);
     }
 
-    public Builder addPrebuiltLibraries(Set<SourcePath> sources) {
-      prebuiltLibraries.addAll(sources);
+    public Builder addModuleDirs(Multimap<Path, SourcePath> moduleDirs) {
+      this.moduleDirs.putAll(moduleDirs);
       return this;
     }
 
@@ -196,7 +201,7 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
       addModules(other.getModules(), from);
       addResources(other.getResources(), from);
       addNativeLibraries(other.getNativeLibraries(), from);
-      addPrebuiltLibraries(other.getPrebuiltLibraries());
+      addModuleDirs(other.getModuleDirs());
       addZipSafe(other.isZipSafe());
       return this;
     }
@@ -215,7 +220,7 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
           ImmutableMap.copyOf(modules),
           ImmutableMap.copyOf(resources),
           ImmutableMap.copyOf(nativeLibraries),
-          ImmutableSet.copyOf(prebuiltLibraries),
+          ImmutableSetMultimap.copyOf(moduleDirs),
           zipSafe);
     }
   }

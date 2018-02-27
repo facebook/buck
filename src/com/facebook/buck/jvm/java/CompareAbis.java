@@ -42,8 +42,8 @@ import javax.annotation.Nullable;
 
 public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements SupportsInputBasedRuleKey, CalculateAbi, InitializableFromDisk<Object> {
-  @AddToRuleKey private final SourcePath classAbi;
-  @AddToRuleKey private final SourcePath sourceAbi;
+  @AddToRuleKey private final SourcePath correctAbi;
+  @AddToRuleKey private final SourcePath experimentalAbi;
   @AddToRuleKey private final JavaBuckConfig.SourceAbiVerificationMode verificationMode;
 
   private final Path outputPath;
@@ -55,12 +55,12 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathResolver resolver,
-      SourcePath classAbi,
-      SourcePath sourceAbi,
+      SourcePath correctAbi,
+      SourcePath experimentalAbi,
       JavaBuckConfig.SourceAbiVerificationMode verificationMode) {
     super(buildTarget, projectFilesystem, params);
-    this.classAbi = classAbi;
-    this.sourceAbi = sourceAbi;
+    this.correctAbi = correctAbi;
+    this.experimentalAbi = experimentalAbi;
     this.verificationMode = verificationMode;
 
     this.outputPath =
@@ -77,14 +77,16 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
     ProjectFilesystem filesystem = getProjectFilesystem();
     SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
 
-    Path classAbiPath = sourcePathResolver.getAbsolutePath(classAbi);
-    Path sourceAbiPath = sourcePathResolver.getAbsolutePath(sourceAbi);
+    Path classAbiPath = sourcePathResolver.getAbsolutePath(correctAbi);
+    Path sourceAbiPath = sourcePathResolver.getAbsolutePath(experimentalAbi);
     buildableContext.recordArtifact(outputPath);
     return ImmutableList.of(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), outputPath.getParent())),
         DiffAbisStep.of(classAbiPath, sourceAbiPath, verificationMode),
+        // We use the "safe" ABI as our output to prevent ABI generation problems from potentially
+        // cascading and resulting in confusing diff results in dependent rules
         CopyStep.forFile(filesystem, classAbiPath, outputPath));
   }
 

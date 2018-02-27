@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Ordering;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -33,6 +34,20 @@ public class MoreMaps {
 
   public static <K, V> Map<K, V> putCheckEquals(Map<K, V> map, K key, @Nullable V value) {
     V old = map.put(key, value);
+    if (old != null) {
+      Preconditions.checkState(old.equals(value));
+    }
+    return map;
+  }
+
+  /**
+   * Inserts the given value if nothing was already set for the key. If a value already existed for
+   * this key, ensures it is the same as the one being inserted, otherwise throws an
+   * IllegalStateException.
+   */
+  public static <K, V> Map<K, V> putIfAbsentCheckEquals(
+      ConcurrentMap<K, V> map, K key, @Nullable V value) {
+    V old = map.putIfAbsent(key, value);
     if (old != null) {
       Preconditions.checkState(old.equals(value));
     }

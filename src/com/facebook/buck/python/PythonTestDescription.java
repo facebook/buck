@@ -32,9 +32,11 @@ import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
@@ -45,7 +47,6 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.NeededCoverageSpec;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -67,6 +68,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
@@ -170,58 +172,55 @@ public class PythonTestDescription
                 .orElse(cxxPlatformsProvider.getDefaultCxxPlatform()));
   }
 
+  private static class PythonTestMainRule extends AbstractBuildRule implements CacheableBuildRule {
+    private final Path output =
+        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/__test_main__.py");
+
+    public PythonTestMainRule(BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
+      super(buildTarget, projectFilesystem);
+    }
+
+    @Override
+    public SortedSet<BuildRule> getBuildDeps() {
+      return ImmutableSortedSet.of();
+    }
+
+    @Override
+    public ImmutableList<? extends Step> getBuildSteps(
+        BuildContext context, BuildableContext buildableContext) {
+      buildableContext.recordArtifact(output);
+      return ImmutableList.of(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())),
+          new WriteFileStep(
+              getProjectFilesystem(),
+              Resources.asByteSource(
+                  Resources.getResource(PythonTestDescription.class, "__test_main__.py")),
+              output,
+              /* executable */ false));
+    }
+
+    @Override
+    public SourcePath getSourcePathToOutput() {
+      return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
+    }
+  }
+
   private SourcePath requireTestMain(
       BuildTarget baseTarget, ProjectFilesystem filesystem, BuildRuleResolver ruleResolver) {
     BuildRule testMainRule =
         ruleResolver.computeIfAbsent(
             baseTarget.withFlavors(InternalFlavor.of("python-test-main")),
-            target ->
-                new AbstractBuildRule(target, filesystem) {
-
-                  private final Path output =
-                      BuildTargets.getGenPath(
-                          getProjectFilesystem(), getBuildTarget(), "%s/__test_main__.py");
-
-                  @Override
-                  public SortedSet<BuildRule> getBuildDeps() {
-                    return ImmutableSortedSet.of();
-                  }
-
-                  @Override
-                  public ImmutableList<? extends Step> getBuildSteps(
-                      BuildContext context, BuildableContext buildableContext) {
-                    buildableContext.recordArtifact(output);
-                    return ImmutableList.of(
-                        MkdirStep.of(
-                            BuildCellRelativePath.fromCellRelativePath(
-                                context.getBuildCellRootPath(),
-                                getProjectFilesystem(),
-                                output.getParent())),
-                        new WriteFileStep(
-                            getProjectFilesystem(),
-                            Resources.asByteSource(
-                                Resources.getResource(
-                                    PythonTestDescription.class, "__test_main__.py")),
-                            output,
-                            /* executable */ false));
-                  }
-
-                  @Override
-                  public SourcePath getSourcePathToOutput() {
-                    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
-                  }
-                });
+            target -> new PythonTestMainRule(target, filesystem));
     return Preconditions.checkNotNull(testMainRule.getSourcePathToOutput());
   }
 
   @Override
   public PythonTest createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      final BuildRuleResolver resolver,
-      CellPathResolver cellRoots,
       final PythonTestDescriptionArg args) {
 
     FlavorDomain<PythonPlatform> pythonPlatforms =
@@ -229,6 +228,7 @@ public class PythonTestDescription
             .getByName(PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.class)
             .getPythonPlatforms();
 
+    BuildRuleResolver resolver = context.getBuildRuleResolver();
     PythonPlatform pythonPlatform =
         pythonPlatforms
             .getValue(buildTarget)
@@ -242,7 +242,7 @@ public class PythonTestDescription
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     Path baseModule = PythonUtil.getBasePath(buildTarget, args.getBaseModule());
     Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
-        targetGraph.get(buildTarget).getSelectedVersions();
+        context.getTargetGraph().get(buildTarget).getSelectedVersions();
 
     ImmutableMap<Path, SourcePath> srcs =
         PythonUtil.getModules(
@@ -281,6 +281,8 @@ public class PythonTestDescription
     }
     ImmutableSet<String> testModules = testModulesBuilder.build();
 
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+
     // Construct a build rule to generate the test modules list source file and
     // add it to the build.
     BuildRule testModulesBuildRule =
@@ -308,7 +310,7 @@ public class PythonTestDescription
                 .build(),
             resources,
             ImmutableMap.of(),
-            ImmutableSet.of(),
+            ImmutableMultimap.of(),
             args.getZipSafe());
     ImmutableList<BuildRule> deps =
         RichStream.from(
@@ -317,6 +319,7 @@ public class PythonTestDescription
             .concat(args.getNeededCoverage().stream().map(NeededCoverageSpec::getBuildTarget))
             .map(resolver::getRule)
             .collect(ImmutableList.toImmutableList());
+    CellPathResolver cellRoots = context.getCellPathResolver();
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)
@@ -352,7 +355,6 @@ public class PythonTestDescription
             projectFilesystem,
             params,
             resolver,
-            pathResolver,
             ruleFinder,
             pythonPlatform,
             cxxPlatform,

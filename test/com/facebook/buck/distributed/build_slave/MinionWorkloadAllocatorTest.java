@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.RuleDepsCache;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import org.junit.Assert;
@@ -45,7 +46,7 @@ public class MinionWorkloadAllocatorTest {
     target = BuildTargetFactory.newInstance(CustomBuildRuleResolverFactory.ROOT_TARGET);
     queue =
         new CacheOptimizedBuildTargetsQueueFactory(
-                resolver, new NoopArtifactCacheByBuildRule(), false)
+                resolver, new NoopArtifactCacheByBuildRule(), false, new RuleDepsCache(resolver))
             .createBuildTargetsQueue(
                 ImmutableList.of(target),
                 new NoOpCoordinatorBuildRuleEventsPublisher(),

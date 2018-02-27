@@ -220,4 +220,9 @@ public class AppleLibraryBuilder
     getArgForPopulating().setModuleName(moduleName);
     return this;
   }
+
+  public AppleLibraryBuilder setLinkWhole(boolean linkWhole) {
+    getArgForPopulating().setLinkWhole(Optional.of(linkWhole));
+    return this;
+  }
 }

@@ -48,6 +48,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -59,7 +60,6 @@ import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
@@ -159,13 +159,12 @@ public class AndroidBinaryDescription
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      CellPathResolver cellRoots,
       AndroidBinaryDescriptionArg args) {
+    BuildRuleResolver resolver = context.getBuildRuleResolver();
+
     try (SimplePerfEvent.Scope ignored =
         SimplePerfEvent.scope(
             Optional.ofNullable(resolver.getEventBus()),
@@ -200,11 +199,15 @@ public class AndroidBinaryDescription
       if (!args.getApplicationModuleConfigs().isEmpty()) {
         apkModuleGraph =
             new APKModuleGraph(
-                Optional.of(args.getApplicationModuleConfigs()), targetGraph, buildTarget);
+                Optional.of(args.getApplicationModuleConfigs()),
+                context.getTargetGraph(),
+                buildTarget);
       } else {
         apkModuleGraph =
             new APKModuleGraph(
-                targetGraph, buildTarget, Optional.of(args.getApplicationModuleTargets()));
+                context.getTargetGraph(),
+                buildTarget,
+                Optional.of(args.getApplicationModuleTargets()));
       }
 
       EnumSet<ExopackageMode> exopackageModes = EnumSet.noneOf(ExopackageMode.class);
@@ -259,6 +262,8 @@ public class AndroidBinaryDescription
       JavaOptionsProvider javaOptionsProvider =
           toolchainProvider.getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class);
 
+      CellPathResolver cellRoots = context.getCellPathResolver();
+
       NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs =
           NonPredexedDexBuildableArgs.builder()
               .setProguardAgentPath(proGuardConfig.getProguardAgentPath())
@@ -287,6 +292,8 @@ public class AndroidBinaryDescription
           toolchainProvider.getByName(
               AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
 
+      ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+
       AndroidBinaryGraphEnhancer graphEnhancer =
           new AndroidBinaryGraphEnhancer(
               toolchainProvider,
@@ -303,6 +310,7 @@ public class AndroidBinaryDescription
               args.getDuplicateResourceWhitelist(),
               args.getResourceUnionPackage(),
               addFallbackLocales(args.getLocales()),
+              args.getLocalizedStringFileName(),
               args.getManifest(),
               args.getManifestSkeleton(),
               packageType,
@@ -680,6 +688,8 @@ public class AndroidBinaryDescription
     Optional<String> getResourceUnionPackage();
 
     ImmutableSet<String> getLocales();
+
+    Optional<String> getLocalizedStringFileName();
 
     @Value.Default
     default boolean isBuildStringSourceMap() {

@@ -37,6 +37,7 @@ import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.ImmutableBuildRuleCreationContext;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -146,12 +147,13 @@ public class AndroidInstrumentationApkTest {
                     new DxConfig(FakeBuckConfig.builder().build()),
                     new ApkConfig(FakeBuckConfig.builder().build()))
                 .createBuildRule(
-                    TargetGraph.EMPTY,
+                    ImmutableBuildRuleCreationContext.of(
+                        TargetGraph.EMPTY,
+                        ruleResolver,
+                        projectFilesystem,
+                        TestCellBuilder.createCellRoots(projectFilesystem)),
                     buildTarget,
-                    projectFilesystem,
                     params,
-                    ruleResolver,
-                    TestCellBuilder.createCellRoots(projectFilesystem),
                     arg);
 
     assertEquals(

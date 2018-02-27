@@ -151,6 +151,7 @@ public class StampedeBuildClient {
     }
 
     if (proceedToLocalSynchronizedBuildPhase) {
+      eventBus.post(BuildEvent.reset());
       SynchronizedBuildPhase.run(
           distBuildRunner,
           synchronizedBuildRunner,

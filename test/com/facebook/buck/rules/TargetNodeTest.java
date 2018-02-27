@@ -148,14 +148,11 @@ public class TargetNodeTest {
 
     @Override
     public BuildRule createBuildRule(
-        TargetGraph targetGraph,
+        BuildRuleCreationContext context,
         BuildTarget buildTarget,
-        ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
-        BuildRuleResolver resolver,
-        CellPathResolver cellRoots,
         ExampleDescriptionArg args) {
-      return new FakeBuildRule(buildTarget, projectFilesystem, params);
+      return new FakeBuildRule(buildTarget, context.getProjectFilesystem(), params);
     }
   }
 

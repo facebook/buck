@@ -1,0 +1,30 @@
+apple_binary(
+    name = "TestApp",
+    srcs = ["main.c"],
+    info_plist = "Info.plist",
+    deps = [":app_lib"],
+)
+
+apple_library(
+    name = "app_lib",
+    platform_deps = [
+        (
+            "iphoneos-arm64",
+            [":lib"],
+        ),
+        (
+            "iphoneos-armv7",
+            [":broken_lib"],
+        ),
+    ],
+)
+
+apple_library(
+    name = "lib",
+    srcs = ["lib.c"],
+)
+
+apple_library(
+    name = "broken_lib",
+    srcs = ["broken_lib.c"],
+)

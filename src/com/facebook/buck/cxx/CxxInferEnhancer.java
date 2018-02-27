@@ -89,7 +89,7 @@ public final class CxxInferEnhancer {
     }
   }
 
-  public static FlavorDomain<InferFlavors> INFER_FLAVOR_DOMAIN =
+  public static final FlavorDomain<InferFlavors> INFER_FLAVOR_DOMAIN =
       FlavorDomain.from("Infer flavors", InferFlavors.class);
 
   public static BuildRule requireInferRule(
@@ -338,6 +338,7 @@ public final class CxxInferEnhancer {
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
             target,
             filesystem,
+            ruleFinder,
             ruleResolver,
             cxxPlatform,
             headers,

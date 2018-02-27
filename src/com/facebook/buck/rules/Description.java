@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
@@ -74,18 +73,9 @@ public interface Description<T> {
    * Flavor} to create.
    *
    * @param buildTarget
-   * @param projectFilesystem
-   * @param resolver For querying for build rules by their targets.
-   * @param cellRoots The roots of known cells.
    * @param args A constructor argument, of type as returned by {@link #getConstructorArgType()}.
    * @return The {@link BuildRule} that describes the default flavour of the rule being described.
    */
   BuildRule createBuildRule(
-      TargetGraph targetGraph,
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      CellPathResolver cellRoots,
-      T args);
+      BuildRuleCreationContext context, BuildTarget buildTarget, BuildRuleParams params, T args);
 }

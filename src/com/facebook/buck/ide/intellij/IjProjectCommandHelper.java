@@ -217,7 +217,7 @@ public class IjProjectCommandHelper {
         CloseableMemoizedSupplier.of(
             () ->
                 MostExecutors.forkJoinPoolWithThreadLimit(
-                    buckConfig.getView(ResourcesConfig.class).getDefaultResourceAmounts().getCpu(),
+                    buckConfig.getView(ResourcesConfig.class).getMaximumResourceAmounts().getCpu(),
                     16),
             ForkJoinPool::shutdownNow)) {
       return actionGraphCache.getActionGraph(

@@ -109,16 +109,8 @@ public class Parser {
         new ParserPythonInterpreterProvider(parserConfig, executableFinder);
   }
 
-  protected DaemonicParserState getPermState() {
+  public DaemonicParserState getPermState() {
     return permState;
-  }
-
-  protected TypeCoercerFactory getTypeCoercerFactory() {
-    return typeCoercerFactory;
-  }
-
-  protected ConstructorArgMarshaller getMarshaller() {
-    return marshaller;
   }
 
   @VisibleForTesting
@@ -148,7 +140,9 @@ public class Parser {
 
     try (PerBuildState state =
         new PerBuildState(
-            this,
+            typeCoercerFactory,
+            permState,
+            marshaller,
             eventBus,
             parserPythonInterpreterProvider,
             executor,
@@ -169,7 +163,9 @@ public class Parser {
       throws BuildFileParseException, BuildTargetException {
     try (PerBuildState state =
         new PerBuildState(
-            this,
+            typeCoercerFactory,
+            permState,
+            marshaller,
             eventBus,
             parserPythonInterpreterProvider,
             executor,
@@ -228,7 +224,9 @@ public class Parser {
 
     try (PerBuildState state =
         new PerBuildState(
-            this,
+            typeCoercerFactory,
+            permState,
+            marshaller,
             eventBus,
             parserPythonInterpreterProvider,
             executor,
@@ -267,7 +265,9 @@ public class Parser {
 
     try (final PerBuildState state =
         new PerBuildState(
-            this,
+            typeCoercerFactory,
+            permState,
+            marshaller,
             eventBus,
             parserPythonInterpreterProvider,
             executor,
@@ -391,7 +391,9 @@ public class Parser {
 
     try (PerBuildState state =
         new PerBuildState(
-            this,
+            typeCoercerFactory,
+            permState,
+            marshaller,
             eventBus,
             parserPythonInterpreterProvider,
             executor,
@@ -431,7 +433,9 @@ public class Parser {
 
     try (PerBuildState state =
         new PerBuildState(
-            this,
+            typeCoercerFactory,
+            permState,
+            marshaller,
             eventBus,
             parserPythonInterpreterProvider,
             executor,

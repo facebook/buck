@@ -17,17 +17,14 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.Hint;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
 import java.util.List;
@@ -45,25 +42,25 @@ public class AndroidAppModularityDescription
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      CellPathResolver cellRoots,
       AndroidAppModularityDescriptionArg args) {
     APKModuleGraph apkModuleGraph =
         new APKModuleGraph(
-            Optional.of(args.getApplicationModuleConfigs()), targetGraph, buildTarget);
+            Optional.of(args.getApplicationModuleConfigs()), context.getTargetGraph(), buildTarget);
 
     AndroidAppModularityGraphEnhancer graphEnhancer =
         new AndroidAppModularityGraphEnhancer(
-            buildTarget, params, resolver, args.getNoDx(), apkModuleGraph);
+            buildTarget, params, context.getBuildRuleResolver(), args.getNoDx(), apkModuleGraph);
 
     AndroidAppModularityGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
     return new AndroidAppModularity(
-        buildTarget, projectFilesystem, params.withExtraDeps(result.getFinalDeps()), result);
+        buildTarget,
+        context.getProjectFilesystem(),
+        params.withExtraDeps(result.getFinalDeps()),
+        result);
   }
 
   @BuckStyleImmutable

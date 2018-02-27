@@ -197,7 +197,8 @@ public class PreBuildPhase {
                   return new CacheOptimizedBuildTargetsQueueFactory(
                           actionAndTargetGraphs.getActionGraphAndResolver().getResolver(),
                           artifactCache,
-                          /* isDeepRemoteBuild */ false)
+                          /* isDeepRemoteBuild */ false,
+                          localRuleKeyCalculator.getRuleDepsCache())
                       .uploadCriticalNodesFromLocalCache(topLevelTargets, distBuildClientStats);
 
                 } catch (Exception e) {

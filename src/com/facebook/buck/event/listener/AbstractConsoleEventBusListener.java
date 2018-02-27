@@ -240,15 +240,20 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     return Optional.of(Math.floor(100 * buildRatio) / 100.0);
   }
 
+  /** Local build progress. */
+  protected Optional<Double> getApproximateLocalBuildProgress() {
+    if (progressEstimator.isPresent()) {
+      return progressEstimator.get().getApproximateBuildProgress();
+    } else {
+      return Optional.empty();
+    }
+  }
+
   protected Optional<Double> getApproximateBuildProgress() {
     if (distBuildStarted != null && distBuildFinished == null) {
       return getApproximateDistBuildProgress();
     } else {
-      if (progressEstimator.isPresent()) {
-        return progressEstimator.get().getApproximateBuildProgress();
-      } else {
-        return Optional.empty();
-      }
+      return getApproximateLocalBuildProgress();
     }
   }
 
@@ -703,6 +708,14 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   public void buildRuleResumed(BuildRuleEvent.Resumed resumed) {
     progressEstimator.ifPresent(ProgressEstimator::didResumeRule);
     buildRuleThreadTracker.didResumeBuildRule(resumed);
+  }
+
+  @SuppressWarnings("unused")
+  @Subscribe
+  private void resetLocalBuildStats(BuildEvent.Reset reset) {
+    buildRuleThreadTracker.reset();
+    progressEstimator.ifPresent(ProgressEstimator::resetBuildData);
+    numRulesCompleted.set(0);
   }
 
   @Subscribe

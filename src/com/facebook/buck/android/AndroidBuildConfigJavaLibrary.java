@@ -24,6 +24,7 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.JarBuildStepsFactory;
+import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
@@ -101,7 +102,9 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         /* sourceOnlyAbiJar */ null,
         /* mavenCoords */ Optional.empty(),
         /* tests */ ImmutableSortedSet.of(),
-        /* requiredForSourceOnlyAbi */ false);
+        /* requiredForSourceOnlyAbi */ false,
+        UnusedDependenciesAction.IGNORE,
+        Optional.empty());
     this.androidBuildConfig = androidBuildConfig;
     Preconditions.checkState(
         params.getBuildDeps().contains(androidBuildConfig),

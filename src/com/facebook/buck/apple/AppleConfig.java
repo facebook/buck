@@ -61,6 +61,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   private static final Logger LOG = Logger.get(AppleConfig.class);
   public static final String APPLE_SECTION = "apple";
 
+  private static final String FORCE_LOAD_LINK_WHOLE_LIBRARY_ENABLED =
+      "force_load_link_whole_library";
+  private static final String FORCE_LOAD_LIBRARY_PATH = "force_load_library_path";
+
   private final BuckConfig delegate;
 
   // Reflection-based factory for ConfigView
@@ -278,6 +282,18 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean shouldVerifyBundleResources() {
     return delegate.getBooleanValue(APPLE_SECTION, "verify_bundle_resources", false);
+  }
+
+  public boolean shouldAddLinkerFlagsForLinkWholeLibraries() {
+    return delegate.getBooleanValue(APPLE_SECTION, FORCE_LOAD_LINK_WHOLE_LIBRARY_ENABLED, false);
+  }
+
+  public String getForceLoadLibraryPath() {
+    Optional<String> path = delegate.getValue(APPLE_SECTION, FORCE_LOAD_LIBRARY_PATH);
+    if (path.isPresent()) {
+      return path.get();
+    }
+    return "$BUILT_PRODUCTS_DIR";
   }
 
   public AppleAssetCatalog.ValidationType assetCatalogValidation() {

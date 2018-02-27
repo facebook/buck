@@ -104,6 +104,12 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(),
                 getProjectFilesystem(),
+                context.getSourcePathResolver().getRelativePath(getResDirectory()))));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
                 context.getSourcePathResolver().getRelativePath(getAssetsDirectory()))));
     steps.add(
         MkdirStep.of(

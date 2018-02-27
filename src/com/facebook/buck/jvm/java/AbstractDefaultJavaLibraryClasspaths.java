@@ -163,11 +163,14 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
   }
 
   @Value.Lazy
+  Iterable<BuildRule> getCompileTimeFirstOrderDeps() {
+    return Iterables.concat(
+        getAllFirstOrderNonProvidedDeps(), Preconditions.checkNotNull(getDeps()).getProvidedDeps());
+  }
+
+  @Value.Lazy
   ImmutableSet<BuildRule> getCompileTimeClasspathUnfilteredFullDeps() {
-    Iterable<BuildRule> firstOrderDeps =
-        Iterables.concat(
-            getAllFirstOrderNonProvidedDeps(),
-            Preconditions.checkNotNull(getDeps()).getProvidedDeps());
+    Iterable<BuildRule> firstOrderDeps = getCompileTimeFirstOrderDeps();
 
     ImmutableSet<BuildRule> rulesExportedByDependencies =
         BuildRules.getUnsortedExportedRules(firstOrderDeps);

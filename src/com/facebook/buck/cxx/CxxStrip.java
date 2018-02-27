@@ -24,9 +24,12 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
@@ -43,7 +46,8 @@ import java.util.SortedSet;
  * Controls how strip tool is invoked. To have better understanding please refer to `man strip`. If
  * you don't want stripping, you should depend on CxxLink directly.
  */
-public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRuleKey {
+public class CxxStrip extends AbstractBuildRule
+    implements SupportsInputBasedRuleKey, CacheableBuildRule {
 
   /**
    * Used to identify this rule in the graph. This should be appended ONLY to build target that is
@@ -60,7 +64,7 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
   @AddToRuleKey(stringify = true)
   private final Path output;
 
-  private final SourcePathRuleFinder ruleFinder;
+  private SourcePathRuleFinder ruleFinder;
 
   public CxxStrip(
       BuildTarget buildTarget,
@@ -147,5 +151,13 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
   @Override
   public SourcePath getSourcePathToOutput() {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
+  }
+
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver sourcePathResolver) {
+    this.ruleFinder = ruleFinder;
   }
 }

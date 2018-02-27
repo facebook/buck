@@ -112,4 +112,8 @@ public class ParallelRuleKeyCalculator<T> {
   public synchronized Set<BuildTarget> getAllKnownTargets() {
     return ruleKeys.keySet();
   }
+
+  public RuleDepsCache getRuleDepsCache() {
+    return ruleDepsCache;
+  }
 }

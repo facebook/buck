@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
+import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
@@ -133,6 +134,9 @@ public abstract class DistBuildFactory {
     ArtifactCacheFactory distBuildArtifactCacheFactory =
         params.getArtifactCacheFactory().cloneWith(state.getRemoteRootCellConfig());
 
+    // ResourceConfig based on buckconfig local to Stampede worker.
+    ResourcesConfig resource = params.getBuckConfig().getView(ResourcesConfig.class);
+
     DistBuildSlaveExecutor executor =
         new DistBuildSlaveExecutor(
             DistBuildSlaveExecutorArgs.builder()
@@ -166,6 +170,9 @@ public abstract class DistBuildFactory {
                 .setMinionBuildProgressTracker(minionBuildProgressTracker)
                 .setHealthCheckStatsTracker(healthCheckStatsTracker)
                 .setRuleKeyCacheScope(ruleKeyCacheScope)
+                .setMaxActionGraphParallelism(resource.getMaximumResourceAmounts().getCpu())
+                .setActionGraphParallelizationMode(
+                    params.getBuckConfig().getActionGraphParallelizationMode())
                 .build());
     return executor;
   }

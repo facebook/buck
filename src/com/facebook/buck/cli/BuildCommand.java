@@ -24,6 +24,8 @@ import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientSt
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.POST_DISTRIBUTED_BUILD_LOCAL_STEPS;
 import static com.facebook.buck.util.concurrent.MostExecutors.newMultiThreadExecutor;
 
+import com.facebook.buck.apple.AppleBundle;
+import com.facebook.buck.apple.AppleDsym;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.cli.output.Mode;
 import com.facebook.buck.command.Build;
@@ -117,6 +119,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -644,6 +648,26 @@ public class BuildCommand extends AbstractCommand {
     return ExitCode.SUCCESS;
   }
 
+  private void symLinkBuildRuleResult(
+      SourcePathResolver pathResolver,
+      BuckConfig buckConfig,
+      Path lastOutputDirPath,
+      BuildRule rule)
+      throws IOException {
+    Optional<Path> outputPath =
+        TargetsCommand.getUserFacingOutputPath(
+            pathResolver, rule, buckConfig.getBuckOutCompatLink());
+    if (outputPath.isPresent()) {
+      Path absolutePath = outputPath.get();
+      Path destPath = lastOutputDirPath.relativize(absolutePath);
+      Path linkPath = lastOutputDirPath.resolve(absolutePath.getFileName());
+      // Don't overwrite existing symlink in case there are duplicate names.
+      if (!Files.exists(linkPath)) {
+        Files.createSymbolicLink(linkPath, destPath);
+      }
+    }
+  }
+
   private void symLinkBuildResults(
       CommandRunnerParams params, ActionGraphAndResolver actionGraphAndResolver)
       throws IOException {
@@ -659,27 +683,24 @@ public class BuildCommand extends AbstractCommand {
 
     for (BuildTarget buildTarget : buildTargets) {
       BuildRule rule = actionGraphAndResolver.getResolver().requireRule(buildTarget);
-      Optional<Path> outputPath =
-          TargetsCommand.getUserFacingOutputPath(
-              pathResolver, rule, params.getBuckConfig().getBuckOutCompatLink());
-      if (outputPath.isPresent()) {
-        Path absolutePath = outputPath.get();
-        Path destPath = lastOutputDirPath.relativize(absolutePath);
-        Path linkPath = lastOutputDirPath.resolve(absolutePath.getFileName());
-        // Don't overwrite existing symlink in case there are duplicate names.
-        if (!Files.exists(linkPath)) {
-          Files.createSymbolicLink(linkPath, destPath);
+      // If it's an apple bundle, we'd like to also link the dSYM file over here.
+      if (rule instanceof AppleBundle) {
+        AppleBundle bundle = (AppleBundle) rule;
+        Optional<AppleDsym> dsym = bundle.getAppleDsym();
+        if (dsym.isPresent()) {
+          symLinkBuildRuleResult(
+              pathResolver, params.getBuckConfig(), lastOutputDirPath, dsym.get());
         }
       }
+      symLinkBuildRuleResult(pathResolver, params.getBuckConfig(), lastOutputDirPath, rule);
     }
   }
 
   private AsyncJobStateAndCells computeDistBuildState(
       final CommandRunnerParams params,
       ActionAndTargetGraphs graphs,
-      final ListeningExecutorService executorService,
-      Optional<ClientStatsTracker> clientStatsTracker)
-      throws IOException, InterruptedException {
+      final WeightedListeningExecutorService executorService,
+      Optional<ClientStatsTracker> clientStatsTracker) {
     DistBuildCellIndexer cellIndexer = new DistBuildCellIndexer(params.getCell());
 
     // Compute the file hashes.
@@ -721,6 +742,7 @@ public class BuildCommand extends AbstractCommand {
             params.getRuleKeyConfiguration());
     DistBuildTargetGraphCodec targetGraphCodec =
         new DistBuildTargetGraphCodec(
+            executorService,
             parserTargetNodeFactory,
             input -> {
               return params
@@ -738,8 +760,7 @@ public class BuildCommand extends AbstractCommand {
                 .map(t -> t.getFullyQualifiedName())
                 .collect(Collectors.toSet()));
 
-    return new AsyncJobStateAndCells(
-        distributedBuildFileHashes,
+    ListenableFuture<BuildJobState> asyncJobState =
         executorService.submit(
             () -> {
               try {
@@ -754,14 +775,35 @@ public class BuildCommand extends AbstractCommand {
                 LOG.info("Finished computing serializable distributed build state.");
                 return state;
               } catch (InterruptedException ex) {
+                distributedBuildFileHashes.cancel();
                 LOG.warn(
                     ex,
                     "Failed computing serializable distributed build state as interrupted. Local build probably finished first.");
                 Thread.currentThread().interrupt();
                 throw ex;
               }
-            }),
-        cellIndexer);
+            });
+
+    Futures.addCallback(
+        asyncJobState,
+        new FutureCallback<BuildJobState>() {
+          @Override
+          public void onSuccess(@Nullable BuildJobState result) {
+            LOG.info("Finished creating stampede BuildJobState.");
+          }
+
+          @Override
+          public void onFailure(Throwable t) {
+            // We need to cancel file hash computation here as well, in case the asyncJobState
+            // future didn't start at all, and hence wasn't able to cancel file hash computation
+            // itself.
+            LOG.warn("Failed to create stampede BuildJobState. Cancelling file hash computation.");
+            distributedBuildFileHashes.cancel();
+          }
+        },
+        MoreExecutors.directExecutor());
+
+    return new AsyncJobStateAndCells(asyncJobState, cellIndexer);
   }
 
   private ListeningExecutorService createStampedeControllerExecutorService(int maxThreads) {
@@ -951,7 +993,7 @@ public class BuildCommand extends AbstractCommand {
 
       // If local build finished before hashing was complete, it's important to cancel
       // related Futures to avoid this operation blocking forever.
-      stateAndCells.cancel();
+      asyncJobState.cancel(true);
 
       // stampedeControllerExecutor is now redundant. Kill it as soon as possible.
       killExecutor(
@@ -966,22 +1008,8 @@ public class BuildCommand extends AbstractCommand {
 
       // Publish details about all default rule keys that were cache misses.
       // A non-zero value suggests a problem that needs investigating.
-      try {
-        Set<String> cacheMissRequestKeys =
-            distBuildClientEventListener.getDefaultCacheMissRequestKeys();
-        ArtifactCacheBuckConfig artifactCacheBuckConfig =
-            ArtifactCacheBuckConfig.of(distBuildConfig.getBuckConfig());
-        List<RuleKeyLogEntry> ruleKeyLogs =
-            distBuildService.fetchRuleKeyLogs(
-                cacheMissRequestKeys,
-                artifactCacheBuckConfig.getRepository(),
-                artifactCacheBuckConfig.getScheduleType(),
-                true /* distributedBuildModeEnabled */);
-        params
-            .getBuckEventBus()
-            .post(distBuildClientEventListener.createDistBuildClientCacheResultsEvent(ruleKeyLogs));
-      } catch (Exception ex) {
-        LOG.error("Failed to publish distributed build client cache request event", ex);
+      if (distBuildConfig.isCacheMissAnalysisEnabled()) {
+        performCacheMissAnalysis(params, distBuildConfig, distBuildService);
       }
 
       boolean ruleKeyConsistencyChecksPassedOrSkipped =
@@ -1013,6 +1041,40 @@ public class BuildCommand extends AbstractCommand {
       }
 
       return ExitCode.map(finalExitCode);
+    }
+  }
+
+  private void performCacheMissAnalysis(
+      CommandRunnerParams params,
+      DistBuildConfig distBuildConfig,
+      DistBuildService distBuildService) {
+    try {
+      Set<String> cacheMissRequestKeys =
+          distBuildClientEventListener.getDefaultCacheMissRequestKeys();
+      ArtifactCacheBuckConfig artifactCacheBuckConfig =
+          ArtifactCacheBuckConfig.of(distBuildConfig.getBuckConfig());
+
+      LOG.info(
+          String.format(
+              "Fetching rule key logs for [%d] cache misses", cacheMissRequestKeys.size()));
+      if (cacheMissRequestKeys.size() > 0) {
+        // TODO(alisdair): requests should be batched for high key counts.
+        List<RuleKeyLogEntry> ruleKeyLogs =
+            distBuildService.fetchRuleKeyLogs(
+                cacheMissRequestKeys,
+                artifactCacheBuckConfig.getRepository(),
+                artifactCacheBuckConfig.getScheduleType(),
+                true /* distributedBuildModeEnabled */);
+        params
+            .getBuckEventBus()
+            .post(distBuildClientEventListener.createDistBuildClientCacheResultsEvent(ruleKeyLogs));
+      }
+      LOG.info(
+          String.format(
+              "Fetched rule key logs for [%d] cache misses", cacheMissRequestKeys.size()));
+
+    } catch (Exception ex) {
+      LOG.error("Failed to publish distributed build client cache request event", ex);
     }
   }
 
@@ -1083,7 +1145,7 @@ public class BuildCommand extends AbstractCommand {
               .getBuckEventBus()
               .post(
                   ConsoleEvent.severe(
-                      "%s [%s]",
+                      "MISMATCHING RULE: %s [%s]",
                       ruleKeyNameAndType.getRuleName(), ruleKeyNameAndType.getRuleType()));
         }
 
@@ -1150,6 +1212,8 @@ public class BuildCommand extends AbstractCommand {
                       showFullOutput || showFullJsonOutput
                           ? path
                           : params.getCell().getFilesystem().relativize(path));
+
+      params.getConsole().getStdOut().flush();
       if (showJsonOutput || showFullJsonOutput) {
         sortedJsonOutputs.put(
             rule.getFullyQualifiedName(), outputPath.map(Object::toString).orElse(""));
@@ -1342,23 +1406,13 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private static class AsyncJobStateAndCells {
-    final DistBuildFileHashes distributedBuildFileHashes;
     final ListenableFuture<BuildJobState> asyncJobState;
     final DistBuildCellIndexer distBuildCellIndexer;
 
     AsyncJobStateAndCells(
-        DistBuildFileHashes distributedBuildFileHashes,
-        ListenableFuture<BuildJobState> asyncJobState,
-        DistBuildCellIndexer cellIndexer) {
-      this.distributedBuildFileHashes = distributedBuildFileHashes;
+        ListenableFuture<BuildJobState> asyncJobState, DistBuildCellIndexer cellIndexer) {
       this.asyncJobState = asyncJobState;
       this.distBuildCellIndexer = cellIndexer;
-    }
-
-    // Cancels any ongoing Future operations
-    protected void cancel() {
-      distributedBuildFileHashes.cancel();
-      asyncJobState.cancel(true);
     }
   }
 

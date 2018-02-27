@@ -26,7 +26,9 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.InitializableFromDisk;
@@ -43,7 +45,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 public class CalculateClassAbi extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements CalculateAbi, InitializableFromDisk<Object>, SupportsInputBasedRuleKey {
+    implements CalculateAbi,
+        InitializableFromDisk<Object>,
+        SupportsInputBasedRuleKey,
+        CacheableBuildRule {
 
   @AddToRuleKey private final SourcePath binaryJar;
   /**
@@ -153,5 +158,13 @@ public class CalculateClassAbi extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public BuildOutputInitializer<Object> getBuildOutputInitializer() {
     return buildOutputInitializer;
+  }
+
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
+    abiJarContentsSupplier.updateSourcePathResolver(pathResolver);
   }
 }

@@ -75,6 +75,9 @@ abstract class AbstractOcamlBuildContext implements AddsToRuleKey {
   public abstract List<Arg> getFlags();
 
   @AddToRuleKey
+  public abstract ImmutableList<String> getOcamlDepFlags();
+
+  @AddToRuleKey
   public abstract List<SourcePath> getInput();
 
   public abstract List<String> getNativeIncludes();

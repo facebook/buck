@@ -1,0 +1,97 @@
+java_library(
+    name = "bar_with_dep",
+    srcs = ["Bar.java"],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "buck//third-party/java/jsr:jsr305",
+    ],
+)
+
+java_library(
+    name = "bar_with_provided_dep",
+    srcs = ["Bar.java"],
+    provided_deps = [
+        "buck//third-party/java/jsr:jsr305",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+java_library(
+    name = "bar_with_exported_dep",
+    srcs = ["Bar.java"],
+    exported_deps = [
+        "buck//third-party/java/jsr:jsr305",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+java_library(
+    name = "meh",
+    srcs = ["Meh.java"],
+)
+
+java_library(
+    name = "bar_without_dep",
+    srcs = ["Bar.java"],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+java_library(
+    name = "barmeh_with_exported_dep",
+    srcs = ["BarMeh.java"],
+    exported_deps = [
+        ":meh",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+java_library(
+    name = "blargh",
+    srcs = ["Blargh.java"],
+)
+
+java_library(
+    name = "bar_with_transitive_exported_dep",
+    srcs = ["Foo.java"],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":barmeh_with_exported_dep",
+        ":blargh",
+    ],
+)
+
+java_library(
+    name = "bar_with_dep_and_skip_option",
+    srcs = ["Bar.java"],
+    on_unused_dependencies = "ignore",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "buck//third-party/java/jsr:jsr305",
+    ],
+)
+
+java_library(
+    name = "bar_with_dep_and_warn_option",
+    srcs = ["Bar.java"],
+    on_unused_dependencies = "warn",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "buck//third-party/java/jsr:jsr305",
+    ],
+)

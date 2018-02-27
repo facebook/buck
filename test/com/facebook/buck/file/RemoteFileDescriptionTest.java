@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.ImmutableBuildRuleCreationContext;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -87,14 +88,15 @@ public class RemoteFileDescriptionTest {
     exception.expectMessage(Matchers.containsString(target.getFullyQualifiedName()));
 
     description.createBuildRule(
-        TargetGraph.EMPTY,
+        ImmutableBuildRuleCreationContext.of(
+            TargetGraph.EMPTY,
+            ruleResolver,
+            filesystem,
+            TestCellBuilder.createCellRoots(filesystem)),
         target,
-        filesystem,
         RemoteFileBuilder.createBuilder(downloader, target)
             .from(arg)
             .createBuildRuleParams(ruleResolver),
-        ruleResolver,
-        TestCellBuilder.createCellRoots(filesystem),
         arg);
   }
 
@@ -113,14 +115,15 @@ public class RemoteFileDescriptionTest {
 
     BuildRule buildRule =
         description.createBuildRule(
-            TargetGraph.EMPTY,
+            ImmutableBuildRuleCreationContext.of(
+                TargetGraph.EMPTY,
+                ruleResolver,
+                filesystem,
+                TestCellBuilder.createCellRoots(filesystem)),
             target,
-            filesystem,
             RemoteFileBuilder.createBuilder(downloader, target)
                 .from(arg)
                 .createBuildRuleParams(ruleResolver),
-            ruleResolver,
-            TestCellBuilder.createCellRoots(filesystem),
             arg);
     ruleResolver.addToIndex(buildRule);
 

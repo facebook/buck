@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.DependencyAggregation;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
@@ -56,14 +57,14 @@ import java.util.function.Function;
  * {@code deps} list.
  */
 public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements NativeLinkable, CxxPreprocessorDep {
+    implements NativeLinkable, CxxPreprocessorDep, CacheableBuildRule {
 
   private static final Flavor AGGREGATED_PREPROCESS_DEPS_FLAVOR =
       InternalFlavor.of("preprocessor-deps");
 
-  protected final BuildRuleResolver ruleResolver;
-  protected final SourcePathResolver pathResolver;
-  protected final SourcePathRuleFinder ruleFinder;
+  protected BuildRuleResolver ruleResolver;
+  protected SourcePathRuleFinder ruleFinder;
+  protected SourcePathResolver pathResolver;
 
   /**
    * The source path which was expressed as either: (1) the `prefix_header` attribute in a
@@ -336,5 +337,15 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
                   sourceType,
                   cxxPlatform.getCompilerDebugPathSanitizer());
             });
+  }
+
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
+    this.ruleResolver = ruleResolver;
+    this.ruleFinder = ruleFinder;
+    this.pathResolver = pathResolver;
   }
 }

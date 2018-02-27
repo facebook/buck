@@ -34,7 +34,6 @@ import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.rules.TestStatusMessageEvent;
 import com.facebook.buck.rules.TestSummaryEvent;
@@ -312,17 +311,21 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     // Synchronize on the DirtyPrintStreamDecorator to prevent interlacing of output.
     // We don't log immediately so we avoid locking the console handler to avoid deadlocks.
     boolean stderrDirty;
+    boolean stdoutDirty;
     synchronized (console.getStdErr()) {
-      // If another source has written to stderr, stop rendering with the SuperConsole.
-      // We need to do this to keep our updates consistent. We don't do this with stdout
-      // because we don't use it directly except in a couple of cases, where the
-      // synchronization in DirtyPrintStreamDecorator should be sufficient
-      stderrDirty = console.getStdErr().isDirty();
-      if (stderrDirty) {
-        stopRenderScheduler();
-      } else if (previousNumLinesPrinted != 0 || !lines.isEmpty() || !logLines.isEmpty()) {
-        String fullFrame = renderFullFrame(logLines, lines, previousNumLinesPrinted);
-        console.getStdErr().getRawStream().print(fullFrame);
+      synchronized (console.getStdOut()) {
+        // If another source has written to stderr, stop rendering with the SuperConsole.
+        // We need to do this to keep our updates consistent. We don't do this with stdout
+        // because we don't use it directly except in a couple of cases, where the
+        // synchronization in DirtyPrintStreamDecorator should be sufficient
+        stderrDirty = console.getStdErr().isDirty();
+        stdoutDirty = console.getStdOut().isDirty();
+        if (stderrDirty || stdoutDirty) {
+          stopRenderScheduler();
+        } else if (previousNumLinesPrinted != 0 || !lines.isEmpty() || !logLines.isEmpty()) {
+          String fullFrame = renderFullFrame(logLines, lines, previousNumLinesPrinted);
+          console.getStdErr().getRawStream().print(fullFrame);
+        }
       }
     }
     if (stderrDirty) {
@@ -447,7 +450,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       lines.add(stampedeIdLogLine.get());
     }
 
+    String localBuildLinePrefix = "Building";
+
     if (distBuildStarted != null) {
+      localBuildLinePrefix = "Local Build";
       long distBuildMs =
           logEventPair(
               "Distributed Build",
@@ -467,10 +473,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
               new DistBuildSlaveStateRenderer(
                   ansi, currentTimeMillis, ImmutableList.copyOf(distBuildSlaveTracker.values()));
         }
-        renderLines(renderer, lines, maxThreadLines, shouldAlwaysSortThreadsByTime);
+        int numLinesRendered =
+            renderLines(renderer, lines, maxThreadLines, shouldAlwaysSortThreadsByTime);
 
-        // We don't want to print anything else while dist-build is going on.
-        return lines.build();
+        if (numLinesRendered > 0) {
+          // We don't want to print anything else while dist-build is going on.
+          return lines.build();
+        }
       }
     }
 
@@ -495,13 +504,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     long totalBuildMs =
         logEventPair(
-            "Building",
+            localBuildLinePrefix,
             getOptionalBuildLineSuffix(),
             currentTimeMillis,
             offsetMs, // parseTime,
             this.buildStarted,
             this.buildFinished,
-            getApproximateBuildProgress(),
+            getApproximateLocalBuildProgress(),
             Optional.empty(),
             lines);
 
@@ -644,9 +653,22 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       }
     }
 
-    String localStatus = String.format("local status: %s", stampedeLocalBuildStatus);
+    String localStatus = createLocalStatus();
     parseLine = localStatus + "; " + Joiner.on(", ").join(columns);
     return Strings.isNullOrEmpty(parseLine) ? Optional.empty() : Optional.of(parseLine);
+  }
+
+  private String createLocalStatus() {
+    Optional<Double> localBuildProgress = getApproximateLocalBuildProgress();
+    String localBuildProgressString = "";
+    if (localBuildProgress.isPresent()) {
+      localBuildProgressString =
+          String.format(" (%d%% done)", Math.round(localBuildProgress.get() * 100));
+    }
+    synchronized (distBuildStatusLock) {
+      return String.format(
+          "local status: %s%s", stampedeLocalBuildStatus, localBuildProgressString);
+    }
   }
 
   /** Adds log messages for rendering. */
@@ -665,11 +687,17 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     return logEventLinesBuilder.build();
   }
 
-  public void renderLines(
+  /**
+   * Render lines using the provided {@param renderer}.
+   *
+   * @return the number of lines created.
+   */
+  public int renderLines(
       MultiStateRenderer renderer,
       ImmutableList.Builder<String> lines,
       int maxLines,
       boolean alwaysSortByTime) {
+    int numLinesRendered = 0;
     int threadCount = renderer.getExecutorCount();
     int fullLines = threadCount;
     boolean useCompressedLine = false;
@@ -686,6 +714,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       long threadId = threadIds.get(i);
       lineBuilder.delete(0, lineBuilder.length());
       lines.add(renderer.renderStatusLine(threadId, lineBuilder));
+      numLinesRendered++;
     }
     if (useCompressedLine) {
       lineBuilder.delete(0, lineBuilder.length());
@@ -702,7 +731,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         lineBuilder.append(renderer.renderShortStatus(threadId));
       }
       lines.add(lineBuilder.toString());
+      numLinesRendered++;
     }
+
+    return numLinesRendered;
   }
 
   private Optional<String> renderTestSuffix() {
@@ -724,24 +756,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     } else {
       return Optional.empty();
     }
-  }
-
-  @Override
-  @Subscribe
-  public void buildRuleStarted(BuildRuleEvent.Started started) {
-    super.buildRuleStarted(started);
-  }
-
-  @Override
-  @Subscribe
-  public void buildRuleSuspended(BuildRuleEvent.Suspended suspended) {
-    super.buildRuleSuspended(suspended);
-  }
-
-  @Override
-  @Subscribe
-  public void buildRuleResumed(BuildRuleEvent.Resumed resumed) {
-    super.buildRuleResumed(resumed);
   }
 
   @Subscribe
@@ -862,7 +876,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
     // We're about to write to stdout, so make sure we render the final frame before we do.
     render();
-    console.getStdOut().println(testOutput);
+    synchronized (console.getStdOut()) {
+      console.getStdOut().println(testOutput);
+    }
   }
 
   @Subscribe

@@ -151,7 +151,9 @@ public class DistBuildRunner {
         runDistributedBuildFuture, "Cannot cancel build that hasn't started");
 
     String statusString =
-        localBuildSucceeded ? "succeeded" : String.format("failed [%d]", localBuildExitCode);
+        localBuildSucceeded
+            ? "succeeded"
+            : String.format("failed [exitCode=%d]", localBuildExitCode);
     eventBus.post(new StampedeLocalBuildStatusEvent(statusString));
 
     if (finishedSuccessfully() && !waitGracefullyForDistributedBuildThreadToFinish) {
@@ -161,9 +163,11 @@ public class DistBuildRunner {
 
     if (stillPending()) {
       setLocalBuildFinishedFirstExitCode();
+      String statusMessage =
+          String.format("The build %s locally before distributed build finished.", statusString);
       terminateDistributedBuildJob(
           localBuildSucceeded ? BuildStatus.FINISHED_SUCCESSFULLY : BuildStatus.FAILED,
-          (statusString + " locally before distributed build finished."));
+          statusMessage);
     }
 
     if (waitGracefullyForDistributedBuildThreadToFinish) {
@@ -195,12 +199,12 @@ public class DistBuildRunner {
     }
 
     LOG.info(
-        String.format("Terminating distributed build with Stampede ID [%s]", stampedeId.getId()));
+        String.format("Terminating distributed build with Stampede ID [%s].", stampedeId.getId()));
 
     try {
       distBuildService.setFinalBuildStatus(stampedeId, finalStatus, statusMessage);
     } catch (IOException | RuntimeException e) {
-      LOG.warn(e, "Failed to terminate distributed build");
+      LOG.warn(e, "Failed to terminate distributed build.");
     }
   }
 

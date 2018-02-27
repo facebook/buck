@@ -17,11 +17,11 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -31,7 +31,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ProxyArg;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
@@ -81,13 +80,11 @@ public class WorkerToolDescription
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      final BuildRuleResolver resolver,
-      CellPathResolver cellRoots,
       WorkerToolDescriptionArg args) {
+    BuildRuleResolver resolver = context.getBuildRuleResolver();
 
     CommandTool.Builder builder;
     if (args.getExe().isPresent()) {
@@ -113,7 +110,8 @@ public class WorkerToolDescription
             .collect(ImmutableList.toImmutableList()));
 
     Function<String, Arg> toArg =
-        MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);
+        MacroArg.toMacroArgFunction(
+            MACRO_HANDLER, buildTarget, context.getCellPathResolver(), resolver);
 
     if (args.getArgs().isLeft()) {
       builder.addArg(
@@ -145,7 +143,7 @@ public class WorkerToolDescription
     CommandTool tool = builder.build();
     return new DefaultWorkerTool(
         buildTarget,
-        projectFilesystem,
+        context.getProjectFilesystem(),
         new SourcePathRuleFinder(resolver),
         tool,
         maxWorkers,

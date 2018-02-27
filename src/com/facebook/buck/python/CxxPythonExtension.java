@@ -23,17 +23,33 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.annotations.VisibleForTesting;
 import java.nio.file.Path;
 
 public abstract class CxxPythonExtension extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements PythonPackagable, HasRuntimeDeps {
+    implements PythonPackagable, HasRuntimeDeps, CacheableBuildRule {
+
+  protected BuildRuleResolver ruleResolver;
+  protected SourcePathRuleFinder ruleFinder;
+  protected SourcePathResolver pathResolver;
 
   public CxxPythonExtension(
-      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
     super(buildTarget, projectFilesystem, params);
+    this.ruleResolver = ruleResolver;
+    this.ruleFinder = ruleFinder;
+    this.pathResolver = pathResolver;
   }
 
   @VisibleForTesting
@@ -46,4 +62,14 @@ public abstract class CxxPythonExtension extends NoopBuildRuleWithDeclaredAndExt
       PythonPlatform pythonPlatform, CxxPlatform cxxPlatform);
 
   public abstract NativeLinkTarget getNativeLinkTarget(PythonPlatform pythonPlatform);
+
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
+    this.ruleResolver = ruleResolver;
+    this.ruleFinder = ruleFinder;
+    this.pathResolver = pathResolver;
+  }
 }

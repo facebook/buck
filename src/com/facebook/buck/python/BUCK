@@ -59,6 +59,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/test:test",
         "//src/com/facebook/buck/test/selectors:selectors",
+        "//src/com/facebook/buck/unarchive:unarchive",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:packaged_resource",
         "//src/com/facebook/buck/util:process_executor",

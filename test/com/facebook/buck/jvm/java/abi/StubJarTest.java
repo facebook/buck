@@ -1415,6 +1415,33 @@ public class StubJarTest {
   }
 
   @Test
+  public void preservesAnnotationsWithConstrainedTypeValues() throws IOException {
+    createAnnotationFullJar()
+        .addFullJarToClasspathAlways()
+        .setSourceFile(
+            "Dependency.java",
+            "package com.example.buck;",
+            "public interface Dependency extends Runnable { }")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "@Foo(runnableValues={Dependency.class})",
+            "public @interface A {}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x2601",
+            "public abstract @interface com/example/buck/A implements java/lang/annotation/Annotation  {",
+            "",
+            "",
+            "  @Lcom/example/buck/Foo;(runnableValues={com.example.buck.Dependency.class})",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
   public void providesNiceErrorWhenConstantMissing() throws IOException {
     if (testingMode != MODE_SOURCE_BASED_MISSING_DEPS) {
       return;
@@ -4816,6 +4843,7 @@ public class StubJarTest {
             "  Retention[] annotationArrayValue() default {};",
             "  RetentionPolicy enumValue () default RetentionPolicy.CLASS;",
             "  Class typeValue() default Foo.class;",
+            "  Class<? extends Runnable>[] runnableValues() default {};",
             "  @Target({TYPE_PARAMETER, TYPE_USE})",
             "  @interface TypeAnnotation { }",
             "}")

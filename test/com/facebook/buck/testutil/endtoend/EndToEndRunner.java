@@ -16,12 +16,16 @@
 
 package com.facebook.buck.testutil.endtoend;
 
+import com.facebook.buck.testutil.ProcessResult;
+import java.lang.annotation.AnnotationFormatError;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.internal.runners.model.ReflectiveCallable;
 import org.junit.internal.runners.statements.Fail;
@@ -103,6 +107,24 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
   }
 
   /**
+   * Marks validation errors if given method is not static, or does not return an {@link
+   * EndToEndEnvironment}
+   */
+  private void validateEnvironmentMethod(
+      FrameworkMethod environmentMethod, List<Throwable> errors) {
+    if (!environmentMethod.isStatic()) {
+      errors.add(
+          new AnnotationFormatError(
+              "Methods marked by @Environment or @EnvironmentFor must be static"));
+    }
+    if (!EndToEndEnvironment.class.isAssignableFrom(environmentMethod.getReturnType())) {
+      errors.add(
+          new AnnotationFormatError(
+              "Methods marked by @Environment or @EnvironmentFor must return an EndToEndEnvironment"));
+    }
+  }
+
+  /**
    * Marks validation errors in errors if:
    *
    * <ul>
@@ -129,13 +151,77 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
                   + "@EnvironmentFor(\"testNameShouldBuild\")\n"
                   + "EndToEndEnvironment createEndToEndEnvironmentForCase() {\n\n}"));
     } else {
-      // TODO: validate method is static
       FrameworkMethod environmentMethod = environmentMethods.get(0);
-      if (environmentMethod.getReturnType() != EndToEndEnvironment.class) {
-        errors.add(
-            new IllegalArgumentException(
-                "Methods marked by @Environment must return an EndToEndEnvironment"));
+      validateEnvironmentMethod(environmentMethod, errors);
+    }
+  }
+
+  /**
+   * Marks validation errors in errors if a method marked by @EnvironmentFor points at a method that
+   * does not exist or is not marked by @Test
+   *
+   * <p>Note: Adds an error to the list for each marked testName that doesn't exist
+   */
+  private void validateEnvironmentMapPointsToExistingTests(List<Throwable> errors) {
+    List<FrameworkMethod> environmentForMethods =
+        getTestClass().getAnnotatedMethods(EnvironmentFor.class);
+    Set<String> testMethodNames =
+        getTestClass()
+            .getAnnotatedMethods(Test.class)
+            .stream()
+            .map(m -> m.getName())
+            .collect(Collectors.toSet());
+    for (FrameworkMethod environmentForMethod : environmentForMethods) {
+      String[] environmentForTestNames =
+          environmentForMethod.getAnnotation(EnvironmentFor.class).testNames();
+      for (String testName : environmentForTestNames) {
+        if (!testMethodNames.contains(testName)) {
+          errors.add(
+              new AnnotationFormatError(
+                  String.format(
+                      "EnvironmentFor method %s has testName %s which does not exist in the Test class"
+                          + " (or it is not annotated with @Test)",
+                      environmentForMethod.getName(), testName)));
+        }
       }
+    }
+  }
+
+  /**
+   * Marks validation errors in errors if 2 methods marked by @EnvironmentFor contain the same test
+   * names
+   *
+   * <p>Note: Adds an error to the list for each pair of duplicates found
+   */
+  private void validateEnvironmentMapContainsNoDuplicates(List<Throwable> errors) {
+    List<FrameworkMethod> environmentForMethods =
+        getTestClass().getAnnotatedMethods(EnvironmentFor.class);
+    Map<String, String> seenTestNames = new HashMap<>();
+    for (FrameworkMethod environmentForMethod : environmentForMethods) {
+      String[] environmentForTestNames =
+          environmentForMethod.getAnnotation(EnvironmentFor.class).testNames();
+      for (String testName : environmentForTestNames) {
+        if (seenTestNames.containsKey(testName)) {
+          errors.add(
+              new AnnotationFormatError(
+                  String.format(
+                      "EnvironmentFor methods %s and %s are both marked as for %s",
+                      environmentForMethod.getName(), seenTestNames.get(testName), testName)));
+        }
+        seenTestNames.put(testName, environmentForMethod.getName());
+      }
+    }
+  }
+
+  /**
+   * Marks validation errors in errors for each method marked by @EnvironmentFor does not return an
+   * {@link EndToEndEnvironment} or is not static
+   */
+  private void validateEnvironmentMapMethods(List<Throwable> errors) {
+    List<FrameworkMethod> environmentForMethods =
+        getTestClass().getAnnotatedMethods(EnvironmentFor.class);
+    for (FrameworkMethod environmentForMethod : environmentForMethods) {
+      validateEnvironmentMethod(environmentForMethod, errors);
     }
   }
 
@@ -143,19 +229,16 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
    * Marks validation errors in errors if:
    *
    * <ul>
-   *   <li>Any method marked by @EnvironmentFor does not return and {@link EndToEndEnvironment}
+   *   <li>Any method marked by @EnvironmentFor does not return an {@link EndToEndEnvironment}
+   *   <li>Any method marked by @EnvironmentFor points at a method that does not exist or is not
+   *       marked by @Test
+   *   <li>2 methods marked by @EnvironmentFor contain the same test names
    * </ul>
    */
   private void validateEnvironmentMap(List<Throwable> errors) {
-    List<FrameworkMethod> environmentForMethods =
-        getTestClass().getAnnotatedMethods(EnvironmentFor.class);
-    for (FrameworkMethod environmentForMethod : environmentForMethods) {
-      if (environmentForMethod.getReturnType() != EndToEndEnvironment.class) {
-        errors.add(
-            new Exception("Methods marked by @Environment must return an EndToEndEnvironment"));
-      }
-    }
-    // TODO: Handle case where environment for for two tests, tests that don't exist
+    validateEnvironmentMapMethods(errors);
+    validateEnvironmentMapPointsToExistingTests(errors);
+    validateEnvironmentMapContainsNoDuplicates(errors);
   }
 
   private void validateEnvironments(List<Throwable> errors) {
@@ -164,10 +247,30 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
   }
 
   /**
+   * Marks validation errors in errors if the given method does not have exact args ({@link
+   * EndToEndTestDescriptor}, {@link ProcessResult})
+   */
+  private void validateTestMethodArgs(FrameworkMethod testMethod, List<Throwable> errors) {
+    Class<?>[] paramTypes = testMethod.getMethod().getParameterTypes();
+    if (paramTypes.length != 2
+        || !EndToEndTestDescriptor.class.isAssignableFrom(paramTypes[0])
+        || !ProcessResult.class.isAssignableFrom(paramTypes[1])) {
+      errors.add(
+          new AnnotationFormatError(
+              "Methods marked by @Test in the EndToEndRunner must support taking an "
+                  + "EndToEndTestDescriptor and ProcessResult. Example:\n"
+                  + "@Test\n"
+                  + "public void shouldRun(EndToEndTestDescriptor test, ProcessResult result) {\n\n}"));
+    }
+  }
+
+  /**
    * Marks validation errors in errors if:
    *
    * <ul>
    *   <li>Any method marked by @Test is a not a public non-static void method.
+   *   <li>Any method marked by @Test does not have exact args ({@link EndToEndTestDescriptor},
+   *       {@link ProcessResult})
    * </ul>
    */
   private void validateTestMethods(List<Throwable> errors) {
@@ -175,7 +278,7 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
 
     for (FrameworkMethod testMethod : methods) {
       testMethod.validatePublicVoid(false, errors);
-      // TODO: validate they have the two parameters we give them
+      validateTestMethodArgs(testMethod, errors);
     }
   }
 

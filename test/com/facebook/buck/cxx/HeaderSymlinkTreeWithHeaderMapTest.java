@@ -45,6 +45,7 @@ import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.SymlinkTreeMergeStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -56,6 +57,7 @@ import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -115,7 +117,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule =
         HeaderSymlinkTreeWithHeaderMap.create(
-            buildTarget, projectFilesystem, symlinkTreeRoot, links);
+            buildTarget, projectFilesystem, symlinkTreeRoot, links, ruleFinder);
   }
 
   @Test
@@ -135,6 +137,9 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
                     projectFilesystem,
                     symlinkTreeRoot,
                     resolver.getMappedPaths(links)))
+            .add(
+                new SymlinkTreeMergeStep(
+                    "cxx_header", projectFilesystem, symlinkTreeRoot, ImmutableMultimap.of()))
             .add(
                 new HeaderMapStep(
                     projectFilesystem,
@@ -170,7 +175,8 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
             ImmutableMap.of(
                 Paths.get("different/link"),
                 PathSourcePath.of(
-                    projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), aFile))));
+                    projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), aFile))),
+            ruleFinder);
 
     // Calculate their rule keys and verify they're different.
     DefaultFileHashCache hashCache =

@@ -192,6 +192,21 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
+  public void generatesProjectWithJsBundleDependency() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    workspace
+        .runBuckCommand(
+            "project",
+            "--config",
+            "project.ide=xcode",
+            "//ios:DemoApp#iphonesimulator-x86_64,no-debug")
+        .assertSuccess();
+    workspace.verify(Paths.get("ios_project.expected"), workspace.getDestPath());
+  }
+
+  @Test
   public void dependencyFile() throws IOException {
     workspace
         .runBuckBuild(
@@ -236,6 +251,21 @@ public class JsRulesIntegrationTest {
         .runBuckBuild("//ios:DemoAppWithJsBundleGenrule#iphonesimulator-x86_64,no-debug")
         .assertSuccess();
     workspace.verify(Paths.get("ios_app_with_genrule.expected"), genPath);
+  }
+
+  @Test
+  public void generatesProjectWithJsBundleGenruleDependency() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    workspace
+        .runBuckCommand(
+            "project",
+            "--config",
+            "project.ide=xcode",
+            "//ios:DemoAppWithJsBundleGenrule#iphonesimulator-x86_64,no-debug")
+        .assertSuccess();
+    workspace.verify(Paths.get("ios_project_with_genrule.expected"), workspace.getDestPath());
   }
 
   @Test

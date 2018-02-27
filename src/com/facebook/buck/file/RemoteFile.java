@@ -26,6 +26,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
@@ -44,7 +45,8 @@ import java.util.Optional;
  * from running at build time, requiring a user to run {@code buck fetch} before executing the
  * build.
  */
-public class RemoteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+public class RemoteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
+    implements CacheableBuildRule {
 
   @AddToRuleKey(stringify = true)
   private final URI uri;

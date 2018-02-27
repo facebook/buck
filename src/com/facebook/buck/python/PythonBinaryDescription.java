@@ -31,6 +31,7 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.python.toolchain.PexToolProvider;
 import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -44,7 +45,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
@@ -57,10 +57,10 @@ import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -135,7 +135,7 @@ public class PythonBinaryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       String mainModule,
@@ -167,25 +167,9 @@ public class PythonBinaryDescription
                     .putAll(components.getModules())
                     .putAll(components.getResources())
                     .putAll(components.getNativeLibraries())
-                    .putAll(
-                        components
-                            .getPrebuiltLibraries()
-                            .stream()
-                            // Get the prebuilt libraries, and stick them in a directory that can be
-                            // added to the sys.path of the in-place executor. Use a subdir so that
-                            // we can just glob on '*' and not have to maintain a list of
-                            // whitelisted
-                            // extensions or anything in the inplace python template file.
-                            .collect(
-                                ImmutableMap.toImmutableMap(
-                                    sourcePath ->
-                                        Paths.get(PythonInPlaceBinary.PREBUILT_PYTHON_RULES_SUBDIR)
-                                            .resolve(
-                                                pathResolver
-                                                    .getRelativePath(sourcePath)
-                                                    .getFileName()),
-                                    sourcePath -> sourcePath)))
-                    .build()));
+                    .build(),
+                components.getModuleDirs(),
+                ruleFinder));
 
     return new PythonInPlaceBinary(
         buildTarget,
@@ -208,7 +192,6 @@ public class PythonBinaryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
@@ -226,7 +209,7 @@ public class PythonBinaryDescription
             projectFilesystem,
             params,
             resolver,
-            pathResolver,
+            ruleFinder,
             pythonPlatform,
             cxxPlatform,
             mainModule,
@@ -273,12 +256,9 @@ public class PythonBinaryDescription
 
   @Override
   public PythonBinary createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      CellPathResolver cellRoots,
       PythonBinaryDescriptionArg args) {
     if (!(args.getMain().isPresent() ^ args.getMainModule().isPresent())) {
       throw new HumanReadableException(
@@ -288,6 +268,7 @@ public class PythonBinaryDescription
 
     String mainModule;
     ImmutableMap.Builder<Path, SourcePath> modules = ImmutableMap.builder();
+    BuildRuleResolver resolver = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -309,7 +290,7 @@ public class PythonBinaryDescription
             modules.build(),
             /* resources */ ImmutableMap.of(),
             /* nativeLibraries */ ImmutableMap.of(),
-            /* prebuiltLibraries */ ImmutableSet.of(),
+            /* moduleDirs */ ImmutableMultimap.of(),
             /* zipSafe */ args.getZipSafe());
 
     FlavorDomain<PythonPlatform> pythonPlatforms =
@@ -328,6 +309,8 @@ public class PythonBinaryDescription
                         .<Flavor>map(InternalFlavor::of)
                         .orElse(pythonPlatforms.getFlavors().iterator().next())));
     CxxPlatform cxxPlatform = getCxxPlatform(buildTarget, args);
+    CellPathResolver cellRoots = context.getCellPathResolver();
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)
@@ -362,7 +345,6 @@ public class PythonBinaryDescription
         projectFilesystem,
         params,
         resolver,
-        pathResolver,
         ruleFinder,
         pythonPlatform,
         cxxPlatform,

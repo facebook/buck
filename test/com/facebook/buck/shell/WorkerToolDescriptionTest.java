@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.ImmutableBuildRuleCreationContext;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -105,12 +106,13 @@ public class WorkerToolDescriptionTest {
             ImmutableSortedSet.of());
     return (WorkerTool)
         workerToolDescription.createBuildRule(
-            targetGraph,
+            ImmutableBuildRuleCreationContext.of(
+                targetGraph,
+                resolver,
+                projectFilesystem,
+                TestCellBuilder.createCellRoots(projectFilesystem)),
             buildTarget,
-            projectFilesystem,
             params,
-            resolver,
-            TestCellBuilder.createCellRoots(projectFilesystem),
             args);
   }
 }

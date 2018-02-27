@@ -20,25 +20,31 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.startsWith;
+import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.python.toolchain.PythonVersion;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.ObjectMappers;
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class PexStepTest {
@@ -57,9 +63,15 @@ public class PexStepTest {
       ImmutableMap.of(Paths.get("r"), Paths.get("/src/r"));
   private static final ImmutableMap<Path, Path> NATIVE_LIBRARIES =
       ImmutableMap.of(Paths.get("n.so"), Paths.get("/src/n.so"));
-  private static final ImmutableSet<Path> PREBUILT_LIBRARIES =
-      ImmutableSet.of(Paths.get("/src/p.egg"));
   private static final ImmutableSortedSet<String> PRELOAD_LIBRARIES = ImmutableSortedSet.of();
+  private static final ImmutableSetMultimap<Path, Path> MODULE_DIRS =
+      ImmutableSetMultimap.of(
+          Paths.get(""),
+          Paths.get("/tmp/dir1.whl"),
+          Paths.get("subdir"),
+          Paths.get("/tmp/dir2.whl"));
+
+  @Rule public TemporaryPaths tmpDir = new TemporaryPaths();
 
   @Test
   public void testCommandLine() {
@@ -77,7 +89,7 @@ public class PexStepTest {
             MODULES,
             RESOURCES,
             NATIVE_LIBRARIES,
-            PREBUILT_LIBRARIES,
+            MODULE_DIRS,
             PRELOAD_LIBRARIES,
             /* zipSafe */ true);
     String command =
@@ -106,7 +118,7 @@ public class PexStepTest {
             MODULES,
             RESOURCES,
             NATIVE_LIBRARIES,
-            PREBUILT_LIBRARIES,
+            MODULE_DIRS,
             PRELOAD_LIBRARIES,
             /* zipSafe */ false);
     String command =
@@ -118,10 +130,26 @@ public class PexStepTest {
   @Test
   @SuppressWarnings("unchecked")
   public void testCommandStdin() throws InterruptedException, IOException {
+    Path realDir1 = tmpDir.getRoot().resolve("dir1.whl");
+    Path realDir2 = tmpDir.getRoot().resolve("dir2.whl");
+    Path file1 = realDir1.resolve("file1.py");
+    Path file2 = realDir2.resolve("file2.py");
+    Path childFile = realDir1.resolve("some_dir").resolve("child.py");
+
+    ImmutableSetMultimap<Path, Path> moduleDirs =
+        ImmutableSetMultimap.of(Paths.get(""), realDir1, Paths.get("subdir"), realDir2);
+
+    Files.createDirectories(realDir1);
+    Files.createDirectories(realDir2);
+    Files.createDirectories(childFile.getParent());
+    Files.write(file1, "print(\"file1\")".getBytes(Charsets.UTF_8));
+    Files.write(file2, "print(\"file2\")".getBytes(Charsets.UTF_8));
+    Files.write(childFile, "print(\"child\")".getBytes(Charsets.UTF_8));
+
     PexStep step =
         new PexStep(
             BuildTargetFactory.newInstance("//dummy:target"),
-            new FakeProjectFilesystem(),
+            TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()),
             PEX_ENVIRONMENT,
             PEX_COMMAND,
             PYTHON_PATH,
@@ -132,23 +160,34 @@ public class PexStepTest {
             MODULES,
             RESOURCES,
             NATIVE_LIBRARIES,
-            PREBUILT_LIBRARIES,
+            moduleDirs,
             PRELOAD_LIBRARIES,
             /* zipSafe */ true);
 
     Map<String, Object> args =
         ObjectMappers.readValue(step.getStdin(TestExecutionContext.newInstance()).get(), Map.class);
+    Assert.assertTrue(file1.isAbsolute());
+    Assert.assertTrue(file2.isAbsolute());
+    Assert.assertTrue(childFile.isAbsolute());
     assertThat(
         (Map<String, String>) args.get("modules"),
         hasEntry(Paths.get("m").toString(), Paths.get("/src/m").toString()));
+    assertThat(
+        (Map<String, String>) args.get("modules"),
+        hasEntry(Paths.get("file1.py").toString(), file1.toString()));
+    assertThat(
+        (Map<String, String>) args.get("modules"),
+        hasEntry(Paths.get("some_dir", "child.py").toString(), childFile.toString()));
+    assertThat(
+        (Map<String, String>) args.get("modules"),
+        hasEntry(Paths.get("subdir", "file2.py").toString(), file2.toString()));
     assertThat(
         (Map<String, String>) args.get("resources"),
         hasEntry(Paths.get("r").toString(), Paths.get("/src/r").toString()));
     assertThat(
         (Map<String, String>) args.get("nativeLibraries"),
         hasEntry(Paths.get("n.so").toString(), Paths.get("/src/n.so").toString()));
-    assertThat(
-        (List<String>) args.get("prebuiltLibraries"), hasItem(Paths.get("/src/p.egg").toString()));
+    assertEquals(0, ((List<String>) args.get("prebuiltLibraries")).size());
   }
 
   @Test
@@ -167,7 +206,7 @@ public class PexStepTest {
             MODULES,
             RESOURCES,
             NATIVE_LIBRARIES,
-            PREBUILT_LIBRARIES,
+            MODULE_DIRS,
             PRELOAD_LIBRARIES,
             /* zipSafe */ true);
     assertThat(
