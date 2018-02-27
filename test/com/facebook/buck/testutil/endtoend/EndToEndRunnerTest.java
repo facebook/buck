@@ -45,6 +45,13 @@ public class EndToEndRunnerTest {
   }
 
   @Test
+  public void shouldFailInSuccessfulEnv(EndToEndTestDescriptor test, ProcessResult result) {
+    // Uses successful environment, but fixture BUCK file is empty
+    result.assertFailure(
+        String.format("%s successfully built when it has an empty BUCK file", test.getName()));
+  }
+
+  @Test
   public void shouldNotBuildSuccessfully(EndToEndTestDescriptor test, ProcessResult result) {
     result.assertFailure(
         String.format(

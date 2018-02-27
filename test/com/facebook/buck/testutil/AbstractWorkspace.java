@@ -22,6 +22,7 @@ import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.environment.Platform;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -50,6 +51,7 @@ import java.nio.file.spi.FileSystemProvider;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 
 /**
@@ -60,12 +62,40 @@ import java.util.Queue;
  * of overriding the copied .buckconfig by adding configs to a BuckConfigLocal.
  */
 public abstract class AbstractWorkspace {
+
+  /**
+   * Describes at what fixtureLevel a file was in when it was saved. Needed since when we save
+   * fixtured files, they will no longer have those fixtures attached
+   */
+  private enum FixtureLevel {
+    NOT_A_FIXTURE(0),
+    FIXTURE(1),
+    TEST_CLASS_FIXTURE(2),
+    TEST_CASE_FIXTURE(3);
+
+    private final int level;
+
+    FixtureLevel(int level) {
+      this.level = level;
+    }
+
+    /** @return integer value of the fixture level */
+    @JsonValue
+    public int getLevel() {
+      return level;
+    }
+  }
+
   protected static final String FIXTURE_SUFFIX = "fixture";
   protected static final String EXPECTED_SUFFIX = "expected";
 
   protected Path destPath;
   private final Map<String, Map<String, String>> localConfigs = new HashMap<>();
   private boolean firstTemplateAdded = false;
+
+  private Optional<String> testClassFixtureSuffix = Optional.empty();
+  private Optional<String> testCaseFixtureSuffix = Optional.empty();
+  private Map<Path, FixtureLevel> writtenFileFixtureLevel = new HashMap<>();
 
   /**
    * Constructor for AbstractWorkspace
@@ -82,6 +112,17 @@ public abstract class AbstractWorkspace {
    * destPath before using methods that rely on it.
    */
   protected AbstractWorkspace() {}
+
+  /**
+   * After attaching testClassName and testName as fixture suffixes, the files with those suffixes
+   * will replace any with just the fixture suffix.
+   *
+   * <p>Example: BUCK.fixture < BUCK.fixtureTestClass < BUCK.fixtureTestClassTestCase
+   */
+  public void attachTestSpecificFixtureSuffixes(String testClassName, String testName) {
+    testClassFixtureSuffix = Optional.of(FIXTURE_SUFFIX + testClassName);
+    testCaseFixtureSuffix = Optional.of(testClassFixtureSuffix.get() + testName);
+  }
 
   private Map<String, String> getBuckConfigLocalSection(String section) {
     Map<String, String> newValue = new HashMap<>();
@@ -186,22 +227,52 @@ public abstract class AbstractWorkspace {
     }
   }
 
-  private void copyTemplateContentsToDestPath(
-      FileSystemProvider provider, Path templatePath, Path contentPath) throws IOException {
+  private FixtureLevel extensionIsFixture(String extension) {
+    if (extension.equals(FIXTURE_SUFFIX)) {
+      return FixtureLevel.FIXTURE;
+    }
+    if (testClassFixtureSuffix.isPresent() && extension.equals(testClassFixtureSuffix.get())) {
+      return FixtureLevel.TEST_CLASS_FIXTURE;
+    }
+    if (testCaseFixtureSuffix.isPresent() && extension.equals(testCaseFixtureSuffix.get())) {
+      return FixtureLevel.TEST_CASE_FIXTURE;
+    }
+    return FixtureLevel.NOT_A_FIXTURE;
+  }
+
+  private Optional<Path> copyFilePath(Path contentPath) {
     String fileName = contentPath.getFileName().toString();
     String extension = com.google.common.io.Files.getFileExtension(fileName);
     if (extension.equals(EXPECTED_SUFFIX)) {
-      return;
+      return Optional.empty();
     }
 
-    Path outputPath = contentPath;
-    if (extension.equals(FIXTURE_SUFFIX)) {
-      outputPath =
-          contentPath
-              .getParent()
-              .resolve(com.google.common.io.Files.getNameWithoutExtension(fileName));
+    FixtureLevel fixtureLevel = extensionIsFixture(extension);
+    if (fixtureLevel == FixtureLevel.NOT_A_FIXTURE) {
+      return Optional.of(contentPath);
     }
-    outputPath = templatePath.relativize(outputPath);
+
+    Path outputPath =
+        contentPath
+            .getParent()
+            .resolve(com.google.common.io.Files.getNameWithoutExtension(fileName));
+    // Only copy fixture if it has not yet been copied, or if only less specific fixtures have
+    // already been written
+    if (fixtureLevel.getLevel()
+        < writtenFileFixtureLevel.getOrDefault(outputPath, FixtureLevel.NOT_A_FIXTURE).getLevel()) {
+      return Optional.empty();
+    }
+    writtenFileFixtureLevel.put(outputPath, fixtureLevel);
+    return Optional.of(outputPath);
+  }
+
+  private void copyTemplateContentsToDestPath(
+      FileSystemProvider provider, Path templatePath, Path contentPath) throws IOException {
+    Optional<Path> optionalOutputPath = copyFilePath(contentPath);
+    if (!optionalOutputPath.isPresent()) {
+      return;
+    }
+    Path outputPath = templatePath.relativize(optionalOutputPath.get());
 
     try (InputStream inStream = provider.newInputStream(contentPath);
         FileOutputStream outStream =
@@ -229,21 +300,7 @@ public abstract class AbstractWorkspace {
   public void addTemplateToWorkspace(Path templatePath) throws IOException {
     // renames those with FIXTURE_SUFFIX, removes those with EXPECTED_SUFFIX
     MoreFiles.copyRecursively(
-        templatePath,
-        destPath,
-        (Path path) -> {
-          String fileName = path.getFileName().toString();
-          String extension = com.google.common.io.Files.getFileExtension(fileName);
-          switch (extension) {
-            case FIXTURE_SUFFIX:
-              return path.getParent()
-                  .resolve(com.google.common.io.Files.getNameWithoutExtension(fileName));
-            case EXPECTED_SUFFIX:
-              return null;
-            default:
-              return path;
-          }
-        });
+        templatePath, destPath, (Path path) -> copyFilePath(path).orElse(null));
 
     if (Platform.detect() == Platform.WINDOWS) {
       // Hack for symlinks on Windows.
