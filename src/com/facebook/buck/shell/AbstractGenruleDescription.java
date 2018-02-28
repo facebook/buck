@@ -34,6 +34,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.AbstractMacroExpander;
+import com.facebook.buck.rules.macros.ClasspathAbiMacroExpander;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
@@ -132,6 +133,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     return Optional.of(
         ImmutableList.of(
             new ClasspathMacroExpander(),
+            new ClasspathAbiMacroExpander(),
             new ExecutableMacroExpander(),
             new WorkerMacroExpander(),
             new LocationMacroExpander(),
