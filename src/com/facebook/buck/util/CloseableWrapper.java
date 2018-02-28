@@ -80,13 +80,4 @@ public class CloseableWrapper<T, E extends Exception> implements AutoCloseable {
     closed = true;
     closer.accept(obj);
   }
-
-  /**
-   * The version of {@code Consumer<T>} that can throw an exception. It only exists because {@code
-   * AutoCloseable} interface defines its {@code close} function to throw {@code Exception}
-   */
-  @FunctionalInterface
-  public interface ThrowingConsumer<T, E extends Exception> {
-    void accept(T t) throws E;
-  }
 }
