@@ -146,26 +146,4 @@ public class JavaLibraryRules {
             .map(BuildRule::getSourcePathToOutput)
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
-
-  /**
-   * Iterates the input BuildRules and translates them to their ABI rules when possible. This is
-   * necessary when constructing a BuildRuleParams object, for example, where we want to translate
-   * rules to their ABI rules, but not skip over BuildRules such as GenAidl, CxxLibrary, NdkLibrary,
-   * AndroidResource, etc. These should still be returned from this method, but without translation.
-   */
-  public static ImmutableSortedSet<BuildRule> getAbiRulesWherePossible(
-      BuildRuleResolver resolver, Iterable<BuildRule> inputs) {
-    ImmutableSortedSet.Builder<BuildRule> abiRules = ImmutableSortedSet.naturalOrder();
-    for (BuildRule dep : inputs) {
-      if (dep instanceof HasJavaAbi) {
-        Optional<BuildTarget> abiJarTarget = ((HasJavaAbi) dep).getAbiJar();
-        if (abiJarTarget.isPresent()) {
-          abiRules.add(resolver.requireRule(abiJarTarget.get()));
-        }
-      } else {
-        abiRules.add(dep);
-      }
-    }
-    return abiRules.build();
-  }
 }
