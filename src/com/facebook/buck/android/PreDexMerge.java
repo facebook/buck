@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -47,10 +48,12 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.google.common.collect.Streams;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
@@ -294,7 +297,8 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       throw new HumanReadableException("No classes found in primary or secondary dexes");
     }
 
-    Multimap<Path, Path> aggregatedOutputToInputs = HashMultimap.create();
+    SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
+    Multimap<Path, SourcePath> aggregatedOutputToInputs = HashMultimap.create();
     ImmutableMap.Builder<Path, Sha1HashCode> dexInputHashesBuilder = ImmutableMap.builder();
     for (PreDexedFilesSorter.Result result : sortResults.values()) {
       if (!result.apkModule.equals(apkModuleGraph.getRootAPKModule())) {
@@ -305,7 +309,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                     context.getBuildCellRootPath(), getProjectFilesystem(), dexOutputPath)));
       }
       aggregatedOutputToInputs.putAll(result.secondaryOutputToInputs);
-      dexInputHashesBuilder.putAll(result.dexInputHashes);
+      addResolvedPathsToBuilder(sourcePathResolver, dexInputHashesBuilder, result.dexInputHashes);
     }
     final ImmutableMap<Path, Sha1HashCode> dexInputHashes = dexInputHashesBuilder.build();
 
@@ -317,9 +321,17 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             context,
             getProjectFilesystem(),
             primaryDexPath,
-            Suppliers.ofInstance(rootApkModuleResult.primaryDexInputs),
+            Suppliers.ofInstance(
+                rootApkModuleResult
+                    .primaryDexInputs
+                    .stream()
+                    .map(sourcePathResolver::getRelativePath)
+                    .collect(ImmutableSet.toImmutableSet())),
             Optional.of(paths.jarfilesSubdir),
-            Optional.of(Suppliers.ofInstance(aggregatedOutputToInputs)),
+            Optional.of(
+                Suppliers.ofInstance(
+                    Multimaps.transformValues(
+                        aggregatedOutputToInputs, sourcePathResolver::getRelativePath))),
             () -> dexInputHashes,
             paths.successDir,
             DX_MERGE_OPTIONS,
@@ -341,6 +353,15 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     }
 
     addMetadataWriteStep(rootApkModuleResult, steps, paths.metadataFile);
+  }
+
+  private void addResolvedPathsToBuilder(
+      SourcePathResolver sourcePathResolver,
+      ImmutableMap.Builder<Path, Sha1HashCode> builder,
+      ImmutableMap<SourcePath, Sha1HashCode> dexInputHashes) {
+    for (Map.Entry<SourcePath, Sha1HashCode> entry : dexInputHashes.entrySet()) {
+      builder.put(sourcePathResolver.getRelativePath(entry.getKey()), entry.getValue());
+    }
   }
 
   private void addMetadataWriteStep(

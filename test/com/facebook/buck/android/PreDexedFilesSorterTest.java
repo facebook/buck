@@ -247,11 +247,6 @@ public class PreDexedFilesSorterTest {
       }
 
       @Override
-      public Path getPathToDexFile() {
-        return pathToDex;
-      }
-
-      @Override
       public ImmutableSet<String> getClassNames() {
         return classNames;
       }

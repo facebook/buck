@@ -20,7 +20,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
-import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -33,8 +32,6 @@ public interface DexWithClasses {
 
   /** @return path from the project root where the {@code .dex.jar} file can be found. */
   SourcePath getSourcePathToDexFile();
-
-  Path getPathToDexFile();
 
   /** @return the names of the {@code .class} files that went into the DEX file. */
   ImmutableSet<String> getClassNames();
@@ -60,7 +57,6 @@ public interface DexWithClasses {
           }
 
           final SourcePath sourcePathToDex = preDex.getSourcePathToDex();
-          final Path pathToDex = preDex.getPathToDex();
           final ImmutableSet<String> classNames = preDex.getClassNames().keySet();
           final Sha1HashCode classesHash =
               Sha1HashCode.fromHashCode(Hashing.combineOrdered(preDex.getClassNames().values()));
@@ -69,11 +65,6 @@ public interface DexWithClasses {
             @Override
             public SourcePath getSourcePathToDexFile() {
               return sourcePathToDex;
-            }
-
-            @Override
-            public Path getPathToDexFile() {
-              return pathToDex;
             }
 
             @Override
