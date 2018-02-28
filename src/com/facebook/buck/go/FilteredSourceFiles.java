@@ -18,19 +18,20 @@ package com.facebook.buck.go;
 
 import com.facebook.buck.go.GoListStep.FileType;
 import com.facebook.buck.model.BuildTarget;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 public class FilteredSourceFiles implements Iterable<Path> {
-  private final List<Path> rawSrcFiles;
-  private final List<Path> extraSrcFiles;
-  private Map<Path, GoListStep> filterSteps;
+  private final ImmutableList<Path> rawSrcFiles;
+  private final ImmutableList<Path> extraSrcFiles;
+  private final ImmutableMap<Path, GoListStep> filterSteps;
 
   public FilteredSourceFiles(
       List<Path> rawSrcFiles,
@@ -38,17 +39,27 @@ public class FilteredSourceFiles implements Iterable<Path> {
       GoToolchain goToolchain,
       GoPlatform platform,
       List<FileType> fileTypes) {
-    this.rawSrcFiles = rawSrcFiles;
-    this.extraSrcFiles = new ArrayList<>();
-    initFilterSteps(buildTarget, goToolchain, platform, fileTypes);
+    this(rawSrcFiles, ImmutableList.of(), buildTarget, goToolchain, platform, fileTypes);
   }
 
-  private void initFilterSteps(
+  public FilteredSourceFiles(
+      List<Path> rawSrcFiles,
+      List<Path> extraSrcFiles,
       BuildTarget buildTarget,
       GoToolchain goToolchain,
       GoPlatform platform,
       List<FileType> fileTypes) {
-    filterSteps = new HashMap<>();
+    this.rawSrcFiles = ImmutableList.copyOf(rawSrcFiles);
+    this.extraSrcFiles = ImmutableList.copyOf(extraSrcFiles);
+    filterSteps = createFilterSteps(buildTarget, goToolchain, platform, fileTypes);
+  }
+
+  private ImmutableMap<Path, GoListStep> createFilterSteps(
+      BuildTarget buildTarget,
+      GoToolchain goToolchain,
+      GoPlatform platform,
+      List<FileType> fileTypes) {
+    HashMap<Path, GoListStep> filterSteps = new HashMap<>();
     for (Path srcFile : rawSrcFiles) {
       Path absPath = srcFile.getParent();
       if (!filterSteps.containsKey(absPath)) {
@@ -56,6 +67,7 @@ public class FilteredSourceFiles implements Iterable<Path> {
             absPath, new GoListStep(buildTarget, absPath, goToolchain, platform, fileTypes));
       }
     }
+    return ImmutableMap.copyOf(filterSteps);
   }
 
   public Collection<GoListStep> getFilterSteps() {
@@ -66,19 +78,13 @@ public class FilteredSourceFiles implements Iterable<Path> {
   public Iterator<Path> iterator() {
     HashSet<Path> sourceFiles = new HashSet<>();
     for (Path srcFile : rawSrcFiles) {
-      if (filterSteps.get(srcFile.getParent()).getSourceFiles().contains(srcFile)) {
+      GoListStep step = filterSteps.get(srcFile.getParent());
+      Preconditions.checkNotNull(step, "No GoListStep is found for " + srcFile.toString());
+      if (step.getSourceFiles().contains(srcFile)) {
         sourceFiles.add(srcFile);
       }
     }
     sourceFiles.addAll(extraSrcFiles);
     return sourceFiles.iterator();
-  }
-
-  /**
-   * @param srcFiles Extra source files to be added to the iterator. These files will NOT be subject
-   *     to filtering
-   */
-  public void addExtraSourceFiles(List<Path> srcFiles) {
-    extraSrcFiles.addAll(srcFiles);
   }
 }

@@ -172,8 +172,13 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       steps.add(new TouchStep(getProjectFilesystem(), output));
     } else {
       FilteredSourceFiles filteredCompileSrcs =
-          new FilteredSourceFiles(rawCompileSrcs, getBuildTarget(), goToolchain, platform, goFileTypes);
-      filteredCompileSrcs.addExtraSourceFiles(getSourceFiles(generatedSrcs, context));
+          new FilteredSourceFiles(
+              rawCompileSrcs,
+              getSourceFiles(generatedSrcs, context),
+              getBuildTarget(),
+              goToolchain,
+              platform,
+              goFileTypes);
       steps.addAll(filteredCompileSrcs.getFilterSteps());
       steps.add(
           new GoCompileStep(
@@ -271,9 +276,9 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     return steps.build();
   }
 
-  private List<Path> getSourceFiles(ImmutableSet<SourcePath> srcs, BuildContext context) {
+  private static List<Path> getSourceFiles(ImmutableSet<SourcePath> srcPaths, BuildContext context) {
     List<Path> srcFiles = new ArrayList<>();
-    for (SourcePath path : srcs) {
+    for (SourcePath path : srcPaths) {
       Path srcPath = context.getSourcePathResolver().getAbsolutePath(path);
       if (Files.isDirectory(srcPath)) {
         try (Stream<Path> sourcePaths = Files.list(srcPath)) {

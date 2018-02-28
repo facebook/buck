@@ -128,11 +128,6 @@ abstract class GoDescriptors {
     resolver.addToIndex(symlinkTree);
 
     ImmutableList.Builder<SourcePath> extraAsmOutputsBuilder = ImmutableList.builder();
-    ImmutableSet.Builder<SourcePath> compileSrcBuilder = ImmutableSet.builder();
-    compileSrcBuilder.addAll(srcs);
-
-    ImmutableSet<SourcePath> compileSrcs = compileSrcBuilder.build();
-    ImmutableList<BuildRule> srcDependencies = getDependenciesFromSources(ruleFinder, compileSrcs);
 
     ImmutableSet.Builder<SourcePath> generatedSrcBuilder = ImmutableSet.builder();
     for (BuildTarget dep : cgoDeps) {
@@ -157,7 +152,7 @@ abstract class GoDescriptors {
         params
             .copyAppendingExtraDeps(linkableDepsBuilder.build())
             .copyAppendingExtraDeps(ImmutableList.of(symlinkTree))
-            .copyAppendingExtraDeps(srcDependencies),
+            .copyAppendingExtraDeps(getDependenciesFromSources(ruleFinder, srcs)),
         symlinkTree,
         packageName,
         getPackageImportMap(
@@ -167,7 +162,7 @@ abstract class GoDescriptors {
                 .stream()
                 .flatMap(input -> input.getGoLinkInput().keySet().stream())
                 .collect(ImmutableList.toImmutableList())),
-        compileSrcs,
+        srcs,
         generatedSrcBuilder.build(),
         goToolchain,
         ImmutableList.copyOf(compilerFlags),

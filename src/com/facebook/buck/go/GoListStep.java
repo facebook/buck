@@ -88,8 +88,8 @@ public class GoListStep extends ShellStep {
   @Override
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
     return ImmutableMap.<String, String>builder()
-        // The GOROOT is set to /usr/local/go somehow on Travis CI, which doesn't exist.
-        // So it has to be explicitly overridden here to the correct path
+        // The go list command relies on these environment variables, so they are set here
+        // in case the inherited/default ones are wrong
         .put("GOROOT", goToolchain.getGoRoot().toString())
         .put("GOOS", platform.getGoOs())
         .put("GOARCH", platform.getGoArch())

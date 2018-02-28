@@ -89,8 +89,8 @@ public class GoCompileStep extends ShellStep {
         commandBuilder.add("-I", dir.toString());
       }
 
-      for (Map.Entry<Path, Path> importMap : importPathMap.entrySet()) {
-        commandBuilder.add("-importmap", importMap.getKey() + "=" + importMap.getValue());
+      for (Map.Entry<Path, Path> entry : importPathMap.entrySet()) {
+        commandBuilder.add("-importmap", entry.getKey() + "=" + entry.getValue());
       }
 
       if (asmHeaderPath.isPresent()) {
