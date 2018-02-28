@@ -59,6 +59,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final Path packageName;
 
   @AddToRuleKey private final ImmutableSet<SourcePath> srcs;
+  @AddToRuleKey private final ImmutableSet<SourcePath> generatedSrcs;
   @AddToRuleKey private final ImmutableList<String> compilerFlags;
   @AddToRuleKey private final ImmutableList<String> assemblerFlags;
   @AddToRuleKey private final ImmutableList<SourcePath> extraAsmOutputs;
@@ -81,6 +82,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       Path packageName,
       ImmutableMap<Path, Path> importPathMap,
       ImmutableSet<SourcePath> srcs,
+      ImmutableSet<SourcePath> generatedSrcs,
       GoToolchain goToolchain,
       ImmutableList<String> compilerFlags,
       ImmutableList<String> assemblerFlags,
@@ -90,6 +92,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     super(buildTarget, projectFilesystem, params);
     this.importPathMap = importPathMap;
     this.srcs = srcs;
+    this.generatedSrcs = generatedSrcs;
     this.symlinkTree = symlinkTree;
     this.packageName = packageName;
     this.compilerFlags = compilerFlags;
@@ -118,7 +121,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     ImmutableList.Builder<Path> compileSrcListBuilder = ImmutableList.builder();
     ImmutableList.Builder<Path> headerSrcListBuilder = ImmutableList.builder();
     ImmutableList.Builder<Path> asmSrcListBuilder = ImmutableList.builder();
-    List<Path> srcFiles = getSourceFiles(context);
+    List<Path> srcFiles = getSourceFiles(srcs, context);
     for (Path sourceFile : srcFiles) {
       String extension = MorePaths.getFileExtension(sourceFile).toLowerCase();
       if (extension.equals("s")) {
@@ -170,6 +173,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     } else {
       FilteredSourceFiles filteredCompileSrcs =
           new FilteredSourceFiles(rawCompileSrcs, getBuildTarget(), goToolchain, platform, goFileTypes);
+      filteredCompileSrcs.addExtraSourceFiles(getSourceFiles(generatedSrcs, context));
       steps.addAll(filteredCompileSrcs.getFilterSteps());
       steps.add(
           new GoCompileStep(
@@ -267,7 +271,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     return steps.build();
   }
 
-  private List<Path> getSourceFiles(BuildContext context) {
+  private List<Path> getSourceFiles(ImmutableSet<SourcePath> srcs, BuildContext context) {
     List<Path> srcFiles = new ArrayList<>();
     for (SourcePath path : srcs) {
       Path srcPath = context.getSourcePathResolver().getAbsolutePath(path);

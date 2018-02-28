@@ -131,6 +131,10 @@ abstract class GoDescriptors {
     ImmutableSet.Builder<SourcePath> compileSrcBuilder = ImmutableSet.builder();
     compileSrcBuilder.addAll(srcs);
 
+    ImmutableSet<SourcePath> compileSrcs = compileSrcBuilder.build();
+    ImmutableList<BuildRule> srcDependencies = getDependenciesFromSources(ruleFinder, compileSrcs);
+
+    ImmutableSet.Builder<SourcePath> generatedSrcBuilder = ImmutableSet.builder();
     for (BuildTarget dep : cgoDeps) {
       BuildRule rule = resolver.requireRule(dep);
       if (!(rule instanceof CGoLibrary)) {
@@ -139,15 +143,12 @@ abstract class GoDescriptors {
       }
 
       CGoLibrary lib = (CGoLibrary) rule;
-      compileSrcBuilder.addAll(lib.getGeneratedGoSource());
+      generatedSrcBuilder.addAll(lib.getGeneratedGoSource());
       extraAsmOutputsBuilder.add(lib.getOutput());
       linkableDepsBuilder
           .addAll(ruleFinder.filterBuildRuleInputs(lib.getOutput()))
           .addAll(ruleFinder.filterBuildRuleInputs(lib.getGeneratedGoSource()));
     }
-
-    ImmutableSet<SourcePath> compileSrcs = compileSrcBuilder.build();
-    ImmutableList<BuildRule> srcDependencies = getDependenciesFromSources(ruleFinder, compileSrcs);
 
     LOG.verbose("Symlink tree for compiling %s: %s", buildTarget, symlinkTree.getLinks());
     return new GoCompile(
@@ -166,7 +167,8 @@ abstract class GoDescriptors {
                 .stream()
                 .flatMap(input -> input.getGoLinkInput().keySet().stream())
                 .collect(ImmutableList.toImmutableList())),
-        compileSrcBuilder.build(),
+        compileSrcs,
+        generatedSrcBuilder.build(),
         goToolchain,
         ImmutableList.copyOf(compilerFlags),
         ImmutableList.copyOf(assemblerFlags),

@@ -19,6 +19,7 @@ package com.facebook.buck.go;
 import com.facebook.buck.go.GoListStep.FileType;
 import com.facebook.buck.model.BuildTarget;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,6 +29,7 @@ import java.util.Map;
 
 public class FilteredSourceFiles implements Iterable<Path> {
   private final List<Path> rawSrcFiles;
+  private final List<Path> extraSrcFiles;
   private Map<Path, GoListStep> filterSteps;
 
   public FilteredSourceFiles(
@@ -37,11 +39,15 @@ public class FilteredSourceFiles implements Iterable<Path> {
       GoPlatform platform,
       List<FileType> fileTypes) {
     this.rawSrcFiles = rawSrcFiles;
+    this.extraSrcFiles = new ArrayList<>();
     initFilterSteps(buildTarget, goToolchain, platform, fileTypes);
   }
 
   private void initFilterSteps(
-      BuildTarget buildTarget, GoToolchain goToolchain, GoPlatform platform, List<FileType> fileTypes) {
+      BuildTarget buildTarget,
+      GoToolchain goToolchain,
+      GoPlatform platform,
+      List<FileType> fileTypes) {
     filterSteps = new HashMap<>();
     for (Path srcFile : rawSrcFiles) {
       Path absPath = srcFile.getParent();
@@ -64,6 +70,15 @@ public class FilteredSourceFiles implements Iterable<Path> {
         sourceFiles.add(srcFile);
       }
     }
+    sourceFiles.addAll(extraSrcFiles);
     return sourceFiles.iterator();
+  }
+
+  /**
+   * @param srcFiles Extra source files to be added to the iterator. These files will NOT be subject
+   *     to filtering
+   */
+  public void addExtraSourceFiles(List<Path> srcFiles) {
+    extraSrcFiles.addAll(srcFiles);
   }
 }
