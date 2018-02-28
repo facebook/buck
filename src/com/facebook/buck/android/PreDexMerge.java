@@ -51,17 +51,16 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Streams;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.AbstractMap;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -142,7 +141,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     if (dexSplitMode.isShouldSplitDex()) {
       addStepsForSplitDex(steps, context, buildableContext);
     } else {
-      addStepsForSingleDex(steps, buildableContext);
+      addStepsForSingleDex(steps, context, buildableContext);
     }
     return steps.build();
   }
@@ -393,36 +392,34 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   }
 
   private void addStepsForSingleDex(
-      ImmutableList.Builder<Step> steps, final BuildableContext buildableContext) {
+      ImmutableList.Builder<Step> steps,
+      BuildContext context,
+      final BuildableContext buildableContext) {
     // For single-dex apps with pre-dexing, we just add the steps directly.
-    Iterable<Path> filesToDex =
-        FluentIterable.from(preDexDeps.values())
-            .transform(
-                new Function<DexProducedFromJavaLibrary, Path>() {
-                      @Override
-                      @Nullable
-                      public Path apply(DexProducedFromJavaLibrary preDex) {
-                        if (preDex.hasOutput()) {
-                          return preDex.getPathToDex();
-                        } else {
-                          return null;
-                        }
-                      }
-                    }
-                    ::apply)
-            .filter(Objects::nonNull);
+
+    Stream<SourcePath> sourcePathsToDex =
+        preDexDeps
+            .values()
+            .stream()
+            .filter(DexProducedFromJavaLibrary::hasOutput)
+            .map(DexProducedFromJavaLibrary::getSourcePathToDex);
 
     // If this APK has Android resources, then the generated R.class files also need to be dexed.
     Optional<DexWithClasses> rDotJavaDexWithClasses =
         Optional.ofNullable(DexWithClasses.TO_DEX_WITH_CLASSES.apply(dexForUberRDotJava));
     if (rDotJavaDexWithClasses.isPresent()) {
-      filesToDex =
-          Iterables.concat(
-              filesToDex, Collections.singleton(rDotJavaDexWithClasses.get().getPathToDexFile()));
+      sourcePathsToDex =
+          Streams.concat(
+              sourcePathsToDex, Stream.of(rDotJavaDexWithClasses.get().getSourcePathToDexFile()));
     }
 
     Path primaryDexPath = getPrimaryDexPath();
     buildableContext.recordArtifact(primaryDexPath);
+
+    Iterable<Path> filesToDex =
+        context
+            .getSourcePathResolver()
+            .getAllAbsolutePaths(sourcePathsToDex.collect(Collectors.toList()));
 
     // This will combine the pre-dexed files and the R.class files into a single classes.dex file.
     steps.add(

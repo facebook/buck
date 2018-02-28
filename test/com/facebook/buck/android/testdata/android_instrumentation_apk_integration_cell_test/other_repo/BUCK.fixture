@@ -1,0 +1,27 @@
+android_binary(
+    name = "app",
+    keystore = ":keystore",
+    manifest = "AndroidManifest.xml",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//java/com/sample/lib:lib",
+    ],
+)
+
+keystore(
+    name = "keystore",
+    properties = "debug.keystore.properties",
+    store = "debug.keystore",
+    visibility = ["PUBLIC"],
+)
+
+android_instrumentation_apk(
+    name = "app_cxx_lib_dep",
+    apk = ":app",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//java/com/sample/app:app",
+    ],
+)

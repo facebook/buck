@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
@@ -31,6 +32,8 @@ import javax.annotation.Nullable;
 public interface DexWithClasses {
 
   /** @return path from the project root where the {@code .dex.jar} file can be found. */
+  SourcePath getSourcePathToDexFile();
+
   Path getPathToDexFile();
 
   /** @return the names of the {@code .class} files that went into the DEX file. */
@@ -56,12 +59,18 @@ public interface DexWithClasses {
             return null;
           }
 
+          final SourcePath sourcePathToDex = preDex.getSourcePathToDex();
           final Path pathToDex = preDex.getPathToDex();
           final ImmutableSet<String> classNames = preDex.getClassNames().keySet();
           final Sha1HashCode classesHash =
               Sha1HashCode.fromHashCode(Hashing.combineOrdered(preDex.getClassNames().values()));
           final int weightEstimate = preDex.getWeightEstimate();
           return new DexWithClasses() {
+            @Override
+            public SourcePath getSourcePathToDexFile() {
+              return sourcePathToDex;
+            }
+
             @Override
             public Path getPathToDexFile() {
               return pathToDex;
@@ -86,5 +95,5 @@ public interface DexWithClasses {
       };
 
   Comparator<DexWithClasses> DEX_WITH_CLASSES_COMPARATOR =
-      (o1, o2) -> o1.getPathToDexFile().compareTo(o2.getPathToDexFile());
+      (o1, o2) -> o1.getSourcePathToDexFile().compareTo(o2.getSourcePathToDexFile());
 }

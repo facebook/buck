@@ -21,6 +21,8 @@ import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.dalvik.CanaryFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.classes.FileLike;
+import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -294,6 +296,11 @@ public class PreDexedFilesSorter {
           // Because we do not know the units being used for DEX size estimation and the canary
           // should be very small, assume the size is zero.
           return 0;
+        }
+
+        @Override
+        public SourcePath getSourcePathToDexFile() {
+          return PathSourcePath.of(filesystem, scratchDirectoryForCanaryClass);
         }
 
         @Override

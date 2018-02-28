@@ -22,7 +22,10 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -187,11 +190,13 @@ public class PreDexedFilesSorterTest {
   private ImmutableMap<String, PreDexedFilesSorter.Result> generatePreDexSorterResults(
       int numberOfPrimaryDexes, int numberOfSecondaryDexes, int numberOfExtraDexes)
       throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     ImmutableMultimap.Builder<APKModule, DexWithClasses> inputDexes = ImmutableMultimap.builder();
     for (int i = 0; i < numberOfPrimaryDexes; i++) {
       inputDexes.put(
           moduleGraph.getRootAPKModule(),
           createFakeDexWithClasses(
+              filesystem,
               Paths.get("primary").resolve(String.format("/primary%d.dex", i)),
               ImmutableSet.of(String.format("primary.primary%d.class", i)),
               STANDARD_DEX_FILE_ESTIMATE));
@@ -200,6 +205,7 @@ public class PreDexedFilesSorterTest {
       inputDexes.put(
           moduleGraph.getRootAPKModule(),
           createFakeDexWithClasses(
+              filesystem,
               Paths.get("secondary").resolve(String.format("secondary%d.dex", i)),
               ImmutableSet.of(String.format("secondary.secondary%d.class", i)),
               STANDARD_DEX_FILE_ESTIMATE));
@@ -208,6 +214,7 @@ public class PreDexedFilesSorterTest {
       inputDexes.put(
           extraModule,
           createFakeDexWithClasses(
+              filesystem,
               Paths.get("extra").resolve(String.format("extra%d.dex", i)),
               ImmutableSet.of(String.format("extra.extra%d.class", i)),
               STANDARD_DEX_FILE_ESTIMATE));
@@ -225,13 +232,20 @@ public class PreDexedFilesSorterTest {
             tempDir.newFolder("secondary").toPath(),
             tempDir.newFolder("additional").toPath());
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     return sorter.sortIntoPrimaryAndSecondaryDexes(filesystem, steps);
   }
 
   private DexWithClasses createFakeDexWithClasses(
-      final Path pathToDex, final ImmutableSet<String> classNames, final int weightEstimate) {
+      ProjectFilesystem filesystem,
+      final Path pathToDex,
+      final ImmutableSet<String> classNames,
+      final int weightEstimate) {
     return new DexWithClasses() {
+      @Override
+      public SourcePath getSourcePathToDexFile() {
+        return PathSourcePath.of(filesystem, pathToDex);
+      }
+
       @Override
       public Path getPathToDexFile() {
         return pathToDex;
