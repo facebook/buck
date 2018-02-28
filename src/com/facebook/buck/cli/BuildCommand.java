@@ -142,6 +142,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
@@ -253,6 +254,8 @@ public class BuildCommand extends AbstractCommand {
   )
   private boolean useDistributedBuild = false;
 
+  private Optional<String> autoDistBuildMessage = Optional.empty();
+
   @Nullable
   @Option(
     name = DistBuildRunCommand.BUILD_STATE_FILE_ARG_NAME,
@@ -344,6 +347,10 @@ public class BuildCommand extends AbstractCommand {
 
   public void setUseDistributedBuild(boolean useDistributedBuild) {
     this.useDistributedBuild = useDistributedBuild;
+  }
+
+  public void shouldPrintAutoDistributedBuildMessage(DistBuildConfig config) {
+    this.autoDistBuildMessage = config.getAutoDistributedBuildMessage();
   }
 
   /** @return an absolute path or {@link Optional#empty()}. */
@@ -844,6 +851,13 @@ public class BuildCommand extends AbstractCommand {
 
     BuildEvent.DistBuildStarted started = BuildEvent.distBuildStarted();
     params.getBuckEventBus().post(started);
+    autoDistBuildMessage.ifPresent(
+        msg ->
+            params
+                .getBuckEventBus()
+                .post(
+                    ConsoleEvent.createForMessageWithAnsiEscapeCodes(
+                        Level.INFO, params.getConsole().getAnsi().asInformationText(msg))));
 
     LOG.info("Starting async file hash computation and job state serialization.");
     AsyncJobStateAndCells stateAndCells =
