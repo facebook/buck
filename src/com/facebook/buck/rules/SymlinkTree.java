@@ -54,14 +54,12 @@ import java.util.logging.Level;
 import java.util.stream.Stream;
 
 /** Creates a tree of symlinks inside of a given directory */
-public class SymlinkTree
-    implements BuildRule, HasRuntimeDeps, SupportsInputBasedRuleKey, CacheableBuildRule {
+public class SymlinkTree extends AbstractBuildRule
+    implements HasRuntimeDeps, SupportsInputBasedRuleKey, CacheableBuildRule {
 
   private final String category;
   private final Path root;
   private final ImmutableSortedMap<Path, SourcePath> links;
-  private final BuildTarget target;
-  private final ProjectFilesystem filesystem;
 
   private final String type;
   private final ImmutableMultimap<Path, SourcePath> directoriesToMerge;
@@ -89,9 +87,8 @@ public class SymlinkTree
       final ImmutableMap<Path, SourcePath> links,
       ImmutableMultimap<Path, SourcePath> directoriesToMerge,
       SourcePathRuleFinder ruleFinder) {
+    super(target, filesystem);
     this.category = category;
-    this.target = target;
-    this.filesystem = filesystem;
     this.directoriesToMerge = directoriesToMerge;
 
     this.buildDeps =
@@ -189,11 +186,6 @@ public class SymlinkTree
   }
 
   @Override
-  public BuildTarget getBuildTarget() {
-    return target;
-  }
-
-  @Override
   public String getType() {
     return type;
   }
@@ -261,11 +253,6 @@ public class SymlinkTree
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), root);
   }
 
-  @Override
-  public ProjectFilesystem getProjectFilesystem() {
-    return filesystem;
-  }
-
   @VisibleForTesting
   protected Step getVerifyStep() {
     return new AbstractExecutionStep("verify_symlink_tree") {
@@ -324,10 +311,5 @@ public class SymlinkTree
 
   public ImmutableSortedMap<Path, SourcePath> getLinks() {
     return links;
-  }
-
-  @Override
-  public String toString() {
-    return getFullyQualifiedName();
   }
 }
