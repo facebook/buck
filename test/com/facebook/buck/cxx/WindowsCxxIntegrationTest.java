@@ -21,6 +21,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.WindowsUtils;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
@@ -42,13 +43,15 @@ public class WindowsCxxIntegrationTest {
   private ProjectWorkspace workspace;
 
 
+  private WindowsUtils windowsUtils = new WindowsUtils();
+
   @Before
   public void setUp() throws IOException {
     assumeTrue(Platform.detect() == Platform.WINDOWS);
-    WindowsUtils.checkAssumptions();
+    windowsUtils.checkAssumptions();
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "win_x64", tmp);
     workspace.setUp();
-    WindowsUtils.setUpWorkspace(workspace, "xplat");
+    windowsUtils.setUpWorkspace(workspace, "xplat");
   }
 
   @Test
@@ -128,7 +131,8 @@ public class WindowsCxxIntegrationTest {
   private ImmutableMap<String, String> getDevConsoleEnv(String vcvarsallBatArg)
       throws IOException, InterruptedException {
     workspace.writeContentsToPath(
-        "\"" + WindowsUtils.vcvarsallBat + "\" " + vcvarsallBatArg + " & set", "env.bat");
+        String.format("\"%s\" %s & set", windowsUtils.getVcvarsallbat(), vcvarsallBatArg),
+        "env.bat");
     ProcessExecutor.Result envResult = workspace.runCommand("cmd", "/Q", "/c", "env.bat");
     Optional<String> envOut = envResult.getStdout();
     Assert.assertTrue(envOut.isPresent());
