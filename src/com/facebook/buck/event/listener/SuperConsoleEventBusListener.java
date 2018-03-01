@@ -44,6 +44,7 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.timing.Clock;
@@ -590,7 +591,17 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       // we only output total time if build started and finished
       if (buildStarted != null && buildFinished != null) {
         long durationMs = buildFinished.getTimestamp() - buildStarted.getTimestamp();
-        lines.add("  Total time: " + formatElapsedTime(durationMs));
+        String finalLine = "  Total time: " + formatElapsedTime(durationMs);
+        if (distBuildStarted != null) {
+          // Stampede build. We need to print final status to reduce confusion from remote errors.
+          finalLine += ". ";
+          if (buildFinished.getExitCode() == ExitCode.SUCCESS) {
+            finalLine += ansi.asGreenText("Build successful.");
+          } else {
+            finalLine += ansi.asErrorText("Build failed.");
+          }
+        }
+        lines.add(finalLine);
       }
     } else {
       // project generation started, it may or may not contain a build
