@@ -83,6 +83,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
 
     PreprocessorFlags.Builder flagsBuilder = PreprocessorFlags.builder();
     inputs.forEach(input -> flagsBuilder.addAllIncludes(input.getIncludes()));
+    inputs.forEach(input -> flagsBuilder.addAllFrameworkPaths(input.getFrameworks()));
     PreprocessorFlags preprocessorFlags = flagsBuilder.build();
 
     return SwiftLibraryDescription.createSwiftCompileRule(

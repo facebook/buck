@@ -57,6 +57,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Streams;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -179,8 +180,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
 
     compilerCommand.addAll(
-        frameworks
-            .stream()
+        Streams.concat(frameworks.stream(), cxxDeps.getFrameworkPaths().stream())
             .filter(x -> !x.isSDKROOTFrameworkPath())
             .map(frameworkPathToSearchPath)
             .flatMap(searchPath -> ImmutableSet.of("-F", searchPath.toString()).stream())
