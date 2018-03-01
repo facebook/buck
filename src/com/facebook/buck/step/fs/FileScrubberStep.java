@@ -64,6 +64,7 @@ public class FileScrubberStep implements Step {
       }
     } catch (FileContentsScrubber.ScrubException e) {
       context.logError(e, "Error scrubbing non-deterministic metadata from %s", filePath);
+      return StepExecutionResults.ERROR;
     }
     return StepExecutionResults.SUCCESS;
   }

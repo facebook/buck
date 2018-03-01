@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain.objectfile;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Ints;
@@ -49,6 +50,8 @@ public class Machos {
   // Description of object file STAB entries
   static final short N_OSO = (short) 0x66;
 
+  static final String LINKEDIT = "__LINKEDIT";
+
   private Machos() {}
 
   static void setUuid(MappedByteBuffer map, byte[] uuid) throws MachoException {
@@ -65,7 +68,6 @@ public class Machos {
       }
     }
 
-    throw new MachoException("LC_UUID command not found");
   }
 
   static boolean isMacho(FileChannel file) throws IOException {
@@ -105,6 +107,7 @@ public class Machos {
     boolean symbolTableSegmentFound = false;
     int segmentSizePosition = 0;
     int segmentSize = 0;
+    boolean linkEditSegmentFound = false;
 
     int commandsCount = header.getCommandsCount();
     for (int i = 0; i < commandsCount; i++) {
@@ -121,38 +124,43 @@ public class Machos {
           symbolTableSegmentFound = true;
           break;
         case LC_SEGMENT:
-          /* segment name */ ObjectFileScrubbers.getBytes(map, 16);
-          /* vm address */ ObjectFileScrubbers.getLittleEndianInt(map);
-          /* vm size */ ObjectFileScrubbers.getLittleEndianInt(map);
-          int segmentFileOffset = ObjectFileScrubbers.getLittleEndianInt(map);
-          int segmentFileSizePosition = map.position();
-          int segmentFileSize = ObjectFileScrubbers.getLittleEndianInt(map);
-          /* maximum vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
-          /* initial vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
-          /* number of sections */ ObjectFileScrubbers.getLittleEndianInt(map);
-          /* flags */ ObjectFileScrubbers.getLittleEndianInt(map);
+          byte[] segmentNameBytes = ObjectFileScrubbers.getBytes(map, 16);
+          String segmentName = new String(segmentNameBytes, Charsets.US_ASCII);
+          if (segmentName.startsWith(LINKEDIT)) {
+            linkEditSegmentFound = true;
+            /* vm address */ ObjectFileScrubbers.getLittleEndianInt(map);
+            /* vm size */ ObjectFileScrubbers.getLittleEndianInt(map);
+            int segmentFileOffset = ObjectFileScrubbers.getLittleEndianInt(map);
+            int segmentFileSizePosition = map.position();
+            int segmentFileSize = ObjectFileScrubbers.getLittleEndianInt(map);
+            /* maximum vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
+            /* initial vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
+            /* number of sections */ ObjectFileScrubbers.getLittleEndianInt(map);
+            /* flags */ ObjectFileScrubbers.getLittleEndianInt(map);
 
-          if (segmentFileOffset + segmentFileSize == size) {
             if (segmentSizePosition != 0) {
               throw new MachoException("multiple map segment commands map string table");
             }
             segmentSizePosition = segmentFileSizePosition;
             segmentSize = segmentFileSize;
+
           }
           break;
         case LC_SEGMENT_64:
-          /* segment name */ ObjectFileScrubbers.getBytes(map, 16);
-          /* vm address */ ObjectFileScrubbers.getLittleEndianLong(map);
-          /* vm size */ ObjectFileScrubbers.getLittleEndianLong(map);
-          long segment64FileOffset = ObjectFileScrubbers.getLittleEndianLong(map);
-          int segment64FileSizePosition = map.position();
-          long segment64FileSize = ObjectFileScrubbers.getLittleEndianLong(map);
-          /* maximum vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
-          /* initial vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
-          /* number of sections */ ObjectFileScrubbers.getLittleEndianInt(map);
-          /* flags */ ObjectFileScrubbers.getLittleEndianInt(map);
+          byte[] segment64NameBytes = ObjectFileScrubbers.getBytes(map, 16);
+          String segment64Name = new String(segment64NameBytes, Charsets.US_ASCII);
+          if (segment64Name.startsWith(LINKEDIT)) {
+            linkEditSegmentFound = true;
+            /* vm address */ ObjectFileScrubbers.getLittleEndianLong(map);
+            /* vm size */ ObjectFileScrubbers.getLittleEndianLong(map);
+            long segment64FileOffset = ObjectFileScrubbers.getLittleEndianLong(map);
+            int segment64FileSizePosition = map.position();
+            long segment64FileSize = ObjectFileScrubbers.getLittleEndianLong(map);
+            /* maximum vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
+            /* initial vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
+            /* number of sections */ ObjectFileScrubbers.getLittleEndianInt(map);
+            /* flags */ ObjectFileScrubbers.getLittleEndianInt(map);
 
-          if (segment64FileOffset + segment64FileSize == size) {
             if (segmentSizePosition != 0) {
               throw new MachoException("multiple map segment commands map string table");
             }
@@ -161,10 +169,17 @@ public class Machos {
               throw new MachoException("map segment file size too big");
             }
             segmentSize = (int) segment64FileSize;
+
           }
           break;
       }
       map.position(commandStart + commandSize);
+    }
+
+    if (!linkEditSegmentFound) {
+      /*The OSO entries are identified in segments named __LINKEDIT. If no segment is found with
+       that name, there is nothing to scrub.*/
+      return;
     }
 
     if (!symbolTableSegmentFound) {
