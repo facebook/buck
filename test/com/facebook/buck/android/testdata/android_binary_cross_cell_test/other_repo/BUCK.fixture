@@ -16,12 +16,3 @@ keystore(
     store = "debug.keystore",
     visibility = ["PUBLIC"],
 )
-
-android_instrumentation_apk(
-    name = "app_cxx_lib_dep",
-    apk = ":app",
-    manifest = "AndroidManifest.xml",
-    deps = [
-        "//java/com/sample/app:app",
-    ],
-)

@@ -61,20 +61,4 @@ public class AndroidInstrumentationApkIntegrationTest extends AbiCompilationMode
     zipInspector.assertFileExists("lib/x86/libcxx.so");
     zipInspector.assertFileExists("lib/x86/libgnustl_shared.so");
   }
-
-  @Test
-  public void testCrossRepositoryDexMerge() throws InterruptedException, IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
-
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "android_instrumentation_apk_integration_cell_test", tmpFolder);
-    workspace.setUp();
-    setWorkspaceCompilationMode(workspace);
-
-    workspace
-        .runBuckCommand("build", "//:app_cxx_lib_dep", "other_repo//:app_cxx_lib_dep")
-        .assertSuccess();
-  }
 }
