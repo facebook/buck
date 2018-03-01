@@ -1,0 +1,3 @@
+framework module Dummy {
+	umbrella header "Dummy.h" 
+}

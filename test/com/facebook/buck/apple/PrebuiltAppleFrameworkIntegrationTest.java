@@ -250,4 +250,13 @@ public class PrebuiltAppleFrameworkIntegrationTest {
                   Pattern.DOTALL)));
     }
   }
+
+  @Test
+  public void frameworkPathsPassedIntoSwiftc() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "prebuilt_apple_framework_static_swift", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:Foo#macosx-x86_64,static").assertSuccess();
+  }
 }
