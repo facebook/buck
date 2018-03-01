@@ -1,4 +1,5 @@
 [repositories]
+  main = .
   other_repo = other_repo
 
 [project]

@@ -660,7 +660,7 @@ public class AndroidBinaryGraphEnhancer {
                     buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(javaLibrary));
                 return new DexProducedFromJavaLibrary(
                     preDexTarget,
-                    projectFilesystem,
+                    javaLibrary.getProjectFilesystem(),
                     androidPlatformTarget,
                     paramsForPreDex,
                     javaLibrary,

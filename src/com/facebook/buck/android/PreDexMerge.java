@@ -325,13 +325,14 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 rootApkModuleResult
                     .primaryDexInputs
                     .stream()
-                    .map(sourcePathResolver::getRelativePath)
+                    .map(path -> sourcePathResolver.getRelativePath(getProjectFilesystem(), path))
                     .collect(ImmutableSet.toImmutableSet())),
             Optional.of(paths.jarfilesSubdir),
             Optional.of(
                 Suppliers.ofInstance(
                     Multimaps.transformValues(
-                        aggregatedOutputToInputs, sourcePathResolver::getRelativePath))),
+                        aggregatedOutputToInputs,
+                        path -> sourcePathResolver.getRelativePath(getProjectFilesystem(), path)))),
             () -> dexInputHashes,
             paths.successDir,
             DX_MERGE_OPTIONS,
@@ -360,7 +361,9 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       ImmutableMap.Builder<Path, Sha1HashCode> builder,
       ImmutableMap<SourcePath, Sha1HashCode> dexInputHashes) {
     for (Map.Entry<SourcePath, Sha1HashCode> entry : dexInputHashes.entrySet()) {
-      builder.put(sourcePathResolver.getRelativePath(entry.getKey()), entry.getValue());
+      builder.put(
+          sourcePathResolver.getRelativePath(getProjectFilesystem(), entry.getKey()),
+          entry.getValue());
     }
   }
 

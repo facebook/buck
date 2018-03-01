@@ -41,4 +41,20 @@ public class AndroidBinaryCrossCellIntegrationTest extends AbiCompilationModeTes
 
     workspace.runBuckCommand("build", "//:app", "other_repo//:app").assertSuccess();
   }
+
+  @Test
+  public void testCrossRepositoryDexMergeWithSplitDex() throws InterruptedException, IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "android_binary_cross_cell_test", tmpFolder);
+    workspace.setUp();
+    setWorkspaceCompilationMode(workspace);
+
+    workspace
+        .runBuckCommand("build", "//:app_with_main_lib", "other_repo//:app_with_mainlib")
+        .assertSuccess();
+  }
 }
