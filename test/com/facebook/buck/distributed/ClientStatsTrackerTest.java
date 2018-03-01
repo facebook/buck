@@ -152,6 +152,26 @@ public class ClientStatsTrackerTest {
         (long) stats.localTargetGraphSerializationDurationMs().get());
   }
 
+  @Test
+  public void testRacingBuildFinishedFirstIsPopulatedWhenRacingBuildIsPerformed() {
+    // Racing build not performed.
+    ClientStatsTracker tracker = new ClientStatsTracker(BUILD_LABEL);
+    initializeCommonStats(tracker);
+    DistBuildClientStats stats = tracker.generateStats();
+    Assert.assertFalse(stats.performedRacingBuild());
+    Assert.assertFalse(stats.racingBuildFinishedFirst().isPresent());
+
+    // Racing build performed.
+    tracker = new ClientStatsTracker(BUILD_LABEL);
+    initializeCommonStats(tracker);
+    tracker.setPerformedRacingBuild(true);
+    tracker.setRacingBuildFinishedFirst(false);
+    stats = tracker.generateStats();
+    Assert.assertTrue(stats.performedRacingBuild());
+    Assert.assertTrue(stats.racingBuildFinishedFirst().isPresent());
+    Assert.assertFalse(stats.racingBuildFinishedFirst().get());
+  }
+
   private void initializeCommonStats(ClientStatsTracker tracker) {
     tracker.setStampedeId(STAMPEDE_ID_ONE);
     tracker.setDistributedBuildExitCode(DISTRIBUTED_BUILD_EXIT_CODE);

@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.command.Build;
 import com.facebook.buck.command.LocalBuildExecutorInvoker;
+import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.ExitCode;
 import com.facebook.buck.distributed.thrift.BuildStatus;
@@ -182,6 +183,7 @@ public class StampedeBuildClientTest {
             waitForSynchronizedBuildCalledLatch,
             guardedLocalBuildExecutorInvoker,
             guardedDistBuildControllerInvoker,
+            new ClientStatsTracker(""),
             waitGracefullyForDistributedBuildThreadToFinish,
             distributedBuildThreadKillTimeoutSeconds,
             stampedeId);

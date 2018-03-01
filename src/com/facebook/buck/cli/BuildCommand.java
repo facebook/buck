@@ -980,6 +980,7 @@ public class BuildCommand extends AbstractCommand {
               localBuildExecutorInvoker,
               distBuildControllerArgsBuilder,
               distBuildControllerInvocationArgs,
+              distBuildClientStats,
               waitForDistBuildThreadToFinishGracefully,
               distributedBuildThreadKillTimeoutSeconds);
 
