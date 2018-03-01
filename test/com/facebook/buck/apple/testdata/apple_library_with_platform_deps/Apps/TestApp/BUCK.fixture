@@ -10,21 +10,23 @@ apple_library(
     platform_deps = [
         (
             "iphoneos-arm64",
-            [":lib"],
+            [":working-binary"],
         ),
         (
             "iphoneos-armv7",
-            [":broken_lib"],
+            [":broken-binary"],
         ),
     ],
 )
 
-apple_library(
-    name = "lib",
-    srcs = ["lib.c"],
+apple_binary(
+    name = "working-binary",
+    srcs = ["main.c"],
+    info_plist = "Info.plist",
 )
 
-apple_library(
-    name = "broken_lib",
+apple_binary(
+    name = "broken-binary",
     srcs = ["broken_lib.c"],
+    info_plist = "Info.plist",
 )

@@ -98,7 +98,11 @@ public class TargetNodeFactory implements NodeCopier {
           && info.hasElementTypes(BuildTarget.class, SourcePath.class, Path.class)
           && !info.getName().equals("deps")) {
         detectBuildTargetsAndPathsForConstructorArg(
-            cellRoots, extraDepsBuilder, pathsBuilder, info, constructorArg);
+            cellRoots,
+            info.isTargetGraphOnlyDep() ? targetGraphOnlyDepsBuilder : extraDepsBuilder,
+            pathsBuilder,
+            info,
+            constructorArg);
       }
     }
 
