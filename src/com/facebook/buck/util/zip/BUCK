@@ -19,11 +19,3 @@ java_library(
         "//third-party/java/jsr:jsr305",
     ],
 )
-
-java_binary(
-    name = "zip-write-test",
-    main_class = "com.facebook.buck.util.zip.ZipWriteTest",
-    deps = [
-        ":zip",
-    ],
-)
