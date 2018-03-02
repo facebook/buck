@@ -103,7 +103,7 @@ import javax.annotation.Nullable;
  * }
  * }</pre>
  */
-public class ModernBuildRule<T extends Buildable>
+public abstract class ModernBuildRule<T extends Buildable>
     implements BuildRule,
         HasRuntimeDeps,
         SupportsInputBasedRuleKey,
