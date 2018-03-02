@@ -317,6 +317,9 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     Path symlinkDir = dir.resolve(HaskellGhciDescription.getSoLibsRelDir(getBuildTarget()));
     Path symlinkPreloadDir = dir.resolve(name + ".preload-symlinks");
 
+    ImmutableList.Builder<String> compilerFlagsBuilder = ImmutableList.builder();
+    compilerFlagsBuilder.addAll(compilerFlags);
+
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.addAll(
         MakeCleanDirectoryStep.of(
@@ -402,6 +405,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     if (!preloadLibs.isEmpty()) {
       iservScript = Optional.of(dir.resolve("iserv"));
+      compilerFlagsBuilder.add("-fexternal-interpreter");
       steps.add(
           new AbstractExecutionStep("ghci_iserv_wrapper") {
             @Override
@@ -518,8 +522,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     .build());
 
     if (enableProfiling) {
-      compilerFlags =
-          ImmutableList.copyOf(Iterables.concat(compilerFlags, HaskellDescriptionUtils.PROF_FLAGS));
+      compilerFlagsBuilder.addAll(HaskellDescriptionUtils.PROF_FLAGS);
     }
 
     String ghc = ghcPath;
@@ -529,7 +532,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       templateArgs.put("start_ghci", dir.relativize(startGhci).toString());
       templateArgs.put("exposed_packages", exposed);
       templateArgs.put("package_dbs", pkgdbs);
-      templateArgs.put("compiler_flags", Joiner.on(' ').join(compilerFlags));
+      templateArgs.put("compiler_flags", Joiner.on(' ').join(compilerFlagsBuilder.build()));
       templateArgs.put("srcs", Joiner.on(' ').join(srcpaths.build()));
       templateArgs.put("squashed_so", dir.relativize(dir.resolve(so.getFileName())).toString());
       templateArgs.put("binutils_path", ghciBinutils.toRealPath().toString());
