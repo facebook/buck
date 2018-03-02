@@ -27,7 +27,7 @@ java_library(
 )
 
 java_test(
-    name = "end_to_end",
+    name = "endtoend",
     srcs = TEST_SRCS,
     visibility = [
         "//test/...",
