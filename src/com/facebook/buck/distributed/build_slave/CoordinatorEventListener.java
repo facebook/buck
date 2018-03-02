@@ -23,12 +23,14 @@ import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildModeInfo;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.StampedeId;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
 
 /** Listener to events from the Coordinator. */
 public class CoordinatorEventListener implements ThriftCoordinatorServer.EventListener {
+  private static final Logger LOG = Logger.get(CoordinatorEventListener.class);
   private final DistBuildService service;
   private final StampedeId stampedeId;
   private final String minionQueue;
@@ -60,6 +62,7 @@ public class CoordinatorEventListener implements ThriftCoordinatorServer.EventLi
             ? buildModeInfo.getNumberOfMinions() - 1
             : buildModeInfo.getNumberOfMinions();
     if (requiredNumberOfMinions > 0) {
+      LOG.info("Enqueuing %d more minions.", requiredNumberOfMinions);
       service.enqueueMinions(stampedeId, requiredNumberOfMinions, minionQueue);
     }
   }

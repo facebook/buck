@@ -154,6 +154,7 @@ public class ThriftCoordinatorServer implements Closeable {
   }
 
   public ThriftCoordinatorServer start() throws IOException {
+    LOG.info("Starting ThriftCoordinatorServer.");
     synchronized (lock) {
       TNonblockingServerSocket transport;
       try {
@@ -268,6 +269,7 @@ public class ThriftCoordinatorServer implements Closeable {
   private void switchToActiveModeOrFail(Future<BuildTargetsQueue> queue) {
     Preconditions.checkState(queue.isDone());
     try {
+      LOG.info("Switching Coordinator to Active mode now.");
       MinionWorkloadAllocator allocator = new MinionWorkloadAllocator(queue.get());
       this.handler =
           new ActiveCoordinatorService(
