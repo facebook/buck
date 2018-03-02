@@ -408,6 +408,12 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testApkWithNoResourcesBuildsCorrectlyWithAapt2() throws Exception {
+    AssumeAndroidPlatform.assumeAapt2WithOutputTextSymbolsIsAvailable();
+    workspace.runBuckBuild("//apps/sample:app_aapt2_with_no_res").assertSuccess();
+  }
+
+  @Test
   public void testSimpleAapt2App() throws Exception {
     AssumeAndroidPlatform.assumeAapt2WithOutputTextSymbolsIsAvailable();
 
