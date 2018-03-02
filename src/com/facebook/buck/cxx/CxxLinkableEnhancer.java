@@ -416,6 +416,6 @@ public class CxxLinkableEnhancer {
         .collect(
             ImmutableMap.toImmutableMap(
                 name -> name,
-                name -> output.getParent().resolve(output.getFileName().toString() + "-" + name)));
+                name -> output.getParent().resolve(output.getFileName() + "-" + name)));
   }
 }
