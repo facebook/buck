@@ -51,7 +51,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public final class MoreFiles {
+public final class MostFiles {
 
   // Extended attribute bits for directories and symlinks; see:
   // http://unix.stackexchange.com/questions/14705/the-zip-formats-external-file-attribute
@@ -96,7 +96,7 @@ public final class MoreFiles {
       (a, b) -> b.getLastAccessTime().compareTo(a.getLastAccessTime());
 
   /** Utility class: do not instantiate. */
-  private MoreFiles() {}
+  private MostFiles() {}
 
   public static void deleteRecursivelyIfExists(Path path) throws IOException {
     deleteRecursivelyWithOptions(

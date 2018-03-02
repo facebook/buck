@@ -26,7 +26,7 @@ import com.facebook.buck.distributed.testutil.FakeFileContentsProvider;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.io.ArchiveMemberPath;
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -400,8 +400,8 @@ public class DistBuildFileHashesTest {
 
     @Override
     public void close() throws IOException {
-      MoreFiles.deleteRecursively(firstFolder);
-      MoreFiles.deleteRecursively(secondFolder);
+      MostFiles.deleteRecursively(firstFolder);
+      MostFiles.deleteRecursively(secondFolder);
     }
   }
 

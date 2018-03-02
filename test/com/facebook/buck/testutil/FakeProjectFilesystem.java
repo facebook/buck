@@ -16,8 +16,8 @@
 
 package com.facebook.buck.testutil;
 
-import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
@@ -215,7 +215,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
             new Thread(
                 () -> {
                   try {
-                    MoreFiles.deleteRecursively(tempDir);
+                    MostFiles.deleteRecursively(tempDir);
                   } catch (IOException e) { // NOPMD
                     // Swallow. At least we tried, right?
                   }

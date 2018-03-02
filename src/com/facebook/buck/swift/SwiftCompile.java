@@ -24,7 +24,7 @@ import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -313,7 +313,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         if (Files.notExists(swiftFileListPath.getParent())) {
           Files.createDirectories(swiftFileListPath.getParent());
         }
-        MoreFiles.writeLinesToFile(relativePaths, swiftFileListPath);
+        MostFiles.writeLinesToFile(relativePaths, swiftFileListPath);
         return StepExecutionResults.SUCCESS;
       }
 

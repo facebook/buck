@@ -22,7 +22,7 @@ import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.LazyPath;
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.RichStream;
@@ -93,7 +93,7 @@ public class BuildCacheArtifactFetcher {
           @Override
           protected Path create() throws IOException {
             return Files.createTempFile(
-                "buck_artifact_" + MoreFiles.sanitize(rule.getBuildTarget().getShortName()),
+                "buck_artifact_" + MostFiles.sanitize(rule.getBuildTarget().getShortName()),
                 ".zip");
           }
         };
@@ -192,9 +192,9 @@ public class BuildCacheArtifactFetcher {
     // Path pathToZip = Paths.get(zipPath.getAbsolutePath());
     // FileSystem fs = FileSystems.newFileSystem(pathToZip, /* loader */ null);
     // Path root = Iterables.getOnlyElement(fs.getRootDirectories());
-    // MoreFiles.copyRecursively(root, projectRoot);
+    // MostFiles.copyRecursively(root, projectRoot);
     //
-    // Unfortunately, this does not appear to work, in practice, because MoreFiles fails when trying
+    // Unfortunately, this does not appear to work, in practice, because MostFiles fails when trying
     // to resolve a Path for a zip entry against a file Path on disk.
     ArtifactCompressionEvent.Started started =
         ArtifactCompressionEvent.started(

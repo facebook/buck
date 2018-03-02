@@ -64,7 +64,7 @@ import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.WatchmanWatcher;
 import com.facebook.buck.io.WatchmanWatcher.FreshInstanceAction;
 import com.facebook.buck.io.WatchmanWatcherException;
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -1369,7 +1369,7 @@ public final class Main {
         console
             .getStdErr()
             .format("Atomic moves not supported, falling back to synchronous delete: %s", e);
-        MoreFiles.deleteRecursivelyIfExists(pathToMove);
+        MostFiles.deleteRecursivelyIfExists(pathToMove);
       }
     }
   }

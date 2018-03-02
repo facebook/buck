@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.agent.util.AgentUtil;
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -158,7 +158,7 @@ public class TestAndroidDevice implements AndroidDevice {
   @Override
   public void uninstallPackage(String packageName) throws InstallException {
     try {
-      MoreFiles.deleteRecursively(getPackageDirectory(packageName));
+      MostFiles.deleteRecursively(getPackageDirectory(packageName));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

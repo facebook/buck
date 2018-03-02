@@ -16,7 +16,7 @@
 
 package com.facebook.buck.event.listener;
 
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
@@ -280,7 +280,7 @@ public class TestResultFormatter {
       ImmutableList<Path> testLogPaths = testLogPathsBuilder.build();
       if (testLogsPath.isPresent() && verbosity != Verbosity.SILENT) {
         try {
-          if (MoreFiles.concatenateFiles(testLogsPath.get(), testLogPaths)) {
+          if (MostFiles.concatenateFiles(testLogsPath.get(), testLogPaths)) {
             addTo.add("Updated test logs: " + testLogsPath.get().toString());
           }
         } catch (IOException e) {

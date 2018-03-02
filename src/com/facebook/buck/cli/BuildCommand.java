@@ -59,7 +59,7 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.listener.DistBuildClientEventListener;
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
@@ -678,7 +678,7 @@ public class BuildCommand extends AbstractCommand {
     // Clean up last buck-out/last.
     Path lastOutputDirPath =
         params.getCell().getFilesystem().getBuckPaths().getLastOutputDir().toAbsolutePath();
-    MoreFiles.deleteRecursivelyIfExists(lastOutputDirPath);
+    MostFiles.deleteRecursivelyIfExists(lastOutputDirPath);
     Files.createDirectories(lastOutputDirPath);
 
     SourcePathRuleFinder ruleFinder =

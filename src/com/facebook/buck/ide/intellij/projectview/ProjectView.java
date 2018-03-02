@@ -25,7 +25,7 @@ import com.facebook.buck.android.GenAidl;
 import com.facebook.buck.cli.parameter_extractors.ProjectViewParameters;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.ide.intellij.projectview.shared.SharedConstants;
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -1437,7 +1437,7 @@ public class ProjectView {
 
   private void deleteAll(Path root) {
     try {
-      MoreFiles.deleteRecursivelyIfExists(root);
+      MostFiles.deleteRecursivelyIfExists(root);
     } catch (IOException e) {
       stderr("'%s' deleting %s\n", e.getMessage(), root);
     }

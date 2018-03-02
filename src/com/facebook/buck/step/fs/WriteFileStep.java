@@ -16,7 +16,7 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -82,7 +82,7 @@ public class WriteFileStep implements Step {
       filesystem.copyToPath(sourceStream, outputPath, StandardCopyOption.REPLACE_EXISTING);
       if (executable) {
         Path resolvedPath = filesystem.resolve(outputPath);
-        MoreFiles.makeExecutable(resolvedPath);
+        MostFiles.makeExecutable(resolvedPath);
       }
       return StepExecutionResults.SUCCESS;
     }

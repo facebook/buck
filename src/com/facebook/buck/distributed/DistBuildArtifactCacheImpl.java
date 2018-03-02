@@ -22,7 +22,7 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -156,7 +156,7 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
     ListenableFuture<CacheResult> asyncfetchResult;
     try (CloseableHolder<NamedTemporaryFile> tempFile =
         new CloseableHolder<>(
-            new NamedTemporaryFile(MoreFiles.sanitize(rule.getBuildTarget().getShortName()), ""))) {
+            new NamedTemporaryFile(MostFiles.sanitize(rule.getBuildTarget().getShortName()), ""))) {
       asyncfetchResult =
           Futures.transformAsync(
               asyncRuleKey,

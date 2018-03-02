@@ -20,7 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -222,7 +222,7 @@ public class ExecutableFinderTest {
 
   private Path createExecutable(String executablePath) throws IOException {
     Path file = tmp.newFile(executablePath);
-    MoreFiles.makeExecutable(file);
+    MostFiles.makeExecutable(file);
     return file;
   }
 }

@@ -46,7 +46,7 @@ import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
@@ -234,7 +234,7 @@ public class NdkCxxPlatformTest {
                 .setGccVersion("clang-version")
                 .build(),
             "target-app-platform");
-    MoreFiles.writeLinesToFile(ImmutableList.of("r9c"), ndkRoot.resolve("RELEASE.TXT"));
+    MostFiles.writeLinesToFile(ImmutableList.of("r9c"), ndkRoot.resolve("RELEASE.TXT"));
     NdkCxxPlatform platform =
         NdkCxxPlatforms.build(
             CxxPlatformUtils.DEFAULT_CONFIG,
@@ -267,7 +267,7 @@ public class NdkCxxPlatformTest {
                 .setGccVersion("clang-version")
                 .build(),
             "target-app-platform");
-    MoreFiles.writeLinesToFile(ImmutableList.of("r9c"), ndkRoot.resolve("RELEASE.TXT"));
+    MostFiles.writeLinesToFile(ImmutableList.of("r9c"), ndkRoot.resolve("RELEASE.TXT"));
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
             .setSections(
@@ -366,7 +366,7 @@ public class NdkCxxPlatformTest {
                 .setGccVersion("clang-version")
                 .build(),
             "target-app-platform");
-    MoreFiles.writeLinesToFile(ImmutableList.of("r9c"), ndkRoot.resolve("RELEASE.TXT"));
+    MostFiles.writeLinesToFile(ImmutableList.of("r9c"), ndkRoot.resolve("RELEASE.TXT"));
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
             .setSections(
@@ -462,7 +462,7 @@ public class NdkCxxPlatformTest {
         for (Platform platform :
             ImmutableList.of(Platform.LINUX, Platform.MACOS, Platform.WINDOWS)) {
           Path root = tmp.newFolder(dir);
-          MoreFiles.writeLinesToFile(ImmutableList.of("r9c"), root.resolve("RELEASE.TXT"));
+          MostFiles.writeLinesToFile(ImmutableList.of("r9c"), root.resolve("RELEASE.TXT"));
           ImmutableMap<TargetCpuType, NdkCxxPlatform> platforms =
               NdkCxxPlatforms.getPlatforms(
                   CxxPlatformUtils.DEFAULT_CONFIG,
@@ -489,7 +489,7 @@ public class NdkCxxPlatformTest {
           linkRukeKeys.put(
               String.format("NdkCxxPlatform(%s, %s)", dir, platform),
               constructLinkRuleKeys(platforms));
-          MoreFiles.deleteRecursively(root);
+          MostFiles.deleteRecursively(root);
         }
       }
 
@@ -515,7 +515,7 @@ public class NdkCxxPlatformTest {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     String dir = "android-ndk-r9c";
     Path root = tmp.newFolder(dir);
-    MoreFiles.writeLinesToFile(ImmutableList.of("r9c"), root.resolve("RELEASE.TXT"));
+    MostFiles.writeLinesToFile(ImmutableList.of("r9c"), root.resolve("RELEASE.TXT"));
     ImmutableMap<TargetCpuType, NdkCxxPlatform> platforms =
         NdkCxxPlatforms.getPlatforms(
             CxxPlatformUtils.DEFAULT_CONFIG,

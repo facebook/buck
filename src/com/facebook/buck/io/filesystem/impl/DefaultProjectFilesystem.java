@@ -17,9 +17,9 @@
 package com.facebook.buck.io.filesystem.impl;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.file.PathListing;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.CopySourceMode;
@@ -561,7 +561,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
    */
   @Override
   public void deleteRecursivelyIfExists(Path pathRelativeToProjectRoot) throws IOException {
-    MoreFiles.deleteRecursivelyIfExists(resolve(pathRelativeToProjectRoot));
+    MostFiles.deleteRecursivelyIfExists(resolve(pathRelativeToProjectRoot));
   }
 
   /**
@@ -802,10 +802,10 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
         Files.copy(resolve(source), resolve(target), StandardCopyOption.REPLACE_EXISTING);
         break;
       case DIRECTORY_CONTENTS_ONLY:
-        MoreFiles.copyRecursively(resolve(source), resolve(target));
+        MostFiles.copyRecursively(resolve(source), resolve(target));
         break;
       case DIRECTORY_AND_CONTENTS:
-        MoreFiles.copyRecursively(resolve(source), resolve(target.resolve(source.getFileName())));
+        MostFiles.copyRecursively(resolve(source), resolve(target.resolve(source.getFileName())));
         break;
     }
   }
@@ -829,7 +829,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   public void createSymLink(Path symLink, Path realFile, boolean force) throws IOException {
     symLink = resolve(symLink);
     if (force) {
-      MoreFiles.deleteRecursivelyIfExists(symLink);
+      MostFiles.deleteRecursivelyIfExists(symLink);
     }
     if (Platform.detect() == Platform.WINDOWS) {
       if (windowsSymlinks) {
@@ -841,7 +841,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
         // otherwise, creating hardlinks
         if (isDirectory(realFile)) {
           // Hardlinks are only for files - so, copying folders
-          MoreFiles.copyRecursively(realFile, symLink);
+          MostFiles.copyRecursively(realFile, symLink);
         } else {
           realFile = MorePaths.normalize(symLink.getParent().resolve(realFile));
           Files.createLink(symLink, realFile);
@@ -897,9 +897,9 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
     }
 
     if (isDirectory(path)) {
-      mode |= MoreFiles.S_IFDIR;
+      mode |= MostFiles.S_IFDIR;
     } else if (isFile(path)) {
-      mode |= MoreFiles.S_IFREG;
+      mode |= MostFiles.S_IFREG;
     }
 
     // Propagate any additional permissions

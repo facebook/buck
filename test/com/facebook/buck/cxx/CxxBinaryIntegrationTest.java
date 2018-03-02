@@ -39,7 +39,7 @@ import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
@@ -1434,7 +1434,7 @@ public class CxxBinaryIntegrationTest {
         secondCompiler);
 
     // Make the second faux clang++/g++ binary executable
-    MoreFiles.makeExecutable(secondCompiler);
+    MostFiles.makeExecutable(secondCompiler);
 
     // Run two builds, each with different compiler "binaries".  In the first
     // instance, both binaries are in the PATH but the first binary is not
@@ -1459,7 +1459,7 @@ public class CxxBinaryIntegrationTest {
     // Now, make the first faux clang++/g++ binary executable.  In this second
     // instance, both binaries are still in the PATH but the first binary is
     // now marked executable and so is picked up; causing a rebuild.
-    MoreFiles.makeExecutable(firstCompiler);
+    MostFiles.makeExecutable(firstCompiler);
 
     workspace
         .runBuckCommandWithEnvironmentOverridesAndContext(

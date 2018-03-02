@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -53,7 +53,7 @@ public class DBuckConfigTest {
   private Path makeFakeExecutable(Path directory, String baseName) throws IOException {
     Path dmd = directory.resolve(baseName + (Platform.detect() == Platform.WINDOWS ? ".exe" : ""));
     Files.createFile(dmd);
-    MoreFiles.makeExecutable(dmd);
+    MostFiles.makeExecutable(dmd);
     return dmd;
   }
 

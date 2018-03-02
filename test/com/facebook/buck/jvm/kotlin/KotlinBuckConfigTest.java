@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -62,7 +62,7 @@ public class KotlinBuckConfigTest {
     // Get faux kotlinc binary location in project
     Path kotlinHome = testDataDirectory.resolve("faux_kotlin_home/libexec/bin").normalize();
     Path kotlinCompiler = kotlinHome.resolve("kotlinc");
-    MoreFiles.makeExecutable(kotlinCompiler);
+    MostFiles.makeExecutable(kotlinCompiler);
 
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
@@ -82,7 +82,7 @@ public class KotlinBuckConfigTest {
     // Get faux kotlinc binary location in project
     Path kotlinHome = testDataDirectory.resolve("faux_kotlin_home/bin").normalize();
     Path kotlinCompiler = kotlinHome.resolve("kotlinc");
-    MoreFiles.makeExecutable(kotlinCompiler);
+    MostFiles.makeExecutable(kotlinCompiler);
 
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
@@ -103,7 +103,7 @@ public class KotlinBuckConfigTest {
     // Get faux kotlinc binary location in project
     Path kotlinHome = testDataDirectory.resolve("faux_kotlin_home").normalize();
     Path kotlinCompiler = kotlinHome.resolve("bin").resolve("kotlinc");
-    MoreFiles.makeExecutable(kotlinCompiler);
+    MostFiles.makeExecutable(kotlinCompiler);
 
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
@@ -125,7 +125,7 @@ public class KotlinBuckConfigTest {
     // Get faux kotlinc binary location in project
     Path kotlinHome = testDataDirectory.resolve("faux_kotlin_home/libexec").normalize();
     Path kotlinCompiler = kotlinHome.resolve("bin").resolve("kotlinc");
-    MoreFiles.makeExecutable(kotlinCompiler);
+    MostFiles.makeExecutable(kotlinCompiler);
 
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
@@ -150,7 +150,7 @@ public class KotlinBuckConfigTest {
     // Get faux kotlinc binary location in project
     Path kotlinHome = testDataDirectory.resolve("faux_kotlin_home").normalize();
     Path kotlinCompiler = kotlinHome.resolve("bin").resolve("kotlinc");
-    MoreFiles.makeExecutable(kotlinCompiler);
+    MostFiles.makeExecutable(kotlinCompiler);
 
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(testDataDirectory.resolve("."));
@@ -233,7 +233,7 @@ public class KotlinBuckConfigTest {
     // Get faux kotlinc binary location in project
     Path kotlinHome = testDataDirectory.resolve("faux_kotlin_home").normalize();
     Path kotlinCompiler = kotlinHome.resolve("libexec").resolve("bin").resolve("kotlinc");
-    MoreFiles.makeExecutable(kotlinCompiler);
+    MostFiles.makeExecutable(kotlinCompiler);
 
     BuckConfig buckConfig =
         FakeBuckConfig.builder()

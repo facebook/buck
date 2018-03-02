@@ -29,7 +29,7 @@ import com.facebook.buck.apple.CodeSigning;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
@@ -303,7 +303,7 @@ public class ObjectPathsAbsolutifierIntegrationTest {
     filesystem.mkdirs(unsanizitedBinaryPath.getParent());
 
     // copy bundle
-    MoreFiles.copyRecursively(sanitizedBinaryPath.getParent(), unsanizitedBinaryPath.getParent());
+    MostFiles.copyRecursively(sanitizedBinaryPath.getParent(), unsanizitedBinaryPath.getParent());
 
     DebugPathSanitizer sanitizer = getDebugPathSanitizer();
 

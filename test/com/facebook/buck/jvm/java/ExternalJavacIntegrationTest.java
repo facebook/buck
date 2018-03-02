@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -47,7 +47,7 @@ public class ExternalJavacIntegrationTest {
     workspace.setUp();
 
     Path javac = workspace.getPath("javac.sh");
-    MoreFiles.makeExecutable(javac);
+    MostFiles.makeExecutable(javac);
 
     workspace.replaceFileContents(".buckconfig", "@JAVAC@", javac.toAbsolutePath().toString());
     workspace.runBuckCommand("build", "example").assertSuccess();
@@ -64,7 +64,7 @@ public class ExternalJavacIntegrationTest {
     workspace.setUp();
 
     Path javac = workspace.getPath("javac.sh");
-    MoreFiles.makeExecutable(javac);
+    MostFiles.makeExecutable(javac);
 
     workspace.replaceFileContents(".buckconfig", "@JAVAC@", javac.toAbsolutePath().toString());
 
@@ -81,7 +81,7 @@ public class ExternalJavacIntegrationTest {
     workspace.setUp();
 
     Path error = workspace.getPath("error.sh");
-    MoreFiles.makeExecutable(error);
+    MostFiles.makeExecutable(error);
 
     workspace.replaceFileContents(".buckconfig", "@JAVAC@", error.toAbsolutePath().toString());
     ProcessResult result = workspace.runBuckCommand("build", "example");
@@ -103,7 +103,7 @@ public class ExternalJavacIntegrationTest {
     workspace.setUp();
 
     Path javac = workspace.getPath("check_env.sh");
-    MoreFiles.makeExecutable(javac);
+    MostFiles.makeExecutable(javac);
 
     workspace.replaceFileContents(".buckconfig", "@JAVAC@", javac.toAbsolutePath().toString());
     workspace

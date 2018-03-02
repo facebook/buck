@@ -16,7 +16,7 @@
 
 package com.facebook.buck.testutil;
 
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -123,13 +123,13 @@ public class TemporaryPaths extends ExternalResource {
 
   public Path newExecutableFile() throws IOException {
     Path newFile = newFile();
-    MoreFiles.makeExecutable(newFile);
+    MostFiles.makeExecutable(newFile);
     return newFile;
   }
 
   public Path newExecutableFile(String name) throws IOException {
     Path newFile = newFile(name);
-    MoreFiles.makeExecutable(newFile);
+    MostFiles.makeExecutable(newFile);
     return newFile;
   }
 

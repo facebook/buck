@@ -16,7 +16,7 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -37,7 +37,7 @@ public class MakeExecutableStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    MoreFiles.makeExecutable(filesystem.resolve(file));
+    MostFiles.makeExecutable(filesystem.resolve(file));
     return StepExecutionResults.SUCCESS;
   }
 

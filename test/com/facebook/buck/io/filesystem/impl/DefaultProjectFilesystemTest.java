@@ -24,8 +24,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -426,7 +426,7 @@ public class DefaultProjectFilesystemTest {
 
     // Create a empty executable file.
     Path exe = tmp.newFile("test.exe");
-    MoreFiles.makeExecutable(exe);
+    MostFiles.makeExecutable(exe);
 
     // Archive it into a zipfile using `Zip.create`.
     Path zipFile = tmp.getRoot().resolve("test.zip");

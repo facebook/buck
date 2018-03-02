@@ -45,7 +45,7 @@ import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class MoreFilesTest {
+public class MostFilesTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
@@ -58,7 +58,7 @@ public class MoreFilesTest {
     tmp.newFolder("foo/baz");
     tmp.newFile("foo/baz/biz");
     assertEquals("There should be files to delete.", 3, tmp.getRoot().toFile().listFiles().length);
-    MoreFiles.deleteRecursively(tmp.getRoot());
+    MostFiles.deleteRecursively(tmp.getRoot());
     assertNull(tmp.getRoot().toFile().listFiles());
   }
 
@@ -66,7 +66,7 @@ public class MoreFilesTest {
   public void deleteRecursivelyIfExistsShouldNotFailOnNonExistentDir() throws IOException {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
     Path fakeTmpDir = vfs.getPath("/tmp/fake-tmp-dir");
-    MoreFiles.deleteRecursivelyIfExists(fakeTmpDir.resolve("nonexistent"));
+    MostFiles.deleteRecursivelyIfExists(fakeTmpDir.resolve("nonexistent"));
   }
 
   @Test
@@ -76,7 +76,7 @@ public class MoreFilesTest {
     Path dirToDelete = fakeTmpDir.resolve("delete-me");
     Path childDir = dirToDelete.resolve("child-dir");
     Files.createDirectories(childDir);
-    MoreFiles.deleteRecursivelyIfExists(dirToDelete);
+    MostFiles.deleteRecursivelyIfExists(dirToDelete);
     assertThat(Files.exists(dirToDelete), is(false));
   }
 
@@ -87,8 +87,8 @@ public class MoreFilesTest {
     Path dirToDelete = fakeTmpDir.resolve("delete-me");
     Path childDir = dirToDelete.resolve("child-dir");
     Files.createDirectories(childDir);
-    MoreFiles.deleteRecursivelyWithOptions(
-        dirToDelete, EnumSet.of(MoreFiles.DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY));
+    MostFiles.deleteRecursivelyWithOptions(
+        dirToDelete, EnumSet.of(MostFiles.DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY));
     assertThat(Files.exists(dirToDelete), is(true));
     assertThat(Files.exists(childDir), is(false));
   }
@@ -98,7 +98,7 @@ public class MoreFilesTest {
     Path outputFile = tmp.newFile("output.txt");
     ImmutableList<String> lines =
         ImmutableList.of("The", "quick brown fox", "jumps over", "the lazy dog.");
-    MoreFiles.writeLinesToFile(lines, outputFile);
+    MostFiles.writeLinesToFile(lines, outputFile);
 
     List<String> observedLines = Files.readAllLines(outputFile, Charsets.UTF_8);
     assertEquals(lines, observedLines);
@@ -123,7 +123,7 @@ public class MoreFilesTest {
     Files.setAttribute(fileZ, "lastAccessTime", FileTime.fromMillis(2000));
 
     File[] files = dir.toFile().listFiles();
-    MoreFiles.sortFilesByAccessTime(files);
+    MostFiles.sortFilesByAccessTime(files);
     assertEquals(
         "Files short be sorted from most recently accessed to least recently accessed.",
         ImmutableList.of(fileW.toFile(), fileZ.toFile(), fileY.toFile(), fileX.toFile()),
@@ -137,12 +137,12 @@ public class MoreFilesTest {
     // If the file system does not support the executable permission, skip the test
     assumeTrue(file.toFile().setExecutable(false));
     assertFalse("File should not be executable", file.toFile().canExecute());
-    MoreFiles.makeExecutable(file);
+    MostFiles.makeExecutable(file);
     assertTrue("File should be executable", file.toFile().canExecute());
 
     assumeTrue(file.toFile().setExecutable(true));
     assertTrue("File should be executable", Files.isExecutable(file));
-    MoreFiles.makeExecutable(file);
+    MostFiles.makeExecutable(file);
     assertTrue("File should be executable", Files.isExecutable(file));
   }
 
@@ -153,56 +153,56 @@ public class MoreFilesTest {
     Path file = tmp.newFile();
 
     Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("r--------"));
-    MoreFiles.makeExecutable(file);
+    MostFiles.makeExecutable(file);
     assertEquals(
         "Owner's execute permission should have been set",
         "r-x------",
         PosixFilePermissions.toString(Files.getPosixFilePermissions(file)));
 
     Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("---r-----"));
-    MoreFiles.makeExecutable(file);
+    MostFiles.makeExecutable(file);
     assertEquals(
         "Group's execute permission should have been set",
         "---r-x---",
         PosixFilePermissions.toString(Files.getPosixFilePermissions(file)));
 
     Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("------r--"));
-    MoreFiles.makeExecutable(file);
+    MostFiles.makeExecutable(file);
     assertEquals(
         "Others' execute permission should have been set",
         "------r-x",
         PosixFilePermissions.toString(Files.getPosixFilePermissions(file)));
 
     Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("r--r--r--"));
-    MoreFiles.makeExecutable(file);
+    MostFiles.makeExecutable(file);
     assertEquals(
         "All execute permissions should have been set",
         "r-xr-xr-x",
         PosixFilePermissions.toString(Files.getPosixFilePermissions(file)));
 
     Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("r-xrw-rwx"));
-    MoreFiles.makeExecutable(file);
+    MostFiles.makeExecutable(file);
     assertEquals(
         "Only group's execute permission should have been set",
         "r-xrwxrwx",
         PosixFilePermissions.toString(Files.getPosixFilePermissions(file)));
 
     Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("-w---x-wx"));
-    MoreFiles.makeExecutable(file);
+    MostFiles.makeExecutable(file);
     assertEquals(
         "No permissions should have been changed",
         "-w---x-wx",
         PosixFilePermissions.toString(Files.getPosixFilePermissions(file)));
 
     Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("---------"));
-    MoreFiles.makeExecutable(file);
+    MostFiles.makeExecutable(file);
     assertEquals(
         "No permissions should have been changed",
         "---------",
         PosixFilePermissions.toString(Files.getPosixFilePermissions(file)));
 
     Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("rwxrwxrwx"));
-    MoreFiles.makeExecutable(file);
+    MostFiles.makeExecutable(file);
     assertEquals(
         "No permissions should have been changed",
         "rwxrwxrwx",
@@ -213,7 +213,7 @@ public class MoreFilesTest {
   public void concatenatingNoFilesReturnsFalse() throws IOException {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
     Path outputPath = vfs.getPath("logs.txt");
-    boolean collected = MoreFiles.concatenateFiles(outputPath, ImmutableList.of());
+    boolean collected = MostFiles.concatenateFiles(outputPath, ImmutableList.of());
     assertThat(collected, is(false));
     assertThat(Files.exists(outputPath), is(false));
   }
@@ -231,7 +231,7 @@ public class MoreFilesTest {
     Path outputPath = vfs.getPath("logs.txt");
 
     boolean concatenated =
-        MoreFiles.concatenateFiles(outputPath, ImmutableList.of(fooPath, barPath));
+        MostFiles.concatenateFiles(outputPath, ImmutableList.of(fooPath, barPath));
     assertThat(concatenated, is(false));
 
     assertThat(Files.exists(outputPath), is(false));
@@ -250,7 +250,7 @@ public class MoreFilesTest {
     Path outputPath = vfs.getPath("logs.txt");
 
     boolean concatenated =
-        MoreFiles.concatenateFiles(outputPath, ImmutableList.of(fooPath, barPath));
+        MostFiles.concatenateFiles(outputPath, ImmutableList.of(fooPath, barPath));
     assertThat(concatenated, is(true));
 
     assertThat(
