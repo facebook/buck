@@ -113,6 +113,14 @@ An <code>android_binary()</code> rule is used to generate an Android APK.
 {/call}
 
 {call buck.arg}
+  {param name : 'aapt_mode' /}
+  {param default : 'aapt1' /}
+  {param desc}
+  Set to <code>"aapt2"</code> to build resources for this app with aapt2.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name : 'skip_crunch_pngs' /}
   {param default : 'False' /}
   {param desc}
