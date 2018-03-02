@@ -76,6 +76,10 @@ public class ClientStatsTracker {
 
   private volatile boolean performedLocalBuild = false;
 
+  private volatile boolean performedRacingBuild = false;
+
+  private volatile boolean racingBuildFinishedFirst = false;
+
   private volatile boolean buckClientError = false;
 
   private volatile Optional<Integer> localBuildExitCode = Optional.empty();
@@ -118,9 +122,6 @@ public class ClientStatsTracker {
   }
 
   public synchronized DistBuildClientStats generateStats() {
-    // Without a Stampede ID there is nothing useful to record.
-    Preconditions.checkArgument(stampedeId.isPresent());
-
     if (!buckClientError) {
       generateStatsPreconditionChecksNoException();
     } else {
@@ -143,6 +144,11 @@ public class ClientStatsTracker {
       builder.setLocalBuildExitCode(localBuildExitCode);
       builder.setLocalBuildDurationMs(getDurationOrEmpty(PERFORM_LOCAL_BUILD));
       builder.setPostBuildAnalysisDurationMs(getDurationOrEmpty(POST_BUILD_ANALYSIS));
+    }
+
+    builder.setPerformedRacingBuild(performedRacingBuild);
+    if (performedRacingBuild) {
+      builder.setRacingBuildFinishedFirst(racingBuildFinishedFirst);
     }
 
     builder.setLocalPreparationDurationMs(getDurationOrEmpty(LOCAL_PREPARATION));
@@ -179,6 +185,14 @@ public class ClientStatsTracker {
 
   public void setPerformedLocalBuild(boolean performedLocalBuild) {
     this.performedLocalBuild = performedLocalBuild;
+  }
+
+  public void setPerformedRacingBuild(boolean performedRacingBuild) {
+    this.performedRacingBuild = performedRacingBuild;
+  }
+
+  public void setRacingBuildFinishedFirst(boolean racingBuildFinishedFirst) {
+    this.racingBuildFinishedFirst = racingBuildFinishedFirst;
   }
 
   public void setLocalBuildExitCode(int localBuildExitCode) {

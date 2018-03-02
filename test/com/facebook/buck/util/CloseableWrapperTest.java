@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Test;
@@ -47,6 +47,30 @@ public class CloseableWrapperTest {
       throw new Exception("exception");
     } finally {
       // close was still called despite the exception thrown
+      assertEquals(1, obj.get());
+    }
+  }
+
+  @Test
+  public void duplicateCloseOnlyClosesOnce() throws Exception {
+    AtomicInteger obj = new AtomicInteger(0);
+    try (CloseableWrapper<AtomicInteger, Exception> wrapper =
+        CloseableWrapper.of(obj, CloseableWrapperTest::closer)) {
+      assertEquals(0, wrapper.get().get());
+      wrapper.close();
+    } finally {
+      // assert that close was called exactly once with this object
+      assertEquals(1, obj.get());
+    }
+  }
+
+  @Test
+  public void closesWithoutGet() throws Exception {
+    AtomicInteger obj = new AtomicInteger(0);
+    try (CloseableWrapper<AtomicInteger, Exception> wrapper =
+        CloseableWrapper.of(obj, CloseableWrapperTest::closer)) {
+    } finally {
+      // assert that close was called exactly once with this object
       assertEquals(1, obj.get());
     }
   }

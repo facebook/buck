@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
@@ -288,6 +289,10 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
   public SourcePath getSourcePathToOutput() {
     // A .dex file is not guaranteed to be generated, so we return null to be conservative.
     return null;
+  }
+
+  public SourcePath getSourcePathToDex() {
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToDex());
   }
 
   public Path getPathToDex() {

@@ -16,8 +16,10 @@
 
 package com.facebook.buck.testutil.endtoend;
 
+import com.facebook.buck.testutil.PlatformUtils;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.util.ExitCode;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -25,35 +27,57 @@ import org.junit.Test;
 public class EndToEndWorkspaceTest {
   @Rule public EndToEndWorkspace workspace = new EndToEndWorkspace();
 
+  private PlatformUtils platformUtils = PlatformUtils.getForPlatform();
+
   @Before
   public void buildCppEnv() throws Exception {
     workspace.addPremadeTemplate("cxx");
   }
 
   @Test
-  public void shouldBuildSuccessfully() throws Exception {
-    ProcessResult result = workspace.runBuckCommand("build", "simple_successful_helloworld");
+  public void shouldBuildSuccess() throws Exception {
+    String target = "//simple_successful_helloworld:simple_successful_helloworld";
+    Optional<String> flavor = platformUtils.getFlavor();
+    if (flavor.isPresent()) {
+      target += "#" + flavor.get();
+    }
+    ProcessResult result = workspace.runBuckCommand("build", target);
     result.assertExitCode(
         "simple_successful_helloworld did not successfully build", ExitCode.map(0));
   }
 
   @Test
-  public void shouldNotBuildSuccessfully() throws Exception {
-    ProcessResult result = workspace.runBuckCommand("build", "simple_failed_helloworld");
+  public void shouldBuildFail() throws Exception {
+    String target = "//simple_failed_helloworld:simple_failed_helloworld";
+    Optional<String> flavor = platformUtils.getFlavor();
+    if (flavor.isPresent()) {
+      target += "#" + flavor.get();
+    }
+    ProcessResult result = workspace.runBuckCommand("build", target);
     result.assertFailure(
         "simple_failed_helloworld successfully built when it should have failed to compile");
   }
 
   @Test
-  public void shouldBuildSuccessfullyWithBuckd() throws Exception {
-    ProcessResult result = workspace.runBuckCommand(true, "build", "simple_successful_helloworld");
+  public void shouldBuildSuccessWithBuckd() throws Exception {
+    String target = "//simple_successful_helloworld:simple_successful_helloworld";
+    Optional<String> flavor = platformUtils.getFlavor();
+    if (flavor.isPresent()) {
+      target += "#" + flavor.get();
+    }
+    ProcessResult result = workspace.runBuckCommand("build", target);
     result.assertExitCode(
         "simple_successful_helloworld did not successfully build", ExitCode.map(0));
   }
 
   @Test
-  public void shouldNotBuildSuccessfullyWithBuckd() throws Exception {
-    ProcessResult result = workspace.runBuckCommand(true, "build", "simple_failed_helloworld");
+  public void shouldBuildFailWithBuckd() throws Exception {
+    String target = "//simple_failed_helloworld:simple_failed_helloworld";
+    Optional<String> flavor = platformUtils.getFlavor();
+    if (flavor.isPresent()) {
+      target += "#" + flavor.get();
+    }
+    ProcessResult result = workspace.runBuckCommand("build", target);
     result.assertFailure("simple_failed_helloworld built when it should have failed to compile");
   }
 }

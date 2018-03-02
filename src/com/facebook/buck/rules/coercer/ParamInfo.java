@@ -163,6 +163,16 @@ public class ParamInfo implements Comparable<ParamInfo> {
     return Hint.DEFAULT_IS_DEP;
   }
 
+  /** @see Hint#isTargetGraphOnlyDep() */
+  public boolean isTargetGraphOnlyDep() {
+    Hint hint = getHint();
+    if (hint != null && hint.isTargetGraphOnlyDep()) {
+      Preconditions.checkState(hint.isDep(), "Conditional deps are only applicable for deps.");
+      return true;
+    }
+    return Hint.DEFAULT_IS_TARGET_GRAPH_ONLY_DEP;
+  }
+
   public boolean isInput() {
     Hint hint = getHint();
     if (hint != null) {

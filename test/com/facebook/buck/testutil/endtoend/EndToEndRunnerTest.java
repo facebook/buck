@@ -25,17 +25,21 @@ import org.junit.runner.RunWith;
 public class EndToEndRunnerTest {
 
   public static EndToEndEnvironment getBaseEnvironment() {
-    return new EndToEndEnvironment().withBuckdToggled(ToggleState.ON_OFF).addTemplates("cxx");
+    return new EndToEndEnvironment()
+        .withBuckdToggled(ToggleState.ON_OFF)
+        .addTemplates("cxx")
+        .withCommand("build");
   }
 
   @Environment
   public static EndToEndEnvironment setSuccessEnvironment() {
-    return getBaseEnvironment().withCommand("build", "simple_successful_helloworld");
+    return getBaseEnvironment()
+        .withTargets("//simple_successful_helloworld:simple_successful_helloworld");
   }
 
   @EnvironmentFor(testNames = {"shouldNotBuildSuccessfully"})
   public static EndToEndEnvironment setFailEnvironment() {
-    return getBaseEnvironment().withCommand("build", "simple_failed_helloworld");
+    return getBaseEnvironment().withTargets("//simple_failed_helloworld:simple_failed_helloworld");
   }
 
   @Test

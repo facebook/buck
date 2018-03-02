@@ -38,6 +38,10 @@ public class ConfigBuilder {
   }
 
   public static RawConfig rawFromReader(Reader reader) throws IOException {
-    return RawConfig.of(Inis.read(reader));
+    return ConfigBuilder.rawFromReader(reader, ".buckconfig");
+  }
+
+  public static RawConfig rawFromReader(Reader reader, String filename) throws IOException {
+    return RawConfig.of(Inis.read(reader, filename));
   }
 }

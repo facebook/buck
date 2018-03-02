@@ -1157,7 +1157,7 @@ public class SuperConsoleEventBusListenerTest {
             + " 3.3% cache miss, 1 [3.3%] cache errors, 1 upload errors";
     final String buildingLine =
         "Local Build: finished in 1.6 sec (100%) 1/5 jobs, 1 updated, 20.0% cache miss";
-    final String totalLine = "  Total time: 1.8 sec";
+    final String totalLine = "  Total time: 1.8 sec. Build successful.";
     timeMillis += 100;
     validateConsole(
         listener,

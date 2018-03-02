@@ -48,8 +48,10 @@ public class DistBuildClientEventListener implements BuckEventListener, Closeabl
       RuleKeyCacheResultEvent cacheResultEvent) {
     RuleKeyCacheResult ruleKeyCacheResult = cacheResultEvent.getRuleKeyCacheResult();
     // Stampede clients should get 100% default rule key hits, so the abnormal requests
-    // we care about logging are default rule key misses.
-    if (ruleKeyCacheResult.cacheResult() != CacheResultType.MISS
+    // we care about logging are default rule key misses (and for fetches made after remote
+    // building of rule is complete).
+    if (!cacheResultEvent.isCacheHitExpected()
+        || ruleKeyCacheResult.cacheResult() != CacheResultType.MISS
         || ruleKeyCacheResult.ruleKeyType() != RuleKeyType.DEFAULT) {
       return;
     }

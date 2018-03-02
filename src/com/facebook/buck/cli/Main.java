@@ -209,7 +209,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
-import java.util.logging.Level;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 import org.kohsuke.args4j.CmdLineException;
@@ -610,13 +609,12 @@ public final class Main {
     boolean isUsingDistributedBuild = false;
 
     // Automatically use distributed build for supported repositories and users.
-    Optional<String> autoDistBuildMessage = Optional.empty();
     if (command.subcommand != null && command.subcommand instanceof BuildCommand) {
       BuildCommand subcommand = (BuildCommand) command.subcommand;
       if (!subcommand.isUseDistributedBuild() && distBuildConfig.shouldUseDistributedBuild()) {
         isUsingDistributedBuild = true;
         subcommand.setUseDistributedBuild(true);
-        autoDistBuildMessage = distBuildConfig.getAutoDistributedBuildMessage();
+        subcommand.shouldPrintAutoDistributedBuildMessage(distBuildConfig);
       }
     }
 
@@ -1030,13 +1028,6 @@ public final class Main {
             buildEventBus.post(DaemonEvent.newDaemonInstance());
           }
 
-
-          // Auto dist build message event posted here so that eventbus and listeners are ready.
-          if (autoDistBuildMessage.isPresent()) {
-            buildEventBus.post(
-                ConsoleEvent.createForMessageWithAnsiEscapeCodes(
-                    Level.INFO, console.getAnsi().asInformationText(autoDistBuildMessage.get())));
-          }
 
           VersionControlBuckConfig vcBuckConfig = new VersionControlBuckConfig(buckConfig);
           VersionControlStatsGenerator vcStatsGenerator =

@@ -83,6 +83,10 @@ public class DistBuildConfig {
   private static final String LOG_MATERIALIZATION_ENABLED = "log_materialization_enabled";
   private static final boolean DEFAULT_LOG_MATERIALIZATION_ENABLED = false;
 
+  private static final String DISTRIBUTED_BUILD_THREAD_KILL_TIMEOUT_SECONDS =
+      "distributed_build_thread_kill_timeout_seconds";
+  private static final long DEFAULT_DISTRIBUTED_BUILD_THREAD_KILL_TIMEOUT_SECONDS = 2;
+
   private static final String PERFORM_RULE_KEY_CONSISTENCY_CHECK =
       "perform_rule_key_consistency_check";
   private static final boolean DEFAULT_PERFORM_RULE_KEY_CONSISTENCY_CHECK = false;
@@ -272,6 +276,12 @@ public class DistBuildConfig {
     return buckConfig
         .getBoolean(STAMPEDE_SECTION, LOG_MATERIALIZATION_ENABLED)
         .orElse(DEFAULT_LOG_MATERIALIZATION_ENABLED);
+  }
+
+  public long getDistributedBuildThreadKillTimeoutSeconds() {
+    return buckConfig
+        .getLong(STAMPEDE_SECTION, DISTRIBUTED_BUILD_THREAD_KILL_TIMEOUT_SECONDS)
+        .orElse(DEFAULT_DISTRIBUTED_BUILD_THREAD_KILL_TIMEOUT_SECONDS);
   }
 
   public boolean getPerformRuleKeyConsistencyCheck() {

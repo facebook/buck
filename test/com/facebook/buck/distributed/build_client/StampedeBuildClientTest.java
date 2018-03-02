@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.command.Build;
 import com.facebook.buck.command.LocalBuildExecutorInvoker;
+import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.ExitCode;
 import com.facebook.buck.distributed.thrift.BuildStatus;
@@ -98,6 +99,7 @@ public class StampedeBuildClientTest {
   private CountDownLatch waitForRacingBuildCalledLatch;
   private CountDownLatch waitForSynchronizedBuildCalledLatch;
   private boolean waitGracefullyForDistributedBuildThreadToFinish;
+  private long distributedBuildThreadKillTimeoutSeconds;
   private Optional<StampedeId> stampedeId = Optional.empty();
 
   @Before
@@ -158,6 +160,7 @@ public class StampedeBuildClientTest {
     waitForRacingBuildCalledLatch = new CountDownLatch(1);
     waitForSynchronizedBuildCalledLatch = new CountDownLatch(1);
     waitGracefullyForDistributedBuildThreadToFinish = false;
+    distributedBuildThreadKillTimeoutSeconds = 0;
     createStampedBuildClient();
     buildClientExecutor = Executors.newSingleThreadExecutor();
   }
@@ -180,7 +183,9 @@ public class StampedeBuildClientTest {
             waitForSynchronizedBuildCalledLatch,
             guardedLocalBuildExecutorInvoker,
             guardedDistBuildControllerInvoker,
+            new ClientStatsTracker(""),
             waitGracefullyForDistributedBuildThreadToFinish,
+            distributedBuildThreadKillTimeoutSeconds,
             stampedeId);
   }
 

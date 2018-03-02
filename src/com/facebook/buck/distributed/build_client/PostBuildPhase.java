@@ -193,7 +193,7 @@ public class PostBuildPhase {
     try {
       finishedStats = distBuildService.fetchBuildSlaveFinishedStats(job.getStampedeId(), runId);
       if (!finishedStats.isPresent()) {
-        LOG.error("BuildSlaveFinishedStats was not set for RunId:[%s] from frontend.", runId);
+        LOG.warn("BuildSlaveFinishedStats was not set for RunId:[%s] from frontend.", runId);
       }
     } catch (IOException ex) {
       LOG.error(

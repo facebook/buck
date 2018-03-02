@@ -46,7 +46,7 @@ public class BuckInvoker extends Statement {
               testDescriptor.getBuckdEnabled(),
               ImmutableMap.copyOf(testDescriptor.getVariableMap()),
               testDescriptor.getTemplateSet(),
-              testDescriptor.getCommand());
+              testDescriptor.getFullCommand());
       testDescriptor.getMethod().invokeExplosively(target, testDescriptor, result);
     } finally {
       workspace.teardown();

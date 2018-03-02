@@ -301,15 +301,19 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
       for (String[] templateSet : testEnvironment.getTemplates()) {
         for (Map<String, String> variableMap : testEnvironment.getVariableMaps()) {
           ToggleState toggleState = testEnvironment.getBuckdToggled();
-          String[] commandSet = testEnvironment.getCommand();
+          String command = testEnvironment.getCommand();
+          String[] buildTargets = testEnvironment.getBuildTargets();
+          String[] arguments = testEnvironment.getArguments();
           if (toggleState == ToggleState.ON_OFF || toggleState == ToggleState.ON) {
             EndToEndTestDescriptor testDescriptor =
-                new EndToEndTestDescriptor(testMethod, templateSet, commandSet, true, variableMap);
+                new EndToEndTestDescriptor(
+                    testMethod, templateSet, command, buildTargets, arguments, true, variableMap);
             output.add(testDescriptor);
           }
           if (toggleState == ToggleState.ON_OFF || toggleState == ToggleState.OFF) {
             EndToEndTestDescriptor testDescriptor =
-                new EndToEndTestDescriptor(testMethod, templateSet, commandSet, false, variableMap);
+                new EndToEndTestDescriptor(
+                    testMethod, templateSet, command, buildTargets, arguments, false, variableMap);
             output.add(testDescriptor);
           }
         }

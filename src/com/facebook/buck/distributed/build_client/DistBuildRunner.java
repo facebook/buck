@@ -31,6 +31,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -53,6 +55,7 @@ public class DistBuildRunner {
   private final RemoteBuildRuleSynchronizer remoteBuildSynchronizer;
   private final ImmutableSet<CountDownLatch> buildPhaseLatches;
   private final boolean waitGracefullyForDistributedBuildThreadToFinish;
+  private final long distributedBuildThreadKillTimeoutSeconds;
 
   private final AtomicInteger distributedBuildExitCode;
   private final AtomicBoolean distributedBuildTerminated;
@@ -70,7 +73,8 @@ public class DistBuildRunner {
       BuildEvent.DistBuildStarted started,
       RemoteBuildRuleSynchronizer remoteBuildSynchronizer,
       ImmutableSet<CountDownLatch> buildPhaseLatches,
-      boolean waitGracefullyForDistributedBuildThreadToFinish) {
+      boolean waitGracefullyForDistributedBuildThreadToFinish,
+      long distributedBuildThreadKillTimeoutSeconds) {
     this.distBuildControllerInvoker = distBuildControllerInvoker;
     this.executor = executor;
     this.eventBus = eventBus;
@@ -82,6 +86,7 @@ public class DistBuildRunner {
     distributedBuildTerminated = new AtomicBoolean(false);
     this.waitGracefullyForDistributedBuildThreadToFinish =
         waitGracefullyForDistributedBuildThreadToFinish;
+    this.distributedBuildThreadKillTimeoutSeconds = distributedBuildThreadKillTimeoutSeconds;
 
     this.distributedBuildExitCode =
         new AtomicInteger(
@@ -173,7 +178,7 @@ public class DistBuildRunner {
     if (waitGracefullyForDistributedBuildThreadToFinish) {
       waitUntilFinished();
     } else {
-      runDistributedBuildFuture.cancel(true);
+      waitUntilFinishedOrKillOnTimeout();
     }
   }
 
@@ -183,6 +188,19 @@ public class DistBuildRunner {
       Preconditions.checkNotNull(runDistributedBuildFuture).get();
     } catch (ExecutionException e) {
       LOG.error(e, "Exception thrown whilst waiting for distributed build thread to finish");
+    }
+  }
+
+  private synchronized void waitUntilFinishedOrKillOnTimeout() throws InterruptedException {
+    try {
+      Preconditions.checkNotNull(runDistributedBuildFuture)
+          .get(distributedBuildThreadKillTimeoutSeconds, TimeUnit.SECONDS);
+    } catch (ExecutionException | TimeoutException e) {
+      LOG.warn(
+          e,
+          "Distributed build failed to finish within timeout after getting killed. "
+              + "Abandoning now.");
+      runDistributedBuildFuture.cancel(true);
     }
   }
 

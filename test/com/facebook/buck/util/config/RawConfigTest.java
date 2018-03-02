@@ -39,7 +39,8 @@ public class RawConfigTest {
                     "two =   //foo:two",
                     "three = //foo:three",
                     "four  = //foo:four"));
-    RawConfig rawConfig = RawConfig.builder().putAll(Inis.read(reader)).build();
+    RawConfig rawConfig =
+        RawConfig.builder().putAll(Inis.read(reader, ".buckconfig.local")).build();
     assertThat(
         "entries are sorted in the order that they appear in the file",
         rawConfig.getSection("alias").keySet(),

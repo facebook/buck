@@ -17,6 +17,7 @@
 package com.facebook.buck.testutil.endtoend;
 
 import com.facebook.buck.testutil.AbstractWorkspace;
+import com.facebook.buck.testutil.PlatformUtils;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
@@ -26,6 +27,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -52,12 +54,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
 
   private static final String TESTDATA_DIRECTORY = "testdata";
 
-  // TODO: Move to work on windows, and to use Resources
-  private static final String BUCK_EXE =
-      FileSystems.getDefault()
-          .getPath("buck-out", "gen", "programs", "buck.pex")
-          .toAbsolutePath()
-          .toString();
+  private PlatformUtils platformUtils = PlatformUtils.getForPlatform();
 
   /**
    * Constructor for EndToEndWorkspace. Note that setup and teardown should be called in between
@@ -75,6 +72,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
    * @param description a description of the test
    * @return transformed statement that sets up and tears down before and after the test
    */
+  @Override
   public Statement apply(Statement base, Description description) {
     return statement(base);
   }
@@ -168,6 +166,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
    *     {@code ["project"]}, etc.
    * @return the result of running Buck, which includes the exit code, stdout, and stderr.
    */
+  @Override
   public ProcessResult runBuckCommand(
       ImmutableMap<String, String> environmentOverrides, String... args) throws Exception {
     String[] templates = new String[] {};
@@ -195,8 +194,8 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
     for (String template : templates) {
       this.addPremadeTemplate(template);
     }
-    List<String> command =
-        ImmutableList.<String>builder().add(BUCK_EXE).addAll(ImmutableList.copyOf(args)).build();
+    ImmutableList.Builder<String> commandBuilder = platformUtils.getCommandBuilder();
+    List<String> command = commandBuilder.addAll(ImmutableList.copyOf(args)).build();
     ImmutableMap<String, String> environment =
         overrideSystemEnvironment(buckdEnabled, environmentOverrides);
     ProcessExecutorParams params =
@@ -213,6 +212,12 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
         result.getStderr().orElse(""));
   }
 
+  /** Replaces platform-specific placeholders configurations with their appropriate replacements */
+  private void postAddPlatformConfiguration() throws IOException {
+    platformUtils.checkAssumptions();
+    platformUtils.setUpWorkspace(this);
+  }
+
   /**
    * Copies the template directory of a premade template, contained in endtoend/testdata, stripping
    * the suffix from files with suffix .fixture, and not copying files with suffix .expected
@@ -222,19 +227,20 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
     // If we're running this test in IJ, then this path doesn't exist. Fall back to one that does
     if (testDataResource != null) {
       this.addTemplateToWorkspace(testDataResource, templateName);
-      return;
+    } else {
+      Path templatePath =
+          FileSystems.getDefault()
+              .getPath(
+                  "test",
+                  "com",
+                  "facebook",
+                  "buck",
+                  "testutil",
+                  "endtoend",
+                  TESTDATA_DIRECTORY,
+                  templateName);
+      addTemplateToWorkspace(templatePath);
     }
-    Path templatePath =
-        FileSystems.getDefault()
-            .getPath(
-                "test",
-                "com",
-                "facebook",
-                "buck",
-                "testutil",
-                "endtoend",
-                TESTDATA_DIRECTORY,
-                templateName);
-    this.addTemplateToWorkspace(templatePath);
+    postAddPlatformConfiguration();
   }
 }

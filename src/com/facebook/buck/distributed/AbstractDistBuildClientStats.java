@@ -32,6 +32,10 @@ abstract class AbstractDistBuildClientStats {
 
   abstract boolean performedLocalBuild();
 
+  abstract boolean performedRacingBuild();
+
+  abstract Optional<Boolean> racingBuildFinishedFirst();
+
   abstract Optional<Boolean> isLocalFallbackBuildEnabled();
 
   abstract Optional<Integer> distributedBuildExitCode();

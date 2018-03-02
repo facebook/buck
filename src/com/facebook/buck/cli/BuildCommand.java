@@ -142,6 +142,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
@@ -253,6 +254,8 @@ public class BuildCommand extends AbstractCommand {
   )
   private boolean useDistributedBuild = false;
 
+  private Optional<String> autoDistBuildMessage = Optional.empty();
+
   @Nullable
   @Option(
     name = DistBuildRunCommand.BUILD_STATE_FILE_ARG_NAME,
@@ -344,6 +347,10 @@ public class BuildCommand extends AbstractCommand {
 
   public void setUseDistributedBuild(boolean useDistributedBuild) {
     this.useDistributedBuild = useDistributedBuild;
+  }
+
+  public void shouldPrintAutoDistributedBuildMessage(DistBuildConfig config) {
+    this.autoDistBuildMessage = config.getAutoDistributedBuildMessage();
   }
 
   /** @return an absolute path or {@link Optional#empty()}. */
@@ -549,13 +556,10 @@ public class BuildCommand extends AbstractCommand {
 
           throw ex;
         } finally {
-          if (distBuildClientStatsTracker.hasStampedeId()) {
+          if (distributedBuildStateFile == null) {
             params
                 .getBuckEventBus()
                 .post(new DistBuildClientStatsEvent(distBuildClientStatsTracker.generateStats()));
-          } else {
-            LOG.error(
-                "Failed to published DistBuildClientStatsEvent as no Stampede ID was received");
           }
         }
         if (exitCode == ExitCode.SUCCESS) {
@@ -847,6 +851,13 @@ public class BuildCommand extends AbstractCommand {
 
     BuildEvent.DistBuildStarted started = BuildEvent.distBuildStarted();
     params.getBuckEventBus().post(started);
+    autoDistBuildMessage.ifPresent(
+        msg ->
+            params
+                .getBuckEventBus()
+                .post(
+                    ConsoleEvent.createForMessageWithAnsiEscapeCodes(
+                        Level.INFO, params.getConsole().getAnsi().asInformationText(msg))));
 
     LOG.info("Starting async file hash computation and job state serialization.");
     AsyncJobStateAndCells stateAndCells =
@@ -956,6 +967,8 @@ public class BuildCommand extends AbstractCommand {
       // TODO(alisdair): ensure minion build status recorded even if local build finishes first.
       boolean waitForDistBuildThreadToFinishGracefully =
           distBuildConfig.getLogMaterializationEnabled();
+      long distributedBuildThreadKillTimeoutSeconds =
+          distBuildConfig.getDistributedBuildThreadKillTimeoutSeconds();
 
       StampedeBuildClient stampedeBuildClient =
           new StampedeBuildClient(
@@ -967,7 +980,9 @@ public class BuildCommand extends AbstractCommand {
               localBuildExecutorInvoker,
               distBuildControllerArgsBuilder,
               distBuildControllerInvocationArgs,
-              waitForDistBuildThreadToFinishGracefully);
+              distBuildClientStats,
+              waitForDistBuildThreadToFinishGracefully,
+              distributedBuildThreadKillTimeoutSeconds);
 
       distBuildClientStats.startTimer(PERFORM_LOCAL_BUILD);
 
@@ -1032,12 +1047,6 @@ public class BuildCommand extends AbstractCommand {
       // Post distributed build phase starts POST_DISTRIBUTED_BUILD_LOCAL_STEPS counter internally.
       if (distributedBuildExitCode == 0) {
         distBuildClientStats.stopTimer(POST_DISTRIBUTED_BUILD_LOCAL_STEPS);
-      }
-
-      if (distBuildClientStats.hasStampedeId()) {
-        params
-            .getBuckEventBus()
-            .post(new DistBuildClientStatsEvent(distBuildClientStats.generateStats()));
       }
 
       return ExitCode.map(finalExitCode);

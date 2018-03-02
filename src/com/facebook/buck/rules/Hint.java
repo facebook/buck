@@ -32,10 +32,21 @@ import java.lang.annotation.Target;
 public @interface Hint {
   boolean DEFAULT_IS_DEP = true;
   boolean DEFAULT_IS_INPUT = true;
+  boolean DEFAULT_IS_TARGET_GRAPH_ONLY_DEP = false;
 
   /** @return Whether to search the field's value for dependencies */
   boolean isDep() default DEFAULT_IS_DEP;
 
   /** @return Whether to use the field's value as an input */
   boolean isInput() default DEFAULT_IS_INPUT;
+
+  /**
+   * @return Whether to add the field's value to the target graph, but do not automatically
+   *     propagate it to the build rule (action graph). During action graph construction, build
+   *     rules can still decide to add them to action graph based on some condition. Build rules
+   *     must explicitly handle these dependencies if they should be used during build.
+   *     <p>For example, rules that support platform-specific dependencies must explicitly include
+   *     dependencies matching target platform into the action graph.
+   */
+  boolean isTargetGraphOnlyDep() default DEFAULT_IS_TARGET_GRAPH_ONLY_DEP;
 }
