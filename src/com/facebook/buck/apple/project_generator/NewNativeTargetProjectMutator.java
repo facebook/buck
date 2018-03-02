@@ -46,7 +46,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
-import com.facebook.buck.js.JsBundle;
 import com.facebook.buck.js.JsBundleOutputs;
 import com.facebook.buck.js.JsBundleOutputsDescription;
 import com.facebook.buck.log.Logger;
@@ -767,8 +766,8 @@ class NewNativeTargetProjectMutator {
         BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);
         BuildRule rule = resolver.getRule(targetNode.getBuildTarget());
 
-        Preconditions.checkState(rule instanceof JsBundle);
-        JsBundle bundle = (JsBundle) rule;
+        Preconditions.checkState(rule instanceof JsBundleOutputs);
+        JsBundleOutputs bundle = (JsBundleOutputs) rule;
 
         SourcePath jsOutput = bundle.getSourcePathToOutput();
         SourcePath resOutput = bundle.getSourcePathToResources();

@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * Performs a depth-first, post-order traversal over a DAG.
@@ -42,15 +43,23 @@ public class AcyclicDepthFirstPostOrderTraversal<T> {
     this.traversable = traversable;
   }
 
+  public Iterable<T> traverse(Iterable<? extends T> initialNodes) throws CycleException {
+    return traverse(initialNodes, node -> true);
+  }
+
   /**
    * Performs a depth-first, post-order traversal over a DAG.
    *
    * @param initialNodes The nodes from which to perform the traversal. Not allowed to contain
    *     {@code null}.
+   * @param shouldExploreChildren Whether or not to explore a particular node's children. Used to
+   *     support short circuiting in the traversal.
    * @throws CycleException if a cycle is found while performing the traversal.
    */
   @SuppressWarnings("PMD.PrematureDeclaration")
-  public Iterable<T> traverse(Iterable<? extends T> initialNodes) throws CycleException {
+  public Iterable<T> traverse(
+      Iterable<? extends T> initialNodes, Predicate<T> shouldExploreChildren)
+      throws CycleException {
     // This corresponds to the current chain of nodes being explored. Enforcing this invariant makes
     // this data structure useful for debugging.
     Deque<Explorable> toExplore = new LinkedList<>();
@@ -75,18 +84,20 @@ public class AcyclicDepthFirstPostOrderTraversal<T> {
 
       // Find children that need to be explored to add to the stack.
       int stackSize = toExplore.size();
-      for (Iterator<T> iter = explorable.children; iter.hasNext(); ) {
-        T child = iter.next();
-        if (inProgress.contains(child)) {
-          throw createCycleException(child, toExplore);
-        } else if (!explored.contains(child)) {
-          toExplore.addFirst(new Explorable(child));
+      if (shouldExploreChildren.test(node)) {
+        for (Iterator<T> iter = explorable.children; iter.hasNext(); ) {
+          T child = iter.next();
+          if (inProgress.contains(child)) {
+            throw createCycleException(child, toExplore);
+          } else if (!explored.contains(child)) {
+            toExplore.addFirst(new Explorable(child));
 
-          // Without this break statement:
-          // (1) Children will be explored in reverse order instead of the specified order.
-          // (2) CycleException may contain extra nodes.
-          // Comment out the break statement and run the unit test to verify this for yourself.
-          break;
+            // Without this break statement:
+            // (1) Children will be explored in reverse order instead of the specified order.
+            // (2) CycleException may contain extra nodes.
+            // Comment out the break statement and run the unit test to verify this for yourself.
+            break;
+          }
         }
       }
 

@@ -1,9 +1,0 @@
-android_resource(
-    name = "res",
-    assets = "assets",
-    package = "com.example",
-    res = "res",
-    visibility = [
-        "PUBLIC",
-    ],
-)

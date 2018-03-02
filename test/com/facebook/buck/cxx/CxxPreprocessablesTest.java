@@ -37,6 +37,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.args.StringArg;
@@ -203,7 +204,12 @@ public class CxxPreprocessablesTest {
     // Build our symlink tree rule using the helper method.
     HeaderSymlinkTree symlinkTree =
         CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
-            target, filesystem, root, links, HeaderMode.SYMLINK_TREE_ONLY);
+            target,
+            filesystem,
+            new SourcePathRuleFinder(resolver),
+            root,
+            links,
+            HeaderMode.SYMLINK_TREE_ONLY);
 
     // Verify that the symlink tree has no deps.  This is by design, since setting symlinks can
     // be done completely independently from building the source that the links point to and

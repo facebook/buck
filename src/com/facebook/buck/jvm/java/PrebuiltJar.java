@@ -32,12 +32,15 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -65,7 +68,8 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         InitializableFromDisk<JavaLibrary.Data>,
         JavaLibrary,
         MaybeRequiredForSourceOnlyAbi,
-        SupportsInputBasedRuleKey {
+        SupportsInputBasedRuleKey,
+        CacheableBuildRule {
 
   @AddToRuleKey private final SourcePath binaryJar;
   private final JarContentsSupplier binaryJarContentsSupplier;
@@ -316,5 +320,13 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Optional<String> getMavenCoords() {
     return mavenCoords;
+  }
+
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
+    binaryJarContentsSupplier.updateSourcePathResolver(pathResolver);
   }
 }

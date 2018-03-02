@@ -51,6 +51,7 @@ import com.facebook.buck.model.Flavored;
 import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -61,7 +62,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -180,6 +180,7 @@ public class CxxPythonExtensionDescription
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
             target,
             projectFilesystem,
+            ruleFinder,
             ruleResolver,
             cxxPlatform,
             headers,
@@ -398,13 +399,13 @@ public class CxxPythonExtensionDescription
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      final BuildRuleResolver ruleResolver,
-      CellPathResolver cellRoots,
       final CxxPythonExtensionDescriptionArg args) {
+    BuildRuleResolver ruleResolverLocal = context.getBuildRuleResolver();
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    CellPathResolver cellRoots = context.getCellPathResolver();
 
     // See if we're building a particular "type" of this library, and if so, extract it as an enum.
     final Optional<Type> type = LIBRARY_TYPE.getValue(buildTarget);
@@ -417,7 +418,7 @@ public class CxxPythonExtensionDescription
       switch (type.get()) {
         case SANDBOX_TREE:
           return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
-              ruleResolver,
+              ruleResolverLocal,
               args,
               cxxPlatforms.getRequiredValue(buildTarget),
               buildTarget,
@@ -426,7 +427,7 @@ public class CxxPythonExtensionDescription
           return createExtensionBuildRule(
               buildTarget,
               projectFilesystem,
-              ruleResolver,
+              ruleResolverLocal,
               cellRoots,
               getPythonPlatforms().getRequiredValue(buildTarget),
               cxxPlatforms.getRequiredValue(buildTarget),
@@ -435,7 +436,7 @@ public class CxxPythonExtensionDescription
           return createCompilationDatabase(
               buildTarget,
               projectFilesystem,
-              ruleResolver,
+              ruleResolverLocal,
               cellRoots,
               getPythonPlatforms().getRequiredValue(buildTarget),
               cxxPlatforms.getRequiredValue(buildTarget),
@@ -445,12 +446,18 @@ public class CxxPythonExtensionDescription
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathRuleFinder ruleFinderLocal = new SourcePathRuleFinder(ruleResolverLocal);
+    final SourcePathResolver pathResolverLocal = DefaultSourcePathResolver.from(ruleFinderLocal);
     Path baseModule = PythonUtil.getBasePath(buildTarget, args.getBaseModule());
     String moduleName = args.getModuleName().orElse(buildTarget.getShortName());
     final Path module = baseModule.resolve(getExtensionName(moduleName));
-    return new CxxPythonExtension(buildTarget, projectFilesystem, params) {
+    return new CxxPythonExtension(
+        buildTarget,
+        projectFilesystem,
+        params,
+        ruleResolverLocal,
+        ruleFinderLocal,
+        pathResolverLocal) {
 
       @Override
       protected BuildRule getExtension(PythonPlatform pythonPlatform, CxxPlatform cxxPlatform) {
@@ -487,7 +494,7 @@ public class CxxPythonExtensionDescription
             ImmutableMap.of(module, output),
             ImmutableMap.of(),
             ImmutableMap.of(),
-            ImmutableSet.of(),
+            ImmutableMultimap.of(),
             Optional.of(false));
       }
 

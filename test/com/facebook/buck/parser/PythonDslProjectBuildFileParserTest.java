@@ -73,7 +73,7 @@ public class PythonDslProjectBuildFileParserTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
-  public void createCell() throws IOException, InterruptedException {
+  public void createCell() {
     cell = new TestCellBuilder().build();
     KnownBuildRuleTypesFactory knownBuildRuleTypesFactory =
         DefaultKnownBuildRuleTypesFactory.of(

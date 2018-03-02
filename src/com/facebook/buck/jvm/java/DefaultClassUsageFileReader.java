@@ -60,11 +60,9 @@ class DefaultClassUsageFileReader {
       final ImmutableSet<Map.Entry<String, ImmutableList<String>>> classUsageEntries =
           loadClassUsageMap(classUsageFilePath).entrySet();
       for (Map.Entry<String, ImmutableList<String>> jarUsedClassesEntry : classUsageEntries) {
-        final Path recordedPath = Paths.get(jarUsedClassesEntry.getKey());
         Path jarAbsolutePath =
-            recordedPath.isAbsolute()
-                ? getAbsolutePathForCellRootedPath(recordedPath, cellPathResolver)
-                : projectFilesystem.resolve(recordedPath);
+            convertRecordedJarPathToAbsolute(
+                projectFilesystem, cellPathResolver, jarUsedClassesEntry.getKey());
         SourcePath sourcePath = jarPathToSourcePath.get(jarAbsolutePath);
         if (sourcePath == null) {
           // This indicates a dependency that wasn't among the deps of the rule; i.e.,
@@ -83,6 +81,33 @@ class DefaultClassUsageFileReader {
           projectFilesystem.resolve(classUsageFilePath));
     }
     return builder.build();
+  }
+
+  public static ImmutableSet<Path> loadUsedJarsFromFile(
+      ProjectFilesystem projectFilesystem,
+      CellPathResolver cellPathResolver,
+      Path classUsageFilePath)
+      throws IOException {
+    final ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
+    final ImmutableSet<Map.Entry<String, ImmutableList<String>>> classUsageEntries =
+        loadClassUsageMap(classUsageFilePath).entrySet();
+    for (Map.Entry<String, ImmutableList<String>> jarUsedClassesEntry : classUsageEntries) {
+      Path jarAbsolutePath =
+          convertRecordedJarPathToAbsolute(
+              projectFilesystem, cellPathResolver, jarUsedClassesEntry.getKey());
+      builder.add(jarAbsolutePath);
+    }
+    return builder.build();
+  }
+
+  private static Path convertRecordedJarPathToAbsolute(
+      ProjectFilesystem projectFilesystem, CellPathResolver cellPathResolver, String jarPath) {
+    final Path recordedPath = Paths.get(jarPath);
+    Path jarAbsolutePath =
+        recordedPath.isAbsolute()
+            ? getAbsolutePathForCellRootedPath(recordedPath, cellPathResolver)
+            : projectFilesystem.resolve(recordedPath);
+    return jarAbsolutePath;
   }
 
   /**

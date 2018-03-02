@@ -28,17 +28,18 @@ import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.model.macros.MacroFinder;
 import com.facebook.buck.model.macros.MacroMatchResult;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -161,15 +162,14 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      final BuildRuleResolver resolver,
-      CellPathResolver cellRoots,
       final PrebuiltCxxLibraryGroupDescriptionArg args) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    return new CustomPrebuiltCxxLibrary(buildTarget, projectFilesystem, params) {
+    BuildRuleResolver resolverLocal = context.getBuildRuleResolver();
+    SourcePathRuleFinder ruleFinderLocal = new SourcePathRuleFinder(resolverLocal);
+    return new CustomPrebuiltCxxLibrary(
+        buildTarget, context.getProjectFilesystem(), params, resolverLocal, ruleFinderLocal) {
 
       private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
           transitiveCxxPreprocessorInputCache =
@@ -225,7 +225,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
       @Override
       public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
         return FluentIterable.from(args.getExportedDeps())
-            .transform(resolver::getRule)
+            .transform(ruleResolver::getRule)
             .filter(NativeLinkable.class);
       }
 
@@ -246,7 +246,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
                 getStaticLinkArgs(
                     getBuildTarget(),
                     CxxGenruleDescription.fixupSourcePaths(
-                        resolver, ruleFinder, cxxPlatform, args.getStaticLibs()),
+                        ruleResolver, ruleFinder, cxxPlatform, args.getStaticLibs()),
                     args.getStaticLink()));
             break;
           case STATIC_PIC:
@@ -254,7 +254,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
                 getStaticLinkArgs(
                     getBuildTarget(),
                     CxxGenruleDescription.fixupSourcePaths(
-                        resolver, ruleFinder, cxxPlatform, args.getStaticPicLibs()),
+                        ruleResolver, ruleFinder, cxxPlatform, args.getStaticPicLibs()),
                     args.getStaticPicLink()));
             break;
           case SHARED:
@@ -262,7 +262,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
                 getSharedLinkArgs(
                     getBuildTarget(),
                     CxxGenruleDescription.fixupSourcePaths(
-                        resolver,
+                        ruleResolver,
                         ruleFinder,
                         cxxPlatform,
                         ImmutableMap.<String, SourcePath>builder()
@@ -340,10 +340,29 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
   }
 
   public abstract static class CustomPrebuiltCxxLibrary
-      extends NoopBuildRuleWithDeclaredAndExtraDeps implements AbstractCxxLibrary {
+      extends NoopBuildRuleWithDeclaredAndExtraDeps
+      implements AbstractCxxLibrary, CacheableBuildRule {
+    protected BuildRuleResolver ruleResolver;
+    protected SourcePathRuleFinder ruleFinder;
+
     public CustomPrebuiltCxxLibrary(
-        BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
+        BuildTarget buildTarget,
+        ProjectFilesystem projectFilesystem,
+        BuildRuleParams params,
+        BuildRuleResolver ruleResolver,
+        SourcePathRuleFinder ruleFinder) {
       super(buildTarget, projectFilesystem, params);
+      this.ruleResolver = ruleResolver;
+      this.ruleFinder = ruleFinder;
+    }
+
+    @Override
+    public void updateBuildRuleResolver(
+        BuildRuleResolver ruleResolver,
+        SourcePathRuleFinder ruleFinder,
+        SourcePathResolver pathResolver) {
+      this.ruleResolver = ruleResolver;
+      this.ruleFinder = ruleFinder;
     }
   }
 

@@ -21,17 +21,27 @@ import com.facebook.buck.cxx.toolchain.nativelink.CanProvideNativeLinkTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 public abstract class PrebuiltCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements AbstractCxxLibrary, CanProvideNativeLinkTarget {
+    implements AbstractCxxLibrary, CanProvideNativeLinkTarget, CacheableBuildRule {
+
+  protected BuildRuleResolver ruleResolver;
 
   PrebuiltCxxLibrary(
-      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver) {
     super(buildTarget, projectFilesystem, params);
+    this.ruleResolver = ruleResolver;
   }
 
   public abstract ImmutableList<String> getExportedLinkerFlags(CxxPlatform cxxPlatform);
@@ -39,4 +49,12 @@ public abstract class PrebuiltCxxLibrary extends NoopBuildRuleWithDeclaredAndExt
   abstract Optional<SourcePath> getStaticLibrary(CxxPlatform cxxPlatform);
 
   abstract Optional<SourcePath> getStaticPicLibrary(CxxPlatform cxxPlatform);
+
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
+    this.ruleResolver = ruleResolver;
+  }
 }

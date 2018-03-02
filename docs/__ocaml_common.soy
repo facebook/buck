@@ -45,6 +45,19 @@ Note: Buck is currently tested with 4.X OCaml series.
 {/template}
 
 /***/
+{template .ocamldep_flags_arg}
+{call buck.arg}
+  {param name : 'ocamldep_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of additional flags to pass to ocamldep. Macros are currently not
+  supported, since ocamldep is called while buck is still calculating the action
+  graph and build dependencies have not been built yet.
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .bytecode_only_arg}
 {call buck.arg}
   {param name : 'bytecode_only' /}
@@ -76,4 +89,3 @@ Note: Buck is currently tested with 4.X OCaml series.
   integration tests</a>.
 </p>
 {/template}
-

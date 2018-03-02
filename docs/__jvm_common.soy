@@ -164,3 +164,27 @@
   {/param}
 {/call}
 {/template}
+
+/***/
+{template .on_unused_dependencies}
+{call buck.arg}
+  {param name: 'on_unused_dependencies' /}
+  {param default: 'ignore' /}
+  {param desc}
+     <p>Action performed when Buck detects that some dependencies are not used during Java compilation.</p>
+     <p>Note that this feature is experimental and does not handle runtime dependencies.</p>
+     <p>The valid values are:
+       <ul>
+         <li><code>ignore</code> (default): ignore unused dependencies,</li>
+         <li><code>warn</code>: emit a warning to the console,</li>
+         <li><code>fail</code>: fail the compilation.</li>
+       </ul>
+     </p>
+     <p>This option overrides the default value from {call buck.concept_link_heading}
+       {param page : 'buckconfig' /}
+       {param heading : 'java.unused_dependencies_action' /}
+       {param name : '.buckconfig' /}
+     {/call}.
+  {/param}
+{/call}
+{/template}

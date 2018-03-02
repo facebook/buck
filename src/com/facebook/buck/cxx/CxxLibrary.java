@@ -32,9 +32,11 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
@@ -49,7 +51,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
+import java.util.SortedSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -60,9 +65,16 @@ import java.util.stream.Stream;
  * interfaces to make it consumable by C/C++ preprocessing and native linkable rules.
  */
 public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements AbstractCxxLibrary, HasRuntimeDeps, NativeTestable, NativeLinkTarget {
+    implements AbstractCxxLibrary,
+        HasRuntimeDeps,
+        NativeTestable,
+        NativeLinkTarget,
+        CacheableBuildRule {
 
-  private final BuildRuleResolver ruleResolver;
+  private BuildRuleResolver ruleResolver;
+  private SourcePathRuleFinder ruleFinder;
+  private Set<BuildRule> implicitDepsForCaching = new HashSet<>();
+
   private final CxxDeps deps;
   private final CxxDeps exportedDeps;
   private final Predicate<CxxPlatform> headerOnly;
@@ -114,6 +126,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       Optional<CxxLibraryDescriptionDelegate> delegate) {
     super(buildTarget, projectFilesystem, params);
     this.ruleResolver = ruleResolver;
+    this.ruleFinder = new SourcePathRuleFinder(ruleResolver);
     this.deps = deps;
     this.exportedDeps = exportedDeps;
     this.headerOnly = headerOnly;
@@ -157,9 +170,18 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   private CxxPreprocessorInput getCxxPreprocessorInput(
       CxxPlatform cxxPlatform, HeaderVisibility headerVisibility) {
     // Handle via metadata query.
-    return CxxLibraryDescription.queryMetadataCxxPreprocessorInput(
-            ruleResolver, getBuildTarget(), cxxPlatform, headerVisibility)
-        .orElseThrow(IllegalStateException::new);
+    CxxPreprocessorInput preprocessorInput =
+        CxxLibraryDescription.queryMetadataCxxPreprocessorInput(
+                ruleResolver, getBuildTarget(), cxxPlatform, headerVisibility)
+            .orElseThrow(IllegalStateException::new);
+
+    // Make sure we save preprocessor deps, which won't show up under buildDeps or runtimeDeps,
+    // for the action graph cache.
+    for (BuildRule dep : preprocessorInput.getDeps(ruleResolver, ruleFinder)) {
+      implicitDepsForCaching.add(dep);
+    }
+
+    return preprocessorInput;
   }
 
   @Override
@@ -357,7 +379,17 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   public BuildRule requireBuildRule(Flavor... flavors) {
-    return ruleResolver.requireRule(getBuildTarget().withAppendedFlavors(flavors));
+    BuildRule buildRule = ruleResolver.requireRule(getBuildTarget().withAppendedFlavors(flavors));
+
+    // These dependencies are not tracked as part of deps for this library, but rather, end up
+    // under the link node of the parent binary. We need to capture them here to ensure we
+    // actually get perf benefits from caching this library node. Otherwise, an invalidated parent
+    // binary node will recompute the potentially complex subgraph that actually does the heavy
+    // lifting to compile and link together this library. The most important entries are the Archive
+    // node created by {@link #getNativeLinkableInputUncached}, and the shared library node created
+    // by {@link #getSharedLibraries}.
+    implicitDepsForCaching.add(buildRule);
+    return buildRule;
   }
 
   @Override
@@ -436,11 +468,29 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     // `CxxLibrary` rules themselves are noop meta rules, they shouldn't add any unnecessary
     // overhead.
     return RichStream.from(getDeclaredDeps().stream())
-        .concat(exportedDeps.getForAllPlatforms(ruleResolver).stream())
+        // Make sure to use the rule resolver that's passed in rather than the field we're holding,
+        // since we need to access nodes already created by the previous build rule resolver in the
+        // incremental action graph scenario, and {@see #updateBuildRuleResolver} may already have
+        // been called.
+        .concat(exportedDeps.getForAllPlatforms(ruleFinder.getRuleResolver()).stream())
         .map(BuildRule::getBuildTarget);
   }
 
   public Iterable<? extends Arg> getExportedLinkerFlags(CxxPlatform cxxPlatform) {
     return exportedLinkerFlags.apply(cxxPlatform);
+  }
+
+  @Override
+  public SortedSet<BuildRule> getImplicitDepsForCaching() {
+    return ImmutableSortedSet.copyOf(implicitDepsForCaching);
+  }
+
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
+    this.ruleResolver = ruleResolver;
+    this.ruleFinder = ruleFinder;
   }
 }

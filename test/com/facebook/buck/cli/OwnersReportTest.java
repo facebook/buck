@@ -34,16 +34,14 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -83,14 +81,11 @@ public class OwnersReportTest {
 
     @Override
     public BuildRule createBuildRule(
-        TargetGraph targetGraph,
+        BuildRuleCreationContext context,
         BuildTarget buildTarget,
-        ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
-        BuildRuleResolver resolver,
-        CellPathResolver cellRoots,
         FakeRuleDescriptionArg args) {
-      return new FakeBuildRule(buildTarget, projectFilesystem, params);
+      return new FakeBuildRule(buildTarget, context.getProjectFilesystem(), params);
     }
 
     @BuckStyleImmutable

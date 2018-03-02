@@ -234,6 +234,12 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     return delegate.getValue(SECTION, "default_cxx_platform");
   }
 
+  public UnusedDependenciesAction getUnusedDependenciesAction() {
+    return delegate
+        .getEnum(SECTION, "unused_dependencies_action", UnusedDependenciesAction.class)
+        .orElse(UnusedDependenciesAction.IGNORE);
+  }
+
   public enum SourceAbiVerificationMode {
     /** Don't verify ABI jars. */
     OFF,
@@ -241,5 +247,12 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     LOG,
     /** Generate ABI jars from classes and from source. Fail on differences. */
     FAIL,
+  }
+
+  /** An action that is executed when a rule that compiles Java code has unused dependencies. */
+  public enum UnusedDependenciesAction {
+    FAIL,
+    WARN,
+    IGNORE;
   }
 }

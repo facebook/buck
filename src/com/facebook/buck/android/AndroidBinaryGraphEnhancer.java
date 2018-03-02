@@ -110,6 +110,7 @@ public class AndroidBinaryGraphEnhancer {
   private final Optional<BuildTarget> nativeLibraryMergeCodeGenerator;
   private final BuildRuleResolver ruleResolver;
   private final SourcePathRuleFinder ruleFinder;
+  private final CellPathResolver cellPathResolver;
   private final PackageType packageType;
   private final boolean shouldPreDex;
   private final DexSplitMode dexSplitMode;
@@ -147,6 +148,7 @@ public class AndroidBinaryGraphEnhancer {
       Optional<SourcePath> duplicateResourceWhitelistPath,
       Optional<String> resourceUnionPackage,
       ImmutableSet<String> locales,
+      Optional<String> localizedStringFileName,
       Optional<SourcePath> manifest,
       Optional<SourcePath> manifestSkeleton,
       PackageType packageType,
@@ -194,6 +196,7 @@ public class AndroidBinaryGraphEnhancer {
     this.originalDeps = originalParams.getBuildDeps();
     this.ruleResolver = ruleResolver;
     this.ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    this.cellPathResolver = cellPathResolver;
     this.packageType = packageType;
     this.shouldPreDex = shouldPreDex;
     this.dexSplitMode = dexSplitMode;
@@ -242,6 +245,7 @@ public class AndroidBinaryGraphEnhancer {
             resourcesFilter,
             resourceCompressionMode,
             locales,
+            localizedStringFileName,
             resourceUnionPackage,
             shouldBuildStringSourceMap,
             skipCrunchPngs,
@@ -328,6 +332,7 @@ public class AndroidBinaryGraphEnhancer {
                   projectFilesystem,
                   paramsForCompileGenCode,
                   ruleResolver,
+                  cellPathResolver,
                   new JavaConfiguredCompilerFactory(javaBuckConfig),
                   javaBuckConfig,
                   null)
@@ -415,6 +420,7 @@ public class AndroidBinaryGraphEnhancer {
                 projectFilesystem,
                 paramsForCompileUberRDotJava,
                 ruleResolver,
+                cellPathResolver,
                 new JavaConfiguredCompilerFactory(javaBuckConfig),
                 javaBuckConfig,
                 null)
@@ -654,7 +660,7 @@ public class AndroidBinaryGraphEnhancer {
                     buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(javaLibrary));
                 return new DexProducedFromJavaLibrary(
                     preDexTarget,
-                    projectFilesystem,
+                    javaLibrary.getProjectFilesystem(),
                     androidPlatformTarget,
                     paramsForPreDex,
                     javaLibrary,

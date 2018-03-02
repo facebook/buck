@@ -22,14 +22,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTest;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTestRunner;
 import com.google.common.base.Joiner;
-import com.sun.source.tree.BlockTree;
-import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.MethodTree;
-import com.sun.source.tree.Tree;
-import com.sun.source.tree.TypeParameterTree;
-import com.sun.source.tree.VariableTree;
-import com.sun.source.util.TreeScanner;
 import java.io.IOException;
 import javax.lang.model.element.TypeElement;
 import org.junit.Before;
@@ -59,21 +52,23 @@ public class ElementTreeFinderTest extends CompilerTreeApiTest {
 
   @Test
   public void testFindsTreeForClass() {
-    assertThat(finder.getTree(elements.getTypeElement("AClass")), is(findTreeNamed("AClass")));
+    assertThat(
+        finder.getTree(elements.getTypeElement("AClass")),
+        is(TreeFinder.findTreeNamed(compilationUnit, "AClass")));
   }
 
   @Test
   public void testFindsTreeForClassTypeParameter() {
     assertThat(
         finder.getTree(findTypeParameter("ClassTypeParam", elements.getTypeElement("AClass"))),
-        is(findTreeNamed("ClassTypeParam")));
+        is(TreeFinder.findTreeNamed(compilationUnit, "ClassTypeParam")));
   }
 
   @Test
   public void testFindsTreeForMethod() {
     assertThat(
         finder.getTree(findMethod("method", elements.getTypeElement("AClass"))),
-        is(findTreeNamed("method")));
+        is(TreeFinder.findTreeNamed(compilationUnit, "method")));
   }
 
   @Test
@@ -82,7 +77,7 @@ public class ElementTreeFinderTest extends CompilerTreeApiTest {
         finder.getTree(
             findParameter(
                 "methodParameter", findMethod("method", elements.getTypeElement("AClass")))),
-        is(findTreeNamed("methodParameter")));
+        is(TreeFinder.findTreeNamed(compilationUnit, "methodParameter")));
   }
 
   @Test
@@ -91,73 +86,14 @@ public class ElementTreeFinderTest extends CompilerTreeApiTest {
         finder.getTree(
             findTypeParameter(
                 "MethodTypeParam", findMethod("method", elements.getTypeElement("AClass")))),
-        is(findTreeNamed("MethodTypeParam")));
+        is(TreeFinder.findTreeNamed(compilationUnit, "MethodTypeParam")));
   }
 
   @Test
   public void testFindsTreeForField() {
     assertThat(
         finder.getTree(findField("field", elements.getTypeElement("AClass"))),
-        is(findTreeNamed("field")));
-  }
-
-  private Tree findTreeNamed(CharSequence name) {
-    return new TreeScanner<Tree, Void>() {
-      @Override
-      public Tree visitClass(ClassTree node, Void aVoid) {
-        if (node.getSimpleName().contentEquals(name)) {
-          return node;
-        }
-
-        return super.visitClass(node, aVoid);
-      }
-
-      @Override
-      public Tree visitMethod(MethodTree node, Void aVoid) {
-        if (node.getName().contentEquals(name)) {
-          return node;
-        }
-
-        return super.visitMethod(node, aVoid);
-      }
-
-      @Override
-      public Tree visitVariable(VariableTree node, Void aVoid) {
-        if (node.getName().contentEquals(name)) {
-          return node;
-        }
-
-        return null;
-      }
-
-      @Override
-      public Tree visitTypeParameter(TypeParameterTree node, Void aVoid) {
-        if (node.getName().contentEquals(name)) {
-          return node;
-        }
-
-        return null;
-      }
-
-      @Override
-      public Tree visitBlock(BlockTree node, Void aVoid) {
-        return null;
-      }
-
-      @Override
-      public Tree reduce(Tree r1, Tree r2) {
-        if (r1 == r2) {
-          return r1;
-        }
-        if (r1 != null && r2 != null) {
-          throw new AssertionError();
-        } else if (r1 != null) {
-          return r1;
-        } else {
-          return r2;
-        }
-      }
-    }.scan(compilationUnit, null);
+        is(TreeFinder.findTreeNamed(compilationUnit, "field")));
   }
 
   private CompilationUnitTree getCompilationUnit() {

@@ -39,6 +39,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.listener.DistBuildSlaveEventBusListener;
 import com.facebook.buck.event.listener.NoOpCoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.EventPostingRuleKeyCacheScope;
@@ -66,6 +67,7 @@ import javax.annotation.Nullable;
 import org.kohsuke.args4j.Option;
 
 public class DistBuildRunCommand extends AbstractDistBuildCommand {
+  private static final Logger LOG = Logger.get(DistBuildRunCommand.class);
 
   public static final String BUILD_STATE_FILE_ARG_NAME = "--build-state-file";
   public static final String BUILD_STATE_FILE_ARG_USAGE = "File containing the BuildStateJob data.";
@@ -135,6 +137,8 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
     if (stampedeId.isPresent()) {
       params.getBuckEventBus().post(new DistBuildRunEvent(stampedeId.get(), getBuildSlaveRunId()));
     }
+
+    LOG.info("Starting DistBuildRunCommand.");
 
     timeStatsTracker.startTimer(SlaveEvents.TOTAL_RUNTIME);
     timeStatsTracker.startTimer(SlaveEvents.DIST_BUILD_PREPARATION_TIME);
@@ -219,9 +223,14 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
           distBuildExecutor.onBuildSlavePreparationCompleted(
               () -> timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_PREPARATION_TIME));
 
+          LOG.info("Starting to process build with DistBuildExecutor.");
           // All preparation work is done, so start building.
           int returnCode = distBuildExecutor.buildAndReturnExitCode();
+          LOG.info(
+              "%s returned with exit code: [%d].",
+              distBuildExecutor.getClass().getName(), returnCode);
           multiSourceFileContentsProvider.close();
+          LOG.info("Successfully shut down the source file provider.");
           timeStatsTracker.stopTimer(SlaveEvents.TOTAL_RUNTIME);
 
           if (slaveEventListener != null) {

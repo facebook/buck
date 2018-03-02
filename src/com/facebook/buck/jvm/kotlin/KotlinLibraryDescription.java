@@ -33,11 +33,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
@@ -78,13 +77,11 @@ public class KotlinLibraryDescription
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      CellPathResolver cellRoots,
       KotlinLibraryDescriptionArg args) {
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
 
@@ -117,6 +114,7 @@ public class KotlinLibraryDescription
             args.getMavenPomTemplate());
       }
     }
+    BuildRuleResolver resolver = context.getBuildRuleResolver();
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
             toolchainProvider
@@ -133,6 +131,7 @@ public class KotlinLibraryDescription
                 projectFilesystem,
                 params,
                 resolver,
+                context.getCellPathResolver(),
                 kotlinBuckConfig,
                 javaBuckConfig,
                 args)

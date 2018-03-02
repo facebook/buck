@@ -634,6 +634,16 @@ android_binary(
 )
 
 android_binary(
+    name = "app_aapt2_with_no_res",
+    aapt_mode = "aapt2",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifestNoRes.xml",
+    deps = [
+        "//java/com/sample/small:small_with_no_resource_deps",
+    ],
+)
+
+android_binary(
     name = "app_with_aar_and_no_res",
     keystore = "//keystores:debug",
     manifest = "AndroidManifestNoRes.xml",

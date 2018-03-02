@@ -18,33 +18,43 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.collect.SortedSets;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 /** A cache of rule deps. */
 public class RuleDepsCache {
-  private final Map<BuildRule, SortedSet<BuildRule>> cache;
+  private final Map<BuildRule, SortedSet<BuildRule>> allDepsCache;
+  private final Map<BuildRule, SortedSet<BuildRule>> runtimeDepsCache;
   private final BuildRuleResolver resolver;
   private final SourcePathRuleFinder ruleFinder;
 
   public RuleDepsCache(BuildRuleResolver resolver) {
     this.resolver = resolver;
     this.ruleFinder = new SourcePathRuleFinder(resolver);
-    this.cache = new ConcurrentHashMap<>();
+    this.allDepsCache = new ConcurrentHashMap<>();
+    this.runtimeDepsCache = new ConcurrentHashMap<>();
   }
 
   public SortedSet<BuildRule> get(final BuildRule rule) {
-    return cache.computeIfAbsent(rule, this::computeDeps);
+    return allDepsCache.computeIfAbsent(rule, this::computeDeps);
   }
 
   private SortedSet<BuildRule> computeDeps(final BuildRule rule) {
+    return SortedSets.union(rule.getBuildDeps(), getRuntimeDeps(rule));
+  }
+
+  public SortedSet<BuildRule> getRuntimeDeps(final BuildRule rule) {
+    return runtimeDepsCache.computeIfAbsent(rule, this::computeRuntimeDeps);
+  }
+
+  private SortedSet<BuildRule> computeRuntimeDeps(final BuildRule rule) {
     if (!(rule instanceof HasRuntimeDeps)) {
-      return rule.getBuildDeps();
+      return ImmutableSortedSet.of();
     }
-    return SortedSets.union(
-        rule.getBuildDeps(),
-        resolver.getAllRules(
-            RichStream.from(((HasRuntimeDeps) rule).getRuntimeDeps(ruleFinder)).toOnceIterable()));
+
+    return resolver.getAllRules(
+        RichStream.from(((HasRuntimeDeps) rule).getRuntimeDeps(ruleFinder)).toOnceIterable());
   }
 }

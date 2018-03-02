@@ -237,6 +237,9 @@ public class ProjectGenerator {
 
     /** Generate an umbrella header for modular targets without one for use in a modulemap */
     GENERATE_MISSING_UMBRELLA_HEADER,
+
+    /** Add linker flags to OTHER_LDFLAGS to force load of libraries with link_whole = true */
+    FORCE_LOAD_LINK_WHOLE_LIBRARIES,
   }
 
   /** Standard options for generating a separated project */
@@ -415,6 +418,10 @@ public class ProjectGenerator {
 
   private boolean shouldGenerateMissingUmbrellaHeaders() {
     return options.contains(Option.GENERATE_MISSING_UMBRELLA_HEADER);
+  }
+
+  private boolean shouldAddLinkerFlagsForLinkWholeLibraries() {
+    return options.contains(Option.FORCE_LOAD_LINK_WHOLE_LIBRARIES);
   }
 
   public ImmutableMap<BuildTarget, PBXTarget> getBuildTargetToGeneratedTargetMap() {
@@ -1478,6 +1485,7 @@ public class ProjectGenerator {
                         Iterables.concat(
                             targetNode.getConstructorArg().getLinkerFlags(),
                             collectRecursiveExportedLinkerFlags(targetNode))))
+                .addAll(collectRecursiveForceLoadLinkerFlags(targetNode))
                 .addAll(swiftDebugLinkerFlagsBuilder.build())
                 .build();
 
@@ -3068,6 +3076,40 @@ public class ProjectGenerator {
         .toList();
   }
 
+  private ImmutableList<String> collectRecursiveForceLoadLinkerFlags(TargetNode<?, ?> targetNode) {
+
+    if (shouldAddLinkerFlagsForLinkWholeLibraries()) {
+      return collectRecursiveLibraryDepTargetsWithOptions(targetNode, false)
+          .append(targetNode)
+          .transform(
+              input ->
+                  input
+                      .castArg(CxxLibraryDescription.CommonArg.class)
+                      .flatMap(this::getForceLoadLinkerFlag))
+          .filter(Optional::isPresent)
+          .transform(input -> input.get())
+          .toList();
+    } else {
+      return ImmutableList.of();
+    }
+  }
+
+  private Optional<String> getForceLoadLinkerFlag(
+      TargetNode<? extends CxxLibraryDescription.CommonArg, ?> targetNode) {
+    CxxLibraryDescription.CommonArg arg = targetNode.getConstructorArg();
+    if (arg.getLinkWhole().orElse(false)) {
+      String flag =
+          "-Wl,-force_load,"
+              + appleConfig.getForceLoadLibraryPath()
+              + "/lib"
+              + getProductNameForBuildTargetNode(targetNode)
+              + ".a";
+      return Optional.of(flag);
+    } else {
+      return Optional.empty();
+    }
+  }
+
   private Iterable<PatternMatchedCollection<ImmutableList<StringWithMacros>>>
       collectRecursiveExportedPlatformLinkerFlags(TargetNode<?, ?> targetNode) {
     return FluentIterable.from(
@@ -3128,7 +3170,6 @@ public class ProjectGenerator {
     if (containsSwiftSources) {
       libsWithSources = libsWithSources.filter(this::isLibraryWithSwiftSources);
     }
-
     return libsWithSources;
   }
 

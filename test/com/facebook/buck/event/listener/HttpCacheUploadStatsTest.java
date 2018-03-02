@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.artifact_cache.ArtifactCacheEvent.StoreType;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEventStoreData;
 import com.google.common.collect.ImmutableSet;
@@ -35,7 +36,8 @@ public class HttpCacheUploadStatsTest {
     // Schedule, start, and finish upload event one.
 
     HttpArtifactCacheEvent.Scheduled scheduledEventOne =
-        HttpArtifactCacheEvent.newStoreScheduledEvent(Optional.of("fake"), ImmutableSet.of());
+        HttpArtifactCacheEvent.newStoreScheduledEvent(
+            Optional.of("fake"), ImmutableSet.of(), StoreType.ARTIFACT);
 
     uploadStats.processHttpArtifactCacheScheduledEvent(scheduledEventOne);
     Assert.assertEquals(1, uploadStats.getHttpArtifactTotalUploadsScheduledCount());
@@ -55,9 +57,11 @@ public class HttpCacheUploadStatsTest {
 
     // Schedule, start, finish, events two and three
     HttpArtifactCacheEvent.Scheduled scheduledEventTwo =
-        HttpArtifactCacheEvent.newStoreScheduledEvent(Optional.of("fake"), ImmutableSet.of());
+        HttpArtifactCacheEvent.newStoreScheduledEvent(
+            Optional.of("fake"), ImmutableSet.of(), StoreType.ARTIFACT);
     HttpArtifactCacheEvent.Scheduled scheduledEventThree =
-        HttpArtifactCacheEvent.newStoreScheduledEvent(Optional.of("fake"), ImmutableSet.of());
+        HttpArtifactCacheEvent.newStoreScheduledEvent(
+            Optional.of("fake"), ImmutableSet.of(), StoreType.ARTIFACT);
     uploadStats.processHttpArtifactCacheScheduledEvent(scheduledEventTwo);
     uploadStats.processHttpArtifactCacheScheduledEvent(scheduledEventTwo);
     Assert.assertEquals(3, uploadStats.getHttpArtifactTotalUploadsScheduledCount());
@@ -95,7 +99,7 @@ public class HttpCacheUploadStatsTest {
     HttpArtifactCacheEventStoreData.Builder storeDataBuilder =
         finishedEventBuilder.getStoreBuilder();
 
-    storeDataBuilder.setWasStoreSuccessful(wasSuccessful);
+    storeDataBuilder.setWasStoreSuccessful(wasSuccessful).setStoreType(StoreType.ARTIFACT);
     if (wasSuccessful) {
       storeDataBuilder.setArtifactSizeBytes(artifactSizeBytes);
     }

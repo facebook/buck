@@ -27,13 +27,13 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -45,7 +45,6 @@ import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
@@ -127,13 +126,11 @@ public class AppleBundleDescription
 
   @Override
   public AppleBundle createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      CellPathResolver cellRoots,
       AppleBundleDescriptionArg args) {
+    BuildRuleResolver resolver = context.getBuildRuleResolver();
     AppleDebugFormat flavoredDebugFormat =
         AppleDebugFormat.FLAVOR_DOMAIN
             .getValue(buildTarget)
@@ -153,9 +150,9 @@ public class AppleBundleDescription
         cxxPlatformsProvider.getCxxPlatforms(),
         cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor(),
         getAppleCxxPlatformFlavorDomain(),
-        targetGraph,
+        context.getTargetGraph(),
         buildTarget,
-        projectFilesystem,
+        context.getProjectFilesystem(),
         params,
         resolver,
         toolchainProvider.getByName(

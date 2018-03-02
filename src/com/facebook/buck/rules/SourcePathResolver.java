@@ -63,4 +63,10 @@ public interface SourcePathResolver {
   ImmutableCollection<Path> filterInputsToCompareToOutput(SourcePath... sources);
 
   Optional<PathSourcePath> getPathSourcePath(SourcePath sourcePath);
+
+  /**
+   * @return {@link Path} to the given {@link SourcePath} that is relative to the given {@link
+   *     ProjectFilesystem}
+   */
+  Path getRelativePath(ProjectFilesystem projectFilesystem, SourcePath sourcePath);
 }

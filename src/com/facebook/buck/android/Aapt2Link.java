@@ -34,7 +34,6 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.RichStream;
@@ -134,11 +133,10 @@ public class Aapt2Link extends AbstractBuildRule {
       symlinkMap.put(linkPath, flata);
     }
 
-    steps.add(
-        RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(), getProjectFilesystem(), linkTreePath))
-            .withRecursive(true));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), linkTreePath)));
     steps.add(
         new SymlinkTreeStep("aapt", getProjectFilesystem(), linkTreePath, symlinkMap.build()));
 

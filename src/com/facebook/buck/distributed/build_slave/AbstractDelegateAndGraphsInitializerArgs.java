@@ -16,6 +16,9 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.config.ActionGraphParallelizationMode;
+import com.facebook.buck.config.IncrementalActionGraphMode;
+import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.FileContentsProvider;
 import com.facebook.buck.event.BuckEventBus;
@@ -61,4 +64,12 @@ abstract class AbstractDelegateAndGraphsInitializerArgs {
   public abstract KnownBuildRuleTypesProvider getKnownBuildRuleTypesProvider();
 
   public abstract boolean getShouldInstrumentActionGraph();
+
+  public abstract IncrementalActionGraphMode getIncrementalActionGraphMode();
+
+  public abstract DistBuildConfig getDistBuildConfig();
+
+  public abstract int getMaxActionGraphParallelism();
+
+  public abstract ActionGraphParallelizationMode getActionGraphParallelizationMode();
 }

@@ -25,6 +25,7 @@ import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.HasDefaultPlatform;
 import com.facebook.buck.rules.HasTests;
+import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -120,6 +121,7 @@ public interface CxxConstructorArg
     return PatternMatchedCollection.of();
   }
 
+  @Hint(isTargetGraphOnlyDep = true)
   @Value.Default
   default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {
     return PatternMatchedCollection.of();

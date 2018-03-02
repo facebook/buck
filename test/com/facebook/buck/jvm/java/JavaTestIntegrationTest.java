@@ -45,7 +45,7 @@ public class JavaTestIntegrationTest {
   @Test
   public void shouldNotCompileIfDependsOnCompilerClasspath() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "missing_test_deps", temp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "missing_test_deps", temp, true);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("build", "//:no-jsr-305");
@@ -58,7 +58,7 @@ public class JavaTestIntegrationTest {
   @Test
   public void shouldRefuseToRunJUnitTestsIfHamcrestNotOnClasspath() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "missing_test_deps", temp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "missing_test_deps", temp, true);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("test", "//:no-hamcrest");
@@ -76,7 +76,7 @@ public class JavaTestIntegrationTest {
   @Test
   public void shouldRefuseToRunJUnitTestsIfJUnitNotOnClasspath() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "missing_test_deps", temp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "missing_test_deps", temp, true);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("test", "//:no-junit");
@@ -94,7 +94,7 @@ public class JavaTestIntegrationTest {
   @Test
   public void shouldRefuseToRunTestNgTestsIfTestNgNotOnClasspath() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "missing_test_deps", temp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "missing_test_deps", temp, true);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("test", "//:no-testng");

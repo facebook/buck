@@ -23,12 +23,12 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.HasSystemFrameworkAndLibraries;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -39,7 +39,6 @@ import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.RichStream;
@@ -108,18 +107,15 @@ public class PrebuiltAppleFrameworkDescription
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      final BuildRuleResolver resolver,
-      CellPathResolver cellRoots,
       final PrebuiltAppleFrameworkDescriptionArg args) {
     return new PrebuiltAppleFramework(
         buildTarget,
-        projectFilesystem,
+        context.getProjectFilesystem(),
         params,
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)),
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(context.getBuildRuleResolver())),
         args.getFramework(),
         args.getPreferredLinkage(),
         args.getFrameworks(),

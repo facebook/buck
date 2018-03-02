@@ -113,7 +113,7 @@ public interface HasJavaAbi {
   }
 
   class JarContentsSupplier {
-    private final SourcePathResolver resolver;
+    private SourcePathResolver resolver;
     @Nullable private final SourcePath jarSourcePath;
     @Nullable private ImmutableSortedSet<SourcePath> contents;
     @Nullable private ImmutableSet<String> contentPaths;
@@ -168,6 +168,10 @@ public interface HasJavaAbi {
 
     public boolean jarContains(String path) {
       return contentPaths.contains(path);
+    }
+
+    public void updateSourcePathResolver(SourcePathResolver resolver) {
+      this.resolver = resolver;
     }
   }
 }

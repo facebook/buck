@@ -39,7 +39,6 @@
 /.idea/workspace.xml
 /.idea/misc.xml
 /.idea/copyright/profiles_settings.xml
-/.idea/markdown*
 
 # From building Emma with Ant.
 /third-party/java/emma-2.0.5312/out/

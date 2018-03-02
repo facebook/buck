@@ -34,7 +34,9 @@ import java.util.Map;
 public class EndToEndEnvironment {
 
   private List<String[]> templates = new ArrayList<>();
-  private String[] command = new String[] {};
+  private String command;
+  private String[] buildTargets = new String[] {};
+  private String[] arguments = new String[] {};
   private ToggleState buckdToggled = ToggleState.OFF;
   private List<Map<String, String>> variableMaps = new ArrayList<>();
 
@@ -49,14 +51,19 @@ public class EndToEndEnvironment {
     return templates;
   }
 
-  /**
-   * Gets commands, which are is a set of command + args to send to buck.
-   *
-   * <p>As an example, giving [["build" "project"], ["build", "project2"]] would run a test after
-   * buck building project and another test after buck build project2
-   */
-  public String[] getCommand() {
+  /** Gets a buck command (i.e. build, query, etc.) */
+  public String getCommand() {
     return command;
+  }
+
+  /** Gets (fullyQualified) build targets, flavours will be automatically applied */
+  public String[] getBuildTargets() {
+    return buildTargets;
+  }
+
+  /** Gets arguments for buck commands */
+  public String[] getArguments() {
+    return arguments;
   }
 
   /** Gets whether tests should be run with buckd off (default), on, or both (two separate tests) */
@@ -90,14 +97,26 @@ public class EndToEndEnvironment {
     return this;
   }
 
-  /**
-   * Sets command, which are sets of command + args to send to buck.
-   *
-   * <p>As an example, giving [["build" "project"], ["build", "project2"]] would run a test after
-   * buck building project and another test after buck build project2
-   */
-  public EndToEndEnvironment withCommand(String... command) {
+  /** Sets the command to run (i.e "build", "query", etc.) */
+  public EndToEndEnvironment withCommand(String command) {
     this.command = command;
+    return this;
+  }
+
+  /**
+   * Sets the build targets to run the command on (in "buck build //test:test", "//test:test" would
+   * be the target).
+   *
+   * <p>Note: Build target must be fully qualified
+   */
+  public EndToEndEnvironment withTargets(String... targets) {
+    buildTargets = targets;
+    return this;
+  }
+
+  /** Sets the arguments to run command with */
+  public EndToEndEnvironment withArguments(String... arguments) {
+    this.arguments = arguments;
     return this;
   }
 

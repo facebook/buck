@@ -12,3 +12,15 @@ prebuilt_jar(
         "//third-party/java/hamcrest:hamcrest-junit",
     ],
 )
+
+prebuilt_jar(
+    name = "junit-no-hamcrest",
+    binary_jar = "junit-4.12.jar",
+    javadoc_url = "http://junit-team.github.io/junit/javadoc/latest/",
+    licenses = [
+        "LICENSE-junit.txt",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

@@ -23,7 +23,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.ProcessResult;
@@ -198,6 +201,28 @@ public class BuildCommandIntegrationTest {
     runBuckResult.assertSuccess();
     assertTrue(
         Files.exists(workspace.getBuckPaths().getLastOutputDir().toAbsolutePath().resolve("bar")));
+  }
+
+  @Test
+  public void lastOutputDirForAppleBundle() throws InterruptedException, IOException {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_app_bundle", tmp);
+    workspace.setUp();
+    ProcessResult runBuckResult =
+        workspace.runBuckBuild(
+            "-c", "build.create_build_output_symlinks_enabled=true", "//:DemoApp#dwarf-and-dsym");
+    runBuckResult.assertSuccess();
+    assertTrue(
+        Files.exists(
+            workspace.getBuckPaths().getLastOutputDir().toAbsolutePath().resolve("DemoApp.app")));
+    assertTrue(
+        Files.exists(
+            workspace
+                .getBuckPaths()
+                .getLastOutputDir()
+                .toAbsolutePath()
+                .resolve("DemoAppBinary#apple-dsym,iphonesimulator-x86_64.dSYM")));
   }
 
   @Test

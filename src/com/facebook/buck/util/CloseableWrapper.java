@@ -16,6 +16,8 @@
 
 package com.facebook.buck.util;
 
+import com.google.common.base.Suppliers;
+
 /**
  * Convenience wrapper class to attach closeable functionality to non-closeable class so it can be
  * used with try-with-resources to make sure resources are always released and proper exception
@@ -23,35 +25,31 @@ package com.facebook.buck.util;
  *
  * <p>Example:
  *
- * <p>class Main {
+ * <pre>{@code
+ * class Main {
+ *  private static void finalizeMyClass(MyClass obj) throws IOException {
+ *    obj.shutdown();
+ *  }
  *
- * <p>private static void finalizeMyClass(MyClass obj) throws IOException {
+ *  public static void main() {
+ *    try (CloseableWrapper<MyClass, IOException> myClassWrapper =
+ *          CloseableWrapper.of(new MyClass(), Main::finalizeMyClass)) {
+ *      myClassWrapper.get().doSomething();
+ *    }
+ *  }
+ * }
  *
- * <p>obj.shutdown();
- *
- * <p>}
- *
- * <p>public static void main() {
- *
- * <p>try (CloseableWrapper<MyClass, IOException> myClassWrapper =
- *
- * <p>CloseableWrapper.of(new MyClass(), Main::finalizeMyClass)) {
- *
- * <p>myClassWrapper.get().doSomething();
- *
- * <p>}
- *
- * <p>}
+ * }</pre>
  */
 public class CloseableWrapper<T, E extends Exception> implements AutoCloseable {
 
-  private final T obj;
-  private final ThrowingConsumer<T, E> closer;
-  private boolean closed = false;
+  private final CloseableMemoizedSupplier<T, E> closeable;
 
   private CloseableWrapper(T obj, ThrowingConsumer<T, E> closer) {
-    this.obj = obj;
-    this.closer = closer;
+    closeable = CloseableMemoizedSupplier.of(Suppliers.ofInstance(obj), closer);
+    // ensure obj is closed, since {@link CloseableMemoizedSupplier} doesn't call close
+    // unless the supplier has been used at least once.
+    closeable.get();
   }
 
   /**
@@ -69,24 +67,11 @@ public class CloseableWrapper<T, E extends Exception> implements AutoCloseable {
 
   /** @return Original wrapped object */
   public T get() {
-    return obj;
+    return closeable.get();
   }
 
   @Override
   public void close() throws E {
-    if (closed) {
-      return;
-    }
-    closed = true;
-    closer.accept(obj);
-  }
-
-  /**
-   * The version of {@code Consumer<T>} that can throw an exception. It only exists because {@code
-   * AutoCloseable} interface defines its {@code close} function to throw {@code Exception}
-   */
-  @FunctionalInterface
-  public interface ThrowingConsumer<T, E extends Exception> {
-    void accept(T t) throws E;
+    closeable.close();
   }
 }

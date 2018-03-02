@@ -16,15 +16,13 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
@@ -58,12 +56,9 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      CellPathResolver cellRoots,
       CommandAliasDescriptionArg args) {
 
     if (args.getPlatformExe().isEmpty() && !args.getExe().isPresent()) {
@@ -74,8 +69,10 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
     ImmutableList.Builder<Arg> toolArgs = ImmutableList.builder();
     ImmutableSortedMap.Builder<String, Arg> toolEnv = ImmutableSortedMap.naturalOrder();
 
+    BuildRuleResolver resolver = context.getBuildRuleResolver();
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.of(buildTarget, cellRoots, resolver, MACRO_EXPANDERS);
+        StringWithMacrosConverter.of(
+            buildTarget, context.getCellPathResolver(), resolver, MACRO_EXPANDERS);
 
     for (StringWithMacros x : args.getArgs()) {
       toolArgs.add(macrosConverter.convert(x));
@@ -93,7 +90,7 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
 
     return new CommandAlias(
         buildTarget,
-        projectFilesystem,
+        context.getProjectFilesystem(),
         exe,
         platformExe.build(),
         toolArgs.build(),

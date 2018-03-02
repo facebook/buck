@@ -65,10 +65,10 @@ abstract class AbstractResourcesConfig implements ConfigView<BuckConfig> {
           ResourceAmounts.RESOURCE_TYPE_COUNT);
       ResourceAmounts amounts =
           ResourceAmounts.of(
-              Integer.valueOf(configAmounts.get(0)),
-              Integer.valueOf(configAmounts.get(1)),
-              Integer.valueOf(configAmounts.get(2)),
-              Integer.valueOf(configAmounts.get(3)));
+              Integer.parseInt(configAmounts.get(0)),
+              Integer.parseInt(configAmounts.get(1)),
+              Integer.parseInt(configAmounts.get(2)),
+              Integer.parseInt(configAmounts.get(3)));
       result.put(ruleName, amounts);
     }
     return result.build();

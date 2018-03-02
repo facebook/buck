@@ -34,6 +34,10 @@ public class SourcePathRuleFinder {
   public final Function<SourcePath, Stream<BuildRule>> FILTER_BUILD_RULE_INPUTS =
       path -> Optionals.toStream(getRule(path));
 
+  public BuildRuleResolver getRuleResolver() {
+    return ruleResolver;
+  }
+
   public ImmutableSet<BuildRule> filterBuildRuleInputs(Iterable<? extends SourcePath> sources) {
     return RichStream.from(sources)
         .flatMap(FILTER_BUILD_RULE_INPUTS)

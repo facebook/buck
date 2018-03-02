@@ -31,6 +31,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -53,6 +55,7 @@ public class DistBuildRunner {
   private final RemoteBuildRuleSynchronizer remoteBuildSynchronizer;
   private final ImmutableSet<CountDownLatch> buildPhaseLatches;
   private final boolean waitGracefullyForDistributedBuildThreadToFinish;
+  private final long distributedBuildThreadKillTimeoutSeconds;
 
   private final AtomicInteger distributedBuildExitCode;
   private final AtomicBoolean distributedBuildTerminated;
@@ -70,7 +73,8 @@ public class DistBuildRunner {
       BuildEvent.DistBuildStarted started,
       RemoteBuildRuleSynchronizer remoteBuildSynchronizer,
       ImmutableSet<CountDownLatch> buildPhaseLatches,
-      boolean waitGracefullyForDistributedBuildThreadToFinish) {
+      boolean waitGracefullyForDistributedBuildThreadToFinish,
+      long distributedBuildThreadKillTimeoutSeconds) {
     this.distBuildControllerInvoker = distBuildControllerInvoker;
     this.executor = executor;
     this.eventBus = eventBus;
@@ -82,6 +86,7 @@ public class DistBuildRunner {
     distributedBuildTerminated = new AtomicBoolean(false);
     this.waitGracefullyForDistributedBuildThreadToFinish =
         waitGracefullyForDistributedBuildThreadToFinish;
+    this.distributedBuildThreadKillTimeoutSeconds = distributedBuildThreadKillTimeoutSeconds;
 
     this.distributedBuildExitCode =
         new AtomicInteger(
@@ -151,7 +156,9 @@ public class DistBuildRunner {
         runDistributedBuildFuture, "Cannot cancel build that hasn't started");
 
     String statusString =
-        localBuildSucceeded ? "succeeded" : String.format("failed [%d]", localBuildExitCode);
+        localBuildSucceeded
+            ? "succeeded"
+            : String.format("failed [exitCode=%d]", localBuildExitCode);
     eventBus.post(new StampedeLocalBuildStatusEvent(statusString));
 
     if (finishedSuccessfully() && !waitGracefullyForDistributedBuildThreadToFinish) {
@@ -161,15 +168,17 @@ public class DistBuildRunner {
 
     if (stillPending()) {
       setLocalBuildFinishedFirstExitCode();
+      String statusMessage =
+          String.format("The build %s locally before distributed build finished.", statusString);
       terminateDistributedBuildJob(
           localBuildSucceeded ? BuildStatus.FINISHED_SUCCESSFULLY : BuildStatus.FAILED,
-          (statusString + " locally before distributed build finished."));
+          statusMessage);
     }
 
     if (waitGracefullyForDistributedBuildThreadToFinish) {
       waitUntilFinished();
     } else {
-      runDistributedBuildFuture.cancel(true);
+      waitUntilFinishedOrKillOnTimeout();
     }
   }
 
@@ -179,6 +188,19 @@ public class DistBuildRunner {
       Preconditions.checkNotNull(runDistributedBuildFuture).get();
     } catch (ExecutionException e) {
       LOG.error(e, "Exception thrown whilst waiting for distributed build thread to finish");
+    }
+  }
+
+  private synchronized void waitUntilFinishedOrKillOnTimeout() throws InterruptedException {
+    try {
+      Preconditions.checkNotNull(runDistributedBuildFuture)
+          .get(distributedBuildThreadKillTimeoutSeconds, TimeUnit.SECONDS);
+    } catch (ExecutionException | TimeoutException e) {
+      LOG.warn(
+          e,
+          "Distributed build failed to finish within timeout after getting killed. "
+              + "Abandoning now.");
+      runDistributedBuildFuture.cancel(true);
     }
   }
 
@@ -195,12 +217,12 @@ public class DistBuildRunner {
     }
 
     LOG.info(
-        String.format("Terminating distributed build with Stampede ID [%s]", stampedeId.getId()));
+        String.format("Terminating distributed build with Stampede ID [%s].", stampedeId.getId()));
 
     try {
       distBuildService.setFinalBuildStatus(stampedeId, finalStatus, statusMessage);
     } catch (IOException | RuntimeException e) {
-      LOG.warn(e, "Failed to terminate distributed build");
+      LOG.warn(e, "Failed to terminate distributed build.");
     }
   }
 

@@ -17,11 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -31,31 +27,25 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
+import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class PerBuildState implements AutoCloseable {
-  private static final Logger LOG = Logger.get(PerBuildState.class);
 
-  private final Parser parser;
+  private final TypeCoercerFactory typeCoercerFactory;
   private final AtomicLong parseProcessedBytes = new AtomicLong();
   private final BuckEventBus eventBus;
   private final ParserPythonInterpreterProvider parserPythonInterpreterProvider;
@@ -64,19 +54,8 @@ public class PerBuildState implements AutoCloseable {
   private final Console console;
 
   private final Map<Path, Cell> cells;
-  private final Map<Path, ParserConfig.AllowSymlinks> cellSymlinkAllowability;
-  /**
-   * Build rule input files (e.g., paths in {@code srcs}) whose paths contain an element which
-   * exists in {@code symlinkExistenceCache}.
-   */
-  private final Set<Path> buildInputPathsUnderSymlink;
 
-  /**
-   * Cache of (symlink path: symlink target) pairs used to avoid repeatedly checking for the
-   * existence of symlinks in the source tree.
-   */
-  private final Map<Path, Optional<Path>> symlinkExistenceCache;
-
+  private final SymlinkCache symlinkCache;
   private final ProjectBuildFileParserPool projectBuildFileParserPool;
   private final RawNodeParsePipeline rawNodeParsePipeline;
   private final TargetNodeParsePipeline targetNodeParsePipeline;
@@ -88,7 +67,9 @@ public class PerBuildState implements AutoCloseable {
   }
 
   public PerBuildState(
-      Parser parser,
+      TypeCoercerFactory typeCoercerFactory,
+      ConstructorArgMarshaller marshaller,
+      DaemonicParserState daemonicParserState,
       BuckEventBus eventBus,
       ExecutableFinder executableFinder,
       ListeningExecutorService executorService,
@@ -97,7 +78,9 @@ public class PerBuildState implements AutoCloseable {
       boolean enableProfiling,
       SpeculativeParsing speculativeParsing) {
     this(
-        parser,
+        typeCoercerFactory,
+        daemonicParserState,
+        marshaller,
         eventBus,
         new ParserPythonInterpreterProvider(rootCell.getBuckConfig(), executableFinder),
         executorService,
@@ -108,7 +91,9 @@ public class PerBuildState implements AutoCloseable {
   }
 
   PerBuildState(
-      Parser parser,
+      TypeCoercerFactory typeCoercerFactory,
+      DaemonicParserState daemonicParserState,
+      ConstructorArgMarshaller marshaller,
       BuckEventBus eventBus,
       ParserPythonInterpreterProvider parserPythonInterpreterProvider,
       ListeningExecutorService executorService,
@@ -117,16 +102,13 @@ public class PerBuildState implements AutoCloseable {
       boolean enableProfiling,
       SpeculativeParsing speculativeParsing) {
 
-    this.parser = parser;
+    this.typeCoercerFactory = typeCoercerFactory;
     this.eventBus = eventBus;
     this.parserPythonInterpreterProvider = parserPythonInterpreterProvider;
     this.enableProfiling = enableProfiling;
     this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
 
     this.cells = new ConcurrentHashMap<>();
-    this.cellSymlinkAllowability = new ConcurrentHashMap<>();
-    this.buildInputPathsUnderSymlink = Sets.newConcurrentHashSet();
-    this.symlinkExistenceCache = new ConcurrentHashMap<>();
 
     this.console = Console.createNullConsole();
 
@@ -143,15 +125,15 @@ public class PerBuildState implements AutoCloseable {
 
     this.rawNodeParsePipeline =
         new RawNodeParsePipeline(
-            parser.getPermState().getRawNodeCache(), projectBuildFileParserPool, executorService);
+            daemonicParserState.getRawNodeCache(), projectBuildFileParserPool, executorService);
     this.targetNodeParsePipeline =
         new TargetNodeParsePipeline(
-            parser.getPermState().getOrCreateNodeCache(TargetNode.class),
+            daemonicParserState.getOrCreateNodeCache(TargetNode.class),
             DefaultParserTargetNodeFactory.createForParser(
-                parser.getMarshaller(),
-                parser.getPermState().getBuildFileTrees(),
+                marshaller,
+                daemonicParserState.getBuildFileTrees(),
                 symlinkCheckers,
-                new TargetNodeFactory(parser.getPermState().getTypeCoercerFactory()),
+                new TargetNodeFactory(typeCoercerFactory),
                 rootCell.getRuleKeyConfiguration()),
             parserConfig.getEnableParallelParsing()
                 ? executorService
@@ -161,6 +143,8 @@ public class PerBuildState implements AutoCloseable {
                 && speculativeParsing == SpeculativeParsing.ENABLED,
             rawNodeParsePipeline,
             knownBuildRuleTypesProvider);
+
+    symlinkCache = new SymlinkCache(eventBus, daemonicParserState);
 
     register(rootCell);
   }
@@ -210,7 +194,7 @@ public class PerBuildState implements AutoCloseable {
       Cell cell, Iterable<Description<?>> descriptions) {
     return ProjectBuildFileParserFactory.createBuildFileParser(
         cell,
-        this.parser.getTypeCoercerFactory(),
+        typeCoercerFactory,
         console,
         eventBus,
         parserPythonInterpreterProvider,
@@ -222,8 +206,7 @@ public class PerBuildState implements AutoCloseable {
     Path root = cell.getFilesystem().getRootPath();
     if (!cells.containsKey(root)) {
       cells.put(root, cell);
-      cellSymlinkAllowability.put(
-          root, cell.getBuckConfig().getView(ParserConfig.class).getAllowSymlinks());
+      symlinkCache.registerCell(root, cell);
     }
   }
 
@@ -246,106 +229,9 @@ public class PerBuildState implements AutoCloseable {
 
   private void registerInputsUnderSymlinks(Path buildFile, TargetNode<?, ?> node)
       throws IOException {
-    Map<Path, Path> newSymlinksEncountered =
-        inputFilesUnderSymlink(node.getInputs(), node.getFilesystem(), symlinkExistenceCache);
-    Optional<ImmutableList<Path>> readOnlyPaths =
-        getCell(node.getBuildTarget())
-            .getBuckConfig()
-            .getView(ParserConfig.class)
-            .getReadOnlyPaths();
     Cell currentCell = cells.get(node.getBuildTarget().getCellPath());
-
-    if (readOnlyPaths.isPresent() && currentCell != null) {
-      newSymlinksEncountered =
-          Maps.filterEntries(
-              newSymlinksEncountered,
-              entry -> {
-                for (Path readOnlyPath : readOnlyPaths.get()) {
-                  if (entry.getKey().startsWith(readOnlyPath)) {
-                    LOG.debug(
-                        "Target %s contains input files under a path which contains a symbolic "
-                            + "link (%s). It will be cached because it belongs under %s, a "
-                            + "read-only path white listed in .buckconfig. under [project] "
-                            + "read_only_paths",
-                        node.getBuildTarget(), entry, readOnlyPath);
-                    return false;
-                  }
-                }
-                return true;
-              });
-    }
-
-    if (newSymlinksEncountered.isEmpty()) {
-      return;
-    }
-
-    ParserConfig.AllowSymlinks allowSymlinks =
-        Preconditions.checkNotNull(
-            cellSymlinkAllowability.get(node.getBuildTarget().getCellPath()));
-    if (allowSymlinks == ParserConfig.AllowSymlinks.FORBID) {
-      throw new HumanReadableException(
-          "Target %s contains input files under a path which contains a symbolic link "
-              + "(%s). To resolve this, use separate rules and declare dependencies instead of "
-              + "using symbolic links.\n"
-              + "If the symlink points to a read-only filesystem, you can specify it in the "
-              + "project.read_only_paths .buckconfig setting. Buck will assume files under that "
-              + "path will never change.",
-          node.getBuildTarget(), newSymlinksEncountered);
-    }
-
-    // If we're not explicitly forbidding symlinks, either warn to the console or the log file
-    // depending on the config setting.
-    String msg =
-        String.format(
-            "Disabling parser cache for target %s, because one or more input files are under a "
-                + "symbolic link (%s). This will severely impact the time spent in parsing! To "
-                + "resolve this, use separate rules and declare dependencies instead of using "
-                + "symbolic links.",
-            node.getBuildTarget(), newSymlinksEncountered);
-    if (allowSymlinks == ParserConfig.AllowSymlinks.WARN) {
-      eventBus.post(ConsoleEvent.warning(msg));
-    } else {
-      LOG.warn(msg);
-    }
-
-    eventBus.post(ParsingEvent.symlinkInvalidation(buildFile.toString()));
-    buildInputPathsUnderSymlink.add(buildFile);
-  }
-
-  private static Map<Path, Path> inputFilesUnderSymlink(
-      // We use Collection<Path> instead of Iterable<Path> to prevent
-      // accidentally passing in Path, since Path itself is Iterable<Path>.
-      Collection<Path> inputs,
-      ProjectFilesystem projectFilesystem,
-      Map<Path, Optional<Path>> symlinkExistenceCache)
-      throws IOException {
-    Map<Path, Path> newSymlinksEncountered = new HashMap<>();
-    for (Path input : inputs) {
-      for (int i = 1; i < input.getNameCount(); i++) {
-        Path subpath = input.subpath(0, i);
-        Optional<Path> resolvedSymlink = symlinkExistenceCache.get(subpath);
-        if (resolvedSymlink != null) {
-          if (resolvedSymlink.isPresent()) {
-            LOG.verbose("Detected cached symlink %s -> %s", subpath, resolvedSymlink.get());
-            newSymlinksEncountered.put(subpath, resolvedSymlink.get());
-          }
-          // If absent, not a symlink.
-        } else {
-          // Not cached, look it up.
-          if (projectFilesystem.isSymLink(subpath)) {
-            Path symlinkTarget = projectFilesystem.resolve(subpath).toRealPath();
-            Path relativeSymlinkTarget =
-                projectFilesystem.getPathRelativeToProjectRoot(symlinkTarget).orElse(symlinkTarget);
-            LOG.verbose("Detected symbolic link %s -> %s", subpath, relativeSymlinkTarget);
-            newSymlinksEncountered.put(subpath, relativeSymlinkTarget);
-            symlinkExistenceCache.put(subpath, Optional.of(relativeSymlinkTarget));
-          } else {
-            symlinkExistenceCache.put(subpath, Optional.empty());
-          }
-        }
-      }
-    }
-    return newSymlinksEncountered;
+    symlinkCache.registerInputsUnderSymlinks(
+        currentCell, getCell(node.getBuildTarget()), buildFile, node);
   }
 
   public void ensureConcreteFilesExist(BuckEventBus eventBus) {
@@ -363,16 +249,6 @@ public class PerBuildState implements AutoCloseable {
     targetNodeParsePipeline.close();
     rawNodeParsePipeline.close();
     projectBuildFileParserPool.close();
-
-    if (!buildInputPathsUnderSymlink.isEmpty()) {
-      LOG.debug(
-          "Cleaning cache of build files with inputs under symlink %s",
-          buildInputPathsUnderSymlink);
-    }
-    Set<Path> buildInputPathsUnderSymlinkCopy = new HashSet<>(buildInputPathsUnderSymlink);
-    buildInputPathsUnderSymlink.clear();
-    for (Path buildFilePath : buildInputPathsUnderSymlinkCopy) {
-      parser.getPermState().invalidatePath(buildFilePath);
-    }
+    symlinkCache.close();
   }
 }

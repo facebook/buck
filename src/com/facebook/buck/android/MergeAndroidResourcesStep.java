@@ -612,7 +612,7 @@ public class MergeAndroidResourcesStep implements Step {
             }
           }
 
-          int styleableResourceIndex = Integer.valueOf(styleableResource.idValue);
+          int styleableResourceIndex = Integer.parseInt(styleableResource.idValue);
           if (styleableResourceIndex < givenResourceIds.size()) {
 
             // These are attributes coming from android SDK -- `android_*`

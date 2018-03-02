@@ -39,6 +39,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -250,7 +251,10 @@ public class DxStep extends ShellStep {
           if (Files.isRegularFile(toDex)) {
             inputs.add(toDex);
           } else {
-            Files.newDirectoryStream(toDex, path -> path.toFile().isFile()).forEach(inputs::add);
+            try (DirectoryStream<Path> directories =
+                Files.newDirectoryStream(toDex, path -> path.toFile().isFile())) {
+              directories.forEach(inputs::add);
+            }
           }
         }
 

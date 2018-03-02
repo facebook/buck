@@ -28,22 +28,20 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
@@ -90,13 +88,11 @@ public class AndroidInstrumentationApkDescription
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      CellPathResolver cellRoots,
       AndroidInstrumentationApkDescriptionArg args) {
+    BuildRuleResolver resolver = context.getBuildRuleResolver();
     params = params.withoutExtraDeps();
     BuildRule installableApk = resolver.getRule(args.getApk());
     if (!(installableApk instanceof HasInstallableApk)) {
@@ -161,9 +157,9 @@ public class AndroidInstrumentationApkDescription
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
             toolchainProvider,
-            cellRoots,
+            context.getCellPathResolver(),
             buildTarget,
-            projectFilesystem,
+            context.getProjectFilesystem(),
             androidPlatformTarget,
             params,
             resolver,
@@ -174,6 +170,7 @@ public class AndroidInstrumentationApkDescription
             Optional.empty(),
             /* resourceUnionPackage */ Optional.empty(),
             /* locales */ ImmutableSet.of(),
+            /* localizedStringFileName */ null,
             args.getManifest(),
             args.getManifestSkeleton(),
             PackageType.INSTRUMENTED,
@@ -211,7 +208,7 @@ public class AndroidInstrumentationApkDescription
             dxExecutorService,
             apkUnderTest.getManifestEntries(),
             cxxBuckConfig,
-            new APKModuleGraph(targetGraph, buildTarget, Optional.empty()),
+            new APKModuleGraph(context.getTargetGraph(), buildTarget, Optional.empty()),
             dxConfig,
             args.getDexTool(),
             /* postFilterResourcesCommands */ Optional.empty(),
@@ -223,7 +220,7 @@ public class AndroidInstrumentationApkDescription
         new AndroidBinaryFilesInfo(enhancementResult, EnumSet.noneOf(ExopackageMode.class), false);
     return new AndroidInstrumentationApk(
         buildTarget,
-        projectFilesystem,
+        context.getProjectFilesystem(),
         toolchainProvider.getByName(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class),
         androidPlatformTarget,
         params,

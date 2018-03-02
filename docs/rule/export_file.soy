@@ -46,6 +46,18 @@
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'mode' /}
+  {param default: 'copy' /}
+  {param desc}
+    How files are referenced internally in buck. 
+    If set to 'copy', then a full copy will be made into the new location in buck-out.
+    If set to 'reference', the original file will be used by internal build rules in-place. 
+    However, this mode does not work across repositories or if the 'out' property is set.
+    For read-only operations, 'reference' can be more performant.
+  {/param}
+{/call}
+
 {/param}  // close args
 
 {param examples}

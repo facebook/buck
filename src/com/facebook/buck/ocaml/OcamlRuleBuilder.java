@@ -114,6 +114,7 @@ public class OcamlRuleBuilder {
       boolean bytecodeOnly,
       ImmutableList<Arg> argFlags,
       final ImmutableList<String> linkerFlags,
+      final ImmutableList<String> ocamlDepFlags,
       boolean buildNativePlugin) {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
@@ -141,6 +142,7 @@ public class OcamlRuleBuilder {
           bytecodeOnly,
           argFlags,
           linkerFlags,
+          ocamlDepFlags,
           buildNativePlugin);
     } else {
       return createBulkBuildRule(
@@ -154,7 +156,8 @@ public class OcamlRuleBuilder {
           isLibrary,
           bytecodeOnly,
           argFlags,
-          linkerFlags);
+          linkerFlags,
+          ocamlDepFlags);
     }
   }
 
@@ -208,7 +211,8 @@ public class OcamlRuleBuilder {
       boolean isLibrary,
       boolean bytecodeOnly,
       ImmutableList<Arg> argFlags,
-      final ImmutableList<String> linkerFlags) {
+      final ImmutableList<String> linkerFlags,
+      final ImmutableList<String> ocamlDepFlags) {
     CxxPlatform defaultCxxPlatform =
         toolchainProvider
             .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
@@ -296,6 +300,7 @@ public class OcamlRuleBuilder {
             .setProjectFilesystem(projectFilesystem)
             .setSourcePathResolver(pathResolver)
             .setFlags(flagsBuilder.build())
+            .setOcamlDepFlags(ocamlDepFlags)
             .setNativeIncludes(nativeIncludes)
             .setBytecodeIncludes(bytecodeIncludes)
             .setOcamlInput(ocamlInput)
@@ -373,6 +378,7 @@ public class OcamlRuleBuilder {
       boolean bytecodeOnly,
       ImmutableList<Arg> argFlags,
       final ImmutableList<String> linkerFlags,
+      final ImmutableList<String> ocamlDepFlags,
       boolean buildNativePlugin) {
     CxxPlatform defaultCxxPlatform =
         toolchainProvider
@@ -459,6 +465,7 @@ public class OcamlRuleBuilder {
             .setProjectFilesystem(projectFilesystem)
             .setSourcePathResolver(pathResolver)
             .setFlags(flagsBuilder.build())
+            .setOcamlDepFlags(ocamlDepFlags)
             .setNativeIncludes(nativeIncludes)
             .setBytecodeIncludes(bytecodeIncludes)
             .setOcamlInput(ocamlInput)
@@ -544,6 +551,12 @@ public class OcamlRuleBuilder {
 
   private static ImmutableMap<Path, ImmutableList<Path>> getMLInputWithDeps(
       BuildTarget target, Path baseDir, OcamlBuildContext ocamlContext) {
+
+    ImmutableList<String> ocamlDepFlags = ImmutableList.<String>builder()
+      .addAll(ocamlContext.getIncludeFlags(/* isBytecode */ false, /* excludeDeps */ true))
+      .addAll(ocamlContext.getOcamlDepFlags())
+      .build();
+
     OcamlDepToolStep depToolStep =
         new OcamlDepToolStep(
             target,
@@ -551,7 +564,7 @@ public class OcamlRuleBuilder {
             ocamlContext.getSourcePathResolver(),
             ocamlContext.getOcamlDepTool().get(),
             ocamlContext.getMLInput(),
-            ocamlContext.getIncludeFlags(/* isBytecode */ false, /* excludeDeps */ true));
+            ocamlDepFlags);
     ImmutableList<String> cmd = depToolStep.getShellCommandInternal(null);
     Optional<String> depsString;
     try {

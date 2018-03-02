@@ -51,7 +51,7 @@ class ExopackageAgent {
       scope.appendFinishedInfo("sdk_version", value);
     }
     try {
-      if (Integer.valueOf(value) > 19) {
+      if (Integer.parseInt(value) > 19) {
         return false;
       }
     } catch (NumberFormatException exn) {

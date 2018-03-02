@@ -16,76 +16,66 @@
 
 package com.facebook.buck.android;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.base.Charsets;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Files;
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import org.junit.After;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class GenerateManifestStepTest {
-
-  private static final String CREATE_MANIFEST = "create_manifest";
-
-  private Path skeletonPath;
-  private Path manifestPath;
-  private ProjectFilesystem filesystem;
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths(true);
 
   @Before
-  public void setUp() {
-    manifestPath = testDataPath("AndroidManifest.xml");
-    skeletonPath = testDataPath("AndroidManifestSkeleton.xml");
-    filesystem = testFileSystem();
-  }
-
-  @After
-  public void tearDown() {
-    manifestPath.toFile().delete();
+  public void setUp() throws InterruptedException, IOException {
+    TestDataHelper.createProjectWorkspaceForScenario(this, "create_manifest", tmpFolder).setUp();
   }
 
   @Test
   public void testManifestGeneration() throws Exception {
-    String expectedOutputPath = testDataPath("AndroidManifest.expected.xml").toString();
-    Path libraryManifestA = testDataPath("AndroidManifestA.xml");
-    Path libraryManifestB = testDataPath("AndroidManifestB.xml");
-    Path libraryManifestC = testDataPath("AndroidManifestC.xml");
-    ImmutableSet.Builder<Path> libraryManifestFiles = ImmutableSet.builder();
-    libraryManifestFiles.add(libraryManifestA);
-    libraryManifestFiles.add(libraryManifestB);
-    libraryManifestFiles.add(libraryManifestC);
-
     ExecutionContext context = TestExecutionContext.newInstance();
+    ProjectFilesystem filesystem =
+        context.getProjectFilesystemFactory().createProjectFilesystem(tmpFolder.getRoot());
+
+    Path expectedOutputPath = Paths.get("AndroidManifest.expected.xml");
+    Path skeletonPath = Paths.get("AndroidManifestSkeleton.xml");
+    ImmutableSet<Path> libraryManifestFiles =
+        RichStream.of("AndroidManifestA.xml", "AndroidManifestB.xml", "AndroidManifestC.xml")
+            .map(Paths::get)
+            .toImmutableSet();
+
+    Path outputPath = tmpFolder.getRoot().resolve("AndroidManifest.xml");
+    Path mergeReportPath = tmpFolder.getRoot().resolve("merge-report.txt");
 
     GenerateManifestStep manifestCommand =
         new GenerateManifestStep(
-            filesystem, skeletonPath, libraryManifestFiles.build(), manifestPath);
+            filesystem, skeletonPath, libraryManifestFiles, outputPath, mergeReportPath);
     int result = manifestCommand.execute(context).getExitCode();
 
     assertEquals(0, result);
 
-    String expected = Files.toString(new File(expectedOutputPath), Charsets.UTF_8);
-    String output = filesystem.readFileIfItExists(manifestPath).get();
+    List<String> expected =
+        Files.lines(filesystem.resolve(expectedOutputPath)).collect(Collectors.toList());
+    List<String> output = Files.lines(outputPath).collect(Collectors.toList());
 
-    assertEquals(expected.replace("\r\n", "\n"), output.replace("\r\n", "\n"));
-  }
+    assertEquals(expected, output);
 
-  private Path testDataPath(String fileName) {
-    Path testData = TestDataHelper.getTestDataDirectory(this).resolve(CREATE_MANIFEST);
-
-    return testData.resolve(fileName);
-  }
-
-  private FakeProjectFilesystem testFileSystem() {
-    return new FakeProjectFilesystem(
-        TestDataHelper.getTestDataDirectory(this).resolve(CREATE_MANIFEST));
+    String report = new String(Files.readAllBytes(mergeReportPath));
+    assertThat(report, containsString("ADDED"));
+    assertThat(report, containsString("MERGED"));
   }
 }

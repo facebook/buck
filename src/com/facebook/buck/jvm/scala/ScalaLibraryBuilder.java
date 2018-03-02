@@ -22,6 +22,7 @@ import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
 
 final class ScalaLibraryBuilder {
   private ScalaLibraryBuilder() {}
@@ -31,6 +32,7 @@ final class ScalaLibraryBuilder {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
+      CellPathResolver cellPathResolver,
       ScalaBuckConfig scalaBuckConfig,
       JavaBuckConfig javaBuckConfig,
       ScalaLibraryDescription.CoreArg args) {
@@ -39,6 +41,7 @@ final class ScalaLibraryBuilder {
         projectFilesystem,
         params,
         buildRuleResolver,
+        cellPathResolver,
         new ScalaConfiguredCompilerFactory(scalaBuckConfig, javaBuckConfig),
         javaBuckConfig,
         args);

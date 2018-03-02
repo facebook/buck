@@ -53,5 +53,7 @@ interface AbstractNetworkCacheArgs {
 
   String getErrorTextTemplate();
 
+  int getErrorTextLimit();
+
   Optional<Long> getMaxStoreSizeBytes();
 }

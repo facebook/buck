@@ -252,6 +252,41 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
   }
 
   @Test
+  public void testBadCaseImportFromClasspathSucceeds() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/bar/someclass.java",
+            Joiner.on('\n').join("package com.facebook.bar;", "public class someclass { }")));
+
+    taskListenerFactory.addTargetAvailableForSourceOnlyAbi("//com/facebook/bar:bar");
+    compileWithValidation(
+        Joiner.on('\n').join("import com.facebook.bar.someclass;", "public class Foo { }"));
+
+    assertNoErrors();
+  }
+
+  @Test
+  public void testBadCaseImportFails() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/bar/someclass.java",
+            Joiner.on('\n').join("package com.facebook.bar;", "public class someclass { }")));
+
+    testCompiler.setAllowCompilationErrors(true);
+    compileWithValidation(
+        Joiner.on('\n').join("import com.facebook.bar.someclass;", "public class Foo { }"));
+
+    assertErrors(
+        Joiner.on('\n')
+            .join(
+                "Foo.java:1: error: Source-only ABI generation requires top-level class names to start with a capital letter.",
+                "import com.facebook.bar.someclass;",
+                "                       ^",
+                "  To fix: ",
+                "  Rename \"someclass\" to \"Someclass\"."));
+  }
+
+  @Test
   public void testStarImportedTypeFromClasspathFails() throws IOException {
     withClasspath(
         ImmutableMap.of(

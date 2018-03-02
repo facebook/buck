@@ -327,6 +327,7 @@ public class Build implements Closeable {
           || t instanceof InterruptedException
           || t instanceof ClosedByInterruptException) {
         try {
+          LOG.debug("Cancelling all running builds because of InterruptedException");
           buildFuture.cancel(true);
         } catch (CancellationException ex) {
           // Rethrow original InterruptedException instead.

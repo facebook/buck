@@ -26,14 +26,20 @@ public class ActionGraphPerfStatEvent extends AbstractBuckEvent {
 
   private final Long elapsedTime;
   private final int numberNodesGenerated;
+  private final long numNoopNodesGenerated;
   private final String targetNodeDescriptionName;
   private final String buildTargetName;
 
   private ActionGraphPerfStatEvent(
-      Long time, int generatedNodesCount, String descriptionName, String buildName) {
+      Long time,
+      int generatedNodesCount,
+      long generatedNoopNodesCount,
+      String descriptionName,
+      String buildName) {
     super(EventKey.unique());
     elapsedTime = time;
     numberNodesGenerated = generatedNodesCount;
+    numNoopNodesGenerated = generatedNoopNodesCount;
     targetNodeDescriptionName = descriptionName;
     buildTargetName = buildName;
   }
@@ -52,13 +58,19 @@ public class ActionGraphPerfStatEvent extends AbstractBuckEvent {
       Clock clock,
       BuckEventBus eventBus,
       Supplier<Integer> getRuleSize,
+      Supplier<Long> getNoOpRuleSize,
       String descriptionName,
       String buildTargetName) {
     ActionGraphPerfStatEvent.Start start = new Start(clock);
     int startSize = getRuleSize.get();
+    long noopStartSize = getNoOpRuleSize.get();
     return () ->
         eventBus.post(
-            start.finish(getRuleSize.get() - startSize, descriptionName, buildTargetName));
+            start.finish(
+                getRuleSize.get() - startSize,
+                getNoOpRuleSize.get() - noopStartSize,
+                descriptionName,
+                buildTargetName));
   }
 
   @Override
@@ -77,6 +89,10 @@ public class ActionGraphPerfStatEvent extends AbstractBuckEvent {
 
   public int getNumberNodesGenerated() {
     return numberNodesGenerated;
+  }
+
+  public long getNumNoopNodesGenerated() {
+    return numNoopNodesGenerated;
   }
 
   public String getBuildTargetName() {
@@ -100,10 +116,11 @@ public class ActionGraphPerfStatEvent extends AbstractBuckEvent {
 
     /** Generates the event representing the end of the timing */
     private ActionGraphPerfStatEvent finish(
-        int generatedNodesCount, String descriptionName, String buildTargetName) {
+        int generatedNodesCount, long noopCount, String descriptionName, String buildTargetName) {
       return new ActionGraphPerfStatEvent(
           clock.currentTimeMillis() - startTime,
           generatedNodesCount,
+          noopCount,
           descriptionName,
           buildTargetName);
     }

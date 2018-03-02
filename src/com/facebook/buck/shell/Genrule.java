@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableSupport;
+import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -108,6 +109,7 @@ import java.util.stream.Collectors;
  *   <li><code>SRCS</code> will be a space-delimited string expansion of the <code>srcs</code>
  *       attribute where each element of <code>srcs</code> will be translated into an absolute path.
  *   <li><code>SRCDIR</code> will be a directory containing all files mentioned in the srcs.
+ *   <li><code>TMP</code> will be a temporary directory which can be used for intermediate results
  *   <li><code>OUT</code> is the output file for the <code>genrule()</code>. The file specified by
  *       this variable must always be written by this command. If not, the execution of this rule
  *       will be considered a failure, halting the build process.
@@ -129,7 +131,7 @@ import java.util.stream.Collectors;
  * <p>Note that the <code>SRCDIR</code> is populated by symlinking the sources.
  */
 public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements HasOutputName, SupportsInputBasedRuleKey {
+    implements HasOutputName, SupportsInputBasedRuleKey, CacheableBuildRule {
 
   /**
    * The order in which elements are specified in the {@code srcs} attribute of a genrule matters.
@@ -146,7 +148,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final boolean isCacheable;
   @AddToRuleKey private final String environmentExpansionSeparator;
 
-  private final BuildRuleResolver buildRuleResolver;
+  private BuildRuleResolver buildRuleResolver;
   private final SandboxExecutionStrategy sandboxExecutionStrategy;
   protected final Path pathToOutDirectory;
   protected final Path pathToOutFile;
@@ -521,5 +523,13 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public final boolean isCacheable() {
     return isCacheable;
+  }
+
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
+    this.buildRuleResolver = ruleResolver;
   }
 }

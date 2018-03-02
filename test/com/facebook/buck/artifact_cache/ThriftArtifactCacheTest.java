@@ -136,6 +136,7 @@ public class ThriftArtifactCacheTest {
             .setHttpWriteExecutorService(service)
             .setHttpFetchExecutorService(service)
             .setErrorTextTemplate("my super error msg")
+            .setErrorTextLimit(100)
             .build();
 
     EasyMock.expect(fetchClient.makeRequest(EasyMock.anyString(), EasyMock.anyObject()))
@@ -255,6 +256,7 @@ public class ThriftArtifactCacheTest {
             .setHttpWriteExecutorService(service)
             .setHttpFetchExecutorService(service)
             .setErrorTextTemplate("my super error msg")
+            .setErrorTextLimit(100)
             .build();
 
     // 0 -> Miss, 1 -> Hit, 2 -> Skip, 3 -> Hit.
@@ -364,6 +366,7 @@ public class ThriftArtifactCacheTest {
             .setHttpWriteExecutorService(service)
             .setHttpFetchExecutorService(service)
             .setErrorTextTemplate("my super error msg")
+            .setErrorTextLimit(100)
             .build();
 
     com.facebook.buck.rules.RuleKey key0 = new com.facebook.buck.rules.RuleKey(HashCode.fromInt(0));
@@ -445,6 +448,7 @@ public class ThriftArtifactCacheTest {
             .setHttpWriteExecutorService(service)
             .setHttpFetchExecutorService(service)
             .setErrorTextTemplate("unused test error message")
+            .setErrorTextLimit(100)
             .build();
 
     EasyMock.expect(storeClient.makeRequest(EasyMock.anyString(), EasyMock.anyObject()))

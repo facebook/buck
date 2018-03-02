@@ -16,12 +16,12 @@
 package com.facebook.buck.haskell;
 
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -30,7 +30,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDepsQuery;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -62,16 +61,14 @@ public class HaskellHaddockDescription
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget baseTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      final BuildRuleResolver resolver,
-      final CellPathResolver cellPathResolver,
       HaskellHaddockDescriptionArg args) {
     String name = baseTarget.getShortName();
     LOG.info("Creating Haddock " + name);
 
+    BuildRuleResolver resolver = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     HaskellPlatform platform = getPlatform(baseTarget, args);
     Iterable<BuildRule> deps = resolver.getAllRules(args.getDeps());
@@ -96,7 +93,7 @@ public class HaskellHaddockDescription
     return resolver.addToIndex(
         HaskellHaddockRule.from(
             baseTarget,
-            projectFilesystem,
+            context.getProjectFilesystem(),
             params,
             ruleFinder,
             platform.getHaddock().resolve(resolver),

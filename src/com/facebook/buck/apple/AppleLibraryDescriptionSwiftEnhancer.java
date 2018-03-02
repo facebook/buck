@@ -121,6 +121,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
   public static BuildRule createObjCGeneratedHeaderBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      SourcePathRuleFinder ruleFinder,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) {
@@ -136,7 +137,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
     Path outputPath = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s");
     HeaderSymlinkTreeWithHeaderMap headerMapRule =
         HeaderSymlinkTreeWithHeaderMap.create(
-            buildTarget, projectFilesystem, outputPath, headerLinks.build());
+            buildTarget, projectFilesystem, outputPath, headerLinks.build(), ruleFinder);
 
     return headerMapRule;
   }

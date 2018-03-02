@@ -44,6 +44,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
@@ -119,7 +120,8 @@ abstract class GoDescriptors {
     }
 
     BuildTarget target = createSymlinkTreeTarget(buildTarget);
-    SymlinkTree symlinkTree = makeSymlinkTree(target, projectFilesystem, pathResolver, linkables);
+    SymlinkTree symlinkTree =
+        makeSymlinkTree(target, projectFilesystem, ruleFinder, pathResolver, linkables);
     resolver.addToIndex(symlinkTree);
 
     ImmutableList.Builder<SourcePath> extraAsmOutputsBuilder = ImmutableList.builder();
@@ -245,6 +247,7 @@ abstract class GoDescriptors {
         makeSymlinkTree(
             target,
             projectFilesystem,
+            ruleFinder,
             pathResolver,
             requireTransitiveGoLinkables(
                 buildTarget,
@@ -400,6 +403,7 @@ abstract class GoDescriptors {
   private static SymlinkTree makeSymlinkTree(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
       ImmutableSet<GoLinkable> linkables) {
     ImmutableMap.Builder<Path, SourcePath> treeMapBuilder = ImmutableMap.builder();
@@ -423,7 +427,14 @@ abstract class GoDescriptors {
 
     Path root = BuildTargets.getScratchPath(projectFilesystem, buildTarget, "__%s__tree");
 
-    return new SymlinkTree("go_linkable", buildTarget, projectFilesystem, root, treeMap);
+    return new SymlinkTree(
+        "go_linkable",
+        buildTarget,
+        projectFilesystem,
+        root,
+        treeMap,
+        ImmutableMultimap.of(),
+        ruleFinder);
   }
 
   /**

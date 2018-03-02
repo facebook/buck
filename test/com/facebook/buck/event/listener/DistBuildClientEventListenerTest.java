@@ -30,6 +30,10 @@ import java.util.List;
 import org.junit.Test;
 
 public class DistBuildClientEventListenerTest {
+  private static final String BUILD_TARGET_ZERO = "buildTargetZero";
+  private static final String RULE_KEY_ZERO = "ruleKeyZero";
+  private static final int REQUEST_TIMESTAMP_MILLIS_ZERO = 100;
+
   private static final String BUILD_TARGET_ONE = "buildTargetOne";
   private static final String RULE_KEY_ONE = "ruleKeyOne";
   private static final int REQUEST_TIMESTAMP_MILLIS_ONE = 101;
@@ -48,11 +52,27 @@ public class DistBuildClientEventListenerTest {
   private static final String RULE_KEY_FOUR = "ruleKeyFour";
   private static final int REQUEST_TIMESTAMP_MILLIS_FOUR = 104;
 
+  private static final boolean CACHE_HIT_EXPECTED = true;
+  private static final boolean CACHE_MISS_ACCEPTABLE = false;
+
   @Test
   public void testDefaultRuleKeyCacheMissesCorrectlyTurnedIntoEvent() throws IOException {
     DistBuildClientEventListener listener = new DistBuildClientEventListener();
 
     List<RuleKeyLogEntry> serverSideLogs = Lists.newArrayList();
+
+    // Cache fetches made before remote building is complete should be skipped, as it is
+    // perfectly normal for these to be cahce misses
+    RuleKeyCacheResult ruleKeyCacheResultZero =
+        RuleKeyCacheResult.builder()
+            .setBuildTarget(BUILD_TARGET_ZERO)
+            .setRuleKey(RULE_KEY_ZERO)
+            .setRequestTimestampMillis(REQUEST_TIMESTAMP_MILLIS_ZERO)
+            .setRuleKeyType(RuleKeyType.DEFAULT)
+            .setCacheResult(CacheResultType.MISS)
+            .build();
+    listener.ruleKeyCacheResultEventHandler(
+        new RuleKeyCacheResultEvent(ruleKeyCacheResultZero, CACHE_MISS_ACCEPTABLE));
 
     // Publish a default rule key miss, including second level content hash key.
     // (i.e. there was a hit for the rule key, but the content key was a miss).
@@ -67,7 +87,8 @@ public class DistBuildClientEventListenerTest {
             .setTwoLevelContentHashKey(CONTENT_HASH_KEY_ONE)
             .build();
 
-    listener.ruleKeyCacheResultEventHandler(new RuleKeyCacheResultEvent(ruleKeyCacheResultOne));
+    listener.ruleKeyCacheResultEventHandler(
+        new RuleKeyCacheResultEvent(ruleKeyCacheResultOne, CACHE_HIT_EXPECTED));
 
     RuleKeyLogEntry ruleKeyOneServerLog =
         createRuleKeyLogEntry(RULE_KEY_ONE, true, LAST_STORED_TS_MILLIS_ONE);
@@ -88,7 +109,8 @@ public class DistBuildClientEventListenerTest {
             .setCacheResult(CacheResultType.HIT)
             .build();
 
-    listener.ruleKeyCacheResultEventHandler(new RuleKeyCacheResultEvent(ruleKeyCacheResultTwo));
+    listener.ruleKeyCacheResultEventHandler(
+        new RuleKeyCacheResultEvent(ruleKeyCacheResultTwo, CACHE_HIT_EXPECTED));
 
     // Publish an input rule key miss.
     // => This should be ignored, as we only care about default rule key misses.
@@ -101,7 +123,8 @@ public class DistBuildClientEventListenerTest {
             .setCacheResult(CacheResultType.MISS)
             .build();
 
-    listener.ruleKeyCacheResultEventHandler(new RuleKeyCacheResultEvent(ruleKeyCacheResultThree));
+    listener.ruleKeyCacheResultEventHandler(
+        new RuleKeyCacheResultEvent(ruleKeyCacheResultThree, CACHE_HIT_EXPECTED));
 
     // Publish a default rule key miss, without second level content key.
     // (i.e. the rule key itself was a miss, so we never got to querying the content hash key).
@@ -115,7 +138,8 @@ public class DistBuildClientEventListenerTest {
             .setCacheResult(CacheResultType.MISS)
             .build();
 
-    listener.ruleKeyCacheResultEventHandler(new RuleKeyCacheResultEvent(ruleKeyCacheResultFour));
+    listener.ruleKeyCacheResultEventHandler(
+        new RuleKeyCacheResultEvent(ruleKeyCacheResultFour, CACHE_HIT_EXPECTED));
     RuleKeyLogEntry ruleKeyFourServerLog = createRuleKeyLogEntry(RULE_KEY_FOUR, false, -1);
     serverSideLogs.add(ruleKeyFourServerLog);
 

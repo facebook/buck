@@ -49,7 +49,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 /** Default implementation of {@link ArtifactCacheByBuildRule} used by Stampede. */
@@ -58,7 +57,6 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
   // TODO(shivanker): Make these configurable.
   private static final int MAX_RULEKEYS_IN_MULTI_CONTAINS_REQUEST = 5000;
 
-  private final AtomicLong queryCreationTotalTimeMs = new AtomicLong(0);
   private final BuildRuleResolver resolver;
   private final BuckEventBus eventBus;
   private final ListeningExecutorService executorService;
@@ -219,7 +217,8 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
   }
 
   @Override
-  public void prewarmRemoteContains(ImmutableSet<BuildRule> rulesToBeChecked) {
+  public synchronized void prewarmRemoteContains(ImmutableSet<BuildRule> rulesToBeChecked) {
+    @SuppressWarnings("PMD.PrematureDeclaration")
     Stopwatch stopwatch = Stopwatch.createStarted();
     Set<BuildRule> unseenRules =
         rulesToBeChecked
@@ -227,15 +226,26 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
             .filter(rule -> !remoteCacheContainsFutures.containsKey(rule))
             .collect(Collectors.toSet());
 
-    LOG.debug(
-        "Checking remote cache for [%d] new rules out of [%d] total rules.",
-        unseenRules.size(), rulesToBeChecked.size());
+    if (unseenRules.size() == 0) {
+      return;
+    }
+
+    LOG.info("Checking remote cache for [%d] new rules.", unseenRules.size());
     Map<BuildRule, ListenableFuture<RuleKey>> rulesToKeys =
         Maps.asMap(unseenRules, rule -> ruleKeyCalculator.calculate(eventBus, rule));
 
     ListenableFuture<Map<RuleKey, CacheResult>> keysToCacheResultFuture =
         Futures.transformAsync(
-            Futures.allAsList(rulesToKeys.values()), this::multiContainsAsync, executorService);
+            Futures.allAsList(rulesToKeys.values()),
+            ruleKeys -> {
+              LOG.info(
+                  "Computing RuleKeys for %d new rules took %dms.",
+                  unseenRules.size(), stopwatch.elapsed(TimeUnit.MILLISECONDS));
+              stopwatch.reset();
+              stopwatch.start();
+              return multiContainsAsync(ruleKeys);
+            },
+            executorService);
 
     Map<BuildRule, ListenableFuture<Boolean>> containsResultsForUnseenRules =
         Maps.asMap(
@@ -251,8 +261,13 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
                     MoreExecutors.directExecutor()));
 
     remoteCacheContainsFutures.putAll(containsResultsForUnseenRules);
-
-    queryCreationTotalTimeMs.addAndGet(stopwatch.elapsed(TimeUnit.MILLISECONDS));
+    Futures.allAsList(containsResultsForUnseenRules.values())
+        .addListener(
+            () ->
+                LOG.info(
+                    "Checking the remote cache for %d rules took %dms.",
+                    unseenRules.size(), stopwatch.elapsed(TimeUnit.MILLISECONDS)),
+            MoreExecutors.directExecutor());
   }
 
   @Override
@@ -268,11 +283,9 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
         remoteContainsResults -> {
           LOG.info(
               "Hit [%d out of %d] targets checked in the remote cache. "
-                  + "[%d ms] was spent on generating the futures for multi-contains requests. "
                   + "[%d] targets were uploaded from the local cache.",
               remoteContainsResults.stream().filter(r -> r).count(),
               remoteContainsResults.stream().count(),
-              queryCreationTotalTimeMs.get(),
               localUploadFutures.size());
           return null;
         },

@@ -40,8 +40,6 @@ import java.util.concurrent.TimeoutException;
  * distributed build.
  */
 public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegate {
-  private static final long DEFAULT_PENDING_FILE_MATERIALIZATION_TIMEOUT_SECONDS = 30;
-
   private final StackedFileHashCache remoteStackedFileHashCache;
   private final ImmutableList<MaterializerDummyFileHashCache> materializerFileHashCaches;
   private final LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory>
@@ -73,27 +71,6 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
             .collect(ImmutableList.toImmutableList());
   }
 
-  /**
-   * @param sourcePathResolver Distributed build source parse resolver.
-   * @param ruleFinder Used by the distributed build rule key factories.
-   * @param remoteStackedFileHashCache Cache that only requires SHA1.
-   * @param materializingStackedFileHashCache Cache that writes the files to the disk.
-   */
-  public DistBuildCachingEngineDelegate(
-      SourcePathResolver sourcePathResolver,
-      SourcePathRuleFinder ruleFinder,
-      StackedFileHashCache remoteStackedFileHashCache,
-      StackedFileHashCache materializingStackedFileHashCache,
-      RuleKeyConfiguration ruleKeyConfiguration) {
-    this(
-        sourcePathResolver,
-        ruleFinder,
-        remoteStackedFileHashCache,
-        materializingStackedFileHashCache,
-        ruleKeyConfiguration,
-        DEFAULT_PENDING_FILE_MATERIALIZATION_TIMEOUT_SECONDS);
-  }
-
   @Override
   public FileHashCache getFileHashCache() {
     return remoteStackedFileHashCache;
@@ -118,14 +95,21 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
 
     ListenableFuture<?> pendingFilesFuture = Futures.allAsList(fileMaterializationFutures);
 
+    long pendingFuturesBeforeWait =
+        fileMaterializationFutures.stream().filter(x -> !x.isDone()).count();
     try {
       pendingFilesFuture.get(pendingFileMaterializationTimeoutSeconds, TimeUnit.SECONDS);
-    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+    } catch (InterruptedException | ExecutionException | TimeoutException exception) {
+      long pendingFuturesAfterWait =
+          fileMaterializationFutures.stream().filter(x -> !x.isDone()).count();
       throw new RuntimeException(
           String.format(
-              "Unexpected error encountered while waiting for files to be materialized: [%s].",
-              e.getMessage()),
-          e);
+              "Unexpected error encountered while waiting for files to be materialized. "
+                  + "pendingFuturesBeforeWait=[%d] "
+                  + "pendingFuturesAfterWait=[%d] "
+                  + "totalFileMaterializationFutures=[%d].",
+              pendingFuturesBeforeWait, pendingFuturesAfterWait, fileMaterializationFutures.size()),
+          exception);
     }
   }
 }

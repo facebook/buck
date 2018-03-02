@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.ImmutableBuildRuleCreationContext;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
@@ -66,12 +67,13 @@ public class AndroidManifestDescriptionTest {
     BuildRule androidManifest =
         new AndroidManifestDescription(new AndroidManifestFactory())
             .createBuildRule(
-                TargetGraph.EMPTY,
+                ImmutableBuildRuleCreationContext.of(
+                    TargetGraph.EMPTY,
+                    buildRuleResolver,
+                    projectFilesystem,
+                    TestCellBuilder.createCellRoots(projectFilesystem)),
                 buildTarget,
-                projectFilesystem,
                 params,
-                buildRuleResolver,
-                TestCellBuilder.createCellRoots(projectFilesystem),
                 arg);
 
     assertEquals(ImmutableSortedSet.of(ruleWithOutput), androidManifest.getBuildDeps());

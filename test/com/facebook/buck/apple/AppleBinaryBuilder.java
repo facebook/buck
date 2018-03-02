@@ -144,4 +144,9 @@ public class AppleBinaryBuilder
     getArgForPopulating().setTests(tests);
     return this;
   }
+
+  public AppleBinaryBuilder setLinkWhole(boolean linkWhole) {
+    getArgForPopulating().setLinkWhole(Optional.of(linkWhole));
+    return this;
+  }
 }

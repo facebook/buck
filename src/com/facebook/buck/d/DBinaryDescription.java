@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -39,7 +40,6 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -75,20 +75,19 @@ public class DBinaryDescription
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver buildRuleResolver,
-      CellPathResolver cellRoots,
       DBinaryDescriptionArg args) {
 
+    BuildRuleResolver buildRuleResolver = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     if (buildTarget.getFlavors().contains(SOURCE_LINK_TREE)) {
       return DDescriptionUtils.createSourceSymlinkTree(
-          buildTarget, projectFilesystem, pathResolver, args.getSrcs());
+          buildTarget, projectFilesystem, pathResolver, ruleFinder, args.getSrcs());
     }
 
     SymlinkTree sourceTree =
@@ -99,7 +98,7 @@ public class DBinaryDescription
     // rule to the index.
     CxxLink nativeLinkable =
         DDescriptionUtils.createNativeLinkable(
-            cellRoots,
+            context.getCellPathResolver(),
             buildTarget.withAppendedFlavors(BINARY_FLAVOR),
             projectFilesystem,
             params,

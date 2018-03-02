@@ -47,7 +47,7 @@ public interface Kotlinc extends Tool {
 
   String getShortName();
 
-  Path getAPPaths();
+  Path getAnnotationProcessorPath();
 
   Path getStdlibPath();
 }

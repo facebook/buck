@@ -22,11 +22,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -67,12 +65,9 @@ public class HttpArchiveDescription implements Description<HttpArchiveDescriptio
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      CellPathResolver cellRoots,
       HttpArchiveDescriptionArg args) {
 
     HashCode sha256 =
@@ -86,6 +81,8 @@ public class HttpArchiveDescription implements Description<HttpArchiveDescriptio
         args.getType()
             .map(t -> getTypeFromType(t, buildTarget))
             .orElseGet(() -> getTypeFromFilename(args.getUrls(), buildTarget));
+
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     // Setup the implicit download rule
     BuildTarget httpFileTarget = buildTarget.withAppendedFlavors(ARCHIVE_DOWNLOAD);
@@ -104,7 +101,7 @@ public class HttpArchiveDescription implements Description<HttpArchiveDescriptio
         new BuildRuleParams(
             () -> ImmutableSortedSet.of(httpFile), ImmutableSortedSet::of, ImmutableSortedSet.of());
 
-    resolver.computeIfAbsent(httpFileTarget, ignored -> httpFile);
+    context.getBuildRuleResolver().computeIfAbsent(httpFileTarget, ignored -> httpFile);
 
     return new HttpArchive(
         buildTarget,

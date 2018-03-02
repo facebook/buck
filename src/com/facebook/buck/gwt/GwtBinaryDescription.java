@@ -18,20 +18,18 @@ package com.facebook.buck.gwt;
 
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.gwt.GwtBinary.Style;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
@@ -71,14 +69,12 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescriptionArg
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      final BuildRuleResolver resolver,
-      CellPathResolver cellRoots,
       GwtBinaryDescriptionArg args) {
 
+    BuildRuleResolver resolver = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
     final ImmutableSortedSet.Builder<BuildRule> extraDeps = ImmutableSortedSet.naturalOrder();
@@ -120,7 +116,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescriptionArg
 
                         return new GwtModule(
                             gwtModuleTarget,
-                            projectFilesystem,
+                            context.getProjectFilesystem(),
                             params.withDeclaredDeps(deps).withoutExtraDeps(),
                             ruleFinder,
                             filesForGwtModule);
@@ -144,7 +140,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescriptionArg
 
     return new GwtBinary(
         buildTarget,
-        projectFilesystem,
+        context.getProjectFilesystem(),
         params.withExtraDeps(extraDeps.build()),
         args.getModules(),
         toolchainProvider

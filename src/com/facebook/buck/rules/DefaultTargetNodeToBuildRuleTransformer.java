@@ -85,13 +85,10 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
             Suppliers.ofInstance(ruleResolver.requireAllRules(extraDeps)),
             ruleResolver.requireAllRules(targetGraphOnlyDeps));
 
-    return description.createBuildRule(
-        targetGraph,
-        targetNode.getBuildTarget(),
-        targetNode.getFilesystem(),
-        params,
-        ruleResolver,
-        targetNode.getCellNames(),
-        arg);
+    BuildRuleCreationContext context =
+        ImmutableBuildRuleCreationContext.of(
+            targetGraph, ruleResolver, targetNode.getFilesystem(), targetNode.getCellNames());
+
+    return description.createBuildRule(context, targetNode.getBuildTarget(), params, arg);
   }
 }

@@ -187,6 +187,37 @@ public class AppleBinaryIntegrationTest {
   }
 
   @Test
+  public void appleBinaryUsesDefaultPlatformForPlatformDeps() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_with_platform_deps", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+  }
+
+  @Test
+  public void appleBinaryExplicitPlatformForPlatformDeps() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_with_platform_deps", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp#iphoneos-arm64");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp#iphoneos-armv7");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertFailure();
+  }
+
+  @Test
   public void testAppleBinarySupportsEntitlements() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));

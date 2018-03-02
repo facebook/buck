@@ -37,7 +37,7 @@ import javax.annotation.Nullable;
  * order for its dependencies to always be evaluated in different build strategies (in particular,
  * top-down).
  */
-public final class DependencyAggregation extends AbstractBuildRule {
+public final class DependencyAggregation extends AbstractBuildRule implements CacheableBuildRule {
 
   private final ImmutableSortedSet<BuildRule> deps;
 

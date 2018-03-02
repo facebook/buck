@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -45,8 +46,9 @@ public final class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
       ProjectFilesystem filesystem,
       Path root,
       ImmutableMap<Path, SourcePath> links,
-      Path headerMapPath) {
-    super(target, filesystem, root, links);
+      Path headerMapPath,
+      SourcePathRuleFinder ruleFinder) {
+    super(target, filesystem, root, links, ruleFinder);
     this.headerMapPath = headerMapPath;
   }
 
@@ -54,9 +56,11 @@ public final class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
       BuildTarget target,
       ProjectFilesystem filesystem,
       Path root,
-      ImmutableMap<Path, SourcePath> links) {
+      ImmutableMap<Path, SourcePath> links,
+      SourcePathRuleFinder ruleFinder) {
     Path headerMapPath = getPath(filesystem, target);
-    return new HeaderSymlinkTreeWithHeaderMap(target, filesystem, root, links, headerMapPath);
+    return new HeaderSymlinkTreeWithHeaderMap(
+        target, filesystem, root, links, headerMapPath, ruleFinder);
   }
 
   @Override

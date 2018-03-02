@@ -26,6 +26,7 @@ import com.google.common.collect.Multimap;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -185,14 +186,34 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
     assertEquals(ImmutableList.of("C", "D", "E", "B", "A"), dfs.exploredNodes);
   }
 
+  @Test
+  public void testShortCircuitTraversal() throws CycleException {
+    Multimap<String, String> graph = LinkedListMultimap.create();
+    graph.put("A", "B");
+    graph.put("B", "C");
+    graph.put("C", "D");
+    graph.put("B", "E");
+
+    TestDagDepthFirstSearch dfs = new TestDagDepthFirstSearch(graph, node -> node != "C");
+    dfs.traverse(ImmutableList.of("A"));
+    assertEquals(ImmutableList.of("C", "E", "B", "A"), dfs.exploredNodes);
+  }
+
   private static class TestDagDepthFirstSearch {
 
     private final Multimap<String, String> graph;
+    private final Predicate<String> shouldExploreChildren;
     private final List<String> exploredNodes = new ArrayList<>();
     private int numFindChildrenCalls;
 
     public TestDagDepthFirstSearch(Multimap<String, String> graph) {
+      this(graph, node -> true);
+    }
+
+    public TestDagDepthFirstSearch(
+        Multimap<String, String> graph, Predicate<String> shouldExploreChildren) {
       this.graph = graph;
+      this.shouldExploreChildren = shouldExploreChildren;
       this.numFindChildrenCalls = 0;
     }
 
@@ -204,7 +225,7 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
                 ++numFindChildrenCalls;
                 return graph.get(node).iterator();
               });
-      for (String node : traversal.traverse(initial)) {
+      for (String node : traversal.traverse(initial, shouldExploreChildren)) {
         exploredNodes.add(node);
       }
     }

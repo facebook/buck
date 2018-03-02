@@ -37,13 +37,16 @@ public class BuckInvoker extends Statement {
   public void evaluate() throws Throwable {
     EndToEndWorkspace workspace = new EndToEndWorkspace();
     workspace.setup();
+    workspace.attachTestSpecificFixtureSuffixes(
+        testDescriptor.getMethod().getDeclaringClass().getSimpleName(),
+        testDescriptor.getMethod().getName());
     try {
       ProcessResult result =
           workspace.runBuckCommand(
               testDescriptor.getBuckdEnabled(),
               ImmutableMap.copyOf(testDescriptor.getVariableMap()),
               testDescriptor.getTemplateSet(),
-              testDescriptor.getCommand());
+              testDescriptor.getFullCommand());
       testDescriptor.getMethod().invokeExplosively(target, testDescriptor, result);
     } finally {
       workspace.teardown();

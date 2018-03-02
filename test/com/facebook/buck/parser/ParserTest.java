@@ -44,6 +44,7 @@ import com.facebook.buck.apple.toolchain.impl.AppleToolchainProviderFactory;
 import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.config.IncrementalActionGraphMode;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.FakeBuckEventListener;
@@ -143,6 +144,7 @@ public class ParserTest {
   private Path includedByBuildFile;
   private Path testBuildFile;
   private Parser parser;
+  private TypeCoercerFactory typeCoercerFactory;
   private ProjectFilesystem filesystem;
   private Path cellRoot;
   private BuckEventBus eventBus;
@@ -177,6 +179,7 @@ public class ParserTest {
   @VisibleForTesting
   private static ImmutableSet<Map<String, Object>> getRawTargetNodes(
       Parser parser,
+      TypeCoercerFactory typeCoercerFactory,
       BuckEventBus eventBus,
       Cell cell,
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
@@ -187,7 +190,9 @@ public class ParserTest {
       throws InterruptedException, BuildFileParseException {
     try (PerBuildState state =
         new PerBuildState(
-            parser,
+            typeCoercerFactory,
+            new ConstructorArgMarshaller(typeCoercerFactory),
+            parser.getPermState(),
             eventBus,
             executableFinder,
             executor,
@@ -304,9 +309,9 @@ public class ParserTest {
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));
 
-    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     BroadcastEventListener broadcastEventListener = new BroadcastEventListener();
     broadcastEventListener.addEventBus(eventBus);
+    typeCoercerFactory = new DefaultTypeCoercerFactory();
     parser =
         new Parser(
             broadcastEventListener,
@@ -659,6 +664,7 @@ public class ParserTest {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -677,6 +683,7 @@ public class ParserTest {
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -695,6 +702,7 @@ public class ParserTest {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -714,6 +722,7 @@ public class ParserTest {
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -732,6 +741,7 @@ public class ParserTest {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -751,6 +761,7 @@ public class ParserTest {
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -769,6 +780,7 @@ public class ParserTest {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -788,6 +800,7 @@ public class ParserTest {
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -806,6 +819,7 @@ public class ParserTest {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -827,6 +841,7 @@ public class ParserTest {
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -845,6 +860,7 @@ public class ParserTest {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -864,6 +880,7 @@ public class ParserTest {
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -882,6 +899,7 @@ public class ParserTest {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -901,6 +919,7 @@ public class ParserTest {
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -919,6 +938,7 @@ public class ParserTest {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -938,6 +958,7 @@ public class ParserTest {
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -956,6 +977,7 @@ public class ParserTest {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -975,6 +997,7 @@ public class ParserTest {
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -993,6 +1016,7 @@ public class ParserTest {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1012,6 +1036,7 @@ public class ParserTest {
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1030,6 +1055,7 @@ public class ParserTest {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1049,6 +1075,7 @@ public class ParserTest {
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1067,6 +1094,7 @@ public class ParserTest {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1086,6 +1114,7 @@ public class ParserTest {
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1105,6 +1134,7 @@ public class ParserTest {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1124,6 +1154,7 @@ public class ParserTest {
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1156,6 +1187,7 @@ public class ParserTest {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1175,6 +1207,7 @@ public class ParserTest {
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1193,6 +1226,7 @@ public class ParserTest {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1212,6 +1246,7 @@ public class ParserTest {
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1231,6 +1266,7 @@ public class ParserTest {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1250,6 +1286,7 @@ public class ParserTest {
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1268,6 +1305,7 @@ public class ParserTest {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1287,6 +1325,7 @@ public class ParserTest {
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1305,6 +1344,7 @@ public class ParserTest {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1324,6 +1364,7 @@ public class ParserTest {
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1342,6 +1383,7 @@ public class ParserTest {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1361,6 +1403,7 @@ public class ParserTest {
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1379,6 +1422,7 @@ public class ParserTest {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1398,6 +1442,7 @@ public class ParserTest {
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1416,6 +1461,7 @@ public class ParserTest {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1435,6 +1481,7 @@ public class ParserTest {
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1453,6 +1500,7 @@ public class ParserTest {
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -1472,6 +1520,7 @@ public class ParserTest {
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
         parser,
+        typeCoercerFactory,
         eventBus,
         cell,
         knownBuildRuleTypesProvider,
@@ -2641,17 +2690,19 @@ public class ParserTest {
 
   private BuildRuleResolver buildActionGraph(BuckEventBus eventBus, TargetGraph targetGraph) {
     return Preconditions.checkNotNull(
-            ActionGraphCache.getFreshActionGraph(
-                eventBus,
-                targetGraph,
-                ActionGraphParallelizationMode.DISABLED,
-                false,
-                CloseableMemoizedSupplier.of(
-                    () -> {
-                      throw new IllegalStateException(
-                          "should not use parallel executor for action graph construction in test");
-                    },
-                    ignored -> {})))
+            new ActionGraphCache(1, 1)
+                .getFreshActionGraph(
+                    eventBus,
+                    targetGraph,
+                    ActionGraphParallelizationMode.DISABLED,
+                    false,
+                    IncrementalActionGraphMode.DISABLED,
+                    CloseableMemoizedSupplier.of(
+                        () -> {
+                          throw new IllegalStateException(
+                              "should not use parallel executor for action graph construction in test");
+                        },
+                        ignored -> {})))
         .getResolver();
   }
 

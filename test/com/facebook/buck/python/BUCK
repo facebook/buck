@@ -290,6 +290,7 @@ java_test(
         "//src/com/facebook/buck/util/network/hostname:hostname",
         "//src/com/facebook/buck/util/sha1:sha1",
         "//src/com/facebook/buck/util/trace:trace",
+        "//src/com/facebook/buck/util/unarchive:unarchive",
         "//src/com/facebook/buck/util/unit:unit",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol_config",

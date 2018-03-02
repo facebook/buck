@@ -27,6 +27,10 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -63,5 +67,43 @@ public class PrebuiltPythonLibraryIntegrationTest {
 
     ProcessResult whlResults = workspace.runBuckCommand("run", "//:main_whl");
     whlResults.assertSuccess();
+  }
+
+  @Test
+  public void buildingAPrebuiltPythonLibraryExtractsIt() throws IOException, InterruptedException {
+    ProcessResult eggResults = workspace.runBuckCommand("run", "//:main_egg");
+    eggResults.assertSuccess();
+
+    ProcessResult whlResults = workspace.runBuckCommand("run", "//:main_whl");
+    whlResults.assertSuccess();
+
+    Path extractedEgg =
+        workspace.resolve(workspace.getBuckPaths().getGenDir()).resolve("__python_egg__extracted");
+    Path extractedWhl =
+        workspace.resolve(workspace.getBuckPaths().getGenDir()).resolve("__python_whl__extracted");
+
+    Assert.assertTrue(Files.exists(extractedEgg.resolve(Paths.get("package", "__init__.py"))));
+    Assert.assertTrue(Files.exists(extractedEgg.resolve(Paths.get("package", "file.py"))));
+    Assert.assertTrue(Files.exists(extractedEgg.resolve(Paths.get("EGG-INFO", "PKG-INFO"))));
+    Assert.assertTrue(Files.exists(extractedEgg.resolve(Paths.get("EGG-INFO", "SOURCES.txt"))));
+    Assert.assertTrue(
+        Files.exists(extractedEgg.resolve(Paths.get("EGG-INFO", "dependency_links.txt"))));
+    Assert.assertTrue(Files.exists(extractedEgg.resolve(Paths.get("EGG-INFO", "top_level.txt"))));
+    Assert.assertTrue(Files.exists(extractedEgg.resolve(Paths.get("EGG-INFO", "zip-safe"))));
+
+    Assert.assertTrue(Files.exists(extractedWhl.resolve(Paths.get("package", "__init__.py"))));
+    Assert.assertTrue(Files.exists(extractedWhl.resolve(Paths.get("package", "file.py"))));
+    Assert.assertTrue(
+        Files.exists(extractedWhl.resolve(Paths.get("package-0.1.dist-info", "DESCRIPTION.rst"))));
+    Assert.assertTrue(
+        Files.exists(extractedWhl.resolve(Paths.get("package-0.1.dist-info", "metadata.json"))));
+    Assert.assertTrue(
+        Files.exists(extractedWhl.resolve(Paths.get("package-0.1.dist-info", "top_level.txt"))));
+    Assert.assertTrue(
+        Files.exists(extractedWhl.resolve(Paths.get("package-0.1.dist-info", "WHEEL"))));
+    Assert.assertTrue(
+        Files.exists(extractedWhl.resolve(Paths.get("package-0.1.dist-info", "METADATA"))));
+    Assert.assertTrue(
+        Files.exists(extractedWhl.resolve(Paths.get("package-0.1.dist-info", "RECORD"))));
   }
 }

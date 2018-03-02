@@ -98,13 +98,17 @@ public class FetchCommand extends BuildCommand {
         }
         actionGraphAndResolver =
             Preconditions.checkNotNull(
-                ActionGraphCache.getFreshActionGraph(
-                    params.getBuckEventBus(),
-                    ruleGenerator,
-                    result.getTargetGraph(),
-                    params.getBuckConfig().getActionGraphParallelizationMode(),
-                    params.getBuckConfig().getShouldInstrumentActionGraph(),
-                    poolSupplier));
+                new ActionGraphCache(
+                        params.getBuckConfig().getMaxActionGraphCacheEntries(),
+                        params.getBuckConfig().getMaxActionGraphNodeCacheEntries())
+                    .getFreshActionGraph(
+                        params.getBuckEventBus(),
+                        ruleGenerator,
+                        result.getTargetGraph(),
+                        params.getBuckConfig().getActionGraphParallelizationMode(),
+                        params.getBuckConfig().getShouldInstrumentActionGraph(),
+                        params.getBuckConfig().getIncrementalActionGraphMode(),
+                        poolSupplier));
         buildTargets = ruleGenerator.getDownloadableTargets();
       } catch (BuildFileParseException | VersionException e) {
         params

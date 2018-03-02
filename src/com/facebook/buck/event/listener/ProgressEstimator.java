@@ -75,6 +75,17 @@ public class ProgressEstimator {
     this.expectationsStorage = null;
   }
 
+  /**
+   * Reset the stats associated with BuildRuleEvent counts. Can be used to reset progress estimation
+   * for a second build instance.
+   */
+  public void resetBuildData() {
+    numberOfRules.set(0);
+    numberOfStartedRules.set(0);
+    numberOfFinishedRules.set(0);
+    buildProgress.set(-1.0);
+  }
+
   public void setCurrentCommand(String commandName, ImmutableList<String> commandArgs) {
     command = commandName + " " + Joiner.on(" ").join(commandArgs);
     fillEstimationsForCommand(command);

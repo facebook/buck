@@ -27,11 +27,10 @@ import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
@@ -60,13 +59,12 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
 
   @Override
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      BuildRuleCreationContext context,
       BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      CellPathResolver cellRoots,
       GroovyLibraryDescriptionArg args) {
+    BuildRuleResolver resolver = context.getBuildRuleResolver();
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
             toolchainProvider
@@ -82,6 +80,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
                 projectFilesystem,
                 params,
                 resolver,
+                context.getCellPathResolver(),
                 new GroovyConfiguredCompilerFactory(groovyBuckConfig),
                 javaBuckConfig,
                 args)

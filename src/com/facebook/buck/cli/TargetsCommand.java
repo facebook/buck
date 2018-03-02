@@ -57,6 +57,7 @@ import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetGraphHashing;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
+import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
@@ -776,7 +777,9 @@ public class TargetsCommand extends AbstractCommand {
 
     try (PerBuildState state =
         new PerBuildState(
-            params.getParser(),
+            params.getTypeCoercerFactory(),
+            new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
+            params.getParser().getPermState(),
             params.getBuckEventBus(),
             params.getExecutableFinder(),
             executor,

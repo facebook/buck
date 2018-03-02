@@ -388,6 +388,7 @@ public class CxxLibraryFactory {
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
             buildTarget,
             projectFilesystem,
+            ruleFinder,
             ruleResolver,
             cxxPlatform,
             CxxDescriptionEnhancer.parseHeaders(
@@ -633,6 +634,7 @@ public class CxxLibraryFactory {
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
+        ruleFinder,
         resolver,
         cxxPlatform,
         CxxDescriptionEnhancer.parseHeaders(
@@ -653,6 +655,7 @@ public class CxxLibraryFactory {
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
+        ruleFinder,
         mode,
         CxxDescriptionEnhancer.parseExportedHeaders(
             buildTarget, resolver, ruleFinder, pathResolver, Optional.empty(), args),
@@ -673,6 +676,7 @@ public class CxxLibraryFactory {
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
+        ruleFinder,
         resolver,
         cxxPlatform,
         CxxDescriptionEnhancer.parseExportedPlatformHeaders(

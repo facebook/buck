@@ -18,6 +18,7 @@ package com.facebook.buck.event.listener;
 
 import static com.facebook.buck.event.TestEventConfigurator.configureTestEventAtTime;
 
+import com.facebook.buck.artifact_cache.ArtifactCacheEvent.StoreType;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -52,6 +53,31 @@ public class ArtifactCacheTestUtils {
     return newUploadStartedEventImpl(buildId, Optional.empty(), ImmutableSet.of(), true);
   }
 
+  public static HttpArtifactCacheEvent.Scheduled newUploadScheduledEvent(
+      BuildId buildId,
+      Optional<String> target,
+      ImmutableSet<RuleKey> ruleKeys,
+      StoreType storeType,
+      boolean configureEvent) {
+
+    HttpArtifactCacheEvent.Scheduled scheduled =
+        HttpArtifactCacheEvent.newStoreScheduledEvent(target, ruleKeys, storeType);
+    if (configureEvent) {
+      scheduled.configure(1, 0, 0, 0, buildId);
+    }
+    return scheduled;
+  }
+
+  public static HttpArtifactCacheEvent.Started newUploadStartedEvent(
+      HttpArtifactCacheEvent.Scheduled scheduledEvent, boolean configureEvent) {
+    HttpArtifactCacheEvent.Started started =
+        HttpArtifactCacheEvent.newStoreStartedEvent(scheduledEvent);
+    if (configureEvent) {
+      started.configure(1, 0, 0, 0, scheduledEvent.getBuildId());
+    }
+    return started;
+  }
+
   public static HttpArtifactCacheEvent.Started newUploadConfiguredStartedEvent(
       BuildId buildId, Optional<String> rulekey, ImmutableSet<RuleKey> ruleKeys) {
     return newUploadStartedEventImpl(buildId, rulekey, ruleKeys, true);
@@ -68,7 +94,7 @@ public class ArtifactCacheTestUtils {
       ImmutableSet<RuleKey> ruleKeys,
       boolean configureEvent) {
     final HttpArtifactCacheEvent.Scheduled scheduled =
-        HttpArtifactCacheEvent.newStoreScheduledEvent(rulekey, ruleKeys);
+        HttpArtifactCacheEvent.newStoreScheduledEvent(rulekey, ruleKeys, StoreType.ARTIFACT);
     HttpArtifactCacheEvent.Started event = HttpArtifactCacheEvent.newStoreStartedEvent(scheduled);
     if (configureEvent) {
       event.configure(1, 0, 0, 0, buildId);
@@ -79,7 +105,8 @@ public class ArtifactCacheTestUtils {
   static HttpArtifactCacheEvent.Scheduled postStoreScheduled(
       BuckEventBus eventBus, long threadId, String target, long timeInMs) {
     HttpArtifactCacheEvent.Scheduled storeScheduled =
-        HttpArtifactCacheEvent.newStoreScheduledEvent(Optional.of(target), ImmutableSet.of());
+        HttpArtifactCacheEvent.newStoreScheduledEvent(
+            Optional.of(target), ImmutableSet.of(), StoreType.ARTIFACT);
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(storeScheduled, timeInMs, TimeUnit.MILLISECONDS, threadId));
@@ -111,6 +138,7 @@ public class ArtifactCacheTestUtils {
     storeFinished
         .getStoreBuilder()
         .setWasStoreSuccessful(success)
+        .setStoreType(StoreType.ARTIFACT)
         .setArtifactSizeBytes(artifactSizeInBytes);
 
     eventBus.postWithoutConfiguring(

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util;
 
-import com.facebook.buck.util.CloseableWrapper.ThrowingConsumer;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import java.util.concurrent.atomic.AtomicReference;

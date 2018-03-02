@@ -445,6 +445,7 @@ public class XCodeProjectCommandHelperTest {
             true /* shouldUseHeaderMaps */,
             false /* shouldMergeHeaderMaps */,
             false /* shouldGenerateHeaderSymlinkTreeOnly */,
+            false,
             false),
         ImmutableSet.of(),
         FocusedModuleTargetMatcher.noFocus(),

@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableSupport;
+import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -55,7 +56,8 @@ import java.util.SortedSet;
  * A {@link com.facebook.buck.rules.BuildRule} which builds an "ar" archive from input files
  * represented as {@link com.facebook.buck.rules.SourcePath}.
  */
-public class Archive extends AbstractBuildRule implements SupportsInputBasedRuleKey {
+public class Archive extends AbstractBuildRule
+    implements SupportsInputBasedRuleKey, CacheableBuildRule {
 
   @AddToRuleKey private final Archiver archiver;
   @AddToRuleKey private ImmutableList<String> archiverFlags;

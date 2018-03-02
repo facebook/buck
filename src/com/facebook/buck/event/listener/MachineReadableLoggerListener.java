@@ -44,6 +44,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsEvent;
+import com.fasterxml.jackson.core.JsonGenerator.Feature;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -220,9 +221,8 @@ public class MachineReadableLoggerListener implements BuckEventListener {
 
   private void writeToLogImpl(String prefix, Object obj) {
     try {
-      byte[] serializedObj = objectWriter.writeValueAsBytes(obj);
       outputStream.write((prefix + " ").getBytes(Charsets.UTF_8));
-      outputStream.write(serializedObj);
+      objectWriter.without(Feature.AUTO_CLOSE_TARGET).writeValue(outputStream, obj);
       outputStream.write(NEWLINE);
       outputStream.flush();
     } catch (JsonProcessingException e) {

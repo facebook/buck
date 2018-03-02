@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.abi;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.jvm.java.lang.model.AnnotationValueScanner8;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTestRunner;
 import com.facebook.buck.jvm.java.testutil.compiler.TestCompiler;
 import java.io.IOException;

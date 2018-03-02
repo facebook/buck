@@ -4,7 +4,7 @@ java_test(
         "A.java",
     ],
     deps = [
-        ":junit",
+        "buck//third-party/java/junit:junit-no-hamcrest",
     ],
 )
 
@@ -14,7 +14,7 @@ java_test(
         "A.java",
     ],
     deps = [
-        ":hamcrest",
+        "buck//third-party/java/hamcrest:hamcrest",
     ],
 )
 
@@ -25,7 +25,7 @@ java_test(
     ],
     test_type = "testng",
     deps = [
-        ":hamcrest",
+        "buck//third-party/java/hamcrest:hamcrest",
     ],
 )
 
@@ -42,26 +42,6 @@ java_test(
 java_library(
     name = "load-jsr-305",
     deps = [
-        ":jsr-305",
+        "buck//third-party/java/jsr:jsr305",
     ],
-)
-
-prebuilt_jar(
-    name = "hamcrest",
-    binary_jar = "hamcrest.jar",
-)
-
-prebuilt_jar(
-    name = "junit",
-    binary_jar = "junit.jar",
-)
-
-prebuilt_jar(
-    name = "testng",
-    binary_jar = "testng.jar",
-)
-
-prebuilt_jar(
-    name = "jsr-305",
-    binary_jar = "jsr305.jar",
 )

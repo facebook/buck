@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableSupport;
+import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
@@ -61,7 +62,11 @@ import java.util.stream.Stream;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule, BinaryBuildRule {
+    implements TestRule,
+        HasRuntimeDeps,
+        ExternalTestRunnerRule,
+        BinaryBuildRule,
+        CacheableBuildRule {
 
   private final Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps;
   private final Supplier<ImmutableMap<String, Arg>> env;

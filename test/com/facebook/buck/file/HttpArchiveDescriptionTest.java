@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.ImmutableBuildRuleCreationContext;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -66,13 +67,11 @@ public class HttpArchiveDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance(targetName);
     return (HttpArchive)
         description.createBuildRule(
-            targetGraph,
+            ImmutableBuildRuleCreationContext.of(
+                targetGraph, buildRuleResolver, filesystem, TestCellPathResolver.get(filesystem)),
             target,
-            filesystem,
             new BuildRuleParams(
                 ImmutableSortedSet::of, ImmutableSortedSet::of, ImmutableSortedSet.of()),
-            buildRuleResolver,
-            TestCellPathResolver.get(filesystem),
             args);
   }
 

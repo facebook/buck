@@ -455,7 +455,11 @@ public class DistBuildStateTest {
             new TargetNodeFactory(typeCoercerFactory),
             TestRuleKeyConfigurationFactory.create());
 
-    return new DistBuildTargetGraphCodec(parserTargetNodeFactory, nodeToRawNode, ImmutableSet.of());
+    return new DistBuildTargetGraphCodec(
+        MoreExecutors.newDirectExecutorService(),
+        parserTargetNodeFactory,
+        nodeToRawNode,
+        ImmutableSet.of());
   }
 
   private static TargetGraph createTargetGraph(ProjectFilesystem filesystem) {

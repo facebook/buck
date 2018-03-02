@@ -277,4 +277,9 @@ public class DefaultSourcePathResolver implements SourcePathResolver {
         ? Optional.of((PathSourcePath) sourcePath)
         : Optional.empty();
   }
+
+  @Override
+  public Path getRelativePath(ProjectFilesystem projectFilesystem, SourcePath sourcePath) {
+    return projectFilesystem.relativize(getAbsolutePath(sourcePath));
+  }
 }

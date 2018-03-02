@@ -117,7 +117,8 @@ public final class MoreFiles {
 
   /**
    * Recursively copies all files under {@code fromPath} to {@code toPath}. The {@code transform}
-   * will be applied after the destination path for a file has been relativized.
+   * will be applied after the destination path for a file has been relativized. This will remove
+   * any existing files in the toPath if there is a conflict.
    *
    * @param fromPath item to copy
    * @param toPath destination of copy

@@ -41,6 +41,7 @@ import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.config.IncrementalActionGraphMode;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -965,11 +966,13 @@ public class WorkspaceAndProjectGeneratorTest {
   private Function<TargetNode<?, ?>, BuildRuleResolver> getBuildRuleResolverForNodeFunction(
       final TargetGraph targetGraph) {
     return input ->
-        ActionGraphCache.getFreshActionGraph(
+        new ActionGraphCache(1, 1)
+            .getFreshActionGraph(
                 BuckEventBusForTests.newInstance(),
                 targetGraph.getSubgraph(ImmutableSet.of(input)),
                 ActionGraphParallelizationMode.DISABLED,
                 false,
+                IncrementalActionGraphMode.DISABLED,
                 CloseableMemoizedSupplier.of(
                     () -> {
                       throw new IllegalStateException(

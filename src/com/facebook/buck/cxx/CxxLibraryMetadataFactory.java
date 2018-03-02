@@ -78,11 +78,23 @@ public class CxxLibraryMetadataFactory {
               getCxxPlatformsProvider()
                   .getCxxPlatforms()
                   .getFlavorAndValue(buildTarget)
-                  .orElseThrow(IllegalArgumentException::new);
+                  .orElseThrow(
+                      () ->
+                          new IllegalArgumentException(
+                              String.format(
+                                  "%s: cannot extract platform from target flavors (available platforms: %s)",
+                                  buildTarget,
+                                  getCxxPlatformsProvider().getCxxPlatforms().getFlavors())));
           Map.Entry<Flavor, HeaderVisibility> visibility =
               CxxLibraryDescription.HEADER_VISIBILITY
                   .getFlavorAndValue(buildTarget)
-                  .orElseThrow(IllegalArgumentException::new);
+                  .orElseThrow(
+                      () ->
+                          new IllegalArgumentException(
+                              String.format(
+                                  "%s: cannot extract visibility from target flavors (available options: %s)",
+                                  buildTarget,
+                                  CxxLibraryDescription.HEADER_VISIBILITY.getFlavors())));
           baseTarget = baseTarget.withoutFlavors(platform.getKey(), visibility.getKey());
 
           CxxPreprocessorInput.Builder cxxPreprocessorInputBuilder = CxxPreprocessorInput.builder();

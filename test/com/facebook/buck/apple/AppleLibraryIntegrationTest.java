@@ -74,6 +74,33 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
+  public void appleLibraryUsesPlatformDepOfSpecifiedPlatform() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_library_with_platform_deps", tmp);
+    workspace.setUp();
+
+    // arm64 platform dependency works, so the build should succeed
+    workspace
+        .runBuckCommand(
+            "build",
+            BuildTargetFactory.newInstance("//Apps/TestApp:TestApp#iphoneos-arm64")
+                .getFullyQualifiedName())
+        .assertSuccess();
+
+    // armv7 platform dependency is broken, so the build should fail
+    workspace
+        .runBuckCommand(
+            "build",
+            BuildTargetFactory.newInstance("//Apps/TestApp:TestApp#iphoneos-armv7")
+                .getFullyQualifiedName())
+        .assertFailure();
+  }
+
+  @Test
   public void testAppleLibraryWithHeaderPathPrefix() throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));

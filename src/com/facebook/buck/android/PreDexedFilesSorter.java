@@ -21,6 +21,8 @@ import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.dalvik.CanaryFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.classes.FileLike;
+import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -155,7 +157,8 @@ public class PreDexedFilesSorter {
     private final APKModule apkModule;
     private final ProjectFilesystem filesystem;
     private final ImmutableList.Builder<Step> steps;
-    private final ImmutableMap.Builder<Path, Sha1HashCode> dexInputsHashes = ImmutableMap.builder();
+    private final ImmutableMap.Builder<SourcePath, Sha1HashCode> dexInputsHashes =
+        ImmutableMap.builder();
 
     public DexStoreContents(
         APKModule apkModule, ProjectFilesystem filesystem, ImmutableList.Builder<Step> steps) {
@@ -171,7 +174,7 @@ public class PreDexedFilesSorter {
     public void addPrimaryDex(DexWithClasses dexWithClasses) {
       primaryDexSize += dexWithClasses.getWeightEstimate();
       primaryDexContents.add(dexWithClasses);
-      dexInputsHashes.put(dexWithClasses.getPathToDexFile(), dexWithClasses.getClassesHash());
+      dexInputsHashes.put(dexWithClasses.getSourcePathToDexFile(), dexWithClasses.getClassesHash());
     }
 
     public void addDex(DexWithClasses dexWithClasses) {
@@ -191,12 +194,12 @@ public class PreDexedFilesSorter {
         currentDexContents.add(canary);
 
         dexesContents.add(currentDexContents);
-        dexInputsHashes.put(canary.getPathToDexFile(), canary.getClassesHash());
+        dexInputsHashes.put(canary.getSourcePathToDexFile(), canary.getClassesHash());
       }
 
       // Now add the contributions from the dexWithClasses entry.
       currentDexContents.add(dexWithClasses);
-      dexInputsHashes.put(dexWithClasses.getPathToDexFile(), dexWithClasses.getClassesHash());
+      dexInputsHashes.put(dexWithClasses.getSourcePathToDexFile(), dexWithClasses.getClassesHash());
       currentDexSize += dexWithClasses.getWeightEstimate();
     }
 
@@ -206,7 +209,8 @@ public class PreDexedFilesSorter {
       }
 
       Map<Path, DexWithClasses> metadataTxtEntries = new HashMap<>();
-      ImmutableMultimap.Builder<Path, Path> secondaryOutputToInputs = ImmutableMultimap.builder();
+      ImmutableMultimap.Builder<Path, SourcePath> secondaryOutputToInputs =
+          ImmutableMultimap.builder();
       boolean isRootModule = apkModule.equals(apkModuleGraph.getRootAPKModule());
 
       for (int index = 0; index < dexesContents.size(); index++) {
@@ -221,15 +225,16 @@ public class PreDexedFilesSorter {
                   .resolve(dexStore.fileNameForSecondary(apkModule.getName(), index));
         }
         metadataTxtEntries.put(pathToSecondaryDex, dexesContents.get(index).get(0));
-        Collection<Path> dexContentPaths =
-            Collections2.transform(dexesContents.get(index), DexWithClasses::getPathToDexFile);
+        Collection<SourcePath> dexContentPaths =
+            Collections2.transform(
+                dexesContents.get(index), DexWithClasses::getSourcePathToDexFile);
         secondaryOutputToInputs.putAll(pathToSecondaryDex, dexContentPaths);
       }
 
-      ImmutableSet<Path> primaryDexInputs =
+      ImmutableSet<SourcePath> primaryDexInputs =
           primaryDexContents
               .stream()
-              .map(DexWithClasses::getPathToDexFile)
+              .map(DexWithClasses::getSourcePathToDexFile)
               .collect(ImmutableSet.toImmutableSet());
 
       return new Result(
@@ -252,7 +257,8 @@ public class PreDexedFilesSorter {
       ImmutableList<DexWithClasses> sortedBySizeDescending =
           FluentIterable.from(primaryDexContents).toSortedList(bySizeDescending);
       for (DexWithClasses dex : sortedBySizeDescending) {
-        message.append(String.format("%s\t%s%n", dex.getWeightEstimate(), dex.getPathToDexFile()));
+        message.append(
+            String.format("%s\t%s%n", dex.getWeightEstimate(), dex.getSourcePathToDexFile()));
       }
       throw new HumanReadableException(message.toString());
     }
@@ -297,8 +303,8 @@ public class PreDexedFilesSorter {
         }
 
         @Override
-        public Path getPathToDexFile() {
-          return scratchDirectoryForCanaryClass;
+        public SourcePath getSourcePathToDexFile() {
+          return PathSourcePath.of(filesystem, scratchDirectoryForCanaryClass);
         }
 
         @Override
@@ -320,17 +326,17 @@ public class PreDexedFilesSorter {
 
   public static class Result {
     public final APKModule apkModule;
-    public final Set<Path> primaryDexInputs;
-    public final Multimap<Path, Path> secondaryOutputToInputs;
+    public final Set<SourcePath> primaryDexInputs;
+    public final Multimap<Path, SourcePath> secondaryOutputToInputs;
     public final Map<Path, DexWithClasses> metadataTxtDexEntries;
-    public final ImmutableMap<Path, Sha1HashCode> dexInputHashes;
+    public final ImmutableMap<SourcePath, Sha1HashCode> dexInputHashes;
 
     public Result(
         APKModule apkModule,
-        Set<Path> primaryDexInputs,
-        Multimap<Path, Path> secondaryOutputToInputs,
+        Set<SourcePath> primaryDexInputs,
+        Multimap<Path, SourcePath> secondaryOutputToInputs,
         Map<Path, DexWithClasses> metadataTxtDexEntries,
-        final ImmutableMap<Path, Sha1HashCode> dexInputHashes) {
+        final ImmutableMap<SourcePath, Sha1HashCode> dexInputHashes) {
       this.apkModule = apkModule;
       this.primaryDexInputs = primaryDexInputs;
       this.secondaryOutputToInputs = secondaryOutputToInputs;

@@ -50,6 +50,7 @@ import com.facebook.buck.apple.SceneKitAssetsBuilder;
 import com.facebook.buck.apple.XcodePostbuildScriptBuilder;
 import com.facebook.buck.apple.XcodePrebuildScriptBuilder;
 import com.facebook.buck.apple.clang.HeaderMap;
+import com.facebook.buck.apple.project_generator.ProjectGenerator.Option;
 import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
@@ -1319,10 +1320,12 @@ public class ProjectGeneratorTest {
 
     assertThat(
         buildSettings.get("OTHER_CFLAGS"),
-        containsString("-ivfsoverlay '$REPO_ROOT/buck-out/gen/_p/CwkbTNOBmb-pub/testing-overlay.yaml'"));
+        containsString(
+            "-ivfsoverlay '$REPO_ROOT/buck-out/gen/_p/CwkbTNOBmb-pub/testing-overlay.yaml'"));
     assertThat(
         buildSettings.get("OTHER_CPLUSPLUSFLAGS"),
-        containsString("-ivfsoverlay '$REPO_ROOT/buck-out/gen/_p/CwkbTNOBmb-pub/testing-overlay.yaml'"));
+        containsString(
+            "-ivfsoverlay '$REPO_ROOT/buck-out/gen/_p/CwkbTNOBmb-pub/testing-overlay.yaml'"));
 
     List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
     assertThat(headerSymlinkTrees, hasSize(4));
@@ -2037,6 +2040,88 @@ public class ProjectGeneratorTest {
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals("$(inherited) -ObjC -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
+  }
+
+  @Test
+  public void testAppleLibraryForceLoadLinkerFlagsEnabled() throws IOException {
+
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    TargetNode<?, ?> node =
+        AppleLibraryBuilder.createBuilder(buildTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-lhello")))
+            .build();
+
+    BuildTarget dependentBuildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib2");
+    TargetNode<?, ?> dependentNode =
+        AppleLibraryBuilder.createBuilder(dependentBuildTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setDeps(ImmutableSortedSet.of(buildTarget))
+            .setLinkWhole(true)
+            .setExportedLinkerFlags(
+                ImmutableList.of(
+                    StringWithMacrosUtils.format("-Xlinker"),
+                    StringWithMacrosUtils.format("-lhello"),
+                    StringWithMacrosUtils.format("-lhello2")))
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(
+            ImmutableSet.of(node, dependentNode),
+            ImmutableSet.of(Option.FORCE_LOAD_LINK_WHOLE_LIBRARIES));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target =
+        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib2");
+
+    ImmutableMap<String, String> settings =
+        ProjectGeneratorTestUtils.getBuildSettings(projectFilesystem, buildTarget, target, "Debug");
+
+    assertEquals(
+        "$(inherited) -ObjC -Xlinker -lhello -lhello2 '-Wl,-force_load,$BUILT_PRODUCTS_DIR/liblib2.a'",
+        settings.get("OTHER_LDFLAGS"));
+  }
+
+  @Test
+  public void testAppleBinaryForceLoadLinkerFlagsEnabled() throws IOException {
+
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    TargetNode<?, ?> node =
+        AppleLibraryBuilder.createBuilder(buildTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-lhello")))
+            .build();
+
+    BuildTarget dependentBuildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib2");
+    TargetNode<?, ?> dependentNode =
+        AppleBinaryBuilder.createBuilder(dependentBuildTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setDeps(ImmutableSortedSet.of(buildTarget))
+            .setLinkWhole(true)
+            .setExportedLinkerFlags(
+                ImmutableList.of(
+                    StringWithMacrosUtils.format("-Xlinker"),
+                    StringWithMacrosUtils.format("-lhello"),
+                    StringWithMacrosUtils.format("-lhello2")))
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(
+            ImmutableSet.of(node, dependentNode),
+            ImmutableSet.of(Option.FORCE_LOAD_LINK_WHOLE_LIBRARIES));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target =
+        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib2");
+
+    ImmutableMap<String, String> settings =
+        ProjectGeneratorTestUtils.getBuildSettings(projectFilesystem, buildTarget, target, "Debug");
+
+    assertEquals(
+        "$(inherited) -ObjC -Xlinker -lhello -lhello2 '-Wl,-force_load,$BUILT_PRODUCTS_DIR/liblib2.a'",
+        settings.get("OTHER_LDFLAGS"));
   }
 
   @Test

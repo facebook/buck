@@ -32,7 +32,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Keeps track of {@link Cell}s encountered while serializing the distributed build state. */
+/**
+ * Keeps track of {@link Cell}s encountered while serializing the distributed build state. This
+ * class is thread safe.
+ */
 public class DistBuildCellIndexer {
 
   public static final Integer ROOT_CELL_INDEX = 0;
@@ -69,15 +72,18 @@ public class DistBuildCellIndexer {
     return rootCell;
   }
 
-  public Map<Integer, ProjectFilesystem> getLocalFilesystemsByCellIndex() {
+  /** @return ProjectFilesystems indexed by cell */
+  public synchronized Map<Integer, ProjectFilesystem> getLocalFilesystemsByCellIndex() {
     return localFilesystemsByCellIndex;
   }
 
-  public Map<Integer, BuildJobStateCell> getState() {
+  /** @return Cells by index */
+  public synchronized Map<Integer, BuildJobStateCell> getState() {
     return state;
   }
 
-  public Integer getCellIndex(Path input) {
+  /** @return Cell index for given path */
+  public synchronized Integer getCellIndex(Path input) {
     // Non-cell Paths are just stored in the root cell data marked as absolute paths.
     Integer i = rootCell.getKnownRoots().contains(input) ? index.get(input) : ROOT_CELL_INDEX;
     if (i == null) {

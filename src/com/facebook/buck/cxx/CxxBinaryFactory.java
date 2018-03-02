@@ -199,6 +199,7 @@ public class CxxBinaryFactory {
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
+        ruleFinder,
         resolver,
         cxxPlatform,
         CxxDescriptionEnhancer.parseHeaders(

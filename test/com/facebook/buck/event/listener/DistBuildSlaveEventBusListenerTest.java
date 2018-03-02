@@ -25,6 +25,7 @@ import static org.easymock.EasyMock.makeThreadSafe;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
+import com.facebook.buck.artifact_cache.ArtifactCacheEvent.StoreType;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEventStoreData;
@@ -505,16 +506,17 @@ public class DistBuildSlaveEventBusListenerTest {
     List<HttpArtifactCacheEvent.Finished> finishedEvents = new ArrayList<>();
     for (int i = 0; i < 6; ++i) {
       scheduledEvents.add(
-          HttpArtifactCacheEvent.newStoreScheduledEvent(Optional.of("fake"), ImmutableSet.of()));
+          HttpArtifactCacheEvent.newStoreScheduledEvent(
+              Optional.of("fake"), ImmutableSet.of(), StoreType.ARTIFACT));
 
       startedEvents.add(HttpArtifactCacheEvent.newStoreStartedEvent(scheduledEvents.get(i)));
 
       HttpArtifactCacheEvent.Finished.Builder finishedEventBuilder =
           HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvents.get(i));
       HttpArtifactCacheEventStoreData.Builder storeData = finishedEventBuilder.getStoreBuilder();
+      storeData.setStoreType(StoreType.ARTIFACT);
       if (i < 3) {
-        storeData.setWasStoreSuccessful(true);
-        storeData.setArtifactSizeBytes(i * kSizeBytesMultiplier);
+        storeData.setWasStoreSuccessful(true).setArtifactSizeBytes(i * kSizeBytesMultiplier);
       } else {
         storeData.setWasStoreSuccessful(false);
       }

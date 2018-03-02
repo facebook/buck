@@ -40,6 +40,7 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.ImmutableBuildRuleCreationContext;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -156,12 +157,13 @@ public class ApkGenruleTest {
     ApkGenrule apkGenrule =
         (ApkGenrule)
             description.createBuildRule(
-                TargetGraph.EMPTY,
+                ImmutableBuildRuleCreationContext.of(
+                    TargetGraph.EMPTY,
+                    ruleResolver,
+                    projectFilesystem,
+                    TestCellBuilder.createCellRoots(projectFilesystem)),
                 buildTarget,
-                projectFilesystem,
                 params,
-                ruleResolver,
-                TestCellBuilder.createCellRoots(projectFilesystem),
                 arg);
     ruleResolver.addToIndex(apkGenrule);
 

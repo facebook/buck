@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.google.common.base.Preconditions;
@@ -29,13 +29,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DefaultClassInfoFactory {
   private static final Logger LOG = Logger.get(DefaultClassInfo.class);
 
-  public static <T extends Buildable> ClassInfo<T> forBuildable(T buildable) {
+  /** Returns the ClassInfo for the object based on its runtime type. */
+  public static <T extends AddsToRuleKey> ClassInfo<T> forInstance(T value) {
     @SuppressWarnings("unchecked")
-    ClassInfo<T> classInfo = (ClassInfo<T>) getClassInfo(buildable.getClass());
+    ClassInfo<T> classInfo = (ClassInfo<T>) getClassInfo(value.getClass());
     return classInfo;
   }
 
-  private static final ConcurrentHashMap<Class<?>, ClassInfo<? extends Buildable>> classesInfo =
+  private static final ConcurrentHashMap<Class<?>, ClassInfo<? extends AddsToRuleKey>> classesInfo =
       new ConcurrentHashMap<>();
 
   private static ClassInfo<?> getClassInfo(Class<?> clazz) {
@@ -45,8 +46,8 @@ public class DefaultClassInfoFactory {
     }
     try {
       Preconditions.checkArgument(
-          Buildable.class.isAssignableFrom(clazz),
-          "%s is not assignable to Buildable.",
+          AddsToRuleKey.class.isAssignableFrom(clazz),
+          "%s is not assignable to AddsToRuleKey.",
           clazz.getName());
       Class<?> superClazz = clazz.getSuperclass();
       if (isIgnoredBaseClass(superClazz)) {
@@ -66,18 +67,20 @@ public class DefaultClassInfoFactory {
     }
   }
 
-  private static <T extends Buildable> ClassInfo<T> computeClassInfo(Class<?> clazz) {
+  private static <T extends AddsToRuleKey> ClassInfo<T> computeClassInfo(Class<?> clazz) {
     // Lambdas, anonymous and local classes can easily access variables that we can't find via
     // reflection.
     Preconditions.checkArgument(
-        !clazz.isAnonymousClass(), "Buildables cannot be anonymous classes.");
-    Preconditions.checkArgument(!clazz.isLocalClass(), "Buildables cannot be local classes.");
-    Preconditions.checkArgument(!clazz.isSynthetic(), "Buildables cannot be synthetic.");
+        !clazz.isAnonymousClass(), "ModernBuildRules cannot be or reference anonymous classes.");
+    Preconditions.checkArgument(
+        !clazz.isLocalClass(), "ModernBuildRules cannot be or reference local classes.");
+    Preconditions.checkArgument(
+        !clazz.isSynthetic(), "ModernBuildRules cannot be or reference synthetic classes.");
     // We don't want to have to deal with inner non-static classes (and verifying usage of state
     // from the outer class).
     Preconditions.checkArgument(
         !clazz.isMemberClass() || Modifier.isStatic(clazz.getModifiers()),
-        "Buildables cannot be inner non-static classes.");
+        "ModernBuildRules cannot be or reference inner non-static classes.");
 
     Optional<ClassInfo<? super T>> superInfo = Optional.empty();
     Class<?> superClazz = clazz.getSuperclass();

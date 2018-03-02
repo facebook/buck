@@ -61,7 +61,6 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -69,6 +68,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
@@ -568,7 +568,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         Matchers.endsWith("libfoo.a"));
   }
 
-  @Test(expected = HumanReadableException.class)
+  @Test(expected = UncheckedExecutionException.class)
   public void missingAllLibFilesThrowsUsefulException() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder =

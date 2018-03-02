@@ -28,10 +28,12 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableSupport;
+import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.HasSupplementaryOutputs;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -50,9 +52,10 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         HasRuntimeDeps,
         HasAppleDebugSymbolDeps,
         SupportsInputBasedRuleKey,
-        HasSupplementaryOutputs {
+        HasSupplementaryOutputs,
+        CacheableBuildRule {
 
-  private final BuildRuleResolver ruleResolver;
+  private BuildRuleResolver ruleResolver;
   private final CxxPlatform cxxPlatform;
   private final BuildRule linkRule;
   private final Tool executable;
@@ -185,5 +188,13 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       }
     }
     return null;
+  }
+
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
+    this.ruleResolver = ruleResolver;
   }
 }
