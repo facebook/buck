@@ -1,10 +1,12 @@
-package com.facebook.buck.util;
+package com.facebook.buck.io.filesystem;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableMultiset;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 
 public class PathHelper {
 
@@ -29,21 +31,20 @@ public class PathHelper {
    * @param sourcePath
    * @return a list of files
    */
-  public static ImmutableSet<Path> getSourcesInPath(ProjectFilesystem filesystem, Path sourcePath)
+  private static ImmutableSet<Path> getSourcesInPath(ProjectFilesystem filesystem, Path sourcePath)
       throws IOException {
     ImmutableMultiset.Builder<Path> builder = new ImmutableMultiset.Builder<>();
-    getInnerFiles(filesystem, sourcePath, builder);
+    filesystem.walkFileTree(
+        sourcePath,
+        new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path path, BasicFileAttributes attributes) {
+            if (!filesystem.isDirectory(path)) {
+              builder.add(path);
+            }
+            return FileVisitResult.CONTINUE;
+          }
+        });
     return builder.build().elementSet();
-  }
-
-  private static void getInnerFiles(ProjectFilesystem filesystem, Path sourcePath, ImmutableMultiset.Builder<Path> builder)
-      throws IOException {
-    if (filesystem.isDirectory(sourcePath)) {
-      for (Path child : filesystem.getDirectoryContents(sourcePath)) {
-        getInnerFiles(filesystem, child, builder);
-      }
-    } else {
-      builder.add(sourcePath);
-    }
   }
 }

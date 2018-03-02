@@ -38,8 +38,6 @@ IO_SRCS = [
     "FilteredDirectoryCopier.java",
     "ListeningCharsetDecoder.java",
     "ListeningCharsetEncoder.java",
-    "PathHelper.java",
-    "PathMatchers.java",
     "PkillProcessManager.java",
     "SimpleProcessListener.java",
     "TimeFormat.java",

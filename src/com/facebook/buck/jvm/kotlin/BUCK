@@ -17,6 +17,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/jvm/java:rules",
         "//src/com/facebook/buck/jvm/java:steps",
         "//src/com/facebook/buck/jvm/java:support",
+        "//src/com/facebook/buck/jvm/java/javax:javax",
         "//src/com/facebook/buck/jvm/java/toolchain:toolchain",
         "//src/com/facebook/buck/maven:util",
         "//src/com/facebook/buck/model:model",

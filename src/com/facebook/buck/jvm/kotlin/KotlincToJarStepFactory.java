@@ -40,7 +40,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.util.PathMatchers;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -276,7 +275,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
     ImmutableList<String> apClassPaths =
         ImmutableList.<String>builder()
-            .add(AP_CLASSPATH_ARG + kotlinc.getAPPaths())
+            .add(AP_CLASSPATH_ARG + kotlinc.getAnnotationProcessorPath())
             .add(AP_CLASSPATH_ARG + kotlinc.getStdlibPath())
             .addAll(pluginFields)
             .add(SOURCES_ARG + filesystem.resolve(apGenerated))
@@ -316,7 +315,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 LOAD_BUILTINS_FROM,
                 PLUGIN,
                 KAPT3_PLUGIN + APT_MODE + "stubs," + join,
-                X_PLUGIN_ARG + kotlinc.getAPPaths()),
+                X_PLUGIN_ARG + kotlinc.getAnnotationProcessorPath()),
             filesystem));
 
     // Then run the annotation processor
@@ -341,7 +340,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 LOAD_BUILTINS_FROM,
                 PLUGIN,
                 KAPT3_PLUGIN + APT_MODE + "apt," + join,
-                X_PLUGIN_ARG + kotlinc.getAPPaths()),
+                X_PLUGIN_ARG + kotlinc.getAnnotationProcessorPath()),
             filesystem));
   }
 

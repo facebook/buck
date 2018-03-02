@@ -58,7 +58,7 @@ public class KotlinBuckConfig {
 
       return new JarBackedReflectedKotlinc(
           classpathEntries,
-          getPathToAP(),
+          getPathToAnnotationProcessingJar(),
           getPathToStdlibJar());
     }
   }
@@ -158,7 +158,7 @@ public class KotlinBuckConfig {
    *
    * @return the Kotlin annotation processing jar path
    */
-  Path getPathToAP() {
+  Path getPathToAnnotationProcessingJar() {
     try {
       return getPathToJar("kotlin-annotation-processing-gradle");
     } catch (HumanReadableException e) {

@@ -159,7 +159,7 @@ public class ExternalKotlinc implements Kotlinc, RuleKeyAppendable {
   }
 
   @Override
-  public Path getAPPaths() {
+  public Path getAnnotationProcessorPath() {
     throw new IllegalStateException("Not supported yet");
   }
 
