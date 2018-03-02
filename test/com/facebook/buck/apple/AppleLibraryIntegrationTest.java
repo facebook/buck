@@ -857,6 +857,35 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
+  public void testModulewrap() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_library_swift_uses_objc_same_lib", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("apple", "use_swift_delegate", "false");
+    workspace.addBuckConfigLocalOption("swift", "use_modulewrap", "true");
+    BuildTarget dylibTarget =
+        workspace
+            .newBuildTarget("//:Mixed#dwarf-and-dsym,macosx-x86_64")
+            .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR);
+    ProcessResult result = workspace.runBuckCommand("build", dylibTarget.getFullyQualifiedName());
+    result.assertSuccess();
+
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    Path dwarfPath =
+        tmp.getRoot()
+            .resolve(filesystem.getBuckPaths().getGenDir())
+            .resolve("Mixed#apple-dsym,macosx-x86_64,shared.dSYM")
+            .resolve("Contents/Resources/DWARF/Mixed");
+    assertThat(Files.exists(dwarfPath), is(true));
+    AppleDsymTestUtil.checkDsymFileHasSection("__SWIFT", "__ast", workspace, dwarfPath);
+  }
+
+  @Test
   public void testBuildAppleLibraryUsingBridingHeaderAndSwiftDotH() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));

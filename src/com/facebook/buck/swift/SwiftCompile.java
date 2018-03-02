@@ -75,7 +75,9 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey(stringify = true)
   private final Path outputPath;
 
+  private final Path objectFilePath;
   private final Path modulePath;
+  private final Path moduleObjectPath;
   private final ImmutableList<Path> objectPaths;
   private final Optional<Path> swiftFileListPath;
 
@@ -123,8 +125,13 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
     String escapedModuleName = CxxDescriptionEnhancer.normalizeModuleName(moduleName);
     this.moduleName = escapedModuleName;
+    this.objectFilePath = outputPath.resolve(escapedModuleName + ".o");
     this.modulePath = outputPath.resolve(escapedModuleName + ".swiftmodule");
-    this.objectPaths = ImmutableList.of(outputPath.resolve(escapedModuleName + ".o"));
+    this.moduleObjectPath = outputPath.resolve(escapedModuleName + ".swiftmodule.o");
+    this.objectPaths =
+        swiftBuckConfig.getUseModulewrap()
+            ? ImmutableList.of(objectFilePath, moduleObjectPath)
+            : ImmutableList.of(objectFilePath);
     this.swiftFileListPath =
         swiftBuckConfig.getUseFileList()
             ? Optional.of(
@@ -207,12 +214,9 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         "-emit-module-path",
         modulePath.toString(),
         "-emit-objc-header-path",
-        headerPath.toString());
-    objectPaths.forEach(
-        x -> {
-          compilerCommand.add("-o");
-          compilerCommand.add(x.toString());
-        });
+        headerPath.toString(),
+        "-o",
+        objectFilePath.toString());
 
     // Do not use swiftBuckConfig's version by definition
     version.ifPresent(
@@ -229,6 +233,32 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       for (SourcePath sourcePath : srcs) {
         compilerCommand.add(resolver.getRelativePath(sourcePath).toString());
       }
+    }
+
+    ProjectFilesystem projectFilesystem = getProjectFilesystem();
+    return new SwiftCompileStep(
+        projectFilesystem.getRootPath(), ImmutableMap.of(), compilerCommand.build());
+  }
+
+  private SwiftCompileStep makeModulewrapStep(SourcePathResolver resolver) {
+    ImmutableList.Builder<String> compilerCommand = ImmutableList.builder();
+    ImmutableList<String> commandPrefix = swiftCompiler.getCommandPrefix(resolver);
+
+    // The swift compiler path will be the first element of the command prefix
+    compilerCommand.add(commandPrefix.get(0));
+
+    String target = "";
+    for (int i = 0; i < commandPrefix.size() - 1; ++i) {
+      if (commandPrefix.get(i).equals("-target")) {
+        target = commandPrefix.get(i + 1);
+        break;
+      }
+    }
+
+    compilerCommand.add("-modulewrap", modulePath.toString(), "-o", moduleObjectPath.toString());
+
+    if (!target.isEmpty()) {
+      compilerCommand.add("-target", target);
     }
 
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
@@ -262,6 +292,11 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     swiftFileListPath.map(
         path -> steps.add(makeFileListStep(context.getSourcePathResolver(), path)));
     steps.add(makeCompileStep(context.getSourcePathResolver()));
+
+    if (swiftBuckConfig.getUseModulewrap()) {
+      steps.add(makeModulewrapStep(context.getSourcePathResolver()));
+    }
+
     return steps.build();
   }
 
@@ -339,10 +374,14 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   }
 
   public ImmutableList<Arg> getAstLinkArgs() {
-    return ImmutableList.<Arg>builder()
-        .addAll(StringArg.from("-Xlinker", "-add_ast_path"))
-        .add(SourcePathArg.of(ExplicitBuildTargetSourcePath.of(getBuildTarget(), modulePath)))
-        .build();
+    if (!swiftBuckConfig.getUseModulewrap()) {
+      return ImmutableList.<Arg>builder()
+          .addAll(StringArg.from("-Xlinker", "-add_ast_path"))
+          .add(SourcePathArg.of(ExplicitBuildTargetSourcePath.of(getBuildTarget(), modulePath)))
+          .build();
+    } else {
+      return ImmutableList.<Arg>builder().build();
+    }
   }
 
   ImmutableList<Arg> getFileListLinkArg() {
