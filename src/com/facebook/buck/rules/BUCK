@@ -189,6 +189,7 @@ java_immutables_library(
     srcs = [
         "AbstractBuildRule.java",
         "AbstractBuildRuleType.java",
+        "AbstractSourcePathResolver.java",
         "AbstractTargetGraphAndBuildTargets.java",
         "AbstractTargetNode.java",
         "ActionGraph.java",
