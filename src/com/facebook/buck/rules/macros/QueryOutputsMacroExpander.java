@@ -80,8 +80,8 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander<QueryOutputsMa
                   return resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
                 })
             .map(BuildRule::getSourcePathToOutput)
-            .sorted()
             .filter(Objects::nonNull)
+            .sorted()
             .collect(ImmutableList.toImmutableList()));
   }
 

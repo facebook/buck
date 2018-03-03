@@ -28,6 +28,10 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.FakeTargetNodeArg;
+import com.facebook.buck.rules.FakeTargetNodeBuilder;
+import com.facebook.buck.rules.FakeTargetNodeBuilder.FakeDescription;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -40,9 +44,11 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.SortedSet;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -63,6 +69,7 @@ public class QueryOutputsMacroExpanderTest {
   private BuildRule dep;
   private MacroHandler handler;
   private HashMapWithStats<MacroMatchResult, Object> cache;
+  private BuildRule noopRule;
 
   @Before
   public void setUp() throws Exception {
@@ -86,13 +93,20 @@ public class QueryOutputsMacroExpanderTest {
             .addDep(depNode.getBuildTarget())
             .build();
 
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, ruleNode);
+    TargetNode<?, ?> noopNode1 = newNoopNode("//fake:no-op-1");
+    TargetNode<?, ?> noopNode2 = newNoopNode("//fake:no-op-2");
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(depNode, ruleNode, noopNode2, noopNode1);
+
     ruleResolver =
         new SingleThreadedBuildRuleResolver(
             targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     dep = ruleResolver.requireRule(depNode.getBuildTarget());
     rule = ruleResolver.requireRule(ruleNode.getBuildTarget());
+    noopRule = ruleResolver.requireRule(noopNode1.getBuildTarget());
+    ruleResolver.requireRule(noopNode2.getBuildTarget());
   }
 
   @Test
@@ -104,6 +118,11 @@ public class QueryOutputsMacroExpanderTest {
             "%s %s",
             absolutify("exciting/lib__dep__output/dep.jar"),
             absolutify("exciting/lib__target__output/target.jar")));
+  }
+
+  @Test
+  public void noOutputs() throws Exception {
+    assertExpandsTo("$(query_outputs 'set(//fake:no-op-1 //fake:no-op-2)')", noopRule, "");
   }
 
   @Test
@@ -175,5 +194,16 @@ public class QueryOutputsMacroExpanderTest {
   private String absolutify(String relativePath) {
     relativePath = relativePath.replace("/", File.separator);
     return filesystem.resolve(Paths.get("buck-out", "gen", relativePath)).toString();
+  }
+
+  private TargetNode<FakeTargetNodeArg, FakeDescription> newNoopNode(String buildTarget) {
+    return FakeTargetNodeBuilder.build(
+        new NoopBuildRule(
+            BuildTargetFactory.newInstance(filesystem.getRootPath(), buildTarget), filesystem) {
+          @Override
+          public SortedSet<BuildRule> getBuildDeps() {
+            return ImmutableSortedSet.of();
+          }
+        });
   }
 }
