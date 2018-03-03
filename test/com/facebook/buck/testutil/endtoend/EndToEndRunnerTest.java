@@ -43,20 +43,23 @@ public class EndToEndRunnerTest {
   }
 
   @Test
-  public void shouldBuildSuccessfully(EndToEndTestDescriptor test, ProcessResult result) {
+  public void shouldBuildSuccessfully(
+      EndToEndTestDescriptor test, EndToEndWorkspace workspace, ProcessResult result) {
     result.assertExitCode(
         String.format("%s did not successfully build", test.getName()), ExitCode.map(0));
   }
 
   @Test
-  public void shouldFailInSuccessfulEnv(EndToEndTestDescriptor test, ProcessResult result) {
+  public void shouldFailInSuccessfulEnv(
+      EndToEndTestDescriptor test, EndToEndWorkspace workspace, ProcessResult result) {
     // Uses successful environment, but fixture BUCK file is empty
     result.assertFailure(
         String.format("%s successfully built when it has an empty BUCK file", test.getName()));
   }
 
   @Test
-  public void shouldNotBuildSuccessfully(EndToEndTestDescriptor test, ProcessResult result) {
+  public void shouldNotBuildSuccessfully(
+      EndToEndTestDescriptor test, EndToEndWorkspace workspace, ProcessResult result) {
     result.assertFailure(
         String.format(
             "%s successfully built when it should have failed to compile", test.getName()));

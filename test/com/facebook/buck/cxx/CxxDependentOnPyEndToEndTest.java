@@ -20,6 +20,7 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.endtoend.EndToEndEnvironment;
 import com.facebook.buck.testutil.endtoend.EndToEndRunner;
 import com.facebook.buck.testutil.endtoend.EndToEndTestDescriptor;
+import com.facebook.buck.testutil.endtoend.EndToEndWorkspace;
 import com.facebook.buck.testutil.endtoend.Environment;
 import com.facebook.buck.testutil.endtoend.ToggleState;
 import com.facebook.buck.util.ExitCode;
@@ -38,7 +39,8 @@ public class CxxDependentOnPyEndToEndTest {
   }
 
   @Test
-  public void shouldBuildSuccessfully(EndToEndTestDescriptor test, ProcessResult result) {
+  public void shouldBuildSuccessfully(
+      EndToEndTestDescriptor test, EndToEndWorkspace workspace, ProcessResult result) {
     result.assertExitCode(
         String.format("%s did not successfully build", test.getName()), ExitCode.map(0));
   }
