@@ -54,7 +54,7 @@ public class Machos {
 
   private Machos() {}
 
-  static void setUuid(MappedByteBuffer map, byte[] uuid) throws MachoException {
+  static void setUuidIfPresent(MappedByteBuffer map, byte[] uuid) throws MachoException {
     int commandsCount = getHeader(map).getCommandsCount();
 
     for (int i = 0; i < commandsCount; i++) {
