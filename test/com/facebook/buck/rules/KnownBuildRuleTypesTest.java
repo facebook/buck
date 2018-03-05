@@ -128,11 +128,7 @@ public class KnownBuildRuleTypesTest {
     BuildRuleResolver resolver = new TestBuildRuleResolver();
     return (DefaultJavaLibrary)
         description.createBuildRule(
-            ImmutableBuildRuleCreationContext.of(
-                TargetGraph.EMPTY,
-                resolver,
-                projectFilesystem,
-                TestCellBuilder.createCellRoots(projectFilesystem)),
+            TestBuildRuleCreationContextFactory.create(resolver, projectFilesystem),
             buildTarget,
             buildRuleParams,
             arg);

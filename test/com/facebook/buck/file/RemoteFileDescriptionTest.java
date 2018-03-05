@@ -28,13 +28,11 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.ImmutableBuildRuleCreationContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.rules.TestBuildRuleResolver;
-import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -85,11 +83,7 @@ public class RemoteFileDescriptionTest {
     exception.expectMessage(Matchers.containsString(target.getFullyQualifiedName()));
 
     description.createBuildRule(
-        ImmutableBuildRuleCreationContext.of(
-            TargetGraph.EMPTY,
-            ruleResolver,
-            filesystem,
-            TestCellBuilder.createCellRoots(filesystem)),
+        TestBuildRuleCreationContextFactory.create(ruleResolver, filesystem),
         target,
         RemoteFileBuilder.createBuilder(downloader, target)
             .from(arg)
@@ -112,11 +106,7 @@ public class RemoteFileDescriptionTest {
 
     BuildRule buildRule =
         description.createBuildRule(
-            ImmutableBuildRuleCreationContext.of(
-                TargetGraph.EMPTY,
-                ruleResolver,
-                filesystem,
-                TestCellBuilder.createCellRoots(filesystem)),
+            TestBuildRuleCreationContextFactory.create(ruleResolver, filesystem),
             target,
             RemoteFileBuilder.createBuilder(downloader, target)
                 .from(arg)

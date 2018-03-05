@@ -30,11 +30,10 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.ImmutableBuildRuleCreationContext;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestBuildRuleResolver;
-import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.shell.ExportFileBuilder;
@@ -82,11 +81,7 @@ public class ApplePackageDescriptionTest {
     resolver.requireAllRules(implicitDeps.build());
     BuildRule rule =
         description.createBuildRule(
-            ImmutableBuildRuleCreationContext.of(
-                graph,
-                resolver,
-                projectFilesystem,
-                TestCellBuilder.createCellRoots(projectFilesystem)),
+            TestBuildRuleCreationContextFactory.create(graph, resolver, projectFilesystem),
             packageBuildTarget,
             TestBuildRuleParams.create(),
             arg);
@@ -136,11 +131,7 @@ public class ApplePackageDescriptionTest {
     resolver.requireAllRules(implicitDeps.build());
     BuildRule rule =
         description.createBuildRule(
-            ImmutableBuildRuleCreationContext.of(
-                graph,
-                resolver,
-                projectFilesystem,
-                TestCellBuilder.createCellRoots(projectFilesystem)),
+            TestBuildRuleCreationContextFactory.create(graph, resolver, projectFilesystem),
             packageBuildTarget,
             params,
             arg);

@@ -38,14 +38,13 @@ import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeTargetNodeBuilder;
-import com.facebook.buck.rules.ImmutableBuildRuleCreationContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestBuildRuleResolver;
-import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -122,11 +121,7 @@ public class SwiftLibraryIntegrationTest {
     SwiftCompile buildRule =
         (SwiftCompile)
             FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
-                ImmutableBuildRuleCreationContext.of(
-                    TargetGraph.EMPTY,
-                    resolver,
-                    projectFilesystem,
-                    TestCellBuilder.createCellRoots(projectFilesystem)),
+                TestBuildRuleCreationContextFactory.create(resolver, projectFilesystem),
                 buildTarget,
                 params,
                 args);
@@ -150,11 +145,7 @@ public class SwiftLibraryIntegrationTest {
     SwiftCompile buildRule =
         (SwiftCompile)
             FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
-                ImmutableBuildRuleCreationContext.of(
-                    TargetGraph.EMPTY,
-                    resolver,
-                    projectFilesystem,
-                    TestCellBuilder.createCellRoots(projectFilesystem)),
+                TestBuildRuleCreationContextFactory.create(resolver, projectFilesystem),
                 swiftCompileTarget,
                 params,
                 args);
@@ -190,11 +181,8 @@ public class SwiftLibraryIntegrationTest {
     CxxLink linkRule =
         (CxxLink)
             FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
-                ImmutableBuildRuleCreationContext.of(
-                    targetGraph,
-                    resolver,
-                    projectFilesystem,
-                    TestCellBuilder.createCellRoots(projectFilesystem)),
+                TestBuildRuleCreationContextFactory.create(
+                    targetGraph, resolver, projectFilesystem),
                 buildTarget.withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR),
                 params,
                 args);

@@ -33,9 +33,9 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.ImmutableBuildRuleCreationContext;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -121,11 +121,7 @@ public class AppleBuildRulesTest {
     BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
     BuildRule libraryRule =
         FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION.createBuildRule(
-            ImmutableBuildRuleCreationContext.of(
-                TargetGraph.EMPTY,
-                buildRuleResolver,
-                projectFilesystem,
-                TestCellBuilder.createCellRoots(projectFilesystem)),
+            TestBuildRuleCreationContextFactory.create(buildRuleResolver, projectFilesystem),
             buildTarget,
             params,
             AppleLibraryDescriptionArg.builder().setName("lib").build());

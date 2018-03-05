@@ -28,10 +28,9 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.ImmutableBuildRuleCreationContext;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.rules.TestBuildRuleResolver;
-import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.function.BiFunction;
@@ -103,11 +102,7 @@ public class WorkerToolDescriptionTest {
             ImmutableSortedSet.of());
     return (WorkerTool)
         workerToolDescription.createBuildRule(
-            ImmutableBuildRuleCreationContext.of(
-                targetGraph,
-                resolver,
-                projectFilesystem,
-                TestCellBuilder.createCellRoots(projectFilesystem)),
+            TestBuildRuleCreationContextFactory.create(targetGraph, resolver, projectFilesystem),
             buildTarget,
             params,
             args);
