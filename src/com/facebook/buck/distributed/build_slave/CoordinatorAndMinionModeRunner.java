@@ -44,8 +44,7 @@ public class CoordinatorAndMinionModeRunner extends AbstractDistBuildModeRunner 
   }
 
   @Override
-  public int runAndReturnExitCode(HeartbeatService heartbeatService)
-      throws IOException, InterruptedException {
+  public int runAndReturnExitCode(HeartbeatService heartbeatService) throws IOException {
     LOG.debug("Running the Coordinator in async mode...");
     try (CoordinatorModeRunner.AsyncCoordinatorRun coordinatorRun =
         coordinatorModeRunner.runAsyncAndReturnExitCode(heartbeatService)) {

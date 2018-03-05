@@ -164,9 +164,7 @@ public class DefaultDefectReporter implements DefectReporter {
   }
 
   private DefectSubmitResult uploadReport(
-      final DefectReport defectReport,
-      DefectSubmitResult.Builder defectSubmitResult,
-      ClientSideSlb slb)
+      DefectReport defectReport, DefectSubmitResult.Builder defectSubmitResult, ClientSideSlb slb)
       throws IOException {
     long timeout = doctorConfig.getReportTimeoutMs();
     OkHttpClient httpClient =

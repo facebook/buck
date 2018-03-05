@@ -129,8 +129,7 @@ public class DistBuildService implements Closeable {
   }
 
   public MultiGetBuildSlaveRealTimeLogsResponse fetchSlaveLogLines(
-      final StampedeId stampedeId, final List<LogLineBatchRequest> logLineRequests)
-      throws IOException {
+      StampedeId stampedeId, List<LogLineBatchRequest> logLineRequests) throws IOException {
 
     MultiGetBuildSlaveRealTimeLogsRequest getLogLinesRequest =
         new MultiGetBuildSlaveRealTimeLogsRequest();
@@ -145,7 +144,7 @@ public class DistBuildService implements Closeable {
   }
 
   public MultiGetBuildSlaveLogDirResponse fetchBuildSlaveLogDir(
-      final StampedeId stampedeId, final List<BuildSlaveRunId> runIds) throws IOException {
+      StampedeId stampedeId, List<BuildSlaveRunId> runIds) throws IOException {
 
     MultiGetBuildSlaveLogDirRequest getBuildSlaveLogDirRequest =
         new MultiGetBuildSlaveLogDirRequest();
@@ -161,9 +160,7 @@ public class DistBuildService implements Closeable {
   }
 
   public void uploadTargetGraph(
-      final BuildJobState buildJobState,
-      final StampedeId stampedeId,
-      final ClientStatsTracker distBuildClientStats)
+      BuildJobState buildJobState, StampedeId stampedeId, ClientStatsTracker distBuildClientStats)
       throws IOException {
     distBuildClientStats.startTimer(UPLOAD_TARGET_GRAPH);
 
@@ -181,10 +178,10 @@ public class DistBuildService implements Closeable {
   }
 
   public ListenableFuture<Void> uploadMissingFilesAsync(
-      final Map<Integer, ProjectFilesystem> localFilesystemsByCell,
-      final List<BuildJobStateFileHashes> fileHashes,
-      final ClientStatsTracker distBuildClientStats,
-      final ListeningExecutorService executorService) {
+      Map<Integer, ProjectFilesystem> localFilesystemsByCell,
+      List<BuildJobStateFileHashes> fileHashes,
+      ClientStatsTracker distBuildClientStats,
+      ListeningExecutorService executorService) {
     distBuildClientStats.startTimer(UPLOAD_MISSING_FILES);
     List<PathInfo> requiredFiles = new ArrayList<>();
     for (BuildJobStateFileHashes filesystem : fileHashes) {
@@ -243,7 +240,7 @@ public class DistBuildService implements Closeable {
    *     future completes when the upload finishes.
    */
   private ListenableFuture<Integer> uploadMissingFilesAsync(
-      final List<PathInfo> absPathsAndHashes, final ListeningExecutorService executorService) {
+      List<PathInfo> absPathsAndHashes, ListeningExecutorService executorService) {
 
     Map<String, PathInfo> sha1ToPathInfo = new HashMap<>();
     for (PathInfo file : absPathsAndHashes) {
@@ -251,7 +248,7 @@ public class DistBuildService implements Closeable {
     }
 
     List<String> contentHashes = ImmutableList.copyOf(sha1ToPathInfo.keySet());
-    final CASContainsRequest containsReq = new CASContainsRequest();
+    CASContainsRequest containsReq = new CASContainsRequest();
     containsReq.setContentSha1s(contentHashes);
     ListenableFuture<FrontendResponse> responseFuture =
         executorService.submit(
@@ -274,7 +271,7 @@ public class DistBuildService implements Closeable {
                   continue;
                 }
 
-                final String contentHash = contentHashes.get(i);
+                String contentHash = contentHashes.get(i);
 
                 // TODO(shivanker): We should upload the missing files in batches, or it might OOM.
                 missingFilesFutureList.add(
@@ -511,8 +508,8 @@ public class DistBuildService implements Closeable {
   }
 
   public ListenableFuture<Void> uploadBuckDotFilesAsync(
-      final StampedeId id,
-      final ProjectFilesystem filesystem,
+      StampedeId id,
+      ProjectFilesystem filesystem,
       FileHashCache fileHashCache,
       ClientStatsTracker distBuildClientStats,
       ListeningExecutorService executorService) {

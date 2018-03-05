@@ -119,7 +119,7 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
 
   /** Reports back to the servers that the coordinator is healthy and alive. */
   public static HeartbeatCallback createHeartbeatCallback(
-      final StampedeId stampedeId, final DistBuildService service) {
+      StampedeId stampedeId, DistBuildService service) {
     return new HeartbeatCallback() {
       @Override
       public void runHeartbeat() throws IOException {

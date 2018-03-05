@@ -284,13 +284,12 @@ public class ThriftCoordinatorServer implements Closeable {
       this.handler =
           new Iface() {
             @Override
-            public GetWorkResponse getWork(GetWorkRequest request) throws TException {
+            public GetWorkResponse getWork(GetWorkRequest request) {
               throw new RuntimeException(msg, e);
             }
 
             @Override
-            public ReportMinionAliveResponse reportMinionAlive(ReportMinionAliveRequest request)
-                throws TException {
+            public ReportMinionAliveResponse reportMinionAlive(ReportMinionAliveRequest request) {
               return new ReportMinionAliveResponse();
             }
           };

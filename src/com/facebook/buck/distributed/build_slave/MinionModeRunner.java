@@ -163,7 +163,7 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
       throw new RuntimeException(msg, e);
     }
 
-    final String minionId = generateMinionId(buildSlaveRunId);
+    String minionId = generateMinionId(buildSlaveRunId);
     try (ThriftCoordinatorClient client =
             new ThriftCoordinatorClient(
                 coordinatorAddress, stampedeId, coordinatorConnectionTimeoutMillis);
@@ -208,7 +208,7 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
   }
 
   private void signalFinishedTargetsAndFetchMoreWork(
-      String minionId, ThriftCoordinatorClient client) throws IOException, InterruptedException {
+      String minionId, ThriftCoordinatorClient client) throws IOException {
     List<String> targetsToSignal = buildTracker.getTargetsToSignal();
 
     if (!buildTracker.capacityAvailable() && exitCode.get() == 0 && targetsToSignal.size() == 0) {
@@ -293,7 +293,7 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
           public void onSuccess(@Nullable BuildResult result) {
             Preconditions.checkNotNull(result);
 
-            final String fullyQualifiedName = result.getRule().getFullyQualifiedName();
+            String fullyQualifiedName = result.getRule().getFullyQualifiedName();
 
             if (!result.isSuccess()) {
               LOG.error(String.format("Building of target [%s] failed.", fullyQualifiedName));
@@ -316,8 +316,8 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
         MoreExecutors.directExecutor());
   }
 
-  private void registerUploadCompletionHandler(final BuildResult buildResult) {
-    final String fullyQualifiedName = buildResult.getRule().getFullyQualifiedName();
+  private void registerUploadCompletionHandler(BuildResult buildResult) {
+    String fullyQualifiedName = buildResult.getRule().getFullyQualifiedName();
     Futures.addCallback(
         buildResult.getUploadCompleteFuture().orElse(Futures.immediateFuture(null)),
         new FutureCallback<Void>() {

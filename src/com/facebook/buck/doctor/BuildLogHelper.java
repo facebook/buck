@@ -168,21 +168,19 @@ public class BuildLogHelper {
   }
 
   private Collection<Path> getAllBuckLogFiles() throws IOException {
-    final List<Path> logfiles = new ArrayList<>();
+    List<Path> logfiles = new ArrayList<>();
     projectFilesystem.walkRelativeFileTree(
         projectFilesystem.getBuckPaths().getLogDir(),
         new FileVisitor<Path>() {
           @Override
-          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-              throws IOException {
+          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
             return Files.isSymbolicLink(dir)
                 ? FileVisitResult.SKIP_SUBTREE
                 : FileVisitResult.CONTINUE;
           }
 
           @Override
-          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-              throws IOException {
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
             if (file.getFileName().toString().equals(BuckConstant.BUCK_LOG_FILE_NAME)) {
               logfiles.add(file);
             }
@@ -191,12 +189,12 @@ public class BuildLogHelper {
           }
 
           @Override
-          public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+          public FileVisitResult visitFileFailed(Path file, IOException exc) {
             return FileVisitResult.CONTINUE;
           }
 
           @Override
-          public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+          public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
             return FileVisitResult.CONTINUE;
           }
         });

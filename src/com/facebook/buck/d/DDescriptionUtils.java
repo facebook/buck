@@ -191,7 +191,7 @@ abstract class DDescriptionUtils {
 
   private static ImmutableMap<BuildTarget, DLibrary> getTransitiveDLibraryRules(
       Iterable<? extends BuildRule> inputs) {
-    final ImmutableMap.Builder<BuildTarget, DLibrary> libraries = ImmutableMap.builder();
+    ImmutableMap.Builder<BuildTarget, DLibrary> libraries = ImmutableMap.builder();
     new AbstractBreadthFirstTraversal<BuildRule>(inputs) {
       @Override
       public Iterable<BuildRule> visit(BuildRule rule) {
