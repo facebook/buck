@@ -115,7 +115,7 @@ public class CopyStep implements Step {
         // N.B., on Windows, java.nio.AbstractPath does not resolve *
         // as a path, causing InvalidPathException. Since this is purely a
         // description, manually create the source argument.
-        args.add(source.toString() + File.separator + "*");
+        args.add(source + File.separator + "*");
         break;
     }
     args.add(destination.toString());

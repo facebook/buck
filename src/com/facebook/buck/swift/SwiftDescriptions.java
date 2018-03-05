@@ -56,9 +56,9 @@ public class SwiftDescriptions {
   }
 
   public static void populateSwiftLibraryDescriptionArg(
-      final SourcePathResolver sourcePathResolver,
+      SourcePathResolver sourcePathResolver,
       SwiftLibraryDescriptionArg.Builder output,
-      final CxxLibraryDescription.CommonArg args,
+      CxxLibraryDescription.CommonArg args,
       BuildTarget buildTarget) {
 
     output.setName(args.getName());

@@ -43,7 +43,7 @@ public class MakeExecutableStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return "chmod +x " + file.toString();
+    return "chmod +x " + file;
   }
 
   @Override

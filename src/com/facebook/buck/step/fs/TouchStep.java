@@ -49,7 +49,7 @@ public class TouchStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return "touch " + filesystem.resolve(fileToTouch).toString();
+    return "touch " + filesystem.resolve(fileToTouch);
   }
 
   @Override

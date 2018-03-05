@@ -31,7 +31,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.google.common.hash.HashCode;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.SortedSet;
 import java.util.UUID;
@@ -120,7 +119,7 @@ public class DefaultWorkerTool extends WriteFile
   }
 
   @Override
-  public UUID initializeFromDisk() throws IOException {
+  public UUID initializeFromDisk() {
     return UUID.randomUUID();
   }
 

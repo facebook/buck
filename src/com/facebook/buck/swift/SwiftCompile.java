@@ -175,7 +175,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
           "-import-objc-header", resolver.getRelativePath(bridgingHeader.get()).toString());
     }
 
-    final Function<FrameworkPath, Path> frameworkPathToSearchPath =
+    Function<FrameworkPath, Path> frameworkPathToSearchPath =
         CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
 
     compilerCommand.addAll(
@@ -308,8 +308,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
     return new Step() {
       @Override
-      public StepExecutionResult execute(ExecutionContext context)
-          throws IOException, InterruptedException {
+      public StepExecutionResult execute(ExecutionContext context) throws IOException {
         if (Files.notExists(swiftFileListPath.getParent())) {
           Files.createDirectories(swiftFileListPath.getParent());
         }

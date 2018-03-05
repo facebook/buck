@@ -58,15 +58,12 @@ public class WriteFileStep implements Step {
   }
 
   public WriteFileStep(
-      ProjectFilesystem filesystem,
-      final Supplier<String> content,
-      Path outputPath,
-      boolean executable) {
+      ProjectFilesystem filesystem, Supplier<String> content, Path outputPath, boolean executable) {
     this(
         filesystem,
         new ByteSource() {
           @Override
-          public InputStream openStream() throws IOException {
+          public InputStream openStream() {
             // echo by default writes a trailing new line and so should we.
             return new ByteArrayInputStream((content.get() + "\n").getBytes(Charsets.UTF_8));
           }

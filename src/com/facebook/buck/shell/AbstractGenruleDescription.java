@@ -80,7 +80,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
 
   protected abstract BuildRule createBuildRule(
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       T args,
@@ -90,7 +90,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
 
   protected BuildRule createBuildRule(
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       T args,
@@ -146,10 +146,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
-      BuildTarget buildTarget,
-      BuildRuleParams params,
-      final T args) {
+      BuildRuleCreationContext context, BuildTarget buildTarget, BuildRuleParams params, T args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     Optional<ImmutableList<AbstractMacroExpander<? extends Macro, ?>>> maybeExpanders =
         getMacroHandler(
@@ -170,9 +167,9 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
             }
             return arg;
           };
-      final Optional<Arg> cmd = args.getCmd().map(toArg);
-      final Optional<Arg> bash = args.getBash().map(toArg);
-      final Optional<Arg> cmdExe = args.getCmdExe().map(toArg);
+      Optional<Arg> cmd = args.getCmd().map(toArg);
+      Optional<Arg> bash = args.getBash().map(toArg);
+      Optional<Arg> cmdExe = args.getCmdExe().map(toArg);
       return createBuildRule(
           buildTarget,
           context.getProjectFilesystem(),
@@ -184,9 +181,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
                           .flatMap(
                               input ->
                                   BuildableSupport.getDepsCollection(input, ruleFinder).stream()))
-                  .collect(
-                      ImmutableSortedSet.toImmutableSortedSet(
-                          Comparator.<BuildRule>naturalOrder()))),
+                  .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()))),
           resolver,
           args,
           cmd,

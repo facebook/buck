@@ -82,7 +82,7 @@ public class ServerHealthManager {
             .build(
                 new CacheLoader<Object, Optional<URI>>() {
                   @Override
-                  public Optional<URI> load(Object key) throws Exception {
+                  public Optional<URI> load(Object key) {
                     return calculateBestServer();
                   }
                 });

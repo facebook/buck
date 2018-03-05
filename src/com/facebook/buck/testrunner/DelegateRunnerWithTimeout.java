@@ -81,7 +81,7 @@ class DelegateRunnerWithTimeout extends Runner {
    */
   @Override
   public void run(RunNotifier notifier) {
-    final DelegateRunNotifier wrapper =
+    DelegateRunNotifier wrapper =
         new DelegateRunNotifier(delegate, notifier, defaultTestTimeoutMillis);
 
     if (wrapper.hasJunitTimeout(getDescription())) {
@@ -91,8 +91,8 @@ class DelegateRunnerWithTimeout extends Runner {
     }
   }
 
-  private void runWithBuckManagedTimeout(final DelegateRunNotifier wrapper) {
-    final Semaphore completionSemaphore = new Semaphore(1);
+  private void runWithBuckManagedTimeout(DelegateRunNotifier wrapper) {
+    Semaphore completionSemaphore = new Semaphore(1);
 
     // Acquire the one permit so later tryAcquire attempts lock
     // until they either time out or this permit is released by
@@ -105,7 +105,7 @@ class DelegateRunnerWithTimeout extends Runner {
       return;
     }
 
-    final AtomicBoolean testsCompleted = new AtomicBoolean(false);
+    AtomicBoolean testsCompleted = new AtomicBoolean(false);
 
     // We run the Runner in an Executor so that we can tear it down if we need to.
     executor
@@ -152,7 +152,7 @@ class DelegateRunnerWithTimeout extends Runner {
     }
   }
 
-  private void runWithoutBuckManagedTimeout(final DelegateRunNotifier wrapper) {
+  private void runWithoutBuckManagedTimeout(DelegateRunNotifier wrapper) {
     delegate.run(wrapper);
   }
 

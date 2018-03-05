@@ -52,5 +52,5 @@ public enum ResultType {
    */
   FAILURE,
   /** The test ran successfully. */
-  SUCCESS;
+  SUCCESS
 }
