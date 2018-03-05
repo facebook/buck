@@ -19,6 +19,7 @@ package com.facebook.buck.rules.modern;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
@@ -43,7 +44,6 @@ import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -103,14 +103,11 @@ import javax.annotation.Nullable;
  * }
  * }</pre>
  */
-public abstract class ModernBuildRule<T extends Buildable>
-    implements BuildRule,
-        HasRuntimeDeps,
+public abstract class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
+    implements HasRuntimeDeps,
         SupportsInputBasedRuleKey,
         CacheableBuildRule,
         InitializableFromDisk<ModernBuildRule.DataHolder> {
-  private final BuildTarget buildTarget;
-  private final ProjectFilesystem filesystem;
   private final BuildOutputInitializer<DataHolder> buildOutputInitializer;
   private final OutputPathResolver outputPathResolver;
 
@@ -141,8 +138,7 @@ public abstract class ModernBuildRule<T extends Buildable>
       ProjectFilesystem filesystem,
       Either<T, Class<T>> buildableSource,
       SourcePathRuleFinder ruleFinder) {
-    this.filesystem = filesystem;
-    this.buildTarget = buildTarget;
+    super(buildTarget, filesystem);
     this.deps = MoreSuppliers.memoize(this::computeDeps);
     this.inputRuleResolver = new DefaultInputRuleResolver(ruleFinder);
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
@@ -219,7 +215,7 @@ public abstract class ModernBuildRule<T extends Buildable>
   protected final SourcePath getSourcePath(OutputPath outputPath) {
     // TODO(cjhopman): enforce that the outputPath is actually from this target somehow.
     return ExplicitBuildTargetSourcePath.of(
-        buildTarget, outputPathResolver.resolvePath(outputPath));
+        getBuildTarget(), outputPathResolver.resolvePath(outputPath));
   }
 
   @Override
@@ -239,20 +235,26 @@ public abstract class ModernBuildRule<T extends Buildable>
     stepBuilder.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), filesystem, outputPathResolver.getRootPath())));
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                outputPathResolver.getRootPath())));
 
     stepBuilder.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), filesystem, outputPathResolver.getTempPath())));
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                outputPathResolver.getTempPath())));
 
     stepBuilder.addAll(
         buildable.getBuildSteps(
             context,
-            filesystem,
+            getProjectFilesystem(),
             outputPathResolver,
             new DefaultBuildCellRelativePathFactory(
-                context.getBuildCellRootPath(), filesystem, Optional.of(outputPathResolver))));
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                Optional.of(outputPathResolver))));
 
     // TODO(cjhopman): Should this delete the scratch directory? Maybe delete by default but
     // preserve it based on verbosity. Currently, since CachingBuildEngine doesn't know what files
@@ -299,48 +301,11 @@ public abstract class ModernBuildRule<T extends Buildable>
   }
 
   @Override
-  public final BuildTarget getBuildTarget() {
-    return buildTarget;
-  }
-
-  @Override
-  public final String getFullyQualifiedName() {
-    return buildTarget.getFullyQualifiedName();
-  }
-
-  @Override
-  public final ProjectFilesystem getProjectFilesystem() {
-    return filesystem;
-  }
-
-  @Override
   public final int compareTo(BuildRule that) {
     if (this == that) {
       return 0;
     }
 
     return this.getBuildTarget().compareTo(that.getBuildTarget());
-  }
-
-  @Override
-  public final boolean equals(Object obj) {
-    if (!(obj instanceof ModernBuildRule)) {
-      return false;
-    }
-    if (this.getClass() != obj.getClass()) {
-      return false;
-    }
-    ModernBuildRule<?> that = (ModernBuildRule<?>) obj;
-    return (this.classInfo == that.classInfo) && Objects.equals(this.buildTarget, that.buildTarget);
-  }
-
-  @Override
-  public final int hashCode() {
-    return this.buildTarget.hashCode();
-  }
-
-  @Override
-  public final String toString() {
-    return getFullyQualifiedName();
   }
 }
