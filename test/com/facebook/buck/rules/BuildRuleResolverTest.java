@@ -31,6 +31,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -78,14 +80,16 @@ public class BuildRuleResolverTest {
             SingleThreadedBuildRuleResolver.class,
             (BuildRuleResolverFactory)
                 (graph, transformer) ->
-                    new SingleThreadedBuildRuleResolver(graph, transformer, null),
+                    new SingleThreadedBuildRuleResolver(
+                        graph, transformer, new ToolchainProviderBuilder().build(), null),
             MoreExecutors.newDirectExecutorService(),
           },
           {
             MultiThreadedBuildRuleResolver.class,
             (BuildRuleResolverFactory)
                 (graph, transformer) ->
-                    new MultiThreadedBuildRuleResolver(pool, graph, transformer, null),
+                    new MultiThreadedBuildRuleResolver(
+                        pool, graph, transformer, new ToolchainProviderBuilder().build(), null),
             pool,
           },
         });
@@ -223,6 +227,7 @@ public class BuildRuleResolverTest {
               @Override
               public <T, U extends Description<T>> BuildRule transform(
                   TargetGraph targetGraph,
+                  ToolchainProvider toolchainProvider,
                   BuildRuleResolver ruleResolver,
                   TargetNode<T, U> targetNode) {
                 Assert.assertFalse(ruleResolver.getRuleOptional(target).isPresent());
@@ -255,6 +260,7 @@ public class BuildRuleResolverTest {
               @Override
               public <T, U extends Description<T>> BuildRule transform(
                   TargetGraph targetGraph,
+                  ToolchainProvider toolchainProvider,
                   BuildRuleResolver ruleResolver,
                   TargetNode<T, U> targetNode) {
                 Boolean existing = transformCalls.put(targetNode.getBuildTarget(), true);
@@ -343,6 +349,7 @@ public class BuildRuleResolverTest {
                 @Override
                 public <T, U extends Description<T>> BuildRule transform(
                     TargetGraph targetGraph,
+                    ToolchainProvider toolchainProvider,
                     BuildRuleResolver ruleResolver,
                     TargetNode<T, U> targetNode) {
 
@@ -364,6 +371,7 @@ public class BuildRuleResolverTest {
                   return new FakeBuildRule(targetNode.getBuildTarget());
                 }
               },
+              new ToolchainProviderBuilder().build(),
               null);
 
       // mimic our actual parallel action graph construction, in which we call requireRule with

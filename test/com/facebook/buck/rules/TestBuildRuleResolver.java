@@ -16,11 +16,13 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
+
 public class TestBuildRuleResolver extends SingleThreadedBuildRuleResolver {
 
   public TestBuildRuleResolver(
       TargetGraph targetGraph, TargetNodeToBuildRuleTransformer buildRuleGenerator) {
-    super(targetGraph, buildRuleGenerator, null);
+    super(targetGraph, buildRuleGenerator, new ToolchainProviderBuilder().build(), null);
   }
 
   public TestBuildRuleResolver(TargetNodeToBuildRuleTransformer buildRuleGenerator) {

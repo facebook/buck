@@ -2694,6 +2694,7 @@ public class ParserTest {
                 .getFreshActionGraph(
                     eventBus,
                     targetGraph,
+                    new ToolchainProviderBuilder().build(),
                     ActionGraphParallelizationMode.DISABLED,
                     false,
                     IncrementalActionGraphMode.DISABLED,

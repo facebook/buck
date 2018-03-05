@@ -220,6 +220,7 @@ java_immutables_library(
         ":source_path",
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/rules/visibility:visibility",
+        "//src/com/facebook/buck/toolchain:toolchain",
         "//src/com/facebook/buck/util/concurrent:concurrent",
     ],
     resources = [

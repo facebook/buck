@@ -56,6 +56,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.swift.SwiftBuckConfig;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
@@ -402,7 +403,8 @@ public class XCodeProjectCommandHelper {
     }
 
     LazyActionGraph lazyActionGraph =
-        new LazyActionGraph(targetGraphAndTargets.getTargetGraph(), buckEventBus);
+        new LazyActionGraph(
+            targetGraphAndTargets.getTargetGraph(), cell.getToolchainProvider(), buckEventBus);
 
     LOG.debug("Generating workspace for config targets %s", targets);
     ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
@@ -836,11 +838,15 @@ public class XCodeProjectCommandHelper {
     private final TargetGraph targetGraph;
     private final BuildRuleResolver resolver;
 
-    public LazyActionGraph(TargetGraph targetGraph, BuckEventBus buckEventBus) {
+    public LazyActionGraph(
+        TargetGraph targetGraph, ToolchainProvider toolchainProvider, BuckEventBus buckEventBus) {
       this.targetGraph = targetGraph;
       this.resolver =
           new SingleThreadedBuildRuleResolver(
-              targetGraph, new DefaultTargetNodeToBuildRuleTransformer(), buckEventBus);
+              targetGraph,
+              new DefaultTargetNodeToBuildRuleTransformer(),
+              toolchainProvider,
+              buckEventBus);
     }
 
     public BuildRuleResolver getBuildRuleResolverWhileRequiringSubgraph(TargetNode<?, ?> root) {

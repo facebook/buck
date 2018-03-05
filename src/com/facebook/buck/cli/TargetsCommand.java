@@ -421,6 +421,7 @@ public class TargetsCommand extends AbstractCommand {
             .getActionGraph(
                 params.getBuckEventBus(),
                 targetGraphAndTargets.getTargetGraph(),
+                params.getCell().getToolchainProvider(),
                 params.getBuckConfig(),
                 params.getRuleKeyConfiguration(),
                 poolSupplier);
@@ -901,6 +902,7 @@ public class TargetsCommand extends AbstractCommand {
                 .getActionGraph(
                     params.getBuckEventBus(),
                     targetGraphAndTargetNodes.getFirst(),
+                    params.getCell().getToolchainProvider(),
                     params.getBuckConfig(),
                     params.getRuleKeyConfiguration(),
                     poolSupplier);

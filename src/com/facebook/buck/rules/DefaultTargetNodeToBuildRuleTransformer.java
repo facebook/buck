@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.query.QueryCache;
 import com.facebook.buck.rules.query.QueryUtils;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -35,7 +36,10 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
   @SuppressWarnings("unchecked")
   @Override
   public <T, U extends Description<T>> BuildRule transform(
-      TargetGraph targetGraph, BuildRuleResolver ruleResolver, TargetNode<T, U> targetNode) {
+      TargetGraph targetGraph,
+      ToolchainProvider toolchainProvider,
+      BuildRuleResolver ruleResolver,
+      TargetNode<T, U> targetNode) {
     U description = targetNode.getDescription();
     T arg = targetNode.getConstructorArg();
 
@@ -87,7 +91,11 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
 
     BuildRuleCreationContext context =
         ImmutableBuildRuleCreationContext.of(
-            targetGraph, ruleResolver, targetNode.getFilesystem(), targetNode.getCellNames());
+            targetGraph,
+            ruleResolver,
+            targetNode.getFilesystem(),
+            targetNode.getCellNames(),
+            toolchainProvider);
 
     return description.createBuildRule(context, targetNode.getBuildTarget(), params, arg);
   }

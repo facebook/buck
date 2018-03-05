@@ -122,7 +122,10 @@ final class JavaBuildGraphProcessor {
 
       BuildRuleResolver buildRuleResolver =
           new SingleThreadedBuildRuleResolver(
-              graph, new DefaultTargetNodeToBuildRuleTransformer(), params.getBuckEventBus());
+              graph,
+              new DefaultTargetNodeToBuildRuleTransformer(),
+              params.getCell().getToolchainProvider(),
+              params.getBuckEventBus());
       SourcePathRuleFinder sourcePathRuleFinder = new SourcePathRuleFinder(buildRuleResolver);
       CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
           params.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);

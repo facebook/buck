@@ -187,6 +187,7 @@ public class AuditClasspathCommand extends AbstractCommand {
                     .getFreshActionGraph(
                         params.getBuckEventBus(),
                         targetGraph,
+                        params.getCell().getToolchainProvider(),
                         params.getBuckConfig().getActionGraphParallelizationMode(),
                         params.getBuckConfig().getShouldInstrumentActionGraph(),
                         params.getBuckConfig().getIncrementalActionGraphMode(),
@@ -237,6 +238,7 @@ public class AuditClasspathCommand extends AbstractCommand {
                     .getFreshActionGraph(
                         params.getBuckEventBus(),
                         targetGraph,
+                        params.getCell().getToolchainProvider(),
                         params.getBuckConfig().getActionGraphParallelizationMode(),
                         params.getBuckConfig().getShouldInstrumentActionGraph(),
                         params.getBuckConfig().getIncrementalActionGraphMode(),

@@ -269,6 +269,7 @@ java_immutables_library(
         "//test/com/facebook/buck/rules/keys/config:testutil",
         "//test/com/facebook/buck/sandbox:testutil",
         "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/toolchain/impl:testutil",
         "//test/com/facebook/buck/util:testutil",
         "//test/com/facebook/buck/util/concurrent:testutil",
         "//third-party/java/aether:aether-api",

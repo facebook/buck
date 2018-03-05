@@ -220,7 +220,12 @@ public class IjProjectCommandHelper {
                     16),
             ForkJoinPool::shutdownNow)) {
       return actionGraphCache.getActionGraph(
-          buckEventBus, targetGraph, buckConfig, ruleKeyConfiguration, forkJoinPoolSupplier);
+          buckEventBus,
+          targetGraph,
+          cell.getToolchainProvider(),
+          buckConfig,
+          ruleKeyConfiguration,
+          forkJoinPoolSupplier);
     }
   }
 

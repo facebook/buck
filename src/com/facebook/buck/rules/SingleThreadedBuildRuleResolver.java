@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.concurrent.Parallelizer;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -35,6 +36,7 @@ public class SingleThreadedBuildRuleResolver implements BuildRuleResolver {
 
   private final TargetGraph targetGraph;
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
+  private final ToolchainProvider toolchainProvider;
 
   /** Event bus for reporting performance information. Will likely be null in unit tests. */
   @Nullable private final BuckEventBus eventBus;
@@ -45,9 +47,11 @@ public class SingleThreadedBuildRuleResolver implements BuildRuleResolver {
   public SingleThreadedBuildRuleResolver(
       TargetGraph targetGraph,
       TargetNodeToBuildRuleTransformer buildRuleGenerator,
+      ToolchainProvider toolchainProvider,
       @Nullable BuckEventBus eventBus) {
     this.targetGraph = targetGraph;
     this.buildRuleGenerator = buildRuleGenerator;
+    this.toolchainProvider = toolchainProvider;
     this.eventBus = eventBus;
 
     // We preallocate our maps to have this amount of slots to get rid of re-allocations
@@ -102,7 +106,7 @@ public class SingleThreadedBuildRuleResolver implements BuildRuleResolver {
         target,
         (ignored) -> {
           TargetNode<?, ?> node = targetGraph.get(target);
-          BuildRule rule = buildRuleGenerator.transform(targetGraph, this, node);
+          BuildRule rule = buildRuleGenerator.transform(targetGraph, toolchainProvider, this, node);
           Preconditions.checkState(
               // TODO(jakubzika): This should hold for flavored build targets as well.
               rule.getBuildTarget()

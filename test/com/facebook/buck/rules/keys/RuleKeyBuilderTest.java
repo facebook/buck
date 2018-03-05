@@ -47,6 +47,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
@@ -270,7 +271,11 @@ public class RuleKeyBuilderTest {
     private final Map<BuildTarget, BuildRule> ruleMap;
 
     public FakeBuildRuleResolver(Map<BuildTarget, BuildRule> ruleMap) {
-      super(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer(), null);
+      super(
+          TargetGraph.EMPTY,
+          new DefaultTargetNodeToBuildRuleTransformer(),
+          new ToolchainProviderBuilder().build(),
+          null);
       this.ruleMap = ruleMap;
     }
 

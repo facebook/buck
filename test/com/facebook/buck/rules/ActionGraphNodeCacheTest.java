@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeTargetNodeBuilder.FakeDescription;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.SortedSet;
@@ -415,6 +416,9 @@ public class ActionGraphNodeCacheTest {
 
   private BuildRuleResolver createBuildRuleResolver(TargetGraph targetGraph) {
     return new SingleThreadedBuildRuleResolver(
-        targetGraph, new DefaultTargetNodeToBuildRuleTransformer(), null);
+        targetGraph,
+        new DefaultTargetNodeToBuildRuleTransformer(),
+        new ToolchainProviderBuilder().build(),
+        null);
   }
 }

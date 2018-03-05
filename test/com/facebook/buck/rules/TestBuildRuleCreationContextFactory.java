@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 
 public class TestBuildRuleCreationContextFactory {
 
@@ -33,6 +34,7 @@ public class TestBuildRuleCreationContextFactory {
         targetGraph,
         buildRuleResolver,
         projectFilesystem,
-        TestCellBuilder.createCellRoots(projectFilesystem));
+        TestCellBuilder.createCellRoots(projectFilesystem),
+        new ToolchainProviderBuilder().build());
   }
 }
