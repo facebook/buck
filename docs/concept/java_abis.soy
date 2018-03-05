@@ -9,117 +9,145 @@
       The different ways of generating ABI jars for Java code.
     {/param}
     {param content}
-      <p>This information pertains to building Java code with Buck.</p>
+      <p>This topic pertains to building Java code with Buck.</p>
 
-      <p>When compiling a Java rule, in addition to the <b>library JAR</b> that contains all of the
-      compiled classes and resources for the rule, Buck also creates an <b>ABI JAR</b> containing
-      just the resources and the class interfaces. Since ABI JARs do not contain method bodies
-      or private members, they are smaller and change less often than library JARs, which enables
-      Buck to do two things with them:
+      <p>
+        When compiling a Java rule, Buck creates an <i>Application Binary Interface (ABI) JAR</i>, which 
+        contains only resources and class interfaces, that is, the public interface for your module. 
+        Buck creates this ABI JAR in addition to the <i>library JAR</i>, which contains all of the compiled 
+        classes and resources for the rule. Since ABI JARs do not contain method bodies or private
+        members, they are smaller and change less frequently than library JARs, which enables Buck to use ABI JARs in two ways:
         <ul>
-          <li>Use them in {call buck.abi_rule_keys /} to more accurately detect which rules need
-          to be rebuilt during an incremental build.</li>
-          <li>Use them on the compiler's classpath instead of library JARs to get a small but
-          noticeable performance boost since the smaller size of ABI JARs enables the compiler
-          to load them faster than library JARs</li>
+          <li>
+            Use them in {call buck.abi_rule_keys /} to more accurately determine which rules need to be rebuilt during an
+            incremental build. In some cases, only part of the output of a BuildRule is used by the things which depend on it. 
+            For example, a java_library rule does not necessarily need to be rebuilt if one of its dependencies 
+            changes, <i>provided that the public interface of that dependency did not change.</i> This knowledge 
+            can be used to avoid extraneous rebuilds, where it is known that the output will be the same.
+          </li>
+          <li>
+            Use them on the compiler's classpath instead of library JARs to get a small but significant performance 
+            boost because the smaller size of ABI JARs enables the compiler to load them faster than library JARs.
+          </li>
         </ul>
       </p>
+
       <h2>Three Kinds of ABI JARs</h2>
+
       <p>
-      Buck has three ways to create an ABI JAR, controlled by the
-      {call buckconfig.java_abi_generation_mode /} config setting:
+      Depending on the {call buckconfig.java_abi_generation_mode /} config setting, Buck can create an ABI JAR in three ways:
         <ul>
           <li>
-            From classes, by building the library JAR first and then stripping out the
-            unnecessary bits.
+            From classes, by building the library JAR first and then stripping out the unnecessary bits.
           </li>
           <li>
-            From source, by hooking in to the compiler while it is compiling the library JAR and
-            emitting the ABI jar partway through. (This helps reduce bottlenecks due to slow
-            rules or low parallelism in a build graph.)
+            From source, by hooking in to the compiler while it is compiling the library JAR and emitting the ABI JAR 
+            partway through the compilation process. This helps to reduce bottlenecks due to slow rules or low parallelism 
+            in a build graph.
           </li>
           <li>
-            From source <b>only</b>, by examining just the text of the source code, using
-            heuristics to infer things that can normally only be determined from looking at
-            dependencies. (This drastically increases parallelism in the rule graph and reduces
-            the number of cache fetches required during incremental builds.)
+            From source <i>only</i>, by examining only the text of the source code, and using heuristics to infer 
+            things that can normally be determined only by looking at dependencies. This dramatically increases 
+            parallelism in the rule graph and reduces the number of cache fetches required during incremental
+            builds. The next section goes into the requirements for these <i>source-only ABI JARs</i> in greater detail.
           </li>
         </ul>
       </p>
+
       <h2>Requirements for Source-only ABI JARs</h2>
+
       <p>
-      Source-only ABI JARs are generated using just the text of the source code for a rule, without
-      compiling (most of) that rule's dependencies first. A few details of an ABI JAR cannot be
-      known for certain from just the source, so Buck uses heuristics to infer these details. Even
-      when using source-only ABIs, Buck must still use a rule's dependencies to compile the library
-      JAR. At that time, Buck checks whether the heuristics got the right answer and fails the build
-      if not.
+        Buck generates source-only ABI JARs using only the text of the source code for a rule, without
+        first compiling (most of) the rule's dependencies. Some details of an ABI JAR cannot be
+        known for certain from just the source, so Buck uses heuristics to infer those details. 
+        Even when using source-only ABIs, Buck still uses a rule's dependencies to compile the library
+        JAR. At that time, Buck verifies whether the heuristics used for the ABI JAR were correct, and 
+        if they were not, Buck fails the build with an error.
       </p>
+
       <p>
-      Such build failures can generally be fixed with {call buck.cmd_fix /}, if sometimes in
-      a sub-optimal way. The following describes the requirements for source-only ABI generation,
-      how {call buck.cmd_fix /} fixes issues, and what options there are for more optimal
-      fixes.
+        Such build failures can generally be fixed with {call buck.cmd_fix /}, although sometimes these 
+        fixes are sub-optimal. In most cases, {call buck.cmd_fix /} adds--or suggests that you 
+        add--either <code>source_only_abi_deps=[&lt;dependencies&gt;]</code> or <code>required_for_source_only_abi=True</code>.
+        However, we recommend that, if possible, you avoid 
+        using <code>source_only_abi_deps</code> and <code>required_for_source_only_abi</code>. 
       </p>
+      
+      <p>
+        Both <code>source_only_abi_deps</code> and <code>required_for_source_only_abi</code> have the potential 
+        to negatively impact build times.  The list of dependencies specified by <code>source_only_abi_deps</code> must 
+        be built before Buck can build a source-only ABI for the current module. In the case
+        of <code>required_for_source_only_abi</code>, the current module must be built first before source ABIs 
+        that depend on it can be built.  Whereas <code>source_only_abi_deps</code> affects only the current 
+        module, <code>required_for_source_only_abi</code> affects every module that depends on
+        the current module.
+      </p>
+
+      <p>
+        The following points describe the requirements for source-only ABI
+        generation, specifically how {call buck.cmd_fix /} fixes issues, 
+        and what options you have for more optimal fixes.
+      </p>
+
+
       <ul>
         <li>
           <p>
-            <b>Annotations and constants in their own rules:</b> All annotations and compile-time
-            constants (including enum values) used in the interface
-            of a rule must be present during source-only ABI generation.
+            <b>Place annotations and constants in their own rules:</b> All annotations and compile-time constants 
+            (including enum values) used in the interface of a rule must be present during source-only ABI generation.
           </p>
           <p>
-            The error will suggest adding <code>required_for_source_abi = True</code> to any rule
-            that defines an annotation type or a compile-time constant that is used from another rule,
-            and {call buck.cmd_fix /} will make that change. For best results, such rules should be
-            manually inspected to ensure they are as small as possible--ideally just containing
-            annotations, enums, and constants--and have as few dependencies as possible.
-          </p>
-        </li>
-        <li>
-          <p>
-            <b>Packages and classes named according to Java convention:</b> Any packages that will
-            not be available during source-only ABI generation must have
-            names that begin with a lowercase letter. Any top-level classes that will not be available
-            must have names that begin with an uppercase letter. (This is extremely common practice in
-            Java.)
-          </p>
-          <p>
-            The error will suggest renaming the package or class, and this will have to be done
-            manually. ({call buck.cmd_fix /} will not attempt it.) If the
-            package or class name in question cannot be changed, add <code>required_for_source_abi = True</code>
-            to the build rule that defines it.
+            The error will suggest adding <code>required_for_source_abi = True</code> to any rule that defines an 
+            annotation type or a compile-time constant that is used from another rule, and {call buck.cmd_fix /} will 
+            make that change. For best results, such rules should be manually inspected to ensure they are as small as 
+            possible--ideally containing only annotations, enums, and constants--and have as few dependencies as possible. 
+            In general, put annotations, enums, and constants in their own packages. This keeps to a minimum the amount 
+            of code that needs to be built before ABI generation. And because constants, enums, and annotations don't change 
+            as frequently as other kinds of code, those packages won't need to be rebuilt as frequently.
           </p>
         </li>
         <li>
           <p>
-            <b>Member types referenced canonically:</b> Any references to member types that will
-            not be available during source-only ABI generation must be canonical. That is, member types are
-            inherited by subclasses; a canonical reference refers to the member type as a member of
+            <b>Name packages and classes according to Java conventions:</b> Any packages that will not be available 
+            during source-only ABI generation must have names that begin with a lowercase letter. Any top-level 
+            classes that will not be available must have names that begin with an uppercase letter. These
+            naming conventions are extremely common in Java.
+          </p>
+          <p>
+            The error will suggest renaming the package or class,
+            but <i>you will have to make this change manually</i>; {call buck.cmd_fix /} will not do it for you. 
+            If the package or class name in question cannot be changed, 
+            add <code>required_for_source_abi = True</code> to the build rule that defines it.
+          </p>
+        </li>
+        <li>
+          <p>
+            <b>Reference member types canonically:</b> Any references to member types that will
+            not be available during source-only ABI generation must be canonical. That is, although member 
+            types are inherited by subclasses, a canonical reference refers to the member type as a member of
             the class in which it is defined, not one that inherits it.
           </p>
           <p>
             If the defining class is accessible, the error will suggest using the canonical name.
-            Otherwise, it will suggest adding <code>source_only_abi_deps</code>. {call buck.cmd_fix /}
-            will make whichever change is suggested by the error. For best
-            results, consider making the defining class accessible so that the extra deps are not
-            needed.
+            Otherwise, it will suggest adding <code>source_only_abi_deps</code> and {call buck.cmd_fix /} will 
+            make whichever change is suggested by the error. For best results, consider making the defining class 
+            accessible so that the extra dependencies are not needed.
           </p>
         </li>
         <li>
           <p>
-            <b>Superclass member types referenced unambiguously:</b> Any references to member types that
-            are inherited by the current class and will not be available during source-only ABI
-            generation must be at least partially qualified.
+            <b>Reference superclass member types unambiguously:</b> Any references to member types that are 
+            inherited by the current class and will not be available during source-only ABI generation must 
+            be at least partially qualified.
           </p>
           <p>
-            The error will suggest adding an import and partially qualifying the name, and
-            {call buck.cmd_fix /} will make the change.
+            The error will suggest adding an import and partially qualifying the name, and {call buck.cmd_fix /} will 
+            make this change.
           </p>
         </li>
         <li>
           <p>
-            <b>Enough deps for the compiler to run:</b> Source-only ABI generation involves
+            <b>Provide enough deps for the compiler to run:</b> Source-only ABI generation involves
             running the Java compiler front-end over a rule's code without providing most of
             that rule's dependencies, then working with the compiler's data model to generate
             the ABI. The compiler is remarkably resilient to missing dependencies, but in some cases
@@ -131,23 +159,22 @@
           <p>
             The error will suggest adding <code>source_only_abi_deps</code> to the rule so that
             the necessary dependencies will be available, and {call buck.cmd_fix /} will make
-            the change. For best results, limit the depth of class hierarchies (this is a best
-            practice for Java design in many cases as well) and avoid splitting them across
-            modules.
+            this change. For best results, limit the depth of class
+            hierarchies--which is a best practice for Java design in
+            many cases--and avoid splitting the class hierarchies across modules.
           </p>
         </li>
         <li>
           <p>
-            <b>Only single-type imports:</b> On-demand imports (star imports) and <code>static</code>
-            imports of types cannot be resolved at source-ABI generation time unless the rule
-            containing the type in question is available.
+            <b>Only single-type imports:</b> On-demand imports (star imports) and <code>static</code> imports of 
+            types cannot be resolved at source-ABI generation time unless the rule containing the type in question 
+            is available.
           </p>
           <p>
-            The error will suggest either adding a single-type import (in the case of star imports)
-            or adding <code>source_only_abi_deps</code> in the case of <code>static</code> imports,
-            and {call buck.cmd_fix /} will make that change. For best results, consider changing
-            <code>static</code> imports of types to non-static imports to avoid needing to
-            add the extra dependencies.
+            The error will suggest either adding a single-type import (in the case of star imports) or 
+            adding <code>source_only_abi_deps</code> in the case of <code>static</code> imports, 
+            and {call buck.cmd_fix /} will make that change. For best results, consider changing <code>static</code> imports 
+            of types to non-static imports to avoid needing to add the extra dependencies.
           </p>
         </li>
       </ul>
