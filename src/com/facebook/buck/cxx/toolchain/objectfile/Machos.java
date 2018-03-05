@@ -108,6 +108,10 @@ public class Machos {
     int segmentSizePosition = 0;
     int segmentSize = 0;
     boolean linkEditSegmentFound = false;
+    int segmentFileSizePosition = 0;
+    int segmentFileSize = 0;
+    int segment64FileSizePosition = 0;
+    long segment64FileSize = 0;
 
     int commandsCount = header.getCommandsCount();
     for (int i = 0; i < commandsCount; i++) {
@@ -131,8 +135,8 @@ public class Machos {
             /* vm address */ ObjectFileScrubbers.getLittleEndianInt(map);
             /* vm size */ ObjectFileScrubbers.getLittleEndianInt(map);
             /* segment file offset */ ObjectFileScrubbers.getLittleEndianInt(map);
-            int segmentFileSizePosition = map.position();
-            int segmentFileSize = ObjectFileScrubbers.getLittleEndianInt(map);
+            segmentFileSizePosition = map.position();
+            segmentFileSize = ObjectFileScrubbers.getLittleEndianInt(map);
             /* maximum vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
             /* initial vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
             /* number of sections */ ObjectFileScrubbers.getLittleEndianInt(map);
@@ -154,8 +158,8 @@ public class Machos {
             /* vm address */ ObjectFileScrubbers.getLittleEndianLong(map);
             /* vm size */ ObjectFileScrubbers.getLittleEndianLong(map);
             /* segment file offset */ ObjectFileScrubbers.getLittleEndianLong(map);
-            int segment64FileSizePosition = map.position();
-            long segment64FileSize = ObjectFileScrubbers.getLittleEndianLong(map);
+            segment64FileSizePosition = map.position();
+            segment64FileSize = ObjectFileScrubbers.getLittleEndianLong(map);
             /* maximum vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
             /* initial vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
             /* number of sections */ ObjectFileScrubbers.getLittleEndianInt(map);
