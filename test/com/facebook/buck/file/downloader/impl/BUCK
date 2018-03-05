@@ -3,6 +3,7 @@ load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 standard_java_test(
     name = "impl",
     deps = [
+        "//src/com/facebook/buck/android/toolchain:toolchain",
         "//src/com/facebook/buck/file/downloader/impl:impl",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/config:FakeBuckConfig",

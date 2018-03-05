@@ -21,6 +21,7 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_C
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.toolchain.DxToolchain;
+import com.facebook.buck.android.toolchain.ndk.impl.TestNdkCxxPlatformsProviderFactory;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -128,7 +129,8 @@ public class AndroidInstrumentationApkTest {
         (AndroidInstrumentationApk)
             new AndroidInstrumentationApkDescription(
                     new ToolchainProviderBuilder()
-                        .withDefaultNdkCxxPlatforms()
+                        .withToolchain(
+                            TestNdkCxxPlatformsProviderFactory.createDefaultNdkPlatformsProvider())
                         .withToolchain(
                             DxToolchain.DEFAULT_NAME,
                             DxToolchain.of(MoreExecutors.newDirectExecutorService()))

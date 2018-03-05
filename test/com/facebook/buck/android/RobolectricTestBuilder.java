@@ -21,6 +21,7 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_C
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.cxx.toolchain.TestCxxPlatformsProviderFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
@@ -38,7 +39,9 @@ public class RobolectricTestBuilder
 
   public static final AndroidLibraryCompilerFactory DEFAULT_ANDROID_COMPILER_FACTORY =
       new DefaultAndroidLibraryCompilerFactory(
-          new ToolchainProviderBuilder().withDefaultCxxPlatforms().build(),
+          new ToolchainProviderBuilder()
+              .withToolchain(TestCxxPlatformsProviderFactory.createDefaultCxxPlatformsProvider())
+              .build(),
           DEFAULT_JAVA_CONFIG,
           new ScalaBuckConfig(FakeBuckConfig.builder().build()),
           new KotlinBuckConfig(FakeBuckConfig.builder().build()));
@@ -47,7 +50,7 @@ public class RobolectricTestBuilder
     super(
         new RobolectricTestDescription(
             new ToolchainProviderBuilder()
-                .withDefaultCxxPlatforms()
+                .withToolchain(TestCxxPlatformsProviderFactory.createDefaultCxxPlatformsProvider())
                 .withToolchain(
                     JavacOptionsProvider.DEFAULT_NAME,
                     JavacOptionsProvider.of(ANDROID_JAVAC_OPTIONS))
@@ -64,7 +67,7 @@ public class RobolectricTestBuilder
     super(
         new RobolectricTestDescription(
             new ToolchainProviderBuilder()
-                .withDefaultCxxPlatforms()
+                .withToolchain(TestCxxPlatformsProviderFactory.createDefaultCxxPlatformsProvider())
                 .withToolchain(
                     JavacOptionsProvider.DEFAULT_NAME,
                     JavacOptionsProvider.of(ANDROID_JAVAC_OPTIONS))
@@ -83,7 +86,7 @@ public class RobolectricTestBuilder
     super(
         new RobolectricTestDescription(
             new ToolchainProviderBuilder()
-                .withDefaultCxxPlatforms()
+                .withToolchain(TestCxxPlatformsProviderFactory.createDefaultCxxPlatformsProvider())
                 .withToolchain(
                     JavacOptionsProvider.DEFAULT_NAME,
                     JavacOptionsProvider.of(ANDROID_JAVAC_OPTIONS))

@@ -23,6 +23,7 @@ java_library(
         "//test/com/facebook/buck/config:FakeBuckConfig",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/rules:testutil",
+        "//test/com/facebook/buck/toolchain/impl:testutil",
         "//third-party/java/guava:guava",
     ],
 )

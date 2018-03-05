@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.android.toolchain.ndk.impl.TestNdkCxxPlatformsProviderFactory;
 import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -70,7 +71,7 @@ public class NdkLibraryTest {
                 AndroidNdk.DEFAULT_NAME,
                 AndroidNdk.of(
                     "1", androidNdk, new FakeExecutableFinder(androidNdk.resolve("ndk-build"))))
-            .withDefaultNdkCxxPlatforms()
+            .withToolchain(TestNdkCxxPlatformsProviderFactory.createDefaultNdkPlatformsProvider())
             .build();
 
     String basePath = "java/src/com/facebook/base";
