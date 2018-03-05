@@ -119,7 +119,7 @@ public class LocalBuildExecutor implements BuildExecutor {
   @Override
   public int buildLocallyAndReturnExitCode(
       Iterable<String> targetToBuildStrings, Optional<Path> pathToBuildReport)
-      throws IOException, InterruptedException {
+      throws InterruptedException {
     Preconditions.checkArgument(!isShutdown);
     try {
       return build.executeAndPrintFailuresToEventBus(
@@ -166,7 +166,7 @@ public class LocalBuildExecutor implements BuildExecutor {
   }
 
   @Override
-  public synchronized void shutdown() throws IOException {
+  public synchronized void shutdown() {
     if (isShutdown) {
       return;
     }
@@ -235,9 +235,9 @@ public class LocalBuildExecutor implements BuildExecutor {
    */
   public static ExecutionContext createExecutionContext(BuildExecutorArgs args) {
     // TODO(shivanker): Fix this for stampede to be able to build android.
-    final ConcurrencyLimit concurrencyLimit =
+    ConcurrencyLimit concurrencyLimit =
         args.getBuckConfig().getView(ResourcesConfig.class).getConcurrencyLimit();
-    final DefaultProcessExecutor processExecutor = new DefaultProcessExecutor(args.getConsole());
+    DefaultProcessExecutor processExecutor = new DefaultProcessExecutor(args.getConsole());
 
     return ExecutionContext.builder()
         .setConsole(args.getConsole())

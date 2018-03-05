@@ -137,8 +137,7 @@ public class Build implements Closeable {
       Iterable<BuildTarget> targetsish,
       BuckEventBus eventBus,
       Console console,
-      Optional<Path> pathToBuildReport)
-      throws InterruptedException {
+      Optional<Path> pathToBuildReport) {
     int exitCode;
 
     ImmutableList<BuildRule> rulesToBuild = getRulesToBuild(targetsish);
