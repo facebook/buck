@@ -34,6 +34,7 @@ import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -85,6 +86,9 @@ public abstract class DefaultJavaLibraryRules {
 
   @org.immutables.builder.Builder.Parameter
   abstract ProjectFilesystem getProjectFilesystem();
+
+  @org.immutables.builder.Builder.Parameter
+  abstract ToolchainProvider getToolchainProvider();
 
   @org.immutables.builder.Builder.Parameter
   abstract BuildRuleParams getInitialParams();
@@ -537,7 +541,8 @@ public abstract class DefaultJavaLibraryRules {
             getProjectFilesystem(),
             getArgs(),
             getJavacOptions(),
-            getBuildRuleResolver());
+            getBuildRuleResolver(),
+            getToolchainProvider());
   }
 
   @Value.Lazy
@@ -549,7 +554,8 @@ public abstract class DefaultJavaLibraryRules {
             getProjectFilesystem(),
             getArgs(),
             getJavacOptionsForSourceOnlyAbi(),
-            getBuildRuleResolver());
+            getBuildRuleResolver(),
+            getToolchainProvider());
   }
 
   @Value.Lazy
@@ -681,6 +687,7 @@ public abstract class DefaultJavaLibraryRules {
     public Builder(
         BuildTarget initialBuildTarget,
         ProjectFilesystem projectFilesystem,
+        ToolchainProvider toolchainProvider,
         BuildRuleParams initialParams,
         BuildRuleResolver buildRuleResolver,
         CellPathResolver cellPathResolver,
@@ -690,6 +697,7 @@ public abstract class DefaultJavaLibraryRules {
       super(
           initialBuildTarget,
           projectFilesystem,
+          toolchainProvider,
           initialParams,
           buildRuleResolver,
           cellPathResolver,

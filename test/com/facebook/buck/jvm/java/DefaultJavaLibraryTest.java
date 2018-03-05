@@ -73,6 +73,7 @@ import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
@@ -1228,6 +1229,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         DefaultJavaLibrary.rulesBuilder(
                 buildTarget,
                 filesystem,
+                new ToolchainProviderBuilder().build(),
                 buildRuleParams,
                 ruleResolver,
                 TestCellBuilder.createCellRoots(filesystem),
@@ -1522,6 +1524,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
           DefaultJavaLibrary.rulesBuilder(
                   buildTarget,
                   projectFilesystem,
+                  new ToolchainProviderBuilder().build(),
                   buildRuleParams,
                   ruleResolver,
                   TestCellBuilder.createCellRoots(projectFilesystem),

@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.toolchain.ToolchainProvider;
 
 final class KotlinLibraryBuilder {
   private KotlinLibraryBuilder() {}
@@ -30,6 +31,7 @@ final class KotlinLibraryBuilder {
   public static DefaultJavaLibraryRules.Builder newInstance(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      ToolchainProvider toolchainProvider,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellPathResolver,
@@ -39,6 +41,7 @@ final class KotlinLibraryBuilder {
     return new DefaultJavaLibraryRules.Builder(
         buildTarget,
         projectFilesystem,
+        toolchainProvider,
         params,
         buildRuleResolver,
         cellPathResolver,

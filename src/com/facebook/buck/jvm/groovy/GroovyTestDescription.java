@@ -91,6 +91,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescriptionA
         new DefaultJavaLibraryRules.Builder(
                 testsLibraryBuildTarget,
                 projectFilesystem,
+                context.getToolchainProvider(),
                 params,
                 resolver,
                 cellRoots,

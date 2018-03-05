@@ -167,6 +167,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             DefaultJavaLibrary.rulesBuilder(
                     testLibraryBuildTarget,
                     projectFilesystem,
+                    context.getToolchainProvider(),
                     params,
                     resolver,
                     cellRoots,

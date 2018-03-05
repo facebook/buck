@@ -44,6 +44,7 @@ import com.facebook.buck.rules.SupportsPipelining;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.annotations.VisibleForTesting;
@@ -128,6 +129,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   public static DefaultJavaLibraryRules.Builder rulesBuilder(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      ToolchainProvider toolchainProvider,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellPathResolver,
@@ -137,6 +139,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     return new DefaultJavaLibraryRules.Builder(
         buildTarget,
         projectFilesystem,
+        toolchainProvider,
         params,
         buildRuleResolver,
         cellPathResolver,

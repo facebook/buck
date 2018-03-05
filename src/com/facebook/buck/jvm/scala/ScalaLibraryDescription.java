@@ -80,6 +80,7 @@ public class ScalaLibraryDescription
         ScalaLibraryBuilder.newInstance(
                 buildTarget,
                 context.getProjectFilesystem(),
+                context.getToolchainProvider(),
                 rawParams,
                 context.getBuildRuleResolver(),
                 context.getCellPathResolver(),

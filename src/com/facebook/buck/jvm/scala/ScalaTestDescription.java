@@ -110,6 +110,7 @@ public class ScalaTestDescription
         ScalaLibraryBuilder.newInstance(
                 javaLibraryBuildTarget,
                 projectFilesystem,
+                context.getToolchainProvider(),
                 params,
                 resolver,
                 cellRoots,

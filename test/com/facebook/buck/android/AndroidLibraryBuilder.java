@@ -40,14 +40,7 @@ public class AndroidLibraryBuilder
 
   private static final AndroidLibraryCompilerFactory JAVA_ONLY_COMPILER_FACTORY =
       language ->
-          new JavaConfiguredCompilerFactory(
-              DEFAULT_JAVA_CONFIG,
-              new AndroidClasspathProvider(
-                  new ToolchainProviderBuilder()
-                      .withToolchain(
-                          AndroidPlatformTarget.DEFAULT_NAME,
-                          TestAndroidPlatformTargetFactory.create())
-                      .build()));
+          new JavaConfiguredCompilerFactory(DEFAULT_JAVA_CONFIG, AndroidClasspathProvider::new);
 
   private AndroidLibraryBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
     super(
@@ -56,6 +49,8 @@ public class AndroidLibraryBuilder
                 .withToolchain(
                     JavacOptionsProvider.DEFAULT_NAME,
                     JavacOptionsProvider.of(ANDROID_JAVAC_OPTIONS))
+                .withToolchain(
+                    AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
                 .build(),
             javaBuckConfig,
             JAVA_ONLY_COMPILER_FACTORY),
