@@ -130,7 +130,7 @@ public class Machos {
             linkEditSegmentFound = true;
             /* vm address */ ObjectFileScrubbers.getLittleEndianInt(map);
             /* vm size */ ObjectFileScrubbers.getLittleEndianInt(map);
-            int segmentFileOffset = ObjectFileScrubbers.getLittleEndianInt(map);
+            /* segment file offset */ ObjectFileScrubbers.getLittleEndianInt(map);
             int segmentFileSizePosition = map.position();
             int segmentFileSize = ObjectFileScrubbers.getLittleEndianInt(map);
             /* maximum vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
@@ -153,7 +153,7 @@ public class Machos {
             linkEditSegmentFound = true;
             /* vm address */ ObjectFileScrubbers.getLittleEndianLong(map);
             /* vm size */ ObjectFileScrubbers.getLittleEndianLong(map);
-            long segment64FileOffset = ObjectFileScrubbers.getLittleEndianLong(map);
+            /* segment file offset */ ObjectFileScrubbers.getLittleEndianLong(map);
             int segment64FileSizePosition = map.position();
             long segment64FileSize = ObjectFileScrubbers.getLittleEndianLong(map);
             /* maximum vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
