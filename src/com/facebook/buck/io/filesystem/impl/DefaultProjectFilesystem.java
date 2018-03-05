@@ -131,7 +131,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
 
   public DefaultProjectFilesystem(
       FileSystem vfs,
-      final Path root,
+      Path root,
       ImmutableSet<PathOrGlobMatcher> blackListedPaths,
       BuckPaths buckPaths,
       ProjectFilesystemDelegate delegate,
@@ -378,8 +378,8 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
    * project root.
    */
   @Override
-  public void walkRelativeFileTree(
-      Path pathRelativeToProjectRoot, final FileVisitor<Path> fileVisitor) throws IOException {
+  public void walkRelativeFileTree(Path pathRelativeToProjectRoot, FileVisitor<Path> fileVisitor)
+      throws IOException {
     walkRelativeFileTree(pathRelativeToProjectRoot, fileVisitor, true);
   }
 
@@ -398,7 +398,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   public void walkRelativeFileTree(
       Path pathRelativeToProjectRoot,
       EnumSet<FileVisitOption> visitOptions,
-      final FileVisitor<Path> fileVisitor)
+      FileVisitor<Path> fileVisitor)
       throws IOException {
     walkRelativeFileTree(pathRelativeToProjectRoot, visitOptions, fileVisitor, true);
   }
@@ -482,10 +482,10 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   @Override
   public ImmutableSet<Path> getFilesUnderPath(
       Path pathRelativeToProjectRoot,
-      final Predicate<Path> predicate,
+      Predicate<Path> predicate,
       EnumSet<FileVisitOption> visitOptions)
       throws IOException {
-    final ImmutableSet.Builder<Path> paths = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> paths = ImmutableSet.builder();
     walkRelativeFileTree(
         pathRelativeToProjectRoot,
         visitOptions,
@@ -924,11 +924,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
       return false;
     }
 
-    if (!Objects.equals(blackListedPaths, that.blackListedPaths)) {
-      return false;
-    }
-
-    return true;
+    return Objects.equals(blackListedPaths, that.blackListedPaths);
   }
 
   @Override

@@ -38,7 +38,7 @@ import com.google.common.eventbus.Subscribe;
 public class WebServerBuckEventListener implements BuckEventListener {
   private final StreamingWebSocketServlet streamingWebSocketServlet;
 
-  WebServerBuckEventListener(final WebServer webServer) {
+  WebServerBuckEventListener(WebServer webServer) {
     this.streamingWebSocketServlet = webServer.getStreamingWebSocketServlet();
   }
 

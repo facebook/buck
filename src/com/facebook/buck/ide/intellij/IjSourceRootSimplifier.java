@@ -359,8 +359,7 @@ public class IjSourceRootSimplifier {
         return Optional.empty();
       }
 
-      final Path resourcesRoot =
-          ijResourceFolderType.getResourcesRootFromFolder(childrenToMerge.get(0));
+      Path resourcesRoot = ijResourceFolderType.getResourcesRootFromFolder(childrenToMerge.get(0));
 
       // If merging would recurse above resources_root, don't merge.
       if (resourcesRoot != null

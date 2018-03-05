@@ -81,7 +81,7 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
-      final Tool haddockTool,
+      Tool haddockTool,
       ImmutableList<String> flags,
       ImmutableSet<HaskellHaddockInput> inputs) {
     ImmutableSet.Builder<SourcePath> ifacesBuilder = ImmutableSet.builder();

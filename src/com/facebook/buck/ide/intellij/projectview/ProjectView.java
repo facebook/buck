@@ -436,7 +436,7 @@ public class ProjectView {
    */
   private Set<String> generateRoots(List<String> sourceFiles) {
     // Setup: Get a sorted (so that a, a/b, and a/c are all together) list of source paths
-    final RootsHelper helper = new RootsHelper();
+    RootsHelper helper = new RootsHelper();
 
     for (String sourceFile : sourceFiles) {
       String path = dirname(sourceFile);
@@ -444,13 +444,13 @@ public class ProjectView {
         helper.addSourcePath(path);
       }
     }
-    final List<String> paths = helper.getSortedSourcePaths();
+    List<String> paths = helper.getSortedSourcePaths();
 
     // First pass: Build the candidate map
-    final Set<String> candidates = new HashSet<>();
-    final String[] candidateMap = new String[paths.size()]; // paths' index -> candidate
+    Set<String> candidates = new HashSet<>();
+    String[] candidateMap = new String[paths.size()]; // paths' index -> candidate
     for (int index = 0, size = paths.size(); index < size; /*increment in loop*/ ) {
-      final String path = pathWithBuck(paths.get(index));
+      String path = pathWithBuck(paths.get(index));
       if (path == null) {
         index += 1;
         continue;
@@ -478,9 +478,9 @@ public class ProjectView {
     }
 
     // Second pass: Possibly replace candidates with ancestors
-    final Set<String> roots = new HashSet<>();
+    Set<String> roots = new HashSet<>();
     for (int index = 0, size = paths.size(); index < size; /*increment in loop*/ ) {
-      final String candidate = candidateMap[index];
+      String candidate = candidateMap[index];
       if (candidate == null) {
         index += 1;
         continue;
@@ -871,7 +871,7 @@ public class ProjectView {
 
   private void writeRootDotIml(
       List<String> sourceFiles, Set<String> roots, List<String> libraries) {
-    final String configuredBuckOutAsString = configuredBuckOut.toString();
+    String configuredBuckOutAsString = configuredBuckOut.toString();
     String buckOut = fileJoin(viewPath, configuredBuckOutAsString);
     symlink(fileJoin(repository, configuredBuckOutAsString), buckOut);
 
@@ -1149,7 +1149,7 @@ public class ProjectView {
   }
 
   private Collection<String> pruneListOfAnnotationAndGeneratedFolders(List<String> folders) {
-    final int buckOutNameCount = configuredBuckOut.getNameCount();
+    int buckOutNameCount = configuredBuckOut.getNameCount();
     Set<String> prunedPaths = new HashSet<>();
 
     for (String folder : folders) {

@@ -165,8 +165,8 @@ public class MorePaths {
    * Filters out {@link Path} objects from {@code paths} that aren't a subpath of {@code root} and
    * returns a set of paths relative to {@code root}.
    */
-  public static ImmutableSet<Path> filterForSubpaths(Iterable<Path> paths, final Path root) {
-    final Path normalizedRoot = root.toAbsolutePath().normalize();
+  public static ImmutableSet<Path> filterForSubpaths(Iterable<Path> paths, Path root) {
+    Path normalizedRoot = root.toAbsolutePath().normalize();
     return FluentIterable.from(paths)
         .filter(
             input -> {
@@ -199,7 +199,7 @@ public class MorePaths {
     return homePath.resolve(path.subpath(1, path.getNameCount()));
   }
 
-  public static ByteSource asByteSource(final Path path) {
+  public static ByteSource asByteSource(Path path) {
     return new ByteSource() {
       @Override
       public InputStream openStream() throws IOException {
@@ -245,7 +245,7 @@ public class MorePaths {
     return Optional.of(p.subpath(prefix.getNameCount(), p.getNameCount()));
   }
 
-  public static Function<String, Path> toPathFn(final FileSystem fileSystem) {
+  public static Function<String, Path> toPathFn(FileSystem fileSystem) {
     return input -> fileSystem.getPath(input);
   }
 

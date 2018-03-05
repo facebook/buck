@@ -104,14 +104,13 @@ public final class MostFiles {
   }
 
   /** Recursively copies all files under {@code fromPath} to {@code toPath}. */
-  public static void copyRecursively(final Path fromPath, final Path toPath) throws IOException {
+  public static void copyRecursively(Path fromPath, Path toPath) throws IOException {
     copyRecursively(fromPath, toPath, Functions.identity());
   }
 
   /** Recursively copies all files under {@code fromPath} to {@code toPath}. */
   public static void copyRecursivelyWithFilter(
-      final Path fromPath, final Path toPath, final Function<Path, Boolean> filter)
-      throws IOException {
+      Path fromPath, Path toPath, Function<Path, Boolean> filter) throws IOException {
     copyRecursively(fromPath, toPath, Functions.identity(), filter);
   }
 
@@ -125,17 +124,13 @@ public final class MostFiles {
    * @param transform renaming function to apply when copying. If this function returns null, then
    *     the file is not copied.
    */
-  public static void copyRecursively(
-      final Path fromPath, final Path toPath, final Function<Path, Path> transform)
+  public static void copyRecursively(Path fromPath, Path toPath, Function<Path, Path> transform)
       throws IOException {
     copyRecursively(fromPath, toPath, transform, input -> true);
   }
 
   public static void copyRecursively(
-      final Path fromPath,
-      final Path toPath,
-      final Function<Path, Path> transform,
-      final Function<Path, Boolean> filter)
+      Path fromPath, Path toPath, Function<Path, Path> transform, Function<Path, Boolean> filter)
       throws IOException {
     // Adapted from http://codingjunkie.net/java-7-copy-move/.
     SimpleFileVisitor<Path> copyDirVisitor =
@@ -173,12 +168,12 @@ public final class MostFiles {
     Files.walkFileTree(fromPath, copyDirVisitor);
   }
 
-  public static void deleteRecursively(final Path path) throws IOException {
+  public static void deleteRecursively(Path path) throws IOException {
     deleteRecursivelyWithOptions(path, EnumSet.noneOf(DeleteRecursivelyOptions.class));
   }
 
   public static void deleteRecursivelyWithOptions(
-      final Path path, final EnumSet<DeleteRecursivelyOptions> options) throws IOException {
+      Path path, EnumSet<DeleteRecursivelyOptions> options) throws IOException {
     try {
       // Adapted from http://codingjunkie.net/java-7-copy-move/.
       SimpleFileVisitor<Path> deleteDirVisitor =
@@ -329,7 +324,7 @@ public final class MostFiles {
       throws IOException {
     // Concatenate all the logs to a temp file, then atomically rename it to the
     // passed-in concatenatedPath if any log data was collected.
-    String tempFilename = "." + dest.getFileName() + ".tmp." + UUID.randomUUID().toString();
+    String tempFilename = "." + dest.getFileName() + ".tmp." + UUID.randomUUID();
     Path tempPath = dest.resolveSibling(tempFilename);
 
     try {

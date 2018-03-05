@@ -64,8 +64,8 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
     return queryListWithTimeout(timeoutNanos, ImmutableList.copyOf(query));
   }
 
-  private Optional<Map<String, Object>> queryListWithTimeout(
-      long timeoutNanos, final List<Object> query) throws IOException, InterruptedException {
+  private Optional<Map<String, Object>> queryListWithTimeout(long timeoutNanos, List<Object> query)
+      throws IOException, InterruptedException {
     ListenableFuture<Optional<Map<String, Object>>> future =
         listeningExecutorService.submit(() -> sendWatchmanQuery(query));
     try {

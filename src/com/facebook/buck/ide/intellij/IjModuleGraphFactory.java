@@ -62,7 +62,7 @@ public final class IjModuleGraphFactory {
       TargetGraph targetGraph,
       IjModuleFactory moduleFactory,
       AggregationModuleFactory aggregationModuleFactory,
-      final int minimumPathDepth,
+      int minimumPathDepth,
       ImmutableSet<String> ignoredTargetLabels) {
 
     Stream<TargetNode<?, ?>> nodes =
@@ -162,11 +162,11 @@ public final class IjModuleGraphFactory {
   }
 
   private static ImmutableSet<IjProjectElement> getProjectElementFromBuildTargets(
-      final TargetGraph targetGraph,
-      final IjLibraryFactory libraryFactory,
-      final ImmutableMap<BuildTarget, IjModule> rulesToModules,
-      final IjModule module,
-      final Stream<BuildTarget> buildTargetStream) {
+      TargetGraph targetGraph,
+      IjLibraryFactory libraryFactory,
+      ImmutableMap<BuildTarget, IjModule> rulesToModules,
+      IjModule module,
+      Stream<BuildTarget> buildTargetStream) {
     return buildTargetStream
         .filter(
             input -> {
@@ -205,14 +205,14 @@ public final class IjModuleGraphFactory {
    *     and Ma contains Ta and Mb contains Tb.
    */
   public static IjModuleGraph from(
-      final ProjectFilesystem projectFilesystem,
-      final IjProjectConfig projectConfig,
-      final TargetGraph targetGraph,
-      final IjLibraryFactory libraryFactory,
-      final IjModuleFactory moduleFactory,
-      final AggregationModuleFactory aggregationModuleFactory) {
+      ProjectFilesystem projectFilesystem,
+      IjProjectConfig projectConfig,
+      TargetGraph targetGraph,
+      IjLibraryFactory libraryFactory,
+      IjModuleFactory moduleFactory,
+      AggregationModuleFactory aggregationModuleFactory) {
     ImmutableSet<String> ignoredTargetLabels = projectConfig.getIgnoredTargetLabels();
-    final ImmutableMap<BuildTarget, IjModule> rulesToModules =
+    ImmutableMap<BuildTarget, IjModule> rulesToModules =
         createModules(
             projectFilesystem,
             projectConfig,
@@ -221,16 +221,16 @@ public final class IjModuleGraphFactory {
             aggregationModuleFactory,
             projectConfig.getAggregationMode().getGraphMinimumDepth(targetGraph.getNodes().size()),
             ignoredTargetLabels);
-    final ExportedDepsClosureResolver exportedDepsClosureResolver =
+    ExportedDepsClosureResolver exportedDepsClosureResolver =
         new ExportedDepsClosureResolver(targetGraph, ignoredTargetLabels);
-    final TransitiveDepsClosureResolver transitiveDepsClosureResolver =
+    TransitiveDepsClosureResolver transitiveDepsClosureResolver =
         new TransitiveDepsClosureResolver(targetGraph, ignoredTargetLabels);
     ImmutableMap.Builder<IjProjectElement, ImmutableMap<IjProjectElement, DependencyType>>
         depsBuilder = ImmutableMap.builder();
-    final Set<IjLibrary> referencedLibraries = new HashSet<>();
+    Set<IjLibrary> referencedLibraries = new HashSet<>();
     Optional<Path> extraCompileOutputRootPath = projectConfig.getExtraCompilerOutputModulesPath();
 
-    for (final IjModule module : ImmutableSet.copyOf(rulesToModules.values())) {
+    for (IjModule module : ImmutableSet.copyOf(rulesToModules.values())) {
       Map<IjProjectElement, DependencyType> moduleDeps = new LinkedHashMap<>();
 
       for (Map.Entry<BuildTarget, DependencyType> entry : module.getDependencies().entrySet()) {

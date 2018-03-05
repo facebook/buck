@@ -35,11 +35,11 @@ public abstract class LazyPath {
    * @param path The path that get()/getUnchecked() methods should return.
    * @return Instance that always returns the given path. It means there is no laziness.
    */
-  public static LazyPath ofInstance(final Path path) {
+  public static LazyPath ofInstance(Path path) {
     LazyPath instance =
         new LazyPath() {
           @Override
-          protected Path create() throws IOException {
+          protected Path create() {
             return path;
           }
         };
@@ -64,7 +64,7 @@ public abstract class LazyPath {
           exception = Optional.of(e);
           LOG.warn(
               "Failed to initialize lazy path, exception: "
-                  + e.toString()
+                  + e
                   + "\n"
                   + "StackTrace: "
                   + Throwables.getStackTraceAsString(e));
@@ -103,7 +103,7 @@ public abstract class LazyPath {
           return "Lazy path uninitialized";
         } else {
           return "Lazy path failed to initialize: "
-              + exception.get().toString()
+              + exception.get()
               + "\n"
               + "Stacktrace: \n"
               + Throwables.getStackTraceAsString(exception.get());

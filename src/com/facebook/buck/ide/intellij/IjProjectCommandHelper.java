@@ -39,7 +39,6 @@ import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -227,7 +226,7 @@ public class IjProjectCommandHelper {
 
   private TargetGraph getProjectGraphForIde(
       ListeningExecutorService executor, ImmutableSet<BuildTarget> passedInTargets)
-      throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
+      throws InterruptedException, BuildFileParseException, IOException {
 
     if (passedInTargets.isEmpty()) {
       return parser
@@ -247,7 +246,7 @@ public class IjProjectCommandHelper {
   }
 
   /** Run intellij specific project generation actions. */
-  private ExitCode runIntellijProjectGenerator(final TargetGraphAndTargets targetGraphAndTargets)
+  private ExitCode runIntellijProjectGenerator(TargetGraphAndTargets targetGraphAndTargets)
       throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> requiredBuildTargets =
         writeProjectAndGetRequiredBuildTargets(targetGraphAndTargets);
@@ -321,7 +320,7 @@ public class IjProjectCommandHelper {
   }
 
   private ImmutableSet<BuildTarget> getTargetsWithAnnotations(
-      final TargetGraph targetGraph, ImmutableSet<BuildTarget> buildTargets) {
+      TargetGraph targetGraph, ImmutableSet<BuildTarget> buildTargets) {
     return buildTargets
         .stream()
         .filter(
@@ -381,8 +380,7 @@ public class IjProjectCommandHelper {
       ImmutableSet<BuildTarget> graphRoots,
       boolean needsFullRecursiveParse,
       ListeningExecutorService executor)
-      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
-          VersionException {
+      throws IOException, InterruptedException, BuildFileParseException, VersionException {
 
     boolean isWithTests = isWithTests();
     ImmutableSet<BuildTarget> explicitTestTargets = ImmutableSet.of();

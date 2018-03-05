@@ -67,7 +67,7 @@ public class AsynchronousDirectoryContentsCleaner {
    * <p>Multiple calls to this method will be serialized, so only one instance of directory cleaning
    * will occur at a time.
    */
-  public void startCleaningDirectory(final Path pathToClean) {
+  public void startCleaningDirectory(Path pathToClean) {
     executor.execute(
         () -> {
           LOG.debug("Starting to clean %s", pathToClean);

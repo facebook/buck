@@ -392,7 +392,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
       }
 
-      pkgdirs.add("${DIR}/" + dir.relativize(pkgdir.resolve(pkgDbSrc.getFileName())).toString());
+      pkgdirs.add("${DIR}/" + dir.relativize(pkgdir.resolve(pkgDbSrc.getFileName())));
     }
 
     ImmutableSet.Builder<String> exposedPkgs = ImmutableSet.builder();
@@ -497,7 +497,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
         steps.add(CopyStep.forFile(getProjectFilesystem(), resolver.getRelativePath(sp), bin));
 
-        ghcPath = "${DIR}/" + dir.relativize(bin).toString() + " -B" + ghciLib.toRealPath();
+        ghcPath = "${DIR}/" + dir.relativize(bin) + " -B" + ghciLib.toRealPath();
       } else {
         ghcPath = ghciGhc.toRealPath().toString();
       }

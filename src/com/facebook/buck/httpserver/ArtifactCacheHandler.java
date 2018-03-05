@@ -35,7 +35,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.Optional;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Request;
@@ -60,7 +59,7 @@ public class ArtifactCacheHandler extends AbstractHandler {
   @Override
   public void handle(
       String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
-      throws IOException, ServletException {
+      throws IOException {
     try {
       int status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
       String method = baseRequest.getMethod();
@@ -107,7 +106,7 @@ public class ArtifactCacheHandler extends AbstractHandler {
         return HttpServletResponse.SC_NOT_FOUND;
       }
 
-      final Path tempFinal = temp;
+      Path tempFinal = temp;
       HttpArtifactCacheBinaryProtocol.FetchResponse fetchResponse =
           new HttpArtifactCacheBinaryProtocol.FetchResponse(
               ImmutableSet.of(ruleKey),

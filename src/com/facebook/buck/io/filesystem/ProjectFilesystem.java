@@ -125,7 +125,7 @@ public interface ProjectFilesystem {
    * Similar to {@link #walkFileTree(Path, FileVisitor)} except this takes in a path relative to the
    * project root.
    */
-  void walkRelativeFileTree(Path pathRelativeToProjectRoot, final FileVisitor<Path> fileVisitor)
+  void walkRelativeFileTree(Path pathRelativeToProjectRoot, FileVisitor<Path> fileVisitor)
       throws IOException;
 
   /**
@@ -140,7 +140,7 @@ public interface ProjectFilesystem {
   void walkRelativeFileTree(
       Path pathRelativeToProjectRoot,
       EnumSet<FileVisitOption> visitOptions,
-      final FileVisitor<Path> fileVisitor)
+      FileVisitor<Path> fileVisitor)
       throws IOException;
 
   /** Walks a project-root relative file tree with a visitor and visit options. */
@@ -168,7 +168,7 @@ public interface ProjectFilesystem {
 
   ImmutableSet<Path> getFilesUnderPath(
       Path pathRelativeToProjectRoot,
-      final Predicate<Path> predicate,
+      Predicate<Path> predicate,
       EnumSet<FileVisitOption> visitOptions)
       throws IOException;
 
