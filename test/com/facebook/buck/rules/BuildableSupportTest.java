@@ -36,9 +36,7 @@ public class BuildableSupportTest {
   public void testDeriveDepsFromAddsToRuleKeys() throws Exception {
     BuildTarget target = BuildTarget.of(Paths.get("some"), "//some", "name");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     BuildRule rule1 = makeRule(target, filesystem, "rule1");
     BuildRule rule2 = makeRule(target, filesystem, "rule2");
     BuildRule rule3 = makeRule(target, filesystem, "rule3");

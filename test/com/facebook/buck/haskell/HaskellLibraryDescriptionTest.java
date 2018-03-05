@@ -32,12 +32,11 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -63,9 +62,7 @@ public class HaskellLibraryDescriptionTest {
     HaskellLibraryBuilder builder =
         new HaskellLibraryBuilder(target).setCompilerFlags(ImmutableList.of(flag));
     BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraphFactory.newInstance(builder.build()),
-            new DefaultTargetNodeToBuildRuleTransformer());
+        new TestBuildRuleResolver(TargetGraphFactory.newInstance(builder.build()));
     HaskellLibrary library = builder.build(resolver);
     library.getCompileInput(
         HaskellTestUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
@@ -78,9 +75,7 @@ public class HaskellLibraryDescriptionTest {
 
   @Test
   public void targetsAndOutputsAreDifferentBetweenLinkStyles() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraphFactory.newInstance(), new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(TargetGraphFactory.newInstance());
     BuildTarget baseTarget = BuildTargetFactory.newInstance("//:rule");
 
     BuildRule staticLib =
@@ -125,9 +120,7 @@ public class HaskellLibraryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     HaskellLibraryBuilder builder = new HaskellLibraryBuilder(target).setLinkWhole(true);
     BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraphFactory.newInstance(builder.build()),
-            new DefaultTargetNodeToBuildRuleTransformer());
+        new TestBuildRuleResolver(TargetGraphFactory.newInstance(builder.build()));
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     HaskellLibrary library = builder.build(resolver);
@@ -167,9 +160,7 @@ public class HaskellLibraryDescriptionTest {
 
   @Test
   public void preferredLinkage() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraphFactory.newInstance(), new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(TargetGraphFactory.newInstance());
 
     // Test default value.
     HaskellLibrary defaultLib =
@@ -222,9 +213,7 @@ public class HaskellLibraryDescriptionTest {
                 SourceList.ofUnnamedSources(ImmutableSortedSet.of(FakeSourcePath.of("Test.hs"))))
             .setLinkWhole(true);
     BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraphFactory.newInstance(builder.build()),
-            new DefaultTargetNodeToBuildRuleTransformer());
+        new TestBuildRuleResolver(TargetGraphFactory.newInstance(builder.build()));
     HaskellLibrary library = builder.build(resolver);
 
     // Test static dep type.
@@ -267,9 +256,7 @@ public class HaskellLibraryDescriptionTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             depABuilder.build(), depBBuilder.build(), ruleBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     HaskellLibrary depA = (HaskellLibrary) resolver.requireRule(depABuilder.getTarget());
     HaskellLibrary depB = (HaskellLibrary) resolver.requireRule(depBBuilder.getTarget());
     HaskellLibrary rule = (HaskellLibrary) resolver.requireRule(ruleBuilder.getTarget());

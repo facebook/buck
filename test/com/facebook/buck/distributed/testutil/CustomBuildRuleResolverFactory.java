@@ -24,13 +24,11 @@ import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -58,9 +56,7 @@ public class CustomBuildRuleResolverFactory {
   public static final String HAS_RUNTIME_DEP_RULE = "//:runtime_dep";
 
   public static BuildRuleResolver createSimpleResolver() throws NoSuchBuildTargetException {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     ImmutableSortedSet<BuildRule> buildRules =
         ImmutableSortedSet.of(
             JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance(ROOT_TARGET))
@@ -77,9 +73,7 @@ public class CustomBuildRuleResolverFactory {
   //        \ left  /
   public static BuildRuleResolver createDiamondDependencyResolver()
       throws NoSuchBuildTargetException {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
 
     BuildTarget root = BuildTargetFactory.newInstance(ROOT_TARGET);
     BuildTarget left = BuildTargetFactory.newInstance(LEFT_TARGET);
@@ -102,9 +96,7 @@ public class CustomBuildRuleResolverFactory {
   //        \ left  /
   public static BuildRuleResolver createDiamondDependencyResolverWithChainFromLeaf()
       throws NoSuchBuildTargetException {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
 
     BuildTarget root = BuildTargetFactory.newInstance(ROOT_TARGET);
     BuildTarget left = BuildTargetFactory.newInstance(LEFT_TARGET);
@@ -126,9 +118,7 @@ public class CustomBuildRuleResolverFactory {
   // Graph structure
   //  cacheable_a -> uncacheable_b
   public static BuildRuleResolver createBuildGraphWithUncachableLeaf() {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
 
     BuildRule uncacheableB =
         newUncacheableRule(resolver, CustomBuildRuleResolverFactory.UNCACHABLE_B);
@@ -142,9 +132,7 @@ public class CustomBuildRuleResolverFactory {
   // uncacheable_root                                  uc_d -> c_b -> uc_e -> c_c
   //                 \ uncacheable_c -> cacheable_a   /
   public static BuildRuleResolver createBuildGraphWithInterleavedUncacheables() {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
 
     // uncacheable_d -> cacheable_b -> uncacheable_e
     BuildRule cacheableC = newCacheableRule(resolver, CustomBuildRuleResolverFactory.CACHABLE_C);
@@ -194,9 +182,7 @@ public class CustomBuildRuleResolverFactory {
 
   public static BuildRuleResolver createSimpleRuntimeDepsResolver() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
 
     // Create a regular build rule
     BuildTarget buildTarget = BuildTargetFactory.newInstance(TRANSITIVE_DEP_RULE);
@@ -224,9 +210,7 @@ public class CustomBuildRuleResolverFactory {
   //                  \
   //                   {uncacheable b (runtime), cacheable c (runtime)}
   public static BuildRuleResolver createResolverWithUncacheableRuntimeDeps() {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
 
     BuildTarget root = BuildTargetFactory.newInstance(ROOT_TARGET);
     BuildTarget left = BuildTargetFactory.newInstance(LEFT_TARGET);

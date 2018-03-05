@@ -30,11 +30,9 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.FluentIterable;
@@ -128,9 +126,7 @@ public class GoDescriptorsTest {
 
   @Test
   public void testBuildRuleAsSrcAddsRuleToDependencies() {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
 
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpPath.getRoot());
@@ -184,9 +180,7 @@ public class GoDescriptorsTest {
 
   @Test
   public void testBuildRuleAsSrcAddsRuleToDependenciesOfBinary() {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
 
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpPath.getRoot());

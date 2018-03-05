@@ -415,6 +415,6 @@ public class ActionGraphNodeCacheTest {
 
   private BuildRuleResolver createBuildRuleResolver(TargetGraph targetGraph) {
     return new SingleThreadedBuildRuleResolver(
-        targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        targetGraph, new DefaultTargetNodeToBuildRuleTransformer(), null);
   }
 }

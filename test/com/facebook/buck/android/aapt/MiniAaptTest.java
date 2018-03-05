@@ -29,12 +29,10 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
@@ -68,10 +66,7 @@ public class MiniAaptTest {
 
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
   private final SourcePathResolver resolver =
-      DefaultSourcePathResolver.from(
-          new SourcePathRuleFinder(
-              new SingleThreadedBuildRuleResolver(
-                  TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+      DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 

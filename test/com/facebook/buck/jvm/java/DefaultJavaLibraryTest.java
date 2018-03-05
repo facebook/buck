@@ -45,19 +45,18 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
@@ -121,9 +120,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
   @Before
   public void setUp() throws InterruptedException {
-    ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver = new TestBuildRuleResolver();
 
     testJavaBuckConfig = getJavaBuckConfigWithCompilationMode();
 
@@ -306,9 +303,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libraryOne, libraryTwo, parent);
-    ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver = new TestBuildRuleResolver(targetGraph);
     JavaLibrary libraryOneRule = (JavaLibrary) ruleResolver.requireRule(libraryOneTarget);
     JavaLibrary parentRule = (JavaLibrary) ruleResolver.requireRule(parentTarget);
 
@@ -347,9 +342,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libraryOne, libraryTwo, parent);
-    ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver = new TestBuildRuleResolver(targetGraph);
 
     BuildRule libraryOneRule = ruleResolver.requireRule(libraryOneTarget);
     BuildRule libraryTwoRule = ruleResolver.requireRule(libraryTwoTarget);
@@ -380,9 +373,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libraryOne, libraryTwo);
-    ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver = new TestBuildRuleResolver(targetGraph);
 
     DefaultJavaLibrary libraryOneRule =
         (DefaultJavaLibrary) ruleResolver.requireRule(libraryOneTarget);
@@ -582,9 +573,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             providedDepLibraryNode,
             providedDepLibraryExportedDepNode,
             resourceDepPrebuiltJarNode);
-    ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver = new TestBuildRuleResolver(targetGraph);
 
     DefaultJavaLibrary library = (DefaultJavaLibrary) ruleResolver.requireRule(libraryTarget);
 
@@ -684,9 +673,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             notIncludedNode, includedNode, libraryOneNode, libraryTwoNode, parentNode);
-    ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver = new TestBuildRuleResolver(targetGraph);
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 
@@ -892,9 +879,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     // Now change the genrule such that its rule key changes, but it's output stays the same (since
     // we don't change it).  This should *not* affect the input-based rule key of the consuming
     // java library, since it only cares about the contents of the source.
-    ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver = new TestBuildRuleResolver();
     genSrc =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gen_srcs"))
             .setOut("Test.java")
@@ -911,9 +896,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
 
     // Now actually modify the source, which should make the input-based rule key change.
-    ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver = new TestBuildRuleResolver();
     genSrc =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gen_srcs"))
             .setOut("Test.java")
@@ -948,9 +931,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, libraryNode);
-    ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver = new TestBuildRuleResolver(targetGraph);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -980,9 +961,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .setResourcesRoot(Paths.get("some root that changes the rule key"))
             .build();
     targetGraph = TargetGraphFactory.newInstance(depNode, libraryNode);
-    ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver = new TestBuildRuleResolver(targetGraph);
     ruleFinder = new SourcePathRuleFinder(ruleResolver);
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -999,9 +978,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     // Now actually change the Java library dependency's ABI JAR.  This *should* affect the
     // input-based rule key of the consuming java library.
-    ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver = new TestBuildRuleResolver(targetGraph);
     ruleFinder = new SourcePathRuleFinder(ruleResolver);
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -1044,9 +1021,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .addDep(depNode.getBuildTarget())
             .build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(exportedDepNode, depNode, libraryNode);
-    ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver = new TestBuildRuleResolver(targetGraph);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -1080,9 +1055,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .setResourcesRoot(Paths.get("some root that changes the rule key"))
             .build();
     targetGraph = TargetGraphFactory.newInstance(exportedDepNode, depNode, libraryNode);
-    ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver = new TestBuildRuleResolver(targetGraph);
     ruleFinder = new SourcePathRuleFinder(ruleResolver);
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -1100,9 +1073,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     // Now actually change the exproted Java library dependency's ABI JAR.  This *should* affect
     // the input-based rule key of the consuming java library.
-    ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver = new TestBuildRuleResolver(targetGraph);
     ruleFinder = new SourcePathRuleFinder(ruleResolver);
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -1151,9 +1122,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(exportedDepNode, dep2Node, dep1Node, libraryNode);
-    ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver = new TestBuildRuleResolver(targetGraph);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -1186,9 +1155,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .setResourcesRoot(Paths.get("some root that changes the rule key"))
             .build();
     targetGraph = TargetGraphFactory.newInstance(exportedDepNode, dep2Node, dep1Node, libraryNode);
-    ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver = new TestBuildRuleResolver(targetGraph);
     ruleFinder = new SourcePathRuleFinder(ruleResolver);
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -1206,9 +1173,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     // Now actually change the exproted Java library dependency's ABI JAR.  This *should* affect
     // the input-based rule key of the consuming java library.
-    ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver = new TestBuildRuleResolver(targetGraph);
     ruleFinder = new SourcePathRuleFinder(ruleResolver);
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -1293,9 +1258,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             return false;
           }
         };
-    BuildRuleResolver resolver1 =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver1 = new TestBuildRuleResolver();
     SourcePathRuleFinder ruleFinder1 = new SourcePathRuleFinder(resolver1);
     SourcePathResolver pathResolver1 = DefaultSourcePathResolver.from(ruleFinder1);
     DefaultJavaLibrary rule1 =
@@ -1310,9 +1273,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .addResource(FakeSourcePath.of("chkdbafijge.txt"))
             .build(resolver1, filesystem);
 
-    BuildRuleResolver resolver2 =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver2 = new TestBuildRuleResolver();
     SourcePathRuleFinder ruleFinder2 = new SourcePathRuleFinder(resolver2);
     SourcePathResolver pathResolver2 = DefaultSourcePathResolver.from(ruleFinder2);
     DefaultJavaLibrary rule2 =
@@ -1385,9 +1346,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(javacNode, ruleNode);
-    ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver = new TestBuildRuleResolver(targetGraph);
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 

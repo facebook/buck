@@ -44,19 +44,18 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -121,9 +120,7 @@ public class PythonBinaryDescriptionTest {
         TargetGraphFactory.newInstance(
             genruleBuilder.build(), libBuilder.build(), binaryBuilder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
 
     Genrule genrule = genruleBuilder.build(resolver, filesystem, targetGraph);
     libBuilder.build(resolver, filesystem, targetGraph);
@@ -133,9 +130,7 @@ public class PythonBinaryDescriptionTest {
 
   @Test
   public void thatMainSourcePathPropagatesToDeps() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     Genrule genrule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gen"))
             .setOut("blah.py")
@@ -156,11 +151,7 @@ public class PythonBinaryDescriptionTest {
     // Run without a base module set and verify it defaults to using the build target
     // base name.
     PythonBinary normal =
-        PythonBinaryBuilder.create(target)
-            .setMain(source)
-            .build(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+        PythonBinaryBuilder.create(target).setMain(source).build(new TestBuildRuleResolver());
     assertThat(
         normal.getComponents().getModules().keySet(),
         Matchers.hasItem(target.getBasePath().resolve(sourceName)));
@@ -171,9 +162,7 @@ public class PythonBinaryDescriptionTest {
         PythonBinaryBuilder.create(target)
             .setMain(source)
             .setBaseModule(baseModule)
-            .build(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+            .build(new TestBuildRuleResolver());
     assertThat(
         withBaseModule.getComponents().getModules().keySet(),
         Matchers.hasItem(Paths.get(baseModule).resolve(sourceName)));
@@ -182,9 +171,7 @@ public class PythonBinaryDescriptionTest {
   @Test
   public void mainModule() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     String mainModule = "foo.main";
     PythonBinary binary =
         PythonBinaryBuilder.create(target).setMainModule(mainModule).build(resolver);
@@ -194,9 +181,7 @@ public class PythonBinaryDescriptionTest {
   @Test
   public void extensionConfig() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     PythonBuckConfig config =
@@ -219,9 +204,7 @@ public class PythonBinaryDescriptionTest {
   @Test
   public void extensionParameter() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     PythonBinaryBuilder builder = PythonBinaryBuilder.create(target);
@@ -237,9 +220,7 @@ public class PythonBinaryDescriptionTest {
   @Test
   public void buildArgs() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     ImmutableList<String> buildArgs = ImmutableList.of("--some", "--args");
@@ -275,18 +256,10 @@ public class PythonBinaryDescriptionTest {
             FlavorDomain.of("Python Platform", platform1, platform2));
     builder.setMainModule("main");
     PythonBinary binary1 =
-        builder
-            .setPlatform(platform1.getFlavor().toString())
-            .build(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+        builder.setPlatform(platform1.getFlavor().toString()).build(new TestBuildRuleResolver());
     assertThat(binary1.getPythonPlatform(), Matchers.equalTo(platform1));
     PythonBinary binary2 =
-        builder
-            .setPlatform(platform2.getFlavor().toString())
-            .build(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+        builder.setPlatform(platform2.getFlavor().toString()).build(new TestBuildRuleResolver());
     assertThat(binary2.getPythonPlatform(), Matchers.equalTo(platform2));
   }
 
@@ -310,9 +283,7 @@ public class PythonBinaryDescriptionTest {
       TargetGraph targetGraph =
           TargetGraphFactory.newInstance(
               cxxBinaryBuilder.build(), pythonLibraryBuilder.build(), pythonBinaryBuilder.build());
-      BuildRuleResolver resolver =
-          new SingleThreadedBuildRuleResolver(
-              targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+      BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
       BuildRule cxxBinary = cxxBinaryBuilder.build(resolver, filesystem, targetGraph);
       pythonLibraryBuilder.build(resolver, filesystem, targetGraph);
       PythonBinary pythonBinary = pythonBinaryBuilder.build(resolver, filesystem, targetGraph);
@@ -327,9 +298,7 @@ public class PythonBinaryDescriptionTest {
   @Test
   public void executableCommandWithPathToPexExecutor() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     final Path executor = Paths.get("/root/executor");
@@ -355,9 +324,7 @@ public class PythonBinaryDescriptionTest {
   @Test
   public void executableCommandWithNoPathToPexExecutor() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     PythonPackagedBinary binary =
@@ -373,9 +340,7 @@ public class PythonBinaryDescriptionTest {
   @Test
   public void packagedBinaryAttachedPexToolDeps() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     final Genrule pexTool =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:pex_tool"))
             .setOut("pex-tool")
@@ -427,13 +392,12 @@ public class PythonBinaryDescriptionTest {
     binaryBuilder.setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()));
 
     BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
+        new TestBuildRuleResolver(
             TargetGraphFactory.newInstance(
                 transitiveCxxDepBuilder.build(),
                 cxxDepBuilder.build(),
                 cxxBuilder.build(),
-                binaryBuilder.build()),
-            new DefaultTargetNodeToBuildRuleTransformer());
+                binaryBuilder.build()));
     transitiveCxxDepBuilder.build(resolver);
     cxxDepBuilder.build(resolver);
     cxxBuilder.build(resolver);
@@ -472,13 +436,12 @@ public class PythonBinaryDescriptionTest {
     binaryBuilder.setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()));
 
     BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
+        new TestBuildRuleResolver(
             TargetGraphFactory.newInstance(
                 transitiveCxxDepBuilder.build(),
                 cxxDepBuilder.build(),
                 cxxBuilder.build(),
-                binaryBuilder.build()),
-            new DefaultTargetNodeToBuildRuleTransformer());
+                binaryBuilder.build()));
     transitiveCxxDepBuilder.build(resolver);
     cxxDepBuilder.build(resolver);
     cxxBuilder.build(resolver);
@@ -522,9 +485,7 @@ public class PythonBinaryDescriptionTest {
         TargetGraphFactory.newInstance(
             python2Builder.build(), extensionBuilder.build(), binaryBuilder.build());
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
 
     python2Builder.build(resolver, filesystem, targetGraph);
     extensionBuilder.build(resolver, filesystem, targetGraph);
@@ -572,9 +533,7 @@ public class PythonBinaryDescriptionTest {
             pythonLibraryBuilder.build(),
             pythonBinaryBuilder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     transitiveCxxLibraryBuilder.build(resolver, filesystem, targetGraph);
     cxxLibraryBuilder.build(resolver, filesystem, targetGraph);
     pythonLibraryBuilder.build(resolver, filesystem, targetGraph);
@@ -586,18 +545,14 @@ public class PythonBinaryDescriptionTest {
 
   @Test
   public void packageStyleParam() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     PythonBinary pythonBinary =
         PythonBinaryBuilder.create(BuildTargetFactory.newInstance("//:bin"))
             .setMainModule("main")
             .setPackageStyle(PythonBuckConfig.PackageStyle.INPLACE)
             .build(resolver);
     assertThat(pythonBinary, Matchers.instanceOf(PythonInPlaceBinary.class));
-    resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    resolver = new TestBuildRuleResolver();
     pythonBinary =
         PythonBinaryBuilder.create(BuildTargetFactory.newInstance("//:bin"))
             .setMainModule("main")
@@ -625,9 +580,8 @@ public class PythonBinaryDescriptionTest {
       binaryBuilder.setMainModule("main");
       binaryBuilder.setPreloadDeps(ImmutableSortedSet.of(cxxLibraryBuilder.getTarget()));
       BuildRuleResolver resolver =
-          new SingleThreadedBuildRuleResolver(
-              TargetGraphFactory.newInstance(cxxLibraryBuilder.build(), binaryBuilder.build()),
-              new DefaultTargetNodeToBuildRuleTransformer());
+          new TestBuildRuleResolver(
+              TargetGraphFactory.newInstance(cxxLibraryBuilder.build(), binaryBuilder.build()));
       cxxLibraryBuilder.build(resolver);
       PythonBinary binary = binaryBuilder.build(resolver);
       assertThat("Using " + strategy, binary.getPreloadLibraries(), Matchers.hasItems("libdep.so"));
@@ -684,10 +638,9 @@ public class PythonBinaryDescriptionTest {
     binaryBuilder.setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()));
 
     BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
+        new TestBuildRuleResolver(
             TargetGraphFactory.newInstance(
-                cxxDepBuilder.build(), cxxBuilder.build(), binaryBuilder.build()),
-            new DefaultTargetNodeToBuildRuleTransformer());
+                cxxDepBuilder.build(), cxxBuilder.build(), binaryBuilder.build()));
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     cxxDepBuilder.build(resolver);
@@ -731,9 +684,7 @@ public class PythonBinaryDescriptionTest {
       TargetGraph targetGraph =
           TargetGraphFactory.newInstance(
               cxxLibraryBuilder.build(), prebuiltCxxLibraryBuilder.build(), binaryBuilder.build());
-      BuildRuleResolver resolver =
-          new SingleThreadedBuildRuleResolver(
-              targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+      BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
       cxxLibraryBuilder.build(resolver, filesystem, targetGraph);
       prebuiltCxxLibraryBuilder.build(resolver, filesystem, targetGraph);
       PythonBinary binary = binaryBuilder.build(resolver, filesystem, targetGraph);
@@ -779,14 +730,13 @@ public class PythonBinaryDescriptionTest {
     binaryBuilder.setPreloadDeps(ImmutableSet.of(preloadCxxBuilder.getTarget()));
 
     BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
+        new TestBuildRuleResolver(
             TargetGraphFactory.newInstance(
                 transitiveCxxDepBuilder.build(),
                 cxxDepBuilder.build(),
                 cxxBuilder.build(),
                 preloadCxxBuilder.build(),
-                binaryBuilder.build()),
-            new DefaultTargetNodeToBuildRuleTransformer());
+                binaryBuilder.build()));
     transitiveCxxDepBuilder.build(resolver);
     cxxDepBuilder.build(resolver);
     cxxBuilder.build(resolver);
@@ -824,9 +774,7 @@ public class PythonBinaryDescriptionTest {
 
   @Test
   public void pexToolBuilderAddedToRuntimeDeps() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraphFactory.newInstance(), new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(TargetGraphFactory.newInstance());
 
     ShBinary pyTool =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:py_tool"))
@@ -865,9 +813,7 @@ public class PythonBinaryDescriptionTest {
               .setMainModule("main")
               .setPackageStyle(packageStyle);
       TargetGraph targetGraph = TargetGraphFactory.newInstance(pythonBinaryBuilder.build());
-      BuildRuleResolver resolver =
-          new SingleThreadedBuildRuleResolver(
-              targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+      BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
       PythonBinary pythonBinaryWithoutDep =
           pythonBinaryBuilder.build(resolver, filesystem, targetGraph);
       RuleKey ruleKeyWithoutDep = calculateRuleKey(resolver, pythonBinaryWithoutDep);
@@ -878,9 +824,7 @@ public class PythonBinaryDescriptionTest {
       pythonBinaryBuilder.setDeps(ImmutableSortedSet.of(cxxBinaryBuilder.getTarget()));
       targetGraph =
           TargetGraphFactory.newInstance(cxxBinaryBuilder.build(), pythonBinaryBuilder.build());
-      resolver =
-          new SingleThreadedBuildRuleResolver(
-              targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+      resolver = new TestBuildRuleResolver(targetGraph);
       cxxBinaryBuilder.build(resolver, filesystem, targetGraph);
       PythonBinary pythonBinaryWithDep =
           pythonBinaryBuilder.build(resolver, filesystem, targetGraph);
@@ -918,9 +862,7 @@ public class PythonBinaryDescriptionTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             libraryABuilder.build(), libraryBBuilder.build(), binaryBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     PythonBinary binary = (PythonBinary) resolver.requireRule(binaryBuilder.getTarget());
     assertThat(
         binary.getComponents().getModules().values(),
@@ -970,9 +912,7 @@ public class PythonBinaryDescriptionTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             libraryABuilder.build(), libraryBBuilder.build(), binaryBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     PythonBinary binary = (PythonBinary) resolver.requireRule(binaryBuilder.getTarget());
     assertThat(
         binary.getComponents().getModules().values(),

@@ -76,7 +76,9 @@ public class BuildRuleResolverTest {
         new Object[][] {
           {
             SingleThreadedBuildRuleResolver.class,
-            (BuildRuleResolverFactory) SingleThreadedBuildRuleResolver::new,
+            (BuildRuleResolverFactory)
+                (graph, transformer) ->
+                    new SingleThreadedBuildRuleResolver(graph, transformer, null),
             MoreExecutors.newDirectExecutorService(),
           },
           {

@@ -43,15 +43,14 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -94,9 +93,7 @@ public class LuaBinaryDescriptionTest {
 
   @Test
   public void mainModule() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     LuaBinary binary =
         new LuaBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setMainModule("hello.world")
@@ -106,9 +103,7 @@ public class LuaBinaryDescriptionTest {
 
   @Test
   public void extensionOverride() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     LuaBinary binary =
@@ -124,9 +119,7 @@ public class LuaBinaryDescriptionTest {
 
   @Test
   public void toolOverride() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     Tool override = new CommandTool.Builder().addArg("override").build();
     LuaBinary binary =
         new LuaBinaryBuilder(
@@ -152,9 +145,8 @@ public class LuaBinaryDescriptionTest {
             .setMainModule("main")
             .setDeps(ImmutableSortedSet.of(cxxLibraryBuilder.getTarget()));
     BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraphFactory.newInstance(cxxLibraryBuilder.build(), binaryBuilder.build()),
-            new DefaultTargetNodeToBuildRuleTransformer());
+        new TestBuildRuleResolver(
+            TargetGraphFactory.newInstance(cxxLibraryBuilder.build(), binaryBuilder.build()));
     cxxLibraryBuilder.build(resolver);
     binaryBuilder.build(resolver);
     SymlinkTree tree =
@@ -183,9 +175,7 @@ public class LuaBinaryDescriptionTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             libraryABuilder.build(), libraryBBuilder.build(), binaryBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     libraryABuilder.build(resolver, filesystem, targetGraph);
     libraryBBuilder.build(resolver, filesystem, targetGraph);
     binaryBuilder.build(resolver, filesystem, targetGraph);
@@ -208,9 +198,7 @@ public class LuaBinaryDescriptionTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             libraryABuilder.build(), libraryBBuilder.build(), binaryBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     libraryABuilder.build(resolver, filesystem, targetGraph);
     libraryBBuilder.build(resolver, filesystem, targetGraph);
     expectedException.expect(HumanReadableException.class);
@@ -231,9 +219,7 @@ public class LuaBinaryDescriptionTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(pythonLibraryBuilder.build(), luaBinaryBuilder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     pythonLibraryBuilder.build(resolver, filesystem, targetGraph);
     LuaBinary luaBinary = luaBinaryBuilder.build(resolver, filesystem, targetGraph);
     assertThat(luaBinary.getComponents().getPythonModules().keySet(), Matchers.hasItem("foo.py"));
@@ -287,15 +273,14 @@ public class LuaBinaryDescriptionTest {
             .setDeps(ImmutableSortedSet.of(cxxPythonExtensionBuilder.getTarget()));
 
     BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
+        new TestBuildRuleResolver(
             TargetGraphFactory.newInstance(
                 py2LibBuilder.build(),
                 py3LibBuilder.build(),
                 py2CxxLibraryBuilder.build(),
                 py3CxxLibraryBuilder.build(),
                 cxxPythonExtensionBuilder.build(),
-                luaBinaryBuilder.build()),
-            new DefaultTargetNodeToBuildRuleTransformer());
+                luaBinaryBuilder.build()));
 
     py2LibBuilder.build(resolver);
     py3LibBuilder.build(resolver);
@@ -324,9 +309,7 @@ public class LuaBinaryDescriptionTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(pythonLibraryBuilder.build(), luaBinaryBuilder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     pythonLibraryBuilder.build(resolver, filesystem, targetGraph);
     LuaBinary luaBinary = luaBinaryBuilder.build(resolver, filesystem, targetGraph);
     assertThat(
@@ -359,13 +342,12 @@ public class LuaBinaryDescriptionTest {
     binaryBuilder.setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()));
 
     BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
+        new TestBuildRuleResolver(
             TargetGraphFactory.newInstance(
                 transitiveCxxDepBuilder.build(),
                 cxxDepBuilder.build(),
                 cxxBuilder.build(),
-                binaryBuilder.build()),
-            new DefaultTargetNodeToBuildRuleTransformer());
+                binaryBuilder.build()));
     transitiveCxxDepBuilder.build(resolver);
     cxxDepBuilder.build(resolver);
     cxxBuilder.build(resolver);
@@ -398,13 +380,12 @@ public class LuaBinaryDescriptionTest {
     binaryBuilder.setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()));
 
     BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
+        new TestBuildRuleResolver(
             TargetGraphFactory.newInstance(
                 transitiveCxxDepBuilder.build(),
                 cxxDepBuilder.build(),
                 cxxBuilder.build(),
-                binaryBuilder.build()),
-            new DefaultTargetNodeToBuildRuleTransformer());
+                binaryBuilder.build()));
     transitiveCxxDepBuilder.build(resolver);
     cxxDepBuilder.build(resolver);
     cxxBuilder.build(resolver);
@@ -444,14 +425,13 @@ public class LuaBinaryDescriptionTest {
     binaryBuilder.setNativeStarterLibrary(nativeStarterCxxBuilder.getTarget());
 
     BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
+        new TestBuildRuleResolver(
             TargetGraphFactory.newInstance(
                 transitiveCxxDepBuilder.build(),
                 cxxDepBuilder.build(),
                 cxxBuilder.build(),
                 nativeStarterCxxBuilder.build(),
-                binaryBuilder.build()),
-            new DefaultTargetNodeToBuildRuleTransformer());
+                binaryBuilder.build()));
     transitiveCxxDepBuilder.build(resolver);
     cxxDepBuilder.build(resolver);
     cxxBuilder.build(resolver);
@@ -495,9 +475,7 @@ public class LuaBinaryDescriptionTest {
         TargetGraphFactory.newInstance(
             python2Builder.build(), extensionBuilder.build(), binaryBuilder.build());
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     python2Builder.build(resolver, filesystem, targetGraph);
     extensionBuilder.build(resolver, filesystem, targetGraph);
     LuaBinary binary = binaryBuilder.build(resolver, filesystem, targetGraph);
@@ -534,9 +512,7 @@ public class LuaBinaryDescriptionTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             libraryABuilder.build(), libraryBBuilder.build(), binaryBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     LuaBinary binary = (LuaBinary) resolver.requireRule(binaryBuilder.getTarget());
     assertThat(
         binary.getComponents().getModules().values(),

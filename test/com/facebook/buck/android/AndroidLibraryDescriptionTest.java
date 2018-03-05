@@ -32,11 +32,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
@@ -87,9 +86,7 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
         TargetGraphFactory.newInstance(
             transitiveExportedNode, exportedNode, exportingNode, androidLibNode);
 
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
 
     BuildRule androidLibRule = resolver.requireRule(androidLibNode.getBuildTarget());
     BuildRule exportedRule = resolver.requireRule(exportedNode.getBuildTarget());
@@ -133,9 +130,7 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
     TargetNode<AndroidLibraryDescriptionArg, AndroidLibraryDescription> rule = ruleBuilder.build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(bottomNode, libNode, sublibNode, rule);
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
 
     FakeBuildRule bottomRule = resolver.addToIndex(new FakeBuildRule(bottomNode.getBuildTarget()));
     FakeBuildRule sublibRule =
@@ -180,9 +175,7 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
         TargetGraphFactory.newInstance(
             transitiveExportedNode, exportedNode, exportingNode, androidLibNode);
 
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
 
     BuildRule androidLibRule = resolver.requireRule(androidLibNode.getBuildTarget());
     BuildRule exportedRule = resolver.requireRule(exportedNode.getBuildTarget());
@@ -252,9 +245,7 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(resourceRule);
 
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
 
     resolver.addToIndex(new FakeBuildRule(resourceRule.getBuildTarget()));
 

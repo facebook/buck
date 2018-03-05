@@ -18,14 +18,12 @@ package com.facebook.buck.apple;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -46,10 +44,7 @@ public class RuleUtilsTest {
                 FakeSourcePath.of("Group2/blech.m"), ImmutableList.of("-fobjc-arc")));
 
     SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     ImmutableList<GroupedSource> sources =
         RuleUtils.createGroupsFromSourcePaths(
             resolver::getRelativePath,
@@ -130,10 +125,7 @@ public class RuleUtilsTest {
             GroupedSource.ofPrivateHeader(FakeSourcePath.of("File.h")));
 
     SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromSourcePaths(
             resolver::getRelativePath,
@@ -169,10 +161,7 @@ public class RuleUtilsTest {
                     GroupedSource.ofPrivateHeader(FakeSourcePath.of("Lib/Foo/File2.h")))));
 
     SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromSourcePaths(
             resolver::getRelativePath,
@@ -193,10 +182,7 @@ public class RuleUtilsTest {
         ImmutableList.of(GroupedSource.ofPrivateHeader(FakeSourcePath.of("Lib/Foo/File1.h")));
 
     SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromSourcePaths(
             resolver::getRelativePath,
@@ -214,10 +200,7 @@ public class RuleUtilsTest {
     ImmutableList<GroupedSource> expected = ImmutableList.of();
 
     SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromSourcePaths(
             resolver::getRelativePath,
@@ -300,10 +283,7 @@ public class RuleUtilsTest {
             GroupedSource.ofPrivateHeader(FakeSourcePath.of("File.h")));
 
     SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromEntryMaps(
             subgroups,
@@ -356,10 +336,7 @@ public class RuleUtilsTest {
                                 FakeSourcePath.of("Lib/Foo/File2.h")))))));
 
     SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromEntryMaps(
             subgroups,
@@ -382,10 +359,7 @@ public class RuleUtilsTest {
         ImmutableList.of(GroupedSource.ofPrivateHeader(FakeSourcePath.of("File1.h")));
 
     SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromEntryMaps(
             subgroups,
@@ -405,10 +379,7 @@ public class RuleUtilsTest {
     ImmutableList<GroupedSource> expected = ImmutableList.of();
 
     SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromEntryMaps(
             subgroups,

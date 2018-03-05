@@ -27,14 +27,13 @@ import com.facebook.buck.model.macros.MacroMatchResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeTargetNodeArg;
 import com.facebook.buck.rules.FakeTargetNodeBuilder;
 import com.facebook.buck.rules.FakeTargetNodeBuilder.FakeDescription;
 import com.facebook.buck.rules.NoopBuildRule;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.QueryOutputsMacroExpander;
@@ -99,9 +98,7 @@ public class QueryOutputsMacroExpanderTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(depNode, ruleNode, noopNode2, noopNode1);
 
-    ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver = new TestBuildRuleResolver(targetGraph);
 
     dep = ruleResolver.requireRule(depNode.getBuildTarget());
     rule = ruleResolver.requireRule(ruleNode.getBuildTarget());

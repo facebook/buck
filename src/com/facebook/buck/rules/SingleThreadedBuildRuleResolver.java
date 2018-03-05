@@ -42,12 +42,6 @@ public class SingleThreadedBuildRuleResolver implements BuildRuleResolver {
   private final ConcurrentHashMap<BuildTarget, BuildRule> buildRuleIndex;
   private final BuildRuleResolverMetadataCache metadataCache;
 
-  @VisibleForTesting
-  public SingleThreadedBuildRuleResolver(
-      TargetGraph targetGraph, TargetNodeToBuildRuleTransformer buildRuleGenerator) {
-    this(targetGraph, buildRuleGenerator, null);
-  }
-
   public SingleThreadedBuildRuleResolver(
       TargetGraph targetGraph,
       TargetNodeToBuildRuleTransformer buildRuleGenerator,

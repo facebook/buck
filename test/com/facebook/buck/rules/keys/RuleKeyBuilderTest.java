@@ -270,7 +270,7 @@ public class RuleKeyBuilderTest {
     private final Map<BuildTarget, BuildRule> ruleMap;
 
     public FakeBuildRuleResolver(Map<BuildTarget, BuildRule> ruleMap) {
-      super(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+      super(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer(), null);
       this.ruleMap = ruleMap;
     }
 

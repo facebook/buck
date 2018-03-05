@@ -31,14 +31,12 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -149,9 +147,7 @@ public class CxxTestDescriptionTest {
   @Test
   public void environmentIsPropagated() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     addFramework(resolver, filesystem);
@@ -186,9 +182,7 @@ public class CxxTestDescriptionTest {
   @Test
   public void testArgsArePropagated() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     addFramework(resolver, filesystem);
@@ -224,9 +218,7 @@ public class CxxTestDescriptionTest {
   public void runTestSeparately() throws Exception {
     for (CxxTestType framework : CxxTestType.values()) {
       ProjectFilesystem filesystem = new FakeProjectFilesystem();
-      BuildRuleResolver resolver =
-          new SingleThreadedBuildRuleResolver(
-              TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+      BuildRuleResolver resolver = new TestBuildRuleResolver();
       addFramework(resolver, filesystem);
       CxxTestBuilder builder =
           createTestBuilder()
@@ -248,9 +240,8 @@ public class CxxTestDescriptionTest {
     CxxLibraryBuilder cxxLibraryBuilder =
         new CxxLibraryBuilder(cxxLibraryTarget).setDeps(ImmutableSortedSet.of(cxxBinaryTarget));
     BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraphFactory.newInstance(cxxLibraryBuilder.build(), cxxBinaryBuilder.build()),
-            new DefaultTargetNodeToBuildRuleTransformer());
+        new TestBuildRuleResolver(
+            TargetGraphFactory.newInstance(cxxLibraryBuilder.build(), cxxBinaryBuilder.build()));
     addFramework(resolver, filesystem);
     BuildRule cxxBinary = cxxBinaryBuilder.build(resolver, filesystem);
     cxxLibraryBuilder.build(resolver, filesystem);
@@ -266,9 +257,7 @@ public class CxxTestDescriptionTest {
   @Test
   public void locationMacro() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     Genrule dep =
@@ -298,9 +287,7 @@ public class CxxTestDescriptionTest {
 
   @Test
   public void linkerFlagsLocationMacro() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     Genrule dep =
@@ -333,9 +320,7 @@ public class CxxTestDescriptionTest {
   @Test
   public void platformLinkerFlagsLocationMacroWithMatch() throws Exception {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     Genrule dep =
@@ -372,9 +357,7 @@ public class CxxTestDescriptionTest {
   @Test
   public void platformLinkerFlagsLocationMacroWithoutMatch() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     Genrule dep =
@@ -414,9 +397,7 @@ public class CxxTestDescriptionTest {
     filesystem.touch(resource);
     for (CxxTestType framework : CxxTestType.values()) {
       // Create a test rule without resources attached.
-      BuildRuleResolver resolver =
-          new SingleThreadedBuildRuleResolver(
-              TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+      BuildRuleResolver resolver = new TestBuildRuleResolver();
       addFramework(resolver, filesystem);
       CxxTestBuilder builder = createTestBuilder().setFramework(framework);
       addSandbox(resolver, filesystem, builder.getTarget());
@@ -424,9 +405,7 @@ public class CxxTestDescriptionTest {
       RuleKey ruleKeyWithoutResource = getRuleKey(resolver, cxxTestWithoutResources);
 
       // Create a rule with a resource attached.
-      resolver =
-          new SingleThreadedBuildRuleResolver(
-              TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+      resolver = new TestBuildRuleResolver();
       addFramework(resolver, filesystem);
       builder =
           createTestBuilder().setFramework(framework).setResources(ImmutableSortedSet.of(resource));
