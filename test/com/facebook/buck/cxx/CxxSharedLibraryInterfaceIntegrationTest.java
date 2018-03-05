@@ -112,13 +112,18 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
     ndkPlatforms.ifPresent(platforms::addAll);
 
     return ParameterizedTests.getPermutations(
-        ImmutableList.of("cxx_library", "prebuilt_cxx_library"), platforms);
+        ImmutableList.of("cxx_library", "prebuilt_cxx_library"),
+        platforms,
+        /* independentInterfaces */ ImmutableList.of(true, false));
   }
 
   @Parameterized.Parameter public String type;
 
   @Parameterized.Parameter(value = 1)
   public Flavor platform;
+
+  @Parameterized.Parameter(value = 2)
+  public boolean independentInterfaces;
 
   private ProjectWorkspace workspace;
 
@@ -185,6 +190,8 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             "-c",
             "cxx.shlib_interfaces=enabled",
             "-c",
+            "cxx.independent_shlib_interfaces=" + independentInterfaces,
+            "-c",
             "cxx.objcopy=/usr/bin/objcopy",
             "-c",
             "cxx.platform=" + platform,
@@ -231,6 +238,8 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
         ImmutableList.of(
             "-c",
             "cxx.shlib_interfaces=enabled",
+            "-c",
+            "cxx.independent_shlib_interfaces=" + independentInterfaces,
             "-c",
             "cxx.objcopy=/usr/bin/objcopy",
             "-c",
@@ -282,6 +291,8 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             "-c",
             "cxx.shlib_interfaces=enabled",
             "-c",
+            "cxx.independent_shlib_interfaces=" + independentInterfaces,
+            "-c",
             "cxx.objcopy=/usr/bin/objcopy",
             "-c",
             "cxx.platform=" + platform,
@@ -304,6 +315,8 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             "-c",
             "cxx.shlib_interfaces=enabled",
             "-c",
+            "cxx.independent_shlib_interfaces=" + independentInterfaces,
+            "-c",
             "cxx.objcopy=/usr/bin/objcopy",
             "-c",
             "cxx.platform=" + platform,
@@ -323,6 +336,8 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
         ImmutableList.of(
             "-c",
             "cxx.shlib_interfaces=enabled",
+            "-c",
+            "cxx.independent_shlib_interfaces=" + independentInterfaces,
             "-c",
             "cxx.objcopy=/usr/bin/objcopy",
             "-c",

@@ -16,8 +16,10 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.ElfSharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceFactory;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -26,7 +28,9 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.ToolProvider;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.immutables.BuckStylePackageVisibleTuple;
+import com.google.common.collect.ImmutableList;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -38,12 +42,13 @@ abstract class AbstractElfSharedLibraryInterfaceFactory implements SharedLibrary
   abstract boolean isRemoveUndefinedSymbols();
 
   @Override
-  public final BuildRule createSharedInterfaceLibrary(
+  public final BuildRule createSharedInterfaceLibraryFromLibrary(
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
+      CxxPlatform cxxPlatform,
       SourcePath library) {
     return ElfSharedLibraryInterface.from(
         target,
@@ -52,6 +57,27 @@ abstract class AbstractElfSharedLibraryInterfaceFactory implements SharedLibrary
         ruleFinder,
         getObjcopy().resolve(resolver),
         library,
+        isRemoveUndefinedSymbols());
+  }
+
+  @Override
+  public final BuildRule createSharedInterfaceLibraryFromLinkableInput(
+      BuildTarget target,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleResolver resolver,
+      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
+      String libName,
+      Linker linker,
+      ImmutableList<Arg> args) {
+    return ElfSharedLibraryInterface.from(
+        target,
+        projectFilesystem,
+        ruleFinder,
+        getObjcopy().resolve(resolver),
+        libName,
+        linker,
+        args,
         isRemoveUndefinedSymbols());
   }
 

@@ -1801,6 +1801,40 @@ cxx_library(
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'shlib_interfaces' /}
+  {param example_value: 'enabled' /}
+  {param description}
+    When linking a executiable or shared library, any dependencies that build shared
+    libraries are normally added to the link line.  If this option is set, Buck will
+    use shared library interfaces for these dependencies instead of full shared libraries.
+    Shared library interfaces are a subset of the original shared library, removing
+    parts of the shared library (e.g. the `.text` segment for ELF) which are typically
+    unused used when this library is being linked against.  Using shared library interfaces
+    can allow Buck's input-based rule keys to avoid potentially unnecessary re-links
+    (see <code>CxxSharedLibraryInterfaceIntegrationTest</code> for examples).
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'independent_shlib_interfaces' /}
+  {param example_value: 'true' /}
+  {param description}
+    Normally, a shared library interface for a rule is generated using it's
+    shared library.  Since linking a rule's shared library requires the shared
+    library interfaces for all dependencies be built, this means that dynamic
+    linking has inherent non-parallelism, due to this build dependency tree.
+
+    When this option is set, Buck will build shared library interfaces indepedent
+    of the rule's shared library (e.g. by linking it's own shared library without
+    any dependency shared libraries), allowing all shared library interfaces to
+    be built in parallel, and therefore also allowing subsequent shared libraries
+    to be built in parallel.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'doctor' /}
   {param description}

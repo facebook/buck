@@ -388,13 +388,14 @@ public class PrebuiltCxxLibraryDescription
             args);
 
     return SharedLibraryInterfaceFactoryResolver.resolveFactory(params.get())
-        .createSharedInterfaceLibrary(
+        .createSharedInterfaceLibraryFromLibrary(
             baseTarget.withAppendedFlavors(
                 Type.SHARED_INTERFACE.getFlavor(), cxxPlatform.getFlavor()),
             projectFilesystem,
             resolver,
             pathResolver,
             ruleFinder,
+            cxxPlatform,
             sharedLibrary);
   }
 
