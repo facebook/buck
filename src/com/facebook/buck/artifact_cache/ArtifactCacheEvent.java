@@ -95,7 +95,7 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
 
   @Override
   protected String getValueString() {
-    return getEventName() + getEventKey().toString();
+    return getEventName() + getEventKey();
   }
 
   @Override
@@ -126,7 +126,7 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
   @Override
   public abstract String getEventName();
 
-  public static final Optional<String> getTarget(final ImmutableMap<String, String> metadata) {
+  public static final Optional<String> getTarget(ImmutableMap<String, String> metadata) {
     return metadata.containsKey(TARGET_KEY)
         ? Optional.of(metadata.get(TARGET_KEY))
         : Optional.empty();

@@ -115,7 +115,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
 
     LOG.verbose("Will fetch key %s", thriftRuleKey);
 
-    final ThriftArtifactCacheProtocol.Request request =
+    ThriftArtifactCacheProtocol.Request request =
         ThriftArtifactCacheProtocol.createRequest(PROTOCOL, cacheRequest);
     Request.Builder builder = toOkHttpRequest(request);
     try (HttpResponse httpResponse = fetchClient.makeRequest(hybridThriftEndpoint, builder)) {
@@ -356,7 +356,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     cacheRequest.setType(BuckCacheRequestType.CONTAINS);
     cacheRequest.setMultiContainsRequest(containsRequest);
 
-    final ThriftArtifactCacheProtocol.Request request =
+    ThriftArtifactCacheProtocol.Request request =
         ThriftArtifactCacheProtocol.createRequest(PROTOCOL, cacheRequest);
     Request.Builder builder = toOkHttpRequest(request);
     try (HttpResponse httpResponse = fetchClient.makeRequest(hybridThriftEndpoint, builder)) {
@@ -637,9 +637,9 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
   }
 
   @Override
-  protected StoreResult storeImpl(final ArtifactInfo info, final Path file) throws IOException {
+  protected StoreResult storeImpl(ArtifactInfo info, Path file) throws IOException {
     StoreResult.Builder resultBuilder = StoreResult.builder();
-    final ByteSource artifact =
+    ByteSource artifact =
         new ByteSource() {
           @Override
           public InputStream openStream() throws IOException {
@@ -666,7 +666,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
               ThriftUtil.thriftToDebugJson(artifactMetadata)));
     }
 
-    final ThriftArtifactCacheProtocol.Request request =
+    ThriftArtifactCacheProtocol.Request request =
         ThriftArtifactCacheProtocol.createRequest(PROTOCOL, cacheRequest, artifact);
     Request.Builder builder = toOkHttpRequest(request);
     resultBuilder.setRequestSizeBytes(request.getRequestLengthBytes());
@@ -748,8 +748,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     return metadata;
   }
 
-  private static Request.Builder toOkHttpRequest(
-      final ThriftArtifactCacheProtocol.Request request) {
+  private static Request.Builder toOkHttpRequest(ThriftArtifactCacheProtocol.Request request) {
     Request.Builder builder =
         new Request.Builder().addHeader(PROTOCOL_HEADER, PROTOCOL.toString().toLowerCase());
     builder.post(
@@ -760,7 +759,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
           }
 
           @Override
-          public long contentLength() throws IOException {
+          public long contentLength() {
             return request.getRequestLengthBytes();
           }
 
@@ -797,7 +796,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
       LOG.verbose(String.format("Deleting rule keys: [%s].", ruleKeys));
     }
 
-    final ThriftArtifactCacheProtocol.Request request =
+    ThriftArtifactCacheProtocol.Request request =
         ThriftArtifactCacheProtocol.createRequest(PROTOCOL, cacheRequest);
     Request.Builder builder = toOkHttpRequest(request);
     try (HttpResponse httpResponse = storeClient.makeRequest(hybridThriftEndpoint, builder)) {

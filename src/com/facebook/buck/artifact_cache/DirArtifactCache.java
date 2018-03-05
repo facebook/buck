@@ -274,7 +274,7 @@ public class DirArtifactCache implements ArtifactCache {
 
   @VisibleForTesting
   Path getPathForRuleKey(RuleKey ruleKey, Optional<String> extension) {
-    return getParentDirForRuleKey(ruleKey).resolve(ruleKey.toString() + extension.orElse(""));
+    return getParentDirForRuleKey(ruleKey).resolve(ruleKey + extension.orElse(""));
   }
 
   @VisibleForTesting
@@ -333,8 +333,8 @@ public class DirArtifactCache implements ArtifactCache {
 
   @VisibleForTesting
   List<Path> getAllFilesInCache() {
-    final List<Path> allFiles = new ArrayList<>();
-    final Path tempFolderPath = getPathToTempFolder();
+    List<Path> allFiles = new ArrayList<>();
+    Path tempFolderPath = getPathToTempFolder();
     try {
       Files.walkFileTree(
           filesystem.resolve(cacheDir),
@@ -382,7 +382,7 @@ public class DirArtifactCache implements ArtifactCache {
   DirectoryCleaner.PathSelector getDirectoryCleanerPathSelector() {
     return new DirectoryCleaner.PathSelector() {
       @Override
-      public Iterable<Path> getCandidatesToDelete(Path rootPath) throws IOException {
+      public Iterable<Path> getCandidatesToDelete(Path rootPath) {
         return getAllFilesInCache();
       }
 

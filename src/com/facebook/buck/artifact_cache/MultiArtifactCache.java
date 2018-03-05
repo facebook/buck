@@ -118,7 +118,7 @@ public class MultiArtifactCache implements ArtifactCache {
     }
 
     // Aggregate future to ensure all store operations have completed.
-    return Futures.transform(Futures.allAsList(storeFutures), Functions.<Void>constant(null));
+    return Futures.transform(Futures.allAsList(storeFutures), Functions.constant(null));
   }
 
   /** Store the artifact to all encapsulated ArtifactCaches. */

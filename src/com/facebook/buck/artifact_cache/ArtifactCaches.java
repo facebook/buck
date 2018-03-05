@@ -224,7 +224,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
    * @return a cache
    */
   public static Optional<ArtifactCache> newServedCache(
-      ArtifactCacheBuckConfig buckConfig, final ProjectFilesystem projectFilesystem) {
+      ArtifactCacheBuckConfig buckConfig, ProjectFilesystem projectFilesystem) {
     return buckConfig
         .getServedLocalCache()
         .map(input -> createDirArtifactCache(Optional.empty(), input, projectFilesystem));
@@ -411,8 +411,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
 
   private static ArtifactCache createRetryingArtifactCache(
       HttpCacheEntry cacheDescription,
-      final String hostToReportToRemote,
-      final BuckEventBus buckEventBus,
+      String hostToReportToRemote,
+      BuckEventBus buckEventBus,
       ProjectFilesystem projectFilesystem,
       ListeningExecutorService httpWriteExecutorService,
       ListeningExecutorService httpFetchExecutorService,
@@ -435,8 +435,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
 
   private static ArtifactCache createHttpArtifactCache(
       HttpCacheEntry cacheDescription,
-      final String hostToReportToRemote,
-      final BuckEventBus buckEventBus,
+      String hostToReportToRemote,
+      BuckEventBus buckEventBus,
       ProjectFilesystem projectFilesystem,
       ListeningExecutorService httpWriteExecutorService,
       ListeningExecutorService httpFetchExecutorService,
@@ -475,8 +475,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
     dispatcher.setMaxRequestsPerHost((int) config.getThreadPoolSize());
     storeClientBuilder.dispatcher(dispatcher);
 
-    final ImmutableMap<String, String> readHeaders = cacheDescription.getReadHeaders();
-    final ImmutableMap<String, String> writeHeaders = cacheDescription.getWriteHeaders();
+    ImmutableMap<String, String> readHeaders = cacheDescription.getReadHeaders();
+    ImmutableMap<String, String> writeHeaders = cacheDescription.getWriteHeaders();
 
     // If write headers are specified, add them to every default client request.
     if (!writeHeaders.isEmpty()) {

@@ -138,7 +138,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
 
     @Override
     protected String getValueString() {
-      return getEventName() + getEventKey().toString();
+      return getEventName() + getEventKey();
     }
   }
 
