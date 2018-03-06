@@ -229,7 +229,7 @@ public class PerBuildState implements AutoCloseable {
 
   private void registerInputsUnderSymlinks(Path buildFile, TargetNode<?, ?> node)
       throws IOException {
-    Cell currentCell = cells.get(node.getBuildTarget().getCellPath());
+    Cell currentCell = getCell(node.getBuildTarget());
     symlinkCache.registerInputsUnderSymlinks(
         currentCell, getCell(node.getBuildTarget()), buildFile, node);
   }
