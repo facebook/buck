@@ -119,8 +119,8 @@ public class RuleKeyFileParser {
           e, filename, "File size is too large (>2.1 billion objects would be deserialized");
     }
 
-    final ImmutableMap.Builder<String, RuleKeyNode> rootNodesBuilder = ImmutableMap.builder();
-    final Map<String, RuleKeyNode> rules = new HashMap<>();
+    ImmutableMap.Builder<String, RuleKeyNode> rootNodesBuilder = ImmutableMap.builder();
+    Map<String, RuleKeyNode> rules = new HashMap<>();
 
     try {
       reader.readFile(

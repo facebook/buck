@@ -21,7 +21,6 @@ import com.facebook.buck.tools.consistency.DifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.TargetHashFileParser.ParsedTargetsFile;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Map;
@@ -42,7 +41,7 @@ public class TargetsDifferTest {
   private DiffPrinter diffPrinter;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() {
     stream = TestPrintStream.create();
     diffPrinter = new DiffPrinter(stream, false);
   }
