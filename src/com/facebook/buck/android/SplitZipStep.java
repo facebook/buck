@@ -176,11 +176,11 @@ public class SplitZipStep implements Step {
             filesystem, proguardFullConfigFile, proguardMappingFile, skipProguard);
     Predicate<String> requiredInPrimaryZip =
         createRequiredInPrimaryZipPredicate(translatorFactory, classes);
-    final ImmutableSet<String> wantedInPrimaryZip =
+    ImmutableSet<String> wantedInPrimaryZip =
         getWantedPrimaryDexEntries(translatorFactory, classes);
-    final ImmutableSet<String> secondaryHeadSet = getSecondaryHeadSet(translatorFactory);
-    final ImmutableSet<String> secondaryTailSet = getSecondaryTailSet(translatorFactory);
-    final ImmutableMultimap<APKModule, String> additionalDexStoreClasses =
+    ImmutableSet<String> secondaryHeadSet = getSecondaryHeadSet(translatorFactory);
+    ImmutableSet<String> secondaryTailSet = getSecondaryTailSet(translatorFactory);
+    ImmutableMultimap<APKModule, String> additionalDexStoreClasses =
         APKModuleGraph.getAPKModuleToClassesMap(
             apkModuleToJarPathMap, translatorFactory.createObfuscationFunction(), filesystem);
 
@@ -254,10 +254,10 @@ public class SplitZipStep implements Step {
       ProguardTranslatorFactory translatorFactory,
       Supplier<ImmutableList<ClassNode>> classesSupplier)
       throws IOException {
-    final Function<String, String> deobfuscate = translatorFactory.createDeobfuscationFunction();
-    final ImmutableSet<String> primaryDexClassNames =
+    Function<String, String> deobfuscate = translatorFactory.createDeobfuscationFunction();
+    ImmutableSet<String> primaryDexClassNames =
         getRequiredPrimaryDexClassNames(translatorFactory, classesSupplier);
-    final ClassNameFilter primaryDexFilter =
+    ClassNameFilter primaryDexFilter =
         ClassNameFilter.fromConfiguration(dexSplitMode.getPrimaryDexPatterns());
 
     return classFileName -> {
@@ -499,7 +499,7 @@ public class SplitZipStep implements Step {
   }
 
   public Supplier<Multimap<Path, Path>> getOutputToInputsMapSupplier(
-      final Path secondaryOutputDir, final Path additionalOutputDir) {
+      Path secondaryOutputDir, Path additionalOutputDir) {
     return () -> {
       Preconditions.checkState(
           outputFiles != null,

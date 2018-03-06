@@ -173,7 +173,7 @@ public class AndroidBuildConfig extends AbstractBuildRuleWithDeclaredAndExtraDep
 
     Supplier<BuildConfigFields> totalFields;
     if (valuesFile.isPresent()) {
-      final ReadValuesStep readValuesStep =
+      ReadValuesStep readValuesStep =
           new ReadValuesStep(
               getProjectFilesystem(),
               context.getSourcePathResolver().getAbsolutePath(valuesFile.get()));
@@ -228,7 +228,7 @@ public class AndroidBuildConfig extends AbstractBuildRuleWithDeclaredAndExtraDep
     @Nullable private BuildConfigFields values;
 
     public ReadValuesStep(ProjectFilesystem filesystem, Path valuesFile) {
-      super("read values from " + valuesFile.toString());
+      super("read values from " + valuesFile);
       this.filesystem = filesystem;
       this.valuesFile = valuesFile;
     }

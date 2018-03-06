@@ -202,7 +202,7 @@ public class AgentMain {
     long totalReceiveTimeoutMs =
         RECEIVE_TIMEOUT_MS + TOTAL_RECEIVE_TIMEOUT_MS_PER_MB * (size / 1024 / 1024);
     try {
-      final int bufferSize = 128 * 1024;
+      int bufferSize = 128 * 1024;
       byte[] buf = new byte[bufferSize];
       while (true) {
         long currentTimeMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());

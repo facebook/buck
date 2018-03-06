@@ -299,11 +299,11 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
 
   @VisibleForTesting
   protected ImmutableSortedSet<SourcePath> findSources(
-      final ProjectFilesystem filesystem, final Path buildRulePath) {
-    final ImmutableSortedSet.Builder<SourcePath> srcs = ImmutableSortedSet.naturalOrder();
+      ProjectFilesystem filesystem, Path buildRulePath) {
+    ImmutableSortedSet.Builder<SourcePath> srcs = ImmutableSortedSet.naturalOrder();
 
     try {
-      final Path rootDirectory = filesystem.resolve(buildRulePath);
+      Path rootDirectory = filesystem.resolve(buildRulePath);
       Files.walkFileTree(
           rootDirectory,
           EnumSet.of(FileVisitOption.FOLLOW_LINKS),

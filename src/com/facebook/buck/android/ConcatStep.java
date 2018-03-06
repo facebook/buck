@@ -73,7 +73,7 @@ public class ConcatStep implements Step {
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
     ImmutableList<Path> list = inputs.get();
-    try (OutputStream out = filesystem.newFileOutputStream(output); ) {
+    try (OutputStream out = filesystem.newFileOutputStream(output)) {
       for (Path p : list) {
         filesystem.copyToOutputStream(p, out);
       }

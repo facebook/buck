@@ -187,7 +187,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     // Copy the transitive closure of native-libs-as-assets to a single directory, if any.
     ImmutableSet.Builder<Path> nativeLibraryAsAssetDirectories = ImmutableSet.builder();
 
-    for (final APKModule module : apkModules) {
+    for (APKModule module : apkModules) {
       boolean shouldPackageAssetLibraries = packageAssetLibraries || !module.isRootModule();
       if (!ExopackageMode.enabledForNativeLibraries(exopackageModes)
           && nativeFilesInfo.nativeLibsDirs.isPresent()
@@ -209,7 +209,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
                 || !ExopackageMode.enabledForResources(exopackageModes));
         Path pathForNativeLibsAsAssets = getPathForNativeLibsAsAssets();
 
-        final Path libSubdirectory =
+        Path libSubdirectory =
             pathForNativeLibsAsAssets
                 .resolve("assets")
                 .resolve(module.isRootModule() ? "lib" : module.getName());
@@ -252,7 +252,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
     SourcePathResolver resolver = context.getSourcePathResolver();
     Path signedApkPath = getSignedApkPath();
-    final Path pathToKeystore = resolver.getAbsolutePath(keystorePath);
+    Path pathToKeystore = resolver.getAbsolutePath(keystorePath);
     Supplier<KeystoreProperties> keystoreProperties =
         getKeystorePropertiesSupplier(resolver, pathToKeystore);
 
@@ -325,9 +325,9 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   private void getStepsForNativeAssets(
       BuildContext context,
       ImmutableList.Builder<Step> steps,
-      final Path libSubdirectory,
-      final String metadataFilename,
-      final APKModule module) {
+      Path libSubdirectory,
+      String metadataFilename,
+      APKModule module) {
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
@@ -335,7 +335,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
                 context.getBuildCellRootPath(), getProjectFilesystem(), libSubdirectory)));
 
     // Input asset libraries are sorted in descending filesize order.
-    final ImmutableSortedSet.Builder<Path> inputAssetLibrariesBuilder =
+    ImmutableSortedSet.Builder<Path> inputAssetLibrariesBuilder =
         ImmutableSortedSet.orderedBy(
             (libPath1, libPath2) -> {
               try {
@@ -377,7 +377,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     }
 
     if (compressAssetLibraries || !module.isRootModule()) {
-      final ImmutableList.Builder<Path> outputAssetLibrariesBuilder = ImmutableList.builder();
+      ImmutableList.Builder<Path> outputAssetLibrariesBuilder = ImmutableList.builder();
       steps.add(
           createRenameAssetLibrariesStep(
               module, inputAssetLibrariesBuilder, outputAssetLibrariesBuilder));
@@ -400,8 +400,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       ImmutableList.Builder<Path> outputAssetLibrariesBuilder) {
     return new AbstractExecutionStep("rename_asset_libraries_as_temp_files_" + module.getName()) {
       @Override
-      public StepExecutionResult execute(ExecutionContext context)
-          throws IOException, InterruptedException {
+      public StepExecutionResult execute(ExecutionContext context) throws IOException {
         ProjectFilesystem filesystem = getProjectFilesystem();
         for (Path libPath : inputAssetLibrariesBuilder.build()) {
           Path tempPath = libPath.resolveSibling(libPath.getFileName() + "~");
@@ -420,8 +419,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       ImmutableSortedSet.Builder<Path> inputAssetLibrariesBuilder) {
     return new AbstractExecutionStep("write_metadata_for_asset_libraries_" + module.getName()) {
       @Override
-      public StepExecutionResult execute(ExecutionContext context)
-          throws IOException, InterruptedException {
+      public StepExecutionResult execute(ExecutionContext context) throws IOException {
         ProjectFilesystem filesystem = getProjectFilesystem();
         // Walk file tree to find libraries
         filesystem.walkRelativeFileTree(

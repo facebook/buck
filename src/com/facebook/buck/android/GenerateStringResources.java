@@ -91,8 +91,7 @@ public class GenerateStringResources extends AbstractBuildRule {
     steps.add(
         new AbstractExecutionStep("copy_string_resources") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context)
-              throws IOException, InterruptedException {
+          public StepExecutionResult execute(ExecutionContext context) throws IOException {
             ProjectFilesystem fileSystem = getProjectFilesystem();
             int i = 0;
             for (Path resDir :

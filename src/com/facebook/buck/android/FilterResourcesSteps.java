@@ -213,7 +213,7 @@ public class FilterResourcesSteps {
               drawables, targetDensities, /* canDownscale */ canDownscale(context)));
     }
 
-    final boolean localeFilterEnabled = !locales.isEmpty();
+    boolean localeFilterEnabled = !locales.isEmpty();
     if (localeFilterEnabled || enableStringWhitelisting) {
       pathPredicates.add(
           path -> {
@@ -287,8 +287,7 @@ public class FilterResourcesSteps {
 
         // Replace density qualifier with target density using regular expression to match
         // the qualifier in the context of a path to a drawable.
-        String fromDensity =
-            (density == ResourceFilters.Density.NO_QUALIFIER ? "" : "-") + density.toString();
+        String fromDensity = (density == ResourceFilters.Density.NO_QUALIFIER ? "" : "-") + density;
         Path destination =
             Paths.get(
                 MorePaths.pathWithUnixSeparators(drawable)
@@ -335,7 +334,7 @@ public class FilterResourcesSteps {
     @Override
     public ImmutableSet<Path> findDrawables(Collection<Path> dirs, ProjectFilesystem filesystem)
         throws IOException {
-      final ImmutableSet.Builder<Path> drawableBuilder = ImmutableSet.builder();
+      ImmutableSet.Builder<Path> drawableBuilder = ImmutableSet.builder();
       for (Path dir : dirs) {
         filesystem.walkRelativeFileTree(
             dir,

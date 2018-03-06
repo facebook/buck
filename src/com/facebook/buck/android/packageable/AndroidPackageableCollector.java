@@ -240,7 +240,7 @@ public class AndroidPackageableCollector {
 
   public AndroidPackageableCollection build() {
     collectionBuilder.setBuildConfigs(ImmutableMap.copyOf(buildConfigs));
-    final ImmutableSet<HasJavaClassHashes> javaClassProviders = javaClassHashesProviders.build();
+    ImmutableSet<HasJavaClassHashes> javaClassProviders = javaClassHashesProviders.build();
     collectionBuilder.addAllJavaLibrariesToDex(
         javaClassProviders
             .stream()

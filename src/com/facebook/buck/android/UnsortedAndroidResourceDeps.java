@@ -59,9 +59,9 @@ public class UnsortedAndroidResourceDeps {
    * order the execution of those buildables.
    */
   public static UnsortedAndroidResourceDeps createFrom(
-      Collection<BuildRule> rules, final Optional<Callback> callback) {
+      Collection<BuildRule> rules, Optional<Callback> callback) {
 
-    final ImmutableSet.Builder<HasAndroidResourceDeps> androidResources = ImmutableSet.builder();
+    ImmutableSet.Builder<HasAndroidResourceDeps> androidResources = ImmutableSet.builder();
 
     // This visitor finds all AndroidResourceRules that are reachable from the specified rules via
     // rules with types in the TRAVERSABLE_TYPES collection.

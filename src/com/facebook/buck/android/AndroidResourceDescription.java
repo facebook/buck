@@ -317,15 +317,14 @@ public class AndroidResourceDescription
 
   @VisibleForTesting
   ImmutableSortedMap<Path, SourcePath> collectInputFiles(
-      final ProjectFilesystem filesystem, Path inputDir) {
-    final ImmutableSortedMap.Builder<Path, SourcePath> paths = ImmutableSortedMap.naturalOrder();
+      ProjectFilesystem filesystem, Path inputDir) {
+    ImmutableSortedMap.Builder<Path, SourcePath> paths = ImmutableSortedMap.naturalOrder();
 
     // We ignore the same files that mini-aapt and aapt ignore.
     FileVisitor<Path> fileVisitor =
         new SimpleFileVisitor<Path>() {
           @Override
-          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attr)
-              throws IOException {
+          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attr) {
             String dirName = dir.getFileName().toString();
             // Special case: directory starting with '_' as per aapt.
             if (dirName.charAt(0) == '_' || !isPossibleResourceName(dirName)) {
@@ -335,7 +334,7 @@ public class AndroidResourceDescription
           }
 
           @Override
-          public FileVisitResult visitFile(Path file, BasicFileAttributes attr) throws IOException {
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attr) {
             String filename = file.getFileName().toString();
             if (isPossibleResourceName(filename)) {
               paths.put(MorePaths.relativize(inputDir, file), PathSourcePath.of(filesystem, file));
@@ -378,10 +377,7 @@ public class AndroidResourceDescription
     if (fileOrDirName.charAt(fileOrDirName.length() - 1) == '~') {
       return false;
     }
-    if (MiniAapt.IGNORED_FILE_EXTENSIONS.contains(Files.getFileExtension(fileOrDirName))) {
-      return false;
-    }
-    return true;
+    return !MiniAapt.IGNORED_FILE_EXTENSIONS.contains(Files.getFileExtension(fileOrDirName));
   }
 
   @Override
@@ -392,12 +388,10 @@ public class AndroidResourceDescription
 
     if (flavors.size() == 1) {
       Flavor flavor = flavors.iterator().next();
-      if (flavor.equals(RESOURCES_SYMLINK_TREE_FLAVOR)
+      return flavor.equals(RESOURCES_SYMLINK_TREE_FLAVOR)
           || flavor.equals(ASSETS_SYMLINK_TREE_FLAVOR)
           || flavor.equals(AAPT2_COMPILE_FLAVOR)
-          || flavor.equals(ANDROID_RESOURCE_INDEX_FLAVOR)) {
-        return true;
-      }
+          || flavor.equals(ANDROID_RESOURCE_INDEX_FLAVOR);
     }
 
     return false;

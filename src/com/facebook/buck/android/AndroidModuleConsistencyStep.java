@@ -75,12 +75,12 @@ public class AndroidModuleConsistencyStep implements Step {
       ProguardTranslatorFactory translatorFactory =
           ProguardTranslatorFactory.create(
               filesystem, proguardFullConfigFile, proguardMappingFile, skipProguard);
-      final ImmutableMultimap<String, APKModule> classToModuleMap =
+      ImmutableMultimap<String, APKModule> classToModuleMap =
           APKModuleGraph.getAPKModuleToClassesMap(
                   apkModuleToJarPathMap, translatorFactory.createObfuscationFunction(), filesystem)
               .inverse();
 
-      final ImmutableMap<String, String> classToModuleResult =
+      ImmutableMap<String, String> classToModuleResult =
           AppModularityMetadataUtil.getClassToModuleMap(filesystem, metadataInput);
 
       boolean hasError = false;

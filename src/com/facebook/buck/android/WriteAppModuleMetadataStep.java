@@ -92,18 +92,18 @@ public class WriteAppModuleMetadataStep implements Step {
       ProguardTranslatorFactory translatorFactory =
           ProguardTranslatorFactory.create(
               filesystem, proguardFullConfigFile, proguardMappingFile, skipProguard);
-      final ImmutableMultimap<APKModule, String> moduleToClassesMap =
+      ImmutableMultimap<APKModule, String> moduleToClassesMap =
           APKModuleGraph.getAPKModuleToClassesMap(
               apkModuleToJarPathMap, translatorFactory.createObfuscationFunction(), filesystem);
-      final TreeMultimap<APKModule, String> orderedModuleToClassesMap =
+      TreeMultimap<APKModule, String> orderedModuleToClassesMap =
           sortModuleToStringsMultimap(moduleToClassesMap);
 
       // Module to module deps map is already sorted
-      final SortedMap<APKModule, ? extends SortedSet<APKModule>> moduleToDepsMap =
+      SortedMap<APKModule, ? extends SortedSet<APKModule>> moduleToDepsMap =
           apkModuleGraph.toOutgoingEdgesMap();
 
       // Write metdata lines to output
-      final LinkedList<String> metadataLines = new LinkedList<>();
+      LinkedList<String> metadataLines = new LinkedList<>();
       metadataLines.add(CLASS_SECTION_HEADER);
       writeModuleToStringsMultimap(orderedModuleToClassesMap, metadataLines);
       metadataLines.add(DEPS_SECTION_HEADER);
@@ -129,7 +129,7 @@ public class WriteAppModuleMetadataStep implements Step {
 
   private static TreeMultimap<APKModule, String> sortModuleToStringsMultimap(
       ImmutableMultimap<APKModule, String> multimap) {
-    final TreeMultimap<APKModule, String> orderedMap =
+    TreeMultimap<APKModule, String> orderedMap =
         TreeMultimap.create(
             (left, right) -> left.getName().compareTo(right.getName()), Ordering.natural());
     orderedMap.putAll(multimap);
@@ -137,7 +137,7 @@ public class WriteAppModuleMetadataStep implements Step {
   }
 
   private void writeModuleToStringsMultimap(
-      Multimap<APKModule, String> map, Collection<String> dest) throws IOException {
+      Multimap<APKModule, String> map, Collection<String> dest) {
     for (APKModule dexStore : map.keySet()) {
       dest.add(MODULE_INDENTATION + dexStore.getName());
       for (String item : map.get(dexStore)) {
@@ -147,8 +147,7 @@ public class WriteAppModuleMetadataStep implements Step {
   }
 
   private void writeModuleToModulesMap(
-      Map<APKModule, ? extends Iterable<APKModule>> map, Collection<String> dest)
-      throws IOException {
+      Map<APKModule, ? extends Iterable<APKModule>> map, Collection<String> dest) {
     for (Map.Entry<APKModule, ? extends Iterable<APKModule>> entry : map.entrySet()) {
       dest.add(MODULE_INDENTATION + entry.getKey().getName());
       for (APKModule item : entry.getValue()) {

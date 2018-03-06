@@ -244,7 +244,7 @@ public class MergeAndroidResourcesStep implements Step {
               filesystem,
               useOldStyleableFormat);
 
-      ImmutableSet.Builder<String> requiredPackages = ImmutableSet.<String>builder();
+      ImmutableSet.Builder<String> requiredPackages = ImmutableSet.builder();
 
       // Create a temporary list as the multimap
       // will be concurrently modified below.
@@ -423,7 +423,7 @@ public class MergeAndroidResourcesStep implements Step {
     Map<String, Map<RDotTxtEntry, RDotTxtEntry>> expandedPackageOverrides = ImmutableMap.of();
     if (overrides.isPresent()) {
       expandedPackageOverrides = new HashMap<>();
-      final Map<String, Map<RDotTxtEntry, RDotTxtEntry>> ovr = expandedPackageOverrides;
+      Map<String, Map<RDotTxtEntry, RDotTxtEntry>> ovr = expandedPackageOverrides;
       overrides
           .get()
           .asMap()
