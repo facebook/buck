@@ -241,7 +241,7 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
       return Collections.unmodifiableSet(stronglyConnectedComponents);
     }
 
-    private void doStrongConnect(final S node) {
+    private void doStrongConnect(S node) {
       // Set the depth index for node to the smallest unused index.
       indexes.put(node, index);
       lowlinks.put(node, index);

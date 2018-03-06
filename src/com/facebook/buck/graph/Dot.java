@@ -136,7 +136,7 @@ public class Dot<T> {
   /** Writes out the graph in dot format to the given output */
   public void writeOutput(Appendable output) throws IOException {
     // Sorting the edges to have deterministic output and be able to test this.
-    final ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
     output.append("digraph " + graphName + " {\n");
 
     if (bfsSorted) {
@@ -146,7 +146,7 @@ public class Dot<T> {
           @Override
           public Iterable<T> visit(T node) {
             if (!shouldContainNode.test(node)) {
-              return ImmutableSet.<T>of();
+              return ImmutableSet.of();
             }
             builder.add(printNode(node, nodeToName, nodeToTypeName, nodeToAttributes));
             ImmutableSortedSet<T> nodes =
@@ -160,7 +160,7 @@ public class Dot<T> {
         }.start();
       }
     } else {
-      final ImmutableSortedSet.Builder<String> sortedSetBuilder = ImmutableSortedSet.naturalOrder();
+      ImmutableSortedSet.Builder<String> sortedSetBuilder = ImmutableSortedSet.naturalOrder();
       new AbstractBottomUpTraversal<T, RuntimeException>(graph) {
 
         @Override

@@ -116,7 +116,7 @@ public class GoPlatformFlavorDomain {
     return getValue(flavors).isPresent();
   }
 
-  public Optional<GoPlatform> getValue(final Platform platform, final Architecture architecture) {
+  public Optional<GoPlatform> getValue(Platform platform, Architecture architecture) {
     Preconditions.checkArgument(platform != Platform.UNKNOWN);
     Preconditions.checkArgument(architecture != Architecture.UNKNOWN);
 

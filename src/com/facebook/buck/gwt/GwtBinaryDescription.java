@@ -77,11 +77,10 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescriptionArg
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
-    final ImmutableSortedSet.Builder<BuildRule> extraDeps = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<BuildRule> extraDeps = ImmutableSortedSet.naturalOrder();
 
     // Find all of the reachable JavaLibrary rules and grab their associated GwtModules.
-    final ImmutableSortedSet.Builder<SourcePath> gwtModuleJarsBuilder =
-        ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<SourcePath> gwtModuleJarsBuilder = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet<BuildRule> moduleDependencies = resolver.getAllRules(args.getModuleDeps());
     new AbstractBreadthFirstTraversal<BuildRule>(moduleDependencies) {
       @Override
