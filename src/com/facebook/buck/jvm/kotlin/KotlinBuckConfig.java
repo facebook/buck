@@ -162,10 +162,18 @@ public class KotlinBuckConfig {
     try {
       return getPathToJar("kotlin-annotation-processing-gradle");
     } catch (HumanReadableException e) {
-      LOG.warn("kotlin-annotation-processing-gradle.jar was not found in " + kotlinHome + " directory, this"
-          + " may result in kapt not working properly. Proceeding with kotlin-annotation-processing.jar"
+      LOG.warn("kotlin-annotation-processing-gradle.jar was not found in " + kotlinHome +
+          " directory, searching for kotlin-annotation-processing-maven.jar"
       );
-      return getPathToJar("kotlin-annotation-processing");
+      try {
+        return getPathToJar("kotlin-annotation-processing-maven");
+      }
+      catch (HumanReadableException er) {
+        LOG.warn("kotlin-annotation-processing-maven.jar was not found in " + kotlinHome + " directory, this"
+            + " may result in kapt not working properly. Proceeding with kotlin-annotation-processing.jar"
+        );
+        return getPathToJar("kotlin-annotation-processing");
+      }
     }
   }
 
