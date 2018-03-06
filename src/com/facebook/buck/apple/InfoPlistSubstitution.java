@@ -80,7 +80,7 @@ public class InfoPlistSubstitution {
    */
   public static Optional<String> getVariableExpansionForPlatform(
       String keyName, String platformName, Map<String, String> variablesToExpand) {
-    final String[] keysToTry;
+    String[] keysToTry;
     if (platformName.equals("iphoneos") || platformName.equals("iphonesimulator")) {
       keysToTry =
           new String[] {
@@ -164,8 +164,7 @@ public class InfoPlistSubstitution {
 
   public static Function<String, String> createVariableExpansionFunction(
       Map<String, String> variablesToExpand) {
-    final ImmutableMap<String, String> variablesToExpandCopy =
-        ImmutableMap.copyOf(variablesToExpand);
+    ImmutableMap<String, String> variablesToExpandCopy = ImmutableMap.copyOf(variablesToExpand);
     return input -> replaceVariablesInString(input, variablesToExpandCopy);
   }
 }

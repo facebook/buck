@@ -26,12 +26,12 @@ abstract class AbstractCopyInXcode {
   public enum SourceType {
     FILE,
     FOLDER_CONTENTS,
-  };
+  }
 
   public enum DestinationBase {
     UNLOCALIZED_RESOURCES,
     TEMPDIR,
-  };
+  }
 
   public abstract SourceType getSourceType();
 

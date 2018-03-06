@@ -383,9 +383,9 @@ class NewNativeTargetProjectMutator {
   }
 
   private void traverseGroupsTreeAndHandleSources(
-      final PBXGroup sourcesGroup,
-      final PBXSourcesBuildPhase sourcesBuildPhase,
-      final PBXHeadersBuildPhase headersBuildPhase,
+      PBXGroup sourcesGroup,
+      PBXSourcesBuildPhase sourcesBuildPhase,
+      PBXHeadersBuildPhase headersBuildPhase,
       Iterable<GroupedSource> groupedSources) {
     GroupedSource.Visitor visitor =
         new GroupedSource.Visitor() {
@@ -575,7 +575,7 @@ class NewNativeTargetProjectMutator {
         resourceDirs,
         variantResourceFiles);
 
-    final PBXBuildPhase phase = new PBXResourcesBuildPhase();
+    PBXBuildPhase phase = new PBXResourcesBuildPhase();
     addResourcesFileReference(
         targetGroup,
         resourceFiles.build(),

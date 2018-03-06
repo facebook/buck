@@ -114,11 +114,11 @@ public final class AppleBuildRules {
   }
 
   public static ImmutableSet<TargetNode<?, ?>> getRecursiveTargetNodeDependenciesOfTypes(
-      final TargetGraph targetGraph,
-      final Optional<AppleDependenciesCache> cache,
-      final RecursiveDependenciesMode mode,
-      final TargetNode<?, ?> targetNode,
-      final Optional<ImmutableSet<Class<? extends Description<?>>>> descriptionClasses) {
+      TargetGraph targetGraph,
+      Optional<AppleDependenciesCache> cache,
+      RecursiveDependenciesMode mode,
+      TargetNode<?, ?> targetNode,
+      Optional<ImmutableSet<Class<? extends Description<?>>>> descriptionClasses) {
     LOG.verbose(
         "Getting recursive dependencies of node %s, mode %s, including only types %s\n",
         targetNode, mode, descriptionClasses);
@@ -247,7 +247,7 @@ public final class AppleBuildRules {
           return deps.iterator();
         };
 
-    final ImmutableSet.Builder<TargetNode<?, ?>> filteredRules = ImmutableSet.builder();
+    ImmutableSet.Builder<TargetNode<?, ?>> filteredRules = ImmutableSet.builder();
     AcyclicDepthFirstPostOrderTraversal<TargetNode<?, ?>> traversal =
         new AcyclicDepthFirstPostOrderTraversal<>(graphTraversable);
     try {

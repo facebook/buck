@@ -29,7 +29,7 @@ public class PBXContainerItemProxy extends PBXContainerItem {
 
     private final int intValue;
 
-    private ProxyType(int intValue) {
+    ProxyType(int intValue) {
       this.intValue = intValue;
     }
 

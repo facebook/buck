@@ -120,8 +120,8 @@ class ProvisioningProfileCopyStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    final Optional<ImmutableMap<String, NSObject>> entitlements;
-    final String prefix;
+    Optional<ImmutableMap<String, NSObject>> entitlements;
+    String prefix;
     if (entitlementsPlist.isPresent()) {
       try {
         NSDictionary entitlementsPlistDict =
@@ -141,14 +141,14 @@ class ProvisioningProfileCopyStep implements Step {
       prefix = "*";
     }
 
-    final Optional<ImmutableList<CodeSignIdentity>> identities;
+    Optional<ImmutableList<CodeSignIdentity>> identities;
     if (!codeSignIdentitiesSupplier.get().isEmpty()) {
       identities = Optional.of(codeSignIdentitiesSupplier.get());
     } else {
       identities = ProvisioningProfileStore.MATCH_ANY_IDENTITY;
     }
 
-    final String bundleID =
+    String bundleID =
         AppleInfoPlistParsing.getBundleIdFromPlistStream(
                 infoPlist, filesystem.getInputStreamForRelativePath(infoPlist))
             .get();

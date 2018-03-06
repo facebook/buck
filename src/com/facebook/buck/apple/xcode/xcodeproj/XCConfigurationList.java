@@ -43,7 +43,7 @@ public class XCConfigurationList extends PBXProjectItem {
             .build(
                 new CacheLoader<String, XCBuildConfiguration>() {
                   @Override
-                  public XCBuildConfiguration load(String key) throws Exception {
+                  public XCBuildConfiguration load(String key) {
                     XCBuildConfiguration configuration = new XCBuildConfiguration(key);
                     buildConfigurations.add(configuration);
                     return configuration;

@@ -82,7 +82,7 @@ public class SceneKitAssets extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), outputDir)));
     for (SourcePath inputPath : sceneKitAssetsPaths) {
-      final Path absoluteInputPath = context.getSourcePathResolver().getAbsolutePath(inputPath);
+      Path absoluteInputPath = context.getSourcePathResolver().getAbsolutePath(inputPath);
 
       if (copySceneKitAssets.isPresent()) {
         stepsBuilder.add(

@@ -187,21 +187,21 @@ class WorkspaceGenerator {
     }
 
     DOMImplementation domImplementation = docBuilder.getDOMImplementation();
-    final Document doc =
+    Document doc =
         domImplementation.createDocument(/* namespaceURI */ null, "Workspace", /* docType */ null);
     doc.setXmlVersion("1.0");
 
     Element rootElem = doc.getDocumentElement();
     rootElem.setAttribute("version", "1.0");
 
-    final Stack<Element> groups = new Stack<>();
+    Stack<Element> groups = new Stack<>();
     groups.push(rootElem);
 
     FileVisitor<Map.Entry<String, WorkspaceNode>> visitor =
         new FileVisitor<Map.Entry<String, WorkspaceNode>>() {
           @Override
           public FileVisitResult preVisitDirectory(
-              Map.Entry<String, WorkspaceNode> dir, BasicFileAttributes attrs) throws IOException {
+              Map.Entry<String, WorkspaceNode> dir, BasicFileAttributes attrs) {
             Preconditions.checkArgument(dir.getValue() instanceof WorkspaceGroup);
             Element element = doc.createElement("Group");
             element.setAttribute("location", "container:");
@@ -213,28 +213,28 @@ class WorkspaceGenerator {
 
           @Override
           public FileVisitResult visitFile(
-              Map.Entry<String, WorkspaceNode> file, BasicFileAttributes attrs) throws IOException {
+              Map.Entry<String, WorkspaceNode> file, BasicFileAttributes attrs) {
             Preconditions.checkArgument(file.getValue() instanceof WorkspaceFileRef);
             WorkspaceFileRef fileRef = (WorkspaceFileRef) file.getValue();
             Element element = doc.createElement("FileRef");
             element.setAttribute(
                 "location",
                 "container:"
-                    + MorePaths.relativize(MorePaths.normalize(outputDirectory), fileRef.getPath())
-                        .toString());
+                    + MorePaths.relativize(
+                        MorePaths.normalize(outputDirectory), fileRef.getPath()));
             groups.peek().appendChild(element);
             return FileVisitResult.CONTINUE;
           }
 
           @Override
           public FileVisitResult visitFileFailed(
-              Map.Entry<String, WorkspaceNode> file, IOException exc) throws IOException {
+              Map.Entry<String, WorkspaceNode> file, IOException exc) {
             return FileVisitResult.TERMINATE;
           }
 
           @Override
           public FileVisitResult postVisitDirectory(
-              Map.Entry<String, WorkspaceNode> dir, IOException exc) throws IOException {
+              Map.Entry<String, WorkspaceNode> dir, IOException exc) {
             groups.pop();
             return FileVisitResult.CONTINUE;
           }

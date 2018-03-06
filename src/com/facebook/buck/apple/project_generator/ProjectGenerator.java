@@ -608,7 +608,7 @@ public class ProjectGenerator {
   private Optional<PBXTarget> generateHalideLibraryTarget(
       PBXProject project, TargetNode<HalideLibraryDescriptionArg, ?> targetNode)
       throws IOException {
-    final BuildTarget buildTarget = targetNode.getBuildTarget();
+    BuildTarget buildTarget = targetNode.getBuildTarget();
     boolean isFocusedOnTarget = focusModules.isFocusedOn(buildTarget);
     String productName = getProductNameForBuildTargetNode(targetNode);
     Path outputPath = getHalideOutputPath(targetNode.getFilesystem(), buildTarget);
@@ -792,7 +792,7 @@ public class ProjectGenerator {
           }
         };
 
-    final ImmutableSet.Builder<TargetNode<?, ?>> filteredRules = ImmutableSet.builder();
+    ImmutableSet.Builder<TargetNode<?, ?>> filteredRules = ImmutableSet.builder();
     AcyclicDepthFirstPostOrderTraversal<TargetNode<?, ?>> traversal =
         new AcyclicDepthFirstPostOrderTraversal<>(graphTraversable);
     try {
@@ -1016,9 +1016,8 @@ public class ProjectGenerator {
     LOG.debug("Generating binary target for node %s", targetNode);
 
     TargetNode<?, ?> buildTargetNode = bundle.isPresent() ? bundle.get() : targetNode;
-    final BuildTarget buildTarget = buildTargetNode.getBuildTarget();
-    final boolean containsSwiftCode =
-        projGenerationStateCache.targetContainsSwiftSourceCode(targetNode);
+    BuildTarget buildTarget = buildTargetNode.getBuildTarget();
+    boolean containsSwiftCode = projGenerationStateCache.targetContainsSwiftSourceCode(targetNode);
 
     String buildTargetName = getProductNameForBuildTargetNode(buildTargetNode);
     CxxLibraryDescription.CommonArg arg = targetNode.getConstructorArg();
@@ -1032,7 +1031,7 @@ public class ProjectGenerator {
     boolean isFocusedOnTarget = focusModules.isFocusedOn(buildTarget);
 
     Optional<String> swiftVersion = getSwiftVersionForTargetNode(targetNode);
-    final boolean hasSwiftVersionArg = swiftVersion.isPresent();
+    boolean hasSwiftVersionArg = swiftVersion.isPresent();
     if (!swiftVersion.isPresent()) {
       swiftVersion = swiftBuckConfig.getVersion();
     }
@@ -1706,7 +1705,7 @@ public class ProjectGenerator {
             Path vfsOverlay =
                 getTestingModulemapVFSOverlayLocationFromSymlinkTreeRoot(
                     getPathToHeaderSymlinkTree(targetUnderTest, HeaderVisibility.PUBLIC));
-            testingOverlayBuilder.add("$REPO_ROOT/" + vfsOverlay.toString());
+            testingOverlayBuilder.add("$REPO_ROOT/" + vfsOverlay);
           }
         });
     return testingOverlayBuilder.build();
@@ -2005,7 +2004,7 @@ public class ProjectGenerator {
             AppleBuildRules.SCENEKIT_ASSETS_DESCRIPTION_CLASSES,
             ImmutableList.of(targetNode));
 
-    for (final AppleWrapperResourceArg sceneKitAssets : allSceneKitAssets) {
+    for (AppleWrapperResourceArg sceneKitAssets : allSceneKitAssets) {
       PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
 
       resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
@@ -2408,7 +2407,7 @@ public class ProjectGenerator {
       PBXGroup targetGroup, Iterable<AppleWrapperResourceArg> dataModels) throws IOException {
     // TODO(coneko): actually add a build phase
 
-    for (final AppleWrapperResourceArg dataModel : dataModels) {
+    for (AppleWrapperResourceArg dataModel : dataModels) {
       // Core data models go in the resources group also.
       PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
 
@@ -2417,10 +2416,10 @@ public class ProjectGenerator {
         // the versions and the file pointing to the current version from
         // getInputsToCompareToOutput(), so the rule will be correctly detected as stale if any of
         // them change.
-        final String currentVersionFileName = ".xccurrentversion";
-        final String currentVersionKey = "_XCCurrentVersionName";
+        String currentVersionFileName = ".xccurrentversion";
+        String currentVersionKey = "_XCCurrentVersionName";
 
-        final XCVersionGroup versionGroup =
+        XCVersionGroup versionGroup =
             resourcesGroup.getOrCreateChildVersionGroupsBySourceTreePath(
                 new SourceTreePath(
                     PBXReference.SourceTree.SOURCE_ROOT,
@@ -3148,7 +3147,7 @@ public class ProjectGenerator {
     targetSpecificSwiftFlags.add("-Xcc");
     targetSpecificSwiftFlags.add("-ivfsoverlay");
     targetSpecificSwiftFlags.add("-Xcc");
-    targetSpecificSwiftFlags.add("$REPO_ROOT/" + vfsOverlay.toString());
+    targetSpecificSwiftFlags.add("$REPO_ROOT/" + vfsOverlay);
     return targetSpecificSwiftFlags.build();
   }
 
@@ -3279,8 +3278,7 @@ public class ProjectGenerator {
     } else if (targetNode.getConstructorArg().getExtension().isLeft()) {
       AppleBundleExtension extension = targetNode.getConstructorArg().getExtension().getLeft();
 
-      boolean nodeIsAppleLibrary =
-          ((Description<?>) binaryNode.getDescription()) instanceof AppleLibraryDescription;
+      boolean nodeIsAppleLibrary = binaryNode.getDescription() instanceof AppleLibraryDescription;
       boolean nodeIsCxxLibrary =
           ((Description<?>) binaryNode.getDescription()) instanceof CxxLibraryDescription;
       if (nodeIsAppleLibrary || nodeIsCxxLibrary) {

@@ -165,7 +165,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
   }
 
   @Override
-  public CxxPreprocessorInput getCxxPreprocessorInput(final CxxPlatform cxxPlatform) {
+  public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
     CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
 
     if (isPlatformSupported(cxxPlatform)) {
@@ -219,18 +219,17 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
     if (type == Linker.LinkableDepType.SHARED) {
       Optional<AppleCxxPlatform> appleCxxPlatform =
           applePlatformFlavorDomain.getValue(ImmutableSet.of(cxxPlatform.getFlavor()));
-      final boolean isMacTarget =
+      boolean isMacTarget =
           appleCxxPlatform
               .map(p -> p.getAppleSdk().getApplePlatform().getType() == ApplePlatformType.MAC)
               .orElse(false);
-      final String loaderPath =
-          isMacTarget ? "@loader_path/../Frameworks" : "@loader_path/Frameworks";
-      final String executablePath =
+      String loaderPath = isMacTarget ? "@loader_path/../Frameworks" : "@loader_path/Frameworks";
+      String executablePath =
           isMacTarget ? "@executable_path/../Frameworks" : "@loader_path/Frameworks";
       linkerArgsBuilder.addAll(StringArg.from("-rpath", loaderPath, "-rpath", executablePath));
     }
 
-    final ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
+    ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
     return NativeLinkableInput.of(linkerArgs, frameworkPaths.build(), Collections.emptySet());
   }
 

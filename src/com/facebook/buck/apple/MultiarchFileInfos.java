@@ -55,7 +55,7 @@ public class MultiarchFileInfos {
    *     incompatible flavors.
    */
   public static Optional<MultiarchFileInfo> create(
-      final FlavorDomain<AppleCxxPlatform> appleCxxPlatforms, BuildTarget target) {
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatforms, BuildTarget target) {
     ImmutableList<ImmutableSortedSet<Flavor>> thinFlavorSets =
         generateThinFlavors(appleCxxPlatforms.getFlavors(), target.getFlavors());
     if (thinFlavorSets.size() <= 1) { // Actually a thin binary

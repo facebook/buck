@@ -110,7 +110,7 @@ public class PrebuiltAppleFrameworkDescription
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
       BuildRuleParams params,
-      final PrebuiltAppleFrameworkDescriptionArg args) {
+      PrebuiltAppleFrameworkDescriptionArg args) {
     return new PrebuiltAppleFramework(
         buildTarget,
         context.getProjectFilesystem(),

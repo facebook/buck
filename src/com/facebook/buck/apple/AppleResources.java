@@ -43,8 +43,8 @@ public class AppleResources {
    * @return The recursive resource buildables.
    */
   public static ImmutableSet<AppleResourceDescriptionArg> collectRecursiveResources(
-      final TargetGraph targetGraph,
-      final Optional<AppleDependenciesCache> cache,
+      TargetGraph targetGraph,
+      Optional<AppleDependenciesCache> cache,
       TargetNode<?, ?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
@@ -58,9 +58,9 @@ public class AppleResources {
   }
 
   public static <T> AppleBundleResources collectResourceDirsAndFiles(
-      final TargetGraph targetGraph,
+      TargetGraph targetGraph,
       BuildRuleResolver resolver,
-      final Optional<AppleDependenciesCache> cache,
+      Optional<AppleDependenciesCache> cache,
       TargetNode<T, ?> targetNode) {
     AppleBundleResources.Builder builder = AppleBundleResources.builder();
 
