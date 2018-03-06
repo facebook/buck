@@ -102,7 +102,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
           .build(
               new CacheLoader<String, String>() {
                 @Override
-                public String load(String key) throws Exception {
+                public String load(String key) {
                   return CaseFormat.UPPER_CAMEL
                       .converterTo(CaseFormat.LOWER_UNDERSCORE)
                       .convert(key)
@@ -147,8 +147,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       ProjectFilesystem projectFilesystem,
       InvocationInfo invocationInfo,
       Clock clock,
-      final Locale locale,
-      final TimeZone timeZone,
+      Locale locale,
+      TimeZone timeZone,
       ThreadMXBean threadMXBean,
       ChromeTraceBuckConfig config)
       throws IOException {
@@ -841,13 +841,13 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       String name,
       ChromeTraceEvent.Phase phase,
       ImmutableMap<String, ? extends Object> arguments,
-      final BuckEvent event) {
+      BuckEvent event) {
     long threadId = event.getThreadId();
     long timestampInMicroseconds = TimeUnit.NANOSECONDS.toMicros(event.getNanoTime());
     long threadTimestampInMicroseconds =
         TimeUnit.NANOSECONDS.toMicros(event.getThreadUserNanoTime());
 
-    final ChromeTraceEvent chromeTraceEvent =
+    ChromeTraceEvent chromeTraceEvent =
         new ChromeTraceEvent(
             category,
             name,
@@ -920,7 +920,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   }
 
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  private void submitTraceEvent(final ChromeTraceEvent chromeTraceEvent) {
+  private void submitTraceEvent(ChromeTraceEvent chromeTraceEvent) {
     @SuppressWarnings("unused")
     Future<?> unused =
         outputExecutor.submit(

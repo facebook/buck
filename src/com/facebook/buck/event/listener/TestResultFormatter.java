@@ -281,7 +281,7 @@ public class TestResultFormatter {
       if (testLogsPath.isPresent() && verbosity != Verbosity.SILENT) {
         try {
           if (MostFiles.concatenateFiles(testLogsPath.get(), testLogPaths)) {
-            addTo.add("Updated test logs: " + testLogsPath.get().toString());
+            addTo.add("Updated test logs: " + testLogsPath.get());
           }
         } catch (IOException e) {
           LOG.warn(e, "Could not concatenate test logs %s to %s", testLogPaths, testLogsPath.get());
