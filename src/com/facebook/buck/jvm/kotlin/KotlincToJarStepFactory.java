@@ -178,6 +178,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             pathToSrcsList,
             kaptSourcePaths,
             allClasspaths,
+            extraArguments,
             kaptGenerated,
             stubsOutput,
             incrementalData,
@@ -254,6 +255,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       Path pathToSrcsList,
       ImmutableSortedSet<Path> sourcePaths,
       Iterable<? extends Path> declaredClasspathEntries,
+      ImmutableList<String> extraArguments,
       Path kaptGenerated,
       Path stubsOutput,
       Path incrementalData,
@@ -308,14 +310,16 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 .addAll(declaredClasspathEntries)
                 .build(),
             kotlinc,
-            ImmutableList.of(
-                MODULE_NAME,
-                invokingRule.getShortNameAndFlavorPostfix(),
-                COMPILER_BUILTINS,
-                LOAD_BUILTINS_FROM,
-                PLUGIN,
-                KAPT3_PLUGIN + APT_MODE + "stubs," + join,
-                X_PLUGIN_ARG + kotlinc.getAnnotationProcessorPath()),
+            ImmutableList.<String>builder()
+                .addAll(extraArguments)
+                .add(MODULE_NAME)
+                .add(invokingRule.getShortNameAndFlavorPostfix())
+                .add(COMPILER_BUILTINS)
+                .add(LOAD_BUILTINS_FROM)
+                .add(PLUGIN)
+                .add(KAPT3_PLUGIN + APT_MODE + "stubs," + join)
+                .add(X_PLUGIN_ARG + kotlinc.getAnnotationProcessorPath())
+            .build(),
             filesystem));
 
     // Then run the annotation processor
@@ -333,14 +337,16 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 .addAll(declaredClasspathEntries)
                 .build(),
             kotlinc,
-            ImmutableList.of(
-                MODULE_NAME,
-                invokingRule.getShortNameAndFlavorPostfix(),
-                COMPILER_BUILTINS,
-                LOAD_BUILTINS_FROM,
-                PLUGIN,
-                KAPT3_PLUGIN + APT_MODE + "apt," + join,
-                X_PLUGIN_ARG + kotlinc.getAnnotationProcessorPath()),
+            ImmutableList.<String>builder()
+                .addAll(extraArguments)
+                .add(MODULE_NAME)
+                .add(invokingRule.getShortNameAndFlavorPostfix())
+                .add(COMPILER_BUILTINS)
+                .add(LOAD_BUILTINS_FROM)
+                .add(PLUGIN)
+                .add(KAPT3_PLUGIN + APT_MODE + "apt," + join)
+                .add(X_PLUGIN_ARG + kotlinc.getAnnotationProcessorPath())
+                .build(),
             filesystem));
   }
 
