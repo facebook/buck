@@ -215,7 +215,7 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
   }
 
   private Path getDepFilePath() {
-    return output.getFileSystem().getPath(output.toString() + ".dep");
+    return output.getFileSystem().getPath(output + ".dep");
   }
 
   private class WriteArgFileStep implements Step {

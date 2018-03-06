@@ -67,10 +67,9 @@ public class CxxPrefixHeader extends PreInclude {
 
     // Language needs to be part of the key, PCHs built under a different language are incompatible.
     // (Replace `c++` with `cxx`; avoid default scrubbing which would make it the cryptic `c__`.)
-    final String langCode = sourceType.getLanguage().replaceAll("c\\+\\+", "cxx");
+    String langCode = sourceType.getLanguage().replaceAll("c\\+\\+", "cxx");
 
-    final String pchFullID =
-        String.format("pch-%s-%s", langCode, getHash.apply(computedCompilerFlags));
+    String pchFullID = String.format("pch-%s-%s", langCode, getHash.apply(computedCompilerFlags));
 
     return requirePrecompiledHeader(
         canPrecompile,

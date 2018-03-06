@@ -69,7 +69,7 @@ public abstract class CxxToolProvider<T> {
           .build(
               new CacheLoader<BuildRuleResolver, T>() {
                 @Override
-                public T load(@Nonnull BuildRuleResolver resolver) throws Exception {
+                public T load(@Nonnull BuildRuleResolver resolver) {
                   return build(type.get(), toolProvider.resolve(resolver));
                 }
               });
@@ -88,7 +88,7 @@ public abstract class CxxToolProvider<T> {
    * Build using a {@link Path} and an optional type. If the type is absent, the tool will be
    * executed to infer it.
    */
-  public CxxToolProvider(final Supplier<PathSourcePath> path, Optional<Type> type) {
+  public CxxToolProvider(Supplier<PathSourcePath> path, Optional<Type> type) {
     this(
         new ConstantToolProvider(new HashedFileTool(path)),
         type.map(Suppliers::ofInstance)

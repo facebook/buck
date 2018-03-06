@@ -42,7 +42,7 @@ public class ObjectFileScrubbers {
   public enum PaddingStyle {
     LEFT,
     RIGHT,
-  };
+  }
 
   private ObjectFileScrubbers() {}
 
@@ -53,7 +53,7 @@ public class ObjectFileScrubbers {
     return Arrays.equals(GLOBAL_THIN_HEADER, header);
   }
 
-  public static FileContentsScrubber createDateUidGidScrubber(final PaddingStyle paddingStyle) {
+  public static FileContentsScrubber createDateUidGidScrubber(PaddingStyle paddingStyle) {
     return new FileContentsScrubber() {
 
       /**
@@ -73,7 +73,7 @@ public class ObjectFileScrubbers {
 
           // Iterate over all the file meta-data entries, injecting zero's for timestamp,
           // UID, and GID.
-          final int entrySize =
+          int entrySize =
               16 /* fileName */
                   + 12 /* file modification time */
                   + 6 /* owner ID */

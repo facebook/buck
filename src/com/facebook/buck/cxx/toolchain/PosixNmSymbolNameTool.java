@@ -116,14 +116,14 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
 
     @Override
     public ImmutableList<Step> getBuildSteps(
-        BuildContext context, final BuildableContext buildableContext) {
-      final Path output = getUndefinedSymbolsPath();
+        BuildContext context, BuildableContext buildableContext) {
+      Path output = getUndefinedSymbolsPath();
 
       // Cache the symbols file.
       buildableContext.recordArtifact(output);
 
       // Run `nm` on the inputs.
-      final ShellStep shellStep =
+      ShellStep shellStep =
           new DefaultShellStep(
               getBuildTarget(),
               getProjectFilesystem().getRootPath(),

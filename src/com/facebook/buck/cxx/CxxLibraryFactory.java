@@ -88,11 +88,11 @@ public class CxxLibraryFactory {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams metadataRuleParams,
-      final BuildRuleResolver resolver,
+      BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final CxxLibraryDescriptionArg args,
+      CxxLibraryDescriptionArg args,
       Optional<Linker.LinkableDepType> linkableDepType,
-      final Optional<SourcePath> bundleLoader,
+      Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
       ImmutableSortedSet<BuildTarget> extraDeps,
       CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction
@@ -266,7 +266,7 @@ public class CxxLibraryFactory {
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return new CxxLibrary(
         buildTarget,
         projectFilesystem,

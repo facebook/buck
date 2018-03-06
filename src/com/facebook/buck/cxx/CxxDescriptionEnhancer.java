@@ -240,7 +240,7 @@ public class CxxDescriptionEnhancer {
             untypedTarget, cxxPlatform.getFlavor());
     BuildRule rule = ruleResolver.requireRule(headerSymlinkTreeTarget);
     Preconditions.checkState(
-        rule instanceof SymlinkTree, rule.getBuildTarget() + " " + rule.getClass().toString());
+        rule instanceof SymlinkTree, rule.getBuildTarget() + " " + rule.getClass());
     return (SymlinkTree) rule;
   }
 
@@ -736,7 +736,7 @@ public class CxxDescriptionEnhancer {
    *     macros expanded.
    */
   public static RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathToSearchPath(
-      final CxxPlatform cxxPlatform, final SourcePathResolver resolver) {
+      CxxPlatform cxxPlatform, SourcePathResolver resolver) {
     return new FrameworkPathToSearchPathFunction(cxxPlatform, resolver);
   }
 

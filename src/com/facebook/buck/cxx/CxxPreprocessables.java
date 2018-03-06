@@ -117,14 +117,12 @@ public class CxxPreprocessables {
    * while traversing the dependencies starting from the {@link BuildRule} objects given.
    */
   public static Collection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      final CxxPlatform cxxPlatform,
-      Iterable<? extends BuildRule> inputs,
-      final Predicate<Object> traverse) {
+      CxxPlatform cxxPlatform, Iterable<? extends BuildRule> inputs, Predicate<Object> traverse) {
 
     // We don't really care about the order we get back here, since headers shouldn't
     // conflict.  However, we want something that's deterministic, so sort by build
     // target.
-    final Map<BuildTarget, CxxPreprocessorInput> deps = new LinkedHashMap<>();
+    Map<BuildTarget, CxxPreprocessorInput> deps = new LinkedHashMap<>();
 
     // Build up the map of all C/C++ preprocessable dependencies.
     new AbstractBreadthFirstTraversal<BuildRule>(inputs) {
@@ -144,7 +142,7 @@ public class CxxPreprocessables {
   }
 
   public static Collection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      final CxxPlatform cxxPlatform, Iterable<? extends BuildRule> inputs) {
+      CxxPlatform cxxPlatform, Iterable<? extends BuildRule> inputs) {
     return getTransitiveCxxPreprocessorInput(cxxPlatform, inputs, x -> true);
   }
 
@@ -223,13 +221,13 @@ public class CxxPreprocessables {
   }
 
   public static LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
-      getTransitiveCxxPreprocessorInputCache(final CxxPreprocessorDep preprocessorDep) {
+      getTransitiveCxxPreprocessorInputCache(CxxPreprocessorDep preprocessorDep) {
     return getTransitiveCxxPreprocessorInputCache(preprocessorDep, Parallelizer.SERIAL);
   }
 
   public static LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
       getTransitiveCxxPreprocessorInputCache(
-          final CxxPreprocessorDep preprocessorDep, Parallelizer parallelizer) {
+          CxxPreprocessorDep preprocessorDep, Parallelizer parallelizer) {
     return CacheBuilder.newBuilder()
         .build(
             new CacheLoader<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>() {

@@ -155,7 +155,7 @@ public class CxxBinaryDescription
       CellPathResolver cellRoots,
       CxxBinaryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
-      final Class<U> metadataClass) {
+      Class<U> metadataClass) {
     return cxxBinaryMetadataFactory.createMetadata(
         buildTarget, resolver, args.getDeps(), metadataClass);
   }
