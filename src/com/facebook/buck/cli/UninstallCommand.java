@@ -151,7 +151,7 @@ public class UninstallCommand extends AbstractCommand {
     }
     HasInstallableApk hasInstallableApk = (HasInstallableApk) buildRule;
 
-    final AndroidDevicesHelper adbHelper = getExecutionContext().getAndroidDevicesHelper().get();
+    AndroidDevicesHelper adbHelper = getExecutionContext().getAndroidDevicesHelper().get();
 
     // Find application package name from manifest and uninstall from matching devices.
     SourcePathResolver pathResolver =

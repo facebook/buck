@@ -427,7 +427,7 @@ public class QueryCommand extends AbstractCommand {
         @Override
         public Iterable<TargetNode<?, ?>> visit(TargetNode<?, ?> node) {
           if (!shouldContainNode.test(node)) {
-            return ImmutableSet.<TargetNode<?, ?>>of();
+            return ImmutableSet.of();
           }
 
           int nodeRank = Preconditions.checkNotNull(ranks.get(node));

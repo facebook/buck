@@ -37,16 +37,16 @@ public class SuggestCommand extends AbstractCommand {
    * FineGrainedJavaDependencySuggester}.
    */
   @Override
-  public ExitCode runWithoutHelp(final CommandRunnerParams params)
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
       throws IOException, InterruptedException {
     if (arguments.size() != 1) {
       throw new CommandLineException("must specify exactly one argument to 'buck suggest'");
     }
 
-    final Console console = params.getConsole();
+    Console console = params.getConsole();
 
     String targetToBreakDown = Iterables.getOnlyElement(arguments);
-    final String fullyQualifiedTarget =
+    String fullyQualifiedTarget =
         Iterables.getOnlyElement(
             getCommandLineBuildTargetNormalizer(params.getBuckConfig())
                 .normalize(targetToBreakDown));

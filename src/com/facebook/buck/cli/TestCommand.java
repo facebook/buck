@@ -339,7 +339,7 @@ public class TestCommand extends BuildCommand {
   }
 
   private ExitCode runTestsExternal(
-      final CommandRunnerParams params,
+      CommandRunnerParams params,
       Build build,
       Iterable<String> command,
       Iterable<TestRule> testRules,
@@ -421,7 +421,7 @@ public class TestCommand extends BuildCommand {
     ForwardingProcessListener processListener =
         new ForwardingProcessListener(
             params.getConsole().getStdOut(), params.getConsole().getStdErr());
-    final ImmutableSet<String> testTargets =
+    ImmutableSet<String> testTargets =
         StreamSupport.stream(testRules.spliterator(), /* parallel */ false)
             .map(BuildRule::getBuildTarget)
             .map(Object::toString)

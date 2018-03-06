@@ -36,7 +36,6 @@ import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildState.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildRule;
@@ -339,8 +338,8 @@ public class TargetsCommand extends AbstractCommand {
       CommandRunnerParams params,
       ListeningExecutorService executor,
       CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier)
-      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
-          CycleException, VersionException {
+      throws IOException, InterruptedException, BuildFileParseException, CycleException,
+          VersionException {
     Optional<ImmutableSet<Class<? extends Description<?>>>> descriptionClasses =
         getDescriptionClassFromParams(params);
     if (!descriptionClasses.isPresent()) {
@@ -412,8 +411,7 @@ public class TargetsCommand extends AbstractCommand {
       CommandRunnerParams params,
       ListeningExecutorService executor,
       CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier)
-      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
-          VersionException {
+      throws IOException, InterruptedException, BuildFileParseException, VersionException {
     TargetGraphAndBuildTargets targetGraphAndTargets = buildTargetGraphAndTargets(params, executor);
     ActionGraphAndResolver result =
         params
@@ -461,7 +459,7 @@ public class TargetsCommand extends AbstractCommand {
                       + " "
                       + node.getType()
                       + " "
-                      + ruleKeyFactory.build(node).toString())
+                      + ruleKeyFactory.build(node))
           .setNodeToTypeName(node -> node.getType())
           .build()
           .writeOutput(params.getConsole().getStdOut());
@@ -472,7 +470,7 @@ public class TargetsCommand extends AbstractCommand {
       CommandRunnerParams params,
       ListeningExecutorService executor,
       Optional<ImmutableSet<Class<? extends Description<?>>>> descriptionClasses)
-      throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
+      throws InterruptedException, BuildFileParseException, IOException {
     if (getArguments().isEmpty()) {
       ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
       TargetGraphAndBuildTargets completeTargetGraphAndBuildTargets =
@@ -560,8 +558,7 @@ public class TargetsCommand extends AbstractCommand {
 
   private TargetGraphAndBuildTargets buildTargetGraphAndTargets(
       CommandRunnerParams params, ListeningExecutorService executor)
-      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
-          VersionException {
+      throws IOException, InterruptedException, BuildFileParseException, VersionException {
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     // Parse the entire action graph, or (if targets are specified), only the specified targets and
     // their dependencies. If we're detecting test changes we need the whole graph as tests are not
@@ -662,8 +659,8 @@ public class TargetsCommand extends AbstractCommand {
   ImmutableSortedMap<String, TargetNode<?, ?>> getMatchingNodes(
       TargetGraph graph,
       Optional<ImmutableSet<Path>> referencedFiles,
-      final Optional<ImmutableSet<BuildTarget>> matchingBuildTargets,
-      final Optional<ImmutableSet<Class<? extends Description<?>>>> descriptionClasses,
+      Optional<ImmutableSet<BuildTarget>> matchingBuildTargets,
+      Optional<ImmutableSet<Class<? extends Description<?>>>> descriptionClasses,
       boolean detectTestChanges,
       String buildFileName) {
     ImmutableSet<TargetNode<?, ?>> directOwners;
@@ -693,14 +690,8 @@ public class TargetsCommand extends AbstractCommand {
                     return false;
                   }
 
-                  if (descriptionClasses.isPresent()
-                      && !descriptionClasses
-                          .get()
-                          .contains(targetNode.getDescription().getClass())) {
-                    return false;
-                  }
-
-                  return true;
+                  return !descriptionClasses.isPresent()
+                      || descriptionClasses.get().contains(targetNode.getDescription().getClass());
                 });
     ImmutableSortedMap.Builder<String, TargetNode<?, ?>> matchingNodesBuilder =
         ImmutableSortedMap.naturalOrder();
@@ -719,7 +710,7 @@ public class TargetsCommand extends AbstractCommand {
    *     nodes}).
    */
   private static ImmutableSet<TargetNode<?, ?>> getDependentNodes(
-      final TargetGraph graph, ImmutableSet<TargetNode<?, ?>> nodes, boolean detectTestChanges) {
+      TargetGraph graph, ImmutableSet<TargetNode<?, ?>> nodes, boolean detectTestChanges) {
     ImmutableMultimap.Builder<TargetNode<?, ?>, TargetNode<?, ?>> extraEdgesBuilder =
         ImmutableMultimap.builder();
 
@@ -738,10 +729,9 @@ public class TargetsCommand extends AbstractCommand {
         }
       }
     }
-    final ImmutableMultimap<TargetNode<?, ?>, TargetNode<?, ?>> extraEdges =
-        extraEdgesBuilder.build();
+    ImmutableMultimap<TargetNode<?, ?>, TargetNode<?, ?>> extraEdges = extraEdgesBuilder.build();
 
-    final ImmutableSet.Builder<TargetNode<?, ?>> builder = ImmutableSet.builder();
+    ImmutableSet.Builder<TargetNode<?, ?>> builder = ImmutableSet.builder();
     AbstractBreadthFirstTraversal<TargetNode<?, ?>> traversal =
         new AbstractBreadthFirstTraversal<TargetNode<?, ?>>(nodes) {
           @Override
@@ -869,8 +859,7 @@ public class TargetsCommand extends AbstractCommand {
       ListeningExecutorService executor,
       Pair<TargetGraph, Iterable<TargetNode<?, ?>>> targetGraphAndTargetNodes,
       CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier)
-      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
-          CycleException {
+      throws IOException, InterruptedException, BuildFileParseException, CycleException {
 
     TargetResultBuilders targetResultBuilders = new TargetResultBuilders();
     if (isShowTargetHash) {
@@ -997,7 +986,7 @@ public class TargetsCommand extends AbstractCommand {
                   .getGeneratedSourcePath()
                   .map(
                       path -> {
-                        final Path rootPath = params.getCell().getFilesystem().getRootPath();
+                        Path rootPath = params.getCell().getFilesystem().getRootPath();
                         Path sameFsPath = rootPath.resolve(path.toString());
                         Path returnPath = isShowFullOutput ? path : rootPath.relativize(sameFsPath);
                         return returnPath.toString();
@@ -1048,7 +1037,7 @@ public class TargetsCommand extends AbstractCommand {
       CommandRunnerParams params,
       ListeningExecutorService executor,
       Pair<TargetGraph, Iterable<TargetNode<?, ?>>> targetGraphAndTargetNodes)
-      throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
+      throws InterruptedException, BuildFileParseException, IOException {
 
     if (isDetectTestChanges) {
       ImmutableSet<BuildTarget> explicitTestTargets =
@@ -1131,8 +1120,7 @@ public class TargetsCommand extends AbstractCommand {
       ListeningExecutorService executor,
       Pair<TargetGraph, Iterable<TargetNode<?, ?>>> targetGraphAndTargetNodes,
       TargetResultBuilders resultBuilders)
-      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
-          CycleException {
+      throws IOException, InterruptedException, BuildFileParseException, CycleException {
     LOG.debug("Getting target hash for %s", targetGraphAndTargetNodes.getSecond());
 
     Pair<TargetGraph, Iterable<TargetNode<?, ?>>> targetGraphAndNodesWithTests =
@@ -1165,7 +1153,7 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   private ImmutableMap<BuildTarget, HashCode> rehashWithTestsIfNeeded(
-      final TargetGraph targetGraphWithTests,
+      TargetGraph targetGraphWithTests,
       Iterable<TargetNode<?, ?>> inputTargets,
       ImmutableMap<BuildTarget, HashCode> buildTargetHashes)
       throws CycleException {

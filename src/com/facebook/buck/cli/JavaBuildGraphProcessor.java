@@ -91,10 +91,9 @@ final class JavaBuildGraphProcessor {
    * runs it. This method will take responsibility for cleaning up the executor service after it
    * runs.
    */
-  static void run(
-      final CommandRunnerParams params, final AbstractCommand command, final Processor processor)
+  static void run(CommandRunnerParams params, AbstractCommand command, Processor processor)
       throws ExitCodeException, InterruptedException, IOException {
-    final ConcurrencyLimit concurrencyLimit = command.getConcurrencyLimit(params.getBuckConfig());
+    ConcurrencyLimit concurrencyLimit = command.getConcurrencyLimit(params.getBuckConfig());
     try (CommandThreadManager pool =
         new CommandThreadManager(command.getClass().getName(), concurrencyLimit)) {
       Cell cell = params.getCell();
@@ -167,9 +166,7 @@ final class JavaBuildGraphProcessor {
                 .setConcurrencyLimit(concurrencyLimit)
                 .setBuckEventBus(eventBus)
                 .setEnvironment(/* environment */ ImmutableMap.of())
-                .setExecutors(
-                    ImmutableMap.<ExecutorPool, ListeningExecutorService>of(
-                        ExecutorPool.CPU, pool.getListeningExecutorService()))
+                .setExecutors(ImmutableMap.of(ExecutorPool.CPU, pool.getListeningExecutorService()))
                 .setJavaPackageFinder(params.getJavaPackageFinder())
                 .setPlatform(params.getPlatform())
                 .setCellPathResolver(params.getCell().getCellPathResolver())

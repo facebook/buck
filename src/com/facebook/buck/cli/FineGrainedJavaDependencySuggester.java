@@ -80,7 +80,7 @@ class FineGrainedJavaDependencySuggester {
    * @throws IllegalArgumentException
    */
   void suggestRefactoring() {
-    final TargetNode<?, ?> suggestedNode = graph.get(suggestedTarget);
+    TargetNode<?, ?> suggestedNode = graph.get(suggestedTarget);
     if (!(suggestedNode.getConstructorArg() instanceof JavaLibraryDescription.CoreArg)) {
       console.printErrorText(
           String.format("'%s' does not correspond to a Java rule", suggestedTarget));
@@ -218,7 +218,7 @@ class FineGrainedJavaDependencySuggester {
       JavaDepsFinder.DependencyInfo dependencyInfo,
       MutableDirectedGraph<String> symbolsDependencies,
       String visibilityArg) {
-    final TargetNode<?, ?> suggestedNode = graph.get(suggestedTarget);
+    TargetNode<?, ?> suggestedNode = graph.get(suggestedTarget);
     SortedSet<String> deps = new TreeSet<>(LOCAL_DEPS_FIRST_COMPARATOR);
     SortedSet<PathSourcePath> srcs = new TreeSet<>();
     for (String providedSymbol : namedComponent.symbols) {
@@ -275,7 +275,7 @@ class FineGrainedJavaDependencySuggester {
       }
     }
 
-    final Path basePathForSuggestedTarget = suggestedTarget.getBasePath();
+    Path basePathForSuggestedTarget = suggestedTarget.getBasePath();
     Iterable<String> relativeSrcs =
         FluentIterable.from(srcs)
             .transform(

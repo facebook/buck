@@ -122,7 +122,7 @@ public class AuditRulesCommand extends AbstractCommand {
         rawRules = parser.getAll(path, new AtomicLong());
 
         // Format and print the rules from the raw data, filtered by type.
-        final ImmutableSet<String> types = getTypes();
+        ImmutableSet<String> types = getTypes();
         Predicate<String> includeType = type -> types.isEmpty() || types.contains(type);
         printRulesToStdout(params, rawRules, includeType);
       }
@@ -137,9 +137,7 @@ public class AuditRulesCommand extends AbstractCommand {
   }
 
   private void printRulesToStdout(
-      CommandRunnerParams params,
-      List<Map<String, Object>> rawRules,
-      final Predicate<String> includeType)
+      CommandRunnerParams params, List<Map<String, Object>> rawRules, Predicate<String> includeType)
       throws IOException {
     Iterable<Map<String, Object>> filteredRules =
         FluentIterable.from(rawRules)

@@ -261,7 +261,7 @@ public class ProjectCommand extends BuildCommand {
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params)
       throws IOException, InterruptedException {
-    final Ide projectIde =
+    Ide projectIde =
         (ide == null) ? getIdeFromBuckConfig(params.getBuckConfig()).orElse(null) : ide;
 
     if (projectIde == null) {

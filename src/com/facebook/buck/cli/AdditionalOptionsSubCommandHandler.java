@@ -51,7 +51,7 @@ public class AdditionalOptionsSubCommandHandler extends SubCommandHandler {
   @Override
   public int parseArguments(Parameters params) throws CmdLineException {
     String subCmd = params.getParameter(0);
-    final SubCommands commands = cachedSetter.asAnnotatedElement().getAnnotation(SubCommands.class);
+    SubCommands commands = cachedSetter.asAnnotatedElement().getAnnotation(SubCommands.class);
     HashMap<String, SubCommand> availableSubcommands = new HashMap<>();
     Arrays.stream(commands.value()).forEach(c -> availableSubcommands.put(c.name(), c));
 
@@ -59,8 +59,7 @@ public class AdditionalOptionsSubCommandHandler extends SubCommandHandler {
     SubCommand c = availableSubcommands.get(subCmd);
     if (c == null) {
       // Try alternative spellings
-      final List<String> suggestions =
-          spellingSuggestions(subCmd, availableSubcommands.keySet(), 2);
+      List<String> suggestions = spellingSuggestions(subCmd, availableSubcommands.keySet(), 2);
       if (suggestions.size() == 1) {
         // Only use the suggestion if it's unambiguous
         String corrected = suggestions.get(0);

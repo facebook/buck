@@ -116,13 +116,13 @@ public class TestRunning {
 
   @SuppressWarnings("PMD.EmptyCatchBlock")
   public static int runTests(
-      final CommandRunnerParams params,
+      CommandRunnerParams params,
       Iterable<TestRule> tests,
       ExecutionContext executionContext,
-      final TestRunningOptions options,
+      TestRunningOptions options,
       ListeningExecutorService service,
       BuildEngine buildEngine,
-      final StepRunner stepRunner,
+      StepRunner stepRunner,
       BuildContext buildContext,
       SourcePathRuleFinder ruleFinder)
       throws IOException, InterruptedException {
@@ -157,13 +157,13 @@ public class TestRunning {
       rulesUnderTestForCoverage = ImmutableSet.of();
     }
 
-    final ImmutableSet<String> testTargets =
+    ImmutableSet<String> testTargets =
         FluentIterable.from(tests)
             .transform(BuildRule::getBuildTarget)
             .transform(Object::toString)
             .toSet();
 
-    final int totalNumberOfTests = Iterables.size(tests);
+    int totalNumberOfTests = Iterables.size(tests);
 
     params
         .getBuckEventBus()
@@ -178,20 +178,20 @@ public class TestRunning {
     // ListenableFuture.
     List<ListenableFuture<TestResults>> results = new ArrayList<>();
 
-    final AtomicInteger lastReportedTestSequenceNumber = new AtomicInteger();
-    final List<TestRun> separateTestRuns = new ArrayList<>();
+    AtomicInteger lastReportedTestSequenceNumber = new AtomicInteger();
+    List<TestRun> separateTestRuns = new ArrayList<>();
     List<TestRun> parallelTestRuns = new ArrayList<>();
-    for (final TestRule test : tests) {
+    for (TestRule test : tests) {
       // Determine whether the test needs to be executed.
-      final Callable<TestResults> resultsInterpreter =
+      Callable<TestResults> resultsInterpreter =
           getCachingCallable(
               test.interpretTestResults(
                   executionContext,
                   buildContext.getSourcePathResolver(),
                   /*isUsingTestSelectors*/ !options.getTestSelectorList().isEmpty()));
 
-      final Map<String, UUID> testUUIDMap = new HashMap<>();
-      final AtomicReference<TestStatusMessageEvent.Started> currentTestStatusMessageEvent =
+      Map<String, UUID> testUUIDMap = new HashMap<>();
+      AtomicReference<TestStatusMessageEvent.Started> currentTestStatusMessageEvent =
           new AtomicReference<>();
       TestRule.TestReportingCallback testReportingCallback =
           new TestRule.TestReportingCallback() {
@@ -314,9 +314,9 @@ public class TestRunning {
 
     ListenableFuture<List<TestResults>> parallelTestStepsFuture = Futures.allAsList(results);
 
-    final List<TestResults> completedResults = new ArrayList<>();
+    List<TestResults> completedResults = new ArrayList<>();
 
-    final ListeningExecutorService directExecutorService = MoreExecutors.newDirectExecutorService();
+    ListeningExecutorService directExecutorService = MoreExecutors.newDirectExecutorService();
     ListenableFuture<Void> uberFuture =
         MoreFutures.addListenableCallback(
             parallelTestStepsFuture,
@@ -442,15 +442,15 @@ public class TestRunning {
   }
 
   private static ListenableFuture<TestResults> transformTestResults(
-      final CommandRunnerParams params,
+      CommandRunnerParams params,
       ListenableFuture<TestResults> originalTestResults,
-      final TestRule testRule,
-      final TestRule.TestReportingCallback testReportingCallback,
-      final ImmutableSet<String> testTargets,
-      final AtomicInteger lastReportedTestSequenceNumber,
-      final int totalNumberOfTests) {
+      TestRule testRule,
+      TestRule.TestReportingCallback testReportingCallback,
+      ImmutableSet<String> testTargets,
+      AtomicInteger lastReportedTestSequenceNumber,
+      int totalNumberOfTests) {
 
-    final SettableFuture<TestResults> transformedTestResults = SettableFuture.create();
+    SettableFuture<TestResults> transformedTestResults = SettableFuture.create();
     FutureCallback<TestResults> callback =
         new FutureCallback<TestResults>() {
 
@@ -524,7 +524,7 @@ public class TestRunning {
     return transformedTestResults;
   }
 
-  private static Callable<TestResults> getCachingCallable(final Callable<TestResults> callable) {
+  private static Callable<TestResults> getCachingCallable(Callable<TestResults> callable) {
     return new Callable<TestResults>() {
       @Nullable private Either<TestResults, Exception> result = null;
 
@@ -793,9 +793,9 @@ public class TestRunning {
   private static ListenableFuture<TestResults> runStepsAndYieldResult(
       StepRunner stepRunner,
       ExecutionContext context,
-      final List<Step> steps,
-      final Callable<TestResults> interpretResults,
-      final BuildTarget buildTarget,
+      List<Step> steps,
+      Callable<TestResults> interpretResults,
+      BuildTarget buildTarget,
       BuckEventBus eventBus,
       ListeningExecutorService listeningExecutorService) {
     Preconditions.checkState(!listeningExecutorService.isShutdown());

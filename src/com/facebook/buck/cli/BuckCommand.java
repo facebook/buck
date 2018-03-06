@@ -121,9 +121,9 @@ public class BuckCommand extends AbstractContainerCommand {
     if (subcommand == null) {
       return "no_sub_command";
     } else {
-      final Class<? extends Command> subcommandClass = subcommand.getClass();
+      Class<? extends Command> subcommandClass = subcommand.getClass();
       try {
-        final SubCommands subCommands =
+        SubCommands subCommands =
             this.getClass()
                 .getDeclaredField(getSubcommandsFieldName())
                 .getAnnotation(SubCommands.class);
