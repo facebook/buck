@@ -620,7 +620,7 @@ public class TestCommand extends BuildCommand {
                     isKeepGoing())) {
 
           // Build all of the test rules.
-          int exitCodeInt =
+          ExitCode exitCode =
               build.executeAndPrintFailuresToEventBus(
                   RichStream.from(testRules)
                       .map(TestRule::getBuildTarget)
@@ -628,7 +628,6 @@ public class TestCommand extends BuildCommand {
                   params.getBuckEventBus(),
                   params.getConsole(),
                   getPathToBuildReport(params.getBuckConfig()));
-          ExitCode exitCode = ExitCode.map(exitCodeInt);
           params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
           if (exitCode != ExitCode.SUCCESS) {
             return exitCode;

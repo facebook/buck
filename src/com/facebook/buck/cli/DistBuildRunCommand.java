@@ -232,27 +232,26 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
           LOG.info("Starting to process build with DistBuildExecutor.");
 
           // All preparation work is done, so start building.
-          int returnCode;
+          ExitCode returnCode;
           try {
             returnCode = distBuildExecutor.buildAndReturnExitCode();
           } catch (Throwable ex) {
             LOG.error(ex, "buildAndReturnExitCode() failed");
             throw ex;
           }
-
           LOG.info(
               "%s returned with exit code: [%d].",
-              distBuildExecutor.getClass().getName(), returnCode);
+              distBuildExecutor.getClass().getName(), returnCode.getCode());
           multiSourceFileContentsProvider.close();
           LOG.info("Successfully shut down the source file provider.");
           timeStatsTracker.stopTimer(SlaveEvents.TOTAL_RUNTIME);
 
           if (slaveEventListener != null) {
             slaveEventListener.sendFinalServerUpdates();
-            slaveEventListener.publishBuildSlaveFinishedEvent(returnCode);
+            slaveEventListener.publishBuildSlaveFinishedEvent(returnCode.getCode());
           }
 
-          if (returnCode == 0) {
+          if (returnCode == ExitCode.SUCCESS) {
             console.printSuccess(
                 String.format(
                     "Successfully ran distributed build [%s] in [%d millis].",
@@ -262,7 +261,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                 "Failed distributed build [%s] in [%d millis].",
                 buildName, timeStatsTracker.getElapsedTimeMs(SlaveEvents.TOTAL_RUNTIME));
           }
-          return ExitCode.map(returnCode);
+          return returnCode;
         }
       } catch (HumanReadableException e) {
         logBuildFailureEvent(e.getHumanReadableErrorMessage(), slaveEventListener);

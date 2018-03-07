@@ -159,7 +159,11 @@ public class DaemonIntegrationTest {
             TestContext.createHeartBeatStream(intervalMillis),
             timeoutMillis)) {
       ProcessResult result = workspace.runBuckdCommand(context, "build", "//:sleep");
-      result.assertFailure();
+      // TODO(buck_team): sometimes we incorrectly report interruption as build error; once it is
+      // fixed we need to only check for SIGNAL_INTERRUPT
+      assertTrue(
+          result.getExitCode() == ExitCode.SIGNAL_INTERRUPT
+              || result.getExitCode() == ExitCode.BUILD_ERROR);
       assertThat(result.getStderr(), containsString("InterruptedException"));
     }
   }
@@ -269,7 +273,11 @@ public class DaemonIntegrationTest {
               },
               "test",
               "//:test");
-      result.assertFailure();
+      // TODO(buck_team): sometimes we incorrectly report interruption as build error; once it is
+      // fixed we need to only check for SIGNAL_INTERRUPT
+      assertTrue(
+          result.getExitCode() == ExitCode.SIGNAL_INTERRUPT
+              || result.getExitCode() == ExitCode.BUILD_ERROR);
       assertThat(result.getStderr(), containsString("InterruptedException"));
     }
   }
@@ -298,7 +306,12 @@ public class DaemonIntegrationTest {
             TestContext.createDisconnectionStream(disconnectMillis),
             timeoutMillis)) {
       ProcessResult result = workspace.runBuckdCommand(context, "build", "//:sleep");
-      result.assertFailure();
+
+      // TODO(buck_team): sometimes we incorrectly report interruption as build error; once it is
+      // fixed we need to only check for SIGNAL_INTERRUPT
+      assertTrue(
+          result.getExitCode() == ExitCode.SIGNAL_INTERRUPT
+              || result.getExitCode() == ExitCode.BUILD_ERROR);
       assertThat(result.getStderr(), containsString("InterruptedException"));
     }
   }
@@ -343,7 +356,11 @@ public class DaemonIntegrationTest {
               },
               "test",
               "//:test");
-      result.assertFailure();
+      // TODO(buck_team): sometimes we incorrectly report interruption as build error; once it is
+      // fixed we need to only check for SIGNAL_INTERRUPT
+      assertTrue(
+          result.getExitCode() == ExitCode.SIGNAL_INTERRUPT
+              || result.getExitCode() == ExitCode.BUILD_ERROR);
       assertThat(result.getStderr(), containsString("InterruptedException"));
     }
   }

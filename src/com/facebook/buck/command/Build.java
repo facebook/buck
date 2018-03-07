@@ -45,6 +45,7 @@ import com.facebook.buck.util.CleanBuildShutdownException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -133,13 +134,12 @@ public class Build implements Closeable {
   }
 
   // This method is thread-safe
-  public int executeAndPrintFailuresToEventBus(
+  public ExitCode executeAndPrintFailuresToEventBus(
       Iterable<BuildTarget> targetsish,
       BuckEventBus eventBus,
       Console console,
       Optional<Path> pathToBuildReport) {
-    int exitCode;
-
+    ExitCode exitCode;
     ImmutableList<BuildRule> rulesToBuild = getRulesToBuild(targetsish);
 
     try {
@@ -149,7 +149,7 @@ public class Build implements Closeable {
               rulesToBuild, resultFutures, eventBus, console, pathToBuildReport);
     } catch (Exception e) {
       reportExceptionToUser(eventBus, e);
-      exitCode = 1;
+      exitCode = ExitCode.BUILD_ERROR;
     }
 
     return exitCode;
@@ -333,6 +333,7 @@ public class Build implements Closeable {
           LOG.warn(ex, "Received CancellationException during processing of InterruptedException");
         }
         Threads.interruptCurrentThread();
+        throw new InterruptedException(e.getMessage());
       }
       throw e;
     }
@@ -388,39 +389,37 @@ public class Build implements Closeable {
   /**
    * * Waits for the given BuildRules to finish building (as tracked by the corresponding Futures).
    * Prints all failures to the event bus.
-   *
-   * @param rulesToBuild
-   * @param resultFutures
-   * @param eventBus
-   * @param console
-   * @param pathToBuildReport
-   * @return
    */
-  public int waitForBuildToFinishAndPrintFailuresToEventBus(
+  public ExitCode waitForBuildToFinishAndPrintFailuresToEventBus(
       ImmutableList<BuildRule> rulesToBuild,
       List<BuildEngineResult> resultFutures,
       BuckEventBus eventBus,
       Console console,
       Optional<Path> pathToBuildReport) {
-    int exitCode;
+
+    ExitCode exitCode = ExitCode.BUILD_ERROR;
 
     try {
       // Can throw BuildExecutionException
       BuildExecutionResult buildExecutionResult = waitForBuildToFinish(rulesToBuild, resultFutures);
 
-      exitCode =
+      int code =
           processBuildReportAndGenerateExitCode(
               buildExecutionResult, eventBus, console, pathToBuildReport);
+      // TODO(buck_team) move ExitCode further down or switch to exceptions
+      exitCode = ExitCode.map(code);
     } catch (CleanBuildShutdownException e) {
       LOG.warn(e, "Build shutdown cleanly.");
-      exitCode = 1;
     } catch (Exception e) {
       if (e instanceof BuildExecutionException) {
         pathToBuildReport.ifPresent(
             path -> writePartialBuildReport(eventBus, path, (BuildExecutionException) e));
+      } else if (e instanceof InterruptedException) {
+        // TODO(buck_team): we should rather propagate exception otherwise command status is
+        // recorded to event bus as completed, not interrupted
+        exitCode = ExitCode.SIGNAL_INTERRUPT;
       }
       reportExceptionToUser(eventBus, e);
-      exitCode = 1;
     }
 
     return exitCode;

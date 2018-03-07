@@ -1349,11 +1349,11 @@ public class BuildCommand extends AbstractCommand {
             .append(getAdditionalTargetsToBuild(actionGraphAndResolver.getResolver()))
             .transform(target -> target.getFullyQualifiedName())
             .toList();
-    int code =
+    ExitCode code =
         builder.buildLocallyAndReturnExitCode(
             targetStrings, getPathToBuildReport(params.getBuckConfig()));
     builder.shutdown();
-    return ExitCode.map(code);
+    return code;
   }
 
   RuleKeyCacheScope<RuleKey> getDefaultRuleKeyCacheScope(

@@ -46,6 +46,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
@@ -117,7 +118,7 @@ public class LocalBuildExecutor implements BuildExecutor {
   }
 
   @Override
-  public int buildLocallyAndReturnExitCode(
+  public ExitCode buildLocallyAndReturnExitCode(
       Iterable<String> targetToBuildStrings, Optional<Path> pathToBuildReport)
       throws InterruptedException {
     Preconditions.checkArgument(!isShutdown);
@@ -147,7 +148,7 @@ public class LocalBuildExecutor implements BuildExecutor {
   }
 
   @Override
-  public int waitForBuildToFinish(
+  public ExitCode waitForBuildToFinish(
       Iterable<String> targetsToBuild,
       List<BuildEngineResult> resultFutures,
       Optional<Path> pathToBuildReport) {
