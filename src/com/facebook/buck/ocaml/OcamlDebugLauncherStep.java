@@ -122,7 +122,7 @@ public class OcamlDebugLauncherStep implements Step {
     }
 
     public Path getOutput() {
-      return Paths.get(bytecodeOutput.toString() + ".debug");
+      return Paths.get(bytecodeOutput + ".debug");
     }
   }
 }

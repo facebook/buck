@@ -77,10 +77,12 @@ public class OcamlBuildStep implements Step {
     hasGeneratedSources =
         ocamlContext.getLexInput().size() > 0 || ocamlContext.getYaccInput().size() > 0;
 
-    ImmutableList<String> ocamlDepFlags = ImmutableList.<String>builder()
-      .addAll(this.ocamlContext.getIncludeFlags(/* isBytecode */ false, /* excludeDeps */ true))
-      .addAll(this.ocamlContext.getOcamlDepFlags())
-      .build();
+    ImmutableList<String> ocamlDepFlags =
+        ImmutableList.<String>builder()
+            .addAll(
+                this.ocamlContext.getIncludeFlags(/* isBytecode */ false, /* excludeDeps */ true))
+            .addAll(this.ocamlContext.getOcamlDepFlags())
+            .build();
 
     this.depToolStep =
         new OcamlDepToolStep(
@@ -319,7 +321,7 @@ public class OcamlBuildStep implements Step {
       if (!outputFileName.endsWith(OcamlCompilables.OCAML_CMI)) {
         linkerInputs.add(outputPath);
       }
-      final ImmutableList<Arg> compileFlags =
+      ImmutableList<Arg> compileFlags =
           getCompileFlags(/* isBytecode */ false, /* excludeDeps */ false);
       Step compileStep =
           new OcamlMLCompileStep(
@@ -372,7 +374,7 @@ public class OcamlBuildStep implements Step {
       if (!outputFileName.endsWith(OcamlCompilables.OCAML_CMI)) {
         linkerInputs.add(outputPath);
       }
-      final ImmutableList<Arg> compileFlags =
+      ImmutableList<Arg> compileFlags =
           getCompileFlags(/* isBytecode */ true, /* excludeDeps */ false);
       Step compileBytecodeStep =
           new OcamlMLCompileStep(

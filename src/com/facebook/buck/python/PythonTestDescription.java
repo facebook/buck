@@ -221,7 +221,7 @@ public class PythonTestDescription
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
       BuildRuleParams params,
-      final PythonTestDescriptionArg args) {
+      PythonTestDescriptionArg args) {
 
     FlavorDomain<PythonPlatform> pythonPlatforms =
         toolchainProvider

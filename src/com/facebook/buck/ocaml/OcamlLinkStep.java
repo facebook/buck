@@ -62,7 +62,7 @@ public class OcamlLinkStep extends ShellStep {
       SourcePathResolver pathResolver) {
     ImmutableList.Builder<String> ocamlInputBuilder = ImmutableList.builder();
 
-    final String linkExt = isBytecode ? OcamlCompilables.OCAML_CMA : OcamlCompilables.OCAML_CMXA;
+    String linkExt = isBytecode ? OcamlCompilables.OCAML_CMA : OcamlCompilables.OCAML_CMXA;
 
     for (String linkInput : Arg.stringify(depInput, pathResolver)) {
       if (isLibrary && linkInput.endsWith(linkExt)) {

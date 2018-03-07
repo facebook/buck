@@ -161,9 +161,9 @@ class DaemonicCellState {
   }
 
   ImmutableSet<Map<String, Object>> putRawNodesIfNotPresentAndStripMetaEntries(
-      final Path buildFile,
-      final ImmutableSet<Map<String, Object>> withoutMetaIncludes,
-      final ImmutableSet<Path> dependentsOfEveryNode,
+      Path buildFile,
+      ImmutableSet<Map<String, Object>> withoutMetaIncludes,
+      ImmutableSet<Path> dependentsOfEveryNode,
       ImmutableMap<String, Optional<String>> env) {
     try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
       ImmutableSet<Map<String, Object>> updated =

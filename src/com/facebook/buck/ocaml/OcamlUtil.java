@@ -40,7 +40,7 @@ public class OcamlUtil {
    * @param extensions for which to return true
    * @return a Predicate instance
    */
-  public static Predicate<? super Path> ext(final String... extensions) {
+  public static Predicate<? super Path> ext(String... extensions) {
     return (Predicate<Path>)
         input -> {
           String strInput = input.toString();
@@ -54,7 +54,7 @@ public class OcamlUtil {
   }
 
   public static Predicate<? super SourcePath> sourcePathExt(
-      final SourcePathResolver resolver, final String... extensions) {
+      SourcePathResolver resolver, String... extensions) {
     return (Predicate<SourcePath>)
         input -> {
           String strInput = resolver.getRelativePath(input).toString();
@@ -70,11 +70,11 @@ public class OcamlUtil {
   public static ImmutableList<OcamlLibrary> getTransitiveOcamlInput(
       Iterable<? extends BuildRule> inputs) {
 
-    final DirectedAcyclicGraph<BuildRule> graph =
+    DirectedAcyclicGraph<BuildRule> graph =
         BuildRuleDependencyVisitors.getBuildRuleDirectedGraphFilteredBy(
             inputs, OcamlLibrary.class::isInstance, OcamlLibrary.class::isInstance);
 
-    final ImmutableList<BuildRule> sorted = TopologicalSort.sort(graph);
+    ImmutableList<BuildRule> sorted = TopologicalSort.sort(graph);
 
     return FluentIterable.from(sorted).filter(OcamlLibrary.class).toList();
   }

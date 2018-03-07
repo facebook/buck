@@ -48,33 +48,33 @@ public class PrebuiltOcamlLibraryDescription
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
       BuildRuleParams params,
-      final PrebuiltOcamlLibraryDescriptionArg args) {
+      PrebuiltOcamlLibraryDescriptionArg args) {
 
-    final boolean bytecodeOnly = args.getBytecodeOnly();
+    boolean bytecodeOnly = args.getBytecodeOnly();
 
-    final String libDir = args.getLibDir();
+    String libDir = args.getLibDir();
 
-    final String nativeLib = args.getNativeLib();
-    final String bytecodeLib = args.getBytecodeLib();
-    final ImmutableList<String> cLibs = args.getCLibs();
+    String nativeLib = args.getNativeLib();
+    String bytecodeLib = args.getBytecodeLib();
+    ImmutableList<String> cLibs = args.getCLibs();
 
-    final Path libPath = buildTarget.getBasePath().resolve(libDir);
-    final Path includeDir = libPath.resolve(args.getIncludeDir());
+    Path libPath = buildTarget.getBasePath().resolve(libDir);
+    Path includeDir = libPath.resolve(args.getIncludeDir());
 
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-    final Optional<SourcePath> staticNativeLibraryPath =
+    Optional<SourcePath> staticNativeLibraryPath =
         bytecodeOnly
             ? Optional.empty()
             : Optional.of(PathSourcePath.of(projectFilesystem, libPath.resolve(nativeLib)));
-    final SourcePath staticBytecodeLibraryPath =
+    SourcePath staticBytecodeLibraryPath =
         PathSourcePath.of(projectFilesystem, libPath.resolve(bytecodeLib));
-    final ImmutableList<SourcePath> staticCLibraryPaths =
+    ImmutableList<SourcePath> staticCLibraryPaths =
         cLibs
             .stream()
             .map(input -> PathSourcePath.of(projectFilesystem, libPath.resolve(input)))
             .collect(ImmutableList.toImmutableList());
 
-    final SourcePath bytecodeLibraryPath =
+    SourcePath bytecodeLibraryPath =
         PathSourcePath.of(projectFilesystem, libPath.resolve(bytecodeLib));
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(context.getBuildRuleResolver());

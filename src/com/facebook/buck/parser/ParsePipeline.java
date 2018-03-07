@@ -62,10 +62,7 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
    * @throws BuildFileParseException for syntax errors.
    */
   public final ImmutableSet<T> getAllNodes(
-      final Cell cell,
-      KnownBuildRuleTypes knownBuildRuleTypes,
-      final Path buildFile,
-      AtomicLong processedBytes)
+      Cell cell, KnownBuildRuleTypes knownBuildRuleTypes, Path buildFile, AtomicLong processedBytes)
       throws BuildFileParseException {
     Preconditions.checkState(!shuttingDown.get());
 
@@ -89,9 +86,9 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
    * @throws BuildTargetException if the buildTarget is malformed
    */
   public final T getNode(
-      final Cell cell,
+      Cell cell,
       KnownBuildRuleTypes knownBuildRuleTypes,
-      final BuildTarget buildTarget,
+      BuildTarget buildTarget,
       AtomicLong processedBytes)
       throws BuildFileParseException, BuildTargetException {
     Preconditions.checkState(!shuttingDown.get());
