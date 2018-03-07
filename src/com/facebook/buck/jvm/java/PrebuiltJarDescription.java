@@ -107,7 +107,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
     // is a BuildTargetSourcePath), we make the PrebuiltJar a dependency of the GWT module. If this
     // becomes a performance issue in practice, then we will explore reducing the dependencies of
     // the GWT module.
-    final SourcePath input;
+    SourcePath input;
     if (arg.getGwtJar().isPresent()) {
       input = arg.getGwtJar().get();
     } else if (arg.getSourceJar().isPresent()) {

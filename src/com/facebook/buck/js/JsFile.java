@@ -119,10 +119,10 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     @Override
     public ImmutableList<Step> getBuildSteps(
         BuildContext context, BuildableContext buildableContext) {
-      final SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
+      SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
       buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToOutput()));
 
-      final Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
+      Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
 
       Path srcPath = sourcePathResolver.getAbsolutePath(src);
       String jobArgs =
@@ -174,7 +174,7 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     @Override
     public ImmutableList<Step> getBuildSteps(
         BuildContext context, BuildableContext buildableContext) {
-      final SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
+      SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
       buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToOutput()));
 
       Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());

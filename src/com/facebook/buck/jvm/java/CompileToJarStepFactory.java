@@ -259,7 +259,7 @@ public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
     }
     ImmutableMap<String, String> envVars = envVarBuilder.build();
 
-    for (final String postprocessClassesCommand : postprocessClassesCommands) {
+    for (String postprocessClassesCommand : postprocessClassesCommands) {
       BashStep bashStep =
           new BashStep(
               target, filesystem.getRootPath(), postprocessClassesCommand + " " + outputDirectory) {

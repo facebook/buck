@@ -87,8 +87,8 @@ public class JavaDepsFinder {
     public final HashMultimap<String, TargetNode<?, ?>> symbolToProviders = HashMultimap.create();
   }
 
-  public DependencyInfo findDependencyInfoForGraph(final TargetGraph graph) {
-    final DependencyInfo dependencyInfo = new DependencyInfo();
+  public DependencyInfo findDependencyInfoForGraph(TargetGraph graph) {
+    DependencyInfo dependencyInfo = new DependencyInfo();
 
     // Walk the graph and for each Java rule we record the Java entities it provides.
     //

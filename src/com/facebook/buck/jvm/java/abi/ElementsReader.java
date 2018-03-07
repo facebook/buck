@@ -69,17 +69,17 @@ class ElementsReader implements LibraryReader {
   }
 
   @Override
-  public List<Path> getRelativePaths() throws IOException {
+  public List<Path> getRelativePaths() {
     return new ArrayList<>(allElements.get().keySet());
   }
 
   @Override
-  public InputStream openResourceFile(Path relativePath) throws IOException {
+  public InputStream openResourceFile(Path relativePath) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public void visitClass(Path relativePath, ClassVisitor cv) throws IOException {
+  public void visitClass(Path relativePath, ClassVisitor cv) {
     Element element = Preconditions.checkNotNull(allElements.get().get(relativePath));
     new ClassVisitorDriverFromElement(
             targetVersion, elements, messager, types, includeParameterMetadata)
@@ -96,7 +96,7 @@ class ElementsReader implements LibraryReader {
       PackageElement packageElement = (PackageElement) rootElement;
       if (!packageElement.getAnnotationMirrors().isEmpty()) {
         elements.put(
-            getRelativePathToClass(packageElement.getQualifiedName().toString() + ".package-info"),
+            getRelativePathToClass(packageElement.getQualifiedName() + ".package-info"),
             packageElement);
       }
     }

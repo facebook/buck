@@ -105,8 +105,7 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
       ImmutableSortedSet<Path> kotlinSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
-      ProjectFilesystem projectFilesystem)
-      throws InterruptedException {
+      ProjectFilesystem projectFilesystem) {
 
     ImmutableList<String> args =
         ImmutableList.<String>builder()

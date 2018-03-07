@@ -82,11 +82,11 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    final SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
-    final SourcePath jsOutputDir = getSourcePathToOutput();
-    final SourcePath sourceMapFile = getSourcePathToSourceMap();
-    final SourcePath resourcesDir = getSourcePathToResources();
-    final SourcePath miscDirPath = getSourcePathToMisc();
+    SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
+    SourcePath jsOutputDir = getSourcePathToOutput();
+    SourcePath sourceMapFile = getSourcePathToSourceMap();
+    SourcePath resourcesDir = getSourcePathToResources();
+    SourcePath miscDirPath = getSourcePathToMisc();
 
     String jobArgs =
         getJobArgs(sourcePathResolver, jsOutputDir, sourceMapFile, resourcesDir, miscDirPath);

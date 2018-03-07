@@ -98,8 +98,7 @@ final class JavaSymbolsRule extends AbstractBuildRule implements InitializableFr
     Step extractSymbolsStep =
         new AbstractExecutionStep("java-symbols") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context)
-              throws IOException, InterruptedException {
+          public StepExecutionResult execute(ExecutionContext context) throws IOException {
             try (OutputStream output = getProjectFilesystem().newFileOutputStream(outputPath)) {
               ObjectMappers.WRITER.writeValue(output, symbolsFinder.extractSymbols());
             }

@@ -240,7 +240,7 @@ public class JavaTestDescription
         ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
         Optional<Boolean> useCxxLibraries,
-        final ImmutableSet<BuildTarget> cxxLibraryWhitelist,
+        ImmutableSet<BuildTarget> cxxLibraryWhitelist,
         BuildRuleResolver resolver,
         SourcePathRuleFinder ruleFinder,
         CxxPlatform cxxPlatform) {

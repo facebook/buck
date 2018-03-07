@@ -464,7 +464,7 @@ public class JavaFileParser {
   }
 
   public Optional<String> getPackageNameFromSource(String code) {
-    final CompilationUnit compilationUnit = makeCompilationUnitFromSource(code);
+    CompilationUnit compilationUnit = makeCompilationUnitFromSource(code);
 
     // A Java file might not have a package. Hopefully all of ours do though...
     PackageDeclaration packageDecl = compilationUnit.getPackage();
@@ -474,7 +474,7 @@ public class JavaFileParser {
     return Optional.empty();
   }
 
-  private static enum DependencyType {
+  private enum DependencyType {
     REQUIRED,
     EXPORTED,
   }
@@ -483,16 +483,16 @@ public class JavaFileParser {
     // For now, we will harcode this. Ultimately, we probably want to make this configurable via
     // .buckconfig. For example, the Buck project itself is diligent about disallowing wildcard
     // imports, but the one exception is the Java code generated via Thrift in src-gen.
-    final boolean shouldThrowForUnsupportedWildcardImport = false;
+    boolean shouldThrowForUnsupportedWildcardImport = false;
 
-    final AtomicBoolean isPoisonedByUnsupportedWildcardImport = new AtomicBoolean(false);
+    AtomicBoolean isPoisonedByUnsupportedWildcardImport = new AtomicBoolean(false);
 
-    final CompilationUnit compilationUnit = makeCompilationUnitFromSource(code);
+    CompilationUnit compilationUnit = makeCompilationUnitFromSource(code);
 
-    final ImmutableSortedSet.Builder<String> providedSymbols = ImmutableSortedSet.naturalOrder();
-    final ImmutableSortedSet.Builder<String> requiredSymbols = ImmutableSortedSet.naturalOrder();
-    final ImmutableSortedSet.Builder<String> exportedSymbols = ImmutableSortedSet.naturalOrder();
-    final ImmutableSortedSet.Builder<String> requiredSymbolsFromExplicitImports =
+    ImmutableSortedSet.Builder<String> providedSymbols = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<String> requiredSymbols = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<String> exportedSymbols = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<String> requiredSymbolsFromExplicitImports =
         ImmutableSortedSet.naturalOrder();
 
     compilationUnit.accept(
@@ -577,8 +577,8 @@ public class JavaFileParser {
             if (!(parent instanceof PackageDeclaration) && !(parent instanceof ImportDeclaration)) {
               String symbol = ancestor.getFullyQualifiedName();
 
-              // If it does not start with an uppercase letter, it is probably because it is a property
-              // lookup.
+              // If it does not start with an uppercase letter, it is probably because it is a
+              // property lookup.
               if (CharMatcher.javaUpperCase().matches(symbol.charAt(0))) {
                 addTypeFromDotDelimitedSequence(symbol, DependencyType.REQUIRED);
               }
@@ -593,8 +593,8 @@ public class JavaFileParser {
            *     added to the set of required symbols.
            */
           private void addTypeFromDotDelimitedSequence(String expr, DependencyType dependencyType) {
-            // At this point, symbol could be `System.out`. We want to reduce it to `System` and then
-            // check it against JAVA_LANG_TYPES.
+            // At this point, symbol could be `System.out`. We want to reduce it to `System` and
+            // then check it against JAVA_LANG_TYPES.
             if (startsWithUppercaseChar(expr)) {
               int index = expr.indexOf('.');
               if (index >= 0) {
@@ -613,9 +613,10 @@ public class JavaFileParser {
           public boolean visit(ImportDeclaration node) {
             String fullyQualifiedName = node.getName().getFullyQualifiedName();
 
-            // Apparently, "on demand" means "uses a wildcard," such as "import java.util.*". Although
-            // we can choose to prohibit these in our own code, it is much harder to enforce for
-            // third-party code. As such, we will tolerate these for some of the common cases.
+            // Apparently, "on demand" means "uses a wildcard," such as "import java.util.*".
+            // Although we can choose to prohibit these in our own code, it is much harder to
+            // enforce for third-party code. As such, we will tolerate these for some of the common
+            // cases.
             if (node.isOnDemand()) {
               ImmutableSet<String> value = SUPPORTED_WILDCARD_IMPORTS.get(fullyQualifiedName);
               if (value != null) {
@@ -645,8 +646,8 @@ public class JavaFileParser {
             } else {
               LOG.warn("Suspicious import lacks obvious enclosing type: %s", fullyQualifiedName);
               // The one example we have seen of this in the wild is
-              // "org.whispersystems.curve25519.java.curve_sigs". In practice, we still need to add it
-              // as a required symbol in this case.
+              // "org.whispersystems.curve25519.java.curve_sigs". In practice, we still need to add
+              // it as a required symbol in this case.
               requiredSymbols.add(fullyQualifiedName);
             }
             return false;
@@ -697,8 +698,8 @@ public class JavaFileParser {
 
             if (parentNode instanceof BodyDeclaration) {
               // Note that BodyDeclaration is an abstract class. Its subclasses are things like
-              // FieldDeclaration and MethodDeclaration. We want to be sure that an annotation on any
-              // non-private declaration is considered an exported symbol.
+              // FieldDeclaration and MethodDeclaration. We want to be sure that an annotation on
+              // any non-private declaration is considered an exported symbol.
               BodyDeclaration declaration = (BodyDeclaration) parentNode;
 
               int modifiers = declaration.getModifiers();
@@ -711,8 +712,8 @@ public class JavaFileParser {
 
           @Override
           public boolean visit(SimpleType node) {
-            // This method is responsible for finding the overwhelming majority of the required symbols
-            // in the AST.
+            // This method is responsible for finding the overwhelming majority of the required
+            // symbols in the AST.
             tryAddType(node, DependencyType.REQUIRED);
             return true;
           }
@@ -764,10 +765,10 @@ public class JavaFileParser {
               // For a Type such as IExample<T>, both "IExample" and "T" will be submitted here as
               // simple types. As such, we use this imperfect heuristic to filter out "T" from being
               // added. Note that this will erroneously exclude "URI". In practice, this should
-              // generally be OK. For example, assuming "URI" is also imported, then at least it will
-              // end up in the set of required symbols. To this end, we perform a second check for
-              // "all caps" types to see if there is a corresponding import and if it should be exported
-              // rather than simply required.
+              // generally be OK. For example, assuming "URI" is also imported, then at least it
+              // will end up in the set of required symbols. To this end, we perform a second check
+              // for "all caps" types to see if there is a corresponding import and if it should be
+              // exported rather than simply required.
               if (!CharMatcher.javaUpperCase().matchesAllOf(simpleName)
                   || (dependencyType == DependencyType.EXPORTED
                       && simpleImportedTypes.containsKey(simpleName))) {
@@ -802,8 +803,8 @@ public class JavaFileParser {
               return;
             }
 
-            // For well-behaved source code, this will always be empty, so don't even bother to create
-            // the iterator most of the time.
+            // For well-behaved source code, this will always be empty, so don't even bother to
+            // create the iterator most of the time.
             if (!wildcardImports.isEmpty()) {
               for (Map.Entry<String, ImmutableSet<String>> entry : wildcardImports.entrySet()) {
                 Set<String> types = entry.getValue();

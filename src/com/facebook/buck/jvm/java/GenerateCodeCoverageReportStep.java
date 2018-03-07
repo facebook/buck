@@ -130,7 +130,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
       Set<Path> extractedClassesDirectories,
       OutputStream outputStream)
       throws IOException {
-    final Properties properties = new Properties();
+    Properties properties = new Properties();
 
     properties.setProperty("jacoco.output.dir", filesystem.resolve(outputDirectory).toString());
     properties.setProperty("jacoco.exec.data.file", JACOCO_EXEC_COVERAGE_FILE);

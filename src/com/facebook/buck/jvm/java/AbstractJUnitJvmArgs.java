@@ -189,9 +189,9 @@ abstract class AbstractJUnitJvmArgs {
     args.add(
         "-classpath",
         "@"
-            + filesystem.resolve(getClasspathFile()).toString()
+            + filesystem.resolve(getClasspathFile())
             + File.pathSeparator
-            + getTestRunnerClasspath().toString());
+            + getTestRunnerClasspath());
 
     args.add(FileClassPathRunner.class.getName());
 

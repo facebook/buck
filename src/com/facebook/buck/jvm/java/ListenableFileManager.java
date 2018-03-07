@@ -164,7 +164,7 @@ class ListenableFileManager extends ForwardingStandardJavaFileManager {
   private class TrackingIterable implements Iterable<JavaFileObject> {
     private final Iterable<? extends JavaFileObject> inner;
 
-    public TrackingIterable(final Iterable<? extends JavaFileObject> inner) {
+    public TrackingIterable(Iterable<? extends JavaFileObject> inner) {
       this.inner = inner;
     }
 
@@ -178,7 +178,7 @@ class ListenableFileManager extends ForwardingStandardJavaFileManager {
 
     private final Iterator<? extends JavaFileObject> inner;
 
-    public TrackingIterator(final Iterator<? extends JavaFileObject> inner) {
+    public TrackingIterator(Iterator<? extends JavaFileObject> inner) {
       this.inner = inner;
     }
 

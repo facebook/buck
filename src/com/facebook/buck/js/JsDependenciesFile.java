@@ -62,7 +62,7 @@ public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDep
   @Override
   public ImmutableList<? extends Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    final SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
+    SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
 
     SourcePath outputFile = getSourcePathToOutput();
     String jobArgs = getJobArgs(sourcePathResolver, outputFile);

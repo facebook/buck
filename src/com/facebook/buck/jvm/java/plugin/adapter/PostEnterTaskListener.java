@@ -86,7 +86,7 @@ public class PostEnterTaskListener implements TaskListener {
 
             // Technically getTypeDecls can also return some imports due to a bug in javac, but
             // that's fine in this case because we'll just ignore them.
-            return super.scan(node.getTypeDecls(), null);
+            return scan(node.getTypeDecls(), null);
           }
 
           @Override

@@ -86,8 +86,7 @@ public class JavacPipelineState implements RulePipelineState {
     return invocation != null;
   }
 
-  public Javac.Invocation getJavacInvocation(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public Javac.Invocation getJavacInvocation(ExecutionContext context) throws IOException {
     if (invocation == null) {
       javacOptions.validateOptions(classpathChecker::validateClasspath);
 
@@ -208,7 +207,7 @@ public class JavacPipelineState implements RulePipelineState {
       Path generatedCodeDirectory,
       ExecutionContext context,
       ImmutableSortedSet<Path> buildClasspathEntries) {
-    final ImmutableList.Builder<String> builder = ImmutableList.builder();
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     javacOptions.appendOptionsTo(
         new OptionsConsumer() {

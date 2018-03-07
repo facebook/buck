@@ -134,7 +134,7 @@ public class KotlincStep implements Step {
       Path outputDirectory,
       ImmutableSortedSet<Path> buildClasspathEntries) {
 
-    final ImmutableList.Builder<String> builder = ImmutableList.builder();
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     builder.add(INCLUDE_RUNTIME_FLAG);
 

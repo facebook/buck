@@ -80,7 +80,7 @@ public class JsFlavors {
   public static boolean validateFlavors(
       ImmutableSet<Flavor> flavors, Iterable<FlavorDomain<?>> allowableDomains) {
 
-    final ImmutableSet.Builder<Flavor> allowableFlavors = ImmutableSet.builder();
+    ImmutableSet.Builder<Flavor> allowableFlavors = ImmutableSet.builder();
     for (FlavorDomain<?> domain : allowableDomains) {
       // verify only one flavor of each domain is present
       domain.getFlavor(flavors);
@@ -90,13 +90,13 @@ public class JsFlavors {
     return allowableFlavors.build().containsAll(flavors);
   }
 
-  public static Flavor fileFlavorForSourcePath(final Path path) {
-    final String hash =
+  public static Flavor fileFlavorForSourcePath(Path path) {
+    String hash =
         Hashing.sha1()
             .hashString(MorePaths.pathWithUnixSeparators(path), Charsets.UTF_8)
             .toString()
             .substring(0, 10);
-    final String safeFileName = Flavor.replaceInvalidCharacters(path.getFileName().toString());
+    String safeFileName = Flavor.replaceInvalidCharacters(path.getFileName().toString());
     return InternalFlavor.of(fileFlavorPrefix + safeFileName + "-" + hash);
   }
 

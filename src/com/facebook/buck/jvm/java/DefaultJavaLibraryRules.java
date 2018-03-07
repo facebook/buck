@@ -728,7 +728,7 @@ public abstract class DefaultJavaLibraryRules {
 
     @Nullable
     public JavaLibraryDeps getDeps() {
-      return super.deps;
+      return deps;
     }
   }
 }

@@ -48,7 +48,7 @@ public class JsonConcatenateStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(final ExecutionContext context)
+  public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
     ImmutableSortedSet<Path> filesToConcatenate =
         inputs
