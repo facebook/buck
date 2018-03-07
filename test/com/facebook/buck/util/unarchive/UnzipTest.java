@@ -103,7 +103,7 @@ public class UnzipTest {
 
     // getFakeTime returs time with some non-zero millis. By doing division and multiplication by
     // 1000 we get rid of that.
-    final long time = ZipConstants.getFakeTime() / 1000 * 1000;
+    long time = ZipConstants.getFakeTime() / 1000 * 1000;
 
     // Create a simple zip archive using apache's commons-compress to store executable info.
     try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(zipFile.toFile())) {
@@ -316,7 +316,7 @@ public class UnzipTest {
   }
 
   @Test
-  public void testStripsPrefixAndIgnoresSiblings() throws IOException, InterruptedException {
+  public void testStripsPrefixAndIgnoresSiblings() throws IOException {
     byte[] bazDotSh = "echo \"baz.sh\"\n".getBytes(Charsets.UTF_8);
     try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(zipFile.toFile())) {
       zip.putArchiveEntry(new ZipArchiveEntry("foo"));

@@ -44,7 +44,7 @@ public class RepackZipEntriesStepTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void buildSampleZipFile() throws InterruptedException, IOException {
+  public void buildSampleZipFile() throws IOException {
     parent = tmp.newFolder("foo");
     filesystem = TestProjectFilesystems.createProjectFilesystem(parent);
     zipFile = parent.resolve("example.zip");

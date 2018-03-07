@@ -27,7 +27,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.io.IOException;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -39,7 +38,7 @@ public class ConfigTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Test
-  public void shouldGetBooleanValues() throws IOException {
+  public void shouldGetBooleanValues() {
     assertTrue(
         "a.b is true when 'yes'",
         ConfigBuilder.createFromText("[a]", "  b = yes").getBooleanValue("a", "b", true));
@@ -58,13 +57,13 @@ public class ConfigTest {
   }
 
   @Test
-  public void testGetFloat() throws IOException {
+  public void testGetFloat() {
     assertEquals(
         Optional.of(0.333f), ConfigBuilder.createFromText("[a]", "  f = 0.333").getFloat("a", "f"));
   }
 
   @Test
-  public void testGetList() throws IOException {
+  public void testGetList() {
     String[] config = {"[a]", "  b = foo,bar,baz"};
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     ImmutableList<String> expected = builder.add("foo").add("bar").add("baz").build();
@@ -78,7 +77,7 @@ public class ConfigTest {
   }
 
   @Test
-  public void testGetListWithCustomSplitChar() throws IOException {
+  public void testGetListWithCustomSplitChar() {
     String[] config = {"[a]", "  b = cool;story;bro"};
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     ImmutableList<String> expected = builder.add("cool").add("story").add("bro").build();
@@ -92,7 +91,7 @@ public class ConfigTest {
   }
 
   @Test
-  public void testGetEmptyList() throws IOException {
+  public void testGetEmptyList() {
     String[] config = {"[a]", "b ="};
     assertThat(
         ConfigBuilder.createFromText(config[0], config[1]).getOptionalListWithoutComments("a", "b"),
@@ -100,7 +99,7 @@ public class ConfigTest {
   }
 
   @Test
-  public void testGetEmptyListWithComment() throws IOException {
+  public void testGetEmptyListWithComment() {
     String[] config = {"[a]", "b = ; comment"};
     assertThat(
         ConfigBuilder.createFromText(config[0], config[1]).getOptionalListWithoutComments("a", "b"),
@@ -108,7 +107,7 @@ public class ConfigTest {
   }
 
   @Test
-  public void testGetUnspecifiedList() throws IOException {
+  public void testGetUnspecifiedList() {
     String[] config = {"[a]", "c ="};
     assertThat(
         ConfigBuilder.createFromText(config[0], config[1]).getOptionalListWithoutComments("a", "b"),
@@ -116,7 +115,7 @@ public class ConfigTest {
   }
 
   @Test(expected = HumanReadableException.class)
-  public void testGetMalformedFloat() throws IOException {
+  public void testGetMalformedFloat() {
     ConfigBuilder.createFromText("[a]", "  f = potato").getFloat("a", "f");
   }
 
@@ -146,7 +145,7 @@ public class ConfigTest {
   }
 
   @Test
-  public void getQuotedValue() throws IOException {
+  public void getQuotedValue() {
     assertEquals(
         "quoted strings are decoded",
         "foo [bar]\t\"\tbaz\\\n\u001f\udbcc\udc05\u6211\r",
@@ -157,7 +156,7 @@ public class ConfigTest {
   }
 
   @Test
-  public void getListWithQuotedParts() throws IOException {
+  public void getListWithQuotedParts() {
     assertEquals(
         "lists with quoted parts are decoded",
         ImmutableList.of("foo bar", ",,,", ";", "\n"),
@@ -166,7 +165,7 @@ public class ConfigTest {
   }
 
   @Test
-  public void invalidEscapeSequence() throws IOException {
+  public void invalidEscapeSequence() {
     String msg = "";
     try {
       ConfigBuilder.createFromText("[foo]\nbar=\"\\z\"").getValue("foo", "bar");
@@ -177,7 +176,7 @@ public class ConfigTest {
   }
 
   @Test
-  public void invalidHexSequence() throws IOException {
+  public void invalidHexSequence() {
     String msg = "";
     try {
       ConfigBuilder.createFromText("[x]\ny=\"\\x4-\"").getValue("x", "y");
@@ -188,7 +187,7 @@ public class ConfigTest {
   }
 
   @Test
-  public void missingCloseQuote() throws IOException {
+  public void missingCloseQuote() {
     String msg = "";
     try {
       ConfigBuilder.createFromText("[foo]\nbar=xyz\"asdfasdfasdf\n").getValue("foo", "bar");
@@ -199,7 +198,7 @@ public class ConfigTest {
   }
 
   @Test
-  public void shortHexSequence() throws IOException {
+  public void shortHexSequence() {
     String msg = "";
     try {
       ConfigBuilder.createFromText("[foo]\nbar=\"\\u002").getValue("foo", "bar");

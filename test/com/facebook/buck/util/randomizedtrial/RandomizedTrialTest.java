@@ -54,7 +54,7 @@ public class RandomizedTrialTest {
   }
 
   @Test
-  public void testCreatingWithWrongConfiguration() throws Exception {
+  public void testCreatingWithWrongConfiguration() {
     try {
       RandomizedTrial.getGroupStable("name", BrokenEnum.class);
     } catch (RuntimeException e) {
@@ -65,7 +65,7 @@ public class RandomizedTrialTest {
   }
 
   @Test
-  public void testPointStaysStable() throws Exception {
+  public void testPointStaysStable() {
     assertThat(
         RandomizedTrial.getPoint("test", "id"),
         Matchers.equalTo(RandomizedTrial.getPoint("test", "id")));
@@ -80,7 +80,7 @@ public class RandomizedTrialTest {
   //  }
 
   @Test
-  public void testGetGroupReturnsCorrectGroup() throws Exception {
+  public void testGetGroupReturnsCorrectGroup() {
     BuildId buildId = new BuildId("01234");
     double point = RandomizedTrial.getPoint("name", buildId.toString());
     MutableEnum.probabilityGroup1 = point;
@@ -92,7 +92,7 @@ public class RandomizedTrialTest {
   }
 
   @Test
-  public void testGetGroupStableReturnsCorrectGroup() throws Exception {
+  public void testGetGroupStableReturnsCorrectGroup() {
     double point = RandomizedTrial.getPoint("name");
     MutableEnum.probabilityGroup1 = point;
     MutableEnum.probabilityGroup2 = 1.0 - point;

@@ -80,7 +80,7 @@ public class VersionUniverseVersionSelectorTest {
   }
 
   @Test
-  public void firstConfiguredVersionUniverseUsedByDefault() throws VersionException {
+  public void firstConfiguredVersionUniverseUsedByDefault() {
     TargetNode<?, ?> root = new VersionRootBuilder("//:root").build();
     VersionUniverseVersionSelector selector =
         new VersionUniverseVersionSelector(

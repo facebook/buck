@@ -68,7 +68,7 @@ public class ListeningMultiSemaphoreTest {
     assertThat(array.getQueueLength(), Matchers.equalTo(1));
     assertThat(array.getAvailableResources(), Matchers.equalTo(amountsOfCpu(4)));
 
-    final AtomicBoolean f2HasBeenReleased = new AtomicBoolean(false);
+    AtomicBoolean f2HasBeenReleased = new AtomicBoolean(false);
     f2.addListener(() -> f2HasBeenReleased.set(true), MoreExecutors.newDirectExecutorService());
 
     array.release(amountsOfCpu(3));
@@ -91,24 +91,24 @@ public class ListeningMultiSemaphoreTest {
 
     // then, this step tried to acquire, but we cancel this future. When pending queue is being
     // processed later, this acquisition should not happen - future is cancelled!
-    final ListenableFuture<Void> toBeCancelled = array.acquire(amountsOfCpu(5));
+    ListenableFuture<Void> toBeCancelled = array.acquire(amountsOfCpu(5));
     assertThat(toBeCancelled.isDone(), Matchers.equalTo(false));
     assertThat(array.getQueueLength(), Matchers.equalTo(1));
     assertThat(array.getAvailableResources(), Matchers.equalTo(amountsOfCpu(2)));
     toBeCancelled.cancel(true);
-    final AtomicBoolean toBeCancelledIsReleased = new AtomicBoolean(false);
+    AtomicBoolean toBeCancelledIsReleased = new AtomicBoolean(false);
     toBeCancelled.addListener(
         () -> toBeCancelledIsReleased.set(toBeCancelled.isCancelled()),
         MoreExecutors.newDirectExecutorService());
 
     // this should be released, because previous future is cancelled,
     // so resources should become free
-    final ListenableFuture<Void> toBeReleaseAfterCancellation = array.acquire(amountsOfCpu(6));
+    ListenableFuture<Void> toBeReleaseAfterCancellation = array.acquire(amountsOfCpu(6));
     assertThat(toBeReleaseAfterCancellation.isDone(), Matchers.equalTo(false));
     assertThat(array.getQueueLength(), Matchers.equalTo(2));
     assertThat(array.getAvailableResources(), Matchers.equalTo(amountsOfCpu(2)));
     // this should happen
-    final AtomicBoolean toBeReleaseAfterCancellationIsReleased = new AtomicBoolean(false);
+    AtomicBoolean toBeReleaseAfterCancellationIsReleased = new AtomicBoolean(false);
     toBeReleaseAfterCancellation.addListener(
         () ->
             toBeReleaseAfterCancellationIsReleased.set(toBeReleaseAfterCancellation.isCancelled()),

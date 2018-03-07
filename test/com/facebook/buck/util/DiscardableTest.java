@@ -26,7 +26,7 @@ public class DiscardableTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  public void testDiscard() throws Exception {
+  public void testDiscard() {
     Discardable<String> discardable = new Discardable<>("hello");
     assertEquals("hello", discardable.get());
 

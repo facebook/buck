@@ -31,8 +31,7 @@ public class FixedVersionSelector implements VersionSelector {
 
   @Override
   public ImmutableMap<BuildTarget, Version> resolve(
-      BuildTarget root, ImmutableMap<BuildTarget, ImmutableSet<Version>> domain)
-      throws VersionException {
+      BuildTarget root, ImmutableMap<BuildTarget, ImmutableSet<Version>> domain) {
     return Preconditions.checkNotNull(selections.get(root));
   }
 }

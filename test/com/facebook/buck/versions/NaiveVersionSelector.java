@@ -29,8 +29,7 @@ public class NaiveVersionSelector implements VersionSelector {
 
   @Override
   public ImmutableMap<BuildTarget, Version> resolve(
-      BuildTarget root, ImmutableMap<BuildTarget, ImmutableSet<Version>> domain)
-      throws VersionException {
+      BuildTarget root, ImmutableMap<BuildTarget, ImmutableSet<Version>> domain) {
     ImmutableMap.Builder<BuildTarget, Version> selectedVersions = ImmutableMap.builder();
     for (Map.Entry<BuildTarget, ImmutableSet<Version>> ent : domain.entrySet()) {
       selectedVersions.put(ent.getKey(), Iterables.get(ent.getValue(), 0));

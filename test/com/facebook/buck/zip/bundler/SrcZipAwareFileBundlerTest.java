@@ -114,7 +114,7 @@ public class SrcZipAwareFileBundlerTest {
   }
 
   @Test
-  public void shouldBundleFilesIfInputIsADirectory() throws InterruptedException, IOException {
+  public void shouldBundleFilesIfInputIsADirectory() throws IOException {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     src = Paths.get("src");
     dest = filesystem.getPath("dest");
@@ -139,7 +139,7 @@ public class SrcZipAwareFileBundlerTest {
   }
 
   @Test
-  public void shouldBundleFilesAndKeepHierarchy() throws InterruptedException, IOException {
+  public void shouldBundleFilesAndKeepHierarchy() throws IOException {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     src = Paths.get("src");
     dest = filesystem.getPath("dest");
@@ -164,8 +164,7 @@ public class SrcZipAwareFileBundlerTest {
   }
 
   @Test(expected = HumanReadableException.class)
-  public void shouldThrowAnExceptionIfBundlerOverwritesFiles()
-      throws InterruptedException, IOException {
+  public void shouldThrowAnExceptionIfBundlerOverwritesFiles() throws IOException {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
     dest = filesystem.getRootPath().resolve("dest");
@@ -181,8 +180,7 @@ public class SrcZipAwareFileBundlerTest {
   }
 
   @Test
-  public void shouldBundleFilesAndKeepSrcFilesUnderBasePath()
-      throws InterruptedException, IOException {
+  public void shouldBundleFilesAndKeepSrcFilesUnderBasePath() throws IOException {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
     dest = filesystem.getPath("dest");

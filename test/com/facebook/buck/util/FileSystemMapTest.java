@@ -25,7 +25,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.util.FileSystemMap.Entry;
 import com.google.devtools.build.lib.vfs.PathFragment;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
@@ -196,7 +195,7 @@ public class FileSystemMapTest {
   }
 
   @Test
-  public void testGetWithPathThatExists() throws IOException {
+  public void testGetWithPathThatExists() {
     Path path = Paths.get("usr/HelloWorld.java");
     FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
     fsMap.put(path, true);
@@ -206,7 +205,7 @@ public class FileSystemMapTest {
   }
 
   @Test
-  public void testGetAtRootLevelWithPathThatExists() throws IOException {
+  public void testGetAtRootLevelWithPathThatExists() {
     Path path = Paths.get("HelloWorld.java");
     FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
     fsMap.put(path, true);
@@ -216,7 +215,7 @@ public class FileSystemMapTest {
   }
 
   @Test
-  public void testGetWithPathDoesntExist() throws IOException {
+  public void testGetWithPathDoesntExist() {
     Path path = Paths.get("usr/GoodbyeCruelWorld.java");
     FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
 

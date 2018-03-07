@@ -206,8 +206,7 @@ public class FakeListeningProcessExecutor extends ListeningProcessExecutor {
   }
 
   @Override
-  public LaunchedProcess launchProcess(
-      ProcessExecutorParams params, final ProcessListener listener) {
+  public LaunchedProcess launchProcess(ProcessExecutorParams params, ProcessListener listener) {
     Collection<FakeListeningProcessState> fakeProcessStates = processStatesFunction.apply(params);
     long processExecTimeNanos = 0;
     for (FakeListeningProcessState state : fakeProcessStates) {
@@ -223,8 +222,7 @@ public class FakeListeningProcessExecutor extends ListeningProcessExecutor {
   }
 
   @Override
-  public int waitForProcess(LaunchedProcess process, long timeout, TimeUnit timeUnit)
-      throws InterruptedException {
+  public int waitForProcess(LaunchedProcess process, long timeout, TimeUnit timeUnit) {
     FakeLaunchedProcessImpl processImpl = (FakeLaunchedProcessImpl) process;
     clock.advanceTimeNanos(Math.min(processImpl.processExecTimeNanos, timeUnit.toNanos(timeout)));
     processImpl.processAllStates();
