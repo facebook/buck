@@ -199,13 +199,12 @@ public class CacheCommandTest extends EasyMockSupport {
 
   private SuperConsoleEventBusListener createSuperConsole(
       Console console, Clock clock, BuckEventBus eventBus) {
-    final TimeZone timeZone = TimeZone.getTimeZone("UTC");
+    TimeZone timeZone = TimeZone.getTimeZone("UTC");
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
-    final Path logPath = vfs.getPath("log.txt");
-    final SuperConsoleConfig emptySuperConsoleConfig =
+    Path logPath = vfs.getPath("log.txt");
+    SuperConsoleConfig emptySuperConsoleConfig =
         new SuperConsoleConfig(FakeBuckConfig.builder().build());
-    final TestResultSummaryVerbosity silentSummaryVerbosity =
-        TestResultSummaryVerbosity.of(false, false);
+    TestResultSummaryVerbosity silentSummaryVerbosity = TestResultSummaryVerbosity.of(false, false);
     SuperConsoleEventBusListener listener =
         new SuperConsoleEventBusListener(
             emptySuperConsoleConfig,

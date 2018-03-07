@@ -61,13 +61,13 @@ import org.junit.Test;
 public class CxxCompilationDatabaseTest {
 
   @Test
-  public void testCompilationDatabase() throws Exception {
+  public void testCompilationDatabase() {
     BuildTarget testBuildTarget =
         BuildTargetFactory.newInstance("//foo:baz")
             .withAppendedFlavors(ImmutableSet.of(CxxCompilationDatabase.COMPILATION_DATABASE));
 
-    final String root = "/Users/user/src";
-    final Path fakeRoot = Paths.get(root);
+    String root = "/Users/user/src";
+    Path fakeRoot = Paths.get(root);
     ProjectFilesystem filesystem = new FakeProjectFilesystem(fakeRoot);
 
     BuildRuleResolver testBuildRuleResolver = new TestBuildRuleResolver();

@@ -47,7 +47,7 @@ import org.junit.Test;
 public class CxxPrepareForLinkStepTest {
 
   @Test
-  public void testCreateCxxPrepareForLinkStep() throws Exception {
+  public void testCreateCxxPrepareForLinkStep() {
     Path dummyPath = Paths.get("dummy");
     BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =

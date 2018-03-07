@@ -96,7 +96,7 @@ public class CxxTestTest {
 
   @Test
   public void runTests() {
-    final ImmutableList<String> command = ImmutableList.of("hello", "world");
+    ImmutableList<String> command = ImmutableList.of("hello", "world");
 
     FakeCxxTest cxxTest =
         new FakeCxxTest() {
@@ -144,9 +144,9 @@ public class CxxTestTest {
 
   @Test
   public void interpretResults() throws Exception {
-    final Path expectedExitCode = Paths.get("output");
-    final Path expectedOutput = Paths.get("output");
-    final Path expectedResults = Paths.get("results");
+    Path expectedExitCode = Paths.get("output");
+    Path expectedOutput = Paths.get("output");
+    Path expectedResults = Paths.get("results");
 
     BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     FakeCxxTest cxxTest =
@@ -174,7 +174,7 @@ public class CxxTestTest {
 
           @Override
           protected ImmutableList<TestResultSummary> parseResults(
-              Path exitCode, Path output, Path results) throws Exception {
+              Path exitCode, Path output, Path results) {
             assertEquals(expectedExitCode, exitCode);
             assertEquals(expectedOutput, output);
             assertEquals(expectedResults, results);

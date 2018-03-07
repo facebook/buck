@@ -93,7 +93,7 @@ public class PrecompiledHeaderFeatureTest {
 
     @Test
     public void test() {
-      final String headerFilename = "foo.h";
+      String headerFilename = "foo.h";
       BuildRuleResolver resolver = new TestBuildRuleResolver();
       CxxPreprocessAndCompile rule =
           preconfiguredSourceRuleFactoryBuilder(resolver)

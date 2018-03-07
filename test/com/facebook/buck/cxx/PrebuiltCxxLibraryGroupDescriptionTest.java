@@ -223,7 +223,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
   }
 
   @Test
-  public void cxxGenruleLib() throws Exception {
+  public void cxxGenruleLib() {
     CxxGenruleBuilder cxxGenruleBuilder =
         new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:dep")).setOut("libtest.so");
     PrebuiltCxxLibraryGroupBuilder builder =

@@ -55,26 +55,26 @@ import org.junit.Test;
 public class CxxLibraryTest {
 
   @Test
-  public void cxxLibraryInterfaces() throws Exception {
+  public void cxxLibraryInterfaces() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = TestBuildRuleParams.create();
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
     // Setup some dummy values for the header info.
-    final BuildTarget publicHeaderTarget = BuildTargetFactory.newInstance("//:header");
-    final BuildTarget publicHeaderSymlinkTreeTarget = BuildTargetFactory.newInstance("//:symlink");
-    final BuildTarget privateHeaderTarget = BuildTargetFactory.newInstance("//:privateheader");
-    final BuildTarget privateHeaderSymlinkTreeTarget =
+    BuildTarget publicHeaderTarget = BuildTargetFactory.newInstance("//:header");
+    BuildTarget publicHeaderSymlinkTreeTarget = BuildTargetFactory.newInstance("//:symlink");
+    BuildTarget privateHeaderTarget = BuildTargetFactory.newInstance("//:privateheader");
+    BuildTarget privateHeaderSymlinkTreeTarget =
         BuildTargetFactory.newInstance("//:privatesymlink");
 
     // Setup some dummy values for the library archive info.
-    final BuildRule archive = new FakeBuildRule("//:archive").setOutputFile("libarchive.a");
+    BuildRule archive = new FakeBuildRule("//:archive").setOutputFile("libarchive.a");
 
     // Setup some dummy values for the library archive info.
-    final BuildRule sharedLibrary = new FakeBuildRule("//:shared").setOutputFile("libshared.so");
-    final Path sharedLibraryOutput = Paths.get("output/path/lib.so");
-    final String sharedLibrarySoname = "lib.so";
+    BuildRule sharedLibrary = new FakeBuildRule("//:shared").setOutputFile("libshared.so");
+    Path sharedLibraryOutput = Paths.get("output/path/lib.so");
+    String sharedLibrarySoname = "lib.so";
 
     // Construct a CxxLibrary object to test.
     FakeCxxLibrary cxxLibrary =

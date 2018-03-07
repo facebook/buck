@@ -423,7 +423,7 @@ public class CxxLinkableEnhancerTest {
   }
 
   @Test
-  public void platformLdFlags() throws Exception {
+  public void platformLdFlags() {
     ImmutableMap<Linker.LinkableDepType, String> runtimes =
         ImmutableMap.of(
             Linker.LinkableDepType.SHARED, "-ldummy-shared-libc",
@@ -468,8 +468,7 @@ public class CxxLinkableEnhancerTest {
   }
 
   @Test
-  public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables()
-      throws Exception {
+  public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables() {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
     SourcePathResolver pathResolver =

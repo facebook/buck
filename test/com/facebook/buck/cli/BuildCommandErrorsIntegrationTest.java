@@ -491,8 +491,7 @@ public class BuildCommandErrorsIntegrationTest {
       return ImmutableList.of(
           new AbstractExecutionStep("step_with_exit_code_" + exitCode) {
             @Override
-            public StepExecutionResult execute(ExecutionContext context)
-                throws IOException, InterruptedException {
+            public StepExecutionResult execute(ExecutionContext context) {
               return StepExecutionResult.of(exitCode, Optional.of(message));
             }
           });

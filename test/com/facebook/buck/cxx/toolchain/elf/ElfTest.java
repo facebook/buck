@@ -135,7 +135,7 @@ public class ElfTest {
   }
 
   @Test
-  public void isElfEmptyBuffer() throws IOException {
+  public void isElfEmptyBuffer() {
     assertFalse(Elf.isElf(ByteBuffer.allocate(0)));
   }
 }

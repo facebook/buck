@@ -40,7 +40,7 @@ public class PrebuiltCxxLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "prebuilt_cxx_from_genrule", tmp);
     workspace.setUp();
     workspace.enableDirCache();
-    final String binaryTargetString = "//core:binary";
+    String binaryTargetString = "//core:binary";
 
     ProcessResult result = workspace.runBuckCommand("run", binaryTargetString);
     result.assertSuccess();
@@ -54,7 +54,7 @@ public class PrebuiltCxxLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "prebuilt_cxx_from_genrule", tmp);
     workspace.setUp();
     workspace.enableDirCache();
-    final String binaryTargetString = "//core:binary";
+    String binaryTargetString = "//core:binary";
 
     ProcessResult result = workspace.runBuckCommand("run", binaryTargetString);
     result.assertSuccess();

@@ -59,7 +59,7 @@ import org.junit.Test;
 public class CxxCollectAndLogInferDependenciesStepTest {
 
   private static ProjectFilesystem createFakeFilesystem(String fakeRoot) {
-    final Path fakeRootPath = Paths.get(fakeRoot);
+    Path fakeRootPath = Paths.get(fakeRoot);
     Preconditions.checkArgument(fakeRootPath.isAbsolute(), "fakeRoot must be an absolute path");
     return new FakeProjectFilesystem(fakeRootPath);
   }
@@ -68,8 +68,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
       BuildTarget buildTarget,
       SourcePathResolver sourcePathResolver,
       ProjectFilesystem filesystem,
-      InferBuckConfig inferBuckConfig)
-      throws Exception {
+      InferBuckConfig inferBuckConfig) {
     class FrameworkPathAppendableFunction
         implements RuleKeyAppendableFunction<FrameworkPath, Path> {
       @Override
@@ -230,10 +229,8 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     String expectedOutput =
         InferLogLine.fromBuildTarget(buildTarget1, analyzeRule.getAbsolutePathToResultsDir())
-                .toString()
             + "\n"
-            + InferLogLine.fromBuildTarget(buildTarget2, captureRule.getAbsolutePathToOutput())
-                .toString();
+            + InferLogLine.fromBuildTarget(buildTarget2, captureRule.getAbsolutePathToOutput());
 
     assertEquals(expectedOutput + "\n", filesystem1.readFileIfItExists(outputFile).get());
   }
@@ -285,10 +282,8 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     String expectedOutput =
         InferLogLine.fromBuildTarget(buildTarget1, analyzeRule.getAbsolutePathToResultsDir())
-                .toString()
             + "\n"
-            + InferLogLine.fromBuildTarget(buildTarget2, captureRule.getAbsolutePathToOutput())
-                .toString();
+            + InferLogLine.fromBuildTarget(buildTarget2, captureRule.getAbsolutePathToOutput());
 
     assertEquals(expectedOutput + "\n", filesystem1.readFileIfItExists(outputFile).get());
   }

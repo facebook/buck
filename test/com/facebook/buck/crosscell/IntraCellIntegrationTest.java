@@ -26,7 +26,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
@@ -60,7 +59,7 @@ public class IntraCellIntegrationTest {
   @SuppressWarnings("PMD.EmptyCatchBlock")
   @Test
   public void shouldTreatCellBoundariesAsVisibilityBoundariesToo()
-      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
+      throws IOException, InterruptedException, BuildFileParseException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "intracell/visibility", tmp);
     workspace.setUp();

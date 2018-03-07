@@ -145,7 +145,7 @@ public class CxxTestDescriptionTest {
   }
 
   @Test
-  public void environmentIsPropagated() throws Exception {
+  public void environmentIsPropagated() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
@@ -180,7 +180,7 @@ public class CxxTestDescriptionTest {
   }
 
   @Test
-  public void testArgsArePropagated() throws Exception {
+  public void testArgsArePropagated() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
@@ -215,7 +215,7 @@ public class CxxTestDescriptionTest {
   }
 
   @Test
-  public void runTestSeparately() throws Exception {
+  public void runTestSeparately() {
     for (CxxTestType framework : CxxTestType.values()) {
       ProjectFilesystem filesystem = new FakeProjectFilesystem();
       BuildRuleResolver resolver = new TestBuildRuleResolver();
@@ -232,7 +232,7 @@ public class CxxTestDescriptionTest {
   }
 
   @Test
-  public void runtimeDepOnDeps() throws Exception {
+  public void runtimeDepOnDeps() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget cxxBinaryTarget = BuildTargetFactory.newInstance("//:dep");
     BuildTarget cxxLibraryTarget = BuildTargetFactory.newInstance("//:lib");
@@ -255,7 +255,7 @@ public class CxxTestDescriptionTest {
   }
 
   @Test
-  public void locationMacro() throws Exception {
+  public void locationMacro() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
@@ -318,7 +318,7 @@ public class CxxTestDescriptionTest {
   }
 
   @Test
-  public void platformLinkerFlagsLocationMacroWithMatch() throws Exception {
+  public void platformLinkerFlagsLocationMacroWithMatch() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
@@ -355,7 +355,7 @@ public class CxxTestDescriptionTest {
   }
 
   @Test
-  public void platformLinkerFlagsLocationMacroWithoutMatch() throws Exception {
+  public void platformLinkerFlagsLocationMacroWithoutMatch() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =

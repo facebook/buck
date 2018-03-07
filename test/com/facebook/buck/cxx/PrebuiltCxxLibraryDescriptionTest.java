@@ -104,7 +104,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void createBuildRuleDefault() throws Exception {
+  public void createBuildRuleDefault() {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder =
         new PrebuiltCxxLibraryBuilder(TARGET)
@@ -142,7 +142,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void headerOnly() throws Exception {
+  public void headerOnly() {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder =
         new PrebuiltCxxLibraryBuilder(TARGET).setHeaderOnly(true);
@@ -167,7 +167,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void createBuildRuleExternal() throws Exception {
+  public void createBuildRuleExternal() {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder =
         new PrebuiltCxxLibraryBuilder(TARGET)
@@ -192,7 +192,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void missingSharedLibsAreAutoBuilt() throws Exception {
+  public void missingSharedLibsAreAutoBuilt() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder =
         new PrebuiltCxxLibraryBuilder(TARGET).setStaticLib(FakeSourcePath.of("libfoo.a"));
@@ -396,7 +396,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void exportedHeaders() throws Exception {
+  public void exportedHeaders() {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder =
         new PrebuiltCxxLibraryBuilder(TARGET)
@@ -418,7 +418,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void exportedPlatformHeaders() throws Exception {
+  public void exportedPlatformHeaders() {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder =
         new PrebuiltCxxLibraryBuilder(TARGET)
@@ -451,7 +451,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void testBuildSharedWithDep() throws Exception {
+  public void testBuildSharedWithDep() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver = new TestBuildRuleResolver();
     CxxPlatform platform = CxxPlatformUtils.DEFAULT_PLATFORM;
@@ -478,7 +478,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void headerNamespace() throws Exception {
+  public void headerNamespace() {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder =
         new PrebuiltCxxLibraryBuilder(TARGET)
@@ -496,7 +496,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void staticPicLibsUseCorrectPath() throws Exception {
+  public void staticPicLibsUseCorrectPath() {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder =
         new PrebuiltCxxLibraryBuilder(TARGET).setStaticPicLib(FakeSourcePath.of("libfoo_pic.a"));
@@ -514,7 +514,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void missingStaticPicLibsUseStaticLibs() throws Exception {
+  public void missingStaticPicLibsUseStaticLibs() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
@@ -534,7 +534,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test(expected = UncheckedExecutionException.class)
-  public void missingAllLibFilesThrowsUsefulException() throws Exception {
+  public void missingAllLibFilesThrowsUsefulException() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder =
         new PrebuiltCxxLibraryBuilder(TARGET).setForceStatic(true);
@@ -546,7 +546,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void forceStatic() throws Exception {
+  public void forceStatic() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PrebuiltCxxLibraryBuilder builder =
         new PrebuiltCxxLibraryBuilder(TARGET)
@@ -563,7 +563,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void exportedLinkerFlagsAreUsedToBuildSharedLibrary() throws Exception {
+  public void exportedLinkerFlagsAreUsedToBuildSharedLibrary() {
     PrebuiltCxxLibraryBuilder builder =
         new PrebuiltCxxLibraryBuilder(TARGET)
             .setExportedLinkerFlags(ImmutableList.of("--some-flag"))
@@ -582,7 +582,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void nativeLinkableDeps() throws Exception {
+  public void nativeLinkableDeps() {
     PrebuiltCxxLibraryBuilder depBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"));
     PrebuiltCxxLibraryBuilder ruleBuilder =
@@ -605,7 +605,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void nativeLinkableExportedDeps() throws Exception {
+  public void nativeLinkableExportedDeps() {
     PrebuiltCxxLibraryBuilder depBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"));
     PrebuiltCxxLibraryBuilder ruleBuilder =
@@ -629,7 +629,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void includesDirs() throws Exception {
+  public void includesDirs() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:r"))
@@ -649,7 +649,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void ruleWithoutHeadersDoesNotUseSymlinkTree() throws Exception {
+  public void ruleWithoutHeadersDoesNotUseSymlinkTree() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
@@ -665,7 +665,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void linkWithoutSoname() throws Exception {
+  public void linkWithoutSoname() {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
@@ -687,7 +687,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void sharedLinkageIsNotANativeLinkTargetSoname() throws Exception {
+  public void sharedLinkageIsNotANativeLinkTargetSoname() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
@@ -701,7 +701,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void providedLibIsNotANativeLinkTargetSoname() throws Exception {
+  public void providedLibIsNotANativeLinkTargetSoname() {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
@@ -715,7 +715,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void existingStaticLibIsANativeLinkTargetSoname() throws Exception {
+  public void existingStaticLibIsANativeLinkTargetSoname() {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"));
@@ -727,7 +727,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void nativeLinkTargetMode() throws Exception {
+  public void nativeLinkTargetMode() {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
@@ -742,7 +742,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void nativeLinkTargetDeps() throws Exception {
+  public void nativeLinkTargetDeps() {
     PrebuiltCxxLibraryBuilder depBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"));
     PrebuiltCxxLibraryBuilder exportedDepBuilder =
@@ -769,7 +769,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void nativeLinkTargetInput() throws Exception {
+  public void nativeLinkTargetInput() {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder ruleBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
@@ -789,7 +789,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void providedDoNotReturnSharedLibs() throws Exception {
+  public void providedDoNotReturnSharedLibs() {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule")).setProvided(true);
@@ -801,7 +801,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void headerOnlyLibPrefersAnyLinking() throws Exception {
+  public void headerOnlyLibPrefersAnyLinking() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
@@ -815,7 +815,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void supportedPlatforms() throws Exception {
+  public void supportedPlatforms() {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
 
@@ -857,7 +857,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void versionedLibrary() throws Exception {
+  public void versionedLibrary() {
     BuildTarget dep = BuildTargetFactory.newInstance("//:dep");
     PrebuiltCxxLibraryBuilder depBuilder = new PrebuiltCxxLibraryBuilder(dep);
     PrebuiltCxxLibraryBuilder builder = new PrebuiltCxxLibraryBuilder(TARGET);

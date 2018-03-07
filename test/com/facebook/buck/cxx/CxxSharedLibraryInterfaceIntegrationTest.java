@@ -59,7 +59,7 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class CxxSharedLibraryInterfaceIntegrationTest {
 
-  private static Optional<ImmutableList<Flavor>> getNdkPlatforms() throws InterruptedException {
+  private static Optional<ImmutableList<Flavor>> getNdkPlatforms() {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
 

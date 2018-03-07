@@ -548,7 +548,7 @@ public class CxxCompilationDatabaseIntegrationTest {
       throws IOException {
     Path resolvedPath = headerSymlinkTreePath(path);
     if (PREPROCESSOR_SUPPORTS_HEADER_MAPS) {
-      final List<String> presentHeaders = new ArrayList<>();
+      List<String> presentHeaders = new ArrayList<>();
       HeaderMap headerMap = HeaderMap.loadFromFile(projectWorkspace.getPath(resolvedPath).toFile());
       headerMap.visit((str, prefix, suffix) -> presentHeaders.add(str));
       assertThat(presentHeaders, containsInAnyOrder(headers));
@@ -559,7 +559,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     }
   }
 
-  private Path headerSymlinkTreePath(Path path) throws IOException {
+  private Path headerSymlinkTreePath(Path path) {
     if (PREPROCESSOR_SUPPORTS_HEADER_MAPS) {
       return path.resolveSibling(String.format("%s.hmap", path.getFileName()));
     } else {
@@ -576,8 +576,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     assertThat(command, equalTo(entry.getArguments()));
   }
 
-  private ImmutableList<String> getExtraFlagsForHeaderMaps(ProjectFilesystem filesystem)
-      throws IOException {
+  private ImmutableList<String> getExtraFlagsForHeaderMaps(ProjectFilesystem filesystem) {
     // This works around OS X being amusing about the location of temp directories.
     return PREPROCESSOR_SUPPORTS_HEADER_MAPS
         ? ImmutableList.of("-I", filesystem.getBuckPaths().getBuckOut().toString())

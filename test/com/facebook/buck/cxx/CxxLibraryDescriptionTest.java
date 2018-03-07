@@ -149,7 +149,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void createBuildRule() throws Exception {
+  public void createBuildRule() {
     Assume.assumeFalse("This test assumes no sandboxing", cxxBuckConfig.sandboxSources());
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -249,7 +249,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         publicHeaders.getNameToPathMap(),
         equalTo(
-            ImmutableMap.<Path, SourcePath>of(
+            ImmutableMap.of(
                 Paths.get(headerName),
                 FakeSourcePath.of(headerName),
                 Paths.get(genHeaderName),
@@ -336,7 +336,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void overrideSoname() throws Exception {
+  public void overrideSoname() {
 
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxPlatform cxxPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
@@ -367,7 +367,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void overrideStaticLibraryBasename() throws Exception {
+  public void overrideStaticLibraryBasename() {
 
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -394,7 +394,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void linkWhole() throws Exception {
+  public void linkWhole() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxPlatform cxxPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
 
@@ -449,7 +449,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void createCxxLibraryBuildRules() throws Exception {
+  public void createCxxLibraryBuildRules() {
     Assume.assumeFalse("This test assumes no sandboxing", cxxBuckConfig.sandboxSources());
 
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -652,7 +652,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void supportedPlatforms() throws Exception {
+  public void supportedPlatforms() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
 
@@ -690,7 +690,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void staticPicLibUsedForStaticPicLinkage() throws Exception {
+  public void staticPicLibUsedForStaticPicLinkage() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxLibraryBuilder libBuilder = new CxxLibraryBuilder(target, cxxBuckConfig);
@@ -713,7 +713,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void linkerFlagsLocationMacro() throws Exception {
+  public void linkerFlagsLocationMacro() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target =
         BuildTargetFactory.newInstance("//:rule")
@@ -744,7 +744,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void locationMacroExpandedLinkerFlag() throws Exception {
+  public void locationMacroExpandedLinkerFlag() {
     BuildTarget location = BuildTargetFactory.newInstance("//:loc");
     BuildTarget target =
         BuildTargetFactory.newInstance("//foo:bar")
@@ -779,7 +779,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void locationMacroExpandedPlatformLinkerFlagPlatformMatch() throws Exception {
+  public void locationMacroExpandedPlatformLinkerFlagPlatformMatch() {
     BuildTarget location = BuildTargetFactory.newInstance("//:loc");
     BuildTarget target =
         BuildTargetFactory.newInstance("//foo:bar")
@@ -822,7 +822,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void locationMacroExpandedPlatformLinkerFlagNoPlatformMatch() throws Exception {
+  public void locationMacroExpandedPlatformLinkerFlagNoPlatformMatch() {
     BuildTarget location = BuildTargetFactory.newInstance("//:loc");
     BuildTarget target =
         BuildTargetFactory.newInstance("//foo:bar")
@@ -863,7 +863,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void locationMacroExpandedExportedLinkerFlag() throws Exception {
+  public void locationMacroExpandedExportedLinkerFlag() {
     BuildTarget location = BuildTargetFactory.newInstance("//:loc");
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -901,7 +901,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void locationMacroExpandedExportedPlatformLinkerFlagPlatformMatch() throws Exception {
+  public void locationMacroExpandedExportedPlatformLinkerFlagPlatformMatch() {
     BuildTarget location = BuildTargetFactory.newInstance("//:loc");
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -944,7 +944,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void locationMacroExpandedExportedPlatformLinkerFlagNoPlatformMatch() throws Exception {
+  public void locationMacroExpandedExportedPlatformLinkerFlagNoPlatformMatch() {
     BuildTarget location = BuildTargetFactory.newInstance("//:loc");
     BuildTarget target =
         BuildTargetFactory.newInstance("//foo:bar")
@@ -990,7 +990,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void libraryWithoutSourcesDoesntHaveOutput() throws Exception {
+  public void libraryWithoutSourcesDoesntHaveOutput() {
     BuildTarget target =
         BuildTargetFactory.newInstance("//foo:bar")
             .withFlavors(
@@ -1006,7 +1006,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void libraryWithoutSourcesDoesntBuildAnything() throws Exception {
+  public void libraryWithoutSourcesDoesntBuildAnything() {
     BuildTarget target =
         BuildTargetFactory.newInstance("//foo:bar")
             .withFlavors(
@@ -1101,7 +1101,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void nativeLinkTargetInput() throws Exception {
+  public void nativeLinkTargetInput() {
     CxxLibraryBuilder ruleBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"), cxxBuckConfig)
             .setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("--flag")))
@@ -1117,7 +1117,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void exportedDepsArePropagatedToRuntimeDeps() throws Exception {
+  public void exportedDepsArePropagatedToRuntimeDeps() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxBinaryBuilder cxxBinaryBuilder =
         new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:dep"));
@@ -1137,7 +1137,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void sharedLibraryShouldLinkOwnRequiredLibraries() throws Exception {
+  public void sharedLibraryShouldLinkOwnRequiredLibraries() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxPlatform platform = CxxPlatformUtils.DEFAULT_PLATFORM;
 
@@ -1167,7 +1167,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void sharedLibraryShouldLinkOwnRequiredLibrariesForCxxLibrary() throws Exception {
+  public void sharedLibraryShouldLinkOwnRequiredLibrariesForCxxLibrary() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxPlatform platform = CxxPlatformUtils.DEFAULT_PLATFORM;
 
@@ -1188,7 +1188,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void ruleWithoutHeadersDoesNotUseSymlinkTree() throws Exception {
+  public void ruleWithoutHeadersDoesNotUseSymlinkTree() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxLibraryBuilder cxxLibraryBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"), cxxBuckConfig);
@@ -1202,7 +1202,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void thinArchiveSettingIsPropagatedToArchive() throws Exception {
+  public void thinArchiveSettingIsPropagatedToArchive() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildTarget target =
@@ -1230,7 +1230,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void forceStatic() throws Exception {
+  public void forceStatic() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxLibraryBuilder cxxLibraryBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"), cxxBuckConfig)
@@ -1244,7 +1244,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void srcsFromCxxGenrule() throws Exception {
+  public void srcsFromCxxGenrule() {
     CxxGenruleBuilder srcBuilder =
         new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:src")).setOut("foo.cpp");
     CxxLibraryBuilder libraryBuilder =
@@ -1265,7 +1265,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void headersFromCxxGenrule() throws Exception {
+  public void headersFromCxxGenrule() {
     CxxGenruleBuilder srcBuilder =
         new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:src")).setOut("foo.h");
     CxxLibraryBuilder libraryBuilder =
@@ -1286,7 +1286,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void locationMacroFromCxxGenrule() throws Exception {
+  public void locationMacroFromCxxGenrule() {
     CxxGenruleBuilder srcBuilder =
         new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:src")).setOut("linker.script");
     CxxLibraryBuilder libraryBuilder =
@@ -1308,7 +1308,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void platformDeps() throws Exception {
+  public void platformDeps() {
     CxxLibraryBuilder depABuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep_a"), cxxBuckConfig);
     CxxLibraryBuilder depBBuilder =
@@ -1338,7 +1338,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void inferCaptureAllIncludesExportedDeps() throws Exception {
+  public void inferCaptureAllIncludesExportedDeps() {
     CxxLibraryBuilder exportedDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:exported_dep"), cxxBuckConfig)
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("dep.c"))));

@@ -99,8 +99,7 @@ public class CxxPlatformUtils {
     return DefaultCxxPlatforms.build(Platform.detect(), config);
   }
 
-  private static CxxPlatform getDefaultPlatform(Path root)
-      throws InterruptedException, IOException {
+  private static CxxPlatform getDefaultPlatform(Path root) throws IOException {
     Config rawConfig = Configs.createDefaultConfig(root);
     BuckConfig buckConfig =
         new BuckConfig(

@@ -92,7 +92,7 @@ public class DaemonIntegrationTest {
   public void whenConcurrentCommandExecutedThenSecondCommandFails()
       throws IOException, InterruptedException, ExecutionException {
 
-    final ProjectWorkspace workspace =
+    ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp);
     workspace.setUp();
     Future<?> firstThread =
@@ -112,9 +112,9 @@ public class DaemonIntegrationTest {
   @Test(expected = InterruptedException.class)
   public void whenClientTimeoutDetectedThenMainThreadIsInterrupted()
       throws InterruptedException, IOException {
-    final long timeoutMillis = 100;
-    final long intervalMillis = timeoutMillis * 2; // Interval > timeout to trigger disconnection.
-    final ProjectWorkspace workspace =
+    long timeoutMillis = 100;
+    long intervalMillis = timeoutMillis * 2; // Interval > timeout to trigger disconnection.
+    ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp);
     workspace.setUp();
 
@@ -141,15 +141,14 @@ public class DaemonIntegrationTest {
    * to fail after timeout.
    */
   @Test
-  public void whenClientTimeoutDetectedThenBuildIsInterrupted()
-      throws InterruptedException, IOException {
+  public void whenClientTimeoutDetectedThenBuildIsInterrupted() throws IOException {
 
     // Sub process interruption not supported on Windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
-    final long timeoutMillis = 100;
-    final long intervalMillis = timeoutMillis * 2; // Interval > timeout to trigger disconnection.
-    final ProjectWorkspace workspace =
+    long timeoutMillis = 100;
+    long intervalMillis = timeoutMillis * 2; // Interval > timeout to trigger disconnection.
+    ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp);
     workspace.setUp();
 
@@ -168,7 +167,7 @@ public class DaemonIntegrationTest {
   @Test
   public void whenConcurrentReadOnlyCommandExecutedThenReadOnlyCommandSucceeds()
       throws IOException, InterruptedException, ExecutionException {
-    final ProjectWorkspace workspace =
+    ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp);
     workspace.setUp();
     Future<?> firstThread =
@@ -184,9 +183,9 @@ public class DaemonIntegrationTest {
   /** This verifies that multiple read only commands can be executed concurrently successfully. */
   @Test
   public void whenReadOnlyCommandsExecutedConcurrentlyThenAllSucceed()
-      throws IOException, InterruptedException, ExecutionException {
+      throws IOException, InterruptedException {
 
-    final ProjectWorkspace workspace =
+    ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp);
     workspace.setUp();
     executorService.invokeAll(
@@ -198,7 +197,7 @@ public class DaemonIntegrationTest {
             createCallableCommand(ExitCode.SUCCESS, "audit", "input", "//:sleep")));
   }
 
-  private Runnable createRunnableCommand(final ExitCode expectedExitCode, final String... args) {
+  private Runnable createRunnableCommand(ExitCode expectedExitCode, String... args) {
     return () -> {
       try {
         Main main =
@@ -237,19 +236,18 @@ public class DaemonIntegrationTest {
    * command execution causing it to fail.
    */
   @Test
-  public void whenClientTimeoutDetectedThenTestIsInterrupted()
-      throws InterruptedException, IOException {
+  public void whenClientTimeoutDetectedThenTestIsInterrupted() throws IOException {
 
     // Sub process interruption not supported on Windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
-    final long timeoutMillis = 100;
-    final ProjectWorkspace workspace =
+    long timeoutMillis = 100;
+    ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp);
     workspace.setUp();
 
     // Start with an input stream that sends heartbeats at a regular rate.
-    final DelegatingInputStream inputStream =
+    DelegatingInputStream inputStream =
         new DelegatingInputStream(TestContext.createHeartBeatStream(timeoutMillis / 10));
 
     // Build an NGContext connected to an NGInputStream reading from stream that will timeout.
@@ -282,15 +280,14 @@ public class DaemonIntegrationTest {
    * to fail after timeout.
    */
   @Test
-  public void whenClientDisconnectionDetectedThenBuildIsInterrupted()
-      throws InterruptedException, IOException {
+  public void whenClientDisconnectionDetectedThenBuildIsInterrupted() throws IOException {
 
     // Sub process interruption not supported on Windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
-    final long timeoutMillis = 2000; // Stream timeout > test timeout.
-    final long disconnectMillis = 100; // Disconnect before test timeout.
-    final ProjectWorkspace workspace =
+    long timeoutMillis = 2000; // Stream timeout > test timeout.
+    long disconnectMillis = 100; // Disconnect before test timeout.
+    ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp);
     workspace.setUp();
 
@@ -312,20 +309,19 @@ public class DaemonIntegrationTest {
    * command execution causing it to fail.
    */
   @Test
-  public void whenClientDisconnectionDetectedThenTestIsInterrupted()
-      throws InterruptedException, IOException {
+  public void whenClientDisconnectionDetectedThenTestIsInterrupted() throws IOException {
 
     // Sub process interruption not supported on Windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
-    final long timeoutMillis = 2000; // Stream timeout > test timeout.
-    final long disconnectMillis = 100; // Disconnect before test timeout.
-    final ProjectWorkspace workspace =
+    long timeoutMillis = 2000; // Stream timeout > test timeout.
+    long disconnectMillis = 100; // Disconnect before test timeout.
+    ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp);
     workspace.setUp();
 
     // Start with an input stream that sends heartbeats at a regular rate.
-    final DelegatingInputStream inputStream =
+    DelegatingInputStream inputStream =
         new DelegatingInputStream(TestContext.createHeartBeatStream(timeoutMillis / 10));
 
     // Build an NGContext connected to an NGInputStream reading from stream that will timeout.
@@ -353,8 +349,8 @@ public class DaemonIntegrationTest {
   }
 
   @Test
-  public void whenAppBuckFileRemovedThenRebuildFails() throws IOException, InterruptedException {
-    final ProjectWorkspace workspace =
+  public void whenAppBuckFileRemovedThenRebuildFails() throws IOException {
+    ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
     ProcessResult result = workspace.runBuckdCommand("build", "app");
@@ -367,9 +363,8 @@ public class DaemonIntegrationTest {
   }
 
   @Test
-  public void whenActivityBuckFileRemovedThenRebuildFails()
-      throws IOException, InterruptedException {
-    final ProjectWorkspace workspace =
+  public void whenActivityBuckFileRemovedThenRebuildFails() throws IOException {
+    ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
     workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertSuccess();
@@ -383,8 +378,8 @@ public class DaemonIntegrationTest {
   }
 
   @Test
-  public void whenSourceInputRemovedThenRebuildFails() throws IOException, InterruptedException {
-    final ProjectWorkspace workspace =
+  public void whenSourceInputRemovedThenRebuildFails() throws IOException {
+    ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
     workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertSuccess();
@@ -404,9 +399,8 @@ public class DaemonIntegrationTest {
   }
 
   @Test
-  public void whenSourceInputInvalidatedThenRebuildFails()
-      throws IOException, InterruptedException {
-    final ProjectWorkspace workspace =
+  public void whenSourceInputInvalidatedThenRebuildFails() throws IOException {
+    ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
     workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertSuccess();
@@ -421,9 +415,8 @@ public class DaemonIntegrationTest {
   }
 
   @Test
-  public void whenAppBuckFileInvalidatedThenRebuildFails()
-      throws IOException, InterruptedException {
-    final ProjectWorkspace workspace =
+  public void whenAppBuckFileInvalidatedThenRebuildFails() throws IOException {
+    ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
     workspace.runBuckdCommand("build", "app").assertSuccess();
@@ -440,9 +433,8 @@ public class DaemonIntegrationTest {
   }
 
   @Test
-  public void whenNativeBuckTargetInvalidatedThenRebuildFails()
-      throws IOException, InterruptedException {
-    final ProjectWorkspace workspace =
+  public void whenNativeBuckTargetInvalidatedThenRebuildFails() throws IOException {
+    ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
     ProcessResult result = workspace.runBuckdCommand("run", "//native/main:main");
@@ -463,9 +455,8 @@ public class DaemonIntegrationTest {
   }
 
   @Test
-  public void whenNativeSourceInputInvalidatedThenRebuildFails()
-      throws IOException, InterruptedException {
-    final ProjectWorkspace workspace =
+  public void whenNativeSourceInputInvalidatedThenRebuildFails() throws IOException {
+    ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
     ProcessResult result = workspace.runBuckdCommand("run", "//native/main:main");
@@ -487,13 +478,12 @@ public class DaemonIntegrationTest {
   }
 
   @Test
-  public void whenCrossCellSourceInvalidatedThenRebuildFails()
-      throws IOException, InterruptedException {
-    final ProjectWorkspace primary =
+  public void whenCrossCellSourceInvalidatedThenRebuildFails() throws IOException {
+    ProjectWorkspace primary =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "crosscell_file_watching/primary", tmp.newFolder());
     primary.setUp();
-    final ProjectWorkspace secondary =
+    ProjectWorkspace secondary =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "crosscell_file_watching/secondary", tmp.newFolder());
     secondary.setUp();
@@ -527,13 +517,12 @@ public class DaemonIntegrationTest {
   }
 
   @Test
-  public void whenCrossCellBuckFileInvalidatedThenRebuildFails()
-      throws IOException, InterruptedException {
-    final ProjectWorkspace primary =
+  public void whenCrossCellBuckFileInvalidatedThenRebuildFails() throws IOException {
+    ProjectWorkspace primary =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "crosscell_file_watching/primary", tmp.newFolder());
     primary.setUp();
-    final ProjectWorkspace secondary =
+    ProjectWorkspace secondary =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "crosscell_file_watching/secondary", tmp.newFolder());
     secondary.setUp();
@@ -560,8 +549,8 @@ public class DaemonIntegrationTest {
   }
 
   @Test
-  public void whenBuckBuiltTwiceLogIsPresent() throws IOException, InterruptedException {
-    final ProjectWorkspace workspace =
+  public void whenBuckBuiltTwiceLogIsPresent() throws IOException {
+    ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
 
@@ -583,13 +572,13 @@ public class DaemonIntegrationTest {
   }
 
   @Test
-  public void whenNativeTargetBuiltTwiceCacheHits() throws IOException, InterruptedException {
-    final ProjectWorkspace workspace =
+  public void whenNativeTargetBuiltTwiceCacheHits() throws IOException {
+    ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "crosscell_file_watching/primary", tmp);
     workspace.setUp();
 
-    final ProjectWorkspace secondary =
+    ProjectWorkspace secondary =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "crosscell_file_watching/secondary", tmp.newFolder());
     secondary.setUp();
@@ -614,12 +603,12 @@ public class DaemonIntegrationTest {
 
   @Test
   public void crossCellIncludeDefChangesInvalidateBuckTargets() throws Exception {
-    final ProjectWorkspace primary =
+    ProjectWorkspace primary =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "crosscell_include_defs/primary", tmp.newFolder("primary"));
     primary.setUp();
 
-    final ProjectWorkspace secondary =
+    ProjectWorkspace secondary =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "crosscell_include_defs/secondary", tmp.newFolder("secondary"));
     secondary.setUp();

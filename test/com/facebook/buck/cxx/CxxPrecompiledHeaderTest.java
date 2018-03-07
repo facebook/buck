@@ -46,7 +46,7 @@ import org.junit.Test;
 public class CxxPrecompiledHeaderTest {
 
   @Test
-  public void generatesPchStepShouldUseCorrectLang() throws Exception {
+  public void generatesPchStepShouldUseCorrectLang() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleResolver resolver = new TestBuildRuleResolver();
     Preprocessor preprocessorSupportingPch =

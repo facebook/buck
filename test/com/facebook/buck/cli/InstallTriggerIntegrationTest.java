@@ -51,7 +51,6 @@ import org.immutables.value.Value;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.kohsuke.args4j.CmdLineException;
 
 public class InstallTriggerIntegrationTest {
   private static final String TRIGGER_TARGET = "//:install_trigger";
@@ -75,7 +74,7 @@ public class InstallTriggerIntegrationTest {
   }
 
   @Test
-  public void testInstallTrigger() throws CmdLineException, IOException, InterruptedException {
+  public void testInstallTrigger() throws IOException {
     // Even without changes, the rule should always build locally.
     // Build it twice with buckd.
     workspace.runBuckdCommand("install", TRIGGER_TARGET).assertSuccess();
@@ -137,8 +136,7 @@ public class InstallTriggerIntegrationTest {
         return ImmutableList.of(
             new AbstractExecutionStep("verify_trigger") {
               @Override
-              public StepExecutionResult execute(ExecutionContext context)
-                  throws IOException, InterruptedException {
+              public StepExecutionResult execute(ExecutionContext context) {
                 trigger.verify(context);
                 return StepExecutionResults.SUCCESS;
               }

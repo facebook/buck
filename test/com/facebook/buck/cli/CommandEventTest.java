@@ -28,7 +28,7 @@ import org.junit.Test;
 
 public class CommandEventTest {
   @Test
-  public void testEquals() throws Exception {
+  public void testEquals() {
     CommandEvent.Started startedDaemon =
         configureTestEvent(
             CommandEvent.started("build", ImmutableList.of("sample-app"), true, 17L));

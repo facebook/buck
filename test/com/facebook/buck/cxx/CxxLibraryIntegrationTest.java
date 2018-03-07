@@ -116,7 +116,7 @@ public class CxxLibraryIntegrationTest {
   }
 
   @Test
-  public void libraryBuildPathIsSoName() throws InterruptedException, IOException {
+  public void libraryBuildPathIsSoName() throws IOException {
     assumeTrue(Platform.detect() == Platform.LINUX);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "shared_library", tmp);
@@ -428,7 +428,7 @@ public class CxxLibraryIntegrationTest {
   }
 
   @Test
-  public void buildWithUniqueLibraryNames() throws InterruptedException, IOException {
+  public void buildWithUniqueLibraryNames() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_library", tmp);
     workspace.setUp();

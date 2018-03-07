@@ -292,9 +292,9 @@ public class CxxPreprocessAndCompileTest {
   public void preprocessorFlagsRuleKeyChangesCauseRuleKeyChangesForPreprocessing()
       throws Exception {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
-    final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    final FakeFileHashCache hashCache =
+    FakeFileHashCache hashCache =
         FakeFileHashCache.createFromStrings(
             ImmutableMap.<String, String>builder()
                 .put("/root/preprocessor", Strings.repeat("a", 40))
@@ -308,7 +308,7 @@ public class CxxPreprocessAndCompileTest {
                 .build());
 
     class TestData {
-      public RuleKey generate(PreprocessorFlags flags) throws Exception {
+      public RuleKey generate(PreprocessorFlags flags) {
         return new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
             .build(
                 CxxPreprocessAndCompile.preprocessAndCompile(
@@ -497,7 +497,7 @@ public class CxxPreprocessAndCompileTest {
   }
 
   @Test
-  public void usesColorFlagForPreprocessingWhenRequested() throws Exception {
+  public void usesColorFlagForPreprocessingWhenRequested() {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
@@ -545,7 +545,7 @@ public class CxxPreprocessAndCompileTest {
   }
 
   @Test
-  public void testGetGcnoFile() throws Exception {
+  public void testGetGcnoFile() {
     Path input = projectFilesystem.resolve("foo/bar.m.o");
     Path output = CxxPreprocessAndCompile.getGcnoPath(input);
     assertEquals(projectFilesystem.resolve("foo/bar.m.gcno"), output);

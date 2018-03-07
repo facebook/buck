@@ -117,7 +117,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
   }
 
   @Test
-  public void testSymlinkTreeBuildSteps() throws IOException {
+  public void testSymlinkTreeBuildSteps() {
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(resolver);
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
@@ -189,8 +189,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
   }
 
   @Test
-  public void testSymlinkTreeRuleKeyChangesIfLinkTargetsChange()
-      throws InterruptedException, IOException {
+  public void testSymlinkTreeRuleKeyChangesIfLinkTargetsChange() throws IOException {
     ruleResolver.addToIndex(symlinkTreeBuildRule);
 
     DefaultFileHashCache hashCache =

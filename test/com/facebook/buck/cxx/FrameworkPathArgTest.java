@@ -49,7 +49,7 @@ public class FrameworkPathArgTest {
   }
 
   @Test
-  public void testGetDeps() throws Exception {
+  public void testGetDeps() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);

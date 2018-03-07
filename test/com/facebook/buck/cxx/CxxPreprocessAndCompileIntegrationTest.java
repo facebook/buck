@@ -134,7 +134,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   }
 
   @Test
-  public void sanitizeSymlinkedWorkingDirectory() throws InterruptedException, IOException {
+  public void sanitizeSymlinkedWorkingDirectory() throws IOException {
     TemporaryFolder folder = new TemporaryFolder();
     folder.create();
     ProjectFilesystem filesystem =

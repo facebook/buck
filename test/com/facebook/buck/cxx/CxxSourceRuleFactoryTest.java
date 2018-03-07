@@ -405,7 +405,7 @@ public class CxxSourceRuleFactoryTest {
     }
 
     @Test
-    public void createPreprocessAndCompileBuildRulePropagatesToolDeps() throws Exception {
+    public void createPreprocessAndCompileBuildRulePropagatesToolDeps() {
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       BuildRuleResolver resolver = new TestBuildRuleResolver();
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);

@@ -36,7 +36,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -45,7 +44,7 @@ import org.junit.Test;
 public class CxxBinaryTest {
 
   @Test
-  public void getExecutableCommandUsesAbsolutePath() throws IOException {
+  public void getExecutableCommandUsesAbsolutePath() {
     BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);

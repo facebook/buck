@@ -47,7 +47,7 @@ import org.junit.Test;
 public class CxxDescriptionEnhancerTest {
 
   @Test
-  public void libraryTestIncludesPrivateHeadersOfLibraryUnderTest() throws Exception {
+  public void libraryTestIncludesPrivateHeadersOfLibraryUnderTest() {
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
 
@@ -97,7 +97,7 @@ public class CxxDescriptionEnhancerTest {
   }
 
   @Test
-  public void libraryTestIncludesPublicHeadersOfDependenciesOfLibraryUnderTest() throws Exception {
+  public void libraryTestIncludesPublicHeadersOfDependenciesOfLibraryUnderTest() {
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
     BuildTarget otherlibTarget = BuildTargetFactory.newInstance("//:otherlib");
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
@@ -171,7 +171,7 @@ public class CxxDescriptionEnhancerTest {
   }
 
   @Test
-  public void nonTestLibraryDepDoesNotIncludePrivateHeadersOfLibrary() throws Exception {
+  public void nonTestLibraryDepDoesNotIncludePrivateHeadersOfLibrary() {
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
 
     BuildRuleParams libParams = TestBuildRuleParams.create();

@@ -130,10 +130,10 @@ public class PreprocessorFlagsTest {
     @Test
     public void flagsAreSanitized() {
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
-      final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-      final FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of());
-      final BuildRule fakeBuildRule = new FakeBuildRule(target);
+      FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of());
+      BuildRule fakeBuildRule = new FakeBuildRule(target);
 
       class TestData {
         public RuleKey generate(String prefix) {

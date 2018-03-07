@@ -41,7 +41,7 @@ public class AuditCellCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "crosscell_file_watching/primary", tmp.newFolder());
     workspace.setUp();
-    final ProjectWorkspace secondary =
+    ProjectWorkspace secondary =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "crosscell_file_watching/secondary", tmp.newFolder());
     secondary.setUp();

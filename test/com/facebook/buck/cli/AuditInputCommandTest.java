@@ -86,7 +86,7 @@ public class AuditInputCommandTest {
   @Test
   public void testJsonClassPathOutput() throws IOException {
     ObjectMapper objectMapper = ObjectMappers.legacyCreate();
-    final String expectedJson =
+    String expectedJson =
         Joiner.on("")
             .join(
                 "{",

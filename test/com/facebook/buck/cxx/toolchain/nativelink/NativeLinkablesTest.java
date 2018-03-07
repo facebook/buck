@@ -205,7 +205,7 @@ public class NativeLinkablesTest {
   }
 
   @Test
-  public void gatherTransitiveSharedLibraries() throws Exception {
+  public void gatherTransitiveSharedLibraries() {
     FakeNativeLinkable c =
         new FakeNativeLinkable(
             "//:c",
@@ -285,7 +285,7 @@ public class NativeLinkablesTest {
   }
 
   @Test(expected = HumanReadableException.class)
-  public void duplicateDifferentLibsConflict() throws Exception {
+  public void duplicateDifferentLibsConflict() {
     FakeNativeLinkable a =
         new FakeNativeLinkable(
             "//:a",
@@ -307,7 +307,7 @@ public class NativeLinkablesTest {
   }
 
   @Test
-  public void duplicateIdenticalLibsDoNotConflict() throws Exception {
+  public void duplicateIdenticalLibsDoNotConflict() {
     PathSourcePath path = FakeSourcePath.of("libc.so");
     FakeNativeLinkable a =
         new FakeNativeLinkable(
@@ -333,7 +333,7 @@ public class NativeLinkablesTest {
   }
 
   @Test
-  public void traversePredicate() throws Exception {
+  public void traversePredicate() {
     FakeNativeLinkable b =
         new FakeNativeLinkable(
             "//:b",
@@ -370,7 +370,7 @@ public class NativeLinkablesTest {
   }
 
   @Test
-  public void transitiveSharedLibrariesDynamicallyLinksStaticRoots() throws Exception {
+  public void transitiveSharedLibrariesDynamicallyLinksStaticRoots() {
     FakeNativeLinkable b =
         new FakeNativeLinkable(
             "//:b",

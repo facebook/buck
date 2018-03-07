@@ -118,7 +118,7 @@ public class DirectHeaderMapTest {
   }
 
   @Test
-  public void testBuildSteps() throws IOException {
+  public void testBuildSteps() {
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
@@ -148,7 +148,7 @@ public class DirectHeaderMapTest {
     Files.write(aFile, "hello world".getBytes(Charsets.UTF_8));
     ImmutableMap.Builder<Path, SourcePath> modifiedLinksBuilder = ImmutableMap.builder();
     for (Path p : links.keySet()) {
-      modifiedLinksBuilder.put(tmpDir.getRoot().resolve("modified-" + p.toString()), links.get(p));
+      modifiedLinksBuilder.put(tmpDir.getRoot().resolve("modified-" + p), links.get(p));
     }
     DirectHeaderMap modifiedBuildRule =
         new DirectHeaderMap(

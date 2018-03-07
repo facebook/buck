@@ -739,7 +739,7 @@ public class QueryCommandIntegrationTest {
     private Path profilerPath = null;
 
     @Override
-    public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
+    public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) {
       if (path.toString().contains("parser-profiler")) {
         profilerPath = path;
         return FileVisitResult.TERMINATE;

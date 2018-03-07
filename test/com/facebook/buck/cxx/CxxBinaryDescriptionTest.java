@@ -124,7 +124,7 @@ public class CxxBinaryDescriptionTest {
   }
 
   @Test
-  public void createBuildRule() throws Exception {
+  public void createBuildRule() {
     Assume.assumeFalse("this test is not for sandboxing", cxxBuckConfig.sandboxSources());
 
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
@@ -247,7 +247,7 @@ public class CxxBinaryDescriptionTest {
   }
 
   @Test
-  public void staticPicLinkStyle() throws Exception {
+  public void staticPicLinkStyle() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleResolver resolver = new TestBuildRuleResolver(prepopulateWithSandbox(target));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -258,7 +258,7 @@ public class CxxBinaryDescriptionTest {
   }
 
   @Test
-  public void runtimeDepOnDeps() throws Exception {
+  public void runtimeDepOnDeps() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildTarget leafBinaryTarget = BuildTargetFactory.newInstance("//:dep");
@@ -289,7 +289,7 @@ public class CxxBinaryDescriptionTest {
   }
 
   @Test
-  public void linkerFlagsLocationMacro() throws Exception {
+  public void linkerFlagsLocationMacro() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildRuleResolver resolver = new TestBuildRuleResolver(prepopulateWithSandbox(target));
     SourcePathResolver pathResolver =
@@ -314,7 +314,7 @@ public class CxxBinaryDescriptionTest {
   }
 
   @Test
-  public void platformLinkerFlagsLocationMacroWithMatch() throws Exception {
+  public void platformLinkerFlagsLocationMacroWithMatch() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildRuleResolver resolver = new TestBuildRuleResolver(prepopulateWithSandbox(target));
     SourcePathResolver pathResolver =
@@ -345,7 +345,7 @@ public class CxxBinaryDescriptionTest {
   }
 
   @Test
-  public void platformLinkerFlagsLocationMacroWithoutMatch() throws Exception {
+  public void platformLinkerFlagsLocationMacroWithoutMatch() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildRuleResolver resolver = new TestBuildRuleResolver(prepopulateWithSandbox(target));
     SourcePathResolver pathResolver =
@@ -376,7 +376,7 @@ public class CxxBinaryDescriptionTest {
   }
 
   @Test
-  public void binaryShouldLinkOwnRequiredLibraries() throws Exception {
+  public void binaryShouldLinkOwnRequiredLibraries() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxPlatform platform = CxxPlatformUtils.DEFAULT_PLATFORM;
 
@@ -403,7 +403,7 @@ public class CxxBinaryDescriptionTest {
   }
 
   @Test
-  public void testBinaryWithStripFlavorHasStripLinkRuleWithCorrectStripStyle() throws Exception {
+  public void testBinaryWithStripFlavorHasStripLinkRuleWithCorrectStripStyle() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxPlatform platform = CxxPlatformUtils.DEFAULT_PLATFORM;
 
@@ -427,7 +427,7 @@ public class CxxBinaryDescriptionTest {
   }
 
   @Test
-  public void depQuery() throws Exception {
+  public void depQuery() {
     CxxLibraryBuilder transitiveDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:transitive_dep"));
     CxxLibraryBuilder depBuilder =
@@ -487,7 +487,7 @@ public class CxxBinaryDescriptionTest {
   }
 
   @Test
-  public void testDefaultPlatformArg() throws Exception {
+  public void testDefaultPlatformArg() {
     CxxPlatform alternatePlatform =
         CxxPlatformUtils.DEFAULT_PLATFORM.withFlavor(InternalFlavor.of("alternate"));
     FlavorDomain<CxxPlatform> cxxPlatforms =

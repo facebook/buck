@@ -245,7 +245,7 @@ public class CxxRawHeadersIntegrationTest {
   }
 
   @Test
-  public void headersUsage() throws IOException {
+  public void headersUsage() {
     Exception caughtException = null;
     try {
       runCommand("targets", "//lib5:lib5");

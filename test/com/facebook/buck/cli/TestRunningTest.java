@@ -107,7 +107,7 @@ public class TestRunningTest {
    * absent.
    */
   @Test
-  public void testGeneratedSourceFile() throws Exception {
+  public void testGeneratedSourceFile() {
     BuildTarget genSrcTarget = BuildTargetFactory.newInstance("//:gensrc");
 
     TargetNode<GenruleDescriptionArg, GenruleDescription> sourceGenerator =
@@ -148,7 +148,7 @@ public class TestRunningTest {
    * source tmp corresponding to a non-generated source path.
    */
   @Test
-  public void testNonGeneratedSourceFile() throws Exception {
+  public void testNonGeneratedSourceFile() {
     Path pathToNonGenFile = Paths.get("package/src/SourceFile1.java");
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//foo:bar");
@@ -182,7 +182,7 @@ public class TestRunningTest {
   }
 
   @Test
-  public void testNonGeneratedSourceFileWithoutPathElements() throws Exception {
+  public void testNonGeneratedSourceFileWithoutPathElements() {
     Path pathToNonGenFile = Paths.get("package/src/SourceFile1.java");
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//foo:bar");
@@ -211,7 +211,7 @@ public class TestRunningTest {
    * correct source tmp corresponding to the unified source path.
    */
   @Test
-  public void testUnifiedSourceFile() throws Exception {
+  public void testUnifiedSourceFile() {
     Path pathToNonGenFile = Paths.get("java/package/src/SourceFile1.java");
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//foo:bar");
@@ -249,7 +249,7 @@ public class TestRunningTest {
    * the generated file comes first in the ordered set.
    */
   @Test
-  public void testMixedSourceFile() throws Exception {
+  public void testMixedSourceFile() {
     BuildTarget genSrcTarget = BuildTargetFactory.newInstance("//:gensrc");
 
     TargetNode<GenruleDescriptionArg, GenruleDescription> sourceGenerator =
@@ -288,8 +288,7 @@ public class TestRunningTest {
     Path rootPath = javaLibrary.getProjectFilesystem().getRootPath();
     ImmutableSet<String> expected =
         ImmutableSet.of(
-            rootPath.resolve("package/src-gen").toString() + "/",
-            rootPath.resolve("package/src").toString() + "/");
+            rootPath.resolve("package/src-gen") + "/", rootPath.resolve("package/src") + "/");
 
     assertEquals(
         "The non-generated source files are under two different source folders.", expected, result);
@@ -417,7 +416,7 @@ public class TestRunningTest {
     AtomicInteger atomicExecutionOrder = new AtomicInteger(0);
     ExecutionOrderAwareFakeStep separateTestStep1 =
         new ExecutionOrderAwareFakeStep("teststep1", "teststep1", 0, atomicExecutionOrder);
-    final TestResults fakeTestResults =
+    TestResults fakeTestResults =
         FakeTestResults.of(
             ImmutableList.of(
                 new TestCaseSummary(
@@ -516,7 +515,7 @@ public class TestRunningTest {
     AtomicInteger atomicExecutionOrder = new AtomicInteger(0);
     ExecutionOrderAwareFakeStep separateTestStep1 =
         new ExecutionOrderAwareFakeStep("teststep1", "teststep1", 0, atomicExecutionOrder);
-    final TestResults fakeTestResults =
+    TestResults fakeTestResults =
         FakeTestResults.of(
             ImmutableList.of(
                 new TestCaseSummary(
@@ -728,7 +727,7 @@ public class TestRunningTest {
   @Test
   public void whenSeparateTestFailsThenBuildFails() throws Exception {
     CommandRunnerParams commandRunnerParams = CommandRunnerParamsForTesting.builder().build();
-    final TestResults failingTestResults =
+    TestResults failingTestResults =
         FakeTestResults.of(
             ImmutableList.of(
                 new TestCaseSummary(

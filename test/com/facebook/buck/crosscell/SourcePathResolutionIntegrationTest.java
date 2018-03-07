@@ -104,7 +104,7 @@ public class SourcePathResolutionIntegrationTest {
   }
 
   private ProjectWorkspace createWorkspace(String scenarioName) throws IOException {
-    final Path tmpSubfolder = tmp.newFolder();
+    Path tmpSubfolder = tmp.newFolder();
     ProjectWorkspace projectWorkspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, scenarioName, tmpSubfolder);
     projectWorkspace.setUp();

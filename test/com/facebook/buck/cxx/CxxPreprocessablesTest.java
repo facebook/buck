@@ -127,7 +127,7 @@ public class CxxPreprocessablesTest {
   }
 
   @Test
-  public void getTransitiveCxxPreprocessorInput() throws Exception {
+  public void getTransitiveCxxPreprocessorInput() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(
@@ -214,8 +214,7 @@ public class CxxPreprocessablesTest {
   }
 
   @Test
-  public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables()
-      throws Exception {
+  public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables() {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 

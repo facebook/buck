@@ -90,7 +90,7 @@ public class CxxGenruleDescriptionTest {
   }
 
   @Test
-  public void ldFlagsFilter() throws Exception {
+  public void ldFlagsFilter() {
     for (BiFunction<Optional<Pattern>, ImmutableList<BuildTarget>, Macro> macro :
         ImmutableList.<BiFunction<Optional<Pattern>, ImmutableList<BuildTarget>, Macro>>of(
             LdflagsSharedFilterMacro::of,
@@ -134,7 +134,7 @@ public class CxxGenruleDescriptionTest {
   }
 
   @Test
-  public void cppflagsNoArgs() throws Exception {
+  public void cppflagsNoArgs() {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.DEFAULT_PLATFORM.withCppflags("-cppflag").withCxxppflags("-cxxppflag");
     CxxGenruleBuilder builder =
@@ -159,7 +159,7 @@ public class CxxGenruleDescriptionTest {
   }
 
   @Test
-  public void cflagsNoArgs() throws Exception {
+  public void cflagsNoArgs() {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.DEFAULT_PLATFORM
             .withAsflags("-asflag")
@@ -256,7 +256,7 @@ public class CxxGenruleDescriptionTest {
   }
 
   @Test
-  public void cxxGenruleInLocationMacro() throws Exception {
+  public void cxxGenruleInLocationMacro() {
     CxxGenruleBuilder depBuilder =
         new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:dep")).setOut("out");
     CxxGenruleBuilder builder =
