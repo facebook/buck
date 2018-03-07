@@ -145,7 +145,7 @@ public class AppleCxxPlatformsTest {
   }
 
   @Test
-  public void iphoneOSSdkPathsBuiltFromDirectory() throws Exception {
+  public void iphoneOSSdkPathsBuiltFromDirectory() {
     AppleSdkPaths appleSdkPaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(developerDir)
@@ -245,7 +245,7 @@ public class AppleCxxPlatformsTest {
   }
 
   @Test
-  public void watchOSSdkPathsBuiltFromDirectory() throws Exception {
+  public void watchOSSdkPathsBuiltFromDirectory() {
     AppleSdkPaths appleSdkPaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(developerDir)
@@ -336,7 +336,7 @@ public class AppleCxxPlatformsTest {
   }
 
   @Test
-  public void appleTVOSSdkPathsBuiltFromDirectory() throws Exception {
+  public void appleTVOSSdkPathsBuiltFromDirectory() {
     AppleSdkPaths appleSdkPaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(developerDir)
@@ -429,7 +429,7 @@ public class AppleCxxPlatformsTest {
   }
 
   @Test
-  public void invalidFlavorCharactersInSdkAreEscaped() throws Exception {
+  public void invalidFlavorCharactersInSdkAreEscaped() {
     AppleSdkPaths appleSdkPaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(developerDir)
@@ -480,7 +480,7 @@ public class AppleCxxPlatformsTest {
   }
 
   @Test
-  public void cxxToolParamsReadFromBuckConfig() throws Exception {
+  public void cxxToolParamsReadFromBuckConfig() {
     AppleSdkPaths appleSdkPaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(developerDir)
@@ -544,7 +544,7 @@ public class AppleCxxPlatformsTest {
   }
 
   @Test
-  public void pathNotFoundThrows() throws Exception {
+  public void pathNotFoundThrows() {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(containsString("Cannot find tool"));
     AppleSdkPaths appleSdkPaths =
@@ -584,7 +584,7 @@ public class AppleCxxPlatformsTest {
   }
 
   @Test
-  public void iphoneOSSimulatorPlatformSetsLinkerFlags() throws Exception {
+  public void iphoneOSSimulatorPlatformSetsLinkerFlags() {
     AppleSdkPaths appleSdkPaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(developerDir)
@@ -638,7 +638,7 @@ public class AppleCxxPlatformsTest {
   }
 
   @Test
-  public void watchOSSimulatorPlatformSetsLinkerFlags() throws Exception {
+  public void watchOSSimulatorPlatformSetsLinkerFlags() {
     AppleSdkPaths appleSdkPaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(developerDir)
@@ -692,7 +692,7 @@ public class AppleCxxPlatformsTest {
   }
 
   @Test
-  public void appleTVOSSimulatorPlatformSetsLinkerFlags() throws Exception {
+  public void appleTVOSSimulatorPlatformSetsLinkerFlags() {
     AppleSdkPaths appleSdkPaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(developerDir)
@@ -934,7 +934,7 @@ public class AppleCxxPlatformsTest {
   }
 
   @Test
-  public void filePathIsUsedWhenBuildTargetDoesNotExist() throws IOException {
+  public void filePathIsUsedWhenBuildTargetDoesNotExist() {
     Path codesignPath = projectFilesystem.getPath("/foo/fakecodesign");
     touchFile(codesignPath);
     AppleCxxPlatform appleCxxPlatform =
@@ -1119,7 +1119,7 @@ public class AppleCxxPlatformsTest {
     Files.createDirectories(tempRoot.resolve("usr/lib/swift_static/iphoneos"));
     Optional<AppleToolchain> selectedSwiftToolChain =
         useDefaultSwift ? Optional.empty() : Optional.of(swiftToolchain);
-    final ImmutableSet<Path> knownPaths =
+    ImmutableSet<Path> knownPaths =
         ImmutableSet.<Path>builder()
             .addAll(getCommonKnownPaths(developerDir))
             .add(developerDir.resolve("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))

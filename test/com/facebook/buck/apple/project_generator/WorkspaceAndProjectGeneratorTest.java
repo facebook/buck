@@ -965,7 +965,7 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   private Function<TargetNode<?, ?>, BuildRuleResolver> getBuildRuleResolverForNodeFunction(
-      final TargetGraph targetGraph) {
+      TargetGraph targetGraph) {
     return input ->
         new ActionGraphCache(1, 1)
             .getFreshActionGraph(

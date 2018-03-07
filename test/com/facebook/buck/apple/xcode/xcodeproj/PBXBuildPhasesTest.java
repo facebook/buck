@@ -61,7 +61,7 @@ public class PBXBuildPhasesTest {
 
   @Test
   public void testCopyFilesBuildPhaseWithNameAndDepoymentPostprocessing() {
-    final String copyPhaseName = "Test Phase Name";
+    String copyPhaseName = "Test Phase Name";
     PBXCopyFilesBuildPhase copyPhase = makeCopyFilesPhase();
     copyPhase.setRunOnlyForDeploymentPostprocessing(Optional.of(Boolean.TRUE));
     copyPhase.setName(Optional.of(copyPhaseName));

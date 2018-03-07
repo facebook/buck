@@ -47,7 +47,7 @@ import org.junit.Test;
 public class ApplePackageDescriptionTest {
 
   @Test
-  public void descriptionCreatesExternallyBuiltPackageRuleIfConfigExists() throws Exception {
+  public void descriptionCreatesExternallyBuiltPackageRuleIfConfigExists() {
     ApplePackageDescription description = descriptionWithCommand("echo");
     BuildTarget binaryBuildTarget = BuildTargetFactory.newInstance("//foo:binary");
     BuildTarget bundleBuildTarget = BuildTargetFactory.newInstance("//foo:bundle");
@@ -94,7 +94,7 @@ public class ApplePackageDescriptionTest {
   }
 
   @Test
-  public void descriptionExpandsLocationMacrosAndTracksDependencies() throws Exception {
+  public void descriptionExpandsLocationMacrosAndTracksDependencies() {
     ApplePackageDescription description = descriptionWithCommand("echo $(location :exportfile)");
     BuildTarget binaryBuildTarget = BuildTargetFactory.newInstance("//foo:binary");
     BuildTarget bundleBuildTarget = BuildTargetFactory.newInstance("//foo:bundle");

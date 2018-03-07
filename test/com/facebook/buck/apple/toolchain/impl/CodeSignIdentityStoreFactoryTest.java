@@ -38,7 +38,7 @@ import org.junit.Test;
 
 public class CodeSignIdentityStoreFactoryTest {
   @Test
-  public void testInvalidIdentitiesAreIgnored() throws Exception {
+  public void testInvalidIdentitiesAreIgnored() {
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder().addCommand("unused").build();
     FakeProcess process =
@@ -67,7 +67,7 @@ public class CodeSignIdentityStoreFactoryTest {
   }
 
   @Test
-  public void testCodeSignIdentitiesCommandOverride() throws Exception {
+  public void testCodeSignIdentitiesCommandOverride() {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
     Path testdataDir =

@@ -54,7 +54,7 @@ public class AppleLibraryIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void testAppleLibraryBuildsSomething() throws InterruptedException, IOException {
+  public void testAppleLibraryBuildsSomething() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
@@ -101,7 +101,7 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryWithHeaderPathPrefix() throws InterruptedException, IOException {
+  public void testAppleLibraryWithHeaderPathPrefix() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
@@ -121,7 +121,7 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testCanUseAHeaderWithoutPrefix() throws InterruptedException, IOException {
+  public void testCanUseAHeaderWithoutPrefix() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
@@ -141,8 +141,7 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryWithDefaultsInConfigBuildsSomething()
-      throws InterruptedException, IOException {
+  public void testAppleLibraryWithDefaultsInConfigBuildsSomething() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
@@ -168,8 +167,7 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryWithDefaultsInRuleBuildsSomething()
-      throws InterruptedException, IOException {
+  public void testAppleLibraryWithDefaultsInRuleBuildsSomething() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
@@ -192,7 +190,7 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryBuildsForWatchOS() throws InterruptedException, IOException {
+  public void testAppleLibraryBuildsForWatchOS() throws IOException {
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.WATCHOS));
 
     ProjectWorkspace workspace =
@@ -211,7 +209,7 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryBuildsForWatchSimulator() throws InterruptedException, IOException {
+  public void testAppleLibraryBuildsForWatchSimulator() throws IOException {
     assumeTrue(
         AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.WATCHSIMULATOR));
 
@@ -232,7 +230,7 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryBuildsForAppleTVOS() throws InterruptedException, IOException {
+  public void testAppleLibraryBuildsForAppleTVOS() throws IOException {
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.APPLETVOS));
 
     ProjectWorkspace workspace =
@@ -252,7 +250,7 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryBuildsForAppleTVSimulator() throws InterruptedException, IOException {
+  public void testAppleLibraryBuildsForAppleTVSimulator() throws IOException {
     assumeTrue(
         AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.APPLETVSIMULATOR));
 
@@ -273,8 +271,7 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryBuildsSomethingUsingAppleCxxPlatform()
-      throws InterruptedException, IOException {
+  public void testAppleLibraryBuildsSomethingUsingAppleCxxPlatform() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
@@ -294,7 +291,7 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryHeaderSymlinkTree() throws InterruptedException, IOException {
+  public void testAppleLibraryHeaderSymlinkTree() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
@@ -634,7 +631,7 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryExportedHeaderSymlinkTree() throws InterruptedException, IOException {
+  public void testAppleLibraryExportedHeaderSymlinkTree() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
@@ -662,7 +659,7 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryIsHermetic() throws InterruptedException, IOException {
+  public void testAppleLibraryIsHermetic() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 

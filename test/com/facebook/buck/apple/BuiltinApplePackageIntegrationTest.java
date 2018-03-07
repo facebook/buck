@@ -65,14 +65,14 @@ public class BuiltinApplePackageIntegrationTest {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
   }
 
-  private static boolean isDirEmpty(final Path directory) throws IOException {
+  private static boolean isDirEmpty(Path directory) throws IOException {
     try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(directory)) {
       return !dirStream.iterator().hasNext();
     }
   }
 
   @Test
-  public void packageHasProperStructure() throws IOException, InterruptedException {
+  public void packageHasProperStructure() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "simple_application_bundle_no_debug", tmp);

@@ -61,7 +61,7 @@ public class AppleCxxPlatformsProviderFactoryTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  public void testPlatformConflicts() throws IOException, InterruptedException {
+  public void testPlatformConflicts() throws IOException {
     assumeThat(Platform.detect(), is(Platform.MACOS));
 
     ProjectWorkspace workspace =

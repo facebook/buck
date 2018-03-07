@@ -444,7 +444,7 @@ public class NewNativeTargetProjectMutatorTest {
     return mutator;
   }
 
-  private static void assertHasTargetGroupWithName(PBXProject project, final String name) {
+  private static void assertHasTargetGroupWithName(PBXProject project, String name) {
     assertThat(
         "Should contain a target group named: " + name,
         Iterables.filter(
@@ -452,7 +452,7 @@ public class NewNativeTargetProjectMutatorTest {
         not(emptyIterable()));
   }
 
-  private static PBXGroup assertHasSubgroupAndReturnIt(PBXGroup group, final String subgroupName) {
+  private static PBXGroup assertHasSubgroupAndReturnIt(PBXGroup group, String subgroupName) {
     ImmutableList<PBXGroup> candidates =
         FluentIterable.from(group.getChildren())
             .filter(input -> input.getName().equals(subgroupName))

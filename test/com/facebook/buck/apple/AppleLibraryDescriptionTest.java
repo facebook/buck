@@ -54,7 +54,7 @@ import org.junit.Test;
 public class AppleLibraryDescriptionTest {
 
   @Test
-  public void linkerFlagsLocationMacro() throws Exception {
+  public void linkerFlagsLocationMacro() {
     assumeThat(Platform.detect(), is(Platform.MACOS));
     BuildTarget sandboxTarget =
         BuildTargetFactory.newInstance("//:rule")
@@ -88,9 +88,9 @@ public class AppleLibraryDescriptionTest {
   }
 
   @Test
-  public void swiftMetadata() throws Exception {
-    final SourcePath objCSourcePath = FakeSourcePath.of("foo.m");
-    final SourcePath swiftSourcePath = FakeSourcePath.of("bar.swift");
+  public void swiftMetadata() {
+    SourcePath objCSourcePath = FakeSourcePath.of("foo.m");
+    SourcePath swiftSourcePath = FakeSourcePath.of("bar.swift");
 
     BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:library");
     TargetNode<?, ?> binaryNode =

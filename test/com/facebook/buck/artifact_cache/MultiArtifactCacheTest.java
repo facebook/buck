@@ -67,7 +67,7 @@ public class MultiArtifactCacheTest {
   }
 
   @Test
-  public void testCacheFetch() throws InterruptedException, IOException {
+  public void testCacheFetch() throws IOException {
     DummyArtifactCache dummyArtifactCache1 = new DummyArtifactCache();
     DummyArtifactCache dummyArtifactCache2 = new DummyArtifactCache();
     MultiArtifactCache multiArtifactCache =
@@ -100,7 +100,7 @@ public class MultiArtifactCacheTest {
   }
 
   @Test
-  public void testCacheMultiContains() throws InterruptedException, IOException {
+  public void testCacheMultiContains() throws IOException {
     DummyArtifactCache dummyArtifactCache1 = new DummyArtifactCache();
     DummyArtifactCache dummyArtifactCache2 = new DummyArtifactCache();
     MultiArtifactCache multiArtifactCache =
@@ -226,7 +226,7 @@ public class MultiArtifactCacheTest {
   }
 
   @Test
-  public void testCacheStore() throws InterruptedException, IOException {
+  public void testCacheStore() throws IOException {
     DummyArtifactCache dummyArtifactCache1 = new DummyArtifactCache();
     DummyArtifactCache dummyArtifactCache2 = new DummyArtifactCache();
     MultiArtifactCache multiArtifactCache =
@@ -321,8 +321,7 @@ public class MultiArtifactCacheTest {
   }
 
   @Test
-  public void testCacheStoreWithBorrowablePathConsumingCache()
-      throws InterruptedException, IOException, ExecutionException {
+  public void testCacheStoreWithBorrowablePathConsumingCache() {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     Path fetchFile = filesystem.resolve("fetch_file");
 
@@ -351,7 +350,7 @@ public class MultiArtifactCacheTest {
   }
 
   @Test
-  public void preserveErrorsFromInnerCache() throws InterruptedException, IOException {
+  public void preserveErrorsFromInnerCache() {
     ErroringArtifactCache inner = new ErroringArtifactCache();
     MultiArtifactCache cache = new MultiArtifactCache(ImmutableList.of(inner));
     CacheResult result = Futures.getUnchecked(cache.fetchAsync(dummyRuleKey, dummyFile));

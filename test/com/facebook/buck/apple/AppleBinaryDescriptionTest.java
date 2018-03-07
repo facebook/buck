@@ -44,7 +44,7 @@ import org.junit.Test;
 public class AppleBinaryDescriptionTest {
 
   @Test
-  public void linkerFlagsLocationMacro() throws Exception {
+  public void linkerFlagsLocationMacro() {
     assumeThat(Platform.detect(), is(Platform.MACOS));
     BuildTarget sandboxTarget =
         BuildTargetFactory.newInstance(

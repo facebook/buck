@@ -55,7 +55,7 @@ import org.junit.Test;
 public class AppleTestDescriptionTest {
 
   @Test
-  public void linkerFlagsLocationMacro() throws Exception {
+  public void linkerFlagsLocationMacro() {
     assumeThat(Platform.detect(), is(Platform.MACOS));
     GenruleBuilder depBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep")).setOut("out");
@@ -91,7 +91,7 @@ public class AppleTestDescriptionTest {
   }
 
   @Test
-  public void uiTestHasTestHostAndUiTestTarget() throws Exception {
+  public void uiTestHasTestHostAndUiTestTarget() {
     assumeThat(Platform.detect(), is(Platform.MACOS));
 
     BuildTarget testHostBinTarget = BuildTargetFactory.newInstance("//:testhostbin#macosx-x86_64");
@@ -142,7 +142,7 @@ public class AppleTestDescriptionTest {
   }
 
   @Test
-  public void testCreateTestHostInfo() throws Exception {
+  public void testCreateTestHostInfo() {
     assumeThat(Platform.detect(), is(Platform.MACOS));
 
     BuildTarget testHostBinTarget = BuildTargetFactory.newInstance("//:testhostbin#macosx-x86_64");
@@ -207,7 +207,7 @@ public class AppleTestDescriptionTest {
   }
 
   @Test
-  public void testCreateTestHostInfoWithUiTestTarget() throws Exception {
+  public void testCreateTestHostInfoWithUiTestTarget() {
     assumeThat(Platform.detect(), is(Platform.MACOS));
 
     BuildTarget testHostBinTarget = BuildTargetFactory.newInstance("//:testhostbin#macosx-x86_64");

@@ -2416,7 +2416,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testAppleLibraryDependentsSearchHeadersAndLibraries() throws IOException {
     ImmutableSortedMap<String, ImmutableMap<String, String>> configs =
-        ImmutableSortedMap.of("Debug", ImmutableMap.<String, String>of());
+        ImmutableSortedMap.of("Debug", ImmutableMap.of());
 
     BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
     TargetNode<?, ?> libraryNode =
@@ -2536,7 +2536,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testAppleLibraryTransitiveDependentsSearchHeadersAndLibraries() throws IOException {
     ImmutableSortedMap<String, ImmutableMap<String, String>> configs =
-        ImmutableSortedMap.of("Debug", ImmutableMap.<String, String>of());
+        ImmutableSortedMap.of("Debug", ImmutableMap.of());
 
     BuildTarget libraryDepTarget = BuildTargetFactory.newInstance(rootPath, "//bar", "lib");
     TargetNode<?, ?> libraryDepNode =
@@ -4472,7 +4472,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testAppleLibraryWithoutHeaderMaps() throws IOException {
     ImmutableSortedMap<String, ImmutableMap<String, String>> configs =
-        ImmutableSortedMap.of("Debug", ImmutableMap.<String, String>of());
+        ImmutableSortedMap.of("Debug", ImmutableMap.of());
 
     BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
     TargetNode<?, ?> libraryNode =
@@ -4750,7 +4750,7 @@ public class ProjectGeneratorTest {
             .build();
     ImmutableSet<TargetNode<?, ?>> nodes =
         ImmutableSet.of(frameworkBinaryNode, frameworkNode, resourceNode, binaryNode, bundleNode);
-    final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes));
     BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     ProjectGenerator projectGenerator =
         createProjectGeneratorForCombinedProject(
@@ -5226,11 +5226,11 @@ public class ProjectGeneratorTest {
             .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("lib4.h")))
             .build();
 
-    final TargetGraph targetGraph =
+    TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             ImmutableSet.of(lib1Node, lib2Node, lib3Node, testNode, lib4Node));
-    final AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
-    final ProjectGenerationStateCache projStateCache = new ProjectGenerationStateCache();
+    AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
+    ProjectGenerationStateCache projStateCache = new ProjectGenerationStateCache();
 
     ProjectGenerator projectGeneratorLib2 =
         new ProjectGenerator(
@@ -5261,7 +5261,7 @@ public class ProjectGeneratorTest {
 
     // The merged header map should not generated at this point.
     Path hmapPath = Paths.get("buck-out/gen/_p/pub-hmap/.hmap");
-    assertFalse(hmapPath.toString() + " should NOT exist.", projectFilesystem.isFile(hmapPath));
+    assertFalse(hmapPath + " should NOT exist.", projectFilesystem.isFile(hmapPath));
     // Checks the content of the header search paths.
     PBXProject project2 = projectGeneratorLib2.getGeneratedProject();
     PBXTarget testPBXTarget2 = assertTargetExistsAndReturnTarget(project2, "//bar:lib2");
@@ -5305,7 +5305,7 @@ public class ProjectGeneratorTest {
     projectGeneratorLib1.createXcodeProjects();
 
     // The merged header map should not generated at this point.
-    assertTrue(hmapPath.toString() + " should exist.", projectFilesystem.isFile(hmapPath));
+    assertTrue(hmapPath + " should exist.", projectFilesystem.isFile(hmapPath));
     assertThatHeaderMapWithoutSymLinksContains(
         Paths.get("buck-out/gen/_p/pub-hmap"),
         ImmutableMap.of(
@@ -5366,7 +5366,7 @@ public class ProjectGeneratorTest {
       Collection<TargetNode<?, ?>> initialTargetNodes,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions,
       ImmutableSet<String> appleCxxFlavors) {
-    final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
     return createProjectGeneratorForCombinedProject(
         allNodes,
         initialTargetNodes,
@@ -5378,7 +5378,7 @@ public class ProjectGeneratorTest {
   private ProjectGenerator createProjectGeneratorForCombinedProject(
       Collection<TargetNode<?, ?>> allNodes,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions) {
-    final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
     return createProjectGeneratorForCombinedProject(
         allNodes,
         allNodes,
@@ -5407,9 +5407,9 @@ public class ProjectGeneratorTest {
             .map(TargetNode::getBuildTarget)
             .collect(ImmutableSet.toImmutableSet());
 
-    final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
-    final AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
-    final ProjectGenerationStateCache projStateCache = new ProjectGenerationStateCache();
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
+    AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
+    ProjectGenerationStateCache projStateCache = new ProjectGenerationStateCache();
     return new ProjectGenerator(
         targetGraph,
         cache,
@@ -5436,7 +5436,7 @@ public class ProjectGeneratorTest {
   }
 
   private Function<TargetNode<?, ?>, BuildRuleResolver> getBuildRuleResolverNodeFunction(
-      final TargetGraph targetGraph) {
+      TargetGraph targetGraph) {
     BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException> bottomUpTraversal =
         new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(targetGraph) {

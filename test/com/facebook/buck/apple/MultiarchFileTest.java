@@ -124,7 +124,7 @@ public class MultiarchFileTest {
 
   @SuppressWarnings({"unchecked"})
   @Test
-  public void descriptionWithMultiplePlatformArgsShouldGenerateMultiarchFile() throws Exception {
+  public void descriptionWithMultiplePlatformArgsShouldGenerateMultiarchFile() {
     BuildTarget target =
         BuildTargetFactory.newInstance("//foo:thing#iphoneos-i386,iphoneos-x86_64");
     BuildTarget sandboxTarget =
@@ -192,7 +192,7 @@ public class MultiarchFileTest {
         nodeBuilderFactory
             .getNodeBuilder(
                 BuildTargetFactory.newInstance(
-                    "//foo:xctest#" + "iphoneos-i386,iphoneos-x86_64," + flavor.toString()))
+                    "//foo:xctest#" + "iphoneos-i386,iphoneos-x86_64," + flavor))
             .build(resolver);
       } catch (HumanReadableException e) {
         exception = e;

@@ -29,7 +29,7 @@ public class ProvisioningProfileMetadataTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  public void testSplitAppID() throws Exception {
+  public void testSplitAppID() {
     Pair<String, String> result;
 
     result = ProvisioningProfileMetadata.splitAppID("ABCDE12345.com.example.TestApp");

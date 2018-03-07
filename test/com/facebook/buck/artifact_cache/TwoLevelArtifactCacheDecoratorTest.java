@@ -44,7 +44,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
       new RuleKey("1111111111111111111111111111111111111111");
 
   @Test
-  public void testCacheFetch() throws InterruptedException, IOException {
+  public void testCacheFetch() throws IOException {
     try (InMemoryArtifactCache inMemoryArtifactCache = new InMemoryArtifactCache();
         TwoLevelArtifactCacheDecorator twoLevelCache =
             new TwoLevelArtifactCacheDecorator(
@@ -79,7 +79,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
   }
 
   @Test
-  public void testResultDoesntHaveAddedMetadata() throws InterruptedException, IOException {
+  public void testResultDoesntHaveAddedMetadata() throws IOException {
     try (InMemoryArtifactCache inMemoryArtifactCache = new InMemoryArtifactCache();
         TwoLevelArtifactCacheDecorator twoLevelCache =
             new TwoLevelArtifactCacheDecorator(
@@ -103,7 +103,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
   }
 
   private void testStoreThresholds(int artifactSize, int expectedArtifactsInCache)
-      throws InterruptedException, IOException {
+      throws IOException {
     try (InMemoryArtifactCache inMemoryArtifactCache = new InMemoryArtifactCache();
         TwoLevelArtifactCacheDecorator twoLevelCache =
             new TwoLevelArtifactCacheDecorator(
@@ -141,7 +141,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
   }
 
   @Test
-  public void testMetadataIsNotShared() throws InterruptedException, IOException {
+  public void testMetadataIsNotShared() throws IOException {
     try (InMemoryArtifactCache inMemoryArtifactCache = new InMemoryArtifactCache();
         TwoLevelArtifactCacheDecorator twoLevelCache =
             new TwoLevelArtifactCacheDecorator(
@@ -153,7 +153,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
                 /* maximumTwoLevelStoredArtifactSize */ Optional.empty())) {
       LazyPath dummyFile = LazyPath.ofInstance(tmp.newFile());
 
-      final String testMetadataKey = "testMetaKey";
+      String testMetadataKey = "testMetaKey";
       twoLevelCache.store(
           ArtifactInfo.builder()
               .addRuleKeys(dummyRuleKey)
@@ -176,7 +176,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
   }
 
   @Test
-  public void testCanRead2LStoresIfStoresDisabled() throws InterruptedException, IOException {
+  public void testCanRead2LStoresIfStoresDisabled() throws IOException {
     try (InMemoryArtifactCache inMemoryArtifactCache = new InMemoryArtifactCache();
         TwoLevelArtifactCacheDecorator twoLevelCache =
             new TwoLevelArtifactCacheDecorator(

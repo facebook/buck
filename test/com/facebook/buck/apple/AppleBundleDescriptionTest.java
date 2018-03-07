@@ -157,7 +157,7 @@ public class AppleBundleDescriptionTest {
   }
 
   @Test
-  public void metadataTraversalForFrameworkDependenciesAreTerminated() throws Exception {
+  public void metadataTraversalForFrameworkDependenciesAreTerminated() {
     BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:binary");
     TargetNode<?, ?> binaryNode = new AppleBinaryBuilder(binaryTarget).build();
 

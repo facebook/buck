@@ -87,7 +87,7 @@ public final class ProjectGeneratorTestUtils {
   }
 
   public static <T extends PBXBuildPhase> void assertHasSingletonPhaseWithEntries(
-      PBXTarget target, final Class<T> cls, ImmutableList<String> entries) {
+      PBXTarget target, Class<T> cls, ImmutableList<String> entries) {
     PBXBuildPhase buildPhase = getSingletonPhaseByType(target, cls);
     assertThat(
         "Phase should have right number of entries",
@@ -116,7 +116,7 @@ public final class ProjectGeneratorTestUtils {
   }
 
   public static <T extends PBXBuildPhase> T getSingletonPhaseByType(
-      PBXTarget target, final Class<T> cls) {
+      PBXTarget target, Class<T> cls) {
     Iterable<PBXBuildPhase> buildPhases =
         Iterables.filter(target.getBuildPhases(), cls::isInstance);
     assertEquals("Build phase should be singleton", 1, Iterables.size(buildPhases));

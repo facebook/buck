@@ -79,7 +79,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testCacheCreation() throws InterruptedException, IOException {
+  public void testCacheCreation() throws IOException {
     Path cacheDir = tmpDir.newFolder();
 
     dirArtifactCache =
@@ -92,7 +92,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testCacheFetchMiss() throws InterruptedException, IOException {
+  public void testCacheFetchMiss() throws IOException {
     Path cacheDir = tmpDir.newFolder();
     Path fileX = tmpDir.newFile("x");
 
@@ -122,7 +122,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testCacheStoreAndFetchHit() throws InterruptedException, IOException {
+  public void testCacheStoreAndFetchHit() throws IOException {
     Path cacheDir = tmpDir.newFolder();
     Path fileX = tmpDir.newFile("x");
 
@@ -166,7 +166,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testCacheContainsMiss() throws IOException, InterruptedException {
+  public void testCacheContainsMiss() throws IOException {
     Path cacheDir = tmpDir.newFolder();
     Path fileX = tmpDir.newFile("x");
 
@@ -197,7 +197,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testCacheStoreAndContainsHit() throws IOException, InterruptedException {
+  public void testCacheStoreAndContainsHit() throws IOException {
     Path cacheDir = tmpDir.newFolder();
     Path fileX = tmpDir.newFile("x");
 
@@ -232,7 +232,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testCacheStoreOverwrite() throws InterruptedException, IOException {
+  public void testCacheStoreOverwrite() throws IOException {
     Path cacheDir = tmpDir.newFolder();
     Path fileX = tmpDir.newFile("x");
 
@@ -272,7 +272,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testCacheStoresAndFetchHits() throws InterruptedException, IOException {
+  public void testCacheStoresAndFetchHits() throws IOException {
     Path cacheDir = tmpDir.newFolder();
     Path fileX = tmpDir.newFile("x");
     Path fileY = tmpDir.newFile("y");
@@ -372,12 +372,12 @@ public class DirArtifactCacheTest {
 
     for (RuleKey ruleKey : ImmutableSet.of(ruleKeyX, ruleKeyY, ruleKeyZ)) {
       assertThat(filenames, Matchers.hasItem(ruleKey.toString()));
-      assertThat(filenames, Matchers.hasItem(ruleKey.toString() + ".metadata"));
+      assertThat(filenames, Matchers.hasItem(ruleKey + ".metadata"));
     }
   }
 
   @Test
-  public void testCacheStoresAndMultiContainsHits() throws InterruptedException, IOException {
+  public void testCacheStoresAndMultiContainsHits() throws IOException {
     Path cacheDir = tmpDir.newFolder();
     Path fileX = tmpDir.newFile("x");
     Path fileY = tmpDir.newFile("y");
@@ -457,7 +457,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testCacheStoresAndBorrowsPaths() throws InterruptedException, IOException {
+  public void testCacheStoresAndBorrowsPaths() throws IOException {
     Path cacheDir = tmpDir.newFolder();
     Path fileX = tmpDir.newFile("x");
     Path fileY = tmpDir.newFile("y");
@@ -505,7 +505,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testNoStoreMisses() throws InterruptedException, IOException {
+  public void testNoStoreMisses() throws IOException {
     Path cacheDir = tmpDir.newFolder();
     Path fileX = tmpDir.newFile("x");
     Path fileY = tmpDir.newFile("y");
@@ -598,7 +598,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testDeleteNothing() throws InterruptedException, IOException {
+  public void testDeleteNothing() throws IOException {
     Path cacheDir = tmpDir.newFolder();
     Path fileX = cacheDir.resolve("x");
     Path fileY = cacheDir.resolve("y");
@@ -624,7 +624,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testDeleteNothingAbsentLimit() throws InterruptedException, IOException {
+  public void testDeleteNothingAbsentLimit() throws IOException {
     Path cacheDir = tmpDir.newFolder();
     Path fileX = cacheDir.resolve("x");
     Path fileY = cacheDir.resolve("y");
@@ -650,7 +650,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testDeleteSome() throws InterruptedException, IOException {
+  public void testDeleteSome() throws IOException {
     Path cacheDir = tmpDir.newFolder();
 
     Path fileW = cacheDir.resolve("11").resolve("11").resolve("w");
@@ -696,7 +696,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testDirectoryCleanerPathSelector() throws InterruptedException, IOException {
+  public void testDirectoryCleanerPathSelector() throws IOException {
     Path cacheDir = tmpDir.newFolder();
 
     dirArtifactCache =
@@ -717,7 +717,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testDeleteAfterStoreIfFull() throws InterruptedException, IOException {
+  public void testDeleteAfterStoreIfFull() throws IOException {
     Path cacheDir = tmpDir.newFolder();
     Path fileX = tmpDir.newFile("x");
     Path fileY = tmpDir.newFile("y");
@@ -819,7 +819,7 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testCacheStoreMultipleKeys() throws InterruptedException, IOException {
+  public void testCacheStoreMultipleKeys() throws IOException {
     Path cacheDir = tmpDir.newFolder();
     Path fileX = tmpDir.newFile("x");
 
@@ -912,7 +912,7 @@ public class DirArtifactCacheTest {
     private final SourcePath file;
 
     private BuildRuleForTest(Path file) {
-      super(BuildTargetFactory.newInstance("//foo:" + file.getFileName().toString()));
+      super(BuildTargetFactory.newInstance("//foo:" + file.getFileName()));
       // TODO(15468825) - PathSourcePath should be relative!11!!11!1!!!
       this.file = FakeSourcePath.of(new FakeProjectFilesystem(), file);
     }
