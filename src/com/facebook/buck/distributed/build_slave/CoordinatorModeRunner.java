@@ -197,7 +197,7 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
     private void dumpAndUploadChromeTrace() {
       try {
         Path traceFilePath = logDirectoryPath.resolve(BuckConstant.DIST_BUILD_TRACE_FILE_NAME);
-        this.server.traceSnapshot().dumpToChromeTrace(traceFilePath);
+        this.server.generateTrace().dumpToChromeTrace(traceFilePath);
 
         if (!clientBuildId.isPresent()) {
           LOG.warn("Not uploading distbuild chrome trace because original build uuid is unset");

@@ -91,7 +91,7 @@ public class DistBuildTraceTracker {
     minionGotWork(newWorkUnits, now);
   }
 
-  public DistBuildTrace snapshot() {
+  public DistBuildTrace generateTrace() {
     return new DistBuildTrace(stampedeId, new HashMap<>(rulesByMinionId));
   }
 }

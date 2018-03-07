@@ -243,10 +243,10 @@ public class ThriftCoordinatorServer implements Closeable {
     }
   }
 
-  /** Create a snapshot of dist build trace. */
-  public DistBuildTrace traceSnapshot() {
+  /** Create a {@link DistBuildTrace} based on timestamps of rules processed by the minions. */
+  public DistBuildTrace generateTrace() {
     synchronized (lock) {
-      return chromeTraceTracker.snapshot();
+      return chromeTraceTracker.generateTrace();
     }
   }
 
