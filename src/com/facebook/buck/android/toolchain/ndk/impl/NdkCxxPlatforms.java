@@ -501,6 +501,7 @@ public class NdkCxxPlatforms {
                     ElfSharedLibraryInterfaceParams.of(
                         new ConstantToolProvider(
                             getGccTool(toolchainPaths, "objcopy", version, executableFinder)),
+                        ImmutableList.of(),
                         config.getSharedLibraryInterfaces()
                             == SharedLibraryInterfaceParams.Type.DEFINED_ONLY))
                 : Optional.empty())

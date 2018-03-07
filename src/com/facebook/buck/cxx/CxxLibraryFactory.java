@@ -903,6 +903,9 @@ public class CxxLibraryFactory {
     argsBuilder.addAll(
         StringArg.from(cxxPlatform.getRuntimeLdflags().get(Linker.LinkableDepType.SHARED)));
 
+    // Add in additional, user-configured flags.
+    argsBuilder.addAll(StringArg.from(params.getLdflags()));
+
     ImmutableList<Arg> args = argsBuilder.build();
 
     return SharedLibraryInterfaceFactoryResolver.resolveFactory(params)

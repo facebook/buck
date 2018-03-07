@@ -62,6 +62,7 @@ public class CxxPlatforms {
               Optional.of(
                   ElfSharedLibraryInterfaceParams.of(
                       config.getObjcopy().get(),
+                      config.getIndependentShlibInterfacesLdflags().orElse(ImmutableList.of()),
                       type == SharedLibraryInterfaceParams.Type.DEFINED_ONLY));
           break;
           // $CASES-OMITTED$
