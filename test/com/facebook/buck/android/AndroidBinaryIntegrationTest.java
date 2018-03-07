@@ -265,7 +265,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testDxFindsReferencedResources() throws InterruptedException, IOException {
+  public void testDxFindsReferencedResources() throws IOException {
     workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
     BuildTarget dexTarget = BuildTargetFactory.newInstance("//java/com/sample/lib:lib#dex");
     ProjectFilesystem filesystem =

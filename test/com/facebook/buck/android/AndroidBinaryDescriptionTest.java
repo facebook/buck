@@ -46,7 +46,7 @@ import org.junit.Test;
 public class AndroidBinaryDescriptionTest {
 
   @Test
-  public void testNoDxRulesBecomeFirstOrderDeps() throws Exception {
+  public void testNoDxRulesBecomeFirstOrderDeps() {
     TargetNode<?, ?> transitiveDepNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
             .addSrc(Paths.get("Dep.java"))
@@ -111,7 +111,7 @@ public class AndroidBinaryDescriptionTest {
   }
 
   @Test
-  public void duplicateResourceBanningDefaultAllow() throws Exception {
+  public void duplicateResourceBanningDefaultAllow() {
     AndroidBinaryDescriptionArg arg =
         AndroidBinaryDescriptionArg.builder()
             .setName("res")
@@ -125,7 +125,7 @@ public class AndroidBinaryDescriptionTest {
   }
 
   @Test
-  public void duplicateResourceBanningDefaultBan() throws Exception {
+  public void duplicateResourceBanningDefaultBan() {
     AndroidBinaryDescriptionArg arg =
         AndroidBinaryDescriptionArg.builder()
             .setName("res")
@@ -142,7 +142,7 @@ public class AndroidBinaryDescriptionTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void duplicateResourceBanningBadCombinationBan() throws Exception {
+  public void duplicateResourceBanningBadCombinationBan() {
     AndroidBinaryDescriptionArg.builder()
         .setName("res")
         .setManifest(FakeSourcePath.of("manifest"))
@@ -155,7 +155,7 @@ public class AndroidBinaryDescriptionTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void duplicateResourceBanningBadCombinationAllow() throws Exception {
+  public void duplicateResourceBanningBadCombinationAllow() {
     AndroidBinaryDescriptionArg.builder()
         .setName("res")
         .setManifest(FakeSourcePath.of("manifest"))

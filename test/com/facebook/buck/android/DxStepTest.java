@@ -77,7 +77,7 @@ public class DxStepTest {
   }
 
   @Test
-  public void testDxCommandNoOptimizeNoJumbo() throws InterruptedException, IOException {
+  public void testDxCommandNoOptimizeNoJumbo() throws IOException {
     // Context with --verbose 2.
     try (ExecutionContext context = createExecutionContext(2)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
@@ -107,7 +107,7 @@ public class DxStepTest {
   }
 
   @Test
-  public void testDxCommandOptimizeNoJumbo() throws InterruptedException, IOException {
+  public void testDxCommandOptimizeNoJumbo() throws IOException {
     // Context with --verbose 2.
     try (ExecutionContext context = createExecutionContext(2)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
@@ -135,7 +135,7 @@ public class DxStepTest {
   }
 
   @Test
-  public void testDxCommandNoOptimizeForceJumbo() throws InterruptedException, IOException {
+  public void testDxCommandNoOptimizeForceJumbo() throws IOException {
     // Context with --verbose 2.
     try (ExecutionContext context = createExecutionContext(2)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
@@ -165,7 +165,7 @@ public class DxStepTest {
   }
 
   @Test
-  public void testVerbose3AddsStatisticsFlag() throws InterruptedException, IOException {
+  public void testVerbose3AddsStatisticsFlag() throws IOException {
     // Context with --verbose 3.
     try (ExecutionContext context = createExecutionContext(COMMANDS_AND_SPECIAL_OUTPUT.ordinal())) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
@@ -198,7 +198,7 @@ public class DxStepTest {
   }
 
   @Test
-  public void testVerbose10AddsVerboseFlagToDx() throws InterruptedException, IOException {
+  public void testVerbose10AddsVerboseFlagToDx() throws IOException {
     // Context with --verbose 10.
     try (ExecutionContext context = createExecutionContext(10)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
@@ -233,7 +233,7 @@ public class DxStepTest {
   }
 
   @Test
-  public void testOverridenMaxHeapSize() throws InterruptedException, IOException {
+  public void testOverridenMaxHeapSize() throws IOException {
     try (ExecutionContext context = createExecutionContext(2)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
@@ -263,7 +263,7 @@ public class DxStepTest {
     }
   }
 
-  private ExecutionContext createExecutionContext(int verbosityLevel) throws IOException {
+  private ExecutionContext createExecutionContext(int verbosityLevel) {
     Verbosity verbosity = VerbosityParser.getVerbosityForLevel(verbosityLevel);
     TestConsole console = new TestConsole(verbosity);
     return TestExecutionContext.newBuilder().setConsole(console).build();

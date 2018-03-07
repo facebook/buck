@@ -51,7 +51,7 @@ public class AndroidSdkLocationFactoryTest {
   }
 
   @Test
-  public void testAndroidSdkLocationNotPresentWhenSdkRootNotPresent() throws Exception {
+  public void testAndroidSdkLocationNotPresentWhenSdkRootNotPresent() {
     AndroidSdkLocationFactory factory = new AndroidSdkLocationFactory();
 
     String androidSdkNotPresentMessage = "Android SDK could not be found";

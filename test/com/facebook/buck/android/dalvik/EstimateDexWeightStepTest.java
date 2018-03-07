@@ -75,7 +75,7 @@ public class EstimateDexWeightStepTest {
   }
 
   @Test(expected = IllegalStateException.class)
-  public void testGetBeforeExecuteThrowsException() throws InterruptedException {
+  public void testGetBeforeExecuteThrowsException() {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Path pathToJarOrClassesDirectory = Paths.get("out");
     EstimateDexWeightStep step =
@@ -84,7 +84,7 @@ public class EstimateDexWeightStepTest {
   }
 
   @Test
-  public void testGetShortName() throws InterruptedException {
+  public void testGetShortName() {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Path pathToJarOrClassesDirectory = Paths.get("out");
     EstimateDexWeightStep step =
@@ -93,7 +93,7 @@ public class EstimateDexWeightStepTest {
   }
 
   @Test
-  public void testGetDescription() throws InterruptedException {
+  public void testGetDescription() {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Path pathToJarOrClassesDirectory = Paths.get("out");
     EstimateDexWeightStep step =
@@ -110,7 +110,7 @@ public class EstimateDexWeightStepTest {
     }
 
     @Override
-    public int getEstimate(FileLike fileLike) throws IOException {
+    public int getEstimate(FileLike fileLike) {
       return Preconditions.checkNotNull(
           relativePathToCostMap.get(pathWithPlatformSeparators(fileLike.getRelativePath())));
     }

@@ -615,7 +615,7 @@ public class ExopackageInstallerIntegrationTest {
     if (!modularDexesContents.isEmpty()) {
       ImmutableList.Builder<String> topLevelMetadata = ImmutableList.builder();
       filesystem.deleteRecursivelyIfExists(modulesDirectory);
-      final Builder<DexInfo> moduleInfoBuilder = ImmutableList.builder();
+      Builder<DexInfo> moduleInfoBuilder = ImmutableList.builder();
       for (int i = 0; i < modularDexesContents.size(); i++) {
         String dexContent = modularDexesContents.get(i);
         String moduleName = dexContent.trim();
@@ -628,7 +628,7 @@ public class ExopackageInstallerIntegrationTest {
         builder.addExoFile("modular-dex/" + dexJarName, dexContent);
         // Write the metadata for this module
         Path moduleManifest = moduleDirectory.resolve(moduleName + ".metadata");
-        final String metadataContents = String.format("%s %s", sourceFilename, dexHash);
+        String metadataContents = String.format("%s %s", sourceFilename, dexHash);
         writeFile(moduleManifest, metadataContents);
         builder.addExoFile("modular-dex/" + moduleName + ".metadata", metadataContents);
         moduleInfoBuilder.add(

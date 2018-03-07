@@ -103,8 +103,7 @@ public class ApkGenruleTest {
 
   @Test
   @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
-  public void testCreateAndRunApkGenrule()
-      throws InterruptedException, IOException, NoSuchBuildTargetException {
+  public void testCreateAndRunApkGenrule() throws IOException, NoSuchBuildTargetException {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     FileSystem fileSystem = projectFilesystem.getRootPath().getFileSystem();
     BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
@@ -113,7 +112,7 @@ public class ApkGenruleTest {
     // From the Python object, create a ApkGenruleBuildRuleFactory to create a ApkGenrule.Builder
     // that builds a ApkGenrule from the Python object.
     BuildTargetParser parser = EasyMock.createNiceMock(BuildTargetParser.class);
-    final BuildTarget apkTarget =
+    BuildTarget apkTarget =
         BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:fb4a");
 
     EasyMock.expect(
@@ -161,7 +160,7 @@ public class ApkGenruleTest {
     // Verify all of the observers of the Genrule.
     Path expectedApkOutput =
         projectFilesystem.resolve(
-            projectFilesystem.getBuckPaths().getGenDir().toString()
+            projectFilesystem.getBuckPaths().getGenDir()
                 + "/src/com/facebook/sign_fb4a/sign_fb4a.apk");
     assertEquals(expectedApkOutput, apkGenrule.getAbsoluteOutputFilePath());
     assertEquals(

@@ -59,7 +59,7 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void rulesExportedFromDepsBecomeFirstOrderDeps() throws Exception {
+  public void rulesExportedFromDepsBecomeFirstOrderDeps() {
     TargetNode<?, ?> transitiveExportedNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:transitive_exported_rule"), javaBuckConfig)
@@ -106,7 +106,7 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void rulesMatchingDepQueryBecomeFirstOrderDeps() throws Exception {
+  public void rulesMatchingDepQueryBecomeFirstOrderDeps() {
     // Set up target graph: rule -> lib -> sublib -> bottom
     TargetNode<JavaLibraryDescriptionArg, JavaLibraryDescription> bottomNode =
         JavaLibraryBuilder.createBuilder(
@@ -148,7 +148,7 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() throws Exception {
+  public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() {
     TargetNode<?, ?> transitiveExportedNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:transitive_exported_rule"), javaBuckConfig)
@@ -239,7 +239,7 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testClasspathContainsOnlyJavaTargets() throws Exception {
+  public void testClasspathContainsOnlyJavaTargets() {
     TargetNode<AndroidResourceDescriptionArg, AndroidResourceDescription> resourceRule =
         AndroidResourceBuilder.createBuilder(BuildTargetFactory.newInstance("//:res")).build();
 

@@ -197,14 +197,14 @@ public class AndroidPackageableCollectorTest {
         "Because a native library was declared as a dependency, it should be added to the "
             + "transitive dependencies.",
         pathResolver,
-        ImmutableSet.<SourcePath>of(
+        ImmutableSet.of(
             PathSourcePath.of(new FakeProjectFilesystem(), ndkLibraryRule.getLibraryPath())),
         ImmutableSet.copyOf(packageableCollection.getNativeLibsDirectories().values()));
     assertResolvedEquals(
         "Because a prebuilt native library  was declared as a dependency (and asset), it should "
             + "be added to the transitive dependecies.",
         pathResolver,
-        ImmutableSet.<SourcePath>of(FakeSourcePath.of(prebuildNativeLibraryRule.getLibraryPath())),
+        ImmutableSet.of(FakeSourcePath.of(prebuildNativeLibraryRule.getLibraryPath())),
         ImmutableSet.copyOf(packageableCollection.getNativeLibAssetsDirectories().values()));
     assertEquals(
         ImmutableSet.of(FakeSourcePath.of("debug.pro")),

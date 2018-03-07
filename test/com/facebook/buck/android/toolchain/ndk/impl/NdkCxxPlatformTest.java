@@ -216,7 +216,7 @@ public class NdkCxxPlatformTest {
   }
 
   @Test
-  public void testNdkFlags() throws IOException, InterruptedException {
+  public void testNdkFlags() throws IOException {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     Path ndkRoot = tmp.newFolder("android-ndk-r10b");
     NdkCxxPlatformTargetConfiguration targetConfiguration =
@@ -249,7 +249,7 @@ public class NdkCxxPlatformTest {
   }
 
   @Test
-  public void testExtraNdkFlags() throws IOException, InterruptedException {
+  public void testExtraNdkFlags() throws IOException {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     Path ndkRoot = tmp.newFolder("android-ndk-r10b");
     NdkCxxPlatformTargetConfiguration targetConfiguration =
@@ -347,7 +347,7 @@ public class NdkCxxPlatformTest {
   // This test is mostly just so that changes are forced to update this string if they change the
   // ndk platform flags so that such changes can actually be reviewed.
   @Test
-  public void testExtraNdkFlagsLiterally() throws IOException, InterruptedException {
+  public void testExtraNdkFlagsLiterally() throws IOException {
     Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     Path ndkRoot = tmp.newFolder("android-ndk-r10b");
@@ -505,7 +505,7 @@ public class NdkCxxPlatformTest {
   }
 
   @Test
-  public void headerVerificationWhitelistsNdkRoot() throws InterruptedException, IOException {
+  public void headerVerificationWhitelistsNdkRoot() throws IOException {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     String dir = "android-ndk-r9c";
     Path root = tmp.newFolder(dir);

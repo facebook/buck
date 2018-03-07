@@ -268,29 +268,26 @@ public class MergeAndroidResourcesStepTest {
         Optional.empty(),
         ImmutableMap.of(
             entriesBuilder.getProjectFilesystem().getPath("a-R.txt"),
-            (HasAndroidResourceDeps)
-                AndroidResourceRuleBuilder.newBuilder()
-                    .setRuleFinder(ruleFinder)
-                    .setBuildTarget(resTarget)
-                    .setRes(FakeSourcePath.of("a/res"))
-                    .setRDotJavaPackage("com.res.a")
-                    .build(),
+            AndroidResourceRuleBuilder.newBuilder()
+                .setRuleFinder(ruleFinder)
+                .setBuildTarget(resTarget)
+                .setRes(FakeSourcePath.of("a/res"))
+                .setRDotJavaPackage("com.res.a")
+                .build(),
             entriesBuilder.getProjectFilesystem().getPath("b-R.txt"),
-            (HasAndroidResourceDeps)
-                AndroidResourceRuleBuilder.newBuilder()
-                    .setRuleFinder(ruleFinder)
-                    .setBuildTarget(resTarget)
-                    .setRes(FakeSourcePath.of("b/res"))
-                    .setRDotJavaPackage("com.res.b")
-                    .build(),
+            AndroidResourceRuleBuilder.newBuilder()
+                .setRuleFinder(ruleFinder)
+                .setBuildTarget(resTarget)
+                .setRes(FakeSourcePath.of("b/res"))
+                .setRDotJavaPackage("com.res.b")
+                .build(),
             entriesBuilder.getProjectFilesystem().getPath("c-R.txt"),
-            (HasAndroidResourceDeps)
-                AndroidResourceRuleBuilder.newBuilder()
-                    .setRuleFinder(ruleFinder)
-                    .setBuildTarget(resTarget)
-                    .setRes(FakeSourcePath.of("c/res"))
-                    .setRDotJavaPackage("com.res.c")
-                    .build()),
+            AndroidResourceRuleBuilder.newBuilder()
+                .setRuleFinder(ruleFinder)
+                .setBuildTarget(resTarget)
+                .setRes(FakeSourcePath.of("c/res"))
+                .setRDotJavaPackage("com.res.c")
+                .build()),
         Optional.empty(),
         /* bannedDuplicateResourceTypes */ EnumSet.of(RType.STRING),
         ImmutableSet.of(),
@@ -356,7 +353,7 @@ public class MergeAndroidResourcesStepTest {
                 entriesBuilder.getProjectFilesystem(), target, "__%s_text_symbols__/R.txt")
             .toString();
     String rDotJavaPackage = "com.facebook";
-    final ImmutableList<String> outputTextSymbols =
+    ImmutableList<String> outputTextSymbols =
         ImmutableList.<String>builder()
             .add("int id placeholder 0x7f020000")
             .add("int string debug_http_proxy_dialog_title 0x7f030004")
@@ -450,7 +447,7 @@ public class MergeAndroidResourcesStepTest {
                 entriesBuilder.getProjectFilesystem(), target, "__%s_text_symbols__/R.txt")
             .toString();
     String rDotJavaPackage = "com.facebook";
-    final ImmutableList<String> outputTextSymbols =
+    ImmutableList<String> outputTextSymbols =
         ImmutableList.<String>builder()
             .add("int drawable android_drawable 0x7f010000")
             .add("int drawable fb_drawable 0x7f010001 #")
@@ -515,7 +512,7 @@ public class MergeAndroidResourcesStepTest {
   }
 
   @Test
-  public void testGetRDotJavaFilesWithSkipPrebuiltRDotJava() throws Exception {
+  public void testGetRDotJavaFilesWithSkipPrebuiltRDotJava() {
     BuildTarget res1Target = BuildTargetFactory.newInstance("//:res1");
     BuildTarget res2Target = BuildTargetFactory.newInstance("//:res2");
 
@@ -568,7 +565,7 @@ public class MergeAndroidResourcesStepTest {
   }
 
   @Test
-  public void testGetRDotJavaFilesWithoutSkipPrebuiltRDotJava() throws Exception {
+  public void testGetRDotJavaFilesWithoutSkipPrebuiltRDotJava() {
     BuildTarget res1Target = BuildTargetFactory.newInstance("//:res1");
     BuildTarget res2Target = BuildTargetFactory.newInstance("//:res2");
 
@@ -1000,7 +997,7 @@ public class MergeAndroidResourcesStepTest {
       this.filesystem = filesystem;
     }
 
-    public void add(RDotTxtFile entry) throws IOException {
+    public void add(RDotTxtFile entry) {
       filesystem.writeLinesToPath(entry.contents, entry.filePath);
       filePathToPackageName.put(entry.filePath, entry.packageName);
     }

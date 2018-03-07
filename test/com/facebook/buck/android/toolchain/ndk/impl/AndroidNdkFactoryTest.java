@@ -48,7 +48,7 @@ public class AndroidNdkFactoryTest {
   }
 
   @Test
-  public void testAndroidNdkNotPresentWhenNdkRootNotPresent() throws Exception {
+  public void testAndroidNdkNotPresentWhenNdkRootNotPresent() {
 
     DefaultToolchainProvider defaultToolchainProvider =
         new DefaultToolchainProvider(
@@ -67,7 +67,7 @@ public class AndroidNdkFactoryTest {
   }
 
   @Test
-  public void testAndroidNdkFailureMessage() throws Exception {
+  public void testAndroidNdkFailureMessage() {
 
     DefaultToolchainProvider defaultToolchainProvider =
         new DefaultToolchainProvider(

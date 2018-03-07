@@ -54,7 +54,7 @@ import org.junit.Test;
 public class GenAidlTest {
 
   @Test
-  public void testSimpleGenAidlRule() throws InterruptedException, IOException {
+  public void testSimpleGenAidlRule() throws IOException {
     ProjectFilesystem stubFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Files.createDirectories(stubFilesystem.getRootPath().resolve("java/com/example/base"));
 
@@ -62,10 +62,10 @@ public class GenAidlTest {
         FakeSourcePath.of(stubFilesystem, "java/com/example/base/IWhateverService.aidl");
     String importPath = Paths.get("java/com/example/base").toString();
 
-    final String pathToAidlExecutable = Paths.get("/usr/local/bin/aidl").toString();
-    final String pathToFrameworkAidl =
+    String pathToAidlExecutable = Paths.get("/usr/local/bin/aidl").toString();
+    String pathToFrameworkAidl =
         Paths.get("/home/root/android/platforms/android-16/framework.aidl").toString();
-    final AndroidPlatformTarget androidPlatformTarget =
+    AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTarget.of(
             "android",
             Paths.get(""),

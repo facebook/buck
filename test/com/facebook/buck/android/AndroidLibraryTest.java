@@ -32,7 +32,7 @@ import org.junit.Test;
 public class AndroidLibraryTest {
 
   @Test
-  public void testAndroidAnnotation() throws Exception {
+  public void testAndroidAnnotation() {
     BuildTarget processorTarget = BuildTargetFactory.newInstance("//java/processor:processor");
     TargetNode<?, ?> processorNode =
         JavaLibraryBuilder.createBuilder(processorTarget)

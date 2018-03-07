@@ -54,7 +54,7 @@ public class AndroidResourceDescriptionTest {
   @Rule public TemporaryFolder tmpFolder = new TemporaryFolder();
 
   @Test
-  public void testNonAssetFilesAndDirsAreIgnored() throws InterruptedException, IOException {
+  public void testNonAssetFilesAndDirsAreIgnored() throws IOException {
     tmpFolder.newFolder("res");
 
     tmpFolder.newFile("res/image.png");
@@ -118,7 +118,7 @@ public class AndroidResourceDescriptionTest {
   }
 
   @Test
-  public void testPossibleResourceFileFiltering() throws IOException {
+  public void testPossibleResourceFileFiltering() {
     ImmutableList<Path> inputPaths =
         ImmutableList.of(
             Paths.get("res/image.png"),

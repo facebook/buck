@@ -49,7 +49,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -59,7 +58,7 @@ import org.junit.Test;
 
 public class DummyRDotJavaTest {
   @Test
-  public void testBuildSteps() throws IOException {
+  public void testBuildSteps() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);

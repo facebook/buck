@@ -188,7 +188,7 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testNativeLibraryMergeErrors() throws IOException, InterruptedException {
+  public void testNativeLibraryMergeErrors() throws IOException {
     try {
       workspace.runBuckBuild("//apps/sample:app_with_merge_lib_into_two_targets");
       Assert.fail("No exception from trying to merge lib into two targets.");

@@ -679,8 +679,7 @@ public class MiniAaptTest {
   }
 
   @Test
-  public void testUnionResources()
-      throws IOException, XPathExpressionException, ResourceParseException {
+  public void testUnionResources() throws IOException, ResourceParseException {
     ImmutableList<String> lines =
         ImmutableList.<String>builder()
             .add(

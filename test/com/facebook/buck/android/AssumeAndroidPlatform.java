@@ -37,7 +37,7 @@ public class AssumeAndroidPlatform {
 
   private AssumeAndroidPlatform() {}
 
-  public static void assumeNdkIsAvailable() throws InterruptedException {
+  public static void assumeNdkIsAvailable() {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
     Optional<AndroidNdk> androidNdk = AndroidNdkHelper.detectAndroidNdk(projectFilesystem);
@@ -53,7 +53,7 @@ public class AssumeAndroidPlatform {
     }
   }
 
-  private static AndroidSdkLocation getAndroidSdkLocation() throws InterruptedException {
+  private static AndroidSdkLocation getAndroidSdkLocation() {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
     return TestAndroidSdkLocationFactory.create(projectFilesystem);
@@ -73,8 +73,7 @@ public class AssumeAndroidPlatform {
     assumeAapt2IsAvailable(androidSdkLocation);
   }
 
-  private static void assumeAapt2IsAvailable(AndroidSdkLocation androidSdkLocation)
-      throws InterruptedException {
+  private static void assumeAapt2IsAvailable(AndroidSdkLocation androidSdkLocation) {
     AndroidBuildToolsResolver buildToolsResolver =
         new AndroidBuildToolsResolver(
             AndroidNdkHelper.DEFAULT_CONFIG,

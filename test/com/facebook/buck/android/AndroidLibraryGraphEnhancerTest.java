@@ -244,6 +244,6 @@ public class AndroidLibraryGraphEnhancerTest {
         graphEnhancer.getBuildableForAndroidResources(
             resolver, /* createdBuildableIfEmptyDeps */ true);
     assertTrue(result.isPresent());
-    assertThat(result.get().getBuildDeps(), Matchers.<BuildRule>contains(javacDep));
+    assertThat(result.get().getBuildDeps(), Matchers.contains(javacDep));
   }
 }

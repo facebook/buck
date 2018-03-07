@@ -86,7 +86,7 @@ import org.junit.Test;
 public class AndroidBinaryGraphEnhancerTest {
 
   @Test
-  public void testCreateDepsForPreDexing() throws Exception {
+  public void testCreateDepsForPreDexing() {
     // Create three Java rules, :dep1, :dep2, and :lib. :lib depends on :dep1 and :dep2.
     BuildTarget javaDep1BuildTarget = BuildTargetFactory.newInstance("//java/com/example:dep1");
     TargetNode<?, ?> javaDep1Node =
@@ -262,7 +262,7 @@ public class AndroidBinaryGraphEnhancerTest {
   }
 
   @Test
-  public void testAllBuildablesExceptPreDexRule() throws Exception {
+  public void testAllBuildablesExceptPreDexRule() {
     // Create an android_build_config() as a dependency of the android_binary().
     BuildTarget buildConfigBuildTarget = BuildTargetFactory.newInstance("//java/com/example:cfg");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
@@ -352,7 +352,7 @@ public class AndroidBinaryGraphEnhancerTest {
 
     // Verify that android_build_config() was processed correctly.
     Flavor flavor = InternalFlavor.of("buildconfig_com_example_buck");
-    final SourcePathResolver pathResolver =
+    SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     BuildTarget enhancedBuildConfigTarget = apkTarget.withAppendedFlavors(flavor);
     assertEquals(
@@ -403,7 +403,7 @@ public class AndroidBinaryGraphEnhancerTest {
   }
 
   @Test
-  public void testResourceRulesBecomeDepsOfAaptPackageResources() throws Exception {
+  public void testResourceRulesBecomeDepsOfAaptPackageResources() {
     TargetNode<?, ?> resourceNode =
         AndroidResourceBuilder.createBuilder(BuildTargetFactory.newInstance("//:resource"))
             .setRDotJavaPackage("package")

@@ -96,7 +96,7 @@ public class DuplicateResourcesTest {
    *                                                        //bottom_dep:res
    */
   @Before
-  public void makeRules() throws Exception {
+  public void makeRules() {
     mainResTarget = BuildTargetFactory.newInstance("//main_app:res");
     directDepResTarget = BuildTargetFactory.newInstance("//direct_dep:res");
     transitiveDepResTarget = BuildTargetFactory.newInstance("//transitive_dep:res");
@@ -153,7 +153,7 @@ public class DuplicateResourcesTest {
   }
 
   @Test
-  public void testDuplicateResoucesFavorCloserDependencyWithLibraryDep() throws Exception {
+  public void testDuplicateResoucesFavorCloserDependencyWithLibraryDep() {
     assumeFalse("Android SDK paths don't work on Windows", Platform.detect() == Platform.WINDOWS);
 
     TargetNode<AndroidBinaryDescriptionArg, AndroidBinaryDescription> binary =
@@ -165,7 +165,7 @@ public class DuplicateResourcesTest {
   }
 
   @Test
-  public void testDuplicateResoucesFavorCloserDependencyWithTwoLibraryDeps() throws Exception {
+  public void testDuplicateResoucesFavorCloserDependencyWithTwoLibraryDeps() {
     assumeFalse("Android SDK paths don't work on Windows", Platform.detect() == Platform.WINDOWS);
 
     TargetNode<AndroidBinaryDescriptionArg, AndroidBinaryDescription> binary =
@@ -178,7 +178,7 @@ public class DuplicateResourcesTest {
   }
 
   @Test
-  public void testDuplicateResoucesFavorCloserDependencyWithResourceDep() throws Exception {
+  public void testDuplicateResoucesFavorCloserDependencyWithResourceDep() {
     assumeFalse("Android SDK paths don't work on Windows", Platform.detect() == Platform.WINDOWS);
 
     TargetNode<AndroidBinaryDescriptionArg, AndroidBinaryDescription> binary =
@@ -190,7 +190,7 @@ public class DuplicateResourcesTest {
   }
 
   @Test
-  public void testDuplicateResoucesFavorCloserDependencyWithOnlyResourceDep() throws Exception {
+  public void testDuplicateResoucesFavorCloserDependencyWithOnlyResourceDep() {
     assumeFalse("Android SDK paths don't work on Windows", Platform.detect() == Platform.WINDOWS);
 
     TargetNode<AndroidBinaryDescriptionArg, AndroidBinaryDescription> binary =

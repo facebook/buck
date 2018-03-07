@@ -38,7 +38,7 @@ import org.junit.Test;
 public class AndroidInstrumentationApkDescriptionTest {
 
   @Test
-  public void testNoDxRulesBecomeFirstOrderDeps() throws Exception {
+  public void testNoDxRulesBecomeFirstOrderDeps() {
     // Build up the original APK rule.
     TargetNode<?, ?> transitiveDepNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))

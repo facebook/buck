@@ -56,7 +56,7 @@ import org.junit.Test;
 public class AndroidResourceTest {
 
   @Test
-  public void testRuleKeyForDifferentInputFilenames() throws Exception {
+  public void testRuleKeyForDifferentInputFilenames() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/src/com/facebook/base:res");
     Function<Path, BuildRuleResolver> createResourceRule =
         (Path resourcePath) -> {

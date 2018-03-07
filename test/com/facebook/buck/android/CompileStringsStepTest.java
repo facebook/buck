@@ -401,7 +401,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
 
   @Test
   public void testSuccessfulStepExecution() throws InterruptedException, IOException {
-    final Path destinationDir = Paths.get("");
+    Path destinationDir = Paths.get("");
     Path rDotJavaSrcDir = Paths.get("");
 
     ExecutionContext context = TestExecutionContext.newInstance();
@@ -467,7 +467,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
       this(Paths.get(".").toAbsolutePath());
     }
 
-    private FakeProjectFileSystem(Path root) throws InterruptedException {
+    private FakeProjectFileSystem(Path root) {
       super(root, new DefaultProjectFilesystemDelegate(root));
     }
 

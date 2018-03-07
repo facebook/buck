@@ -211,8 +211,7 @@ public class AndroidBinaryTest {
       BuildRuleResolver ruleResolver,
       String resDirectory,
       String assetDirectory,
-      String nativeLibsDirectory)
-      throws Exception {
+      String nativeLibsDirectory) {
     BuildTarget libraryOnebuildTarget = BuildTargetFactory.newInstance(buildTarget);
     AndroidLibraryBuilder androidLibraryRuleBuilder =
         AndroidLibraryBuilder.createBuilder(libraryOnebuildTarget)
@@ -309,8 +308,7 @@ public class AndroidBinaryTest {
         proguardDir);
   }
 
-  private void assertCommandsInOrder(List<Step> steps, List<Class<?>> expectedCommands)
-      throws Exception {
+  private void assertCommandsInOrder(List<Step> steps, List<Class<?>> expectedCommands) {
     List<Class<?>> filteredObservedCommands =
         steps
             .stream()
@@ -505,7 +503,7 @@ public class AndroidBinaryTest {
     assertThat(rule.getBuildDeps(), Matchers.hasItem(transitivePrebuiltJarDep));
   }
 
-  private Keystore addKeystoreRule(BuildRuleResolver ruleResolver) throws Exception {
+  private Keystore addKeystoreRule(BuildRuleResolver ruleResolver) {
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     return KeystoreBuilder.createBuilder(keystoreTarget)
         .setStore(FakeSourcePath.of("keystore/debug.keystore"))

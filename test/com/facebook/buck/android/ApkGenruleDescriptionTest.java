@@ -41,7 +41,7 @@ import org.junit.Test;
 public class ApkGenruleDescriptionTest {
 
   @Test
-  public void testClasspathTransitiveDepsBecomeFirstOrderDeps() throws Exception {
+  public void testClasspathTransitiveDepsBecomeFirstOrderDeps() {
     BuildTarget installableApkTarget = BuildTargetFactory.newInstance("//:installable");
     TargetNode<?, ?> installableApkNode =
         FakeTargetNodeBuilder.build(new FakeInstallable(installableApkTarget));

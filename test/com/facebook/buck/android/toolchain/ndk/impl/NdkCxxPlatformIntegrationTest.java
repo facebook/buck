@@ -97,7 +97,7 @@ public class NdkCxxPlatformIntegrationTest {
     return workspace;
   }
 
-  private Path getNdkRoot() throws InterruptedException {
+  private Path getNdkRoot() {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
     Path ndkDir = AndroidNdkHelper.detectAndroidNdk(projectFilesystem).get().getNdkRootPath();

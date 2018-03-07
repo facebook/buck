@@ -277,7 +277,7 @@ public class RobolectricTestRuleTest {
   }
 
   @Test
-  public void testRobolectricThrowsIfResourceDirNotThere() throws Exception {
+  public void testRobolectricThrowsIfResourceDirNotThere() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
 
     BuildTarget robolectricBuildTarget =
@@ -356,7 +356,7 @@ public class RobolectricTestRuleTest {
   }
 
   @Test
-  public void testRobolectricThrowsIfAssetsDirNotThere() throws Exception {
+  public void testRobolectricThrowsIfAssetsDirNotThere() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
 
     BuildTarget robolectricBuildTarget =
@@ -386,7 +386,7 @@ public class RobolectricTestRuleTest {
   }
 
   @Test
-  public void runtimeDepsIncludeTransitiveResourcesAndDummyR() throws Exception {
+  public void runtimeDepsIncludeTransitiveResourcesAndDummyR() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
 
     BuildTarget resGenRuleTarget = BuildTargetFactory.newInstance("//:res-gen");

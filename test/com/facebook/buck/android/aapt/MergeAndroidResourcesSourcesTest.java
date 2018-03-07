@@ -101,7 +101,7 @@ public class MergeAndroidResourcesSourcesTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void testRuleStepCreation() throws IOException, InterruptedException {
+  public void testRuleStepCreation() {
     BuildTarget target = BuildTargetFactory.newInstance("//:output_folder");
     ImmutableList<SourcePath> directories =
         ImmutableList.of(
