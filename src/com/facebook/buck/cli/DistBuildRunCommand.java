@@ -224,8 +224,16 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
               () -> timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_PREPARATION_TIME));
 
           LOG.info("Starting to process build with DistBuildExecutor.");
+
           // All preparation work is done, so start building.
-          int returnCode = distBuildExecutor.buildAndReturnExitCode();
+          int returnCode;
+          try {
+            returnCode = distBuildExecutor.buildAndReturnExitCode();
+          } catch (Throwable ex) {
+            LOG.error(ex, "buildAndReturnExitCode() failed");
+            throw ex;
+          }
+
           LOG.info(
               "%s returned with exit code: [%d].",
               distBuildExecutor.getClass().getName(), returnCode);
