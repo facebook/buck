@@ -57,8 +57,7 @@ public class BuckArgsMethods {
                 new String[] {"python", argsPath.toAbsolutePath().toString(), "--flavors", suffix});
     try (InputStream input = proc.getInputStream();
         OutputStream output = proc.getOutputStream();
-        BufferedReader reader =
-            new BufferedReader(new InputStreamReader(input, Charsets.UTF_8)); ) {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(input, Charsets.UTF_8))) {
       return reader.lines().collect(Collectors.toList());
     }
   }

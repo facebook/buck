@@ -41,7 +41,7 @@ public class Types {
           .build(
               new CacheLoader<Field, Type>() {
                 @Override
-                public Type load(Field field) throws Exception {
+                public Type load(Field field) {
                   boolean isOptional = Optional.class.isAssignableFrom(field.getType());
                   if (isOptional) {
                     Type type = field.getGenericType();

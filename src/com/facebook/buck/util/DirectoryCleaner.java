@@ -114,13 +114,12 @@ public class DirectoryCleaner {
   }
 
   private static long computeDirSizeBytesRecursively(Path directoryPath) throws IOException {
-    final AtomicLong totalSizeBytes = new AtomicLong(0);
+    AtomicLong totalSizeBytes = new AtomicLong(0);
     Files.walkFileTree(
         directoryPath,
         new SimpleFileVisitor<Path>() {
           @Override
-          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-              throws IOException {
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
             totalSizeBytes.addAndGet(attrs.size());
             return FileVisitResult.CONTINUE;
           }

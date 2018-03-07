@@ -258,7 +258,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   }
 
   private static Iterable<String> replaceTemplateValue(
-      Iterable<String> values, final String template, final String replacement) {
+      Iterable<String> values, String template, String replacement) {
     return StreamSupport.stream(values.spliterator(), false)
         .map(text -> text.contains(template) ? text.replace(template, replacement) : text)
         .collect(ImmutableList.toImmutableList());

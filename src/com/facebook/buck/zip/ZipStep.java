@@ -104,7 +104,7 @@ public class ZipStep implements Step {
 
     // Since filesystem traversals can be non-deterministic, sort the entries we find into
     // a tree map before writing them out.
-    final Map<String, Pair<CustomZipEntry, Optional<Path>>> entries = new TreeMap<>();
+    Map<String, Pair<CustomZipEntry, Optional<Path>>> entries = new TreeMap<>();
 
     FileVisitor<Path> pathFileVisitor =
         new SimpleFileVisitor<Path>() {
@@ -117,8 +117,8 @@ public class ZipStep implements Step {
             return MorePaths.pathWithUnixSeparators(relativePath);
           }
 
-          private CustomZipEntry getZipEntry(
-              String entryName, final Path path, BasicFileAttributes attr) throws IOException {
+          private CustomZipEntry getZipEntry(String entryName, Path path, BasicFileAttributes attr)
+              throws IOException {
             boolean isDirectory = filesystem.isDirectory(path);
             if (isDirectory) {
               entryName += "/";
@@ -210,7 +210,7 @@ public class ZipStep implements Step {
     }
 
     // destination archive
-    args.append(pathToZipFile.toString()).append(" ");
+    args.append(pathToZipFile).append(" ");
 
     // files to add to archive
     if (paths.isEmpty()) {
@@ -220,7 +220,7 @@ public class ZipStep implements Step {
     } else {
       // Add specified paths, relative to workingDirectory.
       for (Path path : paths) {
-        args.append(path.toString()).append(" ");
+        args.append(path).append(" ");
       }
     }
 

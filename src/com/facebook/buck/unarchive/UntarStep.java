@@ -52,8 +52,7 @@ public class UntarStep extends UnarchiveStep {
         break;
       case ZIP:
       default:
-        throw new RuntimeException(
-            "Invalid archive format given to untar step. Got " + format.toString());
+        throw new RuntimeException("Invalid archive format given to untar step. Got " + format);
     }
   }
 

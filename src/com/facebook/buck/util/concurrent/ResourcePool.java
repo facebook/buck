@@ -117,10 +117,10 @@ public class ResourcePool<R extends AutoCloseable> implements AutoCloseable {
    *     cancelled if the {@link ResourcePool#close()} method is called.
    */
   public synchronized <T> ListenableFuture<T> scheduleOperationWithResource(
-      ThrowingFunction<R, T> withResource, final ListeningExecutorService executorService) {
+      ThrowingFunction<R, T> withResource, ListeningExecutorService executorService) {
     Preconditions.checkState(!closing.get());
 
-    final ListenableFuture<T> futureWork =
+    ListenableFuture<T> futureWork =
         Futures.transformAsync(
             initialSchedule(),
             new AsyncFunction<Void, T>() {
@@ -271,8 +271,7 @@ public class ResourcePool<R extends AutoCloseable> implements AutoCloseable {
     // future is ready to run (which causes it to never run).
     // Using a direct executor means we run the chance of executing shutdown synchronously (which
     // we try to avoid).
-    final ExecutorService executorService =
-        MostExecutors.newSingleThreadExecutor("resource shutdown");
+    ExecutorService executorService = MostExecutors.newSingleThreadExecutor("resource shutdown");
 
     // It is possible that more requests for work are scheduled at this point, however they should
     // all early-out due to `closing` being set to true, so we don't really care about those.

@@ -117,7 +117,7 @@ public class PackagedResource implements Supplier<Path> {
         filesystem.createParentDirs(outputPath);
         Path tempFilePath =
             filesystem.createTempFile(
-                outputPath.getParent(), outputPath.getFileName().toString() + ".", ".tmp");
+                outputPath.getParent(), outputPath.getFileName() + ".", ".tmp");
         try (OutputStream outputStream = filesystem.newFileOutputStream(tempFilePath)) {
           ByteStreams.copy(stream, outputStream);
         }

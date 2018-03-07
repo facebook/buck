@@ -81,12 +81,12 @@ public class Config {
 
   // Some `.buckconfig`s embed genrule macros which break with recent changes to support the config
   // macro.  So, add special expanders to preserve these until they get fixed.
-  private static MacroReplacer<String> getMacroPreserver(final String name) {
+  private static MacroReplacer<String> getMacroPreserver(String name) {
     return input -> String.format("$(%s %s)", name, Joiner.on(' ').join(input.getMacroInput()));
   }
 
   /** @return the input after recursively expanding any config references. */
-  private String expand(String input, final Stack<String> expandStack) {
+  private String expand(String input, Stack<String> expandStack) {
     MacroReplacer<String> macroReplacer =
         inputs -> {
           if (inputs.getMacroInput().size() != 1) {

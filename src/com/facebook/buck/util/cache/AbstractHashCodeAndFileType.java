@@ -81,5 +81,5 @@ abstract class AbstractHashCodeAndFileType {
     ARCHIVE,
     FILE,
     DIRECTORY
-  };
+  }
 }

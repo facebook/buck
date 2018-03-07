@@ -103,7 +103,7 @@ public class ObjectMappers {
     };
   }
 
-  public static <T> Function<String, T> fromJsonFunction(final Class<T> type) {
+  public static <T> Function<String, T> fromJsonFunction(Class<T> type) {
     return input -> {
       try {
         return readValue(input, type);

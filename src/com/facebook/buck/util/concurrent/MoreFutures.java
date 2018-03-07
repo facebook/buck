@@ -117,8 +117,8 @@ public class MoreFutures {
   }
 
   public static <V> ListenableFuture<Void> addListenableCallback(
-      ListenableFuture<V> future, final FutureCallback<? super V> callback, Executor executor) {
-    final SettableFuture<Void> waiter = SettableFuture.create();
+      ListenableFuture<V> future, FutureCallback<? super V> callback, Executor executor) {
+    SettableFuture<Void> waiter = SettableFuture.create();
     Futures.addCallback(
         future,
         new FutureCallback<V>() {
@@ -149,7 +149,7 @@ public class MoreFutures {
   }
 
   public static <V> ListenableFuture<Void> addListenableCallback(
-      ListenableFuture<V> future, final FutureCallback<? super V> callback) {
+      ListenableFuture<V> future, FutureCallback<? super V> callback) {
     return addListenableCallback(future, callback, directExecutor());
   }
 
@@ -158,7 +158,7 @@ public class MoreFutures {
    *     value contained in {@code to} if they both succeed.
    */
   public static <F, T> ListenableFuture<T> chainExceptions(
-      ListenableFuture<F> from, final ListenableFuture<T> to) {
+      ListenableFuture<F> from, ListenableFuture<T> to) {
     return chainExceptions(from, to, directExecutor());
   }
 
@@ -167,7 +167,7 @@ public class MoreFutures {
    *     value contained in {@code to} if they both succeed.
    */
   public static <F, T> ListenableFuture<T> chainExceptions(
-      ListenableFuture<F> from, final ListenableFuture<T> to, Executor executor) {
+      ListenableFuture<F> from, ListenableFuture<T> to, Executor executor) {
     return Futures.transformAsync(from, result -> to, executor);
   }
 
