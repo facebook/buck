@@ -150,7 +150,9 @@ public class AndroidPackageableCollectorTest {
             prebuiltNativeLibraryBuild,
             guava,
             jsr);
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
+    BuildRuleResolver ruleResolver =
+        new TestBuildRuleResolver(
+            targetGraph, NdkLibraryBuilder.createToolchainProviderForNdkLibrary());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 

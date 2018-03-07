@@ -86,12 +86,6 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
       new MacroHandler(
           ImmutableMap.of("env", new EnvironmentVariableMacroExpander(Platform.detect())));
 
-  private final ToolchainProvider toolchainProvider;
-
-  public NdkLibraryDescription(ToolchainProvider toolchainProvider) {
-    this.toolchainProvider = toolchainProvider;
-  }
-
   @Override
   public Class<NdkLibraryDescriptionArg> getConstructorArgType() {
     return NdkLibraryDescriptionArg.class;
@@ -155,7 +149,10 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
    *     file and also appends relevant preprocessor and linker flags to use C/C++ library deps.
    */
   private Pair<String, Iterable<BuildRule>> generateMakefile(
-      ProjectFilesystem projectFilesystem, BuildRuleParams params, BuildRuleResolver resolver) {
+      ToolchainProvider toolchainProvider,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      BuildRuleResolver resolver) {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -334,9 +331,11 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
       BuildTarget buildTarget,
       BuildRuleParams params,
       NdkLibraryDescriptionArg args) {
+    ToolchainProvider toolchainProvider = context.getToolchainProvider();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     Pair<String, Iterable<BuildRule>> makefilePair =
-        generateMakefile(projectFilesystem, params, context.getBuildRuleResolver());
+        generateMakefile(
+            toolchainProvider, projectFilesystem, params, context.getBuildRuleResolver());
 
     ImmutableSortedSet<SourcePath> sources;
     if (!args.getSrcs().isEmpty()) {
