@@ -129,7 +129,7 @@ public class SymlinkTreeTest {
   }
 
   @Test
-  public void testSymlinkTreeBuildSteps() throws IOException {
+  public void testSymlinkTreeBuildSteps() {
 
     // Create the fake build contexts.
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
@@ -449,8 +449,7 @@ public class SymlinkTreeTest {
   }
 
   @Test
-  public void testSymlinkTreeInputBasedRuleKeysAreImmuneToLinkSourceContentChanges()
-      throws Exception {
+  public void testSymlinkTreeInputBasedRuleKeysAreImmuneToLinkSourceContentChanges() {
     Genrule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
@@ -583,8 +582,7 @@ public class SymlinkTreeTest {
   }
 
   @Test
-  public void mergesDirectoryContentsIntoMainSymlinkTree()
-      throws IOException, InterruptedException {
+  public void mergesDirectoryContentsIntoMainSymlinkTree() throws IOException {
     BuildTarget exportFileTarget1 = BuildTargetFactory.newInstance("//test:dir1");
     BuildTarget exportFileTarget2 = BuildTargetFactory.newInstance("//test:dir2");
     ExportFile exportFile1 =

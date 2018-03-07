@@ -126,7 +126,7 @@ public class ActionGraphCacheTest {
   }
 
   @Test
-  public void hitOnCache() throws InterruptedException {
+  public void hitOnCache() {
     ActionGraphCache cache = new ActionGraphCache(1, 1);
 
     ActionGraphAndResolver resultRun1 =

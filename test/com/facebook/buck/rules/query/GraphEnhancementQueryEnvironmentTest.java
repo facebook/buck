@@ -62,7 +62,7 @@ public class GraphEnhancementQueryEnvironmentTest {
   }
 
   @Test
-  public void getTargetsMatchingPatternThrowsInformativeException() throws Exception {
+  public void getTargetsMatchingPatternThrowsInformativeException() {
     BuildTarget target = BuildTargetFactory.newInstance(ROOT, "//foo/bar:bar");
     GraphEnhancementQueryEnvironment envWithoutDeps =
         new GraphEnhancementQueryEnvironment(
@@ -168,7 +168,7 @@ public class GraphEnhancementQueryEnvironmentTest {
   }
 
   @Test
-  public void getFwdDeps() throws Exception {
+  public void getFwdDeps() {
     GraphEnhancementQueryEnvironment env = buildQueryEnvironmentWithGraph();
     // lib -> sublib
     assertThat(
@@ -194,7 +194,7 @@ public class GraphEnhancementQueryEnvironmentTest {
   }
 
   @Test
-  public void getClasspath() throws Exception {
+  public void getClasspath() {
     GraphEnhancementQueryEnvironment env = buildQueryEnvironmentWithGraph();
     ImmutableSet<QueryTarget> classpath =
         env.getFirstOrderClasspath(ImmutableSet.of(getQueryTarget("//:lib")))

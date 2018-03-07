@@ -99,7 +99,7 @@ public class BuildTargetTypeCoercerTest {
     // this using the MockBuilder failed with an InvocationTargetException. Turns out that easymock
     // just can't mock toString. So we're going to do this Old Skool using a dynamic proxy. *sigh*
     // And we can't build a partial mock from an interface. *sigh*
-    final Path concreteType = Paths.get("notused");
+    Path concreteType = Paths.get("notused");
 
     Path stubPath =
         (Path)

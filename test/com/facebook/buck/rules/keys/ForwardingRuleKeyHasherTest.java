@@ -331,8 +331,8 @@ public class ForwardingRuleKeyHasherTest {
 
   @Test
   public void testHashAndOnHash() {
-    final String string = "hash";
-    final HashCode hash = createMock(HashCode.class);
+    String string = "hash";
+    HashCode hash = createMock(HashCode.class);
 
     @SuppressWarnings("unchecked")
     RuleKeyHasher<String> stringHasher = createStrictMock(RuleKeyHasher.class);

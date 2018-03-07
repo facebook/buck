@@ -54,13 +54,12 @@ public class DefaultOnDiskBuildInfoIntegrationTest {
 
   private final MetadataStorage metadataStorage;
 
-  public DefaultOnDiskBuildInfoIntegrationTest(CachingBuildEngine.MetadataStorage metadataStorage)
-      throws IOException {
+  public DefaultOnDiskBuildInfoIntegrationTest(CachingBuildEngine.MetadataStorage metadataStorage) {
     this.metadataStorage = metadataStorage;
   }
 
   @Test
-  public void testPathsAndMetadataForArtifactAreCorrect() throws IOException, InterruptedException {
+  public void testPathsAndMetadataForArtifactAreCorrect() throws IOException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
 
     ProjectFilesystem projectFilesystem =

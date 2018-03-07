@@ -121,7 +121,7 @@ public class MacroHandlerTest {
 
   @Test
   public void testHandlingMacroExpanderWithPrecomputedWork() throws Exception {
-    final AtomicInteger expansionCount = new AtomicInteger(0);
+    AtomicInteger expansionCount = new AtomicInteger(0);
     AbstractMacroExpander<String, String> expander =
         new AbstractMacroExpander<String, String>() {
           @Override
@@ -136,8 +136,7 @@ public class MacroHandlerTest {
 
           @Override
           protected String parse(
-              BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
-              throws MacroException {
+              BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input) {
             return "Parsed Result";
           }
 
@@ -146,8 +145,7 @@ public class MacroHandlerTest {
               BuildTarget target,
               CellPathResolver cellNames,
               BuildRuleResolver resolver,
-              String input)
-              throws MacroException {
+              String input) {
             expansionCount.incrementAndGet();
             return "Precomputed Work";
           }
@@ -158,8 +156,7 @@ public class MacroHandlerTest {
               CellPathResolver cellNames,
               BuildRuleResolver resolver,
               String input,
-              String precomputedWork)
-              throws MacroException {
+              String precomputedWork) {
             return StringArg.of(precomputedWork);
           }
         };

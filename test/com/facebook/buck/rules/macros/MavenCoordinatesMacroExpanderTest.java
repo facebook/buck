@@ -50,7 +50,7 @@ public class MavenCoordinatesMacroExpanderTest {
   }
 
   @Test
-  public void testHasMavenCoordinatesBuildRule() throws Exception {
+  public void testHasMavenCoordinatesBuildRule() {
 
     String mavenCoords = "org.foo:bar:1.0";
 
@@ -68,7 +68,7 @@ public class MavenCoordinatesMacroExpanderTest {
   }
 
   @Test
-  public void testNonHasMavenCoordinatesBuildRule() throws Exception {
+  public void testNonHasMavenCoordinatesBuildRule() {
     assumeFalse(
         "Assuming that FakeBuildRule does not have maven coordinates",
         FakeBuildRule.class.isAssignableFrom(HasMavenCoordinates.class));
@@ -86,7 +86,7 @@ public class MavenCoordinatesMacroExpanderTest {
   }
 
   @Test
-  public void testHasMavenCoordinatesBuildRuleMissingCoordinates() throws Exception {
+  public void testHasMavenCoordinatesBuildRuleMissingCoordinates() {
     BuildRule rule =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//test:no-mvn"))
             .build(resolver);

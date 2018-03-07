@@ -44,7 +44,7 @@ import org.junit.Test;
 public class BuildTargetMacroExpanderTest {
 
   private static Optional<BuildTarget> match(String blob) throws MacroException {
-    final List<BuildTarget> found = new ArrayList<>();
+    List<BuildTarget> found = new ArrayList<>();
     BuildRuleResolver resolver = new TestBuildRuleResolver();
     FakeBuildRule rule = new FakeBuildRule("//something:manifest");
     resolver.addToIndex(rule);
@@ -52,8 +52,7 @@ public class BuildTargetMacroExpanderTest {
     BuildTargetMacroExpander<?> macroExpander =
         new ExecutableMacroExpander() {
           @Override
-          public Arg expand(SourcePathResolver resolver, ExecutableMacro ignored, BuildRule rule)
-              throws MacroException {
+          public Arg expand(SourcePathResolver resolver, ExecutableMacro ignored, BuildRule rule) {
             found.add(rule.getBuildTarget());
             return StringArg.of("");
           }

@@ -432,7 +432,7 @@ public class RuleKeyTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
-    final FakeBuildRule fakeBuildRule = new FakeBuildRule("//:fake");
+    FakeBuildRule fakeBuildRule = new FakeBuildRule("//:fake");
     resolver.addToIndex(fakeBuildRule);
 
     ExplicitBuildTargetSourcePath archive1 =

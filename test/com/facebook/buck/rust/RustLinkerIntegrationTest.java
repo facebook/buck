@@ -40,7 +40,7 @@ public class RustLinkerIntegrationTest {
   }
 
   @Test
-  public void rustLinkerOverride() throws IOException, InterruptedException {
+  public void rustLinkerOverride() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
@@ -55,7 +55,7 @@ public class RustLinkerIntegrationTest {
   }
 
   @Test
-  public void rustLinkerCxxArgsOverride() throws IOException, InterruptedException {
+  public void rustLinkerCxxArgsOverride() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
@@ -69,7 +69,7 @@ public class RustLinkerIntegrationTest {
   }
 
   @Test
-  public void rustLinkerRustArgsOverride() throws IOException, InterruptedException {
+  public void rustLinkerRustArgsOverride() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
@@ -89,7 +89,7 @@ public class RustLinkerIntegrationTest {
   }
 
   @Test
-  public void rustRuleLinkerFlagsOverride() throws IOException, InterruptedException {
+  public void rustRuleLinkerFlagsOverride() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
@@ -100,7 +100,7 @@ public class RustLinkerIntegrationTest {
   }
 
   @Test
-  public void rustTestRuleLinkerFlagsOverride() throws IOException, InterruptedException {
+  public void rustTestRuleLinkerFlagsOverride() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_tests", tmp);
     workspace.setUp();
@@ -111,7 +111,7 @@ public class RustLinkerIntegrationTest {
   }
 
   @Test
-  public void cxxLinkerOverride() throws IOException, InterruptedException {
+  public void cxxLinkerOverride() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
@@ -123,7 +123,7 @@ public class RustLinkerIntegrationTest {
   }
 
   @Test
-  public void cxxLinkerArgsOverride() throws IOException, InterruptedException {
+  public void cxxLinkerArgsOverride() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
@@ -138,7 +138,7 @@ public class RustLinkerIntegrationTest {
   }
 
   @Test
-  public void cxxLinkerArgsNoOverride() throws IOException, InterruptedException {
+  public void cxxLinkerArgsNoOverride() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
@@ -156,7 +156,7 @@ public class RustLinkerIntegrationTest {
   }
 
   @Test
-  public void cxxLinkerDependency() throws IOException, InterruptedException {
+  public void cxxLinkerDependency() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();

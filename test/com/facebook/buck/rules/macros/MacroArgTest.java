@@ -58,7 +58,7 @@ public class MacroArgTest {
   }
 
   @Test
-  public void getDeps() throws Exception {
+  public void getDeps() {
     MacroHandler macroHandler =
         new MacroHandler(ImmutableMap.of("loc", new LocationMacroExpander()));
     BuildRuleResolver resolver = new TestBuildRuleResolver();

@@ -111,7 +111,7 @@ public class KnownBuildRuleTypesTest {
   }
 
   @BeforeClass
-  public static void setupBuildParams() throws IOException {
+  public static void setupBuildParams() {
     projectFilesystem = new FakeProjectFilesystem();
     buildTarget = BuildTargetFactory.newInstance("//:foo");
     buildRuleParams = TestBuildRuleParams.create();
@@ -137,7 +137,7 @@ public class KnownBuildRuleTypesTest {
   @Test
   public void whenJavacIsSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithDifferentRuleKey()
       throws Exception {
-    final Path javac;
+    Path javac;
     if (Platform.detect() == Platform.WINDOWS) {
       javac = Paths.get("C:/Windows/system32/rundll32.exe");
     } else {
@@ -185,7 +185,7 @@ public class KnownBuildRuleTypesTest {
   }
 
   @Test(expected = IllegalStateException.class)
-  public void whenRegisteringDescriptionsWithSameTypeErrorIsThrown() throws Exception {
+  public void whenRegisteringDescriptionsWithSameTypeErrorIsThrown() {
     KnownBuildRuleTypes.Builder buildRuleTypesBuilder = KnownBuildRuleTypes.builder();
     buildRuleTypesBuilder.addDescriptions(new KnownRuleTestDescription("Foo"));
     buildRuleTypesBuilder.addDescriptions(new KnownRuleTestDescription("Bar"));
@@ -213,7 +213,7 @@ public class KnownBuildRuleTypesTest {
     KnownBuildRuleTypes knownBuildRuleTypes1 =
         KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
 
-    final Path javac = temporaryFolder.newExecutableFile();
+    Path javac = temporaryFolder.newExecutableFile();
     ImmutableMap<String, ImmutableMap<String, String>> sections =
         ImmutableMap.of("tools", ImmutableMap.of("javac", javac.toString()));
     buckConfig = FakeBuckConfig.builder().setFilesystem(filesystem).setSections(sections).build();

@@ -52,7 +52,7 @@ import org.junit.Test;
 
 public class ExecutableMacroExpanderTest {
 
-  private BuildRule createSampleJavaBinaryRule(BuildRuleResolver ruleResolver) throws Exception {
+  private BuildRule createSampleJavaBinaryRule(BuildRuleResolver ruleResolver) {
     // Create a java_binary that depends on a java_library so it is possible to create a
     // java_binary rule with a classpath entry and a main class.
     BuildRule javaLibrary =
@@ -153,11 +153,11 @@ public class ExecutableMacroExpanderTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
 
-    final BuildRule dep1 =
+    BuildRule dep1 =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep1"))
             .setOut("arg1")
             .build(ruleResolver, filesystem);
-    final BuildRule dep2 =
+    BuildRule dep2 =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep2"))
             .setOut("arg2")
             .build(ruleResolver, filesystem);
@@ -203,7 +203,7 @@ public class ExecutableMacroExpanderTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params = TestBuildRuleParams.create();
-    final Tool tool = new CommandTool.Builder().addArg("command").build();
+    Tool tool = new CommandTool.Builder().addArg("command").build();
     ruleResolver.addToIndex(
         new NoopBinaryBuildRule(target, projectFilesystem, params) {
           @Override

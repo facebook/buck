@@ -61,7 +61,7 @@ public class ClasspathMacroExpanderTest {
 
   @Test
   public void shouldIncludeARuleIfNothingIsGiven() throws Exception {
-    final BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
+    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
     BuildRule rule =

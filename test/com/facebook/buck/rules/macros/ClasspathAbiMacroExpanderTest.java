@@ -60,7 +60,7 @@ public class ClasspathAbiMacroExpanderTest {
 
   @Test
   public void testShouldIncludeARuleIfNothingIsGiven() throws Exception {
-    final BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
 
     BuildRule rule =
         getLibraryBuilder("//cheese:cake")

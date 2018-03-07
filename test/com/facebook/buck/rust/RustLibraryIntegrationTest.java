@@ -40,7 +40,7 @@ public class RustLibraryIntegrationTest {
   }
 
   @Test
-  public void rustLibraryBuild() throws IOException, InterruptedException {
+  public void rustLibraryBuild() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
@@ -49,7 +49,7 @@ public class RustLibraryIntegrationTest {
   }
 
   @Test
-  public void rustLibraryAmbigFail() throws IOException, InterruptedException {
+  public void rustLibraryAmbigFail() throws IOException {
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(Matchers.containsString("Can't find suitable top-level source file for"));
@@ -62,7 +62,7 @@ public class RustLibraryIntegrationTest {
   }
 
   @Test
-  public void rustLibraryAmbigOverride() throws IOException, InterruptedException {
+  public void rustLibraryAmbigOverride() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
@@ -71,7 +71,7 @@ public class RustLibraryIntegrationTest {
   }
 
   @Test
-  public void rustLibraryCheck() throws IOException, InterruptedException {
+  public void rustLibraryCheck() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
@@ -83,7 +83,7 @@ public class RustLibraryIntegrationTest {
   }
 
   @Test
-  public void rustLibraryCheckWarning() throws IOException, InterruptedException {
+  public void rustLibraryCheckWarning() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
@@ -99,7 +99,7 @@ public class RustLibraryIntegrationTest {
   }
 
   @Test
-  public void rustLibraryCheckCompilerArgs() throws IOException, InterruptedException {
+  public void rustLibraryCheckCompilerArgs() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
@@ -115,7 +115,7 @@ public class RustLibraryIntegrationTest {
   }
 
   @Test
-  public void rustLibraryCompilerArgs() throws IOException, InterruptedException {
+  public void rustLibraryCompilerArgs() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
@@ -129,7 +129,7 @@ public class RustLibraryIntegrationTest {
   }
 
   @Test
-  public void rustLibraryCompilerLibraryArgs() throws IOException, InterruptedException {
+  public void rustLibraryCompilerLibraryArgs() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
@@ -145,7 +145,7 @@ public class RustLibraryIntegrationTest {
   }
 
   @Test
-  public void rustLibraryCompilerBinaryArgs() throws IOException, InterruptedException {
+  public void rustLibraryCompilerBinaryArgs() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
@@ -157,7 +157,7 @@ public class RustLibraryIntegrationTest {
   }
 
   @Test
-  public void rustLibraryCompilerArgs2() throws IOException, InterruptedException {
+  public void rustLibraryCompilerArgs2() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
@@ -174,7 +174,7 @@ public class RustLibraryIntegrationTest {
   }
 
   @Test
-  public void rustLibraryRuleCompilerArgs() throws IOException, InterruptedException {
+  public void rustLibraryRuleCompilerArgs() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
@@ -185,7 +185,7 @@ public class RustLibraryIntegrationTest {
   }
 
   @Test
-  public void libraryCrateRoot() throws IOException, InterruptedException {
+  public void libraryCrateRoot() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
@@ -194,7 +194,7 @@ public class RustLibraryIntegrationTest {
   }
 
   @Test
-  public void binaryWithLibrary() throws IOException, InterruptedException {
+  public void binaryWithLibrary() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
@@ -207,7 +207,7 @@ public class RustLibraryIntegrationTest {
   }
 
   @Test
-  public void binaryWithAliasedLibrary() throws IOException, InterruptedException {
+  public void binaryWithAliasedLibrary() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();

@@ -63,7 +63,7 @@ public class OptionalTypeCoercerTest {
   }
 
   @Test
-  public void nestedOptionals() throws CoerceFailedException {
+  public void nestedOptionals() {
     exception.expect(IllegalArgumentException.class);
     exception.expectMessage("Nested optional fields are ambiguous.");
     new OptionalTypeCoercer<>(new OptionalTypeCoercer<>(new IdentityTypeCoercer<>(Void.class)));

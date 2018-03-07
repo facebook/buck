@@ -178,8 +178,8 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    final Path output = Paths.get("output");
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path output = Paths.get("output");
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildRuleParams params = TestBuildRuleParams.create();
@@ -213,9 +213,9 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
-    final BuildRule dep =
+    BuildRule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
             .build(resolver, filesystem);
@@ -261,7 +261,7 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    final ProjectFilesystem fileSystem = new FakeProjectFilesystem();
+    ProjectFilesystem fileSystem = new FakeProjectFilesystem();
 
     // Build a rule key with a particular hash set for the output for the above rule.
     Path filePath = fileSystem.getPath("file.txt");
@@ -285,7 +285,7 @@ public class InputBasedRuleKeyFactoryTest {
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     FileHashCache hashCache =
         new StackedFileHashCache(
             ImmutableList.of(
@@ -422,13 +422,13 @@ public class InputBasedRuleKeyFactoryTest {
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
                     filesystem, FileHashCacheMode.DEFAULT)));
-    final int sizeLimit = 200;
+    int sizeLimit = 200;
     InputBasedRuleKeyFactory factory =
         new TestInputBasedRuleKeyFactory(
             fieldLoader, hashCache, pathResolver, ruleFinder, sizeLimit);
     // Create rule with inputs that make it go past the size limit, and verify the rule key factory
     // doesn't create a rule key.
-    final int tooLargeRuleSize = 300;
+    int tooLargeRuleSize = 300;
     assertThat(tooLargeRuleSize, Matchers.greaterThan(sizeLimit));
     Path tooLargeInput = filesystem.getPath("too_large_input");
     filesystem.writeBytesToPath(new byte[tooLargeRuleSize], tooLargeInput);
@@ -454,12 +454,12 @@ public class InputBasedRuleKeyFactoryTest {
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
                     filesystem, FileHashCacheMode.DEFAULT)));
-    final int sizeLimit = 200;
+    int sizeLimit = 200;
     InputBasedRuleKeyFactory factory =
         new TestInputBasedRuleKeyFactory(
             fieldLoader, hashCache, pathResolver, ruleFinder, sizeLimit);
     // Create a rule that doesn't pass the size limit and verify it creates a rule key.
-    final int smallEnoughRuleSize = 100;
+    int smallEnoughRuleSize = 100;
     assertThat(smallEnoughRuleSize, Matchers.lessThan(sizeLimit));
     Path input = filesystem.getPath("small_enough_input");
     filesystem.writeBytesToPath(new byte[smallEnoughRuleSize], input);

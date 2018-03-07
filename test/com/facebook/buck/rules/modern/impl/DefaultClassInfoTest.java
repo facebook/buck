@@ -105,7 +105,7 @@ public class DefaultClassInfoTest {
   }
 
   @Test
-  public void testDerivedClass() throws Exception {
+  public void testDerivedClass() {
     BuildTarget target1 = BuildTarget.of(Paths.get("some1"), "//some1", "name");
     BuildTarget target2 = BuildTarget.of(Paths.get("some2"), "//some2", "name");
     BuildTarget target3 = BuildTarget.of(Paths.get("some3"), "//some3", "name");

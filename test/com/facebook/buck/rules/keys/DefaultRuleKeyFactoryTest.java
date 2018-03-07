@@ -162,7 +162,7 @@ public class DefaultRuleKeyFactoryTest {
   }
 
   @Test
-  public void shouldAllowAddsToRuleKeysToAppendToRuleKey() throws IOException {
+  public void shouldAllowAddsToRuleKeysToAppendToRuleKey() {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -415,9 +415,7 @@ public class DefaultRuleKeyFactoryTest {
     class Child extends Parent {
       @AddToRuleKey private String key = "child";
 
-      public Child() {
-        super();
-      }
+      public Child() {}
     }
 
     Result<RuleKey, String> result =

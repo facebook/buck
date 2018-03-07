@@ -106,8 +106,7 @@ public final class KnownBuildRuleTypesTestUtil {
 
   @VisibleForTesting
   static KnownBuildRuleTypes createInstance(
-      BuckConfig config, ToolchainProvider toolchainProvider, ProcessExecutor processExecutor)
-      throws InterruptedException, IOException {
+      BuckConfig config, ToolchainProvider toolchainProvider, ProcessExecutor processExecutor) {
 
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
 
