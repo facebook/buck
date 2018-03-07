@@ -108,6 +108,7 @@ import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.BuckArgsMethods;
 import com.facebook.buck.util.BuckIsDyingException;
+import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -629,8 +630,7 @@ public final class Main {
     // No more early outs: if this command is not read only, acquire the command semaphore to
     // become the only executing read/write command.
     boolean shouldCleanUpTrash = false;
-    try (ThrowingCloseableWrapper<Semaphore, InterruptedException> semaphore =
-        getSemaphoreWrapper(command)) {
+    try (CloseableWrapper<Semaphore> semaphore = getSemaphoreWrapper(command)) {
       if (!command.isReadOnly() && semaphore == null) {
         LOG.warn("Buck server was busy executing a command. Maybe retrying later will help.");
         return ExitCode.BUSY;
@@ -939,8 +939,7 @@ public final class Main {
             // This will get executed first once it gets out of try block and just wait for
             // event bus to dispatch all pending events before we proceed to termination
             // procedures
-            ThrowingCloseableWrapper<BuckEventBus, InterruptedException> waitEvents =
-                getWaitEventsWrapper(buildEventBus)) {
+            CloseableWrapper<BuckEventBus> waitEvents = getWaitEventsWrapper(buildEventBus)) {
 
           LOG.debug(invocationInfo.toLogLine());
 
@@ -1416,9 +1415,8 @@ public final class Main {
    * RAII wrapper which does not really close any object but waits for all events in given event bus
    * to complete. We want to have it this way to safely start deinitializing event listeners
    */
-  private static ThrowingCloseableWrapper<BuckEventBus, InterruptedException> getWaitEventsWrapper(
-      BuckEventBus buildEventBus) {
-    return ThrowingCloseableWrapper.of(
+  private static CloseableWrapper<BuckEventBus> getWaitEventsWrapper(BuckEventBus buildEventBus) {
+    return CloseableWrapper.of(
         buildEventBus,
         eventBus -> {
           // wait for event bus to process all pending events
@@ -1579,14 +1577,11 @@ public final class Main {
 
   /**
    * Try to acquire global semaphore if needed to do so. Attach closer to acquired semaphore in a
-   * form of a wrapper object so it can be used with try-with-resources. Wrapper is specialized with
-   * InterruptedException but in fact closer is exception-free; we have to do it to follow
-   * specification of ThrowingCloseableWrapper
+   * form of a wrapper object so it can be used with try-with-resources.
    *
    * @return Semaphore wrapper object if semaphore is acquired, null otherwise
    */
-  private @Nullable ThrowingCloseableWrapper<Semaphore, InterruptedException> getSemaphoreWrapper(
-      BuckCommand command) {
+  private @Nullable CloseableWrapper<Semaphore> getSemaphoreWrapper(BuckCommand command) {
     // we can execute read-only commands (query, targets, etc) in parallel
     if (command.isReadOnly()) {
       // using nullable instead of Optional<> to use the object with try-with-resources
@@ -1599,7 +1594,7 @@ public final class Main {
 
     commandSemaphoreNgClient = context;
 
-    return ThrowingCloseableWrapper.of(
+    return CloseableWrapper.of(
         commandSemaphore,
         commandSemaphore -> {
           commandSemaphoreNgClient = Optional.empty();

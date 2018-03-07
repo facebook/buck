@@ -16,22 +16,24 @@
 
 package com.facebook.buck.util;
 
+import java.util.function.Consumer;
+
 /**
  * Convenience wrapper class to attach closeable functionality to non-closeable class so it can be
  * used with try-with-resources to make sure resources are always released and proper exception
- * suppression is used. The closer may throw an exception which type can be specialized.
+ * suppression is used. The closer may not throw an exception.
  *
  * <p>Example:
  *
  * <pre>{@code
  * class Main {
- *  private static void finalizeMyClass(MyClass obj) throws IOException {
+ *  private static void finalizeMyClass(MyClass obj) {
  *    obj.shutdown();
  *  }
  *
  *  public static void main() {
- *    try (ThrowingCloseableWrapper<MyClass, IOException> myClassWrapper =
- *          ThrowingCloseableWrapper.of(new MyClass(), Main::finalizeMyClass)) {
+ *    try (CloseableWrapper<MyClass> myClassWrapper =
+ *          CloseableWrapper.of(new MyClass(), Main::finalizeMyClass)) {
  *      myClassWrapper.get().doSomething();
  *    }
  *  }
@@ -39,23 +41,20 @@ package com.facebook.buck.util;
  *
  * }</pre>
  */
-public class ThrowingCloseableWrapper<T, E extends Exception>
-    extends AbstractCloseableWrapper<T, E> {
-
-  private ThrowingCloseableWrapper(T obj, ThrowingConsumer<T, E> closer) {
+public class CloseableWrapper<T> extends AbstractCloseableWrapper<T, RuntimeException> {
+  private CloseableWrapper(T obj, ThrowingConsumer<T, RuntimeException> closer) {
     super(obj, closer);
   }
 
   /**
    * Wrap an object with {@code AutoCloseable} interface and provide a function to replace a {@code
-   * close} method The wrapper is idempotent, i.e. it will call closer function exactly once, even
+   * close} method. The wrapper is idempotent, i.e. it will call closer function exactly once, even
    * if user calls {@code close} multiple times.
    *
    * @param obj Any class that does not implement AutoCloseable interface which is hard to extend
    * @param closer A function to call on close
    */
-  public static <T, E extends Exception> ThrowingCloseableWrapper<T, E> of(
-      T obj, ThrowingConsumer<T, E> closer) {
-    return new ThrowingCloseableWrapper<>(obj, closer);
+  public static <T> CloseableWrapper<T> of(T obj, Consumer<T> closer) {
+    return new CloseableWrapper<>(obj, t -> closer.accept(t));
   }
 }
