@@ -20,6 +20,7 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -59,6 +60,7 @@ public class DistBuildTrace {
     void recordItems(List<RuleTrace> rules) {
       rules
           .stream()
+          .sorted(Comparator.comparingLong(rule -> rule.startEpochMillis))
           .sequential()
           .forEach(
               rule -> {

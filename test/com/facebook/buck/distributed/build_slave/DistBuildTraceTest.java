@@ -24,13 +24,11 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class DistBuildTraceTest {
 
   @Test
-  @Ignore // TODO(shivanker): Make this test pass.
   public void testRulesAssignmentToThreads() {
     // These rules must fit into 3 threads.
     List<RuleTrace> inputRules = new ArrayList<>();

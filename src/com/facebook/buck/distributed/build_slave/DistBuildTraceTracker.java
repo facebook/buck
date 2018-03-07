@@ -81,6 +81,11 @@ public class DistBuildTraceTracker {
       if (nextRule != null) {
         jobStartedEpochMillisByJobId.put(nextRule, now);
       }
+      // TODO(shivanker): There's a small bug here. In an unlikely case, 2 nodes of the same work
+      // unit could be reported finished in the same request. For such a scenario, this code will
+      // mark the first rule in the unit to have taken up all the time, and the rest of the rules
+      // in the work unit will appear to have finished in zero time. The code complexity added to
+      // solve this bug does not quite justify the importance of solving it IMHO.
     }
   }
 
