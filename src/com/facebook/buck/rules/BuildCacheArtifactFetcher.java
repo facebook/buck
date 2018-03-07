@@ -79,16 +79,14 @@ public class BuildCacheArtifactFetcher {
 
   public ListenableFuture<CacheResult>
       tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-          final RuleKey ruleKey,
-          final ArtifactCache artifactCache,
-          final ProjectFilesystem filesystem) {
+          RuleKey ruleKey, ArtifactCache artifactCache, ProjectFilesystem filesystem) {
     if (!rule.isCacheable()) {
       return Futures.immediateFuture(CacheResult.ignored());
     }
 
     // Create a temp file whose extension must be ".zip" for Filesystems.newFileSystem() to infer
     // that we are creating a zip-based FileSystem.
-    final LazyPath lazyZipPath =
+    LazyPath lazyZipPath =
         new LazyPath() {
           @Override
           protected Path create() throws IOException {

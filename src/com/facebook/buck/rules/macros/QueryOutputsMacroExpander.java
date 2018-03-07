@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
@@ -68,8 +67,7 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander<QueryOutputsMa
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
       QueryOutputsMacro input,
-      QueryResults precomputedWork)
-      throws MacroException {
+      QueryResults precomputedWork) {
     return new QueriedOutputsArg(
         precomputedWork
             .results

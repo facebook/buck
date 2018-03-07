@@ -78,8 +78,7 @@ public class WriteStringTemplateRule extends AbstractBuildRuleWithDeclaredAndExt
       steps.add(
           new AbstractExecutionStep("chmod +x") {
             @Override
-            public StepExecutionResult execute(ExecutionContext context)
-                throws IOException, InterruptedException {
+            public StepExecutionResult execute(ExecutionContext context) throws IOException {
               MostFiles.makeExecutable(getProjectFilesystem().resolve(output));
               return StepExecutionResult.of(0, Optional.empty());
             }

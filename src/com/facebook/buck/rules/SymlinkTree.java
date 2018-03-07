@@ -43,7 +43,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Ordering;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -84,7 +83,7 @@ public class SymlinkTree extends AbstractBuildRule
       BuildTarget target,
       ProjectFilesystem filesystem,
       Path root,
-      final ImmutableMap<Path, SourcePath> links,
+      ImmutableMap<Path, SourcePath> links,
       ImmutableMultimap<Path, SourcePath> directoriesToMerge,
       SourcePathRuleFinder ruleFinder) {
     super(target, filesystem);
@@ -257,8 +256,7 @@ public class SymlinkTree extends AbstractBuildRule
   protected Step getVerifyStep() {
     return new AbstractExecutionStep("verify_symlink_tree") {
       @Override
-      public StepExecutionResult execute(ExecutionContext context)
-          throws IOException, InterruptedException {
+      public StepExecutionResult execute(ExecutionContext context) {
         for (ImmutableMap.Entry<Path, SourcePath> entry : getLinks().entrySet()) {
           for (Path pathPart : entry.getKey()) {
             if (pathPart.toString().equals("..")) {

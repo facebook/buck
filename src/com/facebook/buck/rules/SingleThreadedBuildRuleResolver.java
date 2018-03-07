@@ -55,7 +55,7 @@ public class SingleThreadedBuildRuleResolver implements BuildRuleResolver {
     this.eventBus = eventBus;
 
     // We preallocate our maps to have this amount of slots to get rid of re-allocations
-    final int initialCapacity = (int) (targetGraph.getNodes().size() * 5 * 1.1);
+    int initialCapacity = (int) (targetGraph.getNodes().size() * 5 * 1.1);
 
     this.buildRuleIndex = new ConcurrentHashMap<>(initialCapacity);
     this.metadataCache =

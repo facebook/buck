@@ -58,8 +58,7 @@ public abstract class AbstractMacroExpander<T, P> implements MacroExpander {
       CellPathResolver cellNames,
       T input,
       ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
-      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder)
-      throws MacroException {}
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {}
 
   /** @return the precomputed work that can be re-used between invocations */
   @Override

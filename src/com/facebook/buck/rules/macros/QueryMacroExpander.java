@@ -59,7 +59,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
       CellPathResolver cellNames,
       Optional<BuildRuleResolver> resolver,
       T input) {
-    final GraphEnhancementQueryEnvironment env =
+    GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(
             resolver,
             targetGraph,
@@ -89,7 +89,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
   Stream<QueryTarget> resolveQuery(
       BuildTarget target,
       CellPathResolver cellNames,
-      final BuildRuleResolver resolver,
+      BuildRuleResolver resolver,
       String queryExpression)
       throws MacroException {
     GraphEnhancementQueryEnvironment env =

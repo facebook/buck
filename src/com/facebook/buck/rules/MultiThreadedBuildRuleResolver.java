@@ -225,7 +225,7 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
       Task<V> task =
           new Task<V>() {
             @Override
-            protected V doCompute() throws Exception {
+            protected V doCompute() {
               throw new AssertionError("This task should be directly completed.");
             }
           };

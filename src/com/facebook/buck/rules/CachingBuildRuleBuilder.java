@@ -141,16 +141,16 @@ class CachingBuildRuleBuilder {
       Optional<Long> artifactCacheSizeLimit,
       BuildInfoStoreManager buildInfoStoreManager,
       CachingBuildEngine.BuildMode buildMode,
-      final BuildRuleDurationTracker buildRuleDurationTracker,
-      final boolean consoleLogBuildFailuresInline,
+      BuildRuleDurationTracker buildRuleDurationTracker,
+      boolean consoleLogBuildFailuresInline,
       RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics,
       CachingBuildEngine.DepFiles depFiles,
-      final FileHashCache fileHashCache,
+      FileHashCache fileHashCache,
       long maxDepFileCacheEntries,
       CachingBuildEngine.MetadataStorage metadataStorage,
       SourcePathResolver pathResolver,
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
-      final RuleKeyFactories ruleKeyFactories,
+      RuleKeyFactories ruleKeyFactories,
       WeightedListeningExecutorService service,
       StepRunner stepRunner,
       RuleDepsCache ruleDeps,
@@ -281,7 +281,7 @@ class CachingBuildRuleBuilder {
   }
 
   ListenableFuture<BuildResult> build() {
-    final AtomicReference<Long> outputSize = Atomics.newReference();
+    AtomicReference<Long> outputSize = Atomics.newReference();
 
     ListenableFuture<List<BuildResult>> depResults =
         Futures.immediateFuture(Collections.emptyList());
@@ -373,8 +373,7 @@ class CachingBuildRuleBuilder {
     return buildResult;
   }
 
-  private void finalizeMatchingKey(BuildRuleSuccessType success)
-      throws IOException, StepFailedException, InterruptedException {
+  private void finalizeMatchingKey(BuildRuleSuccessType success) throws IOException {
     switch (success) {
       case MATCHING_RULE_KEY:
         // No need to record anything for matching rule key.
@@ -421,8 +420,7 @@ class CachingBuildRuleBuilder {
   }
 
   private ListenableFuture<BuildResult> finalizeBuildRule(
-      BuildResult input, AtomicReference<Long> outputSize)
-      throws StepFailedException, InterruptedException, IOException {
+      BuildResult input, AtomicReference<Long> outputSize) throws IOException {
     try {
       // If we weren't successful, exit now.
       if (input.getStatus() != BuildRuleStatus.SUCCESS) {
@@ -730,7 +728,7 @@ class CachingBuildRuleBuilder {
   }
 
   private ListenableFuture<Optional<BuildResult>> buildLocally(
-      final CacheResult cacheResult, final ListeningExecutorService service) {
+      CacheResult cacheResult, ListeningExecutorService service) {
     if (SupportsPipelining.isSupported(rule)
         && ((SupportsPipelining<?>) rule).useRulePipelining()) {
       return pipelinesRunner.runPipelineStartingAt(
@@ -959,8 +957,7 @@ class CachingBuildRuleBuilder {
     return Optional.empty();
   }
 
-  private ListenableFuture<CacheResult> performRuleKeyCacheCheck(boolean cacheHitExpected)
-      throws IOException {
+  private ListenableFuture<CacheResult> performRuleKeyCacheCheck(boolean cacheHitExpected) {
     long cacheRequestTimestampMillis = System.currentTimeMillis();
     return Futures.transform(
         buildCacheArtifactFetcher
@@ -1144,7 +1141,7 @@ class CachingBuildRuleBuilder {
   }
 
   // Wrap an async function in rule resume/suspend events.
-  private <F, T> AsyncFunction<F, T> ruleAsyncFunction(final AsyncFunction<F, T> delegate) {
+  private <F, T> AsyncFunction<F, T> ruleAsyncFunction(AsyncFunction<F, T> delegate) {
     return input -> {
       try (Scope ignored = buildRuleScope()) {
         return delegate.apply(input);

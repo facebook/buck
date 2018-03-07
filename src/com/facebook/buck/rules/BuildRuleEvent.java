@@ -320,7 +320,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
           success,
           getRuleKeys().getRuleKey().toString(),
           getRuleKeys().getInputRuleKey().isPresent()
-              ? " I" + getRuleKeys().getInputRuleKey().get().toString()
+              ? " I" + getRuleKeys().getInputRuleKey().get()
               : "");
     }
 

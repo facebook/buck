@@ -143,8 +143,8 @@ public class TargetNodeFactory implements NodeCopier {
 
   private static void detectBuildTargetsAndPathsForConstructorArg(
       CellPathResolver cellRoots,
-      final ImmutableSet.Builder<BuildTarget> depsBuilder,
-      final ImmutableSet.Builder<Path> pathsBuilder,
+      ImmutableSet.Builder<BuildTarget> depsBuilder,
+      ImmutableSet.Builder<Path> pathsBuilder,
       ParamInfo info,
       Object constructorArg)
       throws NoSuchBuildTargetException {

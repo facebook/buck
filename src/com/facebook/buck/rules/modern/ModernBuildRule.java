@@ -43,7 +43,6 @@ import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import java.io.IOException;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -284,7 +283,7 @@ public abstract class ModernBuildRule<T extends Buildable> extends AbstractBuild
   }
 
   @Override
-  public final DataHolder initializeFromDisk() throws IOException {
+  public final DataHolder initializeFromDisk() {
     // TODO(cjhopman): implement
     return new DataHolder();
   }

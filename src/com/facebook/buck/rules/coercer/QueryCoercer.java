@@ -92,7 +92,7 @@ public class QueryCoercer implements TypeCoercer<Query> {
       Object object)
       throws CoerceFailedException {
     if (object instanceof String) {
-      return Query.of((String) object, "//" + pathRelativeToProjectRoot.toString());
+      return Query.of((String) object, "//" + pathRelativeToProjectRoot);
     }
     throw CoerceFailedException.simple(object, getOutputClass());
   }

@@ -54,13 +54,13 @@ public class UnskippedRulesTracker {
     this.ruleResolver = ruleResolver;
   }
 
-  public void registerTopLevelRule(BuildRule rule, final BuckEventBus eventBus) {
+  public void registerTopLevelRule(BuildRule rule, BuckEventBus eventBus) {
     // Add a reference to the top-level rule so that it is never marked as skipped.
     acquireReference(rule);
     sendEventIfStateChanged(eventBus);
   }
 
-  public void markRuleAsUsed(final BuildRule rule, final BuckEventBus eventBus) {
+  public void markRuleAsUsed(BuildRule rule, BuckEventBus eventBus) {
     // Add a reference to the used rule so that it is never marked as skipped.
     acquireReference(rule);
     if (rule instanceof HasRuntimeDeps) {

@@ -33,8 +33,8 @@ public class BuildRuleParams {
   private final ImmutableSortedSet<BuildRule> targetGraphOnlyDeps;
 
   public BuildRuleParams(
-      final Supplier<? extends SortedSet<BuildRule>> declaredDeps,
-      final Supplier<? extends SortedSet<BuildRule>> extraDeps,
+      Supplier<? extends SortedSet<BuildRule>> declaredDeps,
+      Supplier<? extends SortedSet<BuildRule>> extraDeps,
       ImmutableSortedSet<BuildRule> targetGraphOnlyDeps) {
     this.declaredDeps = MoreSuppliers.memoize(declaredDeps);
     this.extraDeps = MoreSuppliers.memoize(extraDeps);
@@ -66,7 +66,7 @@ public class BuildRuleParams {
   }
 
   public BuildRuleParams copyAppendingExtraDeps(
-      final Supplier<? extends Iterable<? extends BuildRule>> additional) {
+      Supplier<? extends Iterable<? extends BuildRule>> additional) {
     Supplier<? extends SortedSet<BuildRule>> extraDeps1 =
         () ->
             ImmutableSortedSet.<BuildRule>naturalOrder()

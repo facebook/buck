@@ -143,7 +143,7 @@ abstract class AbstractBuildConfigFields implements Iterable<Field> {
     builder.append("public class BuildConfig {\n");
     builder.append("  private BuildConfig() {}\n");
 
-    final String prefix = "  public static final ";
+    String prefix = "  public static final ";
     for (Field field : getNameToField().values()) {
       String type = field.getType();
       if ("boolean".equals(type)) {

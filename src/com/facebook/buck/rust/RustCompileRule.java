@@ -255,8 +255,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   cmd.add("--color=always");
                 }
 
-                remapSrcPaths.addRemapOption(
-                    cmd, workingDirectory.toString(), scratchDir.toString() + "/");
+                remapSrcPaths.addRemapOption(cmd, workingDirectory.toString(), scratchDir + "/");
 
                 // Generate a target-unique string to distinguish distinct crates with the same
                 // name.
@@ -299,10 +298,10 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 // invocation in Rust source, and if the path isn't absolute
                 // it will be treated as relative to the current file including
                 // it. The trailing '/' is also to assist this use-case.
-                env.put("RUSTC_BUILD_CONTAINER", root.resolve(scratchDir).toString() + "/");
+                env.put("RUSTC_BUILD_CONTAINER", root.resolve(scratchDir) + "/");
                 env.put(
                     "RUSTC_BUILD_CONTAINER_BASE_PATH",
-                    root.resolve(scratchDir.resolve(basePath)).toString() + "/");
+                    root.resolve(scratchDir.resolve(basePath)) + "/");
 
                 return env.build();
               }

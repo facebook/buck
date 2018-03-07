@@ -53,7 +53,7 @@ public class BuildRules {
     return buildRules.build();
   }
 
-  public static Predicate<BuildRule> isBuildRuleWithTarget(final BuildTarget target) {
+  public static Predicate<BuildRule> isBuildRuleWithTarget(BuildTarget target) {
     return input -> input.getBuildTarget().equals(target);
   }
 
@@ -63,14 +63,14 @@ public class BuildRules {
    */
   public static ImmutableSortedSet<BuildRule> getExportedRules(
       Iterable<? extends BuildRule> rules) {
-    final ImmutableSortedSet.Builder<BuildRule> exportedRules = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<BuildRule> exportedRules = ImmutableSortedSet.naturalOrder();
     buildExportedRules(rules, exportedRules);
     return exportedRules.build();
   }
 
   public static ImmutableSet<BuildRule> getUnsortedExportedRules(
       Iterable<? extends BuildRule> rules) {
-    final ImmutableSet.Builder<BuildRule> exportedRules = ImmutableSet.builder();
+    ImmutableSet.Builder<BuildRule> exportedRules = ImmutableSet.builder();
     buildExportedRules(rules, exportedRules);
     return exportedRules.build();
   }
@@ -93,7 +93,7 @@ public class BuildRules {
   public static ImmutableSet<BuildTarget> getTransitiveRuntimeDeps(
       HasRuntimeDeps rule, BuildRuleResolver resolver) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    final ImmutableSet.Builder<BuildTarget> runtimeDeps = ImmutableSet.builder();
+    ImmutableSet.Builder<BuildTarget> runtimeDeps = ImmutableSet.builder();
     AbstractBreadthFirstTraversal<BuildTarget> visitor =
         new AbstractBreadthFirstTraversal<BuildTarget>(
             rule.getRuntimeDeps(ruleFinder).collect(ImmutableSet.toImmutableSet())) {
