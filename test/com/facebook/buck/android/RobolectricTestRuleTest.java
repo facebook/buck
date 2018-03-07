@@ -119,7 +119,9 @@ public class RobolectricTestRuleTest {
         RobolectricTestBuilder.createBuilder(robolectricBuildTarget, filesystem).build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(robolectricTestNode);
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    BuildRuleResolver resolver =
+        new TestBuildRuleResolver(
+            targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
@@ -162,7 +164,9 @@ public class RobolectricTestRuleTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(robolectricTestNode);
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    BuildRuleResolver resolver =
+        new TestBuildRuleResolver(
+            targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
@@ -203,7 +207,9 @@ public class RobolectricTestRuleTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(robolectricTestNode);
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    BuildRuleResolver resolver =
+        new TestBuildRuleResolver(
+            targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
@@ -248,7 +254,9 @@ public class RobolectricTestRuleTest {
         RobolectricTestBuilder.createBuilder(robolectricBuildTarget, filesystem).build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(robolectricTestNode);
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    BuildRuleResolver resolver =
+        new TestBuildRuleResolver(
+            targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
@@ -279,7 +287,9 @@ public class RobolectricTestRuleTest {
         RobolectricTestBuilder.createBuilder(robolectricBuildTarget, filesystem).build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(robolectricTestNode);
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    BuildRuleResolver resolver =
+        new TestBuildRuleResolver(
+            targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
@@ -324,7 +334,9 @@ public class RobolectricTestRuleTest {
         RobolectricTestBuilder.createBuilder(robolectricBuildTarget, filesystem).build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(robolectricTestNode);
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    BuildRuleResolver resolver =
+        new TestBuildRuleResolver(
+            targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
@@ -354,7 +366,9 @@ public class RobolectricTestRuleTest {
         RobolectricTestBuilder.createBuilder(robolectricBuildTarget, filesystem).build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(robolectricTestNode);
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    BuildRuleResolver resolver =
+        new TestBuildRuleResolver(
+            targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
@@ -403,7 +417,9 @@ public class RobolectricTestRuleTest {
         TargetGraphFactory.newInstance(
             resGenRuleNode, assetsGenRuleNode, res2Node, robolectricTestNode);
 
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    BuildRuleResolver resolver =
+        new TestBuildRuleResolver(
+            targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
 
     RobolectricTest robolectricTest =
         (RobolectricTest) resolver.requireRule(robolectricBuildTarget);

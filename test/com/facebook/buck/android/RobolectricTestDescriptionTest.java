@@ -65,7 +65,9 @@ public class RobolectricTestDescriptionTest extends AbiCompilationModeTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(exportedNode, exportingNode, robolectricTestNode);
 
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    BuildRuleResolver resolver =
+        new TestBuildRuleResolver(
+            targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
 
     RobolectricTest robolectricTest =
         (RobolectricTest) resolver.requireRule(robolectricTestNode.getBuildTarget());
@@ -102,7 +104,9 @@ public class RobolectricTestDescriptionTest extends AbiCompilationModeTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(exportedNode, exportingNode, robolectricTestNode);
 
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    BuildRuleResolver resolver =
+        new TestBuildRuleResolver(
+            targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
 
     RobolectricTest robolectricTest =
         (RobolectricTest) resolver.requireRule(robolectricTestNode.getBuildTarget());
