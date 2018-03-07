@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Test;
 
-public class CloseableWrapperTest {
+public class ThrowingCloseableWrapperTest {
 
   private static void closer(AtomicInteger obj) {
     obj.incrementAndGet();
@@ -30,8 +30,8 @@ public class CloseableWrapperTest {
   @Test
   public void testMain() throws Exception {
     AtomicInteger obj = new AtomicInteger(0);
-    try (CloseableWrapper<AtomicInteger, Exception> wrapper =
-        CloseableWrapper.of(obj, CloseableWrapperTest::closer)) {
+    try (ThrowingCloseableWrapper<AtomicInteger, Exception> wrapper =
+        ThrowingCloseableWrapper.of(obj, ThrowingCloseableWrapperTest::closer)) {
       assertEquals(0, wrapper.get().get());
     } finally {
       // assert that close was called exactly once with this object
@@ -42,8 +42,8 @@ public class CloseableWrapperTest {
   @Test(expected = Exception.class)
   public void testException() throws Exception {
     AtomicInteger obj = new AtomicInteger(0);
-    try (CloseableWrapper<AtomicInteger, Exception> wrapper =
-        CloseableWrapper.of(obj, CloseableWrapperTest::closer)) {
+    try (ThrowingCloseableWrapper<AtomicInteger, Exception> wrapper =
+        ThrowingCloseableWrapper.of(obj, ThrowingCloseableWrapperTest::closer)) {
       throw new Exception("exception");
     } finally {
       // close was still called despite the exception thrown
@@ -54,8 +54,8 @@ public class CloseableWrapperTest {
   @Test
   public void duplicateCloseOnlyClosesOnce() throws Exception {
     AtomicInteger obj = new AtomicInteger(0);
-    try (CloseableWrapper<AtomicInteger, Exception> wrapper =
-        CloseableWrapper.of(obj, CloseableWrapperTest::closer)) {
+    try (ThrowingCloseableWrapper<AtomicInteger, Exception> wrapper =
+        ThrowingCloseableWrapper.of(obj, ThrowingCloseableWrapperTest::closer)) {
       assertEquals(0, wrapper.get().get());
       wrapper.close();
     } finally {
@@ -67,8 +67,8 @@ public class CloseableWrapperTest {
   @Test
   public void closesWithoutGet() throws Exception {
     AtomicInteger obj = new AtomicInteger(0);
-    try (CloseableWrapper<AtomicInteger, Exception> wrapper =
-        CloseableWrapper.of(obj, CloseableWrapperTest::closer)) {
+    try (ThrowingCloseableWrapper<AtomicInteger, Exception> wrapper =
+        ThrowingCloseableWrapper.of(obj, ThrowingCloseableWrapperTest::closer)) {
     } finally {
       // assert that close was called exactly once with this object
       assertEquals(1, obj.get());

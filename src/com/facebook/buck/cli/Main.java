@@ -108,7 +108,6 @@ import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.BuckArgsMethods;
 import com.facebook.buck.util.BuckIsDyingException;
-import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -121,6 +120,7 @@ import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.Scope;
+import com.facebook.buck.util.ThrowingCloseableWrapper;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
@@ -629,7 +629,7 @@ public final class Main {
     // No more early outs: if this command is not read only, acquire the command semaphore to
     // become the only executing read/write command.
     boolean shouldCleanUpTrash = false;
-    try (CloseableWrapper<Semaphore, InterruptedException> semaphore =
+    try (ThrowingCloseableWrapper<Semaphore, InterruptedException> semaphore =
         getSemaphoreWrapper(command)) {
       if (!command.isReadOnly() && semaphore == null) {
         LOG.warn("Buck server was busy executing a command. Maybe retrying later will help.");
@@ -824,59 +824,61 @@ public final class Main {
         try (GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
                 GlobalStateManager.singleton()
                     .setupLoggers(invocationInfo, console.getStdErr(), stdErr, verbosity);
-            CloseableWrapper<ExecutorService, InterruptedException> diskIoExecutorService =
+            ThrowingCloseableWrapper<ExecutorService, InterruptedException> diskIoExecutorService =
                 getExecutorWrapper(
                     MostExecutors.newSingleThreadExecutor("Disk I/O"),
                     "Disk IO",
                     DISK_IO_STATS_TIMEOUT_SECONDS);
-            CloseableWrapper<ListeningExecutorService, InterruptedException>
+            ThrowingCloseableWrapper<ListeningExecutorService, InterruptedException>
                 httpWriteExecutorService =
                     getExecutorWrapper(
                         getHttpWriteExecutorService(cacheBuckConfig, isUsingDistributedBuild),
                         "HTTP Write",
                         cacheBuckConfig.getHttpWriterShutdownTimeout());
-            CloseableWrapper<ListeningExecutorService, InterruptedException>
+            ThrowingCloseableWrapper<ListeningExecutorService, InterruptedException>
                 stampedeSyncBuildHttpFetchExecutorService =
                     getExecutorWrapper(
                         getHttpFetchExecutorService(
                             "heavy", cacheBuckConfig.getDownloadHeavyBuildHttpFetchConcurrency()),
                         "Download Heavy Build HTTP Read",
                         cacheBuckConfig.getHttpWriterShutdownTimeout());
-            CloseableWrapper<ListeningExecutorService, InterruptedException>
+            ThrowingCloseableWrapper<ListeningExecutorService, InterruptedException>
                 httpFetchExecutorService =
                     getExecutorWrapper(
                         getHttpFetchExecutorService(
                             "standard", cacheBuckConfig.getHttpFetchConcurrency()),
                         "HTTP Read",
                         cacheBuckConfig.getHttpWriterShutdownTimeout());
-            CloseableWrapper<ScheduledExecutorService, InterruptedException>
+            ThrowingCloseableWrapper<ScheduledExecutorService, InterruptedException>
                 counterAggregatorExecutor =
                     getExecutorWrapper(
                         Executors.newSingleThreadScheduledExecutor(
                             new CommandThreadFactory("CounterAggregatorThread")),
                         "CounterAggregatorExecutor",
                         COUNTER_AGGREGATOR_SERVICE_TIMEOUT_SECONDS);
-            CloseableWrapper<ScheduledExecutorService, InterruptedException> scheduledExecutorPool =
-                getExecutorWrapper(
-                    Executors.newScheduledThreadPool(
-                        buckConfig.getNumThreadsForSchedulerPool(),
-                        new CommandThreadFactory(getClass().getName() + "SchedulerThreadPool")),
-                    "ScheduledExecutorService",
-                    EXECUTOR_SERVICES_TIMEOUT_SECONDS);
+            ThrowingCloseableWrapper<ScheduledExecutorService, InterruptedException>
+                scheduledExecutorPool =
+                    getExecutorWrapper(
+                        Executors.newScheduledThreadPool(
+                            buckConfig.getNumThreadsForSchedulerPool(),
+                            new CommandThreadFactory(getClass().getName() + "SchedulerThreadPool")),
+                        "ScheduledExecutorService",
+                        EXECUTOR_SERVICES_TIMEOUT_SECONDS);
             // Create a cached thread pool for cpu intensive tasks
-            CloseableWrapper<ListeningExecutorService, InterruptedException> cpuExecutorService =
-                getExecutorWrapper(
-                    listeningDecorator(Executors.newCachedThreadPool()),
-                    ExecutorPool.CPU.toString(),
-                    EXECUTOR_SERVICES_TIMEOUT_SECONDS);
+            ThrowingCloseableWrapper<ListeningExecutorService, InterruptedException>
+                cpuExecutorService =
+                    getExecutorWrapper(
+                        listeningDecorator(Executors.newCachedThreadPool()),
+                        ExecutorPool.CPU.toString(),
+                        EXECUTOR_SERVICES_TIMEOUT_SECONDS);
             // Create a thread pool for network I/O tasks
-            CloseableWrapper<ListeningExecutorService, InterruptedException>
+            ThrowingCloseableWrapper<ListeningExecutorService, InterruptedException>
                 networkExecutorService =
                     getExecutorWrapper(
                         newDirectExecutorService(),
                         ExecutorPool.NETWORK.toString(),
                         EXECUTOR_SERVICES_TIMEOUT_SECONDS);
-            CloseableWrapper<ListeningExecutorService, InterruptedException>
+            ThrowingCloseableWrapper<ListeningExecutorService, InterruptedException>
                 projectExecutorService =
                     getExecutorWrapper(
                         listeningDecorator(
@@ -937,7 +939,7 @@ public final class Main {
             // This will get executed first once it gets out of try block and just wait for
             // event bus to dispatch all pending events before we proceed to termination
             // procedures
-            CloseableWrapper<BuckEventBus, InterruptedException> waitEvents =
+            ThrowingCloseableWrapper<BuckEventBus, InterruptedException> waitEvents =
                 getWaitEventsWrapper(buildEventBus)) {
 
           LOG.debug(invocationInfo.toLogLine());
@@ -1414,9 +1416,9 @@ public final class Main {
    * RAII wrapper which does not really close any object but waits for all events in given event bus
    * to complete. We want to have it this way to safely start deinitializing event listeners
    */
-  private static CloseableWrapper<BuckEventBus, InterruptedException> getWaitEventsWrapper(
+  private static ThrowingCloseableWrapper<BuckEventBus, InterruptedException> getWaitEventsWrapper(
       BuckEventBus buildEventBus) {
-    return CloseableWrapper.of(
+    return ThrowingCloseableWrapper.of(
         buildEventBus,
         eventBus -> {
           // wait for event bus to process all pending events
@@ -1429,9 +1431,9 @@ public final class Main {
   }
 
   private static <T extends ExecutorService>
-      CloseableWrapper<T, InterruptedException> getExecutorWrapper(
+      ThrowingCloseableWrapper<T, InterruptedException> getExecutorWrapper(
           T executor, String executorName, long closeTimeoutSeconds) {
-    return CloseableWrapper.of(
+    return ThrowingCloseableWrapper.of(
         executor,
         service -> {
           executor.shutdown();
@@ -1579,11 +1581,11 @@ public final class Main {
    * Try to acquire global semaphore if needed to do so. Attach closer to acquired semaphore in a
    * form of a wrapper object so it can be used with try-with-resources. Wrapper is specialized with
    * InterruptedException but in fact closer is exception-free; we have to do it to follow
-   * specification of CloseableWrapper
+   * specification of ThrowingCloseableWrapper
    *
    * @return Semaphore wrapper object if semaphore is acquired, null otherwise
    */
-  private @Nullable CloseableWrapper<Semaphore, InterruptedException> getSemaphoreWrapper(
+  private @Nullable ThrowingCloseableWrapper<Semaphore, InterruptedException> getSemaphoreWrapper(
       BuckCommand command) {
     // we can execute read-only commands (query, targets, etc) in parallel
     if (command.isReadOnly()) {
@@ -1597,7 +1599,7 @@ public final class Main {
 
     commandSemaphoreNgClient = context;
 
-    return CloseableWrapper.of(
+    return ThrowingCloseableWrapper.of(
         commandSemaphore,
         commandSemaphore -> {
           commandSemaphoreNgClient = Optional.empty();

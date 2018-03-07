@@ -41,11 +41,11 @@ import com.google.common.base.Suppliers;
  *
  * }</pre>
  */
-public class CloseableWrapper<T, E extends Exception> implements AutoCloseable {
+public class ThrowingCloseableWrapper<T, E extends Exception> implements AutoCloseable {
 
   private final CloseableMemoizedSupplier<T, E> closeable;
 
-  private CloseableWrapper(T obj, ThrowingConsumer<T, E> closer) {
+  private ThrowingCloseableWrapper(T obj, ThrowingConsumer<T, E> closer) {
     closeable = CloseableMemoizedSupplier.of(Suppliers.ofInstance(obj), closer);
     // ensure obj is closed, since {@link CloseableMemoizedSupplier} doesn't call close
     // unless the supplier has been used at least once.
@@ -60,9 +60,9 @@ public class CloseableWrapper<T, E extends Exception> implements AutoCloseable {
    * @param obj Any class that does not implement AutoCloseable interface which is hard to extend
    * @param closer A function to call on close
    */
-  public static <T, E extends Exception> CloseableWrapper<T, E> of(
+  public static <T, E extends Exception> ThrowingCloseableWrapper<T, E> of(
       T obj, ThrowingConsumer<T, E> closer) {
-    return new CloseableWrapper<>(obj, closer);
+    return new ThrowingCloseableWrapper<>(obj, closer);
   }
 
   /** @return Original wrapped object */
