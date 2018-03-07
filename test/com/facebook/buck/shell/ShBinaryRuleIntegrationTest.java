@@ -62,7 +62,7 @@ public class ShBinaryRuleIntegrationTest {
   }
 
   @Test
-  public void testExecutableFromCache() throws IOException, InterruptedException {
+  public void testExecutableFromCache() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace =
@@ -141,7 +141,7 @@ public class ShBinaryRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "sh_binary_pwd", temporaryFolder);
     workspace.setUp();
 
-    String alteredPwd = workspace.getDestPath().toString() + "////////";
+    String alteredPwd = workspace.getDestPath() + "////////";
     ProcessResult buildResult =
         workspace.runBuckCommandWithEnvironmentOverridesAndContext(
             workspace.getDestPath(),

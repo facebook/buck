@@ -60,9 +60,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
    * Constructor for EndToEndWorkspace. Note that setup and teardown should be called in between
    * tests (easy way to do this is to use @Rule)
    */
-  public EndToEndWorkspace() {
-    super();
-  }
+  public EndToEndWorkspace() {}
 
   /**
    * Used for @Rule functionality so that EndToEndWorkspace can be automatically set up and torn
@@ -100,7 +98,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
     this.destPath = null;
   }
 
-  private Statement statement(final Statement base) {
+  private Statement statement(Statement base) {
     return new Statement() {
       @Override
       public void evaluate() throws Throwable {

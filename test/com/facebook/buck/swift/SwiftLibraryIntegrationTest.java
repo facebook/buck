@@ -80,7 +80,7 @@ public class SwiftLibraryIntegrationTest {
   }
 
   @Test
-  public void headersOfDependentTargetsAreIncluded() throws Exception {
+  public void headersOfDependentTargetsAreIncluded() {
     // The output path used by the buildable for the link tree.
     BuildTarget symlinkTarget = BuildTargetFactory.newInstance("//:symlink");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem(tmpDir.getRoot());

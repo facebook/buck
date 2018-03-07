@@ -38,7 +38,7 @@ public class InferHelper {
   }
 
   public static ProjectWorkspace setupWorkspace(
-      Object testCase, final Path workspaceRoot, String scenarioName) throws IOException {
+      Object testCase, Path workspaceRoot, String scenarioName) throws IOException {
     ProjectWorkspace projectWorkspace =
         TestDataHelper.createProjectWorkspaceForScenario(testCase, scenarioName, workspaceRoot);
     projectWorkspace.setUp();
@@ -106,11 +106,11 @@ public class InferHelper {
           ImmutableList.of(
               buildTarget.getFullyQualifiedName(),
               "--config",
-              "*//infer.infer_bin=" + inferBin.toString(),
+              "*//infer.infer_bin=" + inferBin,
               "--config",
-              "*//infer.clang_compiler=" + clangCompiler.toString(),
+              "*//infer.clang_compiler=" + clangCompiler,
               "--config",
-              "*//infer.clang_plugin=" + clangPlugin.toString(),
+              "*//infer.clang_plugin=" + clangPlugin,
               "--config",
               "build.depfiles=cache");
 

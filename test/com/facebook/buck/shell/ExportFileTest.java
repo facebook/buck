@@ -69,7 +69,7 @@ public class ExportFileTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Before
-  public void createFixtures() throws InterruptedException {
+  public void createFixtures() {
     projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     target = BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:example.html");
   }
@@ -167,7 +167,7 @@ public class ExportFileTest {
   }
 
   @Test
-  public void shouldSetInputsFromSourcePaths() throws Exception {
+  public void shouldSetInputsFromSourcePaths() {
     ExportFileBuilder builder =
         new ExportFileBuilder(target).setSrc(FakeSourcePath.of("chips")).setOut("cake");
 
@@ -203,7 +203,7 @@ public class ExportFileTest {
   }
 
   @Test
-  public void getOutputName() throws Exception {
+  public void getOutputName() {
     ExportFile exportFile =
         new ExportFileBuilder(target)
             .setOut("cake")

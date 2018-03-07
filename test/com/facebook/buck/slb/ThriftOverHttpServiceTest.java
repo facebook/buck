@@ -88,7 +88,7 @@ public class ThriftOverHttpServiceTest {
 
     Capture<Request.Builder> requestBuilder = EasyMock.newCapture();
     TSerializer serializer = new TSerializer(config.getThriftProtocol().getFactory());
-    final byte[] responseBuffer = serializer.serialize(expectedResponse);
+    byte[] responseBuffer = serializer.serialize(expectedResponse);
     HttpResponse httpResponse =
         new HttpResponse() {
           @Override
@@ -102,7 +102,7 @@ public class ThriftOverHttpServiceTest {
           }
 
           @Override
-          public long contentLength() throws IOException {
+          public long contentLength() {
             return responseBuffer.length;
           }
 
@@ -117,7 +117,7 @@ public class ThriftOverHttpServiceTest {
           }
 
           @Override
-          public void close() throws IOException {
+          public void close() {
             // do nothing.
           }
         };

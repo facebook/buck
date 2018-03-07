@@ -92,7 +92,7 @@ public class GenruleTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void newFakeFilesystem() throws InterruptedException {
+  public void newFakeFilesystem() {
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
   }
 
@@ -378,7 +378,7 @@ public class GenruleTest {
   }
 
   private GenruleBuilder createGenruleBuilderThatUsesWorkerMacro(BuildRuleResolver resolver)
-      throws NoSuchBuildTargetException, IOException {
+      throws NoSuchBuildTargetException {
     /*
      * Produces a GenruleBuilder that when built produces a Genrule that uses a $(worker) macro
      * that corresponds to:
@@ -733,7 +733,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void testGetOutputNameMethod() throws Exception {
+  public void testGetOutputNameMethod() {
     {
       String name = "out.txt";
       Genrule genrule =
@@ -753,7 +753,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void thatChangingOutChangesRuleKey() throws Exception {
+  public void thatChangingOutChangesRuleKey() {
     StandaloneGenruleBuilder builder1 = new StandaloneGenruleBuilder("//:genrule1");
     StandaloneGenruleBuilder builder2 = new StandaloneGenruleBuilder("//:genrule1");
 

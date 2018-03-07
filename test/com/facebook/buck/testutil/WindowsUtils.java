@@ -97,7 +97,7 @@ public class WindowsUtils extends PlatformUtils {
    */
   @Override
   public ImmutableList.Builder<String> getCommandBuilder() {
-    ImmutableList.Builder<String> commandBuilder = ImmutableList.<String>builder();
+    ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
     commandBuilder.add("cmd").add("/c").add(BUCK_EXE);
     return commandBuilder;
   }

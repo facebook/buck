@@ -329,7 +329,7 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
   }
 
   /** Creates the test statement for a testDescriptor */
-  private Statement methodBlock(final EndToEndTestDescriptor testDescriptor) {
+  private Statement methodBlock(EndToEndTestDescriptor testDescriptor) {
     Object test;
     try {
       test =
@@ -388,7 +388,7 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
    * RunNotifier with the test Result.
    */
   @Override
-  protected void runChild(EndToEndTestDescriptor child, final RunNotifier notifier) {
+  protected void runChild(EndToEndTestDescriptor child, RunNotifier notifier) {
     Description description = describeChild(child);
     Statement statement;
     if (setupError != null) {

@@ -188,7 +188,7 @@ public abstract class AbstractWorkspace {
     }
   }
 
-  private void ensureNoLocalBuckConfig() throws IOException {
+  private void ensureNoLocalBuckConfig() {
     if (Files.exists(getPath(".buckconfig.local"))) {
       throw new IllegalStateException(
           "Found a .buckconfig.local in the Workspace template, which is illegal."
@@ -375,7 +375,7 @@ public abstract class AbstractWorkspace {
     URI jarURI = URI.create(jarSplit[0]);
     FileSystem testDataFS = getOrCreateJarFileSystem(jarURI);
     FileSystemProvider provider = testDataFS.provider();
-    Path templatePath = testDataFS.getPath(jarSplit[1].toString(), templateName);
+    Path templatePath = testDataFS.getPath(jarSplit[1], templateName);
 
     copyTemplateToWorkspace(provider, templatePath);
     postAddTemplateActions();

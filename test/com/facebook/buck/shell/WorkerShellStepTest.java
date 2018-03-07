@@ -125,20 +125,19 @@ public class WorkerShellStepTest {
                 : Optional.of(WorkerProcessIdentity.of(persistentWorkerKey, workerHash))));
   }
 
-  private ExecutionContext createExecutionContextWith(int exitCode, String stdout, String stderr)
-      throws IOException {
+  private ExecutionContext createExecutionContextWith(int exitCode, String stdout, String stderr) {
     WorkerJobResult jobResult =
         WorkerJobResult.of(exitCode, Optional.of(stdout), Optional.of(stderr));
     return createExecutionContextWith(ImmutableMap.of("myJobArgs", jobResult));
   }
 
   private ExecutionContext createExecutionContextWith(
-      final ImmutableMap<String, WorkerJobResult> jobArgs) {
+      ImmutableMap<String, WorkerJobResult> jobArgs) {
     return createExecutionContextWith(jobArgs, 1);
   }
 
   private ExecutionContext createExecutionContextWith(
-      final ImmutableMap<String, WorkerJobResult> jobArgs, final int poolCapacity) {
+      ImmutableMap<String, WorkerJobResult> jobArgs, int poolCapacity) {
     WorkerProcessPool workerProcessPool =
         new WorkerProcessPool(
             poolCapacity, Hashing.sha1().hashString(fakeWorkerStartupCommand, Charsets.UTF_8)) {
@@ -307,7 +306,7 @@ public class WorkerShellStepTest {
       throws IOException, InterruptedException, TimeoutException, ExecutionException {
     String jobArgs1 = "jobArgs1";
     String jobArgs2 = "jobArgs2";
-    final ExecutionContext context =
+    ExecutionContext context =
         createExecutionContextWith(
             ImmutableMap.of(
                 jobArgs1, WorkerJobResult.of(0, Optional.of("stdout 1"), Optional.of("stderr 1")),
@@ -318,7 +317,7 @@ public class WorkerShellStepTest {
             ImmutableList.of(startupCommand, startupArg), ImmutableMap.of(), jobArgs1, 1);
 
     WorkerShellStep step1 = createWorkerShellStep(params, null, null);
-    final WorkerShellStep step2 = createWorkerShellStep(params.withJobArgs(jobArgs2), null, null);
+    WorkerShellStep step2 = createWorkerShellStep(params.withJobArgs(jobArgs2), null, null);
 
     step1.execute(context);
 
@@ -413,10 +412,10 @@ public class WorkerShellStepTest {
   }
 
   @Test
-  public void testMultipleWorkerProcesses() throws IOException, InterruptedException {
+  public void testMultipleWorkerProcesses() throws InterruptedException {
     String jobArgsA = "jobArgsA";
     String jobArgsB = "jobArgsB";
-    final ImmutableMap<String, WorkerJobResult> jobResults =
+    ImmutableMap<String, WorkerJobResult> jobResults =
         ImmutableMap.of(
             jobArgsA, WorkerJobResult.of(0, Optional.of("stdout A"), Optional.of("stderr A")),
             jobArgsB, WorkerJobResult.of(0, Optional.of("stdout B"), Optional.of("stderr B")));

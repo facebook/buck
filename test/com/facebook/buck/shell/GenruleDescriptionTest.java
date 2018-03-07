@@ -107,7 +107,7 @@ public class GenruleDescriptionTest {
   }
 
   @Test
-  public void testClasspathTransitiveDepsBecomeFirstOrderDeps() throws Exception {
+  public void testClasspathTransitiveDepsBecomeFirstOrderDeps() {
     TargetNode<?, ?> transitiveDepNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
             .addSrc(Paths.get("Dep.java"))

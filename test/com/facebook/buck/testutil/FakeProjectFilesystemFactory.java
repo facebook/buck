@@ -27,24 +27,22 @@ public class FakeProjectFilesystemFactory implements ProjectFilesystemFactory {
 
   @Override
   public ProjectFilesystem createProjectFilesystem(
-      Path root, Config config, Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo)
-      throws InterruptedException {
+      Path root, Config config, Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
     return new FakeProjectFilesystem(root);
   }
 
   @Override
-  public ProjectFilesystem createProjectFilesystem(Path root, Config config)
-      throws InterruptedException {
+  public ProjectFilesystem createProjectFilesystem(Path root, Config config) {
     return new FakeProjectFilesystem(root);
   }
 
   @Override
-  public ProjectFilesystem createProjectFilesystem(Path root) throws InterruptedException {
+  public ProjectFilesystem createProjectFilesystem(Path root) {
     return new FakeProjectFilesystem(root);
   }
 
   @Override
-  public ProjectFilesystem createOrThrow(Path path) throws InterruptedException {
+  public ProjectFilesystem createOrThrow(Path path) {
     return new FakeProjectFilesystem(path);
   }
 }

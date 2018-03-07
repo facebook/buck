@@ -67,12 +67,12 @@ public class TimeoutTest {
     Runner suite = new Computer().getSuite(builder, new Class<?>[] {testClass});
     Request request = Request.runner(suite);
 
-    final Set<Result> results = new HashSet<>();
+    Set<Result> results = new HashSet<>();
     JUnitCore core = new JUnitCore();
     core.addListener(
         new RunListener() {
           @Override
-          public void testRunFinished(Result result) throws Exception {
+          public void testRunFinished(Result result) {
             results.add(result);
           }
         });
