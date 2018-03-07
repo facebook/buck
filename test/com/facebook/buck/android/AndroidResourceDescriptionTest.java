@@ -36,7 +36,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -99,7 +98,6 @@ public class AndroidResourceDescriptionTest {
 
     AndroidResourceDescription description =
         new AndroidResourceDescription(
-            new ToolchainProviderBuilder().build(),
             new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()));
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot().toPath());

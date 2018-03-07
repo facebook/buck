@@ -71,7 +71,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
         new AndroidInstrumentationTestDescription(config, toolchainProvider),
         new AndroidLibraryDescription(toolchainProvider, javaConfig, defaultAndroidCompilerFactory),
         new AndroidPrebuiltAarDescription(toolchainProvider, javaConfig),
-        new AndroidResourceDescription(toolchainProvider, androidBuckConfig),
+        new AndroidResourceDescription(androidBuckConfig),
         new RobolectricTestDescription(javaConfig, defaultAndroidCompilerFactory),
         new PrebuiltNativeLibraryDescription(),
         new NdkLibraryDescription(),

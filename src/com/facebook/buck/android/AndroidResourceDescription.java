@@ -37,7 +37,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -70,7 +69,6 @@ public class AndroidResourceDescription
       ImmutableSet.of(
           ".gitkeep", ".svn", ".git", ".ds_store", ".scc", "cvs", "thumbs.db", "picasa.ini");
 
-  private final ToolchainProvider toolchainProvider;
   private final AndroidBuckConfig androidBuckConfig;
 
   @VisibleForTesting
@@ -84,9 +82,7 @@ public class AndroidResourceDescription
 
   public static final Flavor AAPT2_COMPILE_FLAVOR = InternalFlavor.of("aapt2_compile");
 
-  public AndroidResourceDescription(
-      ToolchainProvider toolchainProvider, AndroidBuckConfig androidBuckConfig) {
-    this.toolchainProvider = toolchainProvider;
+  public AndroidResourceDescription(AndroidBuckConfig androidBuckConfig) {
     this.androidBuckConfig = androidBuckConfig;
   }
 
@@ -149,8 +145,9 @@ public class AndroidResourceDescription
           "Tried to require rule %s, but no resource dir is preset.",
           buildTarget);
       AndroidPlatformTarget androidPlatformTarget =
-          toolchainProvider.getByName(
-              AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+          context
+              .getToolchainProvider()
+              .getByName(AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
       return new Aapt2Compile(
           buildTarget,
           projectFilesystem,
