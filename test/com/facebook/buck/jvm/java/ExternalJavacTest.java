@@ -94,8 +94,7 @@ public class ExternalJavacTest extends EasyMockSupport {
             .addCommand(javac.toAbsolutePath().toString(), "-version")
             .build();
     FakeProcess javacProc = new FakeProcess(0, "", "");
-    final FakeProcessExecutor executor =
-        new FakeProcessExecutor(ImmutableMap.of(javacExe, javacProc));
+    FakeProcessExecutor executor = new FakeProcessExecutor(ImmutableMap.of(javacExe, javacProc));
     ExternalJavac compiler =
         new ExternalJavac(Either.ofLeft(javac)) {
           @Override
@@ -128,8 +127,7 @@ public class ExternalJavacTest extends EasyMockSupport {
             .addCommand(javac.toAbsolutePath().toString(), "-version")
             .build();
     FakeProcess javacProc = new FakeProcess(0, "", reportedJavacVersion);
-    final FakeProcessExecutor executor =
-        new FakeProcessExecutor(ImmutableMap.of(javacExe, javacProc));
+    FakeProcessExecutor executor = new FakeProcessExecutor(ImmutableMap.of(javacExe, javacProc));
     ExternalJavac compiler =
         new ExternalJavac(Either.ofLeft(javac)) {
           @Override

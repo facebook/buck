@@ -66,7 +66,7 @@ public class JavaLibraryDescriptionTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void rulesExportedFromDepsBecomeFirstOrderDeps() throws Exception {
+  public void rulesExportedFromDepsBecomeFirstOrderDeps() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildRule javaLibrary =
         JavaLibraryBuilder.createBuilder(target, javaBuckConfig)
@@ -78,11 +78,11 @@ public class JavaLibraryDescriptionTest extends AbiCompilationModeTest {
       exportedRule = resolver.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
     }
 
-    assertThat(javaLibrary.getBuildDeps(), Matchers.<BuildRule>hasItem(exportedRule));
+    assertThat(javaLibrary.getBuildDeps(), Matchers.hasItem(exportedRule));
   }
 
   @Test
-  public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() throws Exception {
+  public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildRule javaLibrary =
         JavaLibraryBuilder.createBuilder(target, javaBuckConfig)
@@ -94,6 +94,6 @@ public class JavaLibraryDescriptionTest extends AbiCompilationModeTest {
       exportedRule = resolver.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
     }
 
-    assertThat(javaLibrary.getBuildDeps(), Matchers.<BuildRule>hasItem(exportedRule));
+    assertThat(javaLibrary.getBuildDeps(), Matchers.hasItem(exportedRule));
   }
 }

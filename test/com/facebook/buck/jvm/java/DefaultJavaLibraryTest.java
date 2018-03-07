@@ -169,7 +169,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testJavaLibaryThrowsIfResourceIsDirectory() throws Exception {
+  public void testJavaLibaryThrowsIfResourceIsDirectory() {
     ProjectFilesystem filesystem =
         new AllExistingProjectFilesystem() {
           @Override
@@ -280,7 +280,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testGetClasspathEntriesMap() throws Exception {
+  public void testGetClasspathEntriesMap() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
@@ -321,7 +321,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testGetClasspathDeps() throws Exception {
+  public void testGetClasspathDeps() {
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
     TargetNode<?, ?> libraryOne =
         createJavaLibraryBuilder(libraryOneTarget)
@@ -359,7 +359,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testClasspathForJavacCommand() throws Exception {
+  public void testClasspathForJavacCommand() {
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
     TargetNode<?, ?> libraryOne =
         createJavaLibraryBuilder(libraryOneTarget)
@@ -392,7 +392,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         FluentIterable.from(steps).filter(JavacStep.class).toList();
     assertEquals("There should be only one javac step.", 1, javacSteps.size());
     JavacStep javacStep = javacSteps.get(0);
-    final BuildRule expectedRule;
+    BuildRule expectedRule;
     if (compileAgainstAbis.equals(TRUE)) {
       expectedRule = ruleResolver.getRule(libraryOneRule.getAbiJar().get());
     } else {
@@ -406,7 +406,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testDepFilePredicateForNoAnnotationProcessorDeps() throws Exception {
+  public void testDepFilePredicateForNoAnnotationProcessorDeps() {
     BuildTarget annotationProcessorTarget = validJavaLibrary.createTarget();
     BuildTarget annotationProcessorAbiTarget = validJavaLibraryAbi.createTarget();
 
@@ -478,7 +478,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testBuildDeps() throws Exception {
+  public void testBuildDeps() {
     BuildTarget sourceDepExportFileTarget = BuildTargetFactory.newInstance("//:source_dep");
     TargetNode<?, ?> sourceDepExportFileNode =
         new ExportFileBuilder(sourceDepExportFileTarget).build();
@@ -632,7 +632,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testExportedDeps() throws Exception {
+  public void testExportedDeps() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildTarget nonIncludedTarget = BuildTargetFactory.newInstance("//:not_included");
@@ -752,7 +752,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
    * parameter.
    */
   @Test
-  public void testExportedDepsShouldOnlyContainJavaLibraryRules() throws Exception {
+  public void testExportedDepsShouldOnlyContainJavaLibraryRules() {
     BuildTarget genruleBuildTarget = BuildTargetFactory.newInstance("//generated:stuff");
     BuildRule genrule =
         GenruleBuilder.newGenruleBuilder(genruleBuildTarget)
@@ -1248,7 +1248,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testRuleKeyIsOrderInsensitiveForSourcesAndResources() throws Exception {
+  public void testRuleKeyIsOrderInsensitiveForSourcesAndResources() {
     // Note that these filenames were deliberately chosen to have identical hashes to maximize
     // the chance of order-sensitivity when being inserted into a HashMap.  Just using
     // {foo,bar}.{java,txt} resulted in a passing test even for the old broken code.
@@ -1316,7 +1316,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testWhenNoJavacIsProvidedAJavacInMemoryStepIsAdded() throws Exception {
+  public void testWhenNoJavacIsProvidedAJavacInMemoryStepIsAdded() {
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
     BuildRule rule =
         createJavaLibraryBuilder(libraryOneTarget)
@@ -1334,7 +1334,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testWhenJavacJarIsProvidedAJavacInMemoryStepIsAdded() throws Exception {
+  public void testWhenJavacJarIsProvidedAJavacInMemoryStepIsAdded() {
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
     BuildTarget javacTarget = BuildTargetFactory.newInstance("//langtools:javac");
     TargetNode<?, ?> javacNode =
@@ -1465,7 +1465,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   private class AnnotationProcessingScenario {
     private final AnnotationProcessingParams.Builder annotationProcessingParamsBuilder;
 
-    public AnnotationProcessingScenario() throws IOException {
+    public AnnotationProcessingScenario() {
       annotationProcessingParamsBuilder =
           AnnotationProcessingParams.builder()
               .setLegacySafeAnnotationProcessors(Collections.emptySet());
@@ -1484,7 +1484,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     }
 
     public ImmutableList<String> buildAndGetCompileParameters()
-        throws InterruptedException, IOException, NoSuchBuildTargetException {
+        throws IOException, NoSuchBuildTargetException {
       ProjectFilesystem projectFilesystem =
           TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
       DefaultJavaLibrary javaLibrary = createJavaLibraryRule(projectFilesystem);

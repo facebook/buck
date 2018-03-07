@@ -19,8 +19,6 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.Locale;
 import javax.annotation.Nullable;
@@ -97,13 +95,9 @@ public class DiagnosticPrettyPrinterTest {
    * @param column The column within {@code row}, also 1-indexed.
    */
   private Diagnostic<? extends JavaFileObject> createDiagnostic(
-      final String message,
-      String pathToSource,
-      String sourceContents,
-      final long row,
-      final long column)
+      String message, String pathToSource, String sourceContents, long row, long column)
       throws Exception {
-    final JavaFileObject fileObject = new StringJavaFileObject(pathToSource, sourceContents);
+    JavaFileObject fileObject = new StringJavaFileObject(pathToSource, sourceContents);
 
     // Calculate the position, because we're all bad at counting things
     int pos = -1;
@@ -174,13 +168,13 @@ public class DiagnosticPrettyPrinterTest {
   private class StringJavaFileObject extends SimpleJavaFileObject {
     private final String content;
 
-    protected StringJavaFileObject(String pathToSource, String content) throws URISyntaxException {
+    protected StringJavaFileObject(String pathToSource, String content) {
       super(Paths.get(pathToSource).toUri(), Kind.SOURCE);
       this.content = content;
     }
 
     @Override
-    public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
+    public CharSequence getCharContent(boolean ignoreEncodingErrors) {
       return content;
     }
   }

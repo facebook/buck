@@ -35,7 +35,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
@@ -71,7 +70,7 @@ public class JavacSpecTest {
   }
 
   @Test
-  public void returnsExternalCompilerIfJavacPathPresent() throws IOException {
+  public void returnsExternalCompilerIfJavacPathPresent() {
     Path externalPath = Paths.get("/foo/bar/path/to/javac");
     SourcePath javacPath = FakeSourcePath.of(externalPath);
 
@@ -108,7 +107,7 @@ public class JavacSpecTest {
   }
 
   @Test
-  public void returnsJarBackedJavacWhenJarPathPresent() throws IOException {
+  public void returnsJarBackedJavacWhenJarPathPresent() {
     SourcePath javacJarPath = FakeSourcePath.of("path/to/javac.jar");
 
     specBuilder.setJavacJarPath(javacJarPath);
@@ -120,7 +119,7 @@ public class JavacSpecTest {
   }
 
   @Test
-  public void returnsJarBackedJavacWhenCompilerArgIsPrebuiltJar() throws Exception {
+  public void returnsJarBackedJavacWhenCompilerArgIsPrebuiltJar() {
     Path javacJarPath = Paths.get("langtools").resolve("javac.jar");
     BuildTarget target = BuildTargetFactory.newInstance("//langtools:javac");
     PrebuiltJar prebuiltJar =
@@ -137,7 +136,7 @@ public class JavacSpecTest {
   }
 
   @Test
-  public void compilerArgTakesPrecedenceOverJavacJarArg() throws Exception {
+  public void compilerArgTakesPrecedenceOverJavacJarArg() {
     Path javacJarPath = Paths.get("langtools").resolve("javac.jar");
     BuildTarget target = BuildTargetFactory.newInstance("//langtools:javac");
     PrebuiltJar prebuiltJar =
@@ -157,7 +156,7 @@ public class JavacSpecTest {
   }
 
   @Test
-  public void customCompilerClassNameIsSet() throws IOException {
+  public void customCompilerClassNameIsSet() {
     PathSourcePath javacJarPath = FakeSourcePath.of("javac_jar");
     String compilerClassName = "test.compiler";
     specBuilder.setJavacJarPath(javacJarPath).setCompilerClassName(compilerClassName);

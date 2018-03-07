@@ -82,7 +82,7 @@ public class JavaSourceJarTest {
         DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//cheese:cake"));
 
     JavaPackageFinder finderStub = createNiceMock(JavaPackageFinder.class);
-    expect(finderStub.findJavaPackageFolder((Path) anyObject())).andStubReturn(Paths.get("cheese"));
+    expect(finderStub.findJavaPackageFolder(anyObject())).andStubReturn(Paths.get("cheese"));
     expect(finderStub.findJavaPackage((Path) anyObject())).andStubReturn("cheese");
 
     // No need to verify. It's a stub. I don't care about the interactions.

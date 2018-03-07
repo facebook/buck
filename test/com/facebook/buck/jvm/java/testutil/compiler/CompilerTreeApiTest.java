@@ -111,7 +111,7 @@ public abstract class CompilerTreeApiTest {
           taskListenerFactory.newTaskListener(testCompiler.getJavacTask()));
     }
 
-    final Iterable<? extends CompilationUnitTree> compilationUnits = testCompiler.parse();
+    Iterable<? extends CompilationUnitTree> compilationUnits = testCompiler.parse();
 
     // Make sure we've got elements for things.
     testCompiler.enter();

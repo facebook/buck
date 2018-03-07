@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSortedSet;
-import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -58,7 +57,7 @@ public class JavaFileParserTest {
               "}");
 
   @Test
-  public void testJavaFileParsing() throws IOException {
+  public void testJavaFileParsing() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
 
     ImmutableSortedSet<String> symbols =
@@ -94,7 +93,7 @@ public class JavaFileParserTest {
               "}");
 
   @Test
-  public void testJavaFileParsingWithLocalClassInAnonymousClass() throws IOException {
+  public void testJavaFileParsingWithLocalClassInAnonymousClass() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
 
     ImmutableSortedSet<String> symbols =
@@ -118,7 +117,7 @@ public class JavaFileParserTest {
               "}");
 
   @Test
-  public void testJavaFileParsingWithLocalClass() throws IOException {
+  public void testJavaFileParsingWithLocalClass() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
 
     ImmutableSortedSet<String> symbols =
@@ -133,7 +132,7 @@ public class JavaFileParserTest {
   private static final String JAVA_CODE_WITH_NO_PACKAGE = "public class NoPackageExample { }";
 
   @Test
-  public void testJavaFileParsingWithNoPackage() throws IOException {
+  public void testJavaFileParsingWithNoPackage() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
 
     ImmutableSortedSet<String> symbols =
@@ -149,7 +148,7 @@ public class JavaFileParserTest {
       "public @interface ExampleAnnotationType { }";
 
   @Test
-  public void testJavaFileParsingWithAnnotationType() throws IOException {
+  public void testJavaFileParsingWithAnnotationType() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
 
     ImmutableSortedSet<String> symbols =
@@ -176,7 +175,7 @@ public class JavaFileParserTest {
               "}");
 
   @Test
-  public void testExtractingRequiredSymbols() throws IOException {
+  public void testExtractingRequiredSymbols() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
 
     JavaFileParser.JavaFileFeatures features =
@@ -263,7 +262,7 @@ public class JavaFileParserTest {
               "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithFullyQualifiedReference() throws IOException {
+  public void testExtractingRequiredSymbolsWithFullyQualifiedReference() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
     JavaFileParser.JavaFileFeatures features =
         parser.extractFeaturesFromJavaCode(JAVA_CODE_WITH_FULLY_QUALIFIED_REFERENCES);
@@ -294,7 +293,7 @@ public class JavaFileParserTest {
               "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithStaticImport() throws IOException {
+  public void testExtractingRequiredSymbolsWithStaticImport() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
     JavaFileParser.JavaFileFeatures features =
         parser.extractFeaturesFromJavaCode(JAVA_CODE_WITH_STATIC_IMPORT);
@@ -322,7 +321,7 @@ public class JavaFileParserTest {
               "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithSupportedWildcardImport() throws IOException {
+  public void testExtractingRequiredSymbolsWithSupportedWildcardImport() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
     JavaFileParser.JavaFileFeatures features =
         parser.extractFeaturesFromJavaCode(JAVA_CODE_WITH_SUPPORTED_WILDCARD_IMPORT);
@@ -348,7 +347,7 @@ public class JavaFileParserTest {
               "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithUnsupportedWildcardImport() throws IOException {
+  public void testExtractingRequiredSymbolsWithUnsupportedWildcardImport() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
     JavaFileParser.JavaFileFeatures features =
         parser.extractFeaturesFromJavaCode(JAVA_CODE_WITH_UNSUPPORTED_WILDCARD_IMPORT);
@@ -377,7 +376,7 @@ public class JavaFileParserTest {
               "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithFullyQualifiedThrows() throws IOException {
+  public void testExtractingRequiredSymbolsWithFullyQualifiedThrows() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
     JavaFileParser.JavaFileFeatures features =
         parser.extractFeaturesFromJavaCode(JAVA_CODE_THROWS_FULLY_QUALIFIED_EXCEPTION);
@@ -400,7 +399,7 @@ public class JavaFileParserTest {
               "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithNewTypeInPackage() throws IOException {
+  public void testExtractingRequiredSymbolsWithNewTypeInPackage() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
     JavaFileParser.JavaFileFeatures features =
         parser.extractFeaturesFromJavaCode(JAVA_CODE_INSTANTIATES_CLASS_IN_PACKAGE);
@@ -423,7 +422,7 @@ public class JavaFileParserTest {
               "}");
 
   @Test
-  public void testExtractingRequiredSymbolsRecursesIntoNewCall() throws IOException {
+  public void testExtractingRequiredSymbolsRecursesIntoNewCall() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
     JavaFileParser.JavaFileFeatures features =
         parser.extractFeaturesFromJavaCode(JAVA_CODE_CREATES_IN_PACKAGE_TYPE_WITHIN_PACKAGE_TYPE);
@@ -442,7 +441,7 @@ public class JavaFileParserTest {
               "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithInstanceofCheckInPackage() throws IOException {
+  public void testExtractingRequiredSymbolsWithInstanceofCheckInPackage() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
     JavaFileParser.JavaFileFeatures features =
         parser.extractFeaturesFromJavaCode(JAVA_CODE_DOES_INSTANCEOF_CHECK_FOR_TYPE_WITHIN_PACKAGE);
@@ -461,7 +460,7 @@ public class JavaFileParserTest {
               "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithCastToTypeInPackage() throws IOException {
+  public void testExtractingRequiredSymbolsWithCastToTypeInPackage() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
     JavaFileParser.JavaFileFeatures features =
         parser.extractFeaturesFromJavaCode(JAVA_CODE_DOES_CAST_FOR_TYPE_WITHIN_PACKAGE);
@@ -480,8 +479,7 @@ public class JavaFileParserTest {
               "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithCastToTypeInPackageWithinMethodInvocation()
-      throws IOException {
+  public void testExtractingRequiredSymbolsWithCastToTypeInPackageWithinMethodInvocation() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
     JavaFileParser.JavaFileFeatures features =
         parser.extractFeaturesFromJavaCode(
@@ -501,7 +499,7 @@ public class JavaFileParserTest {
               "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithParamInPackage() throws IOException {
+  public void testExtractingRequiredSymbolsWithParamInPackage() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
     JavaFileParser.JavaFileFeatures features =
         parser.extractFeaturesFromJavaCode(JAVA_CODE_SPECIFIES_PARAM_FOR_TYPE_WITHIN_PACKAGE);
@@ -520,7 +518,7 @@ public class JavaFileParserTest {
               "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithStaticMethodAccess() throws IOException {
+  public void testExtractingRequiredSymbolsWithStaticMethodAccess() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
     JavaFileParser.JavaFileFeatures features =
         parser.extractFeaturesFromJavaCode(JAVA_CODE_SPECIFIES_STATIC_METHOD_IN_PACKAGE);
@@ -541,8 +539,7 @@ public class JavaFileParserTest {
               "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithTypeOnlyReferencedAsLocalVariable()
-      throws IOException {
+  public void testExtractingRequiredSymbolsWithTypeOnlyReferencedAsLocalVariable() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
     JavaFileParser.JavaFileFeatures features =
         parser.extractFeaturesFromJavaCode(JAVA_CODE_SPECIFIES_TYPE_IN_PACKAGE);
@@ -568,7 +565,7 @@ public class JavaFileParserTest {
               "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithPropertyLookupExpression() throws IOException {
+  public void testExtractingRequiredSymbolsWithPropertyLookupExpression() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
     JavaFileParser.JavaFileFeatures features =
         parser.extractFeaturesFromJavaCode(PROPERTY_LOOKUP_EXPRESSION);
@@ -609,7 +606,7 @@ public class JavaFileParserTest {
               "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithNonTrivialJavaLogic() throws IOException {
+  public void testExtractingRequiredSymbolsWithNonTrivialJavaLogic() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
     JavaFileParser.JavaFileFeatures features =
         parser.extractFeaturesFromJavaCode(JAVA_FULL_FEATURED_EXAMPLE);
@@ -673,7 +670,7 @@ public class JavaFileParserTest {
               "}");
 
   @Test
-  public void testExtractingExportedTypes() throws IOException {
+  public void testExtractingExportedTypes() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
     JavaFileParser.JavaFileFeatures features =
         parser.extractFeaturesFromJavaCode(EXPORTED_TYPES_EXAMPLE);
@@ -708,8 +705,7 @@ public class JavaFileParserTest {
               "}");
 
   @Test
-  public void testExtractingExportedTypesFromInterfaceThatExtendsInterfaceFromAnotherPackage()
-      throws IOException {
+  public void testExtractingExportedTypesFromInterfaceThatExtendsInterfaceFromAnotherPackage() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
     JavaFileParser.JavaFileFeatures features =
         parser.extractFeaturesFromJavaCode(EXPORTED_TYPES_INTERFACE_EXAMPLE);
@@ -730,7 +726,7 @@ public class JavaFileParserTest {
               "}");
 
   @Test
-  public void testExtractingExportedTypesFromSuperclassWithAGeneric() throws IOException {
+  public void testExtractingExportedTypesFromSuperclassWithAGeneric() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
     JavaFileParser.JavaFileFeatures features =
         parser.extractFeaturesFromJavaCode(EXPORTED_TYPES_SUPERCLASS_WITH_GENERIC);
@@ -754,7 +750,7 @@ public class JavaFileParserTest {
 
   /** This is a case that we ran into in Buck's own source code. */
   @Test
-  public void testExtractingExportedTypesWithClassThatLooksLikeAGeneric() throws IOException {
+  public void testExtractingExportedTypesWithClassThatLooksLikeAGeneric() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
     JavaFileParser.JavaFileFeatures features =
         parser.extractFeaturesFromJavaCode(EXPORTED_TYPES_WITH_CLASS_THAT_LOOKS_LIKE_A_GENERIC);

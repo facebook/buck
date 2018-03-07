@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestBuildRuleResolver;
@@ -115,8 +114,7 @@ public class CopyResourcesStepTest {
   }
 
   @Test
-  public void testAddResourceCommandsWithBuildFileParentOfJavaPackage()
-      throws InterruptedException {
+  public void testAddResourceCommandsWithBuildFileParentOfJavaPackage() {
     // Files:
     // android/java/src/BUCK
     // android/java/src/com/facebook/base/data.json
@@ -138,7 +136,7 @@ public class CopyResourcesStepTest {
             buildTarget,
             ResourcesParameters.builder()
                 .setResources(
-                    ImmutableSortedSet.<SourcePath>of(
+                    ImmutableSortedSet.of(
                         FakeSourcePath.of(
                             filesystem, "android/java/src/com/facebook/base/data.json"),
                         FakeSourcePath.of(
@@ -183,7 +181,7 @@ public class CopyResourcesStepTest {
   }
 
   @Test
-  public void testAddResourceCommandsWithBuildFileInJavaPackage() throws InterruptedException {
+  public void testAddResourceCommandsWithBuildFileInJavaPackage() {
     // Files:
     // android/java/src/com/facebook/BUCK
     // android/java/src/com/facebook/base/data.json

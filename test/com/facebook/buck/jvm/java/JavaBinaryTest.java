@@ -48,7 +48,7 @@ public class JavaBinaryTest {
   private static final Path PATH_TO_GENERATOR_JAR = Paths.get("third_party/guava/generator.jar");
 
   @Test
-  public void testGetExecutableCommand() throws Exception {
+  public void testGetExecutableCommand() {
     // prebuilt_jar //third_party/generator:generator
     PrebuiltJarBuilder.createBuilder(
             BuildTargetFactory.newInstance("//third_party/generator:generator"))

@@ -68,8 +68,7 @@ public class KotlinBuckConfigTest {
         FakeBuckConfig.builder()
             .setSections(ImmutableMap.of("kotlin", ImmutableMap.of("external", "true")))
             .setEnvironment(
-                ImmutableMap.of(
-                    "PATH", kotlinHome.toString() + pathSeparator + System.getenv("PATH")))
+                ImmutableMap.of("PATH", kotlinHome + pathSeparator + System.getenv("PATH")))
             .build();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
@@ -88,8 +87,7 @@ public class KotlinBuckConfigTest {
         FakeBuckConfig.builder()
             .setSections(ImmutableMap.of("kotlin", ImmutableMap.of("external", "true")))
             .setEnvironment(
-                ImmutableMap.of(
-                    "PATH", kotlinHome.toString() + pathSeparator + System.getenv("PATH")))
+                ImmutableMap.of("PATH", kotlinHome + pathSeparator + System.getenv("PATH")))
             .build();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
@@ -146,7 +144,7 @@ public class KotlinBuckConfigTest {
 
   @Test
   public void testFindsKotlinCompilerInConfigWithRelativePath()
-      throws HumanReadableException, InterruptedException, IOException {
+      throws HumanReadableException, IOException {
     // Get faux kotlinc binary location in project
     Path kotlinHome = testDataDirectory.resolve("faux_kotlin_home").normalize();
     Path kotlinCompiler = kotlinHome.resolve("bin").resolve("kotlinc");
@@ -169,8 +167,7 @@ public class KotlinBuckConfigTest {
   }
 
   @Test
-  public void testFindsKotlinCompilerJarInConfigWithAbsolutePath()
-      throws HumanReadableException, InterruptedException, IOException {
+  public void testFindsKotlinCompilerJarInConfigWithAbsolutePath() throws HumanReadableException {
 
     Path kotlinRuntime =
         testDataDirectory
@@ -197,8 +194,7 @@ public class KotlinBuckConfigTest {
   }
 
   @Test
-  public void testFindsKotlinCompilerJarInConfigWithAbsolutePath2()
-      throws HumanReadableException, InterruptedException, IOException {
+  public void testFindsKotlinCompilerJarInConfigWithAbsolutePath2() throws HumanReadableException {
 
     Path kotlinRuntime =
         testDataDirectory
@@ -240,8 +236,7 @@ public class KotlinBuckConfigTest {
             .setSections(ImmutableMap.of("kotlin", ImmutableMap.of("external", "true")))
             .setEnvironment(
                 ImmutableMap.of(
-                    "PATH",
-                    kotlinCompiler.getParent().toString() + pathSeparator + System.getenv("PATH")))
+                    "PATH", kotlinCompiler.getParent() + pathSeparator + System.getenv("PATH")))
             .build();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
@@ -251,8 +246,7 @@ public class KotlinBuckConfigTest {
   }
 
   @Test
-  public void testFindsKotlinStdlibJarInConfigWithAbsolutePath()
-      throws HumanReadableException, InterruptedException, IOException {
+  public void testFindsKotlinStdlibJarInConfigWithAbsolutePath() throws HumanReadableException {
 
     Path kotlinRuntime =
         testDataDirectory
@@ -279,8 +273,7 @@ public class KotlinBuckConfigTest {
   }
 
   @Test
-  public void testFindsKotlinStdlibJarInConfigWithAbsolutePath2()
-      throws HumanReadableException, InterruptedException, IOException {
+  public void testFindsKotlinStdlibJarInConfigWithAbsolutePath2() throws HumanReadableException {
 
     Path kotlinRuntime =
         testDataDirectory
@@ -312,8 +305,7 @@ public class KotlinBuckConfigTest {
   }
 
   @Test
-  public void testFindsKotlinStdlibJarInConfigWithRelativePath()
-      throws HumanReadableException, InterruptedException, IOException {
+  public void testFindsKotlinStdlibJarInConfigWithRelativePath() throws HumanReadableException {
 
     BuckConfig buckConfig =
         FakeBuckConfig.builder()

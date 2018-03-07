@@ -41,7 +41,7 @@ public class JvmLibraryArgInterpreterTest {
   private BuildRuleResolver ruleResolver;
 
   @Before
-  public void createHelpers() throws Exception {
+  public void createHelpers() {
     defaults = JavacOptions.builder().setSourceLevel("8").setTargetLevel("8").build();
 
     ruleResolver = new TestBuildRuleResolver();

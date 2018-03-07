@@ -43,11 +43,10 @@ import org.junit.rules.TemporaryFolder;
 public class ClasspathTraversalTest {
   @Rule public TemporaryFolder tempDir = new TemporaryFolder();
 
-  private Map<FileLike, String> traverse(Collection<File> files)
-      throws InterruptedException, IOException {
+  private Map<FileLike, String> traverse(Collection<File> files) throws IOException {
     Collection<Path> paths =
         files.stream().map(File::toPath).collect(ImmutableList.toImmutableList());
-    final ImmutableMap.Builder<FileLike, String> completeList = ImmutableMap.builder();
+    ImmutableMap.Builder<FileLike, String> completeList = ImmutableMap.builder();
     ClasspathTraverser traverser = new DefaultClasspathTraverser();
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tempDir.getRoot().toPath());

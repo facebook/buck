@@ -38,10 +38,10 @@ public class ExternalJavacIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void whenExternalJavacIsSetCompilationSucceeds() throws IOException, InterruptedException {
+  public void whenExternalJavacIsSetCompilationSucceeds() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
-    final ProjectWorkspace workspace =
+    ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "external_javac", tmp);
 
     workspace.setUp();
@@ -55,10 +55,10 @@ public class ExternalJavacIntegrationTest {
 
   @Test
   @Ignore("Disabled due to badness t4689997")
-  public void whenExternalSrcZipUsedCompilationSucceeds() throws IOException, InterruptedException {
+  public void whenExternalSrcZipUsedCompilationSucceeds() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
-    final ProjectWorkspace workspace =
+    ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "external_javac_src_zip", tmp);
 
     workspace.setUp();
@@ -72,11 +72,10 @@ public class ExternalJavacIntegrationTest {
   }
 
   @Test
-  public void whenExternalJavacFailsOutputIsInFailureMessage()
-      throws IOException, InterruptedException {
+  public void whenExternalJavacFailsOutputIsInFailureMessage() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
-    final ProjectWorkspace workspace =
+    ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "external_javac", tmp);
     workspace.setUp();
 
@@ -98,7 +97,7 @@ public class ExternalJavacIntegrationTest {
 
   @Test
   public void whenBuckdUsesExternalJavacThenClientEnvironmentUsed() throws IOException {
-    final ProjectWorkspace workspace =
+    ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "external_javac", tmp);
     workspace.setUp();
 

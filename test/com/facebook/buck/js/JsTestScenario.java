@@ -110,7 +110,7 @@ public class JsTestScenario {
     }
 
     public Builder bundle(BuildTarget target, ImmutableSortedSet<BuildTarget> deps) {
-      final Either<ImmutableSet<String>, String> entry = Either.ofLeft(ImmutableSet.of());
+      Either<ImmutableSet<String>, String> entry = Either.ofLeft(ImmutableSet.of());
       nodes.add(new JsBundleBuilder(target, workerTarget, entry, filesystem).setDeps(deps).build());
 
       return this;
@@ -183,8 +183,8 @@ public class JsTestScenario {
     }
 
     public JsTestScenario build() {
-      final TargetGraph graph = TargetGraphFactory.newInstance(nodes);
-      final BuildRuleResolver resolver = new TestBuildRuleResolver(graph);
+      TargetGraph graph = TargetGraphFactory.newInstance(nodes);
+      BuildRuleResolver resolver = new TestBuildRuleResolver(graph);
       for (TargetNode<?, ?> node : nodes) {
         resolver.requireRule(node.getBuildTarget());
       }

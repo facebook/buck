@@ -43,7 +43,7 @@ public class JavaTestDescriptionTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void rulesExportedFromDepsBecomeFirstOrderDeps() throws Exception {
+  public void rulesExportedFromDepsBecomeFirstOrderDeps() {
     TargetNode<?, ?> exportedNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
@@ -78,7 +78,7 @@ public class JavaTestDescriptionTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() throws Exception {
+  public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() {
     TargetNode<?, ?> exportedNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)

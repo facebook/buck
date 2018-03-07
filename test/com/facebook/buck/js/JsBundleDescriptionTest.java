@@ -75,7 +75,7 @@ public class JsBundleDescriptionTest {
 
   @Test
   public void testTransitiveLibraryDependenciesWithFlavors() throws NoSuchBuildTargetException {
-    final Flavor[] flavors = {JsFlavors.IOS, JsFlavors.RELEASE};
+    Flavor[] flavors = {JsFlavors.IOS, JsFlavors.RELEASE};
     BuildRule jsBundle = scenario.resolver.requireRule(bundleTarget.withFlavors(flavors));
     assertThat(allLibaryTargets(flavors), everyItem(in(dependencyTargets(jsBundle))));
   }
@@ -119,7 +119,7 @@ public class JsBundleDescriptionTest {
   @Test
   public void testTransitiveLibraryDependenciesWithFlavorsForAndroid()
       throws NoSuchBuildTargetException {
-    final Flavor[] flavors = {JsFlavors.ANDROID, JsFlavors.RELEASE};
+    Flavor[] flavors = {JsFlavors.ANDROID, JsFlavors.RELEASE};
     BuildRule jsBundle = scenario.resolver.requireRule(bundleTarget.withFlavors(flavors));
     assertThat(allLibaryTargets(flavors), everyItem(in(dependencyTargets(jsBundle))));
   }
@@ -142,8 +142,8 @@ public class JsBundleDescriptionTest {
 
   @Test
   public void testJsLibraryInDeps() throws NoSuchBuildTargetException {
-    final BuildTarget bundleTarget = BuildTargetFactory.newInstance("//the:bundle");
-    final JsTestScenario testScenario =
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//the:bundle");
+    JsTestScenario testScenario =
         JsTestScenario.builder(scenario)
             .bundleWithDeps(bundleTarget, directDependencyTarget)
             .build();
@@ -154,14 +154,14 @@ public class JsBundleDescriptionTest {
 
   @Test
   public void testTransitiveDependenciesAcrossSubGraph() throws NoSuchBuildTargetException {
-    final BuildTarget firstLevelA = BuildTargetFactory.newInstance("//:firstA");
-    final BuildTarget firstLevelB = BuildTargetFactory.newInstance("//:firstB");
-    final BuildTarget secondLevelA = BuildTargetFactory.newInstance("//:secondA");
-    final BuildTarget secondLevelB = BuildTargetFactory.newInstance("//:secondB");
-    final BuildTarget bundleTarget = BuildTargetFactory.newInstance("//the:bundle");
+    BuildTarget firstLevelA = BuildTargetFactory.newInstance("//:firstA");
+    BuildTarget firstLevelB = BuildTargetFactory.newInstance("//:firstB");
+    BuildTarget secondLevelA = BuildTargetFactory.newInstance("//:secondA");
+    BuildTarget secondLevelB = BuildTargetFactory.newInstance("//:secondB");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//the:bundle");
 
-    final JsTestScenario.Builder builder = JsTestScenario.builder(scenario);
-    final JsTestScenario testScenario =
+    JsTestScenario.Builder builder = JsTestScenario.builder(scenario);
+    JsTestScenario testScenario =
         builder
             .appleLibraryWithDeps(firstLevelA, level1_1)
             .library(secondLevelA)
@@ -170,9 +170,9 @@ public class JsBundleDescriptionTest {
             .bundleWithDeps(bundleTarget, firstLevelA, firstLevelB)
             .build();
 
-    final Flavor[] flavors = {JsFlavors.IOS, JsFlavors.RELEASE};
-    final BuildRule jsBundle = testScenario.resolver.requireRule(bundleTarget.withFlavors(flavors));
-    final List<BuildTarget> expectedLibDeps =
+    Flavor[] flavors = {JsFlavors.IOS, JsFlavors.RELEASE};
+    BuildRule jsBundle = testScenario.resolver.requireRule(bundleTarget.withFlavors(flavors));
+    List<BuildTarget> expectedLibDeps =
         Stream.of(level1_1, level1_2, level2, secondLevelA)
             .map(t -> t.withAppendedFlavors(flavors))
             .collect(Collectors.toList());
@@ -182,7 +182,7 @@ public class JsBundleDescriptionTest {
 
   private static Collection<BuildTarget> dependencyTargets(BuildRule rule) {
     if (rule instanceof JsBundleAndroid) {
-      final JsBundle jsBundle =
+      JsBundle jsBundle =
           RichStream.from(rule.getBuildDeps()).filter(JsBundle.class).findFirst().get();
       return dependencyTargets(jsBundle);
     } else {

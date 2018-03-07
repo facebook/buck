@@ -42,7 +42,7 @@ public class KeystoreTest {
   }
 
   @Test
-  public void testObservers() throws Exception {
+  public void testObservers() {
     Keystore keystore = createKeystoreRuleForTest();
     assertEquals("keystore", keystore.getType());
 
@@ -53,7 +53,7 @@ public class KeystoreTest {
   }
 
   @Test
-  public void testBuildInternal() throws Exception {
+  public void testBuildInternal() {
     BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
 
     Keystore keystore = createKeystoreRuleForTest();

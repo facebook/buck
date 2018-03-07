@@ -28,8 +28,7 @@ public class CopyResourcesStepMustCorrectlyParseFilepathIntegrationTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
-  public void testGeneratedResourceIsAlongsideClassFiles()
-      throws IOException, InterruptedException {
+  public void testGeneratedResourceIsAlongsideClassFiles() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "wont_delete", temporaryFolder);
     workspace.setUp();

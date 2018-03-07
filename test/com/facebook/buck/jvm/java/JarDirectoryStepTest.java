@@ -118,7 +118,7 @@ public class JarDirectoryStepTest {
             "com/example/common/Helper.class");
     Path second = createZip(jarDirectory.resolve("b.jar"), "com/example/common/Helper.class");
 
-    final Path outputPath = Paths.get("output.jar");
+    Path outputPath = Paths.get("output.jar");
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(jarDirectory);
     JarDirectoryStep step =
         new JarDirectoryStep(
@@ -131,12 +131,12 @@ public class JarDirectoryStepTest {
                 .build());
     ExecutionContext context = TestExecutionContext.newInstance();
 
-    final BuckEventBusForTests.CapturingConsoleEventListener listener =
+    BuckEventBusForTests.CapturingConsoleEventListener listener =
         new BuckEventBusForTests.CapturingConsoleEventListener();
     context.getBuckEventBus().register(listener);
 
     step.execute(context);
-    final String expectedMessage =
+    String expectedMessage =
         String.format(
             "Duplicate found when adding 'com/example/common/Helper.class' to '%s' from '%s'",
             filesystem.getPathForRelativePath(outputPath), second.toAbsolutePath());
@@ -596,7 +596,7 @@ public class JarDirectoryStepTest {
   }
 
   private void assertZipContains(Path zip, String... files) throws IOException {
-    final Set<String> contents = getFileNames(zip);
+    Set<String> contents = getFileNames(zip);
 
     for (String file : files) {
       assertTrue(String.format("%s -> %s", file, contents), contents.contains(file));
@@ -604,7 +604,7 @@ public class JarDirectoryStepTest {
   }
 
   private void assertZipDoesNotContain(Path zip, String... files) throws IOException {
-    final Set<String> contents = getFileNames(zip);
+    Set<String> contents = getFileNames(zip);
 
     for (String file : files) {
       assertFalse(String.format("%s -> %s", file, contents), contents.contains(file));

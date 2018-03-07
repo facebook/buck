@@ -87,11 +87,7 @@ public class Jsr199JavacIntegrationTest {
 
     assertEquals(
         String.format(
-            "javac -source %s -target %s -g "
-                + "-d %s "
-                + "-classpath '' "
-                + "@"
-                + pathToSrcsList.toString(),
+            "javac -source %s -target %s -g " + "-d %s " + "-classpath '' " + "@" + pathToSrcsList,
             JavacOptions.TARGETED_JAVA_VERSION,
             JavacOptions.TARGETED_JAVA_VERSION,
             pathToOutputDir),
@@ -345,7 +341,7 @@ public class Jsr199JavacIntegrationTest {
     return createJavac(withSyntaxError, Optional.empty());
   }
 
-  private ProjectFilesystem createProjectFilesystem() throws InterruptedException {
+  private ProjectFilesystem createProjectFilesystem() {
     return TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
   }
 

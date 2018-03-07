@@ -126,7 +126,7 @@ public class GenerateCodeCoverageReportStepTest {
 
   @Test
   public void testJarFileIsExtracted() throws Throwable {
-    final File[] extractedDir = new File[2];
+    File[] extractedDir = new File[2];
     step =
         new GenerateCodeCoverageReportStep(
             JavaCompilationConstants.DEFAULT_JAVA_COMMAND_PREFIX,
@@ -157,7 +157,7 @@ public class GenerateCodeCoverageReportStepTest {
 
   @Test
   public void testClassesDirIsUntouched() throws Throwable {
-    final File classesDir = tmp.newFolder("classesDir");
+    File classesDir = tmp.newFolder("classesDir");
     jarFiles.clear();
     jarFiles.add(classesDir.toPath());
 

@@ -207,7 +207,7 @@ public class JavacStepTest {
   }
 
   @Test
-  public void bootclasspathResolvedToAbsolutePath() throws Exception {
+  public void bootclasspathResolvedToAbsolutePath() {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);

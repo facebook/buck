@@ -255,12 +255,12 @@ public class JarBuilderTest {
 
     @Nullable
     @Override
-    public Manifest getManifest() throws IOException {
+    public Manifest getManifest() {
       return manifest;
     }
 
     @Override
-    public Stream<JarEntrySupplier> stream() throws IOException {
+    public Stream<JarEntrySupplier> stream() {
       return suppliers.stream();
     }
 

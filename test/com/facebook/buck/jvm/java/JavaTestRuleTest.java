@@ -40,7 +40,7 @@ import org.junit.Test;
 public class JavaTestRuleTest {
 
   @Test
-  public void shouldNotAmendVmArgsIfTargetDeviceIsNotPresent() throws Exception {
+  public void shouldNotAmendVmArgsIfTargetDeviceIsNotPresent() {
     ImmutableList<String> vmArgs = ImmutableList.of("--one", "--two", "--three");
     JavaTest rule = newRule(vmArgs);
 
@@ -51,7 +51,7 @@ public class JavaTestRuleTest {
   }
 
   @Test
-  public void shouldAddEmulatorTargetDeviceToVmArgsIfPresent() throws Exception {
+  public void shouldAddEmulatorTargetDeviceToVmArgsIfPresent() {
     ImmutableList<String> vmArgs = ImmutableList.of("--one");
     JavaTest rule = newRule(vmArgs);
 
@@ -64,7 +64,7 @@ public class JavaTestRuleTest {
   }
 
   @Test
-  public void shouldAddRealTargetDeviceToVmArgsIfPresent() throws Exception {
+  public void shouldAddRealTargetDeviceToVmArgsIfPresent() {
     ImmutableList<String> vmArgs = ImmutableList.of("--one");
     JavaTest rule = newRule(vmArgs);
 
@@ -77,7 +77,7 @@ public class JavaTestRuleTest {
   }
 
   @Test
-  public void shouldAddDeviceSerialIdToVmArgsIfPresent() throws Exception {
+  public void shouldAddDeviceSerialIdToVmArgsIfPresent() {
     ImmutableList<String> vmArgs = ImmutableList.of("--one");
     JavaTest rule = newRule(vmArgs);
 

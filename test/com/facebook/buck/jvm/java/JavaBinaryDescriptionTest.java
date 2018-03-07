@@ -65,7 +65,7 @@ public class JavaBinaryDescriptionTest {
   }
 
   @Test
-  public void defaultCxxPlatform() throws Exception {
+  public void defaultCxxPlatform() {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.DEFAULT_PLATFORM.withFlavor(InternalFlavor.of("newplatform"));
     SourcePath lib = FakeSourcePath.of("lib");
