@@ -54,8 +54,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
     AndroidManifestFactory androidManifestFactory = new AndroidManifestFactory();
 
     return Arrays.asList(
-        new AndroidAarDescription(
-            toolchainProvider, androidManifestFactory, cxxBuckConfig, javaConfig),
+        new AndroidAarDescription(androidManifestFactory, cxxBuckConfig, javaConfig),
         new AndroidManifestDescription(androidManifestFactory),
         new AndroidAppModularityDescription(),
         new AndroidBinaryDescription(
