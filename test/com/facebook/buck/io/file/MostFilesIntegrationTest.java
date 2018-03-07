@@ -41,7 +41,7 @@ public class MostFilesIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void testCopyTestdataDirectoryWithSymlinks() throws IOException, InterruptedException {
+  public void testCopyTestdataDirectoryWithSymlinks() throws IOException {
     Platform platform = Platform.detect();
     Assume.assumeTrue(platform == Platform.LINUX || platform == Platform.MACOS);
 

@@ -23,7 +23,6 @@ import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal.CycleExceptio
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -51,7 +50,7 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
    * </pre>
    */
   @Test
-  public void testExpectedTraversal() throws CycleException, IOException, InterruptedException {
+  public void testExpectedTraversal() throws CycleException {
     Multimap<String, String> graph = LinkedListMultimap.create();
     graph.put("A", "B");
     graph.put("A", "C");
@@ -84,7 +83,7 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
    * Note that there is a circular dependency from F -> C -> E -> F.
    */
   @Test
-  public void testCycleDetection() throws IOException, InterruptedException, CycleException {
+  public void testCycleDetection() {
     Multimap<String, String> graph = LinkedListMultimap.create();
     graph.put("A", "B");
     graph.put("A", "C");
@@ -109,7 +108,7 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
 
   /** Ensures that a cycle is detected in a trivial graph of a single node that points to itself. */
   @Test
-  public void testTrivialCycle() throws IOException, InterruptedException, CycleException {
+  public void testTrivialCycle() {
     Multimap<String, String> graph = LinkedListMultimap.create();
     graph.put("A", "A");
     TestDagDepthFirstSearch dfs = new TestDagDepthFirstSearch(graph);
@@ -138,8 +137,7 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
    * </pre>
    */
   @Test
-  public void testCycleExceptionDoesNotContainUnrelatedNodes()
-      throws IOException, InterruptedException, CycleException {
+  public void testCycleExceptionDoesNotContainUnrelatedNodes() {
     Multimap<String, String> graph = LinkedListMultimap.create();
     graph.put("A", "B");
     graph.put("B", "C");
@@ -169,12 +167,9 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
    *   / | \
    * C   D   E
    * </pre>
-   *
-   * @throws CycleException
    */
   @Test
-  public void testTraverseMultipleInitialNodes()
-      throws CycleException, IOException, InterruptedException, CycleException {
+  public void testTraverseMultipleInitialNodes() throws CycleException {
     Multimap<String, String> graph = LinkedListMultimap.create();
     graph.put("A", "B");
     graph.put("B", "C");

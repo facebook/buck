@@ -108,7 +108,7 @@ public class ProjectViewIntegrationTest {
     assertTrue(Files.isSymbolicLink(buckOut));
   }
 
-  private void checkResDirectory() throws IOException {
+  private void checkResDirectory() {
     Path resDirectory = viewPath.resolve("res");
     assertTrue(Files.exists(resDirectory));
     assertTrue(Files.isDirectory(resDirectory));

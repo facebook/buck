@@ -68,7 +68,7 @@ public class IjSourceRootSimplifierTest {
     return fakePackageFinder(ImmutableMap.of());
   }
 
-  private static JavaPackageFinder fakePackageFinder(final ImmutableMap<Path, Path> packageMap) {
+  private static JavaPackageFinder fakePackageFinder(ImmutableMap<Path, Path> packageMap) {
     return new JavaPackageFinder() {
       @Override
       public Path findJavaPackageFolder(Path pathRelativeToProjectRoot) {

@@ -47,7 +47,7 @@ abstract class GoAssumptions {
   private static final Pattern VERSION_PATTERN =
       Pattern.compile("^go version go(\\d+)\\.(\\d+)\\.(\\d+).*$");
 
-  public static void assumeGoCompilerAvailable() throws InterruptedException, IOException {
+  public static void assumeGoCompilerAvailable() throws IOException {
     Throwable exception = null;
     try {
       ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());

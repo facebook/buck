@@ -34,7 +34,7 @@ import org.junit.Test;
 public class HaskellBinaryDescriptionTest {
 
   @Test
-  public void compilerFlags() throws Exception {
+  public void compilerFlags() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     String flag = "-compiler-flag";
     HaskellBinaryBuilder builder =
@@ -50,7 +50,7 @@ public class HaskellBinaryDescriptionTest {
   }
 
   @Test
-  public void depQuery() throws Exception {
+  public void depQuery() {
     HaskellLibraryBuilder transitiveDepBuilder =
         new HaskellLibraryBuilder(BuildTargetFactory.newInstance("//:transitive_dep"));
     HaskellLibraryBuilder depBuilder =

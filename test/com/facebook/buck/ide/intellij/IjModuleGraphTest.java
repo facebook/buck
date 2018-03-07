@@ -462,8 +462,8 @@ public class IjModuleGraphTest {
 
   @Test
   public void testExtraClassPath() {
-    final Path rDotJavaClassPath = Paths.get("buck-out/product/rdotjava_classpath");
-    final TargetNode<?, ?> productTarget =
+    Path rDotJavaClassPath = Paths.get("buck-out/product/rdotjava_classpath");
+    TargetNode<?, ?> productTarget =
         AndroidLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/src/com/facebook/product:product"))
             .addSrc(Paths.get("java/src/com/facebook/File.java"))
@@ -620,7 +620,7 @@ public class IjModuleGraphTest {
 
   public static IjModuleGraph createModuleGraph(
       ImmutableSet<TargetNode<?, ?>> targets,
-      final ImmutableMap<TargetNode<?, ?>, SourcePath> javaLibraryPaths,
+      ImmutableMap<TargetNode<?, ?>, SourcePath> javaLibraryPaths,
       Function<? super TargetNode<?, ?>, Optional<Path>> rDotJavaClassPathResolver) {
     return createModuleGraph(
         targets, javaLibraryPaths, rDotJavaClassPathResolver, AggregationMode.AUTO);
@@ -628,10 +628,10 @@ public class IjModuleGraphTest {
 
   public static IjModuleGraph createModuleGraph(
       ImmutableSet<TargetNode<?, ?>> targets,
-      final ImmutableMap<TargetNode<?, ?>, SourcePath> javaLibraryPaths,
-      final Function<? super TargetNode<?, ?>, Optional<Path>> rDotJavaClassPathResolver,
+      ImmutableMap<TargetNode<?, ?>, SourcePath> javaLibraryPaths,
+      Function<? super TargetNode<?, ?>, Optional<Path>> rDotJavaClassPathResolver,
       AggregationMode aggregationMode) {
-    final SourcePathResolver sourcePathResolver =
+    SourcePathResolver sourcePathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     IjLibraryFactoryResolver sourceOnlyResolver =
         new IjLibraryFactoryResolver() {
@@ -719,7 +719,7 @@ public class IjModuleGraphTest {
   }
 
   public static IjProjectElement getProjectElementForTarget(
-      IjModuleGraph graph, Class<? extends IjProjectElement> type, final TargetNode<?, ?> target) {
+      IjModuleGraph graph, Class<? extends IjProjectElement> type, TargetNode<?, ?> target) {
     return FluentIterable.from(graph.getNodes())
         .filter(type)
         .firstMatch(
@@ -729,11 +729,11 @@ public class IjModuleGraphTest {
         .get();
   }
 
-  public static IjModule getModuleForTarget(IjModuleGraph graph, final TargetNode<?, ?> target) {
+  public static IjModule getModuleForTarget(IjModuleGraph graph, TargetNode<?, ?> target) {
     return (IjModule) getProjectElementForTarget(graph, IjModule.class, target);
   }
 
-  public static IjLibrary getLibraryForTarget(IjModuleGraph graph, final TargetNode<?, ?> target) {
+  public static IjLibrary getLibraryForTarget(IjModuleGraph graph, TargetNode<?, ?> target) {
     return (IjLibrary) getProjectElementForTarget(graph, IjLibrary.class, target);
   }
 }

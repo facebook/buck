@@ -144,7 +144,7 @@ public class ExecutableFinderTest {
   }
 
   @Test
-  public void testSearchPathsEmptyReturnsAbsent() throws IOException {
+  public void testSearchPathsEmptyReturnsAbsent() {
     assertEquals(
         Optional.empty(),
         new ExecutableFinder()
@@ -215,7 +215,7 @@ public class ExecutableFinderTest {
   }
 
   @Test
-  public void testThatEmptyDirectoryDoesNotHaveSwift() throws IOException {
+  public void testThatEmptyDirectoryDoesNotHaveSwift() {
     assertEquals(
         Optional.empty(), new ExecutableFinder().getOptionalToolPath("swift", ImmutableList.of()));
   }

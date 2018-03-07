@@ -24,7 +24,6 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.testutil.PredicateMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -71,7 +70,7 @@ public class WatchmanDiagnosticEventListenerTest {
   }
 
   @Test
-  public void deduplicatesEvents() throws IOException {
+  public void deduplicatesEvents() {
     WatchmanDiagnostic diagnostic =
         WatchmanDiagnostic.of(WatchmanDiagnostic.Level.WARNING, "a warning");
     WatchmanDiagnostic equalDiagnostic =

@@ -49,7 +49,7 @@ import org.junit.Test;
 public class HaskellPrebuiltLibraryDescriptionTest {
 
   @Test
-  public void staticLibraries() throws Exception {
+  public void staticLibraries() {
     PathSourcePath lib = FakeSourcePath.of("libfoo.a");
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     PrebuiltHaskellLibraryBuilder builder =
@@ -76,7 +76,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
   }
 
   @Test
-  public void sharedLibraries() throws Exception {
+  public void sharedLibraries() {
     PathSourcePath lib = FakeSourcePath.of("libfoo.so");
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     PrebuiltHaskellLibraryBuilder builder =
@@ -103,7 +103,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
   }
 
   @Test
-  public void interfaces() throws Exception {
+  public void interfaces() {
     PathSourcePath interfaces = FakeSourcePath.of("interfaces");
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     PrebuiltHaskellLibraryBuilder builder =
@@ -122,7 +122,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
   }
 
   @Test
-  public void packageDb() throws Exception {
+  public void packageDb() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     PathSourcePath db = FakeSourcePath.of("package.conf.d");
     PrebuiltHaskellLibraryBuilder builder =
@@ -138,7 +138,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
   }
 
   @Test
-  public void packageInfo() throws Exception {
+  public void packageInfo() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     PrebuiltHaskellLibraryBuilder builder =
         new PrebuiltHaskellLibraryBuilder(target)
@@ -158,7 +158,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
   }
 
   @Test
-  public void exportedLinkerFlags() throws Exception {
+  public void exportedLinkerFlags() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     String flag = "-exported-linker-flags";
     PrebuiltHaskellLibraryBuilder builder =
@@ -183,7 +183,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
   }
 
   @Test
-  public void exportedCompilerFlags() throws Exception {
+  public void exportedCompilerFlags() {
     String flag = "-exported-compiler-flags";
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     PrebuiltHaskellLibraryBuilder builder =
@@ -206,7 +206,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
   }
 
   @Test
-  public void cxxHeaderDirs() throws Exception {
+  public void cxxHeaderDirs() {
     PathSourcePath interfaces = FakeSourcePath.of("interfaces");
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     PathSourcePath path = FakeSourcePath.of("include_dir");

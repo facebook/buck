@@ -67,7 +67,7 @@ public class RemoteFileTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void ensureOutputIsAddedToBuildableContextSoItIsCached() throws Exception {
+  public void ensureOutputIsAddedToBuildableContextSoItIsCached() {
     Downloader downloader = new ExplodingDownloader();
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:cake");
     BuildRuleResolver resolver = new TestBuildRuleResolver();
@@ -140,7 +140,7 @@ public class RemoteFileTest {
   @Test
   public void shouldUnzipExplodedArchive() throws Exception {
     // zip archive of a directory called hello, which contains hello.txt file with "hello\n" content
-    final byte[] archiveContent = {
+    byte[] archiveContent = {
       0x50,
       0x4B,
       0x03,
@@ -505,7 +505,7 @@ public class RemoteFileTest {
     };
   }
 
-  private static Matcher<Path> hasContent(final byte[] content) {
+  private static Matcher<Path> hasContent(byte[] content) {
     return new BaseMatcher<Path>() {
       @Override
       public boolean matches(Object o) {
@@ -537,7 +537,7 @@ public class RemoteFileTest {
     return runTheMagic(downloader, contentsOfFile.getBytes(UTF_8), hashCode, type);
   }
 
-  private Path runTheMagic(final byte[] contentsOfFile, HashCode hashCode, RemoteFile.Type type)
+  private Path runTheMagic(byte[] contentsOfFile, HashCode hashCode, RemoteFile.Type type)
       throws Exception {
 
     Downloader downloader =
@@ -551,7 +551,7 @@ public class RemoteFileTest {
 
   private Path runTheMagic(
       @Nullable Downloader downloader,
-      final byte[] contentsOfFile,
+      byte[] contentsOfFile,
       HashCode hashCode,
       RemoteFile.Type type)
       throws Exception {

@@ -50,8 +50,7 @@ public class TemplateHandlerTest extends EasyMockSupport {
           }
 
           @Override
-          public ImmutableMap<String, Object> getDataForRequest(Request baseRequest)
-              throws IOException {
+          public ImmutableMap<String, Object> getDataForRequest(Request baseRequest) {
             return ImmutableMap.of("name", "Michael");
           }
         };
@@ -94,8 +93,7 @@ public class TemplateHandlerTest extends EasyMockSupport {
 
           @Nullable
           @Override
-          public ImmutableMap<String, Object> getDataForRequest(Request baseRequest)
-              throws IOException {
+          public ImmutableMap<String, Object> getDataForRequest(Request baseRequest) {
             // Returning null should cause a 500 to be returned.
             return null;
           }

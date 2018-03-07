@@ -56,7 +56,7 @@ import org.junit.Test;
 public class HaskellLibraryDescriptionTest {
 
   @Test
-  public void compilerFlags() throws Exception {
+  public void compilerFlags() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     String flag = "-compiler-flag";
     HaskellLibraryBuilder builder =
@@ -116,7 +116,7 @@ public class HaskellLibraryDescriptionTest {
   }
 
   @Test
-  public void linkWhole() throws Exception {
+  public void linkWhole() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     HaskellLibraryBuilder builder = new HaskellLibraryBuilder(target).setLinkWhole(true);
     BuildRuleResolver resolver =
@@ -198,7 +198,7 @@ public class HaskellLibraryDescriptionTest {
   }
 
   @Test
-  public void thinArchivesPropagatesDepFromObjects() throws Exception {
+  public void thinArchivesPropagatesDepFromObjects() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     CxxBuckConfig cxxBuckConfig =
         new CxxBuckConfig(
@@ -235,7 +235,7 @@ public class HaskellLibraryDescriptionTest {
   }
 
   @Test
-  public void platformDeps() throws Exception {
+  public void platformDeps() {
     HaskellLibraryBuilder depABuilder =
         new HaskellLibraryBuilder(BuildTargetFactory.newInstance("//:depA"));
     HaskellLibraryBuilder depBBuilder =
