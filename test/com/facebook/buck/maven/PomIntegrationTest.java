@@ -57,7 +57,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
-import javax.xml.transform.TransformerException;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Developer;
 import org.apache.maven.model.Model;
@@ -65,7 +64,6 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.junit.Rule;
 import org.junit.Test;
-import org.xml.sax.SAXException;
 
 public class PomIntegrationTest {
 
@@ -166,8 +164,7 @@ public class PomIntegrationTest {
     }
   }
 
-  private static void removeDependencies(Model model, Path pomFile)
-      throws IOException, SAXException, TransformerException {
+  private static void removeDependencies(Model model, Path pomFile) throws IOException {
     model.setDependencies(Collections.emptyList());
     serializePom(model, pomFile);
   }

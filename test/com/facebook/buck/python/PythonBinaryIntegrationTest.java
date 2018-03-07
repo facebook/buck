@@ -404,14 +404,14 @@ public class PythonBinaryIntegrationTest {
    * both a linkable root and an excluded rule, causing an internal omnibus failure.
    */
   @Test
-  public void omnibusExcludedNativeLinkableRoot() throws InterruptedException, IOException {
+  public void omnibusExcludedNativeLinkableRoot() throws IOException {
     assumeThat(nativeLinkStrategy, Matchers.is(NativeLinkStrategy.MERGED));
     workspace
         .runBuckCommand("targets", "--show-output", "//omnibus_excluded_root:bin")
         .assertSuccess();
   }
 
-  private PythonBuckConfig getPythonBuckConfig() throws InterruptedException, IOException {
+  private PythonBuckConfig getPythonBuckConfig() throws IOException {
     Config rawConfig = Configs.createDefaultConfig(tmp.getRoot());
     BuckConfig buckConfig =
         new BuckConfig(

@@ -35,7 +35,7 @@ public class NlistUtilsTest {
   }
 
   @Test
-  public void testWritingToByteBuffer64BitBigEndian() throws Exception {
+  public void testWritingToByteBuffer64BitBigEndian() {
     ByteBuffer byteBuffer =
         ByteBuffer.wrap(NlistTestData.getBigEndian64Bit()).order(ByteOrder.BIG_ENDIAN);
 
@@ -63,7 +63,7 @@ public class NlistUtilsTest {
   }
 
   @Test
-  public void testWritingToByteBuffer64BitLittleEndian() throws Exception {
+  public void testWritingToByteBuffer64BitLittleEndian() {
     ByteBuffer byteBuffer =
         ByteBuffer.wrap(NlistTestData.getLittleEndian64Bit()).order(ByteOrder.LITTLE_ENDIAN);
 
@@ -92,7 +92,7 @@ public class NlistUtilsTest {
   }
 
   @Test
-  public void testWritingToByteBuffer32BitBigEndian() throws Exception {
+  public void testWritingToByteBuffer32BitBigEndian() {
     ByteBuffer byteBuffer =
         ByteBuffer.wrap(NlistTestData.getBigEndian32Bit()).order(ByteOrder.BIG_ENDIAN);
 
@@ -118,7 +118,7 @@ public class NlistUtilsTest {
   }
 
   @Test
-  public void testWritingToByteBuffer32BitLittleEndian() throws Exception {
+  public void testWritingToByteBuffer32BitLittleEndian() {
     ByteBuffer byteBuffer =
         ByteBuffer.wrap(NlistTestData.getLittleEndian32Bit()).order(ByteOrder.LITTLE_ENDIAN);
 

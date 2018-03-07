@@ -96,7 +96,7 @@ public class CxxPythonExtensionDescriptionTest {
   }
 
   @Test
-  public void createBuildRuleBaseModule() throws Exception {
+  public void createBuildRuleBaseModule() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
@@ -144,7 +144,7 @@ public class CxxPythonExtensionDescriptionTest {
   }
 
   @Test
-  public void createBuildRuleNativeLinkableDep() throws Exception {
+  public void createBuildRuleNativeLinkableDep() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
 
@@ -190,7 +190,7 @@ public class CxxPythonExtensionDescriptionTest {
   }
 
   @Test
-  public void createBuildRulePythonPackageable() throws Exception {
+  public void createBuildRulePythonPackageable() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
@@ -228,7 +228,7 @@ public class CxxPythonExtensionDescriptionTest {
   }
 
   @Test
-  public void findDepsFromParamsAddsPythonDep() throws Exception {
+  public void findDepsFromParamsAddsPythonDep() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     CxxPythonExtensionDescription desc =
@@ -255,7 +255,7 @@ public class CxxPythonExtensionDescriptionTest {
   }
 
   @Test
-  public void py2AndPy3PropagateToLinkRules() throws Exception {
+  public void py2AndPy3PropagateToLinkRules() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     PrebuiltCxxLibraryBuilder python2Builder =
@@ -340,7 +340,7 @@ public class CxxPythonExtensionDescriptionTest {
   }
 
   @Test
-  public void nativeLinkTargetDepsIncludePlatformCxxLibrary() throws Exception {
+  public void nativeLinkTargetDepsIncludePlatformCxxLibrary() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxLibraryBuilder python2Builder = new CxxLibraryBuilder(PYTHON2_DEP_TARGET);
     PythonPlatform platform = createPy2Platform(Optional.of(PYTHON2_DEP_TARGET));
@@ -363,7 +363,7 @@ public class CxxPythonExtensionDescriptionTest {
   }
 
   @Test
-  public void nativeLinkTargetInput() throws Exception {
+  public void nativeLinkTargetInput() {
     CxxPythonExtensionBuilder builder =
         new CxxPythonExtensionBuilder(
             BuildTargetFactory.newInstance("//:rule"),
@@ -416,7 +416,7 @@ public class CxxPythonExtensionDescriptionTest {
   }
 
   @Test
-  public void platformDepsSeparateLinkage() throws Exception {
+  public void platformDepsSeparateLinkage() {
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(FakeBuckConfig.builder().build());
     FlavorDomain<PythonPlatform> pythonPlatforms = FlavorDomain.of("Python Platform", PY2, PY3);
 
@@ -466,7 +466,7 @@ public class CxxPythonExtensionDescriptionTest {
   }
 
   @Test
-  public void runtimeDeps() throws Exception {
+  public void runtimeDeps() {
     BuildRuleResolver resolver =
         new TestBuildRuleResolver(
             TargetGraphFactory.newInstance(
@@ -505,7 +505,7 @@ public class CxxPythonExtensionDescriptionTest {
   }
 
   @Test
-  public void compilationDatabase() throws Exception {
+  public void compilationDatabase() {
     CxxPythonExtensionBuilder builder =
         new CxxPythonExtensionBuilder(
             BuildTargetFactory.newInstance("//:ext"),

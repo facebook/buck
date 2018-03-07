@@ -103,11 +103,11 @@ public class BuildTargetPatternParserTest {
   }
 
   @Test
-  public void visibilityCanContainCrossCellReference() throws InterruptedException {
+  public void visibilityCanContainCrossCellReference() {
     BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
         BuildTargetPatternParser.forVisibilityArgument();
 
-    final ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     CellPathResolver cellNames =
         DefaultCellPathResolver.of(
             filesystem.getPath("foo/root"),
@@ -123,7 +123,7 @@ public class BuildTargetPatternParserTest {
   }
 
   @Test
-  public void visibilityCanMatchCrossCellTargets() throws Exception {
+  public void visibilityCanMatchCrossCellTargets() {
     BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
         BuildTargetPatternParser.forVisibilityArgument();
 

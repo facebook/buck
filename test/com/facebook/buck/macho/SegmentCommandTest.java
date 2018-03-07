@@ -35,7 +35,7 @@ public class SegmentCommandTest {
   }
 
   @Test
-  public void testCreatingFromBytes64BitsBigEndian() throws Exception {
+  public void testCreatingFromBytes64BitsBigEndian() {
     ByteBuffer byteBuffer = bufferWithBytes(SegmentCommandTestData.getBigEndian64Bits(), 10);
     byteBuffer.order(ByteOrder.BIG_ENDIAN);
     SegmentCommand command =
@@ -46,7 +46,7 @@ public class SegmentCommandTest {
   }
 
   @Test
-  public void testCreatingFromBytes32BitsBigEndian() throws Exception {
+  public void testCreatingFromBytes32BitsBigEndian() {
     ByteBuffer byteBuffer = bufferWithBytes(SegmentCommandTestData.getBigEndian32Bits(), 10);
     byteBuffer.order(ByteOrder.BIG_ENDIAN);
     SegmentCommand command =
@@ -57,7 +57,7 @@ public class SegmentCommandTest {
   }
 
   @Test
-  public void testCreatingFromBytes64BitsLittleEndian() throws Exception {
+  public void testCreatingFromBytes64BitsLittleEndian() {
     ByteBuffer byteBuffer = bufferWithBytes(SegmentCommandTestData.getLittleEndian64Bits(), 10);
     byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
     SegmentCommand command =
@@ -68,7 +68,7 @@ public class SegmentCommandTest {
   }
 
   @Test
-  public void testCreatingFromBytes32BitsLittleEndian() throws Exception {
+  public void testCreatingFromBytes32BitsLittleEndian() {
     ByteBuffer byteBuffer = bufferWithBytes(SegmentCommandTestData.getLittleEndian32Bits(), 10);
     byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
     SegmentCommand command =

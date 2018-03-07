@@ -75,8 +75,7 @@ public class DaemonicCellStateTest {
   }
 
   @Test
-  public void testPutComputedNodeIfNotPresent()
-      throws BuildTargetException, IOException, InterruptedException {
+  public void testPutComputedNodeIfNotPresent() throws BuildTargetException {
     Cache<BuildTarget, Boolean> cache = state.getOrCreateCache(Boolean.class);
     BuildTarget target =
         BuildTargetFactory.newInstance(filesystem.getRootPath(), "//path/to:target");
@@ -98,8 +97,7 @@ public class DaemonicCellStateTest {
   }
 
   @Test
-  public void testCellNameDoesNotAffectInvalidation()
-      throws BuildTargetException, IOException, InterruptedException {
+  public void testCellNameDoesNotAffectInvalidation() throws BuildTargetException {
     Cache<BuildTarget, Boolean> cache = childState.getOrCreateCache(Boolean.class);
 
     Path targetPath = childCell.getRoot().resolve("path/to/BUCK");

@@ -54,7 +54,7 @@ public class ParserPythonInterpreterProviderTest {
   }
 
   @Test
-  public void whenParserPythonDoesNotExistThenItIsNotUsed() throws IOException {
+  public void whenParserPythonDoesNotExistThenItIsNotUsed() {
     String invalidPath = temporaryFolder.getRoot().toAbsolutePath() + "DoesNotExist";
     BuckConfig buckConfig =
         FakeBuckConfig.builder()

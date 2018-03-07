@@ -40,7 +40,7 @@ public class PublisherIntegrationTest {
   private TestPublisher publisher;
 
   @BeforeClass
-  public static void setUpStatic() throws Exception {
+  public static void setUpStatic() {
     Path testDataDir = TestDataHelper.getTestDataDirectory(PublisherIntegrationTest.class);
     localRepo = testDataDir.resolve("first-party");
   }

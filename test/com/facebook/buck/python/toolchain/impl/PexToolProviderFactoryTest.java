@@ -41,7 +41,7 @@ import org.junit.Test;
 public class PexToolProviderFactoryTest {
 
   @Test
-  public void testPexArgs() throws Exception {
+  public void testPexArgs() {
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
             .setSections(ImmutableMap.of("python", ImmutableMap.of("pex_flags", "--hello --world")))

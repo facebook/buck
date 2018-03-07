@@ -75,7 +75,7 @@ import org.junit.Test;
 public class PythonTestDescriptionTest {
 
   @Test
-  public void thatTestModulesAreInComponents() throws Exception {
+  public void thatTestModulesAreInComponents() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PythonTestBuilder builder =
         PythonTestBuilder.create(BuildTargetFactory.newInstance("//:bin"))
@@ -100,7 +100,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void baseModule() throws Exception {
+  public void baseModule() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
     String sourceName = "main.py";
@@ -138,7 +138,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void buildArgs() throws Exception {
+  public void buildArgs() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
     ImmutableList<String> buildArgs = ImmutableList.of("--some", "--args");
@@ -159,7 +159,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void platformSrcs() throws Exception {
+  public void platformSrcs() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
     SourcePath matchedSource = FakeSourcePath.of("foo/a.py");
@@ -185,7 +185,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void platformResources() throws Exception {
+  public void platformResources() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
     SourcePath matchedSource = FakeSourcePath.of("foo/a.dat");
@@ -211,7 +211,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void explicitPythonHome() throws Exception {
+  public void explicitPythonHome() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PythonPlatform platform1 =
         new TestPythonPlatform(
@@ -241,7 +241,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void runtimeDepOnDeps() throws Exception {
+  public void runtimeDepOnDeps() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     for (PythonBuckConfig.PackageStyle packageStyle : PythonBuckConfig.PackageStyle.values()) {
       CxxBinaryBuilder cxxBinaryBuilder =
@@ -268,7 +268,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void packageStyleParam() throws Exception {
+  public void packageStyleParam() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PythonTestBuilder builder =
         PythonTestBuilder.create(BuildTargetFactory.newInstance("//:bin"))
@@ -287,7 +287,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void pexExecutorIsAddedToTestRuntimeDeps() throws Exception {
+  public void pexExecutorIsAddedToTestRuntimeDeps() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ShBinaryBuilder pexExecutorBuilder =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:pex_executor"))
@@ -318,7 +318,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void pexExecutorRuleIsAddedToParseTimeDeps() throws Exception {
+  public void pexExecutorRuleIsAddedToParseTimeDeps() {
     ShBinaryBuilder pexExecutorBuilder =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:pex_executor"))
             .setMain(FakeSourcePath.of("run.sh"));
@@ -340,7 +340,7 @@ public class PythonTestDescriptionTest {
 
   @Test
   public void pexBuilderAddedToParseTimeDeps() {
-    final BuildTarget pexBuilder = BuildTargetFactory.newInstance("//:pex_builder");
+    BuildTarget pexBuilder = BuildTargetFactory.newInstance("//:pex_builder");
     PythonBuckConfig config =
         new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
@@ -369,7 +369,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void versionedSrcs() throws Exception {
+  public void versionedSrcs() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
     SourcePath matchedSource = FakeSourcePath.of("foo/a.py");
@@ -399,7 +399,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void versionedResources() throws Exception {
+  public void versionedResources() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
     SourcePath matchedSource = FakeSourcePath.of("foo/a.py");
@@ -429,7 +429,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void targetGraphOnlyDepsDoNotAffectRuleKey() throws Exception {
+  public void targetGraphOnlyDepsDoNotAffectRuleKey() {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     for (PythonBuckConfig.PackageStyle packageStyle : PythonBuckConfig.PackageStyle.values()) {
 
@@ -459,7 +459,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void platformDeps() throws Exception {
+  public void platformDeps() {
     SourcePath libASrc = FakeSourcePath.of("libA.py");
     PythonLibraryBuilder libraryABuilder =
         PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:libA"))
@@ -492,7 +492,7 @@ public class PythonTestDescriptionTest {
   }
 
   @Test
-  public void cxxPlatform() throws Exception {
+  public void cxxPlatform() {
     CxxPlatform platformA =
         CxxPlatformUtils.DEFAULT_PLATFORM.withFlavor(InternalFlavor.of("platA"));
     CxxPlatform platformB =

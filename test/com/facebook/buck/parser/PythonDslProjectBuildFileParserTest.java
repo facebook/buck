@@ -139,7 +139,7 @@ public class PythonDslProjectBuildFileParserTest {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRoot(), knownBuildRuleTypes);
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(FakeClock.doNotCare());
-    final List<ConsoleEvent> consoleEvents = new ArrayList<>();
+    List<ConsoleEvent> consoleEvents = new ArrayList<>();
     class EventListener {
       @Subscribe
       public void onConsoleEvent(ConsoleEvent consoleEvent) {
@@ -166,8 +166,8 @@ public class PythonDslProjectBuildFileParserTest {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRoot(), knownBuildRuleTypes);
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(FakeClock.doNotCare());
-    final List<ConsoleEvent> consoleEvents = new ArrayList<>();
-    final List<WatchmanDiagnosticEvent> watchmanDiagnosticEvents = new ArrayList<>();
+    List<ConsoleEvent> consoleEvents = new ArrayList<>();
+    List<WatchmanDiagnosticEvent> watchmanDiagnosticEvents = new ArrayList<>();
     class EventListener {
       @Subscribe
       public void on(ConsoleEvent consoleEvent) {
@@ -206,7 +206,7 @@ public class PythonDslProjectBuildFileParserTest {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRoot(), knownBuildRuleTypes);
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(FakeClock.doNotCare());
-    final List<WatchmanDiagnosticEvent> watchmanDiagnosticEvents = new ArrayList<>();
+    List<WatchmanDiagnosticEvent> watchmanDiagnosticEvents = new ArrayList<>();
     class EventListener {
       @Subscribe
       public void on(WatchmanDiagnosticEvent consoleEvent) {
@@ -236,7 +236,7 @@ public class PythonDslProjectBuildFileParserTest {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRoot(), knownBuildRuleTypes);
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(FakeClock.doNotCare());
-    final List<ConsoleEvent> consoleEvents = new ArrayList<>();
+    List<ConsoleEvent> consoleEvents = new ArrayList<>();
     class EventListener {
       @Subscribe
       public void onConsoleEvent(ConsoleEvent consoleEvent) {
@@ -346,7 +346,7 @@ public class PythonDslProjectBuildFileParserTest {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRoot(), knownBuildRuleTypes);
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(FakeClock.doNotCare());
-    final List<ConsoleEvent> consoleEvents = new ArrayList<>();
+    List<ConsoleEvent> consoleEvents = new ArrayList<>();
     class EventListener {
       @Subscribe
       public void onConsoleEvent(ConsoleEvent consoleEvent) {
@@ -494,7 +494,7 @@ public class PythonDslProjectBuildFileParserTest {
     }
 
     public PythonDslProjectBuildFileParser createNoopParserThatAlwaysReturnsSuccessWithWarning(
-        BuckEventBus buckEventBus, final String warning, final String source) {
+        BuckEventBus buckEventBus, String warning, String source) {
       return new TestPythonDslProjectBuildFileParser(
           "fake-python",
           new FakeProcessExecutor(
@@ -512,7 +512,7 @@ public class PythonDslProjectBuildFileParserTest {
     }
 
     public PythonDslProjectBuildFileParser createNoopParserThatAlwaysReturnsSuccessWithError(
-        BuckEventBus buckEventBus, final String error, final String source) {
+        BuckEventBus buckEventBus, String error, String source) {
       return new TestPythonDslProjectBuildFileParser(
           "fake-python",
           new FakeProcessExecutor(
@@ -531,9 +531,9 @@ public class PythonDslProjectBuildFileParserTest {
 
     public PythonDslProjectBuildFileParser createNoopParserThatAlwaysReturnsErrorWithException(
         BuckEventBus buckEventBus,
-        final String error,
-        final String source,
-        final ImmutableMap<String, Object> exception) {
+        String error,
+        String source,
+        ImmutableMap<String, Object> exception) {
       return new TestPythonDslProjectBuildFileParser(
           "fake-python",
           new FakeProcessExecutor(

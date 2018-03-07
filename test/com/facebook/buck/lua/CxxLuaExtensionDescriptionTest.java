@@ -30,7 +30,7 @@ import org.junit.Test;
 public class CxxLuaExtensionDescriptionTest {
 
   @Test
-  public void baseModule() throws Exception {
+  public void baseModule() {
     CxxLuaExtensionBuilder builder =
         new CxxLuaExtensionBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setBaseModule("hello.world");

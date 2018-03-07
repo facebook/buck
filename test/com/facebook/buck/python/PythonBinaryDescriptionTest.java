@@ -101,7 +101,7 @@ public class PythonBinaryDescriptionTest {
           Optional.of(PYTHON2_DEP_TARGET));
 
   @Test
-  public void thatComponentSourcePathDepsPropagateProperly() throws Exception {
+  public void thatComponentSourcePathDepsPropagateProperly() {
     GenruleBuilder genruleBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gen"))
             .setOut("blah.py");
@@ -143,7 +143,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void baseModule() throws Exception {
+  public void baseModule() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     String sourceName = "main.py";
     SourcePath source = FakeSourcePath.of("foo/" + sourceName);
@@ -169,7 +169,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void mainModule() throws Exception {
+  public void mainModule() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     BuildRuleResolver resolver = new TestBuildRuleResolver();
     String mainModule = "foo.main";
@@ -179,7 +179,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void extensionConfig() throws Exception {
+  public void extensionConfig() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
@@ -202,7 +202,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void extensionParameter() throws Exception {
+  public void extensionParameter() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
@@ -218,7 +218,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void buildArgs() throws Exception {
+  public void buildArgs() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
@@ -239,7 +239,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void explicitPythonHome() throws Exception {
+  public void explicitPythonHome() {
     PythonPlatform platform1 =
         new TestPythonPlatform(
             InternalFlavor.of("pyPlat1"),
@@ -264,7 +264,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void runtimeDepOnDeps() throws Exception {
+  public void runtimeDepOnDeps() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     for (PythonBuckConfig.PackageStyle packageStyle : PythonBuckConfig.PackageStyle.values()) {
       CxxBinaryBuilder cxxBinaryBuilder =
@@ -296,12 +296,12 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void executableCommandWithPathToPexExecutor() throws Exception {
+  public void executableCommandWithPathToPexExecutor() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-    final Path executor = Paths.get("/root/executor");
+    Path executor = Paths.get("/root/executor");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PythonBuckConfig config =
         new PythonBuckConfig(FakeBuckConfig.builder().build()) {
@@ -322,7 +322,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void executableCommandWithNoPathToPexExecutor() throws Exception {
+  public void executableCommandWithNoPathToPexExecutor() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
@@ -338,7 +338,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void packagedBinaryAttachedPexToolDeps() throws Exception {
+  public void packagedBinaryAttachedPexToolDeps() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     BuildRuleResolver resolver = new TestBuildRuleResolver();
     final Genrule pexTool =
@@ -364,7 +364,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void transitiveNativeDepsUsingMergedNativeLinkStrategy() throws Exception {
+  public void transitiveNativeDepsUsingMergedNativeLinkStrategy() {
     CxxLibraryBuilder transitiveCxxDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:transitive_dep"))
             .setSrcs(
@@ -408,7 +408,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void transitiveNativeDepsUsingSeparateNativeLinkStrategy() throws Exception {
+  public void transitiveNativeDepsUsingSeparateNativeLinkStrategy() {
     CxxLibraryBuilder transitiveCxxDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:transitive_dep"))
             .setSrcs(
@@ -452,7 +452,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void extensionDepUsingMergedNativeLinkStrategy() throws Exception {
+  public void extensionDepUsingMergedNativeLinkStrategy() {
     FlavorDomain<PythonPlatform> pythonPlatforms = FlavorDomain.of("Python Platform", PY2);
 
     PrebuiltCxxLibraryBuilder python2Builder =
@@ -498,8 +498,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void transitiveDepsOfLibsWithPrebuiltNativeLibsAreNotIncludedInMergedLink()
-      throws Exception {
+  public void transitiveDepsOfLibsWithPrebuiltNativeLibsAreNotIncludedInMergedLink() {
     CxxLibraryBuilder transitiveCxxLibraryBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:transitive_cxx"))
             .setSrcs(
@@ -562,8 +561,8 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void preloadLibraries() throws Exception {
-    for (final NativeLinkStrategy strategy : NativeLinkStrategy.values()) {
+  public void preloadLibraries() {
+    for (NativeLinkStrategy strategy : NativeLinkStrategy.values()) {
       CxxLibraryBuilder cxxLibraryBuilder =
           new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test.c"))));
@@ -593,7 +592,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void pexExecutorRuleIsAddedToParseTimeDeps() throws Exception {
+  public void pexExecutorRuleIsAddedToParseTimeDeps() {
     ShBinaryBuilder pexExecutorBuilder =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:pex_executor"))
             .setMain(FakeSourcePath.of("run.sh"));
@@ -614,7 +613,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void linkerFlagsUsingMergedNativeLinkStrategy() throws Exception {
+  public void linkerFlagsUsingMergedNativeLinkStrategy() {
     CxxLibraryBuilder cxxDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("dep.c"))));
@@ -656,8 +655,8 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void explicitDepOnlinkWholeLibPullsInSharedLibrary() throws Exception {
-    for (final NativeLinkStrategy strategy : NativeLinkStrategy.values()) {
+  public void explicitDepOnlinkWholeLibPullsInSharedLibrary() {
+    for (NativeLinkStrategy strategy : NativeLinkStrategy.values()) {
       ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
       CxxLibraryBuilder cxxLibraryBuilder =
           new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep1"))
@@ -696,8 +695,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void transitiveDepsOfPreloadDepsAreExcludedFromMergedNativeLinkStrategy()
-      throws Exception {
+  public void transitiveDepsOfPreloadDepsAreExcludedFromMergedNativeLinkStrategy() {
     CxxLibraryBuilder transitiveCxxDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:transitive_dep"))
             .setSrcs(
@@ -750,7 +748,7 @@ public class PythonBinaryDescriptionTest {
 
   @Test
   public void pexBuilderAddedToParseTimeDeps() {
-    final BuildTarget pexBuilder = BuildTargetFactory.newInstance("//:pex_builder");
+    BuildTarget pexBuilder = BuildTargetFactory.newInstance("//:pex_builder");
     PythonBuckConfig config =
         new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
@@ -803,7 +801,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void targetGraphOnlyDepsDoNotAffectRuleKey() throws Exception {
+  public void targetGraphOnlyDepsDoNotAffectRuleKey() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     for (PythonBuckConfig.PackageStyle packageStyle : PythonBuckConfig.PackageStyle.values()) {
 
@@ -836,7 +834,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void platformDeps() throws Exception {
+  public void platformDeps() {
     SourcePath libASrc = FakeSourcePath.of("libA.py");
     PythonLibraryBuilder libraryABuilder =
         PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:libA"))
@@ -870,7 +868,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void cxxPlatform() throws Exception {
+  public void cxxPlatform() {
     CxxPlatform platformA =
         CxxPlatformUtils.DEFAULT_PLATFORM.withFlavor(InternalFlavor.of("platA"));
     CxxPlatform platformB =

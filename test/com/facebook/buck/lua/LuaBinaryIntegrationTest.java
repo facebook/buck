@@ -319,7 +319,7 @@ public class LuaBinaryIntegrationTest {
     assertEquals("okay", workspace.getFileContents(output));
   }
 
-  private LuaBuckConfig getLuaBuckConfig() throws InterruptedException, IOException {
+  private LuaBuckConfig getLuaBuckConfig() throws IOException {
     Config rawConfig = Configs.createDefaultConfig(tmp.getRoot());
     BuckConfig buckConfig =
         new BuckConfig(

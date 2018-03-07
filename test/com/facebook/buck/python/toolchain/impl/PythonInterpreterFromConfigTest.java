@@ -120,7 +120,7 @@ public class PythonInterpreterFromConfigTest {
   }
 
   @Test(expected = HumanReadableException.class)
-  public void whenPythonOnPathNotFoundThenThrow() throws IOException {
+  public void whenPythonOnPathNotFoundThenThrow() {
     PythonBuckConfig config =
         new PythonBuckConfig(
             FakeBuckConfig.builder()

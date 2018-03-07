@@ -41,7 +41,7 @@ import org.junit.Test;
 public class LuaLibraryDescriptionTest {
 
   @Test
-  public void unnamedSource() throws Exception {
+  public void unnamedSource() {
     LuaLibraryBuilder builder =
         new LuaLibraryBuilder(BuildTargetFactory.newInstance("//some:rule"))
             .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("some/foo.lua")));
@@ -57,7 +57,7 @@ public class LuaLibraryDescriptionTest {
   }
 
   @Test
-  public void namedSource() throws Exception {
+  public void namedSource() {
     LuaLibraryBuilder builder =
         new LuaLibraryBuilder(BuildTargetFactory.newInstance("//some:rule"))
             .setSrcs(ImmutableSortedMap.of("bar.lua", FakeSourcePath.of("foo.lua")));
@@ -73,7 +73,7 @@ public class LuaLibraryDescriptionTest {
   }
 
   @Test
-  public void baseModuleSource() throws Exception {
+  public void baseModuleSource() {
     LuaLibraryBuilder builder =
         new LuaLibraryBuilder(BuildTargetFactory.newInstance("//some:rule"))
             .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("some/foo.lua")))
@@ -90,7 +90,7 @@ public class LuaLibraryDescriptionTest {
   }
 
   @Test
-  public void platformDeps() throws Exception {
+  public void platformDeps() {
     LuaLibraryBuilder libraryABuilder =
         new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:libA"));
     LuaLibraryBuilder libraryBBuilder =

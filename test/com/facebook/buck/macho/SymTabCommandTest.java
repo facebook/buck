@@ -24,7 +24,7 @@ import org.junit.Test;
 
 public class SymTabCommandTest {
   @Test
-  public void testCreatingFromBytesBigEndian() throws Exception {
+  public void testCreatingFromBytesBigEndian() {
     ByteBuffer buffer =
         ByteBuffer.wrap(SymTabCommandTestData.getBigEndian()).order(ByteOrder.BIG_ENDIAN);
     buffer.position(0);
@@ -33,7 +33,7 @@ public class SymTabCommandTest {
   }
 
   @Test
-  public void testCreatingFromBytesLittleEndian() throws Exception {
+  public void testCreatingFromBytesLittleEndian() {
     ByteBuffer buffer =
         ByteBuffer.wrap(SymTabCommandTestData.getLittleEndian()).order(ByteOrder.LITTLE_ENDIAN);
     SymTabCommand command = SymTabCommandUtils.createFromBuffer(buffer);

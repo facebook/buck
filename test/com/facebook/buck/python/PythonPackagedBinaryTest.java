@@ -67,8 +67,7 @@ public class PythonPackagedBinaryTest {
       String mod1,
       Path src1,
       String mod2,
-      Path src2)
-      throws IOException {
+      Path src2) {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     BuildTarget target = BuildTargetFactory.newInstance("//:bin");

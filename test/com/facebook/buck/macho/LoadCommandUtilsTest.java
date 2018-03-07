@@ -33,7 +33,7 @@ import org.junit.Test;
 
 public class LoadCommandUtilsTest {
   @Test
-  public void testEnumeratingLoadCommands() throws Exception {
+  public void testEnumeratingLoadCommands() {
     byte[] header = MachoHeaderTestData.getBigEndian64Bit();
     header[19] = 2; // ncmds
     header[23] = 16; // sizeofcmds
@@ -51,7 +51,7 @@ public class LoadCommandUtilsTest {
             .put(commandBytes)
             .order(ByteOrder.BIG_ENDIAN);
 
-    final List<LoadCommand> result = new ArrayList<>();
+    List<LoadCommand> result = new ArrayList<>();
     buffer.position(0);
     LoadCommandUtils.enumerateLoadCommandsInFile(
         buffer,
@@ -79,7 +79,7 @@ public class LoadCommandUtilsTest {
   }
 
   @Test
-  public void testFindingLoadCommands() throws Exception {
+  public void testFindingLoadCommands() {
     byte[] header = MachoHeaderTestData.getBigEndian64Bit();
     header[19] = 3; // ncmds
     header[23] = 16; // sizeofcmds
@@ -132,7 +132,7 @@ public class LoadCommandUtilsTest {
   }
 
   @Test
-  public void testCreatingLoadCommandsFromBuffer() throws Exception {
+  public void testCreatingLoadCommandsFromBuffer() {
     byte[] segmentBytes = SegmentCommandTestData.getBigEndian64Bits();
     byte[] symtabBytes = SymTabCommandTestData.getBigEndian();
     byte[] uuidBytes = UUIDCommandTestData.getBigEndian();

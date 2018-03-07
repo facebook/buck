@@ -191,17 +191,12 @@ public class ObjectPathsAbsolutifierIntegrationTest {
     assertThat(
         unsanitizedOutput,
         containsString(
-            "OSO "
-                + newCompDirValue
-                + "/buck-out/bin/"
-                + relativeSanitizedObjectFilePath.toString()));
+            "OSO " + newCompDirValue + "/buck-out/bin/" + relativeSanitizedObjectFilePath));
     assertThat(
         unsanitizedOutput,
-        containsString(
-            "SO " + newCompDirValue + "/" + relativeSourceFilePath.getParent().toString()));
+        containsString("SO " + newCompDirValue + "/" + relativeSourceFilePath.getParent()));
     assertThat(
-        unsanitizedOutput,
-        containsString("SOL " + newCompDirValue + "/" + relativeSourceFilePath.toString()));
+        unsanitizedOutput, containsString("SOL " + newCompDirValue + "/" + relativeSourceFilePath));
   }
 
   private boolean checkCodeSigning(Path absoluteBundlePath)

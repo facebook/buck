@@ -57,7 +57,7 @@ import org.junit.Test;
 public class PythonLibraryDescriptionTest {
 
   @Test
-  public void baseModule() throws Exception {
+  public void baseModule() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
     String sourceName = "main.py";
@@ -101,7 +101,7 @@ public class PythonLibraryDescriptionTest {
   }
 
   @Test
-  public void platformSrcs() throws Exception {
+  public void platformSrcs() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
     SourcePath matchedSource = FakeSourcePath.of("foo/a.py");
@@ -130,7 +130,7 @@ public class PythonLibraryDescriptionTest {
   }
 
   @Test
-  public void platformResources() throws Exception {
+  public void platformResources() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
     SourcePath matchedSource = FakeSourcePath.of("foo/a.dat");
@@ -255,7 +255,7 @@ public class PythonLibraryDescriptionTest {
   }
 
   @Test
-  public void cxxGenruleSrcs() throws Exception {
+  public void cxxGenruleSrcs() {
     CxxGenruleBuilder srcBuilder =
         new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:src")).setOut("out.py");
     PythonLibraryBuilder libraryBuilder =
@@ -278,7 +278,7 @@ public class PythonLibraryDescriptionTest {
   }
 
   @Test
-  public void platformDeps() throws Exception {
+  public void platformDeps() {
     PythonLibraryBuilder libraryABuilder =
         PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:libA"));
     PythonLibraryBuilder libraryBBuilder =

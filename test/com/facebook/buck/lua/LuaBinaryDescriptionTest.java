@@ -133,7 +133,7 @@ public class LuaBinaryDescriptionTest {
   }
 
   @Test
-  public void versionLessNativeLibraryExtension() throws Exception {
+  public void versionLessNativeLibraryExtension() {
     CxxLibraryBuilder cxxLibraryBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
             .setSoname("libfoo.so.1.0")
@@ -159,7 +159,7 @@ public class LuaBinaryDescriptionTest {
   }
 
   @Test
-  public void duplicateIdenticalModules() throws Exception {
+  public void duplicateIdenticalModules() {
     LuaLibraryBuilder libraryABuilder =
         new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:a"))
             .setSrcs(ImmutableSortedMap.of("foo.lua", FakeSourcePath.of("test")));
@@ -182,7 +182,7 @@ public class LuaBinaryDescriptionTest {
   }
 
   @Test
-  public void duplicateConflictingModules() throws Exception {
+  public void duplicateConflictingModules() {
     LuaLibraryBuilder libraryABuilder =
         new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:a"))
             .setSrcs(ImmutableSortedMap.of("foo.lua", FakeSourcePath.of("foo")));
@@ -207,7 +207,7 @@ public class LuaBinaryDescriptionTest {
   }
 
   @Test
-  public void pythonDeps() throws Exception {
+  public void pythonDeps() {
     PythonLibraryBuilder pythonLibraryBuilder =
         new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setSrcs(
@@ -226,7 +226,7 @@ public class LuaBinaryDescriptionTest {
   }
 
   @Test
-  public void cxxPythonExtensionPlatformDeps() throws Exception {
+  public void cxxPythonExtensionPlatformDeps() {
     FlavorDomain<PythonPlatform> pythonPlatforms = FlavorDomain.of("Python Platform", PY2, PY3);
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(FakeBuckConfig.builder().build());
 
@@ -296,7 +296,7 @@ public class LuaBinaryDescriptionTest {
   }
 
   @Test
-  public void pythonInitIsRuntimeDepForInPlaceBinary() throws Exception {
+  public void pythonInitIsRuntimeDepForInPlaceBinary() {
     PythonLibraryBuilder pythonLibraryBuilder =
         new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setSrcs(
@@ -320,7 +320,7 @@ public class LuaBinaryDescriptionTest {
   }
 
   @Test
-  public void transitiveNativeDepsUsingMergedNativeLinkStrategy() throws Exception {
+  public void transitiveNativeDepsUsingMergedNativeLinkStrategy() {
     CxxLibraryBuilder transitiveCxxDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:transitive_dep"))
             .setSrcs(
@@ -358,7 +358,7 @@ public class LuaBinaryDescriptionTest {
   }
 
   @Test
-  public void transitiveNativeDepsUsingSeparateNativeLinkStrategy() throws Exception {
+  public void transitiveNativeDepsUsingSeparateNativeLinkStrategy() {
     CxxLibraryBuilder transitiveCxxDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:transitive_dep"))
             .setSrcs(
@@ -396,8 +396,7 @@ public class LuaBinaryDescriptionTest {
   }
 
   @Test
-  public void transitiveDepsOfNativeStarterDepsAreIncludedInMergedNativeLinkStrategy()
-      throws Exception {
+  public void transitiveDepsOfNativeStarterDepsAreIncludedInMergedNativeLinkStrategy() {
     CxxLibraryBuilder transitiveCxxDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:transitive_dep"))
             .setSrcs(
@@ -443,7 +442,7 @@ public class LuaBinaryDescriptionTest {
   }
 
   @Test
-  public void pythonExtensionDepUsingMergedNativeLinkStrategy() throws Exception {
+  public void pythonExtensionDepUsingMergedNativeLinkStrategy() {
     FlavorDomain<PythonPlatform> pythonPlatforms = FlavorDomain.of("Python Platform", PY2);
 
     PrebuiltCxxLibraryBuilder python2Builder =
@@ -486,7 +485,7 @@ public class LuaBinaryDescriptionTest {
   }
 
   @Test
-  public void platformDeps() throws Exception {
+  public void platformDeps() {
     SourcePath libASrc = FakeSourcePath.of("libA.lua");
     LuaLibraryBuilder libraryABuilder =
         new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:libA"))
