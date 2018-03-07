@@ -76,7 +76,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             toolchainProvider, javaConfig, defaultAndroidCompilerFactory),
         new PrebuiltNativeLibraryDescription(),
         new NdkLibraryDescription(toolchainProvider),
-        new GenAidlDescription(toolchainProvider),
+        new GenAidlDescription(),
         new ApkGenruleDescription(toolchainProvider, sandboxExecutionStrategy));
   }
 }

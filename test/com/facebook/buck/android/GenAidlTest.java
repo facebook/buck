@@ -98,7 +98,7 @@ public class GenAidlTest {
             pathToAidl,
             importPath);
 
-    GenAidlDescription description = new GenAidlDescription(new ToolchainProviderBuilder().build());
+    GenAidlDescription description = new GenAidlDescription();
     assertEquals(
         Description.getBuildRuleType(GenAidlDescription.class),
         Description.getBuildRuleType(description));
