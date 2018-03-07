@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple.project_generator;
 
+import static org.hamcrest.Matchers.equalToObject;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
@@ -32,6 +33,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXFrameworksBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXTargetDependency;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -74,6 +76,17 @@ public final class ProjectGeneratorTestUtils {
     assertNull(
         "There is generated target with name: " + name,
         getTargetByName(generator.getGeneratedProject(), name));
+  }
+
+  public static void assertHasDependency(
+      PBXProject generatedProject, PBXTarget target, String name) {
+    for (PBXTargetDependency dependency : target.getDependencies()) {
+      PBXTarget dependencyTarget = getTargetByName(generatedProject, name);
+      assertNotNull(dependencyTarget);
+      assertThat(
+          dependency.getTargetProxy().getRemoteGlobalIDString(),
+          equalToObject(dependencyTarget.getGlobalID()));
+    }
   }
 
   public static void assertHasSingletonFrameworksPhaseWithFrameworkEntries(

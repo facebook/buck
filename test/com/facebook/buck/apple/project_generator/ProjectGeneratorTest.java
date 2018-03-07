@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple.project_generator;
 
+import static com.facebook.buck.apple.AppleBundleDescription.WATCH_OS_FLAVOR;
 import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -163,6 +164,8 @@ public class ProjectGeneratorTest {
       OUTPUT_PROJECT_BUNDLE_PATH.resolve("project.pbxproj");
   private static final CxxPlatform DEFAULT_PLATFORM = CxxPlatformUtils.DEFAULT_PLATFORM;
   private static final Flavor DEFAULT_FLAVOR = InternalFlavor.of("default");
+  private static final String WATCH_EXTENSION_PRODUCT_TYPE =
+      "com.apple.product-type.watchkit2-extension";
   private SettableFakeClock clock;
   private ProjectFilesystem projectFilesystem;
   private Cell projectCell;
@@ -3119,19 +3122,35 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleWatchTarget() throws IOException {
+    BuildTarget watchExtensionBinaryTarget =
+        BuildTargetFactory.newInstance(rootPath, "//foo", "WatchExtensionBinary");
+    TargetNode<?, ?> watchExtensionBinaryNode =
+        AppleBinaryBuilder.createBuilder(watchExtensionBinaryTarget).build();
+
+    BuildTarget watchExtensionTarget =
+        BuildTargetFactory.newInstance(rootPath, "//foo", "WatchExtension", WATCH_OS_FLAVOR);
+    TargetNode<?, ?> watchExtensionNode =
+        AppleBundleBuilder.createBuilder(watchExtensionTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.APPEX))
+            .setXcodeProductType(Optional.of(WATCH_EXTENSION_PRODUCT_TYPE))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setBinary(watchExtensionBinaryTarget)
+            .build();
+
     BuildTarget watchAppBinaryTarget =
         BuildTargetFactory.newInstance(rootPath, "//foo", "WatchAppBinary");
     TargetNode<?, ?> watchAppBinaryNode =
         AppleBinaryBuilder.createBuilder(watchAppBinaryTarget).build();
 
     BuildTarget watchAppTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "WatchApp", DEFAULT_FLAVOR);
+        BuildTargetFactory.newInstance(rootPath, "//foo", "WatchApp", WATCH_OS_FLAVOR);
     TargetNode<?, ?> watchAppNode =
         AppleBundleBuilder.createBuilder(watchAppTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.APP))
-            .setXcodeProductType(Optional.of("com.apple.product-type.application.watchapp2"))
+            .setXcodeProductType(Optional.of(ProductTypes.WATCH_APPLICATION.getIdentifier()))
             .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .setBinary(watchAppBinaryTarget)
+            .setDeps(ImmutableSortedSet.of(watchExtensionTarget))
             .build();
 
     BuildTarget hostAppBinaryTarget =
@@ -3150,18 +3169,41 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGeneratorForCombinedProject(
-            ImmutableSet.of(watchAppNode, watchAppBinaryNode, hostAppNode, hostAppBinaryNode));
+            ImmutableSet.of(
+                watchExtensionNode,
+                watchExtensionBinaryNode,
+                watchAppNode,
+                watchAppBinaryNode,
+                hostAppNode,
+                hostAppBinaryNode));
     projectGenerator.createXcodeProjects();
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:HostApp");
-    assertEquals(target.getProductType(), ProductTypes.APPLICATION);
+    PBXProject generatedProject = projectGenerator.getGeneratedProject();
+    PBXTarget generatedHostAppTarget =
+        assertTargetExistsAndReturnTarget(generatedProject, "//foo:HostApp");
+    // Use the fully qualified name of the watch build targets, since they include a flavor
+    PBXTarget generatedWatchAppTarget =
+        assertTargetExistsAndReturnTarget(generatedProject, watchAppTarget.getFullyQualifiedName());
+    PBXTarget generatedWatchExtensionTarget =
+        assertTargetExistsAndReturnTarget(
+            generatedProject, watchExtensionTarget.getFullyQualifiedName());
+    assertEquals(generatedHostAppTarget.getProductType(), ProductTypes.APPLICATION);
+    assertEquals(generatedWatchAppTarget.getProductType(), ProductTypes.WATCH_APPLICATION);
+    assertEquals(
+        generatedWatchExtensionTarget.getProductType(),
+        ProductType.of(WATCH_EXTENSION_PRODUCT_TYPE));
 
     ProjectGeneratorTestUtils.assertHasSingletonCopyFilesPhaseWithFileEntries(
-        target, ImmutableList.of("$BUILT_PRODUCTS_DIR/WatchApp.app"));
+        generatedHostAppTarget, ImmutableList.of("$BUILT_PRODUCTS_DIR/WatchApp.app"));
+
+    ProjectGeneratorTestUtils.assertHasDependency(
+        generatedProject, generatedHostAppTarget, watchAppTarget.getFullyQualifiedName());
+    ProjectGeneratorTestUtils.assertHasDependency(
+        generatedProject, generatedWatchAppTarget, watchExtensionTarget.getFullyQualifiedName());
 
     PBXCopyFilesBuildPhase copyBuildPhase =
-        ProjectGeneratorTestUtils.getSingletonPhaseByType(target, PBXCopyFilesBuildPhase.class);
+        ProjectGeneratorTestUtils.getSingletonPhaseByType(
+            generatedHostAppTarget, PBXCopyFilesBuildPhase.class);
     assertEquals(
         copyBuildPhase.getDstSubfolderSpec(),
         CopyFilePhaseDestinationSpec.builder()

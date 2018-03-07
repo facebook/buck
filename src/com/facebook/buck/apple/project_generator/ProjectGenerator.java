@@ -1243,6 +1243,16 @@ public class ProjectGenerator {
         buckReference.setExplicitFileType(Optional.of("text.script.python"));
       }
 
+      // Watch dependencies need to have explicit target dependencies setup in order for Xcode to
+      // build them properly within the IDE.  It is unable to match the implicit dependency because
+      // of the different in flavor between the targets (iphoneos vs watchos).
+      if (bundle.isPresent() && isFocusedOnTarget) {
+        collectProjectTargetWatchDependencies(
+            targetNode.getBuildTarget().getFlavorPostfix(),
+            target,
+            targetGraph.getAll(bundle.get().getExtraDeps()));
+      }
+
       // -- configurations
       extraSettingsBuilder
           .put("TARGET_NAME", buildTargetName)
@@ -2121,6 +2131,18 @@ public class ProjectGenerator {
                 PBXReference.SourceTree.SOURCE_ROOT,
                 pathRelativizer.outputDirToRootRelative(xcconfigPath),
                 Optional.empty()));
+  }
+
+  private void collectProjectTargetWatchDependencies(
+      String targetFlavorPostfix, PBXNativeTarget target, Iterable<TargetNode<?, ?>> targetNodes) {
+    for (TargetNode<?, ?> targetNode : targetNodes) {
+      String targetNodeFlavorPostfix = targetNode.getBuildTarget().getFlavorPostfix();
+      if (targetNodeFlavorPostfix.startsWith("#watch")
+          && !targetNodeFlavorPostfix.equals(targetFlavorPostfix)
+          && targetNode.getDescription() instanceof AppleBundleDescription) {
+        addPBXTargetDependency(target, targetNode.getBuildTarget());
+      }
+    }
   }
 
   private void collectBuildScriptDependencies(
