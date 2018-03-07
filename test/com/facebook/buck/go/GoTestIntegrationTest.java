@@ -120,4 +120,11 @@ public class GoTestIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("test", "//add:test-add13");
     result.assertSuccess();
   }
+
+  @Test
+  public void testLibWithCgoDeps() throws IOException {
+    ProcessResult result = workspace.runBuckCommand("test", "//cgo/lib:all_tests");
+    result.assertSuccess();
+  }
+
 }
