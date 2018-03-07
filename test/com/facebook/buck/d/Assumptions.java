@@ -19,10 +19,9 @@ package com.facebook.buck.d;
 import static org.junit.Assume.assumeNoException;
 
 import com.facebook.buck.config.FakeBuckConfig;
-import java.io.IOException;
 
 abstract class Assumptions {
-  public static void assumeDCompilerUsable() throws InterruptedException, IOException {
+  public static void assumeDCompilerUsable() {
     // The methods that we use to figure out how to invoke the D compiler throw when
     // they cannot determine how to invoke the compiler. Conversely, if they don't throw,
     // the compiler should be usable. So we check that none of them throw.

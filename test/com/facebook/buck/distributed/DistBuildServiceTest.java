@@ -84,7 +84,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -124,7 +123,7 @@ public class DistBuildServiceTest {
   }
 
   @Test
-  public void canUploadTargetGraph() throws IOException, ExecutionException, InterruptedException {
+  public void canUploadTargetGraph() throws IOException {
     Capture<FrontendRequest> request = EasyMock.newCapture();
     FrontendResponse response = new FrontendResponse();
     response.setType(FrontendRequestType.STORE_BUILD_GRAPH);
@@ -166,7 +165,7 @@ public class DistBuildServiceTest {
 
   @Test
   public void canUploadFiles() throws Exception {
-    final List<Boolean> fileExistence = Arrays.asList(true, false, true);
+    List<Boolean> fileExistence = Arrays.asList(true, false, true);
 
     Capture<FrontendRequest> containsRequest = EasyMock.newCapture();
     FrontendResponse containsResponse = new FrontendResponse();

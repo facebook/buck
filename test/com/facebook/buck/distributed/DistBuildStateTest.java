@@ -327,10 +327,7 @@ public class DistBuildStateTest {
     Config config =
         new Config(
             ConfigBuilder.rawFromLines(
-                "[cache]",
-                "repository=somerepo",
-                "[repositories]",
-                "cell2 = " + cell2Root.toString()));
+                "[cache]", "repository=somerepo", "[repositories]", "cell2 = " + cell2Root));
     BuckConfig buckConfig =
         new BuckConfig(
             config,
@@ -419,8 +416,7 @@ public class DistBuildStateTest {
         rootCell);
   }
 
-  public static DistBuildTargetGraphCodec createDefaultCodec(
-      final Cell cell, final Optional<Parser> parser) {
+  public static DistBuildTargetGraphCodec createDefaultCodec(Cell cell, Optional<Parser> parser) {
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
     Function<? super TargetNode<?, ?>, ? extends Map<String, Object>> nodeToRawNode;

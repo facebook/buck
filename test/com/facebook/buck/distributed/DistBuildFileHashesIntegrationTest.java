@@ -68,7 +68,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.MoreExecutors;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
@@ -233,7 +232,7 @@ public class DistBuildFileHashesIntegrationTest {
   }
 
   private DistBuildFileHashes createDistBuildFileHashes(TargetGraph targetGraph, Cell rootCell)
-      throws InterruptedException, IOException {
+      throws InterruptedException {
     ActionGraphCache cache =
         new ActionGraphCache(
             rootCell.getBuckConfig().getMaxActionGraphCacheEntries(),

@@ -77,7 +77,7 @@ public class MaterializerDummyFileHashCacheTest {
         Assert.fail(String.format("Unexpected failure: [%s].", e.getMessage()));
       }
     };
-  };
+  }
 
   @SuppressWarnings("PMD.EmptyCatchBlock")
   private static final MaterializeFunction THROWING_GET =
@@ -112,7 +112,7 @@ public class MaterializerDummyFileHashCacheTest {
       boolean materializeDuringPreloading,
       MaterializeFunction materializeFunction,
       boolean setCorrectHashCode)
-      throws InterruptedException, IOException {
+      throws IOException {
     // Scenario:
     // file hash entries for:
     // /a - folder
@@ -292,7 +292,7 @@ public class MaterializerDummyFileHashCacheTest {
       boolean materializeDuringPreloading,
       MaterializeFunction materializeFunction,
       boolean setCorrectHash)
-      throws InterruptedException, IOException {
+      throws IOException {
     assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
 
     ProjectFilesystem projectFilesystem =
@@ -390,8 +390,7 @@ public class MaterializerDummyFileHashCacheTest {
   }
 
   private void testSymlinkToFileWithinExternalDirectory(
-      MaterializeFunction materializeFunction, boolean setCorrectHashCode)
-      throws InterruptedException, IOException {
+      MaterializeFunction materializeFunction, boolean setCorrectHashCode) throws IOException {
     // Scenario:
     //  path: /project/linktoexternaldir/externalfile
     //  symlink root: /project/linktoexternaldir -> /externalDir

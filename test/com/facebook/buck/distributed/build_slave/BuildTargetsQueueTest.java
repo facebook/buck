@@ -127,8 +127,7 @@ public class BuildTargetsQueueTest {
   }
 
   @Test
-  public void testResolverWithTargetThatHasRuntimeDep()
-      throws NoSuchBuildTargetException, InterruptedException {
+  public void testResolverWithTargetThatHasRuntimeDep() throws NoSuchBuildTargetException {
     BuildRuleResolver resolver = CustomBuildRuleResolverFactory.createSimpleRuntimeDepsResolver();
     BuildTarget target =
         BuildTargetFactory.newInstance(CustomBuildRuleResolverFactory.HAS_RUNTIME_DEP_RULE);

@@ -114,7 +114,7 @@ public class DBuckConfigTest {
   }
 
   @Test
-  public void testDCompilerFlagsOverridden() throws IOException {
+  public void testDCompilerFlagsOverridden() {
     BuckConfig delegate =
         FakeBuckConfig.builder().setSections("[d]", "base_compiler_flags=-g -O3").build();
     DBuckConfig dBuckConfig = new DBuckConfig(delegate);
@@ -160,11 +160,11 @@ public class DBuckConfigTest {
   }
 
   private static <T> void assertContains(Collection<T> haystack, T needle) {
-    assertTrue(needle.toString() + " is in " + haystack.toString(), haystack.contains(needle));
+    assertTrue(needle + " is in " + haystack, haystack.contains(needle));
   }
 
   private static <T> void assertDoesNotContain(Collection<T> haystack, T needle) {
-    assertFalse(needle.toString() + " is not in " + haystack.toString(), haystack.contains(needle));
+    assertFalse(needle + " is not in " + haystack, haystack.contains(needle));
   }
 
   /** Returns the path of a Tool. */

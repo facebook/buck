@@ -342,7 +342,7 @@ public class EventSerializationTest {
         message);
   }
 
-  private void assertJsonEquals(String expected, String actual) throws IOException {
+  private void assertJsonEquals(String expected, String actual) {
     String commonHeader =
         String.format(
             "\"timestamp\":%d,\"nanoTime\":%d,\"threadUserNanoTime\":%d,"

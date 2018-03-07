@@ -50,7 +50,7 @@ public class HttpArtifactCacheEventListenerTest {
   }
 
   @Test
-  public void creatingRowWithoutColumns() throws InterruptedException {
+  public void creatingRowWithoutColumns() {
     Capture<String> logLineCapture = Capture.newInstance();
     EasyMock.expect(fetchLogger.log(EasyMock.capture(logLineCapture)))
         .andReturn(Optional.empty())

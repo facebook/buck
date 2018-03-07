@@ -105,7 +105,7 @@ public class MachineReadableLogJsonViewTest {
   }
 
   @Test
-  public void testBuildRuleEvent() throws IOException, InterruptedException {
+  public void testBuildRuleEvent() throws IOException {
     BuildRule rule = new FakeBuildRule("//fake:rule");
     long durationMillis = 5;
     long durationNanos = 5 * 1000 * 1000;
@@ -221,7 +221,7 @@ public class MachineReadableLogJsonViewTest {
             + "\"successUploadCount\":2,\"failureUploadCount\":0}");
   }
 
-  private void assertJsonEquals(String expected, String actual) throws IOException {
+  private void assertJsonEquals(String expected, String actual) {
     String commonHeader = String.format("\"timestamp\":%d", timestamp);
     assertThat(actual, new JsonMatcher(String.format(expected, commonHeader)));
   }

@@ -148,7 +148,7 @@ public class DistBuildFileHashesTest {
         BuildRuleResolver resolver, SourcePathResolver sourcePathResolver)
         throws IOException, NoSuchBuildTargetException;
 
-    private StackedFileHashCache createFileHashCache() throws InterruptedException {
+    private StackedFileHashCache createFileHashCache() {
       ImmutableList.Builder<ProjectFileHashCache> cacheList = ImmutableList.builder();
       cacheList.add(
           DefaultFileHashCache.createDefaultFileHashCache(
@@ -442,7 +442,7 @@ public class DistBuildFileHashesTest {
 
   @Test
   public void worksCrossCell() throws Exception {
-    final Fixture f =
+    Fixture f =
         new Fixture(tempDir) {
 
           @Override

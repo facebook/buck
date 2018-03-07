@@ -27,7 +27,7 @@ import org.junit.Test;
 
 public class UninstallEventTest {
   @Test
-  public void testEquals() throws Exception {
+  public void testEquals() {
     UninstallEvent.Started started = configureTestEvent(UninstallEvent.started("com.foo.bar"));
     UninstallEvent.Started startedTwo = configureTestEvent(UninstallEvent.started("com.foo.bar"));
     UninstallEvent finished = configureTestEvent(UninstallEvent.finished(started, true));

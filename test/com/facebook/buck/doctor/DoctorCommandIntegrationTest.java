@@ -62,7 +62,6 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Request;
@@ -189,10 +188,10 @@ public class DoctorCommandIntegrationTest {
       filesystem.setLastModifiedTime(path, FileTime.from(Instant.now()));
     }
 
-    final AtomicReference<String> requestMethod = new AtomicReference<>();
-    final AtomicReference<String> requestPath = new AtomicReference<>();
-    final AtomicReference<byte[]> requestBody = new AtomicReference<>();
-    final String successMessage = "Upload successful";
+    AtomicReference<String> requestMethod = new AtomicReference<>();
+    AtomicReference<String> requestPath = new AtomicReference<>();
+    AtomicReference<byte[]> requestBody = new AtomicReference<>();
+    String successMessage = "Upload successful";
     try (HttpdForTests httpd = new HttpdForTests()) {
       httpd.addHandler(
           new AbstractHandler() {
@@ -202,7 +201,7 @@ public class DoctorCommandIntegrationTest {
                 Request request,
                 HttpServletRequest httpServletRequest,
                 HttpServletResponse httpServletResponse)
-                throws IOException, ServletException {
+                throws IOException {
               httpServletResponse.setStatus(200);
               request.setHandled(true);
 
@@ -267,7 +266,7 @@ public class DoctorCommandIntegrationTest {
                 Request request,
                 HttpServletRequest httpServletRequest,
                 HttpServletResponse httpResponse)
-                throws IOException, ServletException {
+                throws IOException {
               httpResponse.setStatus(200);
               request.setHandled(true);
 
@@ -359,8 +358,7 @@ public class DoctorCommandIntegrationTest {
                 String s,
                 Request request,
                 HttpServletRequest httpServletRequest,
-                HttpServletResponse httpServletResponse)
-                throws IOException, ServletException {
+                HttpServletResponse httpServletResponse) {
               httpServletResponse.setStatus(500);
               request.setHandled(true);
             }
@@ -398,8 +396,7 @@ public class DoctorCommandIntegrationTest {
     }
   }
 
-  private AbstractHandler createEndpointHttpdHandler(
-      final String expectedMethod, final String expectedBody) {
+  private AbstractHandler createEndpointHttpdHandler(String expectedMethod, String expectedBody) {
     return new AbstractHandler() {
       @Override
       public void handle(
@@ -407,7 +404,7 @@ public class DoctorCommandIntegrationTest {
           Request request,
           HttpServletRequest httpRequest,
           HttpServletResponse httpResponse)
-          throws IOException, ServletException {
+          throws IOException {
         httpResponse.setStatus(200);
         request.setHandled(true);
 

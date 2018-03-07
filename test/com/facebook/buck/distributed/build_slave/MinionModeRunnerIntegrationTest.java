@@ -91,7 +91,7 @@ public class MinionModeRunnerIntegrationTest {
         .andReturn(
             new Closeable() {
               @Override
-              public void close() throws IOException {}
+              public void close() {}
             })
         .anyTimes();
     EasyMock.replay(service);
@@ -164,9 +164,9 @@ public class MinionModeRunnerIntegrationTest {
     //         |
     //         +-- (miss target 3)
 
-    final String MISS_TARGET_1 = ROOT_TARGET + "_miss1";
-    final String MISS_TARGET_2 = ROOT_TARGET + "_miss2";
-    final String MISS_TARGET_3 = ROOT_TARGET + "_miss3";
+    String MISS_TARGET_1 = ROOT_TARGET + "_miss1";
+    String MISS_TARGET_2 = ROOT_TARGET + "_miss2";
+    String MISS_TARGET_3 = ROOT_TARGET + "_miss3";
 
     MinionBuildProgressTracker unexpectedCacheMissTracker =
         EasyMock.createMock(MinionBuildProgressTracker.class);
@@ -292,15 +292,13 @@ public class MinionModeRunnerIntegrationTest {
 
     @Override
     public int buildLocallyAndReturnExitCode(
-        Iterable<String> targetsToBuild, Optional<Path> pathToBuildReport)
-        throws IOException, InterruptedException {
+        Iterable<String> targetsToBuild, Optional<Path> pathToBuildReport) {
       buildTargets.addAll(ImmutableList.copyOf((targetsToBuild)));
       return 0;
     }
 
     @Override
-    public List<BuildEngineResult> initializeBuild(Iterable<String> targetsToBuild)
-        throws IOException {
+    public List<BuildEngineResult> initializeBuild(Iterable<String> targetsToBuild) {
 
       buildTargets.addAll(ImmutableList.copyOf((targetsToBuild)));
 
@@ -337,7 +335,7 @@ public class MinionModeRunnerIntegrationTest {
     }
 
     @Override
-    public void shutdown() throws IOException {
+    public void shutdown() {
       // Nothing to cleanup in this implementation
     }
   }
