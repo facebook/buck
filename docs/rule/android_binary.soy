@@ -330,6 +330,18 @@ An <code>android_binary()</code> rule is used to generate an Android APK.
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name : 'native_library_merge_map' /}
+  {{param default : '{}' /}}
+  {param desc}
+  <p>
+    An advanced option for apps with many native libraries.
+    For more details,
+    see <a href="https://github.com/fbsamples/android-native-library-merging-demo">this article</a>.
+  </p>
+  {/param}
+{/call}
+
 {/param} // close args
 
 {param examples}
