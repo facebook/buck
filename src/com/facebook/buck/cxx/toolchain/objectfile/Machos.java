@@ -67,7 +67,6 @@ public class Machos {
         /* Command body */ ObjectFileScrubbers.getBytes(map, commandSize - 8);
       }
     }
-
   }
 
   static boolean isMacho(FileChannel file) throws IOException {
@@ -147,7 +146,6 @@ public class Machos {
             }
             segmentSizePosition = segmentFileSizePosition;
             segmentSize = segmentFileSize;
-
           }
           break;
         case LC_SEGMENT_64:
@@ -173,7 +171,6 @@ public class Machos {
               throw new MachoException("map segment file size too big");
             }
             segmentSize = (int) segment64FileSize;
-
           }
           break;
       }
@@ -182,7 +179,7 @@ public class Machos {
 
     if (!linkEditSegmentFound) {
       /*The OSO entries are identified in segments named __LINKEDIT. If no segment is found with
-       that name, there is nothing to scrub.*/
+      that name, there is nothing to scrub.*/
       return;
     }
 
