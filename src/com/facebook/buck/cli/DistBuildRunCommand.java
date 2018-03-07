@@ -63,6 +63,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Option;
 
@@ -71,6 +72,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
 
   public static final String BUILD_STATE_FILE_ARG_NAME = "--build-state-file";
   public static final String BUILD_STATE_FILE_ARG_USAGE = "File containing the BuildStateJob data.";
+  public static final int SHUTDOWN_TIMEOUT_MINUTES = 1;
 
   @Nullable
   @Option(name = BUILD_STATE_FILE_ARG_NAME, usage = BUILD_STATE_FILE_ARG_USAGE)
@@ -183,7 +185,11 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
             getConcurrencyLimit(state.getRootCell().getBuckConfig());
 
         try (CommandThreadManager pool =
-                new CommandThreadManager(getClass().getName(), concurrencyLimit);
+                new CommandThreadManager(
+                    getClass().getName(),
+                    concurrencyLimit,
+                    SHUTDOWN_TIMEOUT_MINUTES,
+                    TimeUnit.MINUTES);
             RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
                 new EventPostingRuleKeyCacheScope<>(
                     params.getBuckEventBus(),
