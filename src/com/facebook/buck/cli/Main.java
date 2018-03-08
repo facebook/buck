@@ -615,8 +615,7 @@ public final class Main {
       isUsingDistributedBuild = subcommand.isUseDistributedBuild();
       if (!isUsingDistributedBuild && distBuildConfig.shouldUseDistributedBuild()) {
         isUsingDistributedBuild = true;
-        subcommand.setUseDistributedBuild(true);
-        subcommand.shouldPrintAutoDistributedBuildMessage(distBuildConfig);
+        subcommand.autoConversionToStampede(distBuildConfig);
       }
     }
 

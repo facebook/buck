@@ -45,6 +45,7 @@ public class StampedeBuildClient {
       new AtomicReference<>(createPendingStampedeId());
   private final BuckEventBus eventBus;
   private final ClientStatsTracker clientStatsTracker;
+  private final Optional<String> autoStampedeMessage;
 
   private final LocalBuildRunner racerBuildRunner;
   private final LocalBuildRunner synchronizedBuildRunner;
@@ -70,6 +71,7 @@ public class StampedeBuildClient {
     this.eventBus = eventBus;
     this.clientStatsTracker = clientStatsTracker;
     this.remoteBuildRuleSynchronizer = remoteBuildRuleSynchronizer;
+    this.autoStampedeMessage = Optional.empty();
     this.racerBuildRunner =
         createStampedeLocalBuildRunner(
             executorForLocalBuild,
@@ -105,10 +107,12 @@ public class StampedeBuildClient {
       DistBuildControllerInvocationArgs distBuildControllerInvocationArgs,
       ClientStatsTracker clientStatsTracker,
       boolean waitGracefullyForDistributedBuildThreadToFinish,
-      long distributedBuildThreadKillTimeoutSeconds) {
+      long distributedBuildThreadKillTimeoutSeconds,
+      Optional<String> autoStampedeMessage) {
     this.eventBus = eventBus;
     this.clientStatsTracker = clientStatsTracker;
     this.remoteBuildRuleSynchronizer = new RemoteBuildRuleSynchronizer();
+    this.autoStampedeMessage = autoStampedeMessage;
     this.racerBuildRunner =
         createStampedeLocalBuildRunner(
             executorForLocalBuild, localBuildExecutorInvoker, "racer", false, Optional.empty());
@@ -164,6 +168,7 @@ public class StampedeBuildClient {
     clientStatsTracker.setRacingBuildFinishedFirst(!proceedToLocalSynchronizedBuildPhase);
 
     if (proceedToLocalSynchronizedBuildPhase) {
+      eventBus.post(new DistBuildSuperConsoleEvent(autoStampedeMessage));
       eventBus.post(BuildEvent.reset());
       SynchronizedBuildPhase.run(
           distBuildRunner,

@@ -20,6 +20,7 @@ import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.distributed.DistBuildCreatedEvent;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
 import com.facebook.buck.distributed.StampedeLocalBuildStatusEvent;
+import com.facebook.buck.distributed.build_client.DistBuildSuperConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.event.ActionGraphEvent;
@@ -158,6 +159,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @GuardedBy("distBuildStatusLock")
   private String stampedeLocalBuildStatus = "init";
 
+  private volatile Optional<DistBuildSuperConsoleEvent> stampedeSuperConsoleEvent =
+      Optional.empty();
   private Optional<String> stampedeIdLogLine = Optional.empty();
 
   private final Set<String> actionGraphCacheMessage = new HashSet<>();
@@ -448,14 +451,16 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       maxThreadLines = threadLineLimitOnError;
     }
 
-    if (stampedeIdLogLine.isPresent()) {
-      lines.add(stampedeIdLogLine.get());
-    }
-
     String localBuildLinePrefix = "Building";
 
-    if (distBuildStarted != null) {
+    if (stampedeSuperConsoleEvent.isPresent()) {
       localBuildLinePrefix = "Local Build";
+
+      stampedeIdLogLine.ifPresent(lines::add);
+      stampedeSuperConsoleEvent
+          .get()
+          .getMessage()
+          .ifPresent(msg -> lines.add(ansi.asInformationText(msg)));
       long distBuildMs =
           logEventPair(
               "Distributed Build",
@@ -475,17 +480,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
               new DistBuildSlaveStateRenderer(
                   ansi, currentTimeMillis, ImmutableList.copyOf(distBuildSlaveTracker.values()));
         }
-        int numLinesRendered =
-            renderLines(renderer, lines, maxThreadLines, shouldAlwaysSortThreadsByTime);
 
-        if (numLinesRendered > 0) {
-          // We don't want to print anything else while dist-build is going on.
-          return lines.build();
-        }
+        renderLines(renderer, lines, maxThreadLines, true);
       }
     }
 
-    // TODO(shivanker): Add a similar source file upload line for distributed build.
     if (networkStatsKeeper.getRemoteDownloadedArtifactsCount() > 0 || !this.hideEmptyDownload) {
       lines.add(getNetworkStatsLine(buildFinished));
     }
@@ -823,6 +822,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @Subscribe
   public void onDistBuildCreatedEvent(DistBuildCreatedEvent event) {
     stampedeIdLogLine = Optional.of(event.getConsoleLogLine());
+  }
+
+  @Subscribe
+  public void onDistBuildSuperConsoleEvent(DistBuildSuperConsoleEvent event) {
+    stampedeSuperConsoleEvent = Optional.of(event);
   }
 
   /** When a new cache event is about to start. */

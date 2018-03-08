@@ -47,6 +47,7 @@ import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
 import com.facebook.buck.distributed.RuleKeyNameAndType;
 import com.facebook.buck.distributed.build_client.DistBuildControllerArgs;
 import com.facebook.buck.distributed.build_client.DistBuildControllerInvocationArgs;
+import com.facebook.buck.distributed.build_client.DistBuildSuperConsoleEvent;
 import com.facebook.buck.distributed.build_client.LogStateTracker;
 import com.facebook.buck.distributed.build_client.StampedeBuildClient;
 import com.facebook.buck.distributed.thrift.BuckVersion;
@@ -142,7 +143,6 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
@@ -254,6 +254,7 @@ public class BuildCommand extends AbstractCommand {
   )
   private boolean useDistributedBuild = false;
 
+  private boolean autoDistBuild = false;
   private Optional<String> autoDistBuildMessage = Optional.empty();
 
   @Nullable
@@ -345,11 +346,14 @@ public class BuildCommand extends AbstractCommand {
     return useDistributedBuild;
   }
 
-  public void setUseDistributedBuild(boolean useDistributedBuild) {
-    this.useDistributedBuild = useDistributedBuild;
-  }
-
-  public void shouldPrintAutoDistributedBuildMessage(DistBuildConfig config) {
+  /**
+   * Mark this build as being automatically converted to stampede.
+   *
+   * @param config to retrieve the message (if any) to be shown to the user.
+   */
+  public void autoConversionToStampede(DistBuildConfig config) {
+    this.autoDistBuild = true;
+    this.useDistributedBuild = true;
     this.autoDistBuildMessage = config.getAutoDistributedBuildMessage();
   }
 
@@ -850,13 +854,10 @@ public class BuildCommand extends AbstractCommand {
 
     BuildEvent.DistBuildStarted started = BuildEvent.distBuildStarted();
     params.getBuckEventBus().post(started);
-    autoDistBuildMessage.ifPresent(
-        msg ->
-            params
-                .getBuckEventBus()
-                .post(
-                    ConsoleEvent.createForMessageWithAnsiEscapeCodes(
-                        Level.INFO, params.getConsole().getAnsi().asInformationText(msg))));
+    if (!autoDistBuild) {
+      // Enable Stampede console now, but only if it's an explicit stampede build.
+      params.getBuckEventBus().post(new DistBuildSuperConsoleEvent());
+    }
 
     LOG.info("Starting async file hash computation and job state serialization.");
     AsyncJobStateAndCells stateAndCells =
@@ -981,7 +982,8 @@ public class BuildCommand extends AbstractCommand {
               distBuildControllerInvocationArgs,
               distBuildClientStats,
               waitForDistBuildThreadToFinishGracefully,
-              distributedBuildThreadKillTimeoutSeconds);
+              distributedBuildThreadKillTimeoutSeconds,
+              autoDistBuildMessage);
 
       distBuildClientStats.startTimer(PERFORM_LOCAL_BUILD);
 
