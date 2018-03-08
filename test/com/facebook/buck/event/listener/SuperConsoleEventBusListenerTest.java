@@ -961,8 +961,8 @@ public class SuperConsoleEventBusListenerTest {
             parsingLine,
             actionGraphLine,
             "Distributed Build... 1.1 sec (0%) local status: init (10% done); remote status: building",
-            " Server 0: Preparing: creating action graph ...",
-            " Server 1: Preparing: creating action graph, materializing source files [128] ...",
+            " - Preparing: creating action graph, materializing source files [128] ...",
+            " - Preparing: creating action graph ...",
             "Downloading... 0 artifacts, 0.00 bytes",
             "Local Build... 1.0 sec (10%) 1/10 jobs, 1 updated, 10.0% cache miss",
             " - //chicken:dance... 0.1 sec (preparing)"));
@@ -970,6 +970,7 @@ public class SuperConsoleEventBusListenerTest {
     timeMillis += 100;
     slave1.setTotalRulesCount(10);
     slave1.setRulesFinishedCount(5);
+    slave1.setRulesBuildingCount(1);
     CacheRateStats cacheRateStatsForSlave1 = new CacheRateStats();
     slave1.setCacheRateStats(cacheRateStatsForSlave1);
     cacheRateStatsForSlave1.setTotalRulesCount(10);
@@ -1021,8 +1022,8 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             "Distributed Build... 1.3 sec (12%) local status: init (0% done); "
                 + "remote status: building, 10/80 jobs, 3.3% cache miss",
-            " Server 0: Idle... built 5/10 jobs, 10.0% cache miss",
-            " Server 1: Working on 5 jobs... built 5/20 jobs, 1 jobs failed, 0.0% cache miss",
+            " - Building 5 jobs... built 5/20 jobs, 1 jobs failed, 0.0% cache miss",
+            " - Building 1 jobs... built 5/10 jobs, 10.0% cache miss",
             "Downloading... 0 artifacts, 0.00 bytes",
             "Local Build... 1.2 sec (0%) 0/5 jobs, 1 updated, 20.0% cache miss"));
 
@@ -1033,14 +1034,14 @@ public class SuperConsoleEventBusListenerTest {
     cacheRateStatsForSlave1.setCacheHitsCount(8);
     cacheRateStatsForSlave1.setCacheMissesCount(1);
 
-    slave2.setRulesBuildingCount(0);
-    slave2.setRulesFinishedCount(20);
+    slave2.setRulesBuildingCount(1);
+    slave2.setRulesFinishedCount(19);
     slave2.setHttpArtifactUploadsScheduledCount(3);
     slave2.setHttpArtifactUploadsOngoingCount(1);
     slave2.setHttpArtifactUploadsSuccessCount(1);
     slave2.setHttpArtifactUploadsFailureCount(1);
-    cacheRateStatsForSlave2.setUpdatedRulesCount(20);
-    cacheRateStatsForSlave2.setCacheHitsCount(19);
+    cacheRateStatsForSlave2.setUpdatedRulesCount(19);
+    cacheRateStatsForSlave2.setCacheHitsCount(18);
     cacheRateStatsForSlave2.setCacheMissesCount(0);
     cacheRateStatsForSlave2.setCacheErrorsCount(1);
 
@@ -1100,10 +1101,38 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             "Distributed Build... 1.5 sec (62%) local status: building (20% done);"
                 + " remote status: custom, 50/80 jobs,"
+                + " 3.3% cache miss, 1 [3.6%] cache errors, 1 upload errors",
+            " - Building 1 jobs... built 19/20 jobs, 1 jobs failed, 0.0% cache miss, "
+                + "1 [5.3%] cache errors, 1/3 uploaded, 1 upload errors",
+            " - Building 1 jobs... built 9/10 jobs, 10.0% cache miss",
+            "Downloading... 0 artifacts, 0.00 bytes",
+            "Local Build... 1.4 sec (20%) 1/5 jobs, 1 updated, 20.0% cache miss",
+            " - IDLE"));
+
+    slave2.setRulesBuildingCount(0);
+    slave2.setRulesFinishedCount(20);
+    cacheRateStatsForSlave2.setUpdatedRulesCount(20);
+    cacheRateStatsForSlave2.setCacheHitsCount(19);
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            new DistBuildStatusEvent(
+                DistBuildStatus.builder()
+                    .setStatus("custom")
+                    .setSlaveStatuses(ImmutableList.of(slave1, slave2))
+                    .build()),
+            timeMillis,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+    validateConsole(
+        listener,
+        timeMillis,
+        ImmutableList.of(
+            parsingLine,
+            actionGraphLine,
+            "Distributed Build... 1.5 sec (62%) local status: building (20% done);"
+                + " remote status: custom, 50/80 jobs,"
                 + " 3.3% cache miss, 1 [3.4%] cache errors, 1 upload errors",
-            " Server 0: Working on 1 jobs... built 9/10 jobs, 10.0% cache miss",
-            " Server 1: Idle... built 20/20 jobs, 1 jobs failed, 0.0% cache miss, "
-                + "1 [5.0%] cache errors, 1/3 uploaded, 1 upload errors",
+            " - Building 1 jobs... built 9/10 jobs, 10.0% cache miss",
             "Downloading... 0 artifacts, 0.00 bytes",
             "Local Build... 1.4 sec (20%) 1/5 jobs, 1 updated, 20.0% cache miss",
             " - IDLE"));

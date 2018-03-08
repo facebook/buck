@@ -18,15 +18,51 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import java.util.stream.LongStream;
+import java.util.Comparator;
+import java.util.stream.IntStream;
 
 public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
   private final Ansi ansi;
   private final long currentTimeMs;
   private final ImmutableList<BuildSlaveStatus> slaveStatuses;
+
+  private final Comparator<Pair<Integer, BuildSlaveStatus>> serverComparator =
+      (indexAndSlave1, indexAndSlave2) -> {
+        BuildSlaveStatus status1 = indexAndSlave1.getSecond();
+        BuildSlaveStatus status2 = indexAndSlave2.getSecond();
+
+        int buildingDifference =
+            Integer.compare(status1.getRulesBuildingCount(), status2.getRulesBuildingCount());
+        if (buildingDifference != 0) {
+          return -buildingDifference; // Servers with higher value at the top.
+        }
+
+        int totalRulesDifference =
+            Integer.compare(status1.getTotalRulesCount(), status2.getTotalRulesCount());
+        if (totalRulesDifference != 0) {
+          return -totalRulesDifference; // Servers with higher value at the top.
+        }
+
+        int failureDifference =
+            Integer.compare(status1.getRulesFailureCount(), status2.getRulesFailureCount());
+        if (failureDifference != 0) {
+          return -failureDifference; // Servers with higher value at the top.
+        }
+
+        int materializedFilesDifference =
+            Integer.compare(
+                status1.getFilesMaterializedCount(), status2.getFilesMaterializedCount());
+        if (materializedFilesDifference != 0) {
+          return -materializedFilesDifference; // Servers with higher value at the top.
+        }
+
+        // If nothing else, preserve the ordering based on recorded indices.
+        return Integer.compare(indexAndSlave1.getFirst(), indexAndSlave2.getFirst());
+      };
 
   public DistBuildSlaveStateRenderer(
       Ansi ansi, long currentTimeMs, ImmutableList<BuildSlaveStatus> slaveStatuses) {
@@ -40,16 +76,23 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
     return "Servers";
   }
 
+  private boolean isSlaveIdle(BuildSlaveStatus status) {
+    return status.getTotalRulesCount() != 0 && status.getRulesBuildingCount() == 0;
+  }
+
   @Override
   public int getExecutorCount() {
-    return slaveStatuses.size();
+    return (int) slaveStatuses.stream().filter(status -> !isSlaveIdle(status)).count();
   }
 
   @Override
   public ImmutableList<Long> getSortedExecutorIds(boolean sortByTime) {
-    // TODO(shivanker): Implement 'sort by busyness' for Stampede BuildSlaves.
-    return LongStream.range(0, slaveStatuses.size())
+    return IntStream.range(0, slaveStatuses.size())
         .boxed()
+        .map(i -> new Pair<>(i, slaveStatuses.get(i)))
+        .filter(pair -> !isSlaveIdle(pair.getSecond()))
+        .sorted(serverComparator)
+        .map(pair -> (long) pair.getFirst())
         .collect(ImmutableList.toImmutableList());
   }
 
@@ -57,7 +100,7 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
   public String renderStatusLine(long slaveID, StringBuilder lineBuilder) {
     Preconditions.checkArgument(slaveID >= 0 && slaveID < slaveStatuses.size());
     BuildSlaveStatus status = slaveStatuses.get((int) slaveID);
-    lineBuilder.append(String.format(" Server %d: ", slaveID));
+    lineBuilder.append(String.format(" - ", slaveID));
 
     if (status.getTotalRulesCount() == 0) {
       ImmutableList.Builder<String> columns = new ImmutableList.Builder<>();
@@ -72,7 +115,7 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
     } else {
       String prefix = "Idle";
       if (status.getRulesBuildingCount() != 0) {
-        prefix = String.format("Working on %d jobs", status.getRulesBuildingCount());
+        prefix = String.format("Building %d jobs", status.getRulesBuildingCount());
       }
 
       ImmutableList.Builder<String> columns = new ImmutableList.Builder<>();
@@ -116,8 +159,6 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
 
     if (status.getRulesFailureCount() != 0) {
       return ansi.asErrorText(lineBuilder.toString());
-    } else if (status.getTotalRulesCount() > 0 && status.getRulesBuildingCount() == 0) {
-      return ansi.asWarningText(lineBuilder.toString());
     } else {
       return lineBuilder.toString();
     }
