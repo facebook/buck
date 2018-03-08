@@ -450,7 +450,7 @@ public class DistBuildServiceTest {
         .once();
     EasyMock.replay(frontendService);
 
-    distBuildService.uploadBuildSlaveConsoleEvents(stampedeId, buildSlaveRunId, consoleEvents);
+    distBuildService.uploadBuildSlaveEvents(stampedeId, buildSlaveRunId, consoleEvents);
     BuildSlaveEventsQuery query =
         distBuildService.createBuildSlaveEventsQuery(stampedeId, buildSlaveRunId, 2);
     List<BuildSlaveEventWrapper> events =

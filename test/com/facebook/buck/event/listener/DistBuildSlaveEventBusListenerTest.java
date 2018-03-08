@@ -16,7 +16,6 @@
 
 package com.facebook.buck.event.listener;
 
-import static org.easymock.EasyMock.anyLong;
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.eq;
@@ -38,6 +37,7 @@ import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker.Sl
 import com.facebook.buck.distributed.build_slave.HealthCheckStatsTracker;
 import com.facebook.buck.distributed.testutil.FakeDistBuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
+import com.facebook.buck.distributed.thrift.BuildSlaveEventType;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlavePerStageTimingStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
@@ -179,7 +179,7 @@ public class DistBuildSlaveEventBusListenerTest {
 
     Capture<List<BuildSlaveEvent>> capturedEventLists = Capture.newInstance(CaptureType.ALL);
 
-    distBuildServiceMock.uploadBuildSlaveConsoleEvents(
+    distBuildServiceMock.uploadBuildSlaveEvents(
         eq(stampedeId), eq(buildSlaveRunId), capture(capturedEventLists));
     expectLastCall().atLeastOnce();
     replay(distBuildServiceMock);
@@ -212,8 +212,7 @@ public class DistBuildSlaveEventBusListenerTest {
     BuildSlaveStatus expectedStatus = createBuildSlaveStatusWithZeros();
     expectedStatus.setTotalRulesCount(50);
 
-    distBuildServiceMock.uploadBuildSlaveConsoleEvents(
-        eq(stampedeId), eq(buildSlaveRunId), anyObject());
+    distBuildServiceMock.uploadBuildSlaveEvents(eq(stampedeId), eq(buildSlaveRunId), anyObject());
     expectLastCall().anyTimes();
 
     distBuildServiceMock.storeBuildSlaveFinishedStats(
@@ -241,8 +240,7 @@ public class DistBuildSlaveEventBusListenerTest {
     BuildSlaveStatus expectedStatus = createBuildSlaveStatusWithZeros();
     expectedStatus.setRulesFinishedCount(50);
 
-    distBuildServiceMock.uploadBuildSlaveConsoleEvents(
-        eq(stampedeId), eq(buildSlaveRunId), anyObject());
+    distBuildServiceMock.uploadBuildSlaveEvents(eq(stampedeId), eq(buildSlaveRunId), anyObject());
     expectLastCall().anyTimes();
 
     distBuildServiceMock.storeBuildSlaveFinishedStats(
@@ -271,8 +269,7 @@ public class DistBuildSlaveEventBusListenerTest {
     CacheRateStats cacheRateStats = expectedStatus.getCacheRateStats();
     cacheRateStats.setUnexpectedCacheMissesCount(13);
 
-    distBuildServiceMock.uploadBuildSlaveConsoleEvents(
-        eq(stampedeId), eq(buildSlaveRunId), anyObject());
+    distBuildServiceMock.uploadBuildSlaveEvents(eq(stampedeId), eq(buildSlaveRunId), anyObject());
     expectLastCall().anyTimes();
 
     distBuildServiceMock.storeBuildSlaveFinishedStats(
@@ -297,14 +294,10 @@ public class DistBuildSlaveEventBusListenerTest {
 
   @Test
   public void testCoordinatorBuildProgressUpdatesAreSent() throws IOException {
-    Capture<CoordinatorBuildProgress> capturedBuildProgress = Capture.newInstance(CaptureType.LAST);
-    distBuildServiceMock.sendBuildProgressEvent(
-        eq(stampedeId), eq(buildSlaveRunId), capture(capturedBuildProgress), anyLong());
+    Capture<List<BuildSlaveEvent>> capturedBuildSlaveEvents = Capture.newInstance(CaptureType.ALL);
+    distBuildServiceMock.uploadBuildSlaveEvents(
+        eq(stampedeId), eq(buildSlaveRunId), capture(capturedBuildSlaveEvents));
     expectLastCall().atLeastOnce();
-
-    distBuildServiceMock.uploadBuildSlaveConsoleEvents(
-        eq(stampedeId), eq(buildSlaveRunId), anyObject());
-    expectLastCall().anyTimes();
 
     distBuildServiceMock.updateBuildSlaveStatus(eq(stampedeId), eq(buildSlaveRunId), anyObject());
     expectLastCall().anyTimes();
@@ -326,7 +319,24 @@ public class DistBuildSlaveEventBusListenerTest {
 
     listener.close();
     verify(distBuildServiceMock);
-    Assert.assertEquals(expectedProgress, capturedBuildProgress.getValue());
+
+    List<BuildSlaveEvent> progressEvents =
+        capturedBuildSlaveEvents
+            .getValues()
+            .stream()
+            .flatMap(List::stream)
+            .filter(
+                event ->
+                    event.eventType.equals(BuildSlaveEventType.COORDINATOR_BUILD_PROGRESS_EVENT))
+            .collect(Collectors.toList());
+
+    Assert.assertTrue("No COORDINATOR_BUILD_PROGRESS_EVENTs were sent.", progressEvents.size() > 0);
+    Assert.assertEquals(
+        expectedProgress,
+        progressEvents
+            .get(progressEvents.size() - 1)
+            .getCoordinatorBuildProgressEvent()
+            .getBuildProgress());
   }
 
   @Test
@@ -351,8 +361,7 @@ public class DistBuildSlaveEventBusListenerTest {
     fileMaterializationStatsTracker.recordLocalFileMaterialized();
     expectedStatus.setFilesMaterializedCount(FILES_MATERIALIZED_COUNT);
 
-    distBuildServiceMock.uploadBuildSlaveConsoleEvents(
-        eq(stampedeId), eq(buildSlaveRunId), anyObject());
+    distBuildServiceMock.uploadBuildSlaveEvents(eq(stampedeId), eq(buildSlaveRunId), anyObject());
     expectLastCall().anyTimes();
 
     distBuildServiceMock.storeBuildSlaveFinishedStats(
@@ -485,8 +494,7 @@ public class DistBuildSlaveEventBusListenerTest {
     expectedStatus.setHttpArtifactUploadsSuccessCount(3);
     expectedStatus.setHttpArtifactUploadsFailureCount(1);
 
-    distBuildServiceMock.uploadBuildSlaveConsoleEvents(
-        eq(stampedeId), eq(buildSlaveRunId), anyObject());
+    distBuildServiceMock.uploadBuildSlaveEvents(eq(stampedeId), eq(buildSlaveRunId), anyObject());
     expectLastCall().anyTimes();
 
     distBuildServiceMock.storeBuildSlaveFinishedStats(
@@ -599,8 +607,7 @@ public class DistBuildSlaveEventBusListenerTest {
     healthCheckStats.setSlowestDeadMinionCheckIntervalMillis(0);
     expectedFinishedStats.setHealthCheckStats(healthCheckStats);
 
-    distBuildServiceMock.uploadBuildSlaveConsoleEvents(
-        eq(stampedeId), eq(buildSlaveRunId), anyObject());
+    distBuildServiceMock.uploadBuildSlaveEvents(eq(stampedeId), eq(buildSlaveRunId), anyObject());
     expectLastCall().anyTimes();
 
     distBuildServiceMock.updateBuildSlaveStatus(eq(stampedeId), eq(buildSlaveRunId), anyObject());
@@ -626,7 +633,7 @@ public class DistBuildSlaveEventBusListenerTest {
     slaveStatsTracker.setElapsedTimeMillis(
         SlaveEvents.ACTION_GRAPH_CREATION_TIME, ACTION_GRAPH_CREATION_TIME_MS);
 
-    listener.publishBuildSlaveFinishedEvent(EXIT_CODE);
+    listener.sendFinalServerUpdates(EXIT_CODE);
     listener.close();
     verify(distBuildServiceMock);
     Assert.assertEquals(expectedFinishedStats, capturedStats.getValue());

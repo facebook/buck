@@ -247,8 +247,8 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
           timeStatsTracker.stopTimer(SlaveEvents.TOTAL_RUNTIME);
 
           if (slaveEventListener != null) {
-            slaveEventListener.sendFinalServerUpdates();
-            slaveEventListener.publishBuildSlaveFinishedEvent(returnCode.getCode());
+            slaveEventListener.sendFinalServerUpdates(returnCode.getCode());
+            LOG.info("Sent the final slave status and events.");
           }
 
           if (returnCode == ExitCode.SUCCESS) {

@@ -24,11 +24,15 @@ import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.build_slave.CoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.distributed.build_slave.HealthCheckStatsTracker;
 import com.facebook.buck.distributed.build_slave.MinionBuildProgressTracker;
+import com.facebook.buck.distributed.thrift.BuildRuleFinishedEvent;
+import com.facebook.buck.distributed.thrift.BuildRuleStartedEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
+import com.facebook.buck.distributed.thrift.BuildSlaveEventType;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
+import com.facebook.buck.distributed.thrift.CoordinatorBuildProgressEvent;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
@@ -43,6 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -52,11 +57,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.GuardedBy;
 
 /**
  * Listener to transmit DistBuildSlave events over to buck frontend. NOTE: We do not promise to
@@ -79,17 +82,11 @@ public class DistBuildSlaveEventBusListener
   private final BuildSlaveRunId buildSlaveRunId;
   private final Clock clock;
   private final ScheduledFuture<?> scheduledServerUpdates;
-  private final ScheduledExecutorService networkScheduler;
   private final String hostname;
 
-  private final Object consoleEventsLock = new Object();
   private final Object sendServerUpdatesLock = new Object();
 
-  @GuardedBy("consoleEventsLock")
-  private final List<BuildSlaveEvent> consoleEvents = new LinkedList<>();
-
-  private final List<String> startedTargetsToSignal = new LinkedList<>();
-  private final List<String> finishedTargetsToSignal = new LinkedList<>();
+  private final List<BuildSlaveEvent> pendingSlaveEvents = new LinkedList<>();
 
   private final CacheRateStatsKeeper cacheRateStatsKeeper = new CacheRateStatsKeeper();
 
@@ -111,8 +108,6 @@ public class DistBuildSlaveEventBusListener
   private volatile @Nullable DistBuildService distBuildService;
   private volatile Optional<Integer> exitCode = Optional.empty();
   private volatile boolean sentFinishedStatsToServer;
-  private volatile boolean mostBuildRulesCompleted = false;
-  private AtomicBoolean mostBuildRulesCompletedEventSent = new AtomicBoolean(false);
 
   public DistBuildSlaveEventBusListener(
       StampedeId stampedeId,
@@ -151,7 +146,6 @@ public class DistBuildSlaveEventBusListener
     this.slaveStatsTracker = slaveStatsTracker;
     this.fileMaterializationStatsTracker = fileMaterializationStatsTracker;
     this.healthCheckStatsTracker = healthCheckStatsTracker;
-    this.networkScheduler = networkScheduler;
     this.distBuildMode = distBuildMode;
 
     scheduledServerUpdates =
@@ -176,28 +170,7 @@ public class DistBuildSlaveEventBusListener
 
   @Override
   public void close() throws IOException {
-    if (scheduledServerUpdates.isCancelled()) {
-      return; // close() has already been called. Cancelling again will fail.
-    }
-
-    boolean cancelled = scheduledServerUpdates.cancel(false);
-
-    if (!cancelled) {
-      // Wait for the timer to shut down.
-      try {
-        scheduledServerUpdates.get(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-      } catch (InterruptedException | ExecutionException | TimeoutException e) {
-        LOG.error(e);
-      } catch (CancellationException e) {
-        LOG.info("Failed to call get() on scheduled executor future, as already cancelled.");
-      }
-    }
-
-    // Send final updates.
-    sendServerUpdates();
-    if (exitCode.isPresent()) {
-      sendFinishedStatsToFrontend(createBuildSlaveFinishedStats());
-    }
+    stopScheduledUpdates();
   }
 
   private BuildSlaveStatus createBuildSlaveStatus() {
@@ -252,6 +225,21 @@ public class DistBuildSlaveEventBusListener
     }
   }
 
+  private synchronized void sendAllRulesFinishedEvent() {
+    if (totalBuildRuleFinishedEventsSent.get() == 0) {
+      return; // This was not the coordinator.
+    }
+    try {
+      if (distBuildService != null) {
+        distBuildService.sendAllBuildRulesPublishedEvent(
+            stampedeId, buildSlaveRunId, clock.currentTimeMillis());
+      }
+
+    } catch (RuntimeException | IOException e) {
+      LOG.error(e, "Failed to send slave final server updates.");
+    }
+  }
+
   private void sendStatusToFrontend() {
     if (distBuildService == null) {
       return;
@@ -265,171 +253,79 @@ public class DistBuildSlaveEventBusListener
     }
   }
 
-  private void sendBuildRuleCompletedEvents() {
-    if (distBuildService == null) {
-      return;
+  private Optional<BuildSlaveEvent> createCoordinatorBuildProgressEvent() {
+    if (coordinatorBuildProgress == null) {
+      return Optional.empty();
     }
 
-    ImmutableList<String> finishedTargetsCopy;
-    synchronized (finishedTargetsToSignal) {
-      finishedTargetsCopy = ImmutableList.copyOf(finishedTargetsToSignal);
-    }
+    CoordinatorBuildProgressEvent progressEvent =
+        new CoordinatorBuildProgressEvent().setBuildProgress(coordinatorBuildProgress);
 
-    if (finishedTargetsCopy.size() == 0) {
-      return;
-    }
-
-    for (String target : finishedTargetsCopy) {
-      LOG.info(String.format("Publishing build rule finished event for target [%s]", target));
-    }
-
-    // TODO: consider batching if list is too big.
-    try {
-      distBuildService.uploadBuildRuleFinishedEvents(
-          stampedeId, buildSlaveRunId, finishedTargetsCopy, clock.currentTimeMillis());
-
-      totalBuildRuleFinishedEventsSent.addAndGet(finishedTargetsCopy.size());
-    } catch (IOException e) {
-      LOG.error(e, "Could not upload build rule finished events to frontend.");
-    }
-
-    // Only remove events once we are sure they have been sent to the client, otherwise
-    // client will freeze up waiting for targets until end of the build.
-    synchronized (finishedTargetsToSignal) {
-      finishedTargetsToSignal.removeAll(finishedTargetsCopy);
-    }
-  }
-
-  private void sendBuildRuleStartedEvents() {
-    if (distBuildService == null) {
-      return;
-    }
-
-    ImmutableList<String> startedTargetsCopy;
-    synchronized (startedTargetsToSignal) {
-      startedTargetsCopy = ImmutableList.copyOf(startedTargetsToSignal);
-    }
-
-    if (startedTargetsCopy.size() == 0) {
-      return;
-    }
-
-    for (String target : startedTargetsCopy) {
-      LOG.info(String.format("Publishing build rule started event for target [%s]", target));
-    }
-
-    try {
-      distBuildService.uploadBuildRuleStartedEvents(
-          stampedeId, buildSlaveRunId, startedTargetsCopy, clock.currentTimeMillis());
-    } catch (IOException e) {
-      LOG.error(e, "Could not upload build rule started events to frontend.");
-    }
-
-    // Only remove events once we are sure they have been sent to the client, otherwise
-    // client will freeze up waiting for targets until end of the build.
-    synchronized (startedTargetsToSignal) {
-      startedTargetsToSignal.removeAll(startedTargetsCopy);
-    }
-  }
-
-  private void sendConsoleEventsToFrontend() {
-    if (distBuildService == null) {
-      return;
-    }
-
-    ImmutableList<BuildSlaveEvent> consoleEventsCopy;
-    synchronized (consoleEventsLock) {
-      consoleEventsCopy = ImmutableList.copyOf(consoleEvents);
-    }
-
-    if (consoleEventsCopy.size() == 0) {
-      return;
-    }
-
-    try {
-      distBuildService.uploadBuildSlaveConsoleEvents(
-          stampedeId, buildSlaveRunId, consoleEventsCopy);
-    } catch (IOException e) {
-      LOG.error(e, "Could not upload slave console events to frontend.");
-    }
-
-    synchronized (consoleEventsLock) {
-      consoleEvents.removeAll(consoleEventsCopy);
-    }
-  }
-
-  private void sendCoordinatorBuildProgressEvent() {
-    if (distBuildService == null || coordinatorBuildProgress == null) {
-      return;
-    }
-
-    try {
-      distBuildService.sendBuildProgressEvent(
-          stampedeId, buildSlaveRunId, coordinatorBuildProgress, clock.currentTimeMillis());
-    } catch (IOException e) {
-      LOG.error(e, "Could not send build progress event to frontend.");
-    }
+    BuildSlaveEvent buildSlaveEvent =
+        DistBuildUtil.createBuildSlaveEvent(
+            BuildSlaveEventType.COORDINATOR_BUILD_PROGRESS_EVENT, clock.currentTimeMillis());
+    buildSlaveEvent.setCoordinatorBuildProgressEvent(progressEvent);
+    return Optional.of(buildSlaveEvent);
   }
 
   private void sendServerUpdates() {
+    if (distBuildService == null) {
+      return;
+    }
+
     synchronized (sendServerUpdatesLock) {
+      LOG.info("Sending server updates..");
+      sendStatusToFrontend();
+
+      List<BuildSlaveEvent> slaveEvents;
+      synchronized (pendingSlaveEvents) {
+        slaveEvents = new ArrayList<>(pendingSlaveEvents);
+      }
+      createCoordinatorBuildProgressEvent().ifPresent(slaveEvents::add);
+      if (slaveEvents.size() == 0) {
+        return;
+      }
+
       try {
-        LOG.info("Sending server updates..");
-        sendStatusToFrontend();
-        sendConsoleEventsToFrontend();
-        sendBuildRuleStartedEvents();
-        sendBuildRuleCompletedEvents();
-        sendMostBuildRulesCompletedEvent();
-        sendCoordinatorBuildProgressEvent();
-      } catch (RuntimeException ex) {
-        LOG.error(ex, "Failed to send slave server updates.");
+        // TODO(alisdair, shivanker): Consider batching if list is too big.
+        distBuildService.uploadBuildSlaveEvents(stampedeId, buildSlaveRunId, slaveEvents);
+        synchronized (pendingSlaveEvents) {
+          pendingSlaveEvents.removeAll(slaveEvents);
+        }
+      } catch (IOException e) {
+        LOG.error(e, "Failed to upload slave events.");
       }
     }
   }
 
-  private void sendMostBuildRulesCompletedEvent() {
-    if (!mostBuildRulesCompleted || distBuildService == null) {
-      return;
+  private void stopScheduledUpdates() {
+    if (scheduledServerUpdates.isCancelled()) {
+      return; // This method has already been called. Cancelling again will fail.
     }
 
-    boolean eventAlreadySent = mostBuildRulesCompletedEventSent.getAndSet(true);
-    if (eventAlreadySent) {
-      return;
+    boolean cancelled = scheduledServerUpdates.cancel(false);
+
+    if (!cancelled) {
+      // Wait for the timer to shut down.
+      try {
+        scheduledServerUpdates.get(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+      } catch (InterruptedException | ExecutionException | TimeoutException e) {
+        LOG.error(e);
+      } catch (CancellationException e) {
+        LOG.error(e, "Failed to call get() on scheduled executor future, as already cancelled.");
+      }
     }
 
-    try {
-      distBuildService.sendMostBuildRulesCompletedEvent(
-          stampedeId, buildSlaveRunId, clock.currentTimeMillis());
-    } catch (IOException e) {
-      LOG.error(e, "Failed to send most build rules completed event.");
-      mostBuildRulesCompletedEventSent.set(false); // Try again later
-    }
+    // Send final updates.
+    sendServerUpdates();
   }
 
   /** Publishes events from slave back to client that kicked off build (via frontend) */
-  public void sendFinalServerUpdates() {
-    synchronized (sendServerUpdatesLock) {
-      sendServerUpdates();
-      if (totalBuildRuleFinishedEventsSent.get() == 0) {
-        return; // This was not the co-ordiantor.
-      }
-      try {
-        if (distBuildService != null) {
-          distBuildService.sendAllBuildRulesPublishedEvent(
-              stampedeId, buildSlaveRunId, clock.currentTimeMillis());
-        }
-
-      } catch (RuntimeException | IOException e) {
-        LOG.error(e, "Failed to send slave final server updates.");
-      }
-    }
-  }
-
-  public void publishBuildSlaveFinishedEvent(int exitCode) {
+  public void sendFinalServerUpdates(int exitCode) {
     this.exitCode = Optional.of(exitCode);
-    BuildSlaveFinishedStats finishedStats = createBuildSlaveFinishedStats();
-    networkScheduler.schedule(
-        () -> sendFinishedStatsToFrontend(finishedStats), 0, TimeUnit.SECONDS);
+    stopScheduledUpdates();
+    sendAllRulesFinishedEvent();
+    sendFinishedStatsToFrontend(createBuildSlaveFinishedStats());
   }
 
   /** Record unexpected cache misses in build slaves. */
@@ -453,10 +349,10 @@ public class DistBuildSlaveEventBusListener
     if (!event.getLevel().equals(Level.WARNING) && !event.getLevel().equals(Level.SEVERE)) {
       return;
     }
-    synchronized (consoleEventsLock) {
+    synchronized (pendingSlaveEvents) {
       BuildSlaveEvent slaveConsoleEvent =
           DistBuildUtil.createBuildSlaveConsoleEvent(event, clock.currentTimeMillis());
-      consoleEvents.add(slaveConsoleEvent);
+      pendingSlaveEvents.add(slaveConsoleEvent);
     }
   }
 
@@ -525,11 +421,21 @@ public class DistBuildSlaveEventBusListener
     if (startedTargets.size() == 0) {
       return;
     }
+    List<BuildSlaveEvent> ruleStartedEvents = new LinkedList<>();
     for (String target : startedTargets) {
       LOG.info(String.format("Queueing build rule started event for target [%s]", target));
+      BuildRuleStartedEvent startedEvent = new BuildRuleStartedEvent();
+      startedEvent.setBuildTarget(target);
+
+      BuildSlaveEvent buildSlaveEvent =
+          DistBuildUtil.createBuildSlaveEvent(
+              BuildSlaveEventType.BUILD_RULE_STARTED_EVENT, clock.currentTimeMillis());
+      buildSlaveEvent.setBuildRuleStartedEvent(startedEvent);
+      ruleStartedEvents.add(buildSlaveEvent);
     }
-    synchronized (startedTargetsToSignal) {
-      startedTargetsToSignal.addAll(startedTargets);
+
+    synchronized (pendingSlaveEvents) {
+      pendingSlaveEvents.addAll(ruleStartedEvents);
     }
   }
 
@@ -538,16 +444,30 @@ public class DistBuildSlaveEventBusListener
     if (finishedTargets.size() == 0) {
       return;
     }
+    List<BuildSlaveEvent> ruleCompletionEvents = new LinkedList<>();
     for (String target : finishedTargets) {
       LOG.info(String.format("Queueing build rule finished event for target [%s]", target));
+      BuildRuleFinishedEvent finishedEvent = new BuildRuleFinishedEvent();
+      finishedEvent.setBuildTarget(target);
+
+      BuildSlaveEvent buildSlaveEvent =
+          DistBuildUtil.createBuildSlaveEvent(
+              BuildSlaveEventType.BUILD_RULE_FINISHED_EVENT, clock.currentTimeMillis());
+      buildSlaveEvent.setBuildRuleFinishedEvent(finishedEvent);
+      ruleCompletionEvents.add(buildSlaveEvent);
     }
-    synchronized (finishedTargetsToSignal) {
-      finishedTargetsToSignal.addAll(finishedTargets);
+
+    synchronized (pendingSlaveEvents) {
+      pendingSlaveEvents.addAll(ruleCompletionEvents);
     }
   }
 
   @Override
   public void createMostBuildRulesCompletedEvent() {
-    mostBuildRulesCompleted = true;
+    synchronized (pendingSlaveEvents) {
+      pendingSlaveEvents.add(
+          DistBuildUtil.createBuildSlaveEvent(
+              BuildSlaveEventType.MOST_BUILD_RULES_FINISHED_EVENT, clock.currentTimeMillis()));
+    }
   }
 }
