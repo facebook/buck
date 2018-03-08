@@ -43,9 +43,9 @@ import org.junit.Assume;
 
 abstract class GoAssumptions {
   // e.g., "go version go1.9.2 darwin/amd64", "go version go1.9.2 windows/amd64",
-  // "go version go1.2.1 linux/amd64"
+  // "go version go1.8 linux/amd64"
   private static final Pattern VERSION_PATTERN =
-      Pattern.compile("^go version go(\\d+)\\.(\\d+)\\.(\\d+).*$");
+      Pattern.compile("^go version go(\\d+)\\.(\\d+).*$");
 
   public static void assumeGoCompilerAvailable() throws IOException {
     Throwable exception = null;
@@ -86,8 +86,8 @@ abstract class GoAssumptions {
             .map(Integer::valueOf)
             .collect(Collectors.toList());
     Assume.assumeTrue(
-        "Expect minimum version string in the form of x.y.z, got: " + minimumVersion,
-        minimumVersionNumbers.size() == 3);
+        "Expect minimum version string in the form of x.y, got: " + minimumVersion,
+        minimumVersionNumbers.size() >= 2);
     Throwable exception = null;
     List<Integer> actualVersionNumbers = null;
     ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
@@ -104,7 +104,7 @@ abstract class GoAssumptions {
         Matcher matcher = VERSION_PATTERN.matcher(versionOut);
         if (matcher.matches()) {
           actualVersionNumbers =
-              IntStream.range(1, 4)
+              IntStream.range(1, 3)
                   .mapToObj(matcher::group)
                   .map(Integer::valueOf)
                   .collect(Collectors.toList());
@@ -119,7 +119,7 @@ abstract class GoAssumptions {
     }
     assumeNoException(exception);
     boolean versionSatisfied = true;
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 2; i++) {
       if (actualVersionNumbers.get(i) < minimumVersionNumbers.get(i)) {
         versionSatisfied = false;
         break;
