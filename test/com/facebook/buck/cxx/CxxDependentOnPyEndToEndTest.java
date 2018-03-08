@@ -29,19 +29,24 @@ import org.junit.runner.RunWith;
 
 @RunWith(EndToEndRunner.class)
 public class CxxDependentOnPyEndToEndTest {
+  private static final String mainTarget = "//main_bin:main_bin";
+
   @Environment
   public static EndToEndEnvironment setEnvironment() {
     return new EndToEndEnvironment()
         .withBuckdToggled(ToggleState.ON_OFF)
         .addTemplates("cxx_dependent_on_py")
         .withCommand("build")
-        .withTargets("//main_bin:main_bin");
+        .withTargets(mainTarget);
   }
 
   @Test
-  public void shouldBuildSuccessfully(
-      EndToEndTestDescriptor test, EndToEndWorkspace workspace, ProcessResult result) {
+  public void shouldBuildAndRunSuccessfully(
+      EndToEndTestDescriptor test, EndToEndWorkspace workspace, ProcessResult result)
+      throws Exception {
     result.assertExitCode(
         String.format("%s did not successfully build", test.getName()), ExitCode.map(0));
+    ProcessResult targetResult = workspace.runBuiltResult(mainTarget);
+    targetResult.assertSuccess();
   }
 }

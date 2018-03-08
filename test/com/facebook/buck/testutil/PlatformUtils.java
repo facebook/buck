@@ -128,6 +128,9 @@ public abstract class PlatformUtils {
    * Gets a base command builder for the given platform, where the utils adds in command necessary
    * to launch buck in the given environment
    */
+  public abstract ImmutableList.Builder<String> getBuckCommandBuilder();
+
+  /** Gets a base command builder for the given platform */
   public abstract ImmutableList.Builder<String> getCommandBuilder();
 
   /** Gets a PlatformUtils based on what Platform we're running tests in. */

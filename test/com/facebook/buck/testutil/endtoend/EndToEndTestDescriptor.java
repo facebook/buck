@@ -16,16 +16,11 @@
 
 package com.facebook.buck.testutil.endtoend;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.UserFlavor;
 import com.facebook.buck.testutil.PlatformUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import org.junit.runners.model.FrameworkMethod;
 
@@ -112,17 +107,7 @@ public class EndToEndTestDescriptor {
     fullCommandList.add(command);
     fullCommandList.addAll(
         Arrays.stream(buildTargets)
-            .map(
-                (String target) -> {
-                  BuildTarget buildTarget = BuildTargetFactory.newInstance(target);
-                  Optional<String> platformFlavorName = platformUtils.getFlavor();
-                  if (!platformFlavorName.isPresent()) {
-                    return buildTarget.getFullyQualifiedName();
-                  }
-                  Flavor platformFlavor =
-                      UserFlavor.of(platformFlavorName.get(), platformFlavorName.get());
-                  return buildTarget.withFlavors(platformFlavor).getFullyQualifiedName();
-                })
+            .map(EndToEndHelper::getProperBuildTarget)
             .collect(Collectors.toList()));
     fullCommandList.addAll(Arrays.stream(arguments).collect(Collectors.toList()));
 
