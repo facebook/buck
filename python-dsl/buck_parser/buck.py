@@ -432,6 +432,15 @@ def glob(includes, excludes=None, include_dotfiles=False, build_env=None, search
             build_env.diagnostics,
             build_env.watchman_glob_stat_results,
             build_env.watchman_use_glob_generator)
+        if results:
+            # glob should consistently return paths of type str, but
+            # watchman client returns unicode instead.
+            # Extra check is added to make this conversion resilient to
+            # wachman API changes.
+            results = [
+                res.encode("utf-8") if isinstance(res, unicode) else res
+                for res in results
+            ]
 
     if results is None:
         results = glob_internal(
