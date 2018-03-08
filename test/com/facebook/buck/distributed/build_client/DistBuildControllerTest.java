@@ -17,6 +17,7 @@
 package com.facebook.buck.distributed.build_client;
 
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_PREPARATION;
+import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
@@ -60,6 +61,8 @@ import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.ActionAndTargetGraphs;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ActionGraphAndResolver;
+import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.BuildEvent.DistBuildFinished;
 import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RemoteBuildRuleSynchronizer;
@@ -90,6 +93,8 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
+import org.easymock.Capture;
+import org.easymock.CaptureType;
 import org.easymock.EasyMock;
 import org.junit.After;
 import org.junit.Before;
@@ -172,6 +177,7 @@ public class DistBuildControllerTest {
         DistBuildControllerArgs.builder()
             .setBuilderExecutorArgs(executorArgs)
             .setBuckEventBus(mockEventBus)
+            .setDistBuildStartedEvent(BuildEvent.distBuildStarted())
             .setTopLevelTargets(ImmutableSet.of())
             .setBuildGraphs(graphs)
             .setAsyncJobState(asyncBuildJobState)
@@ -453,6 +459,10 @@ public class DistBuildControllerTest {
     mockEventBus.post(isA(ClientSideBuildSlaveFinishedStatsEvent.class));
     expectLastCall().times(1);
 
+    Capture<DistBuildFinished> finishedEvent = Capture.newInstance(CaptureType.LAST);
+    mockEventBus.post(capture(finishedEvent));
+    expectLastCall().atLeastOnce();
+
     replay(mockDistBuildService);
     replay(mockEventBus);
     replay(mockLogStateTracker);
@@ -460,12 +470,15 @@ public class DistBuildControllerTest {
     DistBuildController.ExecutionResult executionResult =
         runBuildWithController(createController(Futures.immediateFuture(buildJobState)));
 
-    assertEquals(
-        ExitCode.DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE.getCode(), executionResult.exitCode);
-
     verify(mockDistBuildService);
     verify(mockLogStateTracker);
     verify(mockEventBus);
+
+    assertEquals(
+        ExitCode.DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE.getCode(), executionResult.exitCode);
+    assertEquals(
+        ExitCode.DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE.getCode(),
+        finishedEvent.getValue().getExitCode());
   }
 
   // Sets up mock expectations for a successful distributed build preparation step

@@ -20,12 +20,15 @@ import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.ExitCode;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildMode;
+import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.BuildEvent.DistBuildStarted;
 import com.facebook.buck.rules.ParallelRuleKeyCalculator;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.Console;
@@ -49,6 +52,7 @@ public class DistBuildController {
   private final BuildPhase buildPhase;
   private final PostBuildPhase postBuildPhase;
   private final Console console;
+  private final DistBuildStarted startedEvent;
 
   private final ListenableFuture<BuildJobState> asyncJobState;
   private final AtomicReference<StampedeId> stampedeIdReference;
@@ -67,6 +71,7 @@ public class DistBuildController {
   public DistBuildController(DistBuildControllerArgs args) {
     this.stampedeIdReference = args.getStampedeIdReference();
     this.eventBus = args.getBuckEventBus();
+    this.startedEvent = args.getDistBuildStartedEvent();
     this.consoleEventsDispatcher = new ConsoleEventsDispatcher(eventBus);
     this.asyncJobState = args.getAsyncJobState();
     this.preBuildPhase =
@@ -177,6 +182,14 @@ public class DistBuildController {
           ExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION);
     }
 
+    // Send DistBuildFinished event if we reach this point without throwing.
+    boolean buildSuccess =
+        buildResult.getFinalBuildJob().getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY);
+    eventBus.post(
+        BuildEvent.distBuildFinished(
+            startedEvent,
+            buildSuccess ? 0 : ExitCode.DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE.getCode()));
+
     // Note: always returns distributed exit code 0
     // TODO(alisdair,ruibm,shivanker): consider new exit code if failed to fetch finished stats
     return postBuildPhase.runPostDistBuildLocalSteps(
@@ -189,6 +202,7 @@ public class DistBuildController {
   private ExecutionResult createFailedExecutionResult(StampedeId stampedeId, ExitCode exitCode) {
     LOG.warn("Stampede failed. Cancel async job state computation if that's still going on.");
     asyncJobState.cancel(true);
+    eventBus.post(BuildEvent.distBuildFinished(startedEvent, exitCode.getCode()));
     return new ExecutionResult(stampedeId, exitCode.getCode());
   }
 }

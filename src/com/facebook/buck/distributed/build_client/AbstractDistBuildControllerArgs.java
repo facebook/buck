@@ -26,6 +26,7 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ActionAndTargetGraphs;
+import com.facebook.buck.rules.BuildEvent.DistBuildStarted;
 import com.facebook.buck.rules.CachingBuildEngineDelegate;
 import com.facebook.buck.rules.RemoteBuildRuleCompletionNotifier;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -75,6 +76,8 @@ abstract class AbstractDistBuildControllerArgs {
   public abstract String getBuildLabel();
 
   public abstract BuckEventBus getBuckEventBus();
+
+  public abstract DistBuildStarted getDistBuildStartedEvent();
 
   @Value.Default
   public int getStatusPollIntervalMillis() {

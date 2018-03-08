@@ -911,6 +911,7 @@ public class BuildCommand extends AbstractCommand {
           DistBuildControllerArgs.builder()
               .setBuilderExecutorArgs(params.createBuilderArgs())
               .setBuckEventBus(params.getBuckEventBus())
+              .setDistBuildStartedEvent(started)
               .setTopLevelTargets(buildTargets)
               .setBuildGraphs(graphs)
               .setCachingBuildEngineDelegate(

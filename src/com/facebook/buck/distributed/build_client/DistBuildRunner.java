@@ -135,9 +135,9 @@ public class DistBuildRunner {
 
       // Local build should not be blocked, even if one of the distributed stages failed.
       remoteBuildSynchronizer.signalCompletionOfRemoteBuild();
-      BuildEvent.DistBuildFinished finished =
-          BuildEvent.distBuildFinished(Preconditions.checkNotNull(started), exitCode);
-      eventBus.post(finished);
+      // We probably already have sent the DistBuildFinishedEvent but in case it slipped through the
+      // exceptions, send it again.
+      eventBus.post(BuildEvent.distBuildFinished(Preconditions.checkNotNull(started), exitCode));
 
       // Whichever build phase is executing should now move to the final stage.
       buildPhaseLatches.forEach(latch -> latch.countDown());
