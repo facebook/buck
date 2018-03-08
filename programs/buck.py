@@ -56,12 +56,12 @@ def _get_java_version():
     Information is provided by java tool and parsing is based on
     http://www.oracle.com/technetwork/java/javase/versioning-naming-139433.html
     """
-    java_version = check_output(
-        ["java", "-version"], stderr=subprocess.STDOUT).splitlines()[0]
-    # extract quoted java version from a string like 'java version "1.8.0_144"'
-    java_version = java_version.split()[-1]
-    java_version = java_version.strip("\"")
-    return java_version.split(".")[1]
+    java_version = check_output(["java", "-version"], stderr=subprocess.STDOUT)
+    # extract java version from a string like 'java version "1.8.0_144"'
+    match = re.search("java version \"(?P<version>.+)\"", java_version)
+    if not match:
+        return None
+    return match.group("version").split(".")[1]
 
 
 def _warn_about_wrong_java_version(required_version, actual_version):
@@ -78,7 +78,7 @@ def _warn_about_wrong_java_version(required_version, actual_version):
 
 def main(argv, reporter):
     java_version = _get_java_version()
-    if java_version != REQUIRED_JAVA_VERSION:
+    if java_version and java_version != REQUIRED_JAVA_VERSION:
         _warn_about_wrong_java_version(REQUIRED_JAVA_VERSION, java_version)
 
     def get_repo(p):
