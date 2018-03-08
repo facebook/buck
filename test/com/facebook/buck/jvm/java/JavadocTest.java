@@ -52,7 +52,7 @@ public class JavadocTest {
   }
 
   @Test
-  public void shouldCreateAnEmptyJarIfThereAreNoSources() throws IOException, InterruptedException {
+  public void shouldCreateAnEmptyJarIfThereAreNoSources() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "javadocs", tmp);
     workspace.setUp();

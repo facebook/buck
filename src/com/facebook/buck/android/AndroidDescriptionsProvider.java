@@ -49,14 +49,12 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
     ApkConfig apkConfig = new ApkConfig(config);
 
     AndroidLibraryCompilerFactory defaultAndroidCompilerFactory =
-        new DefaultAndroidLibraryCompilerFactory(
-            toolchainProvider, javaConfig, scalaConfig, kotlinBuckConfig);
+        new DefaultAndroidLibraryCompilerFactory(javaConfig, scalaConfig, kotlinBuckConfig);
 
     AndroidManifestFactory androidManifestFactory = new AndroidManifestFactory();
 
     return Arrays.asList(
-        new AndroidAarDescription(
-            toolchainProvider, androidManifestFactory, cxxBuckConfig, javaConfig),
+        new AndroidAarDescription(androidManifestFactory, cxxBuckConfig, javaConfig),
         new AndroidManifestDescription(androidManifestFactory),
         new AndroidAppModularityDescription(),
         new AndroidBinaryDescription(
@@ -72,13 +70,12 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             toolchainProvider, javaConfig, proGuardConfig, cxxBuckConfig, dxConfig, apkConfig),
         new AndroidInstrumentationTestDescription(config, toolchainProvider),
         new AndroidLibraryDescription(toolchainProvider, javaConfig, defaultAndroidCompilerFactory),
-        new AndroidPrebuiltAarDescription(toolchainProvider, javaConfig),
-        new AndroidResourceDescription(toolchainProvider, androidBuckConfig),
-        new RobolectricTestDescription(
-            toolchainProvider, javaConfig, defaultAndroidCompilerFactory),
+        new AndroidPrebuiltAarDescription(javaConfig),
+        new AndroidResourceDescription(androidBuckConfig),
+        new RobolectricTestDescription(javaConfig, defaultAndroidCompilerFactory),
         new PrebuiltNativeLibraryDescription(),
-        new NdkLibraryDescription(toolchainProvider),
-        new GenAidlDescription(toolchainProvider),
+        new NdkLibraryDescription(),
+        new GenAidlDescription(),
         new ApkGenruleDescription(toolchainProvider, sandboxExecutionStrategy));
   }
 }

@@ -71,7 +71,7 @@ public class SortedSetTypeCoercer<T extends Comparable<? super T>>
       Path pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
-    final SortedSet<T> builder = new TreeSet<>();
+    SortedSet<T> builder = new TreeSet<>();
     fillSortedSet(cellRoots, filesystem, pathRelativeToProjectRoot, builder, object);
     return ImmutableSortedSet.copyOf(builder);
   }

@@ -20,20 +20,23 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   private final JavaBuckConfig javaBuckConfig;
-  private final ExtraClasspathProvider extraClasspathProvider;
+  private final Function<ToolchainProvider, ExtraClasspathProvider> extraClasspathProviderSupplier;
 
   public JavaConfiguredCompilerFactory(JavaBuckConfig javaBuckConfig) {
-    this(javaBuckConfig, ExtraClasspathProvider.EMPTY);
+    this(javaBuckConfig, (toolchainProvider) -> ExtraClasspathProvider.EMPTY);
   }
 
   public JavaConfiguredCompilerFactory(
-      JavaBuckConfig javaBuckConfig, ExtraClasspathProvider extraClasspathProvider) {
+      JavaBuckConfig javaBuckConfig,
+      Function<ToolchainProvider, ExtraClasspathProvider> extraClasspathProviderSupplier) {
     this.javaBuckConfig = javaBuckConfig;
-    this.extraClasspathProvider = extraClasspathProvider;
+    this.extraClasspathProviderSupplier = extraClasspathProviderSupplier;
   }
 
   @Override
@@ -68,7 +71,8 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       ProjectFilesystem projectFilesystem,
       @Nullable JvmLibraryArg arg,
       JavacOptions javacOptions,
-      BuildRuleResolver buildRuleResolver) {
+      BuildRuleResolver buildRuleResolver,
+      ToolchainProvider toolchainProvider) {
 
     return new JavacToJarStepFactory(
         sourcePathResolver,
@@ -76,7 +80,7 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         projectFilesystem,
         getJavac(buildRuleResolver, arg),
         javacOptions,
-        extraClasspathProvider);
+        extraClasspathProviderSupplier.apply(toolchainProvider));
   }
 
   private Javac getJavac(BuildRuleResolver resolver, @Nullable JvmLibraryArg arg) {

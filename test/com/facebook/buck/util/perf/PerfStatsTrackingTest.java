@@ -34,7 +34,7 @@ public class PerfStatsTrackingTest {
   @Test
   public void probingMemoryPostsToTheEventBus() throws Exception {
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
-    final BlockingQueue<BuckEvent> events = new LinkedBlockingQueue<>();
+    BlockingQueue<BuckEvent> events = new LinkedBlockingQueue<>();
     eventBus.register(
         new Object() {
           @Subscribe

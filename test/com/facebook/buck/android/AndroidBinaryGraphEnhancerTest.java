@@ -53,15 +53,14 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
@@ -87,7 +86,7 @@ import org.junit.Test;
 public class AndroidBinaryGraphEnhancerTest {
 
   @Test
-  public void testCreateDepsForPreDexing() throws Exception {
+  public void testCreateDepsForPreDexing() {
     // Create three Java rules, :dep1, :dep2, and :lib. :lib depends on :dep1 and :dep2.
     BuildTarget javaDep1BuildTarget = BuildTargetFactory.newInstance("//java/com/example:dep1");
     TargetNode<?, ?> javaDep1Node =
@@ -111,9 +110,7 @@ public class AndroidBinaryGraphEnhancerTest {
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(javaDep1Node, javaDep2Node, javaLibNode);
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
 
     BuildRule javaDep1 = ruleResolver.requireRule(javaDep1BuildTarget);
@@ -265,14 +262,12 @@ public class AndroidBinaryGraphEnhancerTest {
   }
 
   @Test
-  public void testAllBuildablesExceptPreDexRule() throws Exception {
+  public void testAllBuildablesExceptPreDexRule() {
     // Create an android_build_config() as a dependency of the android_binary().
     BuildTarget buildConfigBuildTarget = BuildTargetFactory.newInstance("//java/com/example:cfg");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams buildConfigParams = TestBuildRuleParams.create();
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     AndroidBuildConfigJavaLibrary buildConfigJavaLibrary =
         AndroidBuildConfigDescription.createBuildRule(
             buildConfigBuildTarget,
@@ -357,7 +352,7 @@ public class AndroidBinaryGraphEnhancerTest {
 
     // Verify that android_build_config() was processed correctly.
     Flavor flavor = InternalFlavor.of("buildconfig_com_example_buck");
-    final SourcePathResolver pathResolver =
+    SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     BuildTarget enhancedBuildConfigTarget = apkTarget.withAppendedFlavors(flavor);
     assertEquals(
@@ -408,7 +403,7 @@ public class AndroidBinaryGraphEnhancerTest {
   }
 
   @Test
-  public void testResourceRulesBecomeDepsOfAaptPackageResources() throws Exception {
+  public void testResourceRulesBecomeDepsOfAaptPackageResources() {
     TargetNode<?, ?> resourceNode =
         AndroidResourceBuilder.createBuilder(BuildTargetFactory.newInstance("//:resource"))
             .setRDotJavaPackage("package")
@@ -416,9 +411,7 @@ public class AndroidBinaryGraphEnhancerTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(resourceNode);
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
 
     AndroidResource resource =
         (AndroidResource) ruleResolver.requireRule(resourceNode.getBuildTarget());
@@ -496,9 +489,7 @@ public class AndroidBinaryGraphEnhancerTest {
 
   @Test
   public void testPackageStringsDependsOnResourcesFilter() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
 
     // set it up.
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
@@ -576,9 +567,7 @@ public class AndroidBinaryGraphEnhancerTest {
 
   @Test
   public void testResourceRulesDependOnRulesBehindResourceSourcePaths() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
 
     FakeBuildRule resourcesDep =

@@ -23,7 +23,6 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
-import java.io.IOException;
 import javax.annotation.Nullable;
 
 public abstract class KotlinTestAssumptions {
@@ -31,7 +30,7 @@ public abstract class KotlinTestAssumptions {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
   }
 
-  public static void assumeCompilerAvailable(@Nullable BuckConfig config) throws IOException {
+  public static void assumeCompilerAvailable(@Nullable BuckConfig config) {
     Throwable exception = null;
     try {
       new KotlinBuckConfig(config == null ? FakeBuckConfig.builder().build() : config)

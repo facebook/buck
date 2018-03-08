@@ -77,10 +77,10 @@ class ProjectBuildFileParserPool implements AutoCloseable {
    *     cancelled if the {@link ProjectBuildFileParserPool#close()} method is called.
    */
   public ListenableFuture<ImmutableSet<Map<String, Object>>> getAllRulesAndMetaRules(
-      final Cell cell,
-      final Path buildFile,
+      Cell cell,
+      Path buildFile,
       AtomicLong processedBytes,
-      final ListeningExecutorService executorService) {
+      ListeningExecutorService executorService) {
     Preconditions.checkState(!closing.get());
 
     return getResourcePoolForCell(cell)

@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.concurrent.Parallelizer;
 import com.facebook.buck.util.concurrent.WorkThreadTrackingFuture;
@@ -49,6 +50,7 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
 
   private final TargetGraph targetGraph;
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
+  private final ToolchainProvider toolchainProvider;
   @Nullable private final BuckEventBus eventBus;
 
   private final BuildRuleResolverMetadataCache metadataCache;
@@ -58,10 +60,12 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
       ForkJoinPool forkJoinPool,
       TargetGraph targetGraph,
       TargetNodeToBuildRuleTransformer buildRuleGenerator,
+      ToolchainProvider toolchainProvider,
       BuckEventBus eventBus) {
     this.forkJoinPool = forkJoinPool;
     this.targetGraph = targetGraph;
     this.buildRuleGenerator = buildRuleGenerator;
+    this.toolchainProvider = toolchainProvider;
     this.eventBus = eventBus;
 
     int initialCapacity = (int) (targetGraph.getNodes().size() * 5 * 1.1);
@@ -106,7 +110,10 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
     return Futures.getUnchecked(
         buildRuleIndex.computeIfAbsent(
             target,
-            wrap(key -> buildRuleGenerator.transform(targetGraph, this, targetGraph.get(target)))));
+            wrap(
+                key ->
+                    buildRuleGenerator.transform(
+                        targetGraph, toolchainProvider, this, targetGraph.get(target)))));
   }
 
   /** Please use {@code computeIfAbsent} instead */
@@ -218,7 +225,7 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
       Task<V> task =
           new Task<V>() {
             @Override
-            protected V doCompute() throws Exception {
+            protected V doCompute() {
               throw new AssertionError("This task should be directly completed.");
             }
           };

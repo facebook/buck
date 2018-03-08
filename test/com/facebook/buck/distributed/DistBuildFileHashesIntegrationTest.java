@@ -57,6 +57,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.cache.FileHashCacheMode;
@@ -67,7 +68,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.MoreExecutors;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
@@ -232,7 +232,7 @@ public class DistBuildFileHashesIntegrationTest {
   }
 
   private DistBuildFileHashes createDistBuildFileHashes(TargetGraph targetGraph, Cell rootCell)
-      throws InterruptedException, IOException {
+      throws InterruptedException {
     ActionGraphCache cache =
         new ActionGraphCache(
             rootCell.getBuckConfig().getMaxActionGraphCacheEntries(),
@@ -243,6 +243,7 @@ public class DistBuildFileHashesIntegrationTest {
             true,
             false,
             targetGraph,
+            new ToolchainProviderBuilder().build(),
             TestRuleKeyConfigurationFactory.create(),
             ActionGraphParallelizationMode.DISABLED,
             Optional.empty(),

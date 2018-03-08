@@ -22,12 +22,11 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.packaged_resource.PackagedResourceTestUtil;
-import java.io.IOException;
 import org.junit.Test;
 
 public class PackagedResourceIntegrationTest {
   @Test
-  public void testPackagedResourceOnIndividualFile() throws IOException {
+  public void testPackagedResourceOnIndividualFile() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PackagedResource packagedResource =
         PackagedResourceTestUtil.getPackagedResource(filesystem, "testdata/packaged_resource_one");

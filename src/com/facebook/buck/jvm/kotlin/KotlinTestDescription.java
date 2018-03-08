@@ -90,6 +90,7 @@ public class KotlinTestDescription implements Description<KotlinTestDescriptionA
         KotlinLibraryBuilder.newInstance(
                 testsLibraryBuildTarget,
                 projectFilesystem,
+                context.getToolchainProvider(),
                 params,
                 resolver,
                 context.getCellPathResolver(),

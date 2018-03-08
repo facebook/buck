@@ -71,7 +71,7 @@ public class SingleUriServiceTest {
   }
 
   @Test
-  public void testClientIsCalledWithFullUrl() throws IOException, InterruptedException {
+  public void testClientIsCalledWithFullUrl() throws IOException {
     OkHttpClient mockClient = EasyMock.createMock(OkHttpClient.class);
     String path = "my/super/path";
     Request.Builder request = new Request.Builder().url(SERVER + path).get();

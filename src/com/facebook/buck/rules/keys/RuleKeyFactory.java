@@ -44,5 +44,5 @@ public interface RuleKeyFactory<RULE_KEY> {
 
   default Optional<Long> getInputSizeLimit() {
     return Optional.empty();
-  };
+  }
 }

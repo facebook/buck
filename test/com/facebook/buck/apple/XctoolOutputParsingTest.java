@@ -44,7 +44,7 @@ public class XctoolOutputParsingTest {
   private static final double EPSILON = 1e-6;
 
   private static XctoolOutputParsing.XctoolEventCallback eventCallbackAddingEventsToList(
-      final List<Object> streamedObjects) {
+      List<Object> streamedObjects) {
     return new XctoolOutputParsing.XctoolEventCallback() {
       @Override
       public void handleBeginOcunitEvent(XctoolOutputParsing.BeginOcunitEvent event) {
@@ -92,7 +92,7 @@ public class XctoolOutputParsingTest {
   public void streamingSimpleSuccess() throws Exception {
     Path jsonPath =
         TestDataHelper.getTestDataDirectory(this).resolve("xctool-output/simple-success.json");
-    final List<Object> streamedObjects = new ArrayList<>();
+    List<Object> streamedObjects = new ArrayList<>();
     try (Reader jsonReader = Files.newBufferedReader(jsonPath, StandardCharsets.UTF_8)) {
       XctoolOutputParsing.streamOutputFromReader(
           jsonReader, eventCallbackAddingEventsToList(streamedObjects));
@@ -176,7 +176,7 @@ public class XctoolOutputParsingTest {
   public void streamingSimpleFailure() throws Exception {
     Path jsonPath =
         TestDataHelper.getTestDataDirectory(this).resolve("xctool-output/simple-failure.json");
-    final List<Object> streamedObjects = new ArrayList<>();
+    List<Object> streamedObjects = new ArrayList<>();
     try (Reader jsonReader = Files.newBufferedReader(jsonPath, StandardCharsets.UTF_8)) {
       XctoolOutputParsing.streamOutputFromReader(
           jsonReader, eventCallbackAddingEventsToList(streamedObjects));
@@ -266,7 +266,7 @@ public class XctoolOutputParsingTest {
 
   @Test
   public void streamingEmptyReaderDoesNotCauseFailure() {
-    final List<Object> streamedObjects = new ArrayList<>();
+    List<Object> streamedObjects = new ArrayList<>();
     XctoolOutputParsing.streamOutputFromReader(
         new StringReader(""), eventCallbackAddingEventsToList(streamedObjects));
     assertThat(streamedObjects, is(empty()));

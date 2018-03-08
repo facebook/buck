@@ -381,7 +381,7 @@ public class AndroidResourceFilterIntegrationTest {
   }
 
   private int runAaptDumpResources(Path apkFile) throws IOException, InterruptedException {
-    final Pattern pattern = Pattern.compile(".*com.example:string/base_button: t=.*");
+    Pattern pattern = Pattern.compile(".*com.example:string/base_button: t=.*");
     ProcessExecutor.Result result =
         workspace.runCommand(
             pathToAapt.toAbsolutePath().toString(),

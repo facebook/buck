@@ -51,7 +51,7 @@ public class AbstractBreadthFirstTraversalTest {
 
     FakeNode initialNode = createNode("J", nodeF, nodeG, nodeH, nodeI);
 
-    final List<FakeNode> nodeTraversalOrder = new ArrayList<>();
+    List<FakeNode> nodeTraversalOrder = new ArrayList<>();
     new AbstractBreadthFirstTraversal<FakeNode>(initialNode) {
       @Override
       public ImmutableSet<FakeNode> visit(FakeNode node) {
@@ -90,7 +90,7 @@ public class AbstractBreadthFirstTraversalTest {
 
     FakeNode initialNode = createNode("10", node6, node7, node8, node9);
 
-    final List<FakeNode> nodeTraversalOrder = new ArrayList<>();
+    List<FakeNode> nodeTraversalOrder = new ArrayList<>();
 
     // This visitor only visits dependencies whose node names are even numbers.
     new AbstractBreadthFirstTraversal<FakeNode>(initialNode) {

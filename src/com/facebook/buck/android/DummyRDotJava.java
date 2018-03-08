@@ -164,9 +164,9 @@ public class DummyRDotJava extends AbstractBuildRule
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context, final BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    final Path rDotJavaSrcFolder = getRDotJavaSrcFolder(getBuildTarget(), getProjectFilesystem());
+    Path rDotJavaSrcFolder = getRDotJavaSrcFolder(getBuildTarget(), getProjectFilesystem());
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
@@ -236,7 +236,7 @@ public class DummyRDotJava extends AbstractBuildRule
     }
 
     // Clear out the directory where the .class files will be generated.
-    final Path rDotJavaClassesFolder = getRDotJavaBinFolder();
+    Path rDotJavaClassesFolder = getRDotJavaBinFolder();
 
     steps.addAll(
         MakeCleanDirectoryStep.of(

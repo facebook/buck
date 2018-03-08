@@ -56,7 +56,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
     FetchResult.Builder resultBuilder = FetchResult.builder();
     Request.Builder requestBuilder = new Request.Builder().get();
     try (HttpResponse response =
-        fetchClient.makeRequest("/artifacts/key/" + ruleKey.toString(), requestBuilder)) {
+        fetchClient.makeRequest("/artifacts/key/" + ruleKey, requestBuilder)) {
       resultBuilder.setResponseSizeBytes(response.contentLength());
 
       try (DataInputStream input =
@@ -128,18 +128,17 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
   }
 
   @Override
-  protected MultiContainsResult multiContainsImpl(ImmutableSet<RuleKey> ruleKeys)
-      throws IOException {
+  protected MultiContainsResult multiContainsImpl(ImmutableSet<RuleKey> ruleKeys) {
     throw new UnsupportedOperationException("multiContains is not supported");
   }
 
   @Override
-  protected StoreResult storeImpl(ArtifactInfo info, final Path file) throws IOException {
+  protected StoreResult storeImpl(ArtifactInfo info, Path file) throws IOException {
     StoreResult.Builder resultBuilder = StoreResult.builder();
 
     // Build the request, hitting the multi-key endpoint.
     Request.Builder builder = new Request.Builder();
-    final HttpArtifactCacheBinaryProtocol.StoreRequest storeRequest =
+    HttpArtifactCacheBinaryProtocol.StoreRequest storeRequest =
         new HttpArtifactCacheBinaryProtocol.StoreRequest(
             info,
             new ByteSource() {
@@ -160,7 +159,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
           }
 
           @Override
-          public long contentLength() throws IOException {
+          public long contentLength() {
             return storeRequest.getContentLength();
           }
 
@@ -174,7 +173,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
 
     // Dispatch the store operation and verify it succeeded.
     try (HttpResponse response = storeClient.makeRequest("/artifacts/key", builder)) {
-      final boolean requestFailed = response.statusCode() != HttpURLConnection.HTTP_ACCEPTED;
+      boolean requestFailed = response.statusCode() != HttpURLConnection.HTTP_ACCEPTED;
       if (requestFailed) {
         reportFailureWithFormatKey(
             "store(%s, %s): unexpected response: [%d:%s].",
@@ -190,13 +189,13 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
   }
 
   @Override
-  protected CacheDeleteResult deleteImpl(List<RuleKey> ruleKeys) throws IOException {
+  protected CacheDeleteResult deleteImpl(List<RuleKey> ruleKeys) {
     throw new RuntimeException("Delete operation is not yet supported");
   }
 
   @Override
   protected MultiFetchResult multiFetchImpl(
-      Iterable<AbstractAsynchronousCache.FetchRequest> requests) throws IOException {
+      Iterable<AbstractAsynchronousCache.FetchRequest> requests) {
     throw new RuntimeException("multiFetch not supported");
   }
 }

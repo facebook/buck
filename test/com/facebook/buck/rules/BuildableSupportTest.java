@@ -33,12 +33,10 @@ import org.junit.Test;
 
 public class BuildableSupportTest {
   @Test
-  public void testDeriveDepsFromAddsToRuleKeys() throws Exception {
+  public void testDeriveDepsFromAddsToRuleKeys() {
     BuildTarget target = BuildTarget.of(Paths.get("some"), "//some", "name");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     BuildRule rule1 = makeRule(target, filesystem, "rule1");
     BuildRule rule2 = makeRule(target, filesystem, "rule2");
     BuildRule rule3 = makeRule(target, filesystem, "rule3");
@@ -70,7 +68,7 @@ public class BuildableSupportTest {
   }
 
   @Test
-  public void testDeriveInputsFromAddsToRuleKeys() throws Exception {
+  public void testDeriveInputsFromAddsToRuleKeys() {
     PathSourcePath path1 = FakeSourcePath.of("path1");
     PathSourcePath path2 = FakeSourcePath.of("path2");
     PathSourcePath path3 = FakeSourcePath.of("path3");
@@ -93,8 +91,7 @@ public class BuildableSupportTest {
         BuildableSupport.deriveInputs(rule).collect(ImmutableSet.toImmutableSet()));
   }
 
-  private BuildRule makeRule(
-      BuildTarget target, ProjectFilesystem filesystem, final String flavor) {
+  private BuildRule makeRule(BuildTarget target, ProjectFilesystem filesystem, String flavor) {
     return new AbstractBuildRule(
         target.withAppendedFlavors(InternalFlavor.of(flavor)), filesystem) {
       @Override

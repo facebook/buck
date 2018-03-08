@@ -128,7 +128,7 @@ public class IjProjectDataPreparerTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void testDependencies() throws Exception {
+  public void testDependencies() {
     TargetNode<?, ?> hamcrestTargetNode =
         PrebuiltJarBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//third-party/hamcrest:hamcrest"))
@@ -265,7 +265,7 @@ public class IjProjectDataPreparerTest {
   }
 
   @Test
-  public void testEmptyRootModule() throws Exception {
+  public void testEmptyRootModule() {
 
     Path baseTargetSrcFilePath = Paths.get("java/com/example/base/Base.java");
     TargetNode<?, ?> baseTargetNode =
@@ -305,7 +305,7 @@ public class IjProjectDataPreparerTest {
   }
 
   @Test
-  public void testModuleIndex() throws Exception {
+  public void testModuleIndex() {
     TargetNode<?, ?> guavaTargetNode =
         PrebuiltJarBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//third-party/guava:guava"))

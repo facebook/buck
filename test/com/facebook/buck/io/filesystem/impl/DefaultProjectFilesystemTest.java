@@ -24,8 +24,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -331,7 +331,7 @@ public class DefaultProjectFilesystemTest {
     tmp.newFolder("dir/dir2");
     tmp.newFile("dir/dir2/file2.txt");
 
-    final ImmutableList.Builder<String> fileNames = ImmutableList.builder();
+    ImmutableList.Builder<String> fileNames = ImmutableList.builder();
 
     filesystem.walkRelativeFileTree(
         Paths.get("dir"),
@@ -347,11 +347,10 @@ public class DefaultProjectFilesystemTest {
   }
 
   @Test
-  public void testWalkFileTreeWhenProjectRootIsWorkingDir()
-      throws InterruptedException, IOException {
+  public void testWalkFileTreeWhenProjectRootIsWorkingDir() throws IOException {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
-    final ImmutableList.Builder<String> fileNames = ImmutableList.builder();
+    ImmutableList.Builder<String> fileNames = ImmutableList.builder();
 
     Path pathRelativeToProjectRoot =
         Paths.get("test/com/facebook/buck/io/testdata/directory_traversal_ignore_paths");
@@ -375,7 +374,7 @@ public class DefaultProjectFilesystemTest {
     tmp.newFile("dir/file.txt");
     Files.createSymbolicLink(tmp.getRoot().resolve("linkdir"), tmp.getRoot().resolve("dir"));
 
-    final ImmutableList.Builder<Path> filePaths = ImmutableList.builder();
+    ImmutableList.Builder<Path> filePaths = ImmutableList.builder();
 
     filesystem.walkRelativeFileTree(
         Paths.get(""),
@@ -426,7 +425,7 @@ public class DefaultProjectFilesystemTest {
 
     // Create a empty executable file.
     Path exe = tmp.newFile("test.exe");
-    MoreFiles.makeExecutable(exe);
+    MostFiles.makeExecutable(exe);
 
     // Archive it into a zipfile using `Zip.create`.
     Path zipFile = tmp.getRoot().resolve("test.zip");
@@ -550,7 +549,7 @@ public class DefaultProjectFilesystemTest {
   }
 
   @Test
-  public void testIsSymLinkReturnsFalseForNotExistent() throws IOException {
+  public void testIsSymLinkReturnsFalseForNotExistent() {
     assertFalse(filesystem.isSymLink(Paths.get("foo")));
   }
 
@@ -571,7 +570,7 @@ public class DefaultProjectFilesystemTest {
   }
 
   @Test
-  public void testExtractIgnorePaths() throws InterruptedException, IOException {
+  public void testExtractIgnorePaths() throws InterruptedException {
     Config config =
         ConfigBuilder.createFromText("[project]", "ignore = .git, foo, bar/, baz//, a/b/c");
     Path rootPath = tmp.getRoot();
@@ -600,7 +599,7 @@ public class DefaultProjectFilesystemTest {
   }
 
   @Test
-  public void testExtractIgnorePathsWithCacheDir() throws InterruptedException, IOException {
+  public void testExtractIgnorePathsWithCacheDir() throws InterruptedException {
     Config config = ConfigBuilder.createFromText("[cache]", "dir = cache_dir");
     Path rootPath = tmp.getRoot();
     ImmutableSet<Path> ignorePaths =
@@ -626,14 +625,13 @@ public class DefaultProjectFilesystemTest {
     filesystem.touch(Paths.get("foo/bar/cake.txt"));
     filesystem.touch(Paths.get("foo/bar/cake.txt.orig"));
 
-    final ImmutableSet.Builder<String> allPaths = ImmutableSet.builder();
+    ImmutableSet.Builder<String> allPaths = ImmutableSet.builder();
 
     filesystem.walkRelativeFileTree(
         tmp.getRoot(),
         new SimpleFileVisitor<Path>() {
           @Override
-          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-              throws IOException {
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
             allPaths.add(file.toString());
             return FileVisitResult.CONTINUE;
           }
@@ -645,8 +643,7 @@ public class DefaultProjectFilesystemTest {
   }
 
   @Test
-  public void twoProjectFilesystemsWithSameIgnoreGlobsShouldBeEqual()
-      throws InterruptedException, IOException {
+  public void twoProjectFilesystemsWithSameIgnoreGlobsShouldBeEqual() throws InterruptedException {
     Config config = ConfigBuilder.createFromText("[project]", "ignore = **/*.orig");
     Path rootPath = tmp.getRoot();
     ProjectFilesystemFactory projectFilesystemFactory = new DefaultProjectFilesystemFactory();

@@ -440,7 +440,7 @@ public class VersionedTargetGraphBuilder {
     private TargetNode<?, ?> processRoot(TargetNode<?, ?> root) throws VersionException {
 
       // If we've already processed this root, exit now.
-      final TargetNode<?, ?> processedRoot = index.get(root.getBuildTarget());
+      TargetNode<?, ?> processedRoot = index.get(root.getBuildTarget());
       if (processedRoot != null) {
         return processedRoot;
       }
@@ -451,7 +451,7 @@ public class VersionedTargetGraphBuilder {
       VersionInfo versionInfo = getVersionInfo(root);
 
       // Select the versions to use for this sub-graph.
-      final ImmutableMap<BuildTarget, Version> selectedVersions =
+      ImmutableMap<BuildTarget, Version> selectedVersions =
           versionSelector.resolve(root.getBuildTarget(), versionInfo.getVersionDomain());
 
       // Build a target translator object to translate build targets.

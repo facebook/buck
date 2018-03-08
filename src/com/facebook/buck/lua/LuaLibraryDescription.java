@@ -50,9 +50,9 @@ public class LuaLibraryDescription
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
       BuildRuleParams params,
-      final LuaLibraryDescriptionArg args) {
+      LuaLibraryDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
-    final SourcePathResolver pathResolver =
+    SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     return new LuaLibrary(buildTarget, context.getProjectFilesystem(), params) {
 

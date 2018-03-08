@@ -19,6 +19,7 @@ package com.facebook.buck.cxx.toolchain;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.google.common.collect.ImmutableList;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -26,6 +27,9 @@ import org.immutables.value.Value;
 abstract class AbstractElfSharedLibraryInterfaceParams implements SharedLibraryInterfaceParams {
 
   abstract ToolProvider getObjcopy();
+
+  @Override
+  public abstract ImmutableList<String> getLdflags();
 
   abstract boolean isRemoveUndefinedSymbols();
 

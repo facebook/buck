@@ -71,7 +71,7 @@ public class SourcePathTypeCoercerTest {
   }
 
   @Test
-  public void coerceAbsoluteBuildTarget() throws CoerceFailedException, IOException {
+  public void coerceAbsoluteBuildTarget() throws CoerceFailedException {
     SourcePath sourcePath =
         sourcePathTypeCoercer.coerce(
             cellRoots, projectFilesystem, pathRelativeToProjectRoot, "//:hello");
@@ -86,7 +86,7 @@ public class SourcePathTypeCoercerTest {
   }
 
   @Test
-  public void coerceRelativeBuildTarget() throws CoerceFailedException, IOException {
+  public void coerceRelativeBuildTarget() throws CoerceFailedException {
     SourcePath sourcePath =
         sourcePathTypeCoercer.coerce(
             cellRoots, projectFilesystem, pathRelativeToProjectRoot, ":hello");
@@ -101,7 +101,7 @@ public class SourcePathTypeCoercerTest {
   }
 
   @Test
-  public void coerceCrossRepoBuildTarget() throws CoerceFailedException, IOException {
+  public void coerceCrossRepoBuildTarget() throws CoerceFailedException {
     Path helloRoot = Paths.get("/opt/src/hello");
     cellRoots =
         DefaultCellPathResolver.of(

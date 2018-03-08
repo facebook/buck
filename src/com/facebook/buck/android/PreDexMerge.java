@@ -204,9 +204,9 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     if (!dexSplitMode.isShouldSplitDex()) {
       return ImmutableSortedSet.of();
     }
-    final SplitDexPaths paths = new SplitDexPaths();
+    SplitDexPaths paths = new SplitDexPaths();
 
-    final ImmutableSortedSet.Builder<SourcePath> secondaryDexDirectories =
+    ImmutableSortedSet.Builder<SourcePath> secondaryDexDirectories =
         ImmutableSortedSet.naturalOrder();
     if (dexSplitMode.getDexStore() == DexStore.RAW) {
       // Raw classes*.dex files go in the top-level of the APK.
@@ -240,7 +240,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             .filter(input -> input.getValue() != null)
             .toSet());
 
-    final SplitDexPaths paths = new SplitDexPaths();
+    SplitDexPaths paths = new SplitDexPaths();
 
     // Do not clear existing directory which might contain secondary dex files that are not
     // re-merged (since their contents did not change).
@@ -288,7 +288,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             dexSplitMode.getDexStore(),
             paths.jarfilesSubdir,
             paths.additionalJarfilesSubdir);
-    final ImmutableMap<String, PreDexedFilesSorter.Result> sortResults =
+    ImmutableMap<String, PreDexedFilesSorter.Result> sortResults =
         preDexedFilesSorter.sortIntoPrimaryAndSecondaryDexes(getProjectFilesystem(), steps);
 
     PreDexedFilesSorter.Result rootApkModuleResult =
@@ -311,7 +311,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       aggregatedOutputToInputs.putAll(result.secondaryOutputToInputs);
       addResolvedPathsToBuilder(sourcePathResolver, dexInputHashesBuilder, result.dexInputHashes);
     }
-    final ImmutableMap<Path, Sha1HashCode> dexInputHashes = dexInputHashesBuilder.build();
+    ImmutableMap<Path, Sha1HashCode> dexInputHashes = dexInputHashesBuilder.build();
 
     Path primaryDexPath = getPrimaryDexPath();
     steps.add(
@@ -368,12 +368,10 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   }
 
   private void addMetadataWriteStep(
-      final PreDexedFilesSorter.Result result,
-      final ImmutableList.Builder<Step> steps,
-      final Path metadataFilePath) {
+      PreDexedFilesSorter.Result result, ImmutableList.Builder<Step> steps, Path metadataFilePath) {
     StringBuilder nameBuilder = new StringBuilder(30);
-    final boolean isRootModule = result.apkModule.equals(apkModuleGraph.getRootAPKModule());
-    final String storeId = result.apkModule.getName();
+    boolean isRootModule = result.apkModule.equals(apkModuleGraph.getRootAPKModule());
+    String storeId = result.apkModule.getName();
     nameBuilder.append("write_");
     if (!isRootModule) {
       nameBuilder.append(storeId);
@@ -383,8 +381,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     steps.add(
         new AbstractExecutionStep(nameBuilder.toString()) {
           @Override
-          public StepExecutionResult execute(ExecutionContext executionContext)
-              throws IOException, InterruptedException {
+          public StepExecutionResult execute(ExecutionContext executionContext) throws IOException {
             Map<Path, DexWithClasses> metadataTxtEntries = result.metadataTxtDexEntries;
             List<String> lines = Lists.newArrayListWithCapacity(metadataTxtEntries.size());
 
@@ -416,9 +413,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   }
 
   private void addStepsForSingleDex(
-      ImmutableList.Builder<Step> steps,
-      BuildContext context,
-      final BuildableContext buildableContext) {
+      ImmutableList.Builder<Step> steps, BuildContext context, BuildableContext buildableContext) {
     // For single-dex apps with pre-dexing, we just add the steps directly.
 
     Stream<SourcePath> sourcePathsToDex =
@@ -469,7 +464,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   /** @return the output directories for modular dex files */
   Stream<Path> getModuleDexPaths() {
-    final SplitDexPaths paths = new SplitDexPaths();
+    SplitDexPaths paths = new SplitDexPaths();
     return apkModuleGraph
         .getAPKModules()
         .stream()

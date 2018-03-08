@@ -87,7 +87,7 @@ public class WorkerProcessProtocolZeroTest {
   }
 
   private InputStream createMockJsonReaderForReceiveHandshake(
-      int handshakeID, String type, String protocolVersion) throws IOException {
+      int handshakeID, String type, String protocolVersion) {
     String jsonToBeRead =
         String.format(
             "[{\"id\":%d,\"type\":\"%s\",\"protocol_version\":\"%s\",\"capabilities\":[]}",
@@ -181,7 +181,7 @@ public class WorkerProcessProtocolZeroTest {
   }
 
   private InputStream createMockJsonReaderForReceiveCommandResponse(
-      int messageID, String type, int exitCode) throws IOException {
+      int messageID, String type, int exitCode) {
     String jsonToBeRead =
         String.format("{\"id\":%d,\"type\":\"%s\",\"exit_code\":%d}", messageID, type, exitCode);
     return inputStream(jsonToBeRead);
@@ -405,8 +405,7 @@ public class WorkerProcessProtocolZeroTest {
   }
 
   private InputStream createMockJsonReaderForReceiveCommand(
-      int messageID, String type, String argsPath, String stdoutPath, String stderrPath)
-      throws IOException {
+      int messageID, String type, String argsPath, String stdoutPath, String stderrPath) {
     String jsonToBeRead =
         String.format(
             "{"

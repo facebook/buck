@@ -203,8 +203,7 @@ public class WatchmanWatcherTest {
         new ImmutableList.Builder<>();
     // The threshold is 10000; go a little above that.
     for (int i = 0; i < 10010; i++) {
-      changedFiles.add(
-          ImmutableMap.<String, Object>of("name", "foo/bar/baz" + Integer.toString(i)));
+      changedFiles.add(ImmutableMap.of("name", "foo/bar/baz" + Integer.toString(i)));
     }
     ImmutableMap<String, Object> watchmanOutput = ImmutableMap.of("files", changedFiles.build());
     WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
@@ -215,8 +214,7 @@ public class WatchmanWatcherTest {
   }
 
   @Test
-  public void whenWatchmanFailsThenOverflowEventGenerated()
-      throws IOException, InterruptedException {
+  public void whenWatchmanFailsThenOverflowEventGenerated() throws InterruptedException {
     WatchmanWatcher watcher =
         createWatcher(
             eventBus,
@@ -541,7 +539,7 @@ public class WatchmanWatcherTest {
   @Test
   public void watcherInsertsAndUpdatesClockId() throws IOException, InterruptedException {
     ImmutableMap<String, Object> watchmanOutput =
-        ImmutableMap.<String, Object>of("clock", "c:0:1", "files", ImmutableList.of());
+        ImmutableMap.of("clock", "c:0:1", "files", ImmutableList.of());
     WatchmanWatcher watcher =
         createWatcher(
             eventBus,
@@ -561,7 +559,7 @@ public class WatchmanWatcherTest {
   @Test
   public void watcherOverflowUpdatesClockId() throws IOException, InterruptedException {
     ImmutableMap<String, Object> watchmanOutput =
-        ImmutableMap.<String, Object>of("clock", "c:1:0", "is_fresh_instance", true);
+        ImmutableMap.of("clock", "c:1:0", "is_fresh_instance", true);
     WatchmanWatcher watcher =
         createWatcher(
             eventBus,
@@ -589,7 +587,7 @@ public class WatchmanWatcherTest {
     ImmutableMap<String, Object> watchmanOutput = ImmutableMap.of("files", ImmutableList.of());
 
     WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
-    final Set<BuckEvent> events = new HashSet<>();
+    Set<BuckEvent> events = new HashSet<>();
     BuckEventBus bus = BuckEventBusForTests.newInstance(FakeClock.doNotCare());
     bus.register(
         new Object() {
@@ -636,7 +634,7 @@ public class WatchmanWatcherTest {
                 FAKE_ROOT, new WatchmanCursor("c:0:0"),
                 FAKE_SECONDARY_ROOT, new WatchmanCursor("c:0:0")),
             /* numThreads */ 1);
-    final Set<BuckEvent> events = new HashSet<>();
+    Set<BuckEvent> events = new HashSet<>();
     BuckEventBus bus = BuckEventBusForTests.newInstance(FakeClock.doNotCare());
     bus.register(
         new Object() {

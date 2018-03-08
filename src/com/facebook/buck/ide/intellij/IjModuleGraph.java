@@ -63,7 +63,7 @@ public class IjModuleGraph {
   }
 
   public ImmutableMap<IjModule, DependencyType> getDependentModulesFor(IjModule source) {
-    final ImmutableMap<IjProjectElement, DependencyType> deps = getDepsFor(source);
+    ImmutableMap<IjProjectElement, DependencyType> deps = getDepsFor(source);
     return deps.keySet()
         .stream()
         .filter(dep -> dep instanceof IjModule)
@@ -74,7 +74,7 @@ public class IjModuleGraph {
   }
 
   public ImmutableMap<IjLibrary, DependencyType> getDependentLibrariesFor(IjModule source) {
-    final ImmutableMap<IjProjectElement, DependencyType> deps = getDepsFor(source);
+    ImmutableMap<IjProjectElement, DependencyType> deps = getDepsFor(source);
     return deps.keySet()
         .stream()
         .filter(dep -> dep instanceof IjLibrary)

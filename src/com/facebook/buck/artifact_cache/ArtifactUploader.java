@@ -19,7 +19,7 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.BorrowablePath;
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -141,7 +141,7 @@ public class ArtifactUploader {
     try (CloseableHolder<NamedTemporaryFile> zip =
         new CloseableHolder<>(
             new NamedTemporaryFile(
-                "buck_artifact_" + MoreFiles.sanitize(buildTarget.getShortName()), ".zip"))) {
+                "buck_artifact_" + MostFiles.sanitize(buildTarget.getShortName()), ".zip"))) {
       Zip.create(projectFilesystem, pathsToIncludeInZip, zip.get().get());
       return zip.release();
     } catch (IOException e) {

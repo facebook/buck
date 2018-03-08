@@ -39,7 +39,7 @@ public class BundledExternalProcessLauncherTest {
   @Rule public TemporaryPaths temporaryPaths = new TemporaryPaths();
 
   @Test
-  public void canLaunch() throws IOException, InterruptedException {
+  public void canLaunch() throws IOException {
     // Worker process is currently broken on Windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 

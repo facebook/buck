@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
 
 /** Hashes parsed BUCK file objects. */
 public class JsonObjectHashing {
-  private static enum HashedObjectType {
+  private enum HashedObjectType {
     BOOLEAN,
     DOUBLE,
     FLOAT,

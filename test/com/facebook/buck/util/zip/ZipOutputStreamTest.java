@@ -297,7 +297,7 @@ public class ZipOutputStreamTest {
     public void testThatExternalAttributesFieldIsFunctional() throws IOException {
 
       // Prepare some sample modes to write into the zip file.
-      final ImmutableList<String> samplePermissions =
+      ImmutableList<String> samplePermissions =
           ImmutableList.of("rwxrwxrwx", "rw-r--r--", "--x--x--x", "---------");
 
       for (String stringPermissions : samplePermissions) {
@@ -347,10 +347,10 @@ public class ZipOutputStreamTest {
     @Test
     public void writingTheSameFileMoreThanOnceWhenInAppendModeWritesItTwiceToTheZip()
         throws IOException {
-      final String name = "example.txt";
-      final byte[] input1 = "cheese".getBytes(UTF_8);
-      final byte[] input2 = "cake".getBytes(UTF_8);
-      final byte[] input3 = "dessert".getBytes(UTF_8);
+      String name = "example.txt";
+      byte[] input1 = "cheese".getBytes(UTF_8);
+      byte[] input2 = "cake".getBytes(UTF_8);
+      byte[] input3 = "dessert".getBytes(UTF_8);
       try (CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, APPEND_TO_ZIP)) {
         ZipEntry entry = new ZipEntry(name);
         out.putNextEntry(entry);
@@ -373,9 +373,9 @@ public class ZipOutputStreamTest {
     public void writingTheSameFileMoreThanOnceWhenInOverwriteModeWritesItOnceToTheZip()
         throws IOException {
       final String name = "example.txt";
-      final byte[] input1 = "cheese".getBytes(UTF_8);
-      final byte[] input2 = "cake".getBytes(UTF_8);
-      final byte[] input3 = "dessert".getBytes(UTF_8);
+      byte[] input1 = "cheese".getBytes(UTF_8);
+      byte[] input2 = "cake".getBytes(UTF_8);
+      byte[] input3 = "dessert".getBytes(UTF_8);
       try (CustomZipOutputStream out =
           ZipOutputStreams.newOutputStream(output, OVERWRITE_EXISTING)) {
         ZipEntry entry = new ZipEntry(name);

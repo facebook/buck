@@ -140,7 +140,7 @@ public abstract class IjFolder implements Comparable<IjFolder> {
   public String toString() {
     return getClass().getSimpleName()
         + " for "
-        + getPath().toString()
+        + getPath()
         + (wantsPackagePrefix ? " wanting a package prefix" : "")
         + " covering "
         + getInputs();

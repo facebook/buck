@@ -40,7 +40,7 @@ public interface Description<T> {
           .build(
               new CacheLoader<Class<? extends Description<?>>, BuildRuleType>() {
                 @Override
-                public BuildRuleType load(Class<? extends Description<?>> key) throws Exception {
+                public BuildRuleType load(Class<? extends Description<?>> key) {
                   return Description.getBuildRuleType(key.getSimpleName());
                 }
               });

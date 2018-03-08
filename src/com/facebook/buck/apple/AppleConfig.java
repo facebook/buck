@@ -139,7 +139,7 @@ public class AppleConfig implements ConfigView<BuckConfig> {
    *     --print-path}.
    */
   private static Supplier<Optional<Path>> createAppleDeveloperDirectorySupplier(
-      final ProcessExecutor processExecutor) {
+      ProcessExecutor processExecutor) {
     return MoreSuppliers.memoize(
         () -> {
           ProcessExecutorParams processExecutorParams =
@@ -190,7 +190,7 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   }
 
   public ToolProvider getCodesignProvider() {
-    final String codesignField = "codesign";
+    String codesignField = "codesign";
     Optional<BuildTarget> target = delegate.getMaybeBuildTarget(APPLE_SECTION, codesignField);
     String source = String.format("[%s] %s", APPLE_SECTION, codesignField);
     if (target.isPresent()) {

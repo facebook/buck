@@ -55,13 +55,12 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -132,8 +131,7 @@ public class CxxPrecompiledHeaderRuleTest {
   public final TargetNodeToBuildRuleTransformer transformer =
       new DefaultTargetNodeToBuildRuleTransformer();
 
-  public final BuildRuleResolver ruleResolver =
-      new SingleThreadedBuildRuleResolver(TargetGraph.EMPTY, transformer);
+  public final BuildRuleResolver ruleResolver = new TestBuildRuleResolver(transformer);
   public final SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
   public final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -228,9 +226,9 @@ public class CxxPrecompiledHeaderRuleTest {
 
   /** Stolen from {@link PrecompiledHeaderIntegrationTest} */
   private static Matcher<BuckBuildLog> reportedTargetSuccessType(
-      final BuildTarget target, final BuildRuleSuccessType successType) {
+      BuildTarget target, BuildRuleSuccessType successType) {
     return new CustomTypeSafeMatcher<BuckBuildLog>(
-        "target: " + target.toString() + " with result: " + successType) {
+        "target: " + target + " with result: " + successType) {
 
       @Override
       protected boolean matchesSafely(BuckBuildLog buckBuildLog) {
@@ -253,7 +251,7 @@ public class CxxPrecompiledHeaderRuleTest {
   }
 
   @Test
-  public void samePchIffSameFlags() throws Exception {
+  public void samePchIffSameFlags() {
     BuildTarget pchTarget = newTarget("//test:pch");
     CxxPrecompiledHeaderTemplate pch = newPCH(pchTarget);
     ruleResolver.addToIndex(pch);
@@ -316,7 +314,7 @@ public class CxxPrecompiledHeaderRuleTest {
   }
 
   @Test
-  public void userRuleChangesDependencyPCHRuleFlags() throws Exception {
+  public void userRuleChangesDependencyPCHRuleFlags() {
     BuildTarget pchTarget = newTarget("//test:pch");
     CxxPrecompiledHeaderTemplate pch = newPCH(pchTarget);
     ruleResolver.addToIndex(pch);
@@ -354,12 +352,11 @@ public class CxxPrecompiledHeaderRuleTest {
   }
 
   @Test
-  public void pchDepsNotRepeatedInLinkArgs() throws Exception {
-    final BuildTarget publicHeaderTarget = BuildTargetFactory.newInstance("//test:header");
-    final BuildTarget publicHeaderSymlinkTreeTarget =
-        BuildTargetFactory.newInstance("//test:symlink");
-    final BuildTarget privateHeaderTarget = BuildTargetFactory.newInstance("//test:privateheader");
-    final BuildTarget privateHeaderSymlinkTreeTarget =
+  public void pchDepsNotRepeatedInLinkArgs() {
+    BuildTarget publicHeaderTarget = BuildTargetFactory.newInstance("//test:header");
+    BuildTarget publicHeaderSymlinkTreeTarget = BuildTargetFactory.newInstance("//test:symlink");
+    BuildTarget privateHeaderTarget = BuildTargetFactory.newInstance("//test:privateheader");
+    BuildTarget privateHeaderSymlinkTreeTarget =
         BuildTargetFactory.newInstance("//test:privatesymlink");
 
     ruleResolver.addToIndex(new FakeBuildRule(publicHeaderTarget));
@@ -421,7 +418,7 @@ public class CxxPrecompiledHeaderRuleTest {
     }
 
     assertNotNull(foundPCH);
-    final CxxPrecompiledHeader pch = foundPCH;
+    CxxPrecompiledHeader pch = foundPCH;
 
     ImmutableList<SourcePath> binObjects = ImmutableList.of(FakeSourcePath.of(filesystem, "bin.o"));
     ImmutableList<NativeLinkable> nativeLinkableDeps =
@@ -454,7 +451,7 @@ public class CxxPrecompiledHeaderRuleTest {
             ImmutableSet.of(), // blacklist,
             ImmutableSet.of(libTarget), // linkWholeDeps,
             NativeLinkableInput.builder().addAllArgs(SourcePathArg.from(binObjects)).build(),
-            Optional.<LinkOutputPostprocessor>empty(),
+            Optional.empty(),
             TestCellPathResolver.get(filesystem));
 
     CxxWriteArgsToFileStep argsToFile = null;
@@ -484,7 +481,7 @@ public class CxxPrecompiledHeaderRuleTest {
   }
 
   @Test
-  public void pchDisabledShouldIncludeAsRegularHeader() throws Exception {
+  public void pchDisabledShouldIncludeAsRegularHeader() {
     BuildTarget pchTarget = newTarget("//test:pch");
     CxxPrecompiledHeaderTemplate pch =
         newPCH(pchTarget, FakeSourcePath.of("header.h"), ImmutableSortedSet.of());
@@ -509,7 +506,7 @@ public class CxxPrecompiledHeaderRuleTest {
   }
 
   @Test
-  public void userRuleIncludePathsChangedByPCH() throws Exception {
+  public void userRuleIncludePathsChangedByPCH() {
     CxxPreprocessorInput cxxPreprocessorInput =
         CxxPreprocessorInput.builder()
             .addIncludes(
@@ -682,7 +679,7 @@ public class CxxPrecompiledHeaderRuleTest {
     for (BuildTarget target : buildLogA.getAllTargets()) {
       if (target.toString().startsWith("//determinism/lib:pch#default,pch-cxx-")) {
         pchHashA = buildLogA.getLogEntry(target).getRuleKey();
-        System.err.println("A: " + target.toString() + " " + pchHashA);
+        System.err.println("A: " + target + " " + pchHashA);
       }
     }
     assertNotNull(pchHashA);
@@ -693,7 +690,7 @@ public class CxxPrecompiledHeaderRuleTest {
     for (BuildTarget target : buildLogB.getAllTargets()) {
       if (target.toString().startsWith("//determinism/lib:pch#default,pch-cxx-")) {
         pchHashB = buildLogB.getLogEntry(target).getRuleKey();
-        System.err.println("B: " + target.toString() + " " + pchHashB);
+        System.err.println("B: " + target + " " + pchHashB);
       }
     }
     assertNotNull(pchHashB);
@@ -705,7 +702,7 @@ public class CxxPrecompiledHeaderRuleTest {
     for (BuildTarget target : buildLogC.getAllTargets()) {
       if (target.toString().startsWith("//determinism/lib:pch#default,pch-cxx-")) {
         pchHashC = buildLogC.getLogEntry(target).getRuleKey();
-        System.err.println("C: " + target.toString() + " " + pchHashC);
+        System.err.println("C: " + target + " " + pchHashC);
       }
     }
     assertNotNull(pchHashC);

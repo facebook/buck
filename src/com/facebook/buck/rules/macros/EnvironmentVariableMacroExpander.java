@@ -54,8 +54,7 @@ public class EnvironmentVariableMacroExpander
 
   @Override
   public StringArg expandFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, String var)
-      throws MacroException {
+      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, String var) {
     if (platform == Platform.WINDOWS) {
       if ("pwd".equalsIgnoreCase(var)) {
         var = "cd";

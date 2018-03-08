@@ -58,12 +58,12 @@ public class FakeJavac implements Javac {
       @Nullable SourceOnlyAbiRuleInfo ruleInfo) {
     return new Invocation() {
       @Override
-      public int buildSourceOnlyAbiJar() throws InterruptedException {
+      public int buildSourceOnlyAbiJar() {
         throw new UnsupportedOperationException();
       }
 
       @Override
-      public int buildSourceAbiJar() throws InterruptedException {
+      public int buildSourceAbiJar() {
         throw new UnsupportedOperationException();
       }
 

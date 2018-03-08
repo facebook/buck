@@ -29,7 +29,7 @@ import org.junit.Test;
 
 public class JavacPhaseEventTest {
   @Test
-  public void testEquals() throws Exception {
+  public void testEquals() {
     BuildTarget target = BuildTargetFactory.newInstance("//fake:rule");
     JavacPhaseEvent.Phase phase = JavacPhaseEvent.Phase.ENTER;
 
@@ -43,7 +43,7 @@ public class JavacPhaseEventTest {
   }
 
   @Test
-  public void testIsRelated() throws Exception {
+  public void testIsRelated() {
     BuildTarget target = BuildTargetFactory.newInstance("//fake:rule");
     JavacPhaseEvent.Phase phase = JavacPhaseEvent.Phase.ANALYZE;
 

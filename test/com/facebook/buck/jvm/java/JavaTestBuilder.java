@@ -21,6 +21,7 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_C
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.TestCxxPlatformsProviderFactory;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
@@ -41,7 +42,7 @@ public class JavaTestBuilder
     super(
         new JavaTestDescription(
             new ToolchainProviderBuilder()
-                .withDefaultCxxPlatforms()
+                .withToolchain(TestCxxPlatformsProviderFactory.createDefaultCxxPlatformsProvider())
                 .withToolchain(
                     JavaCxxPlatformProvider.DEFAULT_NAME,
                     JavaCxxPlatformProvider.of(CxxPlatformUtils.DEFAULT_PLATFORM))

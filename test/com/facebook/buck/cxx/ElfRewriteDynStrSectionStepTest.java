@@ -69,7 +69,7 @@ public class ElfRewriteDynStrSectionStepTest {
   }
 
   @Test
-  public void test() throws IOException, InterruptedException {
+  public void test() throws IOException {
     Path lib = tmp.getRoot().getFileSystem().getPath("libfoo.so");
     ImmutableSet<String> originalStrings = readDynStr(lib);
     ElfRewriteDynStrSectionStep step =

@@ -112,6 +112,7 @@ public class AndroidLibraryDescription
         AndroidLibrary.builder(
             buildTarget,
             projectFilesystem,
+            toolchainProvider,
             params,
             context.getBuildRuleResolver(),
             context.getCellPathResolver(),

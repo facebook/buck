@@ -56,7 +56,7 @@ public class PrebuiltAppleFrameworkIntegrationTest {
   }
 
   @Test
-  public void testPrebuiltAppleFrameworkBuildsSomething() throws InterruptedException, IOException {
+  public void testPrebuiltAppleFrameworkBuildsSomething() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "prebuilt_apple_framework_builds", tmp);
@@ -96,7 +96,7 @@ public class PrebuiltAppleFrameworkIntegrationTest {
   }
 
   @Test
-  public void testPrebuiltAppleFrameworkCopiedToBundle() throws IOException, InterruptedException {
+  public void testPrebuiltAppleFrameworkCopiedToBundle() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "prebuilt_apple_framework_links", tmp);

@@ -106,9 +106,8 @@ public interface NativeLinkable {
    * @param loader the method to load missing element to cache
    * @return a LoadingCache for native linkable
    */
-  public static LoadingCache<NativeLinkableCacheKey, NativeLinkableInput>
-      getNativeLinkableInputCache(
-          com.google.common.base.Function<NativeLinkableCacheKey, NativeLinkableInput> loader) {
+  static LoadingCache<NativeLinkableCacheKey, NativeLinkableInput> getNativeLinkableInputCache(
+      com.google.common.base.Function<NativeLinkableCacheKey, NativeLinkableInput> loader) {
     return CacheBuilder.newBuilder().build(CacheLoader.from(loader));
   }
 

@@ -95,7 +95,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
 
   @Test
   public void testGraphWithCacheableAndUncachableRuntimeDepsForRemoteHitPruning()
-      throws NoSuchBuildTargetException, InterruptedException {
+      throws NoSuchBuildTargetException {
     // Graph structure:
     //                        uncacheable_a (runtime)
     //                      /
@@ -158,7 +158,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
 
   @Test
   public void testTopLevelTargetWithCacheableRuntimeDepsIsNotSkipped()
-      throws NoSuchBuildTargetException, InterruptedException {
+      throws NoSuchBuildTargetException {
     BuildRuleResolver resolver = CustomBuildRuleResolverFactory.createSimpleRuntimeDepsResolver();
     BuildTarget target =
         BuildTargetFactory.newInstance(CustomBuildRuleResolverFactory.HAS_RUNTIME_DEP_RULE);
@@ -263,7 +263,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
   @Test
   @Ignore // TODO(shivanker): make this test pass.
   public void testGraphWithMissingRuntimeDepsForLocalHitUploads()
-      throws NoSuchBuildTargetException, InterruptedException {
+      throws NoSuchBuildTargetException {
     // Graph structure:
     //                        uncacheable_a (runtime)
     //                      /
@@ -312,7 +312,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
 
   @Test
   public void testGraphWithLocallyCachedRuntimeDepsForLocalHitUploads()
-      throws NoSuchBuildTargetException, InterruptedException {
+      throws NoSuchBuildTargetException {
     // Graph structure:
     //                        uncacheable_a (runtime)
     //                      /

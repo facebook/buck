@@ -32,7 +32,7 @@ public class GoBuckConfig {
 
   private final BuckConfig delegate;
 
-  public GoBuckConfig(final BuckConfig delegate) {
+  public GoBuckConfig(BuckConfig delegate) {
     this.delegate = delegate;
   }
 

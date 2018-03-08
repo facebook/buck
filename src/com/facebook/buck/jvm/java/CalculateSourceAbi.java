@@ -152,7 +152,7 @@ public class CalculateSourceAbi extends AbstractBuildRule
 
   @Override
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
-      BuildContext context, CellPathResolver cellPathResolver) throws IOException {
+      BuildContext context, CellPathResolver cellPathResolver) {
     return jarBuildStepsFactory.getInputsAfterBuildingLocally(
         context, cellPathResolver, getBuildTarget());
   }

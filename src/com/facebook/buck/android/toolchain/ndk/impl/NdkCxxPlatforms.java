@@ -501,6 +501,7 @@ public class NdkCxxPlatforms {
                     ElfSharedLibraryInterfaceParams.of(
                         new ConstantToolProvider(
                             getGccTool(toolchainPaths, "objcopy", version, executableFinder)),
+                        ImmutableList.of(),
                         config.getSharedLibraryInterfaces()
                             == SharedLibraryInterfaceParams.Type.DEFINED_ONLY))
                 : Optional.empty())
@@ -689,7 +690,7 @@ public class NdkCxxPlatforms {
 
     // Add the path to the C/C++ runtime libraries, if necessary.
     if (cxxRuntime != NdkCxxRuntime.SYSTEM) {
-      flags.add("-L" + toolchainPaths.getCxxRuntimeLibsDirectory().toString());
+      flags.add("-L" + toolchainPaths.getCxxRuntimeLibsDirectory());
     }
 
     return new GnuLinker(
@@ -932,7 +933,7 @@ public class NdkCxxPlatforms {
     }
 
     Path processPathPattern(Path root, String pattern) {
-      String key = root.toString() + "/" + pattern;
+      String key = root + "/" + pattern;
       Path result = cachedPaths.get(key);
       if (result == null) {
         String[] segments = pattern.split("/");
@@ -956,8 +957,7 @@ public class NdkCxxPlatforms {
           result = result.resolve(s);
         }
         if (strict) {
-          Assertions.assertCondition(
-              result.toFile().exists(), result.toString() + " doesn't exist.");
+          Assertions.assertCondition(result.toFile().exists(), result + " doesn't exist.");
         }
         cachedPaths.put(key, result);
       }

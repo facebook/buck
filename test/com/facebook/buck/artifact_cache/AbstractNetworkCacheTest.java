@@ -60,8 +60,8 @@ public class AbstractNetworkCacheTest {
 
   private void testStoreCall(
       int expectStoreCallCount, Optional<Long> maxArtifactSizeBytes, int... artifactBytes)
-      throws InterruptedException, IOException, ExecutionException {
-    final AtomicInteger storeCallCount = new AtomicInteger(0);
+      throws InterruptedException, ExecutionException {
+    AtomicInteger storeCallCount = new AtomicInteger(0);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     ListeningExecutorService service =
         new FakeListeningExecutorService() {
@@ -90,30 +90,29 @@ public class AbstractNetworkCacheTest {
                 .setMaxStoreSizeBytes(maxArtifactSizeBytes)
                 .build()) {
           @Override
-          protected FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) throws IOException {
+          protected FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) {
             return null;
           }
 
           @Override
-          protected MultiContainsResult multiContainsImpl(ImmutableSet<RuleKey> ruleKeys)
-              throws IOException {
+          protected MultiContainsResult multiContainsImpl(ImmutableSet<RuleKey> ruleKeys) {
             return null;
           }
 
           @Override
-          protected StoreResult storeImpl(ArtifactInfo info, Path file) throws IOException {
+          protected StoreResult storeImpl(ArtifactInfo info, Path file) {
             storeCallCount.incrementAndGet();
             return StoreResult.builder().build();
           }
 
           @Override
           protected MultiFetchResult multiFetchImpl(
-              Iterable<AbstractAsynchronousCache.FetchRequest> requests) throws IOException {
+              Iterable<AbstractAsynchronousCache.FetchRequest> requests) {
             return null;
           }
 
           @Override
-          protected CacheDeleteResult deleteImpl(List<RuleKey> ruleKeys) throws IOException {
+          protected CacheDeleteResult deleteImpl(List<RuleKey> ruleKeys) {
             throw new RuntimeException("Delete operation is not supported");
           }
         };

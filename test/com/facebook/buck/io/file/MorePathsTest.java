@@ -76,7 +76,7 @@ public class MorePathsTest {
   }
 
   @Test
-  public void testCreateRelativeSymlinkToFilesInRoot() throws InterruptedException, IOException {
+  public void testCreateRelativeSymlinkToFilesInRoot() throws IOException {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     tmp.newFile("biz.txt");
@@ -105,7 +105,7 @@ public class MorePathsTest {
   }
 
   @Test
-  public void testCreateRelativeSymlinkToFileInRoot() throws InterruptedException, IOException {
+  public void testCreateRelativeSymlinkToFileInRoot() throws IOException {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     tmp.newFile("biz.txt");
@@ -135,8 +135,7 @@ public class MorePathsTest {
   }
 
   @Test
-  public void testCreateRelativeSymlinkToFilesOfVaryingDepth()
-      throws InterruptedException, IOException {
+  public void testCreateRelativeSymlinkToFilesOfVaryingDepth() throws IOException {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     tmp.newFolder("foo", "bar", "baz");
@@ -225,36 +224,36 @@ public class MorePathsTest {
 
   @Test
   public void fixPathCommonTest() {
-    final Path inputPath = Paths.get("subdir/subdir2/foo/bar/x.file");
-    final Path expecting = Paths.get("subdir/subdir2/foo/bar/x.file");
+    Path inputPath = Paths.get("subdir/subdir2/foo/bar/x.file");
+    Path expecting = Paths.get("subdir/subdir2/foo/bar/x.file");
     assertEquals(expecting, MorePaths.fixPath(inputPath));
   }
 
   @Test
   public void fixPathAbsoluteTest() {
-    final Path inputPath = Paths.get("/subdir/subdir2/foo/bar/x.file");
-    final Path expecting = Paths.get("/subdir/subdir2/foo/bar/x.file");
+    Path inputPath = Paths.get("/subdir/subdir2/foo/bar/x.file");
+    Path expecting = Paths.get("/subdir/subdir2/foo/bar/x.file");
     assertEquals(expecting, MorePaths.fixPath(inputPath));
   }
 
   @Test
   public void fixPathEmptyPartTest() {
-    final Path inputPath = Paths.get("subdir/subdir2//foo///bar/////x.file");
-    final Path expecting = Paths.get("subdir/subdir2/foo/bar/x.file");
+    Path inputPath = Paths.get("subdir/subdir2//foo///bar/////x.file");
+    Path expecting = Paths.get("subdir/subdir2/foo/bar/x.file");
     assertEquals(expecting, MorePaths.fixPath(inputPath));
   }
 
   @Test
   public void fixPathDotPartTest() {
-    final Path inputPath = Paths.get("subdir/subdir2/./foo/././bar/./x.file");
-    final Path expecting = Paths.get("subdir/subdir2/foo/bar/x.file");
+    Path inputPath = Paths.get("subdir/subdir2/./foo/././bar/./x.file");
+    Path expecting = Paths.get("subdir/subdir2/foo/bar/x.file");
     assertEquals(expecting, MorePaths.fixPath(inputPath));
   }
 
   @Test
   public void fixPathDotDotPartTest() {
-    final Path inputPath = Paths.get("subdir/subdir2/foo/../bar/x.file");
-    final Path expecting = Paths.get("subdir/subdir2/foo/../bar/x.file");
+    Path inputPath = Paths.get("subdir/subdir2/foo/../bar/x.file");
+    Path expecting = Paths.get("subdir/subdir2/foo/../bar/x.file");
     // should be the same!  Does not fully "normalize" path.
     assertEquals(expecting, MorePaths.fixPath(inputPath));
   }

@@ -60,7 +60,7 @@ public class PathTypeCoercer extends LeafTypeCoercer<Path> {
       if (pathString.isEmpty()) {
         throw new CoerceFailedException("invalid path");
       }
-      final Path normalizedPath =
+      Path normalizedPath =
           pathCache.getUnchecked(pathRelativeToProjectRoot).getUnchecked(pathString);
 
       if (pathExistenceVerificationMode.equals(PathExistenceVerificationMode.VERIFY)) {

@@ -79,8 +79,7 @@ public class QueryTargetsAndOutputsMacroExpander
       CellPathResolver cellNames,
       BuildRuleResolver resolver,
       QueryTargetsAndOutputsMacro input,
-      QueryResults precomputedWork)
-      throws MacroException {
+      QueryResults precomputedWork) {
     return new QueriedTargestAndOutputsArg(
         precomputedWork
             .results

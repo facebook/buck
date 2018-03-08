@@ -398,7 +398,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     private String startCompiler(BuckJavacTaskProxy javacTask)
         throws ExecutionException, InterruptedException {
       if (compilerThreadName == null) {
-        final SettableFuture<String> threadName = SettableFuture.create();
+        SettableFuture<String> threadName = SettableFuture.create();
         compilerResult.setFuture(
             executor.submit(
                 () -> {
@@ -597,7 +597,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       return lazyJavacTask;
     }
 
-    private JarBuilder newJarBuilder(JarParameters jarParameters) throws IOException {
+    private JarBuilder newJarBuilder(JarParameters jarParameters) {
       JarBuilder jarBuilder = new JarBuilder();
       Preconditions.checkNotNull(inMemoryFileManager).writeToJar(jarBuilder);
       return jarBuilder

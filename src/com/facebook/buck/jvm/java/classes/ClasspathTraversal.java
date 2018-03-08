@@ -82,7 +82,7 @@ public abstract class ClasspathTraversal {
     }
 
     @Override
-    public void traverse(final ClasspathTraversal traversal) throws IOException {
+    public void traverse(ClasspathTraversal traversal) throws IOException {
       ZipFileTraversal impl =
           new ZipFileTraversal(file) {
             @Override
@@ -136,7 +136,7 @@ public abstract class ClasspathTraversal {
     }
 
     @Override
-    public void traverse(final ClasspathTraversal traversal) throws IOException {
+    public void traverse(ClasspathTraversal traversal) throws IOException {
       filesystem.walkFileTree(
           directory,
           ImmutableSet.of(FileVisitOption.FOLLOW_LINKS),

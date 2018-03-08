@@ -48,8 +48,8 @@ public class HangMonitorTest {
 
   @Test
   public void reportContainsCurrentThread() throws Exception {
-    final AtomicBoolean sleepingThreadShouldRun = new AtomicBoolean(true);
-    final SettableFuture<Void> sleepingThreadRunning = SettableFuture.create();
+    AtomicBoolean sleepingThreadShouldRun = new AtomicBoolean(true);
+    SettableFuture<Void> sleepingThreadRunning = SettableFuture.create();
     try {
       Thread sleepingThread =
           new Thread("testThread") {
@@ -72,7 +72,7 @@ public class HangMonitorTest {
       sleepingThread.start();
       sleepingThreadRunning.get(1, TimeUnit.SECONDS);
 
-      final SettableFuture<String> result = SettableFuture.create();
+      SettableFuture<String> result = SettableFuture.create();
       HangMonitor hangMonitor = new HangMonitor(result::set, Duration.ofMillis(10));
       hangMonitor.runOneIteration();
       assertThat(result.isDone(), Matchers.is(true));
@@ -85,7 +85,7 @@ public class HangMonitorTest {
 
   @Test
   public void workAdvanceEventsSuppressReport() throws Exception {
-    final AtomicBoolean didGetReport = new AtomicBoolean(false);
+    AtomicBoolean didGetReport = new AtomicBoolean(false);
     HangMonitor hangMonitor =
         new HangMonitor(input -> didGetReport.set(true), Duration.ofMillis(10));
     hangMonitor.onWorkAdvance(new WorkEvent());

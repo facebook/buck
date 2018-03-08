@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.FileListingService;
 import com.android.ddmlib.IDevice;
@@ -24,14 +23,10 @@ import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.InstallException;
 import com.android.ddmlib.RawImage;
 import com.android.ddmlib.ScreenRecorderOptions;
-import com.android.ddmlib.ShellCommandUnresponsiveException;
-import com.android.ddmlib.SyncException;
 import com.android.ddmlib.SyncService;
-import com.android.ddmlib.TimeoutException;
 import com.android.ddmlib.log.LogReceiver;
 import com.android.sdklib.AndroidVersion;
 import java.io.File;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -151,16 +146,12 @@ public class TestDevice implements IDevice {
   }
 
   @Override
-  public String getPropertySync(String s)
-      throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
-          IOException {
+  public String getPropertySync(String s) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public String getPropertyCacheOrSync(String s)
-      throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
-          IOException {
+  public String getPropertyCacheOrSync(String s) {
     throw new UnsupportedOperationException();
   }
 
@@ -200,8 +191,7 @@ public class TestDevice implements IDevice {
   }
 
   @Override
-  public SyncService getSyncService()
-      throws TimeoutException, AdbCommandRejectedException, IOException {
+  public SyncService getSyncService() {
     throw new UnsupportedOperationException();
   }
 
@@ -211,37 +201,29 @@ public class TestDevice implements IDevice {
   }
 
   @Override
-  public RawImage getScreenshot()
-      throws TimeoutException, AdbCommandRejectedException, IOException {
+  public RawImage getScreenshot() {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public RawImage getScreenshot(long timeout, TimeUnit unit)
-      throws TimeoutException, AdbCommandRejectedException, IOException {
+  public RawImage getScreenshot(long timeout, TimeUnit unit) {
     return null;
   }
 
   @Override
   public void startScreenRecorder(
-      String remoteFilePath, ScreenRecorderOptions options, IShellOutputReceiver receiver)
-      throws TimeoutException, AdbCommandRejectedException, IOException,
-          ShellCommandUnresponsiveException {
+      String remoteFilePath, ScreenRecorderOptions options, IShellOutputReceiver receiver) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public void executeShellCommand(String s, IShellOutputReceiver iShellOutputReceiver)
-      throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
-          IOException {
+  public void executeShellCommand(String s, IShellOutputReceiver iShellOutputReceiver) {
     throw new UnsupportedOperationException();
   }
 
   @Deprecated
   @Override
-  public void executeShellCommand(String s, IShellOutputReceiver iShellOutputReceiver, int i)
-      throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
-          IOException {
+  public void executeShellCommand(String s, IShellOutputReceiver iShellOutputReceiver, int i) {
     throw new UnsupportedOperationException();
   }
 
@@ -250,9 +232,7 @@ public class TestDevice implements IDevice {
       String command,
       IShellOutputReceiver receiver,
       long maxTimeToOutputResponse,
-      TimeUnit maxTimeUnits)
-      throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
-          IOException {
+      TimeUnit maxTimeUnits) {
     throw new UnsupportedOperationException();
   }
 
@@ -262,52 +242,44 @@ public class TestDevice implements IDevice {
   }
 
   @Override
-  public void runEventLogService(LogReceiver logReceiver)
-      throws TimeoutException, AdbCommandRejectedException, IOException {
+  public void runEventLogService(LogReceiver logReceiver) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public void runLogService(String s, LogReceiver logReceiver)
-      throws TimeoutException, AdbCommandRejectedException, IOException {
+  public void runLogService(String s, LogReceiver logReceiver) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public void createForward(int i, int i1)
-      throws TimeoutException, AdbCommandRejectedException, IOException {
+  public void createForward(int i, int i1) {
     throw new UnsupportedOperationException();
   }
 
   @Override
   public void createForward(
-      int i, String s, IDevice.DeviceUnixSocketNamespace deviceUnixSocketNamespace)
-      throws TimeoutException, AdbCommandRejectedException, IOException {
+      int i, String s, IDevice.DeviceUnixSocketNamespace deviceUnixSocketNamespace) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public void removeForward(int i, int i1)
-      throws TimeoutException, AdbCommandRejectedException, IOException {
+  public void removeForward(int i, int i1) {
     throw new UnsupportedOperationException();
   }
 
   @Override
   public void removeForward(
-      int i, String s, IDevice.DeviceUnixSocketNamespace deviceUnixSocketNamespace)
-      throws TimeoutException, AdbCommandRejectedException, IOException {
+      int i, String s, IDevice.DeviceUnixSocketNamespace deviceUnixSocketNamespace) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public void pushFile(String s, String s1)
-      throws IOException, AdbCommandRejectedException, TimeoutException, SyncException {
+  public void pushFile(String s, String s1) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public void pullFile(String s, String s1)
-      throws IOException, AdbCommandRejectedException, TimeoutException, SyncException {
+  public void pullFile(String s, String s1) {
     throw new UnsupportedOperationException();
   }
 
@@ -322,60 +294,50 @@ public class TestDevice implements IDevice {
       boolean reinstall,
       List<String> installOptions,
       long timeout,
-      TimeUnit timeoutUnit)
-      throws InstallException {}
+      TimeUnit timeoutUnit) {}
 
   @Override
-  public String syncPackageToDevice(String s)
-      throws TimeoutException, AdbCommandRejectedException, IOException, SyncException {
+  public String syncPackageToDevice(String s) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public void installRemotePackage(String s, boolean b, String... strings) throws InstallException {
+  public void installRemotePackage(String s, boolean b, String... strings) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public void removeRemotePackage(String s) throws InstallException {
+  public void removeRemotePackage(String s) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public String uninstallPackage(String s) throws InstallException {
+  public String uninstallPackage(String s) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public void reboot(String s) throws TimeoutException, AdbCommandRejectedException, IOException {
+  public void reboot(String s) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public boolean root()
-      throws TimeoutException, AdbCommandRejectedException, IOException,
-          ShellCommandUnresponsiveException {
+  public boolean root() {
     return false;
   }
 
   @Override
-  public boolean isRoot()
-      throws TimeoutException, AdbCommandRejectedException, IOException,
-          ShellCommandUnresponsiveException {
+  public boolean isRoot() {
     return false;
   }
 
   @Override
-  public Integer getBatteryLevel()
-      throws TimeoutException, AdbCommandRejectedException, IOException,
-          ShellCommandUnresponsiveException {
+  public Integer getBatteryLevel() {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public Integer getBatteryLevel(long l)
-      throws TimeoutException, AdbCommandRejectedException, IOException,
-          ShellCommandUnresponsiveException {
+  public Integer getBatteryLevel(long l) {
     throw new UnsupportedOperationException();
   }
 

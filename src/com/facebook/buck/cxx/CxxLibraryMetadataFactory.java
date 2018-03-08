@@ -42,7 +42,7 @@ public class CxxLibraryMetadataFactory {
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       CxxLibraryDescriptionArg args,
-      final Class<U> metadataClass) {
+      Class<U> metadataClass) {
 
     Map.Entry<Flavor, CxxLibraryDescription.MetadataType> type =
         CxxLibraryDescription.METADATA_TYPE

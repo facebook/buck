@@ -112,9 +112,9 @@ public class ExopackageInstaller {
   }
 
   public void installApkIfNecessary(ApkInfo apkInfo) throws Exception {
-    final File apk = pathResolver.getAbsolutePath(apkInfo.getApkPath()).toFile();
+    File apk = pathResolver.getAbsolutePath(apkInfo.getApkPath()).toFile();
     // TODO(dreiss): Support SD installation.
-    final boolean installViaSd = false;
+    boolean installViaSd = false;
 
     if (shouldAppBeInstalled(apkInfo)) {
       try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "install_exo_apk")) {
@@ -204,7 +204,7 @@ public class ExopackageInstaller {
         .orElse(false);
   }
 
-  private Optional<PackageInfo> getPackageInfo(final String packageName) throws Exception {
+  private Optional<PackageInfo> getPackageInfo(String packageName) throws Exception {
     try (SimplePerfEvent.Scope ignored =
         SimplePerfEvent.scope(
             eventBus, PerfEventId.of("get_package_info"), "package", packageName)) {
@@ -235,7 +235,7 @@ public class ExopackageInstaller {
     return false;
   }
 
-  private String getInstalledAppSignature(final String packagePath) throws Exception {
+  private String getInstalledAppSignature(String packagePath) throws Exception {
     try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "get_app_signature")) {
       String output = device.getSignature(packagePath);
 

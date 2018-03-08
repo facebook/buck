@@ -24,11 +24,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -39,7 +38,7 @@ import org.junit.Test;
 public class AndroidInstrumentationApkDescriptionTest {
 
   @Test
-  public void testNoDxRulesBecomeFirstOrderDeps() throws Exception {
+  public void testNoDxRulesBecomeFirstOrderDeps() {
     // Build up the original APK rule.
     TargetNode<?, ?> transitiveDepNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
@@ -72,9 +71,7 @@ public class AndroidInstrumentationApkDescriptionTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             transitiveDepNode, dep, keystore, androidBinary, androidInstrumentationApk);
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
     BuildRule transitiveDep = ruleResolver.requireRule(transitiveDepNode.getBuildTarget());
     ruleResolver.requireRule(target);
     BuildRule nonPredexedRule =

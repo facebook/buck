@@ -21,7 +21,6 @@ import com.google.common.net.MediaType;
 import java.io.IOException;
 import java.util.Map;
 import javax.annotation.Nullable;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Handler;
@@ -58,7 +57,7 @@ class TemplateHandler extends AbstractHandler {
   @Override
   public void handle(
       String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
-      throws IOException, ServletException {
+      throws IOException {
     String html = createHtmlForResponse(baseRequest);
     if (html != null) {
       Responses.writeSuccessfulResponse(html, MediaType.HTML_UTF_8, baseRequest, response);

@@ -53,7 +53,7 @@ public class TargetNodeTranslatorTest {
     BuildTarget a = BuildTargetFactory.newInstance("//:a");
     BuildTarget b = BuildTargetFactory.newInstance("//:b");
     BuildTarget c = BuildTargetFactory.newInstance("//:c");
-    final BuildTarget d = BuildTargetFactory.newInstance("//:d");
+    BuildTarget d = BuildTargetFactory.newInstance("//:d");
     TargetNode<CxxLibraryDescriptionArg, ?> node =
         new CxxLibraryBuilder(a)
             .setDeps(ImmutableSortedSet.of(b))
@@ -114,7 +114,7 @@ public class TargetNodeTranslatorTest {
   public void selectedVersions() {
     TargetNode<VersionPropagatorDescriptionArg, ?> node =
         new VersionPropagatorBuilder("//:a").build();
-    final ImmutableMap<BuildTarget, Version> selectedVersions =
+    ImmutableMap<BuildTarget, Version> selectedVersions =
         ImmutableMap.of(BuildTargetFactory.newInstance("//:b"), Version.of("1.0"));
     TargetNodeTranslator translator =
         new TargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableList.of()) {

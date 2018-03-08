@@ -49,8 +49,7 @@ public final class PluginLoader implements PluginClassLoader {
    * {@link java.net.URLClassLoader} to load it.
    */
   private static URL extractJavacPluginJar() {
-    @Nullable
-    final URL resourceURL = PluginLoader.class.getResource(JAVAC_PLUGIN_JAR_RESOURCE_PATH);
+    @Nullable URL resourceURL = PluginLoader.class.getResource(JAVAC_PLUGIN_JAR_RESOURCE_PATH);
     if (resourceURL == null) {
       throw new RuntimeException("Could not find javac plugin jar; Buck may be corrupted.");
     } else if ("file".equals(resourceURL.getProtocol())) {
@@ -76,7 +75,7 @@ public final class PluginLoader implements PluginClassLoader {
   /** Returns a class loader that can be used to load classes from the compiler plugin jar. */
   public static ClassLoader getPluginClassLoader(
       ClassLoaderCache classLoaderCache, JavaCompiler.CompilationTask compiler) {
-    final ClassLoader compilerClassLoader = compiler.getClass().getClassLoader();
+    ClassLoader compilerClassLoader = compiler.getClass().getClassLoader();
     return classLoaderCache.getClassLoaderForClassPath(
         compilerClassLoader, ImmutableList.of(JAVAC_PLUGIN_JAR_URL));
   }

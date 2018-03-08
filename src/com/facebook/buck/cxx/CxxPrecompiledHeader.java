@@ -202,7 +202,7 @@ class CxxPrecompiledHeader extends AbstractBuildRule
   }
 
   private Path getSuffixedOutput(SourcePathResolver pathResolver, String suffix) {
-    return Paths.get(pathResolver.getRelativePath(getSourcePathToOutput()).toString() + suffix);
+    return Paths.get(pathResolver.getRelativePath(getSourcePathToOutput()) + suffix);
   }
 
   public CxxIncludePaths getCxxIncludePaths() {

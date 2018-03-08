@@ -25,7 +25,7 @@ public enum TestType {
   private final String defaultRunner;
 
   TestType(String defaultRunner) {
-    this.defaultRunner = defaultRunner.toString();
+    this.defaultRunner = defaultRunner;
   }
 
   public String getDefaultTestRunner() {

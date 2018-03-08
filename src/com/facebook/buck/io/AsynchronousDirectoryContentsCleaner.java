@@ -18,7 +18,7 @@ package com.facebook.buck.io;
 
 import static com.facebook.buck.util.concurrent.MostExecutors.newSingleThreadExecutor;
 
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
@@ -67,16 +67,16 @@ public class AsynchronousDirectoryContentsCleaner {
    * <p>Multiple calls to this method will be serialized, so only one instance of directory cleaning
    * will occur at a time.
    */
-  public void startCleaningDirectory(final Path pathToClean) {
+  public void startCleaningDirectory(Path pathToClean) {
     executor.execute(
         () -> {
           LOG.debug("Starting to clean %s", pathToClean);
           try {
-            MoreFiles.deleteRecursivelyWithOptions(
+            MostFiles.deleteRecursivelyWithOptions(
                 pathToClean,
                 EnumSet.of(
-                    MoreFiles.DeleteRecursivelyOptions.IGNORE_NO_SUCH_FILE_EXCEPTION,
-                    MoreFiles.DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY));
+                    MostFiles.DeleteRecursivelyOptions.IGNORE_NO_SUCH_FILE_EXCEPTION,
+                    MostFiles.DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY));
           } catch (IOException e) {
             LOG.warn(e, "I/O error cleaning trash");
           } finally {

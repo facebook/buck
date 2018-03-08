@@ -28,7 +28,7 @@ import org.junit.Test;
 public class PythonVersionFactoryTest {
 
   @Test
-  public void testGetPythonVersion() throws Exception {
+  public void testGetPythonVersion() {
     PythonVersion version =
         PythonVersionFactory.extractPythonVersion(
             Paths.get("usr", "bin", "python"), new ProcessExecutor.Result(0, "", "CPython 2.7\n"));
@@ -36,7 +36,7 @@ public class PythonVersionFactoryTest {
   }
 
   @Test
-  public void testGetPyrunVersion() throws Exception {
+  public void testGetPyrunVersion() {
     PythonVersion version =
         PythonVersionFactory.extractPythonVersion(
             Paths.get("non", "important", "path"),
@@ -45,7 +45,7 @@ public class PythonVersionFactoryTest {
   }
 
   @Test
-  public void testGetWindowsVersion() throws Exception {
+  public void testGetWindowsVersion() {
     String output = "CPython 2.7\r\n";
     PythonVersion version =
         PythonVersionFactory.extractPythonVersion(

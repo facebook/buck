@@ -48,7 +48,7 @@ class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
     this.superInfo = superInfo;
 
     ImmutableList.Builder<FieldInfo<?>> fieldsBuilder = ImmutableList.builder();
-    for (final Field field : clazz.getDeclaredFields()) {
+    for (Field field : clazz.getDeclaredFields()) {
       field.setAccessible(true);
       Preconditions.checkArgument(
           Modifier.isFinal(field.getModifiers()),
@@ -81,7 +81,7 @@ class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
           !outerClazz.isAnonymousClass()
               && !outerClazz.isMemberClass()
               && !outerClazz.isLocalClass());
-      for (final Field field : outerClazz.getDeclaredFields()) {
+      for (Field field : outerClazz.getDeclaredFields()) {
         field.setAccessible(true);
         if (!Modifier.isStatic(field.getModifiers())) {
           continue;

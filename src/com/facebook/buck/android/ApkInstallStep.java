@@ -67,7 +67,7 @@ public class ApkInstallStep implements Step {
         builder.append("adb -s ");
         builder.append(device.getSerialNumber());
         builder.append(" install ");
-        builder.append(hasInstallableApk.getApkInfo().getApkPath().toString());
+        builder.append(hasInstallableApk.getApkInfo().getApkPath());
       }
     } catch (InterruptedException e) {
     }

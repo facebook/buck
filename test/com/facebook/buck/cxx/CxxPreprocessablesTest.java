@@ -32,14 +32,12 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -129,7 +127,7 @@ public class CxxPreprocessablesTest {
   }
 
   @Test
-  public void getTransitiveCxxPreprocessorInput() throws Exception {
+  public void getTransitiveCxxPreprocessorInput() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(
@@ -174,9 +172,7 @@ public class CxxPreprocessablesTest {
 
   @Test
   public void createHeaderSymlinkTreeBuildRuleHasNoDeps() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     // Setup up the main build target and build params, which some random dep.  We'll make
@@ -218,8 +214,7 @@ public class CxxPreprocessablesTest {
   }
 
   @Test
-  public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables()
-      throws Exception {
+  public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables() {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 

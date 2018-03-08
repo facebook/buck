@@ -17,6 +17,7 @@
 package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.DistBuildConfig;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 
@@ -24,9 +25,9 @@ public interface DistBuildModeRunner {
 
   ListenableFuture<?> getAsyncPrepFuture();
 
-  int runAndReturnExitCode(HeartbeatService heartbeatService)
+  ExitCode runAndReturnExitCode(HeartbeatService heartbeatService)
       throws IOException, InterruptedException;
 
-  int runWithHeartbeatServiceAndReturnExitCode(DistBuildConfig config)
+  ExitCode runWithHeartbeatServiceAndReturnExitCode(DistBuildConfig config)
       throws IOException, InterruptedException;
 }

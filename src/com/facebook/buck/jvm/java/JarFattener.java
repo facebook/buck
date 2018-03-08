@@ -51,7 +51,6 @@ import com.google.common.io.ByteSource;
 import com.google.common.io.Resources;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -225,13 +224,12 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   /** @return a {@link Step} that generates the fat jar info resource. */
-  private Step writeFatJarInfo(
-      Path destination, final ImmutableMap<String, String> nativeLibraries) {
+  private Step writeFatJarInfo(Path destination, ImmutableMap<String, String> nativeLibraries) {
 
     ByteSource source =
         new ByteSource() {
           @Override
-          public InputStream openStream() throws IOException {
+          public InputStream openStream() {
             FatJar fatJar = new FatJar(FAT_JAR_INNER_JAR, nativeLibraries);
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             try {
@@ -247,7 +245,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   /** @return a {@link Step} that writes the final from the resource named {@code name}. */
-  private Step writeFromResource(Path destination, final String name) {
+  private Step writeFromResource(Path destination, String name) {
     return new WriteFileStep(
         getProjectFilesystem(),
         Resources.asByteSource(Resources.getResource(name)),

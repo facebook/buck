@@ -133,7 +133,7 @@ public class ThriftCoordinatorClient implements Closeable {
   }
 
   @Override
-  public synchronized void close() throws ThriftException {
+  public synchronized void close() {
     if (client != null) {
       LOG.info("Closing ThriftCoordinatorClient.");
       stop();

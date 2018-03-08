@@ -17,7 +17,7 @@ FORMAT_JAR_LOCATION="${HOME}/${FORMAT_JAR_NAME}"
 
 wget -O "${FORMAT_JAR_LOCATION}" "${FORMAT_JAR_URL}"
 
-for file_in_revision in $(git diff-tree --no-commit-id --name-only -r HEAD); do
+for file_in_revision in $(git diff --name-only --diff-filter=AM HEAD..${TRAVIS_BRANCH}); do
   echo "Checking ${file_in_revision}"
 
   [ -f "${file_in_revision}" ] || continue

@@ -168,8 +168,7 @@ public class HgCmdLineInterfaceIntegrationTest {
   }
 
   @Test
-  public void testHgRootSubdir()
-      throws VersionControlCommandFailedException, InterruptedException, IOException {
+  public void testHgRootSubdir() throws InterruptedException, IOException {
     // Use a subdir of the repository
     HgCmdLineInterface hgCmdLineInterface =
         makeHgCmdLine(reposPath.resolve(REPO_WITH_SUB_DIR + "/subdir"));
@@ -180,8 +179,7 @@ public class HgCmdLineInterfaceIntegrationTest {
   }
 
   @Test
-  public void testHgRootOutsideRepo()
-      throws VersionControlCommandFailedException, InterruptedException {
+  public void testHgRootOutsideRepo() throws InterruptedException {
     // Note: reposPath is not a hg repository, so we have to create a HgCmdLineInterface directly
     // here.
     HgCmdLineInterface hgCmdLineInterface =
@@ -219,8 +217,7 @@ public class HgCmdLineInterfaceIntegrationTest {
     return reposPath;
   }
 
-  private static VersionControlCmdLineInterface makeCmdLine(Path repoRootDir)
-      throws InterruptedException {
+  private static VersionControlCmdLineInterface makeCmdLine(Path repoRootDir) {
     return new DelegatingVersionControlCmdLineInterface(
         repoRootDir,
         new TestProcessExecutorFactory(),

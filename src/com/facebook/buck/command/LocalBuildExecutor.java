@@ -46,6 +46,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
@@ -117,9 +118,9 @@ public class LocalBuildExecutor implements BuildExecutor {
   }
 
   @Override
-  public int buildLocallyAndReturnExitCode(
+  public ExitCode buildLocallyAndReturnExitCode(
       Iterable<String> targetToBuildStrings, Optional<Path> pathToBuildReport)
-      throws IOException, InterruptedException {
+      throws InterruptedException {
     Preconditions.checkArgument(!isShutdown);
     try {
       return build.executeAndPrintFailuresToEventBus(
@@ -147,7 +148,7 @@ public class LocalBuildExecutor implements BuildExecutor {
   }
 
   @Override
-  public int waitForBuildToFinish(
+  public ExitCode waitForBuildToFinish(
       Iterable<String> targetsToBuild,
       List<BuildEngineResult> resultFutures,
       Optional<Path> pathToBuildReport) {
@@ -166,7 +167,7 @@ public class LocalBuildExecutor implements BuildExecutor {
   }
 
   @Override
-  public synchronized void shutdown() throws IOException {
+  public synchronized void shutdown() {
     if (isShutdown) {
       return;
     }
@@ -235,9 +236,9 @@ public class LocalBuildExecutor implements BuildExecutor {
    */
   public static ExecutionContext createExecutionContext(BuildExecutorArgs args) {
     // TODO(shivanker): Fix this for stampede to be able to build android.
-    final ConcurrencyLimit concurrencyLimit =
+    ConcurrencyLimit concurrencyLimit =
         args.getBuckConfig().getView(ResourcesConfig.class).getConcurrencyLimit();
-    final DefaultProcessExecutor processExecutor = new DefaultProcessExecutor(args.getConsole());
+    DefaultProcessExecutor processExecutor = new DefaultProcessExecutor(args.getConsole());
 
     return ExecutionContext.builder()
         .setConsole(args.getConsole())

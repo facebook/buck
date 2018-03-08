@@ -218,8 +218,8 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @Test
   public void onlyFieldNamedDepsAreConsideredDeclaredDeps() throws Exception {
-    final String dep = "//is/a/declared:dep";
-    final String notDep = "//is/not/a/declared:dep";
+    String dep = "//is/a/declared:dep";
+    String notDep = "//is/not/a/declared:dep";
 
     BuildTarget declaredDep = BuildTargetFactory.newInstance(dep);
 
@@ -557,7 +557,7 @@ public class ConstructorArgMarshallerImmutableTest {
   }
 
   @Test(expected = HumanReadableException.class)
-  public void bogusVisibilityGivesFriendlyError() throws Exception {
+  public void bogusVisibilityGivesFriendlyError() {
     ConstructorArgMarshaller.populateVisibilityPatterns(
         createCellRoots(filesystem), "visibility", ImmutableList.of(":marmosets"), TARGET);
   }

@@ -64,7 +64,7 @@ public class CompilerTreeApiTestRunner extends BlockJUnit4ClassRunner {
         //
         // However, this is test code, we're loading the test cases themselves with this
         // ClassLoader, so Everything Will Be Fine(tm).
-        return super.findClass(name);
+        return findClass(name);
       }
       return super.loadClass(name);
     }

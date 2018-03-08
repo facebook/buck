@@ -32,15 +32,13 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
@@ -68,9 +66,7 @@ public class ExternallyBuiltApplePackageTest {
       BuildTargetFactory.newInstance(Paths.get("."), "//foo", "package");
   private ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
   private BuildRuleParams params = TestBuildRuleParams.create();
-  private BuildRuleResolver resolver =
-      new SingleThreadedBuildRuleResolver(
-          TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+  private BuildRuleResolver resolver = new TestBuildRuleResolver();
   private ApplePackageConfigAndPlatformInfo config =
       ApplePackageConfigAndPlatformInfo.of(
           ApplePackageConfig.of("echo $SDKROOT $OUT", "api"),

@@ -159,12 +159,7 @@ class AbiFilteringClassVisitor extends ClassVisitor {
       return false;
     }
 
-    if (currentClassName.equals(outerName)) {
-      // For now, always include our own inner classes, regardless of visibility
-      return true;
-    }
-
-    return false;
+    return currentClassName.equals(outerName);
   }
 
   private boolean shouldInclude(int access) {
@@ -172,11 +167,7 @@ class AbiFilteringClassVisitor extends ClassVisitor {
       return false;
     }
 
-    if ((access & (Opcodes.ACC_SYNTHETIC | Opcodes.ACC_BRIDGE)) == Opcodes.ACC_SYNTHETIC) {
-      return false;
-    }
-
-    return true;
+    return (access & (Opcodes.ACC_SYNTHETIC | Opcodes.ACC_BRIDGE)) != Opcodes.ACC_SYNTHETIC;
   }
 
   private boolean isInterface(int access) {

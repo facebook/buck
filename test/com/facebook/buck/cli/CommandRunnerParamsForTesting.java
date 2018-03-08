@@ -93,7 +93,7 @@ public class CommandRunnerParamsForTesting {
       ImmutableMap<String, String> environment,
       JavaPackageFinder javaPackageFinder,
       Optional<WebServer> webServer)
-      throws IOException, InterruptedException {
+      throws IOException {
     ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =

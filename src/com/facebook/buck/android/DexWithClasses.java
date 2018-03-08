@@ -56,11 +56,11 @@ public interface DexWithClasses {
             return null;
           }
 
-          final SourcePath sourcePathToDex = preDex.getSourcePathToDex();
-          final ImmutableSet<String> classNames = preDex.getClassNames().keySet();
-          final Sha1HashCode classesHash =
+          SourcePath sourcePathToDex = preDex.getSourcePathToDex();
+          ImmutableSet<String> classNames = preDex.getClassNames().keySet();
+          Sha1HashCode classesHash =
               Sha1HashCode.fromHashCode(Hashing.combineOrdered(preDex.getClassNames().values()));
-          final int weightEstimate = preDex.getWeightEstimate();
+          int weightEstimate = preDex.getWeightEstimate();
           return new DexWithClasses() {
             @Override
             public SourcePath getSourcePathToDexFile() {

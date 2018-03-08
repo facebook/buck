@@ -81,8 +81,7 @@ public interface AndroidDevicesHelper extends Closeable {
    *
    * @see #installApk(SourcePathResolver, HasInstallableApk, boolean, boolean, String)
    */
-  boolean uninstallApp(final String packageName, final boolean shouldKeepUserData)
-      throws InterruptedException;
+  boolean uninstallApp(String packageName, boolean shouldKeepUserData) throws InterruptedException;
 
   void startActivity(
       SourcePathResolver pathResolver,

@@ -153,7 +153,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
       return false;
     }
 
-    final Javac.Source javacSource = getJavacSpec().getJavacSource();
+    Javac.Source javacSource = getJavacSpec().getJavacSource();
     return (javacSource == Javac.Source.JAR || javacSource == Javac.Source.JDK);
   }
 
@@ -253,6 +253,6 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   public enum UnusedDependenciesAction {
     FAIL,
     WARN,
-    IGNORE;
+    IGNORE
   }
 }

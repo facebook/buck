@@ -87,7 +87,7 @@ public class CxxLinkableEnhancer {
       CxxLinkOptions linkOptions,
       Optional<LinkOutputPostprocessor> postprocessor) {
 
-    final Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
+    Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
 
     // Build up the arguments to pass to the linker.
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
@@ -117,7 +117,7 @@ public class CxxLinkableEnhancer {
     // Add all arguments needed to link in the C/C++ platform runtime.
     argsBuilder.addAll(StringArg.from(cxxPlatform.getRuntimeLdflags().get(runtimeDepType)));
 
-    final ImmutableList<Arg> allArgs = argsBuilder.build();
+    ImmutableList<Arg> allArgs = argsBuilder.build();
 
     // Build the C/C++ link step.
     Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
@@ -157,7 +157,7 @@ public class CxxLinkableEnhancer {
       CxxPlatform cxxPlatform,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver ruleResolver,
-      final SourcePathResolver resolver,
+      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Linker.LinkType linkType,
@@ -255,7 +255,7 @@ public class CxxLinkableEnhancer {
       runtimeDepType = Linker.LinkableDepType.STATIC;
     }
 
-    final ImmutableList<Arg> allArgs = argsBuilder.build();
+    ImmutableList<Arg> allArgs = argsBuilder.build();
 
     return createCxxLinkableBuildRule(
         cellPathResolver,

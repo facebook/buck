@@ -296,8 +296,8 @@ public class LuaBinaryDescription
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
-      final LuaPlatform luaPlatform,
-      final PythonPlatform pythonPlatform,
+      LuaPlatform luaPlatform,
+      PythonPlatform pythonPlatform,
       Optional<BuildTarget> nativeStarterLibrary,
       String mainModule,
       LuaPlatform.PackageStyle packageStyle,
@@ -306,12 +306,12 @@ public class LuaBinaryDescription
 
     CxxPlatform cxxPlatform = luaPlatform.getCxxPlatform();
 
-    final LuaPackageComponents.Builder builder = LuaPackageComponents.builder();
-    final OmnibusRoots.Builder omnibusRoots = OmnibusRoots.builder(cxxPlatform, ImmutableSet.of());
+    LuaPackageComponents.Builder builder = LuaPackageComponents.builder();
+    OmnibusRoots.Builder omnibusRoots = OmnibusRoots.builder(cxxPlatform, ImmutableSet.of());
 
-    final Map<BuildTarget, NativeLinkable> nativeLinkableRoots = new LinkedHashMap<>();
-    final Map<BuildTarget, CxxLuaExtension> luaExtensions = new LinkedHashMap<>();
-    final Map<BuildTarget, CxxPythonExtension> pythonExtensions = new LinkedHashMap<>();
+    Map<BuildTarget, NativeLinkable> nativeLinkableRoots = new LinkedHashMap<>();
+    Map<BuildTarget, CxxLuaExtension> luaExtensions = new LinkedHashMap<>();
+    Map<BuildTarget, CxxPythonExtension> pythonExtensions = new LinkedHashMap<>();
 
     // Walk the deps to find all Lua packageables and native linkables.
     new AbstractBreadthFirstTraversal<BuildRule>(deps) {
@@ -574,11 +574,11 @@ public class LuaBinaryDescription
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
-      final SourcePath starter,
-      final LuaPackageComponents components) {
-    final List<SourcePath> extraInputs = new ArrayList<>();
+      SourcePath starter,
+      LuaPackageComponents components) {
+    List<SourcePath> extraInputs = new ArrayList<>();
 
-    final SymlinkTree modulesLinkTree =
+    SymlinkTree modulesLinkTree =
         resolver.addToIndex(
             createSymlinkTree(
                 getModulesSymlinkTreeTarget(buildTarget),
@@ -588,7 +588,7 @@ public class LuaBinaryDescription
                 getModulesSymlinkTreeRoot(buildTarget, projectFilesystem),
                 components.getModules()));
 
-    final List<SymlinkTree> pythonModulesLinktree = new ArrayList<>();
+    List<SymlinkTree> pythonModulesLinktree = new ArrayList<>();
     if (!components.getPythonModules().isEmpty()) {
       // Add in any missing init modules into the python components.
       SourcePath emptyInit =
@@ -602,7 +602,7 @@ public class LuaBinaryDescription
                       MorePaths.toPathFn(projectFilesystem.getRootPath().getFileSystem())),
                   emptyInit),
               Object::toString);
-      final SymlinkTree symlinkTree =
+      SymlinkTree symlinkTree =
           resolver.addToIndex(
               createSymlinkTree(
                   getPythonModulesSymlinkTreeTarget(buildTarget),
@@ -614,7 +614,7 @@ public class LuaBinaryDescription
       pythonModulesLinktree.add(symlinkTree);
     }
 
-    final List<SymlinkTree> nativeLibsLinktree = new ArrayList<>();
+    List<SymlinkTree> nativeLibsLinktree = new ArrayList<>();
     if (!components.getNativeLibraries().isEmpty()) {
       SymlinkTree symlinkTree =
           resolver.addToIndex(
@@ -648,7 +648,7 @@ public class LuaBinaryDescription
           pythonModulesLinktree
               .stream()
               .map(linkTree -> new NonHashableSourcePathContainer(linkTree.getSourcePathToOutput()))
-              .collect(ImmutableList.toImmutableList());;
+              .collect(ImmutableList.toImmutableList());
 
       @AddToRuleKey private final List<SourcePath> toolExtraInputs = extraInputs;
 
@@ -673,7 +673,7 @@ public class LuaBinaryDescription
       LuaPlatform luaPlatform,
       SourcePath starter,
       String mainModule,
-      final LuaPackageComponents components) {
+      LuaPackageComponents components) {
     Path output = getOutputPath(buildTarget, projectFilesystem, luaPlatform);
 
     Tool lua = luaPlatform.getLua().resolve(resolver);
@@ -716,7 +716,7 @@ public class LuaBinaryDescription
       LuaPlatform luaPlatform,
       String mainModule,
       SourcePath starter,
-      final LuaPackageComponents components,
+      LuaPackageComponents components,
       LuaPlatform.PackageStyle packageStyle) {
     switch (packageStyle) {
       case STANDALONE:

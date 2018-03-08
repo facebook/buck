@@ -434,7 +434,7 @@ public class OcamlBuildRulesGenerator {
       ImmutableMap<Path, ImmutableList<Path>> mlSources) {
     ImmutableList.Builder<SourcePath> cmxFiles = ImmutableList.builder();
 
-    final Map<Path, ImmutableSortedSet<BuildRule>> sourceToRule = new HashMap<>();
+    Map<Path, ImmutableSortedSet<BuildRule>> sourceToRule = new HashMap<>();
 
     for (ImmutableMap.Entry<Path, ImmutableList<Path>> mlSource : mlSources.entrySet()) {
       generateSingleMLNativeCompilation(
@@ -487,7 +487,7 @@ public class OcamlBuildRulesGenerator {
 
     String outputFileName = getMLNativeOutputName(name);
     Path outputPath = ocamlContext.getCompileNativeOutputDir().resolve(outputFileName);
-    final ImmutableList<Arg> compileFlags =
+    ImmutableList<Arg> compileFlags =
         getCompileFlags(/* isBytecode */ false, /* excludeDeps */ false);
     OcamlMLCompile compile =
         new OcamlMLCompile(
@@ -515,7 +515,7 @@ public class OcamlBuildRulesGenerator {
       ImmutableMap<Path, ImmutableList<Path>> mlSources) {
     ImmutableList.Builder<SourcePath> cmoFiles = ImmutableList.builder();
 
-    final Map<Path, ImmutableSortedSet<BuildRule>> sourceToRule = new HashMap<>();
+    Map<Path, ImmutableSortedSet<BuildRule>> sourceToRule = new HashMap<>();
 
     for (ImmutableMap.Entry<Path, ImmutableList<Path>> mlSource : mlSources.entrySet()) {
       generateSingleMLBytecodeCompilation(
@@ -567,7 +567,7 @@ public class OcamlBuildRulesGenerator {
 
     String outputFileName = getMLBytecodeOutputName(name);
     Path outputPath = ocamlContext.getCompileBytecodeOutputDir().resolve(outputFileName);
-    final ImmutableList<Arg> compileFlags =
+    ImmutableList<Arg> compileFlags =
         getCompileFlags(/* isBytecode */ true, /* excludeDeps */ false);
     BuildRule compileBytecode =
         new OcamlMLCompile(

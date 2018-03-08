@@ -115,10 +115,10 @@ public class SmartDexingStep implements Step {
       AndroidPlatformTarget androidPlatformTarget,
       BuildContext buildContext,
       ProjectFilesystem filesystem,
-      final Path primaryOutputPath,
-      final Supplier<Set<Path>> primaryInputsToDex,
+      Path primaryOutputPath,
+      Supplier<Set<Path>> primaryInputsToDex,
       Optional<Path> secondaryOutputDir,
-      final Optional<Supplier<Multimap<Path, Path>>> secondaryInputsToDex,
+      Optional<Supplier<Multimap<Path, Path>>> secondaryInputsToDex,
       DexInputHashesProvider dexInputHashesProvider,
       Path successDir,
       EnumSet<Option> dxOptions,
@@ -133,7 +133,7 @@ public class SmartDexingStep implements Step {
     this.outputToInputsSupplier =
         MoreSuppliers.memoize(
             () -> {
-              final Builder<Path, Path> map = ImmutableMultimap.builder();
+              Builder<Path, Path> map = ImmutableMultimap.builder();
               map.putAll(primaryOutputPath, primaryInputsToDex.get());
               if (secondaryInputsToDex.isPresent()) {
                 map.putAll(secondaryInputsToDex.get().get());
@@ -279,7 +279,7 @@ public class SmartDexingStep implements Step {
     Multimap<Path, Path> outputToInputs = outputToInputsSupplier.get();
     for (Path output : outputToInputs.keySet()) {
       b.append("-out ");
-      b.append(output.toString());
+      b.append(output);
       b.append("-in ");
       Joiner.on(':').appendTo(b, Iterables.transform(outputToInputs.get(output), Object::toString));
     }

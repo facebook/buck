@@ -365,8 +365,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
       steps.add(
           new AbstractExecutionStep("symlinking for preprocessing") {
             @Override
-            public StepExecutionResult execute(ExecutionContext context)
-                throws IOException, InterruptedException {
+            public StepExecutionResult execute(ExecutionContext context) throws IOException {
               for (Pair<Path, Path> entry : pathToTarget) {
                 Path symlinkPath = getProjectFilesystem().resolve(entry.getFirst());
                 Path symlinkTarget = getProjectFilesystem().resolve(entry.getSecond());
@@ -482,8 +481,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
     steps.add(
         new AbstractExecutionStep("writing_secondary_dex_listing") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context)
-              throws IOException, InterruptedException {
+          public StepExecutionResult execute(ExecutionContext context) throws IOException {
             getProjectFilesystem().mkdirs(getSecondaryDexListing().getParent());
             getProjectFilesystem()
                 .writeLinesToPath(
@@ -518,14 +516,13 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
   }
 
   Supplier<ImmutableMap<String, HashCode>> addAccumulateClassNamesStep(
-      final ImmutableSet<Path> classPathEntriesToDex, ImmutableList.Builder<Step> steps) {
-    final ImmutableMap.Builder<String, HashCode> builder = ImmutableMap.builder();
+      ImmutableSet<Path> classPathEntriesToDex, ImmutableList.Builder<Step> steps) {
+    ImmutableMap.Builder<String, HashCode> builder = ImmutableMap.builder();
 
     steps.add(
         new AbstractExecutionStep("collect_all_class_names") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context)
-              throws IOException, InterruptedException {
+          public StepExecutionResult execute(ExecutionContext context) {
             Map<String, Path> classesToSources = new HashMap<>();
             for (Path path : classPathEntriesToDex) {
               Optional<ImmutableSortedMap<String, HashCode>> hashes =
@@ -579,7 +576,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
     // Transform our input classpath to a set of output locations for each input classpath.
     // TODO(devjasta): the output path we choose is the result of a slicing function against
     // input classpath. This is fragile and should be replaced with knowledge of the BuildTarget.
-    final ImmutableMap<Path, Path> inputOutputEntries =
+    ImmutableMap<Path, Path> inputOutputEntries =
         classpathEntriesToDex
             .stream()
             .collect(
@@ -648,13 +645,13 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
       ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap,
       BuildContext buildContext) {
     SourcePathResolver resolver = buildContext.getSourcePathResolver();
-    final Supplier<Set<Path>> primaryInputsToDex;
-    final Optional<Path> secondaryDexDir;
-    final Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs;
+    Supplier<Set<Path>> primaryInputsToDex;
+    Optional<Path> secondaryDexDir;
+    Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs;
     Path secondaryDexParentDir = getSecondaryDexRoot().resolve("__secondary_dex__/");
     Path additionalDexParentDir = getSecondaryDexRoot().resolve("__additional_dex__/");
     Path additionalDexAssetsDir = additionalDexParentDir.resolve("assets");
-    final Optional<ImmutableSet<Path>> additionalDexDirs;
+    Optional<ImmutableSet<Path>> additionalDexDirs;
 
     if (shouldSplitDex) {
       Optional<Path> proguardFullConfigFile = Optional.empty();
@@ -691,7 +688,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
       // important because SmartDexingCommand will try to dx every entry in this directory.  It
       // does this because it's impossible to know what outputs split-zip will generate until it
       // runs.
-      final Path secondaryZipDir = getBinPath("__secondary_zip__");
+      Path secondaryZipDir = getBinPath("__secondary_zip__");
 
       steps.addAll(
           MakeCleanDirectoryStep.of(
@@ -700,7 +697,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
 
       // Intermediate directory holding the directories holding _ONLY_ the additional split-zip
       // jar files that are intended for that dex store.
-      final Path additionalDexStoresZipDir = getBinPath("__dex_stores_zip__");
+      Path additionalDexStoresZipDir = getBinPath("__dex_stores_zip__");
 
       steps.addAll(
           MakeCleanDirectoryStep.of(

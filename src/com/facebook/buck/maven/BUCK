@@ -72,7 +72,6 @@ java_binary(
         "//src/com/facebook/buck/jvm/java:support",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
         "//src/com/facebook/buck/maven:util",
-        "//src/com/facebook/buck/message_ipc:message_ipc",
         "//src/com/facebook/buck/model:build_id",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/parser:rule_pattern",

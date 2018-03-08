@@ -45,7 +45,7 @@ public class DefaultOnDiskBuildInfoTest {
   }
 
   @Test
-  public void whenMetaDataJsonListThenGetValuesReturnsList() throws IOException {
+  public void whenMetaDataJsonListThenGetValuesReturnsList() {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     projectFilesystem.writeContentsToPath(
         "[\"bar\",\"biz\",\"baz\"]", Paths.get("buck-out/bin/foo/bar/.baz/metadata/artifact/KEY"));
@@ -60,7 +60,7 @@ public class DefaultOnDiskBuildInfoTest {
   }
 
   @Test
-  public void whenMetaDataEmptyJsonListThenGetValuesReturnsEmptyList() throws IOException {
+  public void whenMetaDataEmptyJsonListThenGetValuesReturnsEmptyList() {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     projectFilesystem.writeContentsToPath(
         "[]", Paths.get("buck-out/bin/foo/bar/.baz/metadata/artifact/KEY"));

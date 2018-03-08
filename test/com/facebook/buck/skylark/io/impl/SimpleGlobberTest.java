@@ -50,7 +50,7 @@ public class SimpleGlobberTest {
   }
 
   @Test
-  public void testGlobFindsIncludes() throws IOException, InterruptedException {
+  public void testGlobFindsIncludes() throws IOException {
     FileSystemUtils.createEmptyFile(root.getChild("foo.txt"));
     FileSystemUtils.createEmptyFile(root.getChild("bar.txt"));
     FileSystemUtils.createEmptyFile(root.getChild("bar.jpg"));
@@ -60,7 +60,7 @@ public class SimpleGlobberTest {
   }
 
   @Test
-  public void testGlobExcludedElementsAreNotReturned() throws IOException, InterruptedException {
+  public void testGlobExcludedElementsAreNotReturned() throws IOException {
     FileSystemUtils.createEmptyFile(root.getChild("foo.txt"));
     FileSystemUtils.createEmptyFile(root.getChild("bar.txt"));
     FileSystemUtils.createEmptyFile(root.getChild("bar.jpg"));

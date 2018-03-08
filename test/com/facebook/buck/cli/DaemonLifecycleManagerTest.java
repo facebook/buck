@@ -82,7 +82,7 @@ public class DaemonLifecycleManagerTest {
   }
 
   @Test
-  public void whenBuckConfigChangesParserInvalidated() throws IOException, InterruptedException {
+  public void whenBuckConfigChangesParserInvalidated() throws IOException {
     Object daemon =
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder()
@@ -131,8 +131,7 @@ public class DaemonLifecycleManagerTest {
   }
 
   @Test
-  public void whenAndroidNdkVersionChangesParserInvalidated()
-      throws IOException, InterruptedException {
+  public void whenAndroidNdkVersionChangesParserInvalidated() throws IOException {
 
     BuckConfig buckConfig1 =
         FakeBuckConfig.builder()
@@ -160,7 +159,7 @@ public class DaemonLifecycleManagerTest {
   }
 
   @Test
-  public void testAppleSdkChangesParserInvalidated() throws IOException, InterruptedException {
+  public void testAppleSdkChangesParserInvalidated() throws IOException {
     assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
@@ -193,8 +192,7 @@ public class DaemonLifecycleManagerTest {
     BuckConfig buckConfigWithDeveloperDirectory =
         FakeBuckConfig.builder()
             .setSections(
-                "[apple]",
-                "xcode_developer_dir = " + appleDeveloperDirectoryPath.toAbsolutePath().toString())
+                "[apple]", "xcode_developer_dir = " + appleDeveloperDirectoryPath.toAbsolutePath())
             .build();
 
     Object daemon3 =
@@ -340,8 +338,7 @@ public class DaemonLifecycleManagerTest {
     assertEquals("Android SDK should be the same other location", daemon3, daemon4);
   }
 
-  private Cell createCellWithAndroidSdk(Path androidSdkPath)
-      throws IOException, InterruptedException {
+  private Cell createCellWithAndroidSdk(Path androidSdkPath) {
     return new TestCellBuilder()
         .setBuckConfig(buckConfig)
         .setFilesystem(filesystem)

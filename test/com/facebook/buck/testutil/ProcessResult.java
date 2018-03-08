@@ -26,11 +26,17 @@ public class ProcessResult {
   private final ExitCode exitCode;
   private final String stdout;
   private final String stderr;
+  private final boolean timedOut;
 
   public ProcessResult(ExitCode exitCode, String stdout, String stderr) {
+    this(exitCode, stdout, stderr, false);
+  }
+
+  public ProcessResult(ExitCode exitCode, String stdout, String stderr, boolean timedOut) {
     this.exitCode = exitCode;
     this.stdout = Preconditions.checkNotNull(stdout);
     this.stderr = Preconditions.checkNotNull(stderr);
+    this.timedOut = timedOut;
   }
 
   /**
@@ -49,6 +55,10 @@ public class ProcessResult {
 
   public String getStderr() {
     return stderr;
+  }
+
+  public boolean isTimedOut() {
+    return timedOut;
   }
 
   public ProcessResult assertSuccess() {
@@ -80,12 +90,17 @@ public class ProcessResult {
       return this;
     }
 
-    String failureMessage =
-        String.format(
-            "Expected exit code %d but was %d.", exitCode.getCode(), getExitCode().getCode());
+    StringBuilder failureMessageBuilder = new StringBuilder();
     if (message != null) {
-      failureMessage = message + " " + failureMessage;
+      failureMessageBuilder.append(message + " ");
     }
+    failureMessageBuilder.append(
+        String.format(
+            "Expected exit code %d but was %d.", exitCode.getCode(), getExitCode().getCode()));
+    if (timedOut) {
+      failureMessageBuilder.append(" Execution experienced a timeout.");
+    }
+    String failureMessage = failureMessageBuilder.toString();
 
     System.err.println("=== " + failureMessage + " ===");
     System.err.println("=== STDERR ===");

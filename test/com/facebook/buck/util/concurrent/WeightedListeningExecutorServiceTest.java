@@ -75,12 +75,12 @@ public class WeightedListeningExecutorServiceTest {
     WeightedListeningExecutorService service =
         new WeightedListeningExecutorService(
             semaphore, ResourceAmounts.of(1, 0, 0, 0), wrappedService);
-    final AtomicBoolean flag = new AtomicBoolean(false);
+    AtomicBoolean flag = new AtomicBoolean(false);
     ListenableFuture<Void> future =
         service.submit(
             new Callable<Void>() {
               @Override
-              public Void call() throws Exception {
+              public Void call() {
                 flag.set(true);
                 return null;
               }
@@ -96,11 +96,11 @@ public class WeightedListeningExecutorServiceTest {
 
   private AtomicBoolean submitSetBool(
       WeightedListeningExecutorService service, ResourceAmounts amounts) {
-    final AtomicBoolean bool = new AtomicBoolean(false);
+    AtomicBoolean bool = new AtomicBoolean(false);
     service.submit(
         new Callable<Void>() {
           @Override
-          public Void call() throws Exception {
+          public Void call() {
             bool.set(true);
             return null;
           }

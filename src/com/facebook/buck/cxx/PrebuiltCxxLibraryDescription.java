@@ -388,13 +388,14 @@ public class PrebuiltCxxLibraryDescription
             args);
 
     return SharedLibraryInterfaceFactoryResolver.resolveFactory(params.get())
-        .createSharedInterfaceLibrary(
+        .createSharedInterfaceLibraryFromLibrary(
             baseTarget.withAppendedFlavors(
                 Type.SHARED_INTERFACE.getFlavor(), cxxPlatform.getFlavor()),
             projectFilesystem,
             resolver,
             pathResolver,
             ruleFinder,
+            cxxPlatform,
             sharedLibrary);
   }
 
@@ -403,7 +404,7 @@ public class PrebuiltCxxLibraryDescription
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
       BuildRuleParams params,
-      final PrebuiltCxxLibraryDescriptionArg args) {
+      PrebuiltCxxLibraryDescriptionArg args) {
 
     // See if we're building a particular "type" of this library, and if so, extract
     // it as an enum.
@@ -416,7 +417,7 @@ public class PrebuiltCxxLibraryDescription
 
     Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
         context.getTargetGraph().get(buildTarget).getSelectedVersions();
-    final Optional<String> versionSubdir =
+    Optional<String> versionSubdir =
         selectedVersions.isPresent() && args.getVersionedSubDir().isPresent()
             ? Optional.of(
                 args.getVersionedSubDir()
@@ -471,7 +472,7 @@ public class PrebuiltCxxLibraryDescription
     if (selectedVersions.isPresent() && args.getVersionedSubDir().isPresent()) {
       ImmutableList<String> versionSubDirs =
           args.getVersionedSubDir()
-              .orElse(VersionMatchedCollection.<String>of())
+              .orElse(VersionMatchedCollection.of())
               .getMatchingValues(selectedVersions.get());
       if (versionSubDirs.size() != 1) {
         throw new HumanReadableException(
@@ -482,7 +483,7 @@ public class PrebuiltCxxLibraryDescription
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
-    final PrebuiltCxxLibraryPaths paths = getPaths(buildTarget, args, versionSubdir);
+    PrebuiltCxxLibraryPaths paths = getPaths(buildTarget, args, versionSubdir);
     return new PrebuiltCxxLibrary(buildTarget, projectFilesystem, params, ruleResolverLocal) {
 
       private final LoadingCache<NativeLinkableCacheKey, NativeLinkableInput> nativeLinkableCache =
@@ -598,7 +599,7 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public CxxPreprocessorInput getCxxPreprocessorInput(final CxxPlatform cxxPlatform) {
+      public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
         CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
 
         if (hasHeaders(cxxPlatform)) {
@@ -681,7 +682,7 @@ public class PrebuiltCxxLibraryDescription
         if (!args.isHeaderOnly()) {
           if (type == Linker.LinkableDepType.SHARED) {
             Preconditions.checkState(getPreferredLinkage(cxxPlatform) != Linkage.STATIC);
-            final SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform, true);
+            SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform, true);
             if (args.getLinkWithoutSoname()) {
               if (!(sharedLibrary instanceof PathSourcePath)) {
                 throw new HumanReadableException(
@@ -711,7 +712,7 @@ public class PrebuiltCxxLibraryDescription
             }
           }
         }
-        final ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
+        ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
 
         return NativeLinkableInput.of(linkerArgs, args.getFrameworks(), args.getLibraries());
       }

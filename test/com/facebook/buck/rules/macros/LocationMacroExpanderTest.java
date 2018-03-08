@@ -33,14 +33,12 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasSupplementaryOutputs;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -75,9 +73,7 @@ public class LocationMacroExpanderTest {
   @Test
   public void testShouldWarnUsersWhenThereIsNoOutputForARuleButLocationRequested()
       throws NoSuchBuildTargetException {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//cheese:java"))
         .build(resolver);
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:cake");
@@ -100,9 +96,7 @@ public class LocationMacroExpanderTest {
   @Test
   public void replaceLocationOfFullyQualifiedBuildTarget() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     BuildRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
@@ -130,9 +124,7 @@ public class LocationMacroExpanderTest {
   public void replaceSupplementalOutputLocation() throws Exception {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem("/some_root");
     BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar");
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     ruleResolver.addToIndex(new RuleWithSupplementaryOutput(target, filesystem));
 
     String input = "$(location //foo:bar[sup])";

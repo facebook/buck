@@ -200,7 +200,7 @@ public class PublishCommand extends BuildCommand {
   }
 
   private static String artifactToString(Artifact artifact) {
-    return artifact.toString() + " < " + artifact.getFile();
+    return artifact + " < " + artifact.getFile();
   }
 
   @Override

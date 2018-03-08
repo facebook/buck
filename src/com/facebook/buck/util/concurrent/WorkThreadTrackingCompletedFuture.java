@@ -16,9 +16,7 @@
 
 package com.facebook.buck.util.concurrent;
 
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import javax.annotation.Nonnull;
 
 final class WorkThreadTrackingCompletedFuture<T> implements WorkThreadTrackingFuture<T> {
@@ -29,13 +27,12 @@ final class WorkThreadTrackingCompletedFuture<T> implements WorkThreadTrackingFu
   }
 
   @Override
-  public T get() throws InterruptedException, ExecutionException {
+  public T get() {
     return value;
   }
 
   @Override
-  public T get(long timeout, @Nonnull TimeUnit unit)
-      throws InterruptedException, ExecutionException, TimeoutException {
+  public T get(long timeout, @Nonnull TimeUnit unit) {
     return value;
   }
 

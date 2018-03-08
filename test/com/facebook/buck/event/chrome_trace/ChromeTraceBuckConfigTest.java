@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.testutil.TemporaryPaths;
-import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -29,7 +28,7 @@ public class ChromeTraceBuckConfigTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
-  public void testGetMaxTraces() throws InterruptedException, IOException {
+  public void testGetMaxTraces() {
     assertEquals(25, ChromeTraceBuckConfig.of(FakeBuckConfig.builder().build()).getMaxTraces());
 
     ChromeTraceBuckConfig config =

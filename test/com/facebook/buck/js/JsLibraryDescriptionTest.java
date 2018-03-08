@@ -144,9 +144,9 @@ public class JsLibraryDescriptionTest {
 
   @Test
   public void subBasePathForSourceFiles() {
-    final String basePath = "base/path";
-    final String filePath = String.format("%s/sub/file.js", targetDirectory);
-    final JsTestScenario scenario = buildScenario(basePath, FakeSourcePath.of(filePath));
+    String basePath = "base/path";
+    String filePath = String.format("%s/sub/file.js", targetDirectory);
+    JsTestScenario scenario = buildScenario(basePath, FakeSourcePath.of(filePath));
 
     assertEquals(
         "arbitrary/path/base/path/sub/file.js",
@@ -155,9 +155,9 @@ public class JsLibraryDescriptionTest {
 
   @Test
   public void relativeBasePathForSourceFiles() {
-    final String basePath = "../base/path";
-    final String filePath = String.format("%s/sub/file.js", targetDirectory);
-    final JsTestScenario scenario = buildScenario(basePath, FakeSourcePath.of(filePath));
+    String basePath = "../base/path";
+    String filePath = String.format("%s/sub/file.js", targetDirectory);
+    JsTestScenario scenario = buildScenario(basePath, FakeSourcePath.of(filePath));
 
     assertEquals(
         "arbitrary/base/path/sub/file.js",
@@ -166,11 +166,10 @@ public class JsLibraryDescriptionTest {
 
   @Test
   public void basePathReplacesBuildTargetSourcePath() {
-    final String basePath = "base/path.js";
-    final BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    String basePath = "base/path.js";
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     scenarioBuilder.arbitraryRule(target);
-    final JsTestScenario scenario =
-        buildScenario(basePath, DefaultBuildTargetSourcePath.of(target));
+    JsTestScenario scenario = buildScenario(basePath, DefaultBuildTargetSourcePath.of(target));
 
     assertEquals(
         "arbitrary/path/base/path.js",
@@ -179,11 +178,10 @@ public class JsLibraryDescriptionTest {
 
   @Test
   public void relativeBasePathReplacesBuildTargetSourcePath() {
-    final String basePath = "../path.js";
-    final BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    String basePath = "../path.js";
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     scenarioBuilder.arbitraryRule(target);
-    final JsTestScenario scenario =
-        buildScenario(basePath, DefaultBuildTargetSourcePath.of(target));
+    JsTestScenario scenario = buildScenario(basePath, DefaultBuildTargetSourcePath.of(target));
 
     assertEquals(
         "arbitrary/path.js", findFirstJsFileDevRule(scenario.resolver).getVirtualPath().get());
@@ -191,10 +189,10 @@ public class JsLibraryDescriptionTest {
 
   @Test
   public void buildTargetWithSubpathPair() {
-    final String basePath = ".";
-    final BuildTarget target = BuildTargetFactory.newInstance("//:node_modules");
+    String basePath = ".";
+    BuildTarget target = BuildTargetFactory.newInstance("//:node_modules");
     scenarioBuilder.arbitraryRule(target);
-    final JsTestScenario scenario =
+    JsTestScenario scenario =
         buildScenario(
             basePath,
             new Pair<>(DefaultBuildTargetSourcePath.of(target), "node_modules/left-pad/index.js"));

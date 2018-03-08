@@ -55,7 +55,7 @@ public final class TestNGRunner extends BaseRunner {
         continue;
       }
 
-      final Class<?> testClass = Class.forName(className);
+      Class<?> testClass = Class.forName(className);
 
       List<TestResult> results;
       if (!mightBeATestClass(testClass)) {

@@ -138,7 +138,7 @@ public class GwtBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 context.getBuildCellRootPath(), getProjectFilesystem(), workingDirectory)));
 
     // Write the deploy files into a separate directory so that the generated .zip is smaller.
-    final Path deployDirectory = workingDirectory.resolve("deploy");
+    Path deployDirectory = workingDirectory.resolve("deploy");
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -185,7 +185,7 @@ public class GwtBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             }
             javaArgsBuilder.addAll(experimentalArgs);
             javaArgsBuilder.addAll(modules);
-            final ImmutableList<String> javaArgs = javaArgsBuilder.build();
+            ImmutableList<String> javaArgs = javaArgsBuilder.build();
 
             return javaArgs;
           }

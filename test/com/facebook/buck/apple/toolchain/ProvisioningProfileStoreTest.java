@@ -51,8 +51,7 @@ public class ProvisioningProfileStoreTest {
       Date expirationDate,
       String uuid,
       ImmutableMap<String, NSObject> entitlements,
-      ImmutableSet<HashCode> fingerprints)
-      throws Exception {
+      ImmutableSet<HashCode> fingerprints) {
     return ProvisioningProfileMetadata.builder()
         .setAppID(ProvisioningProfileMetadata.splitAppID(appID))
         .setExpirationDate(expirationDate)
@@ -117,8 +116,8 @@ public class ProvisioningProfileStoreTest {
 
   @Test
   public void testEntitlementKeysAreMatched() throws Exception {
-    final NSString[] fakeKeychainAccessGroups = {new NSString("AAAAAAAAAA.*")};
-    final NSArray fakeKeychainAccessGroupsArray = new NSArray(fakeKeychainAccessGroups);
+    NSString[] fakeKeychainAccessGroups = {new NSString("AAAAAAAAAA.*")};
+    NSArray fakeKeychainAccessGroupsArray = new NSArray(fakeKeychainAccessGroups);
 
     ImmutableMap<String, NSObject> fakeDevelopmentEntitlements =
         ImmutableMap.of(

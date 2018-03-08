@@ -40,7 +40,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -50,7 +49,7 @@ public class TargetGraphHashingTest {
 
   @Test
   public void emptyTargetGraphHasEmptyHashes()
-      throws IOException, InterruptedException, AcyclicDepthFirstPostOrderTraversal.CycleException {
+      throws InterruptedException, AcyclicDepthFirstPostOrderTraversal.CycleException {
     BuckEventBus eventBus = new DefaultBuckEventBus(new IncrementingFakeClock(), new BuildId());
     TargetGraph targetGraph = TargetGraphFactory.newInstance();
 
@@ -64,7 +63,7 @@ public class TargetGraphHashingTest {
 
   @Test
   public void hashChangesWhenSrcContentChanges()
-      throws IOException, InterruptedException, AcyclicDepthFirstPostOrderTraversal.CycleException {
+      throws InterruptedException, AcyclicDepthFirstPostOrderTraversal.CycleException {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus eventBus = new DefaultBuckEventBus(new IncrementingFakeClock(), new BuildId());
 
@@ -104,7 +103,7 @@ public class TargetGraphHashingTest {
 
   @Test
   public void twoNodeIndependentRootsTargetGraphHasExpectedHashes()
-      throws IOException, InterruptedException, AcyclicDepthFirstPostOrderTraversal.CycleException {
+      throws InterruptedException, AcyclicDepthFirstPostOrderTraversal.CycleException {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus eventBus = new DefaultBuckEventBus(new IncrementingFakeClock(), new BuildId());
 
@@ -167,7 +166,7 @@ public class TargetGraphHashingTest {
 
   @Test
   public void hashChangesForDependentNodeWhenDepsChange()
-      throws IOException, InterruptedException, AcyclicDepthFirstPostOrderTraversal.CycleException {
+      throws InterruptedException, AcyclicDepthFirstPostOrderTraversal.CycleException {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus eventBus = new DefaultBuckEventBus(new IncrementingFakeClock(), new BuildId());
 

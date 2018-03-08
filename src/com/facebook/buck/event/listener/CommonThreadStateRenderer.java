@@ -50,7 +50,7 @@ public class CommonThreadStateRenderer {
       Function<Long, String> formatTimeFunction,
       long currentTimeMs,
       int outputMaxColumns,
-      final ImmutableMap<Long, ThreadRenderingInformation> threadInformationMap) {
+      ImmutableMap<Long, ThreadRenderingInformation> threadInformationMap) {
     this.ansi = ansi;
     this.formatTimeFunction = formatTimeFunction;
     this.currentTimeMs = currentTimeMs;

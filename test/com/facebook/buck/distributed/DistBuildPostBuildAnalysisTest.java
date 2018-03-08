@@ -124,7 +124,7 @@ public class DistBuildPostBuildAnalysisTest {
   }
 
   @Test
-  public void testExtractBuildRules() throws IOException, InterruptedException {
+  public void testExtractBuildRules() throws IOException {
     List<BuildRuleEvent.Finished> ruleEvents = new ArrayList<>();
     ruleEvents.add(
         finishedEvent(

@@ -52,7 +52,7 @@ public class FatJarMain {
     String librarySearchPathName = getLibrarySearchPathName();
     String originalLibPath = System.getenv(librarySearchPathName);
     String newlibPath =
-        libDir.toString() + (originalLibPath == null ? "" : File.pathSeparator + originalLibPath);
+        libDir + (originalLibPath == null ? "" : File.pathSeparator + originalLibPath);
     env.put(librarySearchPathName, newlibPath);
   }
 
@@ -61,7 +61,7 @@ public class FatJarMain {
     try {
       return runtimeMxBean.getInputArguments();
     } catch (java.lang.SecurityException e) {
-      //Do not have the ManagementPermission("monitor") permission
+      // Do not have the ManagementPermission("monitor") permission
       return new ArrayList<String>();
     }
   }

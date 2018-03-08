@@ -49,7 +49,7 @@ public final class BuckTracing {
     this.pluginName = pluginName;
   }
 
-  public TraceSection traceSection(final String eventName) {
+  public TraceSection traceSection(String eventName) {
     begin(eventName);
 
     return traceSection;
@@ -60,7 +60,7 @@ public final class BuckTracing {
    * try-with-resources block to automatically end the section. The section will appear in the trace
    * labeled with eventName.
    */
-  public TraceSection traceSection(final String eventName, final Map<String, String> args) {
+  public TraceSection traceSection(String eventName, Map<String, String> args) {
     begin(eventName, args);
 
     return traceSection;
@@ -74,7 +74,7 @@ public final class BuckTracing {
    * call to {@link #end(Map)} should be in the finally block. Consider using {@link
    * #traceSection(String)} in a try-with-resources block instead.
    */
-  public void begin(final String eventName) {
+  public void begin(String eventName) {
     begin(eventName, Collections.emptyMap());
   }
 
@@ -86,8 +86,8 @@ public final class BuckTracing {
    * call to {@link #end(Map)} should be in the finally block. Consider using {@link
    * #traceSection(String, Map)} in a try-with-resources block instead.
    */
-  public void begin(final String eventName, final Map<String, String> args) {
-    final BuckTracingInterface tracingInterface = curThreadTracingInterface.get();
+  public void begin(String eventName, Map<String, String> args) {
+    BuckTracingInterface tracingInterface = curThreadTracingInterface.get();
     if (tracingInterface == null) {
       return;
     }
@@ -115,8 +115,8 @@ public final class BuckTracing {
    * <p>For best results, this call should be in a finally block, with the corresponding {@link
    * #begin(String, Map)} call immediately before the try.
    */
-  public void end(final Map<String, String> args) {
-    final BuckTracingInterface tracingInterface = curThreadTracingInterface.get();
+  public void end(Map<String, String> args) {
+    BuckTracingInterface tracingInterface = curThreadTracingInterface.get();
     if (tracingInterface == null) {
       return;
     }
@@ -129,7 +129,7 @@ public final class BuckTracing {
    * method manually.
    */
   public static void setCurrentThreadTracingInterfaceFromJsr199Javac(
-      final BuckTracingInterface buckTracingInterface) {
+      BuckTracingInterface buckTracingInterface) {
     curThreadTracingInterface.set(buckTracingInterface);
   }
 

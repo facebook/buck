@@ -108,7 +108,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
     return Optional.ofNullable(rule);
   }
 
-  private Optional<IjLibrary> createLibrary(final TargetNode<?, ?> targetNode) {
+  private Optional<IjLibrary> createLibrary(TargetNode<?, ?> targetNode) {
     return getRule(targetNode)
         .map(
             rule -> {

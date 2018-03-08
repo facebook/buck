@@ -62,6 +62,7 @@ public class CxxPlatforms {
               Optional.of(
                   ElfSharedLibraryInterfaceParams.of(
                       config.getObjcopy().get(),
+                      config.getIndependentShlibInterfacesLdflags().orElse(ImmutableList.of()),
                       type == SharedLibraryInterfaceParams.Type.DEFINED_ONLY));
           break;
           // $CASES-OMITTED$
@@ -74,7 +75,7 @@ public class CxxPlatforms {
   public static CxxPlatform build(
       Flavor flavor,
       Platform platform,
-      final CxxBuckConfig config,
+      CxxBuckConfig config,
       CompilerProvider as,
       PreprocessorProvider aspp,
       CompilerProvider cc,
@@ -84,9 +85,9 @@ public class CxxPlatforms {
       LinkerProvider ld,
       Iterable<String> ldFlags,
       Tool strip,
-      final ArchiverProvider ar,
-      final Optional<ToolProvider> ranlib,
-      final SymbolNameTool nm,
+      ArchiverProvider ar,
+      Optional<ToolProvider> ranlib,
+      SymbolNameTool nm,
       ImmutableList<String> asflags,
       ImmutableList<String> asppflags,
       ImmutableList<String> cflags,

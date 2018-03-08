@@ -23,7 +23,6 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.android.ddmlib.IDevice;
-import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.exopackage.AndroidDevice;
 import com.facebook.buck.android.exopackage.RealAndroidDevice;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
@@ -79,8 +78,7 @@ public class AdbHelperTest {
   private AdbHelper createAdbHelper(
       ExecutionContext executionContext,
       AdbOptions adbOptions,
-      TargetDeviceOptions targetDeviceOptions)
-      throws CmdLineException {
+      TargetDeviceOptions targetDeviceOptions) {
     return new AdbHelper(
         adbOptions,
         targetDeviceOptions,
@@ -95,7 +93,7 @@ public class AdbHelperTest {
 
   /** Verify that null is returned when no devices are present. */
   @Test
-  public void testDeviceFilterNoDevices() throws CmdLineException {
+  public void testDeviceFilterNoDevices() {
     IDevice[] devices = new IDevice[] {};
 
     assertNull(basicAdbHelper.filterDevices(devices));
@@ -103,7 +101,7 @@ public class AdbHelperTest {
 
   /** Verify that non-online devices will not appear in result list. */
   @Test
-  public void testDeviceFilterOnlineOnly() throws CmdLineException {
+  public void testDeviceFilterOnlineOnly() {
     IDevice[] devices =
         new IDevice[] {
           createEmulator("1", IDevice.DeviceState.OFFLINE),
@@ -345,21 +343,20 @@ public class AdbHelperTest {
         new BuckEventBusForTests.CapturingConsoleEventListener();
     testContext.getBuckEventBus().register(listener);
 
-    final File apk = new File("/some/file.apk");
-    final AtomicReference<String> apkPath = new AtomicReference<>();
+    File apk = new File("/some/file.apk");
+    AtomicReference<String> apkPath = new AtomicReference<>();
 
     TestDevice device =
         new TestDevice() {
           @Override
-          public void installPackage(String s, boolean b, String... strings)
-              throws InstallException {
+          public void installPackage(String s, boolean b, String... strings) {
             apkPath.set(s);
           }
         };
     device.setSerialNumber("serial#1");
     device.setName("testDevice");
 
-    final List<IDevice> deviceList = Lists.newArrayList((IDevice) device);
+    List<IDevice> deviceList = Lists.newArrayList((IDevice) device);
 
     AdbHelper adbHelper = createAdbHelper(deviceList);
     boolean success =
@@ -377,21 +374,20 @@ public class AdbHelperTest {
         new BuckEventBusForTests.CapturingConsoleEventListener();
     testContext.getBuckEventBus().register(listener);
 
-    final File apk = new File("/some/file.apk");
-    final AtomicReference<String> apkPath = new AtomicReference<>();
+    File apk = new File("/some/file.apk");
+    AtomicReference<String> apkPath = new AtomicReference<>();
 
     TestDevice device =
         new TestDevice() {
           @Override
-          public void installPackage(String s, boolean b, String... strings)
-              throws InstallException {
+          public void installPackage(String s, boolean b, String... strings) {
             apkPath.set(s);
           }
         };
     device.setSerialNumber("serial#1");
     device.setName("testDevice");
 
-    final List<IDevice> deviceList = Lists.newArrayList((IDevice) device);
+    List<IDevice> deviceList = Lists.newArrayList((IDevice) device);
 
     AdbHelper adbHelper = createAdbHelper(deviceList);
     boolean success =
@@ -406,7 +402,7 @@ public class AdbHelperTest {
             "Installing apk on serial#1.", "Successfully ran install apk on 1 device(s)"));
   }
 
-  private AdbHelper createAdbHelper(final List<IDevice> deviceList) {
+  private AdbHelper createAdbHelper(List<IDevice> deviceList) {
     return new AdbHelper(
         new AdbOptions(),
         new TargetDeviceOptions(),

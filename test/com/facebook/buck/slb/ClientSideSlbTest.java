@@ -19,7 +19,6 @@ package com.facebook.buck.slb;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.collect.ImmutableList;
-import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
@@ -110,7 +109,7 @@ public class ClientSideSlbTest extends EasyMockSupport {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void testAllServersArePinged() throws IOException {
+  public void testAllServersArePinged() {
     Capture<Runnable> capture = EasyMock.newCapture();
     EasyMock.expect(
             mockScheduler.scheduleWithFixedDelay(

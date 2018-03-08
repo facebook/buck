@@ -21,6 +21,7 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_C
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.toolchain.DxToolchain;
+import com.facebook.buck.android.toolchain.ndk.impl.TestNdkCxxPlatformsProviderFactory;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -35,16 +36,13 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.ImmutableBuildRuleCreationContext;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.rules.TestBuildRuleParams;
-import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableSet;
@@ -56,13 +54,11 @@ public class AndroidInstrumentationApkTest {
 
   @Test
   public void testAndroidInstrumentationApkExcludesClassesFromInstrumentedApk() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     BuildTarget javaLibrary1Target = BuildTargetFactory.newInstance("//java/com/example:lib1");
-    final FakeJavaLibrary javaLibrary1 = new FakeJavaLibrary(javaLibrary1Target);
+    FakeJavaLibrary javaLibrary1 = new FakeJavaLibrary(javaLibrary1Target);
 
     FakeJavaLibrary javaLibrary2 =
         new FakeJavaLibrary(
@@ -77,7 +73,7 @@ public class AndroidInstrumentationApkTest {
         };
 
     BuildTarget javaLibrary3Target = BuildTargetFactory.newInstance("//java/com/example:lib3");
-    final FakeJavaLibrary javaLibrary3 = new FakeJavaLibrary(javaLibrary3Target);
+    FakeJavaLibrary javaLibrary3 = new FakeJavaLibrary(javaLibrary3Target);
 
     FakeJavaLibrary javaLibrary4 =
         new FakeJavaLibrary(
@@ -133,7 +129,8 @@ public class AndroidInstrumentationApkTest {
         (AndroidInstrumentationApk)
             new AndroidInstrumentationApkDescription(
                     new ToolchainProviderBuilder()
-                        .withDefaultNdkCxxPlatforms()
+                        .withToolchain(
+                            TestNdkCxxPlatformsProviderFactory.createDefaultNdkPlatformsProvider())
                         .withToolchain(
                             DxToolchain.DEFAULT_NAME,
                             DxToolchain.of(MoreExecutors.newDirectExecutorService()))
@@ -147,11 +144,7 @@ public class AndroidInstrumentationApkTest {
                     new DxConfig(FakeBuckConfig.builder().build()),
                     new ApkConfig(FakeBuckConfig.builder().build()))
                 .createBuildRule(
-                    ImmutableBuildRuleCreationContext.of(
-                        TargetGraph.EMPTY,
-                        ruleResolver,
-                        projectFilesystem,
-                        TestCellBuilder.createCellRoots(projectFilesystem)),
+                    TestBuildRuleCreationContextFactory.create(ruleResolver, projectFilesystem),
                     buildTarget,
                     params,
                     arg);

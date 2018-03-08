@@ -48,10 +48,10 @@ public class HttpDownloaderTest {
   private final Path neverUsed = Paths.get("never/used");
   private BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
-  private HttpDownloader getDownloader(final HttpURLConnection connection) {
+  private HttpDownloader getDownloader(HttpURLConnection connection) {
     return new HttpDownloader() {
       @Override
-      protected HttpURLConnection createConnection(URI uri) throws IOException {
+      protected HttpURLConnection createConnection(URI uri) {
         return connection;
       }
     };
@@ -59,7 +59,7 @@ public class HttpDownloaderTest {
 
   @Test
   public void shouldReturnFalseIfTryingBasicAuthOverHttp() throws IOException, URISyntaxException {
-    final HttpURLConnection connection = EasyMock.createNiceMock(HttpURLConnection.class);
+    HttpURLConnection connection = EasyMock.createNiceMock(HttpURLConnection.class);
     EasyMock.replay(connection);
 
     HttpDownloader downloader = getDownloader(connection);
@@ -77,7 +77,7 @@ public class HttpDownloaderTest {
 
     Capture<String> capturedAuth = EasyMock.newCapture();
 
-    final HttpURLConnection connection = EasyMock.createNiceMock(HttpsURLConnection.class);
+    HttpURLConnection connection = EasyMock.createNiceMock(HttpsURLConnection.class);
     EasyMock.expect(connection.getResponseCode()).andStubReturn(HTTP_FORBIDDEN);
     connection.addRequestProperty(eq("Authorization"), capture(capturedAuth));
     EasyMock.expectLastCall();
@@ -100,7 +100,7 @@ public class HttpDownloaderTest {
 
   @Test
   public void shouldReturnFalseIfTheStatusCodeIsNot200() throws IOException, URISyntaxException {
-    final HttpURLConnection connection = EasyMock.createNiceMock(HttpURLConnection.class);
+    HttpURLConnection connection = EasyMock.createNiceMock(HttpURLConnection.class);
     EasyMock.expect(connection.getResponseCode()).andStubReturn(HTTP_FORBIDDEN);
     EasyMock.replay(connection);
 

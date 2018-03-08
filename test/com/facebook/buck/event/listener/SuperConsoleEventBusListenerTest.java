@@ -196,8 +196,8 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    final String parsingLine = "Parsing buck files: finished in 0.3 sec";
-    final String actionGraphLine = "Creating action graph: finished in 0.1 sec";
+    String parsingLine = "Parsing buck files: finished in 0.3 sec";
+    String actionGraphLine = "Creating action graph: finished in 0.1 sec";
 
     validateConsole(
         listener,
@@ -424,8 +424,8 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    final String buildingLine = "Building: finished in 0.8 sec";
-    final String totalLine = "  Total time: 1.0 sec";
+    String buildingLine = "Building: finished in 0.8 sec";
+    String totalLine = "  Total time: 1.0 sec";
 
     validateConsole(
         listener,
@@ -467,7 +467,7 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    final String installingFinished = "Installing: finished in 1.5 sec";
+    String installingFinished = "Installing: finished in 1.5 sec";
 
     validateConsole(
         listener,
@@ -632,8 +632,8 @@ public class SuperConsoleEventBusListenerTest {
             400L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
-    final String parsingLine = "Parsing buck files: finished in 0.1 sec";
-    final String actionGraphLine = "Creating action graph: finished in 0.1 sec";
+    String parsingLine = "Parsing buck files: finished in 0.1 sec";
+    String actionGraphLine = "Creating action graph: finished in 0.1 sec";
     validateConsole(
         listener,
         540L,
@@ -751,9 +751,9 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    final String buildingLine =
+    String buildingLine =
         "Building: finished in 0.8 sec" + " (100%) 2/10 jobs, 2 updated, 20.0% cache miss";
-    final String totalTime = "  Total time: 1.0 sec";
+    String totalTime = "  Total time: 1.0 sec";
 
     validateConsole(
         listener,
@@ -837,8 +837,8 @@ public class SuperConsoleEventBusListenerTest {
             /* threadId */ 0L));
 
     timeMillis += 150;
-    final String parsingLine = "Parsing buck files: finished in 0.3 sec";
-    final String actionGraphLine = "Creating action graph: finished in 0.1 sec";
+    String parsingLine = "Parsing buck files: finished in 0.3 sec";
+    String actionGraphLine = "Creating action graph: finished in 0.1 sec";
 
     validateConsole(
         listener,
@@ -1151,13 +1151,13 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    final String distbuildLine =
+    String distbuildLine =
         "Distributed Build: finished in 1.6 sec (100%) local status: building (100% done);"
             + " remote status: finished_successfully, 80/80 jobs,"
             + " 3.3% cache miss, 1 [3.3%] cache errors, 1 upload errors";
-    final String buildingLine =
+    String buildingLine =
         "Local Build: finished in 1.6 sec (100%) 1/5 jobs, 1 updated, 20.0% cache miss";
-    final String totalLine = "  Total time: 1.8 sec. Build successful.";
+    String totalLine = "  Total time: 1.8 sec. Build successful.";
     timeMillis += 100;
     validateConsole(
         listener,
@@ -1277,8 +1277,8 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    final String parsingLine = "Parsing buck files: finished in 0.3 sec";
-    final String actionGraphLine = "Creating action graph: finished in 0.1 sec";
+    String parsingLine = "Parsing buck files: finished in 0.3 sec";
+    String actionGraphLine = "Creating action graph: finished in 0.1 sec";
 
     validateConsole(
         listener,
@@ -1325,8 +1325,8 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    final String buildingLine = "Building: finished in 0.8 sec";
-    final String totalLine = "  Total time: 1.0 sec";
+    String buildingLine = "Building: finished in 0.8 sec";
+    String totalLine = "  Total time: 1.0 sec";
 
     validateConsole(
         listener,
@@ -1474,7 +1474,7 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    final String testingLine = "Testing: finished in 1.6 sec (1 PASS/0 FAIL)";
+    String testingLine = "Testing: finished in 1.6 sec (1 PASS/0 FAIL)";
 
     validateConsoleWithStdOutAndErr(
         listener,
@@ -1552,8 +1552,8 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    final String parsingLine = "Parsing buck files: finished in 0.3 sec";
-    final String actionGraphLine = "Creating action graph: finished in 0.1 sec";
+    String parsingLine = "Parsing buck files: finished in 0.3 sec";
+    String actionGraphLine = "Creating action graph: finished in 0.1 sec";
 
     validateConsole(
         listener,
@@ -1600,8 +1600,8 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    final String buildingLine = "Building: finished in 0.8 sec";
-    final String totalLine = "  Total time: 1.0 sec";
+    String buildingLine = "Building: finished in 0.8 sec";
+    String totalLine = "  Total time: 1.0 sec";
 
     validateConsole(
         listener,
@@ -1750,7 +1750,7 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    final String testingLine = "Testing: finished in 1.6 sec (0 PASS/1 SKIP/0 FAIL)";
+    String testingLine = "Testing: finished in 1.6 sec (0 PASS/1 SKIP/0 FAIL)";
 
     validateConsoleWithStdOutAndErr(
         listener,
@@ -1847,8 +1847,8 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    final String parsingLine = "Parsing buck files: finished in 0.3 sec";
-    final String actionGraphLine = "Creating action graph: finished in 0.1 sec";
+    String parsingLine = "Parsing buck files: finished in 0.3 sec";
+    String actionGraphLine = "Creating action graph: finished in 0.1 sec";
 
     validateConsole(
         listener,
@@ -1895,8 +1895,8 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    final String buildingLine = "Building: finished in 0.8 sec";
-    final String totalLine = "  Total time: 1.0 sec";
+    String buildingLine = "Building: finished in 0.8 sec";
+    String totalLine = "  Total time: 1.0 sec";
 
     validateConsole(
         listener,
@@ -2045,7 +2045,7 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    final String testingLine = "Testing: finished in 1.6 sec (0 PASS/1 FAIL)";
+    String testingLine = "Testing: finished in 1.6 sec (0 PASS/1 FAIL)";
 
     validateConsoleWithStdOutAndErr(
         listener,
@@ -2597,8 +2597,8 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             buildEventStarted, 300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
-    final String parsingLine = "Parsing buck files: finished in 0.1 sec";
-    final String actionGraphLine = "Creating action graph: finished in 0.1 sec";
+    String parsingLine = "Parsing buck files: finished in 0.1 sec";
+    String actionGraphLine = "Creating action graph: finished in 0.1 sec";
 
     validateConsole(
         listener,

@@ -112,20 +112,20 @@ public class Omnibus {
   // Build the data structure containing bookkeeping which describing the omnibus link for the
   // given included and excluded roots.
   static OmnibusSpec buildSpec(
-      final CxxPlatform cxxPlatform,
-      final Iterable<? extends NativeLinkTarget> includedRoots,
-      final Iterable<? extends NativeLinkable> excludedRoots) {
+      CxxPlatform cxxPlatform,
+      Iterable<? extends NativeLinkTarget> includedRoots,
+      Iterable<? extends NativeLinkable> excludedRoots) {
 
     // A map of targets to native linkable objects.  We maintain this, so that we index our
     // bookkeeping around `BuildTarget` and avoid having to guarantee that all other types are
     // hashable.
-    final Map<BuildTarget, NativeLinkable> nativeLinkables = new LinkedHashMap<>();
+    Map<BuildTarget, NativeLinkable> nativeLinkables = new LinkedHashMap<>();
 
     // The nodes which should *not* be included in the omnibus link.
-    final Set<BuildTarget> excluded = new LinkedHashSet<>();
+    Set<BuildTarget> excluded = new LinkedHashSet<>();
 
     // Process all the roots included in the omnibus link.
-    final Map<BuildTarget, NativeLinkTarget> roots = new LinkedHashMap<>();
+    Map<BuildTarget, NativeLinkTarget> roots = new LinkedHashMap<>();
     Map<BuildTarget, NativeLinkable> rootDeps = new LinkedHashMap<>();
     for (NativeLinkTarget root : includedRoots) {
       roots.put(root.getBuildTarget(), root);
@@ -188,8 +188,8 @@ public class Omnibus {
 
     // And then we can do one last walk to create the actual graph which contain only root and body
     // nodes to include in the omnibus link.
-    final MutableDirectedGraph<BuildTarget> graphBuilder = new MutableDirectedGraph<>();
-    final Set<BuildTarget> deps = new LinkedHashSet<>();
+    MutableDirectedGraph<BuildTarget> graphBuilder = new MutableDirectedGraph<>();
+    Set<BuildTarget> deps = new LinkedHashSet<>();
     new AbstractBreadthFirstTraversal<BuildTarget>(Sets.difference(rootDeps.keySet(), excluded)) {
       @Override
       public Iterable<BuildTarget> visit(BuildTarget target) {
@@ -555,8 +555,8 @@ public class Omnibus {
       if (root != null) {
         argsBuilder.add(
             SourcePathArg.of(
-                ((CxxLink)
-                        ruleResolver.requireRule(getRootTarget(buildTarget, root.getBuildTarget())))
+                ruleResolver
+                    .requireRule(getRootTarget(buildTarget, root.getBuildTarget()))
                     .getSourcePathToOutput()));
         continue;
       }

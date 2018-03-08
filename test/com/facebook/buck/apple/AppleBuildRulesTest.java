@@ -32,13 +32,12 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.ImmutableBuildRuleCreationContext;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -66,7 +65,7 @@ public class AppleBuildRulesTest {
   public boolean useCache;
 
   @Test
-  public void testAppleLibraryIsXcodeTargetDescription() throws Exception {
+  public void testAppleLibraryIsXcodeTargetDescription() {
     Cell rootCell = (new TestCellBuilder()).build();
     BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "lib");
     TargetNode<AppleLibraryDescriptionArg, ?> library =
@@ -75,7 +74,7 @@ public class AppleBuildRulesTest {
   }
 
   @Test
-  public void testIosResourceIsNotXcodeTargetDescription() throws Exception {
+  public void testIosResourceIsNotXcodeTargetDescription() {
     Cell rootCell = (new TestCellBuilder()).build();
     BuildTarget resourceTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "res");
     TargetNode<?, ?> resourceNode =
@@ -87,18 +86,17 @@ public class AppleBuildRulesTest {
   }
 
   @Test
-  public void testAppleTestIsXcodeTargetTestBuildRuleType() throws Exception {
+  public void testAppleTestIsXcodeTargetTestBuildRuleType() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386");
     BuildTarget sandboxTarget =
         BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386")
             .withFlavors(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR);
     BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
+        new TestBuildRuleResolver(
             TargetGraphFactory.newInstance(
                 new AppleTestBuilder(sandboxTarget)
                     .setInfoPlist(FakeSourcePath.of("Info.plist"))
-                    .build()),
-            new DefaultTargetNodeToBuildRuleTransformer());
+                    .build()));
     AppleTestBuilder appleTestBuilder =
         new AppleTestBuilder(target)
             .setContacts(ImmutableSortedSet.of())
@@ -108,28 +106,21 @@ public class AppleBuildRulesTest {
 
     TargetNode<?, ?> appleTestNode = appleTestBuilder.build();
 
-    TargetGraph targetGraph =
-        TargetGraphFactory.newInstance(ImmutableSet.<TargetNode<?, ?>>of(appleTestNode));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.of(appleTestNode));
 
     BuildRule testRule = appleTestBuilder.build(resolver, new FakeProjectFilesystem(), targetGraph);
     assertTrue(AppleBuildRules.isXcodeTargetTestBuildRule(testRule));
   }
 
   @Test
-  public void testAppleLibraryIsNotXcodeTargetTestBuildRuleType() throws Exception {
+  public void testAppleLibraryIsNotXcodeTargetTestBuildRuleType() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:lib");
     BuildRuleParams params = TestBuildRuleParams.create();
-    BuildRuleResolver buildRuleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
     BuildRule libraryRule =
         FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION.createBuildRule(
-            ImmutableBuildRuleCreationContext.of(
-                TargetGraph.EMPTY,
-                buildRuleResolver,
-                projectFilesystem,
-                TestCellBuilder.createCellRoots(projectFilesystem)),
+            TestBuildRuleCreationContextFactory.create(buildRuleResolver, projectFilesystem),
             buildTarget,
             params,
             AppleLibraryDescriptionArg.builder().setName("lib").build());
@@ -138,12 +129,12 @@ public class AppleBuildRulesTest {
   }
 
   @Test
-  public void testXctestIsTestBundleExtension() throws Exception {
+  public void testXctestIsTestBundleExtension() {
     assertTrue(AppleBuildRules.isXcodeTargetTestBundleExtension(AppleBundleExtension.XCTEST));
   }
 
   @Test
-  public void testRecursiveTargetsIncludesBundleBinaryFromOutsideBundle() throws Exception {
+  public void testRecursiveTargetsIncludesBundleBinaryFromOutsideBundle() {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
     TargetNode<?, ?> libraryNode = AppleLibraryBuilder.createBuilder(libraryTarget).build();
 
@@ -180,7 +171,7 @@ public class AppleBuildRulesTest {
   }
 
   @Test
-  public void exportedDepsOfDylibsAreCollectedForLinking() throws Exception {
+  public void exportedDepsOfDylibsAreCollectedForLinking() {
     BuildTarget fooLibTarget =
         BuildTargetFactory.newInstance("//foo:lib#" + CxxDescriptionEnhancer.SHARED_FLAVOR);
     TargetNode<?, ?> fooLibNode = AppleLibraryBuilder.createBuilder(fooLibTarget).build();
@@ -237,7 +228,7 @@ public class AppleBuildRulesTest {
   }
 
   @Test
-  public void resourceDepsOfDylibsAreNotIncludedInMainBundle() throws Exception {
+  public void resourceDepsOfDylibsAreNotIncludedInMainBundle() {
     BuildTarget sharedResourceTarget = BuildTargetFactory.newInstance("//shared:resource");
     TargetNode<?, ?> sharedResourceNode =
         AppleResourceBuilder.createBuilder(sharedResourceTarget).build();
@@ -335,7 +326,7 @@ public class AppleBuildRulesTest {
   }
 
   @Test
-  public void exportedDepsAreCollectedForCopying() throws Exception {
+  public void exportedDepsAreCollectedForCopying() {
     BuildTarget fooLibTarget =
         BuildTargetFactory.newInstance("//foo:lib#" + CxxDescriptionEnhancer.SHARED_FLAVOR);
     TargetNode<?, ?> fooLibNode = AppleLibraryBuilder.createBuilder(fooLibTarget).build();
@@ -410,7 +401,7 @@ public class AppleBuildRulesTest {
   }
 
   @Test
-  public void linkingStopsAtGenruleDep() throws Exception {
+  public void linkingStopsAtGenruleDep() {
     // Pass a random static lib in a genrule and make sure a framework
     // depending on the genrule doesn't link against or copy in the static lib.
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo:lib");
@@ -461,7 +452,7 @@ public class AppleBuildRulesTest {
   }
 
   @Test
-  public void copyingStopsAtGenruleDep() throws Exception {
+  public void copyingStopsAtGenruleDep() {
     // Pass a random static lib in a genrule and make sure a framework
     // depending on the genrule doesn't link against or copy in the static lib.
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo:lib");
@@ -512,7 +503,7 @@ public class AppleBuildRulesTest {
   }
 
   @Test
-  public void buildingStopsAtGenruleDepButNotAtBundleDep() throws Exception {
+  public void buildingStopsAtGenruleDepButNotAtBundleDep() {
     // Pass a random static lib in a genrule and make sure a framework
     // depending on the genrule doesn't build the dependencies of that genrule.
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo:lib");
@@ -585,7 +576,7 @@ public class AppleBuildRulesTest {
   }
 
   @Test
-  public void testDependenciesCache() throws Exception {
+  public void testDependenciesCache() {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
     TargetNode<?, ?> libraryNode = AppleLibraryBuilder.createBuilder(libraryTarget).build();
 

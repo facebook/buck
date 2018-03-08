@@ -215,7 +215,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
         .resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME);
   }
 
-  private void writeToLog(final String prefix, final Object obj) {
+  private void writeToLog(String prefix, Object obj) {
     executor.submit(() -> writeToLogImpl(prefix, obj));
   }
 

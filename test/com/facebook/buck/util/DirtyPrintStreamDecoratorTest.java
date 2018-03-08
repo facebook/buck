@@ -33,7 +33,7 @@ import org.junit.Test;
 public class DirtyPrintStreamDecoratorTest {
 
   @Test
-  public void testInitialState() throws IOException {
+  public void testInitialState() {
     PrintStream delegate = createMock(PrintStream.class);
 
     delegate.close();

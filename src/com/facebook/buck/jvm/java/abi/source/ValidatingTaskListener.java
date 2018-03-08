@@ -67,7 +67,7 @@ public class ValidatingTaskListener implements TaskListener {
 
   @Override
   public void started(TaskEvent e) {
-    final TaskEvent.Kind kind = e.getKind();
+    TaskEvent.Kind kind = e.getKind();
 
     if (kind == TaskEvent.Kind.ENTER) {
       enterDepth += 1;
@@ -78,9 +78,9 @@ public class ValidatingTaskListener implements TaskListener {
 
   @Override
   public void finished(TaskEvent e) {
-    final TaskEvent.Kind kind = e.getKind();
+    TaskEvent.Kind kind = e.getKind();
     if (kind == TaskEvent.Kind.PARSE) {
-      final CompilationUnitTree compilationUnit = e.getCompilationUnit();
+      CompilationUnitTree compilationUnit = e.getCompilationUnit();
       compilationUnits.add(compilationUnit);
     } else if (kind == TaskEvent.Kind.ENTER) {
       enterDepth -= 1;

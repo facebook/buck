@@ -41,7 +41,7 @@ public class DefaultBuckModuleManager implements BuckModuleManager {
           .build(
               new CacheLoader<String, String>() {
                 @Override
-                public String load(String pluginId) throws Exception {
+                public String load(String pluginId) {
                   Hasher hasher = Hashing.murmur3_128().newHasher();
                   PluginWrapper pluginWrapper = pluginManager.getPlugin(pluginId);
                   pluginWrapper

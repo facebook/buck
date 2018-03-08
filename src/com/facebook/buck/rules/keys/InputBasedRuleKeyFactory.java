@@ -115,8 +115,8 @@ public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
         .ifPresent(Throwables::throwIfUnchecked);
   }
 
-  private Builder<HashCode> newVerifyingBuilder(final BuildRule rule) {
-    final Iterable<DependencyAggregation> aggregatedRules =
+  private Builder<HashCode> newVerifyingBuilder(BuildRule rule) {
+    Iterable<DependencyAggregation> aggregatedRules =
         Iterables.filter(rule.getBuildDeps(), DependencyAggregation.class);
     return new Builder<HashCode>(RuleKeyBuilder.createDefaultHasher(ruleKeyLogger)) {
       private boolean hasEffectiveDirectDep(BuildRule dep) {

@@ -84,7 +84,7 @@ public final class JUnitRunner extends BaseRunner {
     }
 
     for (String className : testClassNames) {
-      final Class<?> testClass = Class.forName(className);
+      Class<?> testClass = Class.forName(className);
 
       List<TestResult> results = new ArrayList<>();
       RecordingFilter filter = new RecordingFilter();
@@ -195,7 +195,7 @@ public final class JUnitRunner extends BaseRunner {
    * thinks is best.
    */
   private RunnerBuilder createRunnerBuilder() {
-    final JUnit4Builder jUnit4RunnerBuilder =
+    JUnit4Builder jUnit4RunnerBuilder =
         new JUnit4Builder() {
           @Override
           public Runner runnerForClass(Class<?> testClass) throws Throwable {

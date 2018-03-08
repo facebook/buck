@@ -75,17 +75,14 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
   private static final Flavor AAR_ANDROID_RESOURCE_FLAVOR =
       InternalFlavor.of("aar_android_resource");
 
-  private final ToolchainProvider toolchainProvider;
   private final AndroidManifestFactory androidManifestFactory;
   private final CxxBuckConfig cxxBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
 
   public AndroidAarDescription(
-      ToolchainProvider toolchainProvider,
       AndroidManifestFactory androidManifestFactory,
       CxxBuckConfig cxxBuckConfig,
       JavaBuckConfig javaBuckConfig) {
-    this.toolchainProvider = toolchainProvider;
     this.androidManifestFactory = androidManifestFactory;
     this.cxxBuckConfig = cxxBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
@@ -124,7 +121,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
             args.getManifestSkeleton());
     aarExtraDepsBuilder.add(resolver.addToIndex(manifest));
 
-    final APKModuleGraph apkModuleGraph =
+    APKModuleGraph apkModuleGraph =
         new APKModuleGraph(context.getTargetGraph(), buildTarget, Optional.empty());
 
     /* assemble dirs */
@@ -201,6 +198,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
               + "BuildConfig class in the final .aar or do not specify build config values.",
           buildTarget);
     }
+    ToolchainProvider toolchainProvider = context.getToolchainProvider();
     if (args.getIncludeBuildConfigClass()) {
       ImmutableSortedSet<JavaLibrary> buildConfigRules =
           AndroidBinaryGraphEnhancer.addBuildConfigDeps(

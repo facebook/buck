@@ -42,7 +42,7 @@ import org.junit.Test;
 public class EdenMountTest {
   @Test
   public void getSha1DelegatesToThriftClient() throws EdenError, IOException, TException {
-    final EdenClient thriftClient = createMock(EdenClient.class);
+    EdenClient thriftClient = createMock(EdenClient.class);
 
     FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
     Path entry = fs.getPath("LICENSE");

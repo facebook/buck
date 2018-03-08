@@ -23,7 +23,7 @@ import org.junit.Test;
 
 public class CloseableWrapperTest {
 
-  private static void closer(AtomicInteger obj) throws Exception {
+  private static void closer(AtomicInteger obj) {
     obj.incrementAndGet();
   }
 

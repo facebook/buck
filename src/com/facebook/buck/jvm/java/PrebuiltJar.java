@@ -99,8 +99,8 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<SourcePath> gwtJar,
       Optional<String> javadocUrl,
       Optional<String> mavenCoords,
-      final boolean provided,
-      final boolean requiredForSourceOnlyAbi) {
+      boolean provided,
+      boolean requiredForSourceOnlyAbi) {
     super(buildTarget, projectFilesystem, params);
     this.binaryJar = binaryJar;
     this.sourceJar = sourceJar;
@@ -228,7 +228,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context, final BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     SourcePathResolver resolver = context.getSourcePathResolver();

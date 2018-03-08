@@ -115,7 +115,7 @@ class TreeBackedAnnotationMirror implements ArtificialAnnotationMirror {
   public String toString() {
     StringBuilder result = new StringBuilder();
     result.append("@");
-    result.append(getAnnotationType().toString());
+    result.append(getAnnotationType());
     Map<ExecutableElement, TreeBackedAnnotationValue> elementValues = getElementValues();
     if (!elementValues.isEmpty()) {
       result.append("(");

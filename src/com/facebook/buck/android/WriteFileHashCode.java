@@ -59,8 +59,7 @@ public class WriteFileHashCode extends ModernBuildRule<WriteFileHashCode> implem
     return ImmutableList.of(
         new AbstractExecutionStep("writing_file_hash") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context)
-              throws IOException, InterruptedException {
+          public StepExecutionResult execute(ExecutionContext context) throws IOException {
             filesystem.writeContentsToPath(
                 filesystem
                     .computeSha1(buildContext.getSourcePathResolver().getAbsolutePath(inputPath))

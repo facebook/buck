@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.apple;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -77,5 +78,18 @@ public class AppleDsymTestUtil {
     assertThat(
         StringUtils.countMatches(dwarfdumpMainStdout, "AT_decl_line"),
         Matchers.equalTo(expectedMatchCount));
+  }
+
+  public static void checkDsymFileHasSection(
+      String segname, String sectname, ProjectWorkspace workspace, Path dwarfPath)
+      throws IOException, InterruptedException {
+    String otoolStdout =
+        workspace
+            .runCommand("otool", "-s", segname, sectname, dwarfPath.toString())
+            .getStdout()
+            .orElse("");
+
+    String contentsStr = "Contents of (" + segname + "," + sectname + ") section";
+    assertThat(StringUtils.contains(otoolStdout, contentsStr), is(true));
   }
 }

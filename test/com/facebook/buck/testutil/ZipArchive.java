@@ -93,13 +93,12 @@ public class ZipArchive implements AutoCloseable {
   }
 
   public Set<String> getDirNames() throws IOException {
-    final ImmutableSet.Builder<String> contents = ImmutableSet.builder();
+    ImmutableSet.Builder<String> contents = ImmutableSet.builder();
     Files.walkFileTree(
         root,
         new SimpleFileVisitor<Path>() {
           @Override
-          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-              throws IOException {
+          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
             // Skip the leading "/" from the path.
             contents.add(dir.toString().substring(1));
             return FileVisitResult.CONTINUE;
@@ -109,13 +108,12 @@ public class ZipArchive implements AutoCloseable {
   }
 
   public Set<String> getFileNames() throws IOException {
-    final ImmutableSet.Builder<String> contents = ImmutableSet.builder();
+    ImmutableSet.Builder<String> contents = ImmutableSet.builder();
     Files.walkFileTree(
         root,
         new SimpleFileVisitor<Path>() {
           @Override
-          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-              throws IOException {
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
             // Skip the leading "/" from the path.
             contents.add(file.toString().substring(1));
             return FileVisitResult.CONTINUE;

@@ -26,7 +26,7 @@ import org.junit.Test;
 
 public class LinkEditDataCommandTest {
   @Test
-  public void testCreatingFromBytesBigEndian() throws Exception {
+  public void testCreatingFromBytesBigEndian() {
     ByteBuffer buffer =
         ByteBuffer.wrap(LinkEditCommandTestData.getCodeSignBigEndian()).order(ByteOrder.BIG_ENDIAN);
     LinkEditDataCommand command = LinkEditDataCommandUtils.createFromBuffer(buffer);
@@ -34,7 +34,7 @@ public class LinkEditDataCommandTest {
   }
 
   @Test
-  public void testCreatingFromBytesLittleEndian() throws Exception {
+  public void testCreatingFromBytesLittleEndian() {
     ByteBuffer buffer =
         ByteBuffer.wrap(LinkEditCommandTestData.getCodeSignLittleEndian())
             .order(ByteOrder.LITTLE_ENDIAN);
@@ -43,7 +43,7 @@ public class LinkEditDataCommandTest {
   }
 
   @Test
-  public void testUpdatingLinkEditDataCommandInByteBuffer() throws Exception {
+  public void testUpdatingLinkEditDataCommandInByteBuffer() {
     LinkEditDataCommand command =
         LinkEditDataCommandUtils.createFromBuffer(
             ByteBuffer.wrap(LinkEditCommandTestData.getCodeSignBigEndian())

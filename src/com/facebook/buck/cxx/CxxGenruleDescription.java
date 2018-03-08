@@ -298,7 +298,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   @Override
   protected BuildRule createBuildRule(
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxGenruleDescriptionArg args,
@@ -615,7 +615,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
 
     private NativeLinkableInput getNativeLinkableInput(
-        Iterable<BuildRule> rules, final Optional<Pattern> filter) {
+        Iterable<BuildRule> rules, Optional<Pattern> filter) {
       ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
           NativeLinkables.getNativeLinkables(
               cxxPlatform,

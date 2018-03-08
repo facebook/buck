@@ -252,8 +252,7 @@ public interface QueryEnvironment {
 
   /** Returns the objects in the `attribute` of the given `target` that satisfy `predicate` */
   ImmutableSet<Object> filterAttributeContents(
-      QueryTarget target, String attribute, final Predicate<Object> predicate)
-      throws QueryException;
+      QueryTarget target, String attribute, Predicate<Object> predicate) throws QueryException;
 
   /** Returns the set of query functions implemented by this query environment. */
   Iterable<QueryFunction> getFunctions();

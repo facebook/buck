@@ -62,7 +62,7 @@ public class MostExecutors {
    * @return A single-threaded executor that silently discards rejected tasks.
    * @param threadName a thread name prefix used to easily identify threads when debugging.
    */
-  public static ExecutorService newSingleThreadExecutor(final String threadName) {
+  public static ExecutorService newSingleThreadExecutor(String threadName) {
     return newSingleThreadExecutor(new NamedThreadFactory(threadName));
   }
 
@@ -84,7 +84,7 @@ public class MostExecutors {
    * @param count the number of threads that should be created in the pool.
    * @return A multi-threaded executor.
    */
-  public static ExecutorService newMultiThreadExecutor(final String threadName, int count) {
+  public static ExecutorService newMultiThreadExecutor(String threadName, int count) {
     return newMultiThreadExecutor(new NamedThreadFactory(threadName), count);
   }
 

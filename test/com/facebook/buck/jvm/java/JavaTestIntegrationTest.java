@@ -262,7 +262,7 @@ public class JavaTestIntegrationTest {
 
   @Test
   public void testClasspath() throws IOException {
-    final ProjectWorkspace workspace =
+    ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "test_rule_classpath", temp);
     workspace.setUp();
     ProcessResult result = workspace.runBuckCommand("audit", "classpath", "//:top");

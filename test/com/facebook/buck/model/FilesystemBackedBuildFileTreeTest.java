@@ -42,8 +42,7 @@ public class FilesystemBackedBuildFileTreeTest {
 
   @Test
   @Ignore("Remove when test passes on OS X (the case preserving file system hurts us)")
-  public void testCanConstructBuildFileTreeFromFilesystemOnOsX()
-      throws InterruptedException, IOException {
+  public void testCanConstructBuildFileTreeFromFilesystemOnOsX() throws IOException {
     Path tempDir = tmp.getRoot();
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tempDir);
 
@@ -74,8 +73,7 @@ public class FilesystemBackedBuildFileTreeTest {
   }
 
   @Test
-  public void testCanConstructBuildFileTreeFromFilesystem()
-      throws InterruptedException, IOException {
+  public void testCanConstructBuildFileTreeFromFilesystem() throws IOException {
     Path tempDir = tmp.getRoot();
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tempDir);
 
@@ -142,7 +140,7 @@ public class FilesystemBackedBuildFileTreeTest {
   }
 
   @Test
-  public void rootBasePath() throws InterruptedException, IOException {
+  public void rootBasePath() throws IOException {
     Path root = tmp.getRoot();
     Files.createFile(root.resolve("BUCK"));
     Files.createDirectory(root.resolve("foo"));
@@ -156,7 +154,7 @@ public class FilesystemBackedBuildFileTreeTest {
   }
 
   @Test
-  public void missingBasePath() throws InterruptedException, IOException {
+  public void missingBasePath() throws IOException {
     Path root = tmp.getRoot();
     Files.createDirectory(root.resolve("foo"));
     Files.createFile(root.resolve("foo/BUCK"));

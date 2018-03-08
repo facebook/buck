@@ -22,12 +22,10 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -65,14 +63,12 @@ public class ModuleExoHelperTest {
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
     moduleOutputPath = Paths.get("module_name");
     metadataOutputPath = moduleOutputPath.resolve("metadata");
-    final DexInfo dexInfo =
+    DexInfo dexInfo =
         DexInfo.of(
             PathSourcePath.of(filesystem, metadataOutputPath),
             PathSourcePath.of(filesystem, moduleOutputPath));
 
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -81,9 +77,9 @@ public class ModuleExoHelperTest {
 
   @Test
   public void testGetFilesToInstall() throws Exception {
-    final ImmutableMap<Path, Path> filesToInstall = moduleExoHelper.getFilesToInstall();
+    ImmutableMap<Path, Path> filesToInstall = moduleExoHelper.getFilesToInstall();
     Assert.assertThat(filesToInstall, Matchers.aMapWithSize(1));
-    final Entry<Path, Path> entry = filesToInstall.entrySet().iterator().next();
+    Entry<Path, Path> entry = filesToInstall.entrySet().iterator().next();
     Path destPath = entry.getKey();
     Path sourcePath = entry.getValue();
     Assert.assertThat(
@@ -95,7 +91,7 @@ public class ModuleExoHelperTest {
 
   @Test
   public void testGetMetadataToInstall() throws Exception {
-    final ImmutableMap<Path, String> metadataToInstall = moduleExoHelper.getMetadataToInstall();
+    ImmutableMap<Path, String> metadataToInstall = moduleExoHelper.getMetadataToInstall();
     Assert.assertThat(metadataToInstall, Matchers.aMapWithSize(2));
     String contents =
         metadataToInstall.get(ModuleExoHelper.MODULAR_DEX_DIR.resolve("metadata.txt"));

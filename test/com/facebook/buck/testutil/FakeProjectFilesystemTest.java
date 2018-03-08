@@ -56,7 +56,7 @@ public class FakeProjectFilesystemTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void testFilesystemReturnsAddedContents() throws IOException {
+  public void testFilesystemReturnsAddedContents() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.writeContentsToPath("Some content", Paths.get("A.txt"));
 
@@ -105,7 +105,7 @@ public class FakeProjectFilesystemTest {
     filesystem.touch(Paths.get("root/A/B/C.txt"));
     filesystem.touch(Paths.get("root/A/B.txt"));
 
-    final List<Path> filesVisited = new ArrayList<>();
+    List<Path> filesVisited = new ArrayList<>();
 
     FileVisitor<Path> fileVisitor =
         new SimpleFileVisitor<Path>() {
@@ -133,7 +133,7 @@ public class FakeProjectFilesystemTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.touch(Paths.get("A.txt"));
 
-    final List<Path> filesVisited = new ArrayList<>();
+    List<Path> filesVisited = new ArrayList<>();
 
     FileVisitor<Path> fileVisitor =
         new SimpleFileVisitor<Path>() {
@@ -162,13 +162,13 @@ public class FakeProjectFilesystemTest {
   }
 
   @Test
-  public void testAllExistingFileSystem() throws IOException {
+  public void testAllExistingFileSystem() {
     AllExistingProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     assertTrue(filesystem.exists(Paths.get("somepath.txt")));
   }
 
   @Test
-  public void testWriteContentsWithDefaultFileAttributes() throws IOException {
+  public void testWriteContentsWithDefaultFileAttributes() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path path = Paths.get("hello.txt");
     filesystem.writeContentsToPath("hello world", path);
@@ -176,7 +176,7 @@ public class FakeProjectFilesystemTest {
   }
 
   @Test
-  public void testWriteContentsWithSpecifiedFileAttributes() throws IOException {
+  public void testWriteContentsWithSpecifiedFileAttributes() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     ImmutableSet<PosixFilePermission> permissions =
         ImmutableSet.of(
@@ -291,7 +291,7 @@ public class FakeProjectFilesystemTest {
   }
 
   @Test
-  public void testWritingAFileAddsParentDirectories() throws IOException {
+  public void testWritingAFileAddsParentDirectories() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.writeContentsToPath("hello", Paths.get("test/one/two/three.txt"));
 
@@ -315,7 +315,7 @@ public class FakeProjectFilesystemTest {
   }
 
   @Test
-  public void testIsSymLinkReturnsFalseForNotExistent() throws IOException {
+  public void testIsSymLinkReturnsFalseForNotExistent() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     assertFalse(filesystem.isSymLink(Paths.get("foo")));
   }
@@ -456,13 +456,12 @@ public class FakeProjectFilesystemTest {
     }
 
     @Override
-    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-        throws IOException {
+    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
       return FileVisitResult.CONTINUE;
     }
 
     @Override
-    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
       seen.add(file);
       return FileVisitResult.CONTINUE;
     }

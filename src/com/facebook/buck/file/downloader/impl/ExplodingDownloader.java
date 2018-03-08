@@ -19,13 +19,12 @@ package com.facebook.buck.file.downloader.impl;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.util.HumanReadableException;
-import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 
 public class ExplodingDownloader implements Downloader {
   @Override
-  public boolean fetch(BuckEventBus eventBus, URI uri, Path output) throws IOException {
+  public boolean fetch(BuckEventBus eventBus, URI uri, Path output) {
     throw new HumanReadableException(
         "Downloading files at runtime is disabled, please run 'buck fetch' before your build");
   }

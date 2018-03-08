@@ -45,7 +45,7 @@ public abstract class ParsingJavaPackageFinder {
    * @return the described PackageFinder.
    */
   public static JavaPackageFinder preparse(
-      final JavaFileParser javaFileParser,
+      JavaFileParser javaFileParser,
       ProjectFilesystem projectFilesystem,
       ImmutableSet<Path> filesToParse,
       JavaPackageFinder fallbackPackageFinder) {

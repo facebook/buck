@@ -135,7 +135,7 @@ public class ConsoleHandler extends Handler {
 
   public static ConsoleHandlerState.Writer utf8OutputStreamWriter(OutputStream outputStream) {
     try {
-      final OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream, "UTF-8");
+      OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream, "UTF-8");
       return new ConsoleHandlerState.Writer() {
         @Override
         public void write(String line) throws IOException {

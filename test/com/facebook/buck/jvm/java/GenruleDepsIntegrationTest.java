@@ -37,7 +37,7 @@ public class GenruleDepsIntegrationTest {
 
   @Test
   public void testUpdatingJarBuildByGenruleAffectDependentRebuild() throws IOException {
-    final Charset charsetForTest = StandardCharsets.UTF_8;
+    Charset charsetForTest = StandardCharsets.UTF_8;
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "genrule_test", tmp);
     workspace.setUp();

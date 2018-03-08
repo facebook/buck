@@ -77,7 +77,7 @@ public class InputBasedRuleKeyManager {
   }
 
   private ListenableFuture<Optional<Pair<BuildRuleSuccessType, CacheResult>>>
-      performInputBasedCacheFetch(RuleKey inputRuleKey) throws IOException {
+      performInputBasedCacheFetch(RuleKey inputRuleKey) {
     Preconditions.checkArgument(SupportsInputBasedRuleKey.isSupported(rule));
 
     getBuildInfoRecorder()

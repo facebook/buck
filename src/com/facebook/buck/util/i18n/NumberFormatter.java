@@ -39,7 +39,7 @@ public class NumberFormatter {
    * Given a function which creates {@link NumberFormat} objects for a {@link Locale}, returns a
    * wrapper providing thread-safe access to the formatter for that locale.
    */
-  public NumberFormatter(final Function<Locale, NumberFormat> numberFormatCreator) {
+  public NumberFormatter(Function<Locale, NumberFormat> numberFormatCreator) {
     numberFormatCache =
         CacheBuilder.newBuilder()
             .maximumSize(1000)

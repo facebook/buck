@@ -165,14 +165,14 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context, final BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
 
-    final ImmutableList.Builder<Step> relinkerSteps = ImmutableList.builder();
+    ImmutableList.Builder<Step> relinkerSteps = ImmutableList.builder();
     if (linker != null) {
       ImmutableList<Arg> args =
           ImmutableList.<Arg>builder()
               .addAll(linkerArgs)
-              .add(StringArg.of("-Wl,--version-script=" + getRelativeVersionFilePath().toString()))
+              .add(StringArg.of("-Wl,--version-script=" + getRelativeVersionFilePath()))
               .build();
 
       relinkerSteps.addAll(

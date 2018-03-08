@@ -153,19 +153,19 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       SourcePathRuleFinder ruleFinder,
-      final Tool compiler,
+      Tool compiler,
       HaskellVersion haskellVersion,
       ImmutableList<String> flags,
-      final PreprocessorFlags ppFlags,
+      PreprocessorFlags ppFlags,
       CxxPlatform cxxPlatform,
       PicType picType,
       boolean hsProfile,
       Optional<String> main,
       Optional<HaskellPackageInfo> packageInfo,
-      final ImmutableList<SourcePath> includes,
-      final ImmutableSortedMap<String, HaskellPackage> exposedPackages,
-      final ImmutableSortedMap<String, HaskellPackage> packages,
-      final HaskellSources sources,
+      ImmutableList<SourcePath> includes,
+      ImmutableSortedMap<String, HaskellPackage> exposedPackages,
+      ImmutableSortedMap<String, HaskellPackage> packages,
+      HaskellSources sources,
       Preprocessor preprocessor) {
     Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
         MoreSuppliers.memoize(
@@ -394,7 +394,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   }
 
   public ImmutableList<SourcePath> getObjects() {
-    final String suffix = "." + getObjectSuffix();
+    String suffix = "." + getObjectSuffix();
 
     ImmutableList.Builder<SourcePath> objects = ImmutableList.builder();
     for (String module : sources.getModuleNames()) {
@@ -435,8 +435,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   private Step prepareOutputDir(String name, Path root, String suffix) {
     return new AbstractExecutionStep(String.format("preparing %s output dir", name)) {
       @Override
-      public StepExecutionResult execute(ExecutionContext context)
-          throws IOException, InterruptedException {
+      public StepExecutionResult execute(ExecutionContext context) throws IOException {
         getProjectFilesystem().mkdirs(root);
         getProjectFilesystem()
             .walkRelativeFileTree(

@@ -72,7 +72,7 @@ public class PatternMatchedCollection<T>
   }
 
   public static <T> PatternMatchedCollection<T> of() {
-    return new PatternMatchedCollection<>(ImmutableList.<Pair<Pattern, T>>of());
+    return new PatternMatchedCollection<>(ImmutableList.of());
   }
 
   public <V> PatternMatchedCollection<V> map(Function<T, V> func) {

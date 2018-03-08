@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util;
 
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.log.Logger;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -75,7 +75,7 @@ public class DirectoryCleaner {
         LOG.verbose(
             "Deleting path [%s] of total size [%d] bytes.",
             currentPath.getPath(), currentPath.getTotalSizeBytes());
-        MoreFiles.deleteRecursivelyIfExists(currentPath.getPath());
+        MostFiles.deleteRecursivelyIfExists(currentPath.getPath());
         --remainingLogDirectories;
         totalSizeBytes -= currentPath.getTotalSizeBytes();
       }
@@ -114,13 +114,12 @@ public class DirectoryCleaner {
   }
 
   private static long computeDirSizeBytesRecursively(Path directoryPath) throws IOException {
-    final AtomicLong totalSizeBytes = new AtomicLong(0);
+    AtomicLong totalSizeBytes = new AtomicLong(0);
     Files.walkFileTree(
         directoryPath,
         new SimpleFileVisitor<Path>() {
           @Override
-          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-              throws IOException {
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
             totalSizeBytes.addAndGet(attrs.size());
             return FileVisitResult.CONTINUE;
           }

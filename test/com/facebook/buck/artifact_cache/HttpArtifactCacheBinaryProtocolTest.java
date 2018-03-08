@@ -43,10 +43,10 @@ public class HttpArtifactCacheBinaryProtocolTest {
 
   @Test
   public void testCreateMetadataHeader() throws IOException {
-    final String base64EncodedData =
+    String base64EncodedData =
         "AAAAAQAgMDAwMDAwMDAwMTAwMDAwMDAwMDAwMDgwMDAwMDAwMDAAAAABAANrZXkAAAAFdmFsdWVc/GBY";
-    final RuleKey ruleKey = new RuleKey("00000000010000000000008000000000");
-    final String data = "data";
+    RuleKey ruleKey = new RuleKey("00000000010000000000008000000000");
+    String data = "data";
     byte[] metadata =
         HttpArtifactCacheBinaryProtocol.createMetadataHeader(
             ImmutableSet.of(ruleKey),
@@ -57,11 +57,11 @@ public class HttpArtifactCacheBinaryProtocolTest {
 
   @Test
   public void testCreateKeysHeader() throws IOException {
-    final String base64EncodedData =
+    String base64EncodedData =
         "AAAAAgAgMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAAIDkwMDAwMDAwMDAwMDAwMDAw"
             + "MDAwMDA4MDAwMDAwMDA1";
-    final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
-    final RuleKey ruleKey2 = new RuleKey("90000000000000000000008000000005");
+    RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
+    RuleKey ruleKey2 = new RuleKey("90000000000000000000008000000005");
     byte[] keysHeader =
         HttpArtifactCacheBinaryProtocol.createKeysHeader(ImmutableSet.of(ruleKey, ruleKey2));
     assertThat(keysHeader, Matchers.equalTo(BaseEncoding.base64().decode(base64EncodedData)));
@@ -71,7 +71,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
   public void testFetchResponse() throws IOException {
     RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
     RuleKey ruleKey2 = new RuleKey("90000000000000000000008000000005");
-    final String data = "data";
+    String data = "data";
     ImmutableMap<String, String> metadata = ImmutableMap.of("metaKey", "metaValue");
 
     HttpArtifactCacheBinaryProtocol.FetchResponse fetchResponse =
@@ -80,7 +80,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
             metadata,
             new ByteSource() {
               @Override
-              public InputStream openStream() throws IOException {
+              public InputStream openStream() {
                 return new ByteArrayInputStream(data.getBytes(Charsets.UTF_8));
               }
             });
@@ -103,10 +103,10 @@ public class HttpArtifactCacheBinaryProtocolTest {
 
   @Test
   public void testReadFetchResponse() throws IOException {
-    final String base64EncodedData =
+    String base64EncodedData =
         "AAAALgAAAAEAIDAwMDAwMDAwMDEwMDAwMDAwMDAwMDA4MDAwMDAwMDAwAAAAANcwdr5kYXRh";
-    final RuleKey ruleKey = new RuleKey("00000000010000000000008000000000");
-    final String data = "data";
+    RuleKey ruleKey = new RuleKey("00000000010000000000008000000000");
+    String data = "data";
 
     byte[] expectedData;
     try (ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -144,8 +144,8 @@ public class HttpArtifactCacheBinaryProtocolTest {
     for (int i = 0; i < 16384; ++i) {
       valueBuilder.append('x');
     }
-    final String value = valueBuilder.toString();
-    final long valueLength = value.getBytes(Charsets.UTF_8).length;
+    String value = valueBuilder.toString();
+    long valueLength = value.getBytes(Charsets.UTF_8).length;
 
     while (metadataSize > 0) {
       String key = "key" + Long.toString(metadataSize);
@@ -180,9 +180,9 @@ public class HttpArtifactCacheBinaryProtocolTest {
 
   @Test
   public void testStoreRequest() throws IOException {
-    final RuleKey ruleKey = new RuleKey("00000000010000000000008000000000");
-    final RuleKey ruleKey2 = new RuleKey("90000000000000000000008000000005");
-    final String data = "data";
+    RuleKey ruleKey = new RuleKey("00000000010000000000008000000000");
+    RuleKey ruleKey2 = new RuleKey("90000000000000000000008000000005");
+    String data = "data";
     ImmutableMap<String, String> metadata = ImmutableMap.of("metaKey", "metaValue");
 
     HttpArtifactCacheBinaryProtocol.StoreRequest storeRequest =
@@ -190,7 +190,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
             ArtifactInfo.builder().addRuleKeys(ruleKey, ruleKey2).setMetadata(metadata).build(),
             new ByteSource() {
               @Override
-              public InputStream openStream() throws IOException {
+              public InputStream openStream() {
                 return new ByteArrayInputStream(data.getBytes(Charsets.UTF_8));
               }
             });
@@ -212,13 +212,13 @@ public class HttpArtifactCacheBinaryProtocolTest {
 
   @Test
   public void testWriteStoreRequest() throws IOException {
-    final String base64EncodedData =
+    String base64EncodedData =
         "AAAAAgAgMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAAIDkwMDA"
             + "wMDAwMDAwMDAwMDAwMDAwMDA4MDAwMDAwMDA1AAAAXgAAAAIAIDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA"
             + "wMDAwACA5MDAwMDAwMDAwMDAwMDAwMDAwMDAwODAwMDAwMDAwNQAAAAEAA2tleQAAAAV2YWx1ZRf0zcZkYXRhZGF"
             + "0YQ==";
-    final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
-    final RuleKey ruleKey2 = new RuleKey("90000000000000000000008000000005");
+    RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
+    RuleKey ruleKey2 = new RuleKey("90000000000000000000008000000005");
 
     HttpArtifactCacheBinaryProtocol.StoreRequest storeRequest =
         new HttpArtifactCacheBinaryProtocol.StoreRequest(
@@ -228,7 +228,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
                 .build(),
             new ByteSource() {
               @Override
-              public InputStream openStream() throws IOException {
+              public InputStream openStream() {
                 return new ByteArrayInputStream("datadata".getBytes(Charsets.UTF_8));
               }
             });

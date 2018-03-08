@@ -108,7 +108,7 @@ public class FileContentsScrubberOverflowTest {
     }
 
     @Override
-    protected void implCloseChannel() throws IOException {
+    protected void implCloseChannel() {
       throw new UnsupportedOperationException();
     }
 

@@ -27,7 +27,7 @@ import org.junit.Test;
 public class UUIDCommandUtilsTest {
 
   @Test
-  public void testUpdatingUuidCommandInByteBuffer() throws Exception {
+  public void testUpdatingUuidCommandInByteBuffer() {
     UUIDCommand command =
         UUIDCommandUtils.createFromBuffer(
             ByteBuffer.wrap(UUIDCommandTestData.getBigEndian()).order(ByteOrder.BIG_ENDIAN));
@@ -53,7 +53,7 @@ public class UUIDCommandUtilsTest {
   }
 
   @Test
-  public void testCreatingFromBufferPositionsItCorrectly() throws Exception {
+  public void testCreatingFromBufferPositionsItCorrectly() {
     ByteBuffer buffer =
         ByteBuffer.wrap(UUIDCommandTestData.getBigEndian()).order(ByteOrder.BIG_ENDIAN);
     UUIDCommandUtils.createFromBuffer(buffer);

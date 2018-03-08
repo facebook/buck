@@ -100,8 +100,7 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
   }
 
   @Override
-  public synchronized ImmutableMap<String, String> getAllMetadata(BuildTarget buildTarget)
-      throws IOException {
+  public synchronized ImmutableMap<String, String> getAllMetadata(BuildTarget buildTarget) {
     try {
       selectAllStmt.setString(1, cellRelativeName(buildTarget));
       try (ResultSet rs = selectAllStmt.executeQuery()) {

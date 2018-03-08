@@ -70,8 +70,7 @@ public class EdenProjectFilesystemDelegateTest {
   }
 
   @Test
-  public void computeSha1ForOrdinaryFileUnderMountButBehindBindMount()
-      throws IOException, EdenError, TException {
+  public void computeSha1ForOrdinaryFileUnderMountButBehindBindMount() throws IOException {
     FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
     Path root = fs.getPath(JIMFS_WORKING_DIRECTORY);
     ProjectFilesystemDelegate delegate = new DefaultProjectFilesystemDelegate(root);

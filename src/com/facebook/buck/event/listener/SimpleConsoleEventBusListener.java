@@ -95,7 +95,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   }
 
   public static String getBuildLogLine(BuildId buildId) {
-    return "Build UUID: " + buildId.toString();
+    return "Build UUID: " + buildId;
   }
 
   /** Print information regarding the current distributed build. */

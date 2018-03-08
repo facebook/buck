@@ -61,9 +61,9 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder<HashCode> {
 
   private static Supplier<UncachedRuleKeyBuilder> createSubKeySupplier(
       SourcePathRuleFinder ruleFinder,
-      final SourcePathResolver resolver,
-      final FileHashCache hashCache,
-      final RuleKeyFactory<RuleKey> ruleKeyFactory) {
+      SourcePathResolver resolver,
+      FileHashCache hashCache,
+      RuleKeyFactory<RuleKey> ruleKeyFactory) {
     return () -> new UncachedRuleKeyBuilder(ruleFinder, resolver, hashCache, ruleKeyFactory);
   }
 

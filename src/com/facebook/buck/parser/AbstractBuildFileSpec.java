@@ -216,7 +216,7 @@ abstract class AbstractBuildFileSpec {
   }
 
   private void forEachBuildFileFilesystem(
-      final ProjectFilesystem filesystem, final String buildFileName, final Consumer<Path> function)
+      ProjectFilesystem filesystem, String buildFileName, Consumer<Path> function)
       throws IOException {
     if (!filesystem.isDirectory(getBasePath())) {
       throw new HumanReadableException(
@@ -228,8 +228,7 @@ abstract class AbstractBuildFileSpec {
         getBasePath(),
         new FileVisitor<Path>() {
           @Override
-          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-              throws IOException {
+          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
             // Skip sub-dirs that we should ignore.
             if (filesystem.isIgnored(dir)) {
               return FileVisitResult.SKIP_SUBTREE;
@@ -238,8 +237,7 @@ abstract class AbstractBuildFileSpec {
           }
 
           @Override
-          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-              throws IOException {
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
             if (buildFileName.equals(file.getFileName().toString())
                 && !filesystem.isIgnored(file)) {
               function.accept(filesystem.resolve(file));
@@ -266,7 +264,7 @@ abstract class AbstractBuildFileSpec {
   public ImmutableSet<Path> findBuildFiles(
       Cell cell, ParserConfig.BuildFileSearchMethod buildFileSearchMethod)
       throws IOException, InterruptedException {
-    final ImmutableSet.Builder<Path> buildFiles = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> buildFiles = ImmutableSet.builder();
 
     forEachBuildFile(
         cell.getFilesystem(),

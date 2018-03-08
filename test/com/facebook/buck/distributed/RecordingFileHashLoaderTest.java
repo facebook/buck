@@ -115,8 +115,7 @@ public class RecordingFileHashLoaderTest {
   }
 
   @Test
-  public void testRecordsCrossCellSymlinkWithCrossCellRealPath()
-      throws IOException, InterruptedException {
+  public void testRecordsCrossCellSymlinkWithCrossCellRealPath() throws IOException {
     // Scenario:
     // /cell1/link -> /cell2/file
     // => /cell1/link should be recorded as a file with the same contents as /cell2/file.
@@ -184,8 +183,7 @@ public class RecordingFileHashLoaderTest {
   }
 
   @Test
-  public void testRecordsCrossCellSymlinkWithExternalRealPath()
-      throws IOException, InterruptedException {
+  public void testRecordsCrossCellSymlinkWithExternalRealPath() throws IOException {
     // Scenario:
     // /cell1/link -> /cell2/link -> /external/file
     // => create direct link: /cell1/link -> /external/file

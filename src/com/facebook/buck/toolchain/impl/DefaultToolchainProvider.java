@@ -57,7 +57,7 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
           .build(
               new CacheLoader<String, Optional<? extends Toolchain>>() {
                 @Override
-                public Optional<? extends Toolchain> load(String toolchainName) throws Exception {
+                public Optional<? extends Toolchain> load(String toolchainName) {
                   if (!toolchainFactories.containsKey(toolchainName)) {
                     throw new IllegalStateException("Unknown toolchain: " + toolchainName);
                   }

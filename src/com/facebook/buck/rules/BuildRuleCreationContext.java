@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import org.immutables.value.Value;
 
 /**
@@ -36,4 +37,7 @@ public interface BuildRuleCreationContext {
 
   @Value.Parameter
   CellPathResolver getCellPathResolver();
+
+  @Value.Parameter
+  ToolchainProvider getToolchainProvider();
 }

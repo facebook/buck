@@ -18,7 +18,7 @@ package com.facebook.buck.testutil;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.environment.Platform;
@@ -188,7 +188,7 @@ public abstract class AbstractWorkspace {
     }
   }
 
-  private void ensureNoLocalBuckConfig() throws IOException {
+  private void ensureNoLocalBuckConfig() {
     if (Files.exists(getPath(".buckconfig.local"))) {
       throw new IllegalStateException(
           "Found a .buckconfig.local in the Workspace template, which is illegal."
@@ -299,7 +299,7 @@ public abstract class AbstractWorkspace {
    */
   public void addTemplateToWorkspace(Path templatePath) throws IOException {
     // renames those with FIXTURE_SUFFIX, removes those with EXPECTED_SUFFIX
-    MoreFiles.copyRecursively(
+    MostFiles.copyRecursively(
         templatePath, destPath, (Path path) -> copyFilePath(path).orElse(null));
 
     if (Platform.detect() == Platform.WINDOWS) {
@@ -330,7 +330,7 @@ public abstract class AbstractWorkspace {
                   Files.copy(linkToFile, path, StandardCopyOption.REPLACE_EXISTING);
                 } else if (Files.isDirectory(linkToFile)) {
                   Files.delete(path);
-                  MoreFiles.copyRecursively(linkToFile, path);
+                  MostFiles.copyRecursively(linkToFile, path);
                 }
               }
               return FileVisitResult.CONTINUE;
@@ -375,7 +375,7 @@ public abstract class AbstractWorkspace {
     URI jarURI = URI.create(jarSplit[0]);
     FileSystem testDataFS = getOrCreateJarFileSystem(jarURI);
     FileSystemProvider provider = testDataFS.provider();
-    Path templatePath = testDataFS.getPath(jarSplit[1].toString(), templateName);
+    Path templatePath = testDataFS.getPath(jarSplit[1], templateName);
 
     copyTemplateToWorkspace(provider, templatePath);
     postAddTemplateActions();
@@ -515,7 +515,7 @@ public abstract class AbstractWorkspace {
    * @throws IOException
    */
   public void copyRecursively(Path source, Path pathRelativeToWorkspaceRoot) throws IOException {
-    MoreFiles.copyRecursively(source, destPath.resolve(pathRelativeToWorkspaceRoot));
+    MostFiles.copyRecursively(source, destPath.resolve(pathRelativeToWorkspaceRoot));
   }
 
   /**

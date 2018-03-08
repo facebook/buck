@@ -143,7 +143,7 @@ class CxxInferAnalyze extends AbstractBuildRule {
             new AbstractExecutionStep("write_specs_path_list") {
               @Override
               public StepExecutionResult execute(ExecutionContext executionContext)
-                  throws IOException, InterruptedException {
+                  throws IOException {
                 ImmutableList<String> specsDirsWithAbsolutePath =
                     getSpecsOfAllDeps()
                         .stream()

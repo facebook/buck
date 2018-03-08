@@ -24,15 +24,12 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.ImmutableBuildRuleCreationContext;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.rules.TestBuildRuleParams;
-import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
@@ -42,9 +39,7 @@ public class AndroidManifestDescriptionTest {
 
   @Test
   public void testGeneratedSkeletonAppearsInDeps() {
-    BuildRuleResolver buildRuleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
 
     BuildRule ruleWithOutput =
         new FakeBuildRule(BuildTargetFactory.newInstance("//foo:bar")) {
@@ -67,11 +62,7 @@ public class AndroidManifestDescriptionTest {
     BuildRule androidManifest =
         new AndroidManifestDescription(new AndroidManifestFactory())
             .createBuildRule(
-                ImmutableBuildRuleCreationContext.of(
-                    TargetGraph.EMPTY,
-                    buildRuleResolver,
-                    projectFilesystem,
-                    TestCellBuilder.createCellRoots(projectFilesystem)),
+                TestBuildRuleCreationContextFactory.create(buildRuleResolver, projectFilesystem),
                 buildTarget,
                 params,
                 arg);

@@ -45,7 +45,7 @@ public class QueryTargetAccessor {
       // Ignore if the field does not exist in this rule.
       return ImmutableSet.of();
     }
-    final ImmutableSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();
+    ImmutableSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();
     info.traverse(
         node.getCellNames(),
         value -> {
@@ -75,7 +75,7 @@ public class QueryTargetAccessor {
       TypeCoercerFactory typeCoercerFactory,
       TargetNode<T, ?> node,
       String attribute,
-      final Predicate<Object> predicate) {
+      Predicate<Object> predicate) {
     Class<?> constructorArgClass = node.getConstructorArg().getClass();
     ParamInfo info =
         CoercedTypeCache.INSTANCE
@@ -85,7 +85,7 @@ public class QueryTargetAccessor {
       // Ignore if the field does not exist in this rule.
       return ImmutableSet.of();
     }
-    final ImmutableSet.Builder<Object> builder = ImmutableSet.builder();
+    ImmutableSet.Builder<Object> builder = ImmutableSet.builder();
     info.traverse(
         node.getCellNames(),
         value -> {

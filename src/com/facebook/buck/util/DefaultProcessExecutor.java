@@ -190,12 +190,10 @@ public class DefaultProcessExecutor implements ProcessExecutor {
 
   @Override
   public Result waitForLaunchedProcessWithTimeout(
-      LaunchedProcess launchedProcess,
-      long millis,
-      final Optional<Consumer<Process>> timeOutHandler)
+      LaunchedProcess launchedProcess, long millis, Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException {
     Preconditions.checkState(launchedProcess instanceof LaunchedProcessImpl);
-    final Process process = ((LaunchedProcessImpl) launchedProcess).process;
+    Process process = ((LaunchedProcessImpl) launchedProcess).process;
     boolean timedOut = waitForTimeoutInternal(process, millis, timeOutHandler);
     int exitCode = !timedOut ? process.exitValue() : 1;
     return new Result(exitCode, timedOut, Optional.empty(), Optional.empty());
@@ -207,7 +205,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
    * @return whether the wait has timed out.
    */
   private boolean waitForTimeoutInternal(
-      final Process process, long millis, final Optional<Consumer<Process>> timeOutHandler)
+      Process process, long millis, Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException {
     Future<?> waiter =
         THREAD_POOL.submit(

@@ -277,7 +277,7 @@ public class CleanCommandTest extends EasyMockSupport {
   }
 
   private CommandRunnerParams createCommandRunnerParams(BuckConfig buckConfig, Cell cell)
-      throws InterruptedException, IOException {
+      throws IOException {
     ProcessExecutor processExecutor = new FakeProcessExecutor();
 
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();

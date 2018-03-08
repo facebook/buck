@@ -202,23 +202,21 @@ public class BuildInfoRecorder {
   }
 
   private ImmutableSortedSet<Path> getRecordedOutputDirsAndFiles() throws IOException {
-    final ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
 
     // Add files from output directories.
-    for (final Path output : pathsToOutputs) {
+    for (Path output : pathsToOutputs) {
       projectFilesystem.walkRelativeFileTree(
           output,
           new SimpleFileVisitor<Path>() {
             @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                throws IOException {
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
               paths.add(file);
               return FileVisitResult.CONTINUE;
             }
 
             @Override
-            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-                throws IOException {
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
               paths.add(dir);
               return FileVisitResult.CONTINUE;
             }
@@ -266,9 +264,7 @@ public class BuildInfoRecorder {
    * Creates a zip file of the metadata and recorded artifacts and stores it in the artifact cache.
    */
   public ListenableFuture<Void> performUploadToArtifactCache(
-      final ImmutableSet<RuleKey> ruleKeys,
-      ArtifactCache artifactCache,
-      final BuckEventBus eventBus) {
+      ImmutableSet<RuleKey> ruleKeys, ArtifactCache artifactCache, BuckEventBus eventBus) {
     // Skip all of this if caching is disabled. Although artifactCache.store() will be a noop,
     // building up the zip is wasted I/O.
     if (!artifactCache.getCacheReadMode().isWritable()) {

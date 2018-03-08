@@ -190,10 +190,10 @@ public class ResourcesFilter extends AbstractBuildRule
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context, final BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    final ImmutableList.Builder<Path> filteredResDirectoriesBuilder = ImmutableList.builder();
+    ImmutableList.Builder<Path> filteredResDirectoriesBuilder = ImmutableList.builder();
     ImmutableSet<Path> whitelistedStringPaths =
         whitelistedStringDirs
             .stream()
@@ -212,14 +212,14 @@ public class ResourcesFilter extends AbstractBuildRule
             .collect(ImmutableList.toImmutableList());
     ImmutableBiMap<Path, Path> inResDirToOutResDirMap =
         createInResDirToOutResDirMap(resPaths, filteredResDirectoriesBuilder);
-    final FilterResourcesSteps filterResourcesSteps =
+    FilterResourcesSteps filterResourcesSteps =
         createFilterResourcesSteps(
             whitelistedStringPaths, locales, localizedStringFileName, inResDirToOutResDirMap);
     steps.add(filterResourcesSteps.getCopyStep());
     maybeAddPostFilterCmdStep(context, buildableContext, steps, inResDirToOutResDirMap);
     steps.add(filterResourcesSteps.getScaleStep());
 
-    final ImmutableList.Builder<Path> stringFilesBuilder = ImmutableList.builder();
+    ImmutableList.Builder<Path> stringFilesBuilder = ImmutableList.builder();
     // The list of strings.xml files is only needed to build string assets
     if (resourceCompressionMode.isStoreStringsAsAssets()) {
       GetStringsFilesStep getStringsFilesStep =
@@ -227,7 +227,7 @@ public class ResourcesFilter extends AbstractBuildRule
       steps.add(getStringsFilesStep);
     }
 
-    final ImmutableList<Path> filteredResDirectories = filteredResDirectoriesBuilder.build();
+    ImmutableList<Path> filteredResDirectories = filteredResDirectoriesBuilder.build();
     for (Path outputResourceDir : filteredResDirectories) {
       buildableContext.recordArtifact(outputResourceDir);
     }
@@ -235,8 +235,7 @@ public class ResourcesFilter extends AbstractBuildRule
     steps.add(
         new AbstractExecutionStep("record_build_output") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context)
-              throws IOException, InterruptedException {
+          public StepExecutionResult execute(ExecutionContext context) throws IOException {
             if (postFilterResourcesCmd.isPresent()) {
               buildableContext.recordArtifact(getRDotJsonPath());
             }

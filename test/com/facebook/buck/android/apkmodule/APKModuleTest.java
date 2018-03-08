@@ -81,7 +81,7 @@ public class APKModuleTest {
                        + - - - - - -+
   */
   @Test
-  public void testAPKModuleGraphSimple() throws Exception {
+  public void testAPKModuleGraphSimple() {
     ImmutableSet.Builder<TargetNode<?, ?>> nodeBuilder = ImmutableSet.builder();
     BuildTarget commonLibraryTarget =
         BuildTargetFactory.newInstance(
@@ -195,7 +195,7 @@ public class APKModuleTest {
      == package and target dependecy
      */
   @Test
-  public void testAPKModuleGraphSharedDependency() throws Exception {
+  public void testAPKModuleGraphSharedDependency() {
 
     ImmutableSet.Builder<TargetNode<?, ?>> nodeBuilder = ImmutableSet.builder();
     BuildTarget commonLibraryTarget = BuildTargetFactory.newInstance("//:test-common-library");
@@ -284,7 +284,7 @@ public class APKModuleTest {
                                    +---------------------------+
   */
   @Test
-  public void testAPKModuleGraphComplexDependencyTree() throws Exception {
+  public void testAPKModuleGraphComplexDependencyTree() {
     ImmutableSet.Builder<TargetNode<?, ?>> nodeBuilder = ImmutableSet.builder();
     BuildTarget commonLibraryTarget = BuildTargetFactory.newInstance("//:test-common-library");
     nodeBuilder.add(

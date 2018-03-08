@@ -190,7 +190,7 @@ public class TranslatingJavacPhaseTracerTest {
     verify(mockLogger);
   }
 
-  private void traceProcOnlyEvents(final TranslatingJavacPhaseTracer tracer) {
+  private void traceProcOnlyEvents(TranslatingJavacPhaseTracer tracer) {
     tracer.beginParse("file1");
     tracer.endParse();
     tracer.beginParse("file2");
@@ -213,7 +213,7 @@ public class TranslatingJavacPhaseTracerTest {
     tracer.close();
   }
 
-  private void logDesiredEventStreamForProcOnly(final JavacPhaseEventLogger logger) {
+  private void logDesiredEventStreamForProcOnly(JavacPhaseEventLogger logger) {
     logger.beginParse("file1");
     logger.endParse();
     logger.beginParse("file2");

@@ -34,7 +34,7 @@ public class WebServerTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     WebServer webServer = new WebServer(/* port */ 9999, projectFilesystem);
     ImmutableList<ContextHandler> handlers = webServer.createHandlers();
-    final Map<String, ContextHandler> contextPathToHandler = new HashMap<>();
+    Map<String, ContextHandler> contextPathToHandler = new HashMap<>();
     for (ContextHandler handler : handlers) {
       contextPathToHandler.put(handler.getContextPath(), handler);
     }

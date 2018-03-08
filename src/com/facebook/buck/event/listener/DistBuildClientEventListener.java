@@ -56,7 +56,7 @@ public class DistBuildClientEventListener implements BuckEventListener, Closeabl
       return;
     }
 
-    String ruleKey = ruleKeyCacheResult.ruleKey().toString();
+    String ruleKey = ruleKeyCacheResult.ruleKey();
     DistBuildClientCacheResult.Builder cacheResultBuilder =
         DistBuildClientCacheResult.builder().setClientSideCacheResult(ruleKeyCacheResult);
 
@@ -111,7 +111,7 @@ public class DistBuildClientEventListener implements BuckEventListener, Closeabl
   }
 
   @Override
-  public void outputTrace(BuildId buildId) throws InterruptedException {}
+  public void outputTrace(BuildId buildId) {}
 
   @Override
   public void close() throws IOException {}

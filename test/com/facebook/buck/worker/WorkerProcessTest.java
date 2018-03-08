@@ -107,7 +107,7 @@ public class WorkerProcessTest {
   }
 
   @Test(timeout = 20 * 1000)
-  public void testDoesNotBlockOnLargeStderr() throws InterruptedException, IOException {
+  public void testDoesNotBlockOnLargeStderr() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "worker_process", temporaryPaths);
     workspace.setUp();

@@ -63,7 +63,7 @@ public class RuleKeyLogFilePrinter {
    * @throws ParseException The file could not be read or parsed
    */
   public void printFile(Path filename) throws ParseException {
-    final int[] linesVisited = {0};
+    int[] linesVisited = {0};
     Consumer<FullRuleKey> filterLambda = ruleKey -> printRuleKey(linesVisited, ruleKey);
     if (namesFilter.isPresent()) {
       filterLambda =

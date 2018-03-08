@@ -38,13 +38,13 @@ public class JavaInMemoryFileObjectTest {
   @Rule public TemporaryFolder temp = new TemporaryFolder();
 
   @Test
-  public void testJavaFileName() throws Exception {
+  public void testJavaFileName() {
     String relativePath = "com/facebook/buck/java/JavaInMemoryFileObjectTest.class";
     JavaInMemoryFileObject inMemoryFileObject =
         new JavaInMemoryFileObject(
             URI.create("file://tmp/" + relativePath), relativePath, JavaFileObject.Kind.CLASS);
 
-    final String expectedName = "com/facebook/buck/java/JavaInMemoryFileObjectTest.class";
+    String expectedName = "com/facebook/buck/java/JavaInMemoryFileObjectTest.class";
     assertEquals(expectedName, inMemoryFileObject.getName());
   }
 
@@ -93,7 +93,7 @@ public class JavaInMemoryFileObjectTest {
   }
 
   @Test
-  public void testJarURIName() throws Exception {
+  public void testJarURIName() {
     String jarPath = "/tmp/test.jar";
     String relativePath = "com/facebook/buck/java/JavaInMemoryFileObjectTest.class";
     JavaInMemoryFileObject inMemoryFileObject =
@@ -102,7 +102,7 @@ public class JavaInMemoryFileObjectTest {
             relativePath,
             JavaFileObject.Kind.CLASS);
 
-    final String expectedName =
+    String expectedName =
         "jar:file:///tmp/test.jar!/com/facebook/buck/java/JavaInMemoryFileObjectTest.class";
 
     assertEquals(relativePath, inMemoryFileObject.getName());

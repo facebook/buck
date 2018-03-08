@@ -132,8 +132,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(
         new AbstractExecutionStep("create_uber_classes_jar") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context)
-              throws IOException, InterruptedException {
+          public StepExecutionResult execute(ExecutionContext context) throws IOException {
             Path libsDirectory = unpackDirectory.resolve("libs");
             boolean dirDoesNotExistOrIsEmpty;
             ProjectFilesystem filesystem = getProjectFilesystem();
@@ -196,7 +195,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public BuildOutput initializeFromDisk() throws IOException {
+  public BuildOutput initializeFromDisk() {
     String rDotJavaPackageFromFile =
         getProjectFilesystem().readFirstLine(pathToRDotJavaPackageFile).get();
     return new BuildOutput(rDotJavaPackageFromFile);

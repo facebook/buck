@@ -113,11 +113,10 @@ public class ApplePackageDescription
       ApplePackageDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-    final BuildRule bundle =
-        resolver.getRule(propagateFlavorsToTarget(buildTarget, args.getBundle()));
+    BuildRule bundle = resolver.getRule(propagateFlavorsToTarget(buildTarget, args.getBundle()));
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
-    final Optional<ApplePackageConfigAndPlatformInfo> applePackageConfigAndPlatformInfo =
+    Optional<ApplePackageConfigAndPlatformInfo> applePackageConfigAndPlatformInfo =
         getApplePackageConfig(
             buildTarget,
             MacroArg.toMacroArgFunction(

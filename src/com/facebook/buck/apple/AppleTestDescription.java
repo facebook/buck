@@ -354,12 +354,12 @@ public class AppleTestDescription
     // we need to unpack to get at the actual binary.  Otherwise, if it's specified as a path, we
     // can use that directly.
     if (appleConfig.getXctoolZipTarget().isPresent()) {
-      final BuildRule xctoolZipBuildRule = resolver.getRule(appleConfig.getXctoolZipTarget().get());
+      BuildRule xctoolZipBuildRule = resolver.getRule(appleConfig.getXctoolZipTarget().get());
 
       // Since the content is unzipped in a directory that might differ for each cell the tests are
       // from, we append a flavor that depends on the root path of the projectFilesystem
       // in order to get a different rule for each cell the tests are from.
-      final String relativeRootPathString =
+      String relativeRootPathString =
           xctoolZipBuildRule
               .getBuildTarget()
               .getCellPath()
@@ -374,7 +374,7 @@ public class AppleTestDescription
               .getBuildTarget()
               .withAppendedFlavors(UNZIP_XCTOOL_FLAVOR)
               .withAppendedFlavors(InternalFlavor.of(sha1Hash));
-      final Path outputDirectory =
+      Path outputDirectory =
           BuildTargets.getGenPath(projectFilesystem, unzipXctoolTarget, "%s/unzipped");
       resolver.computeIfAbsent(
           unzipXctoolTarget,

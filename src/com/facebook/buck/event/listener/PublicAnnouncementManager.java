@@ -63,7 +63,7 @@ public class PublicAnnouncementManager {
       Clock clock,
       BuckEventBus eventBus,
       AbstractConsoleEventBusListener consoleEventBusListener,
-      final String repository,
+      String repository,
       RemoteLogBuckConfig logConfig,
       ListeningExecutorService service) {
     this.clock = clock;
@@ -75,7 +75,7 @@ public class PublicAnnouncementManager {
   }
 
   public void getAndPostAnnouncements() {
-    final ListenableFuture<ImmutableList<Announcement>> message =
+    ListenableFuture<ImmutableList<Announcement>> message =
         service.submit(
             () -> {
               Optional<ClientSideSlb> slb =

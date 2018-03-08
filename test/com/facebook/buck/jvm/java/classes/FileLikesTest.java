@@ -21,7 +21,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Preconditions;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import org.junit.Test;
@@ -73,7 +72,7 @@ public class FileLikesTest {
     }
 
     @Override
-    public InputStream getInput() throws IOException {
+    public InputStream getInput() {
       throw new UnsupportedOperationException();
     }
   }

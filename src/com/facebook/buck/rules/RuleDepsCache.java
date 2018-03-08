@@ -37,19 +37,19 @@ public class RuleDepsCache {
     this.runtimeDepsCache = new ConcurrentHashMap<>();
   }
 
-  public SortedSet<BuildRule> get(final BuildRule rule) {
+  public SortedSet<BuildRule> get(BuildRule rule) {
     return allDepsCache.computeIfAbsent(rule, this::computeDeps);
   }
 
-  private SortedSet<BuildRule> computeDeps(final BuildRule rule) {
+  private SortedSet<BuildRule> computeDeps(BuildRule rule) {
     return SortedSets.union(rule.getBuildDeps(), getRuntimeDeps(rule));
   }
 
-  public SortedSet<BuildRule> getRuntimeDeps(final BuildRule rule) {
+  public SortedSet<BuildRule> getRuntimeDeps(BuildRule rule) {
     return runtimeDepsCache.computeIfAbsent(rule, this::computeRuntimeDeps);
   }
 
-  private SortedSet<BuildRule> computeRuntimeDeps(final BuildRule rule) {
+  private SortedSet<BuildRule> computeRuntimeDeps(BuildRule rule) {
     if (!(rule instanceof HasRuntimeDeps)) {
       return ImmutableSortedSet.of();
     }

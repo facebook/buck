@@ -204,7 +204,7 @@ public final class MoreAsserts {
       String userMessage,
       List<String> expectedStepDescriptions,
       List<Step> observedSteps,
-      final ExecutionContext executionContext) {
+      ExecutionContext executionContext) {
     ImmutableList<String> commands =
         observedSteps
             .stream()

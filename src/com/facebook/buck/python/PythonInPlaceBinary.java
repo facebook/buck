@@ -121,16 +121,15 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   }
 
   private static Supplier<String> getScript(
-      final BuildRuleResolver resolver,
-      final PythonPlatform pythonPlatform,
-      final CxxPlatform cxxPlatform,
-      final String mainModule,
-      final PythonPackageComponents components,
-      final Path relativeLinkTreeRoot,
-      final ImmutableSet<String> preloadLibraries) {
-    final String relativeLinkTreeRootStr =
-        Escaper.escapeAsPythonString(relativeLinkTreeRoot.toString());
-    final Linker ld = cxxPlatform.getLd().resolve(resolver);
+      BuildRuleResolver resolver,
+      PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform,
+      String mainModule,
+      PythonPackageComponents components,
+      Path relativeLinkTreeRoot,
+      ImmutableSet<String> preloadLibraries) {
+    String relativeLinkTreeRootStr = Escaper.escapeAsPythonString(relativeLinkTreeRoot.toString());
+    Linker ld = cxxPlatform.getLd().resolve(resolver);
     return () -> {
       ST st =
           new ST(getRunInplaceResource())

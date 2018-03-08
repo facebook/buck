@@ -127,10 +127,10 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
           allReferencedResourcesBuilder.addAll(referencedResources.get());
         }
       }
-      final ImmutableSet<String> allReferencedResources = allReferencedResourcesBuilder.build();
+      ImmutableSet<String> allReferencedResources = allReferencedResourcesBuilder.build();
 
-      final ProjectFilesystem projectFilesystem = getProjectFilesystem();
-      try (final CustomZipOutputStream output =
+      ProjectFilesystem projectFilesystem = getProjectFilesystem();
+      try (CustomZipOutputStream output =
           ZipOutputStreams.newOutputStream(projectFilesystem.resolve(pathToOutput))) {
         if (!pathToInput.isPresent()) {
           // dx fails if its input contains no classes.  Rather than add empty input handling
@@ -221,7 +221,7 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       // This can cause us to keep (for example) R.layout.foo when only R.string.foo
       // is referenced.  That is a very rare case, though, and not worth the complexity to fix.
       if (m.find()) {
-        final String resource = m.group(1);
+        String resource = m.group(1);
         boolean shouldWriteLine =
             allReferencedResources.contains(packageName + "." + resource)
                 || (keepPattern.isPresent() && keepPattern.get().matcher(resource).find());

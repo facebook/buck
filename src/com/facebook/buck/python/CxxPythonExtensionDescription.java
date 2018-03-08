@@ -95,7 +95,6 @@ public class CxxPythonExtensionDescription
     EXTENSION(CxxDescriptionEnhancer.SHARED_FLAVOR),
     SANDBOX_TREE(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR),
     COMPILATION_DATABASE(CxxCompilationDatabase.COMPILATION_DATABASE);
-    ;
 
     private final Flavor flavor;
 
@@ -402,13 +401,13 @@ public class CxxPythonExtensionDescription
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
       BuildRuleParams params,
-      final CxxPythonExtensionDescriptionArg args) {
+      CxxPythonExtensionDescriptionArg args) {
     BuildRuleResolver ruleResolverLocal = context.getBuildRuleResolver();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CellPathResolver cellRoots = context.getCellPathResolver();
 
     // See if we're building a particular "type" of this library, and if so, extract it as an enum.
-    final Optional<Type> type = LIBRARY_TYPE.getValue(buildTarget);
+    Optional<Type> type = LIBRARY_TYPE.getValue(buildTarget);
     if (type.isPresent()) {
 
       FlavorDomain<CxxPlatform> cxxPlatforms = getCxxPlatforms();
@@ -447,10 +446,10 @@ public class CxxPythonExtensionDescription
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
     SourcePathRuleFinder ruleFinderLocal = new SourcePathRuleFinder(ruleResolverLocal);
-    final SourcePathResolver pathResolverLocal = DefaultSourcePathResolver.from(ruleFinderLocal);
+    SourcePathResolver pathResolverLocal = DefaultSourcePathResolver.from(ruleFinderLocal);
     Path baseModule = PythonUtil.getBasePath(buildTarget, args.getBaseModule());
     String moduleName = args.getModuleName().orElse(buildTarget.getShortName());
-    final Path module = baseModule.resolve(getExtensionName(moduleName));
+    Path module = baseModule.resolve(getExtensionName(moduleName));
     return new CxxPythonExtension(
         buildTarget,
         projectFilesystem,
@@ -499,7 +498,7 @@ public class CxxPythonExtensionDescription
       }
 
       @Override
-      public NativeLinkTarget getNativeLinkTarget(final PythonPlatform pythonPlatform) {
+      public NativeLinkTarget getNativeLinkTarget(PythonPlatform pythonPlatform) {
         return new NativeLinkTarget() {
 
           @Override

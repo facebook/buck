@@ -61,7 +61,7 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
-  public void binaryWithAsm() throws IOException, InterruptedException {
+  public void binaryWithAsm() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "asm", tmp);
     workspace.setUp();
 
@@ -71,7 +71,7 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
-  public void binaryWithCgo() throws IOException, InterruptedException {
+  public void binaryWithCgo() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cgo", tmp);
     workspace.setUp();
 
@@ -81,7 +81,7 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
-  public void buildAfterChangeWorks() throws IOException, InterruptedException {
+  public void buildAfterChangeWorks() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
@@ -93,7 +93,7 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
-  public void binaryWithLibrary() throws IOException, InterruptedException {
+  public void binaryWithLibrary() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
@@ -104,7 +104,7 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
-  public void vendoredLibrary() throws IOException, InterruptedException {
+  public void vendoredLibrary() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "vendored_library", tmp);
     workspace.setUp();
@@ -115,7 +115,7 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
-  public void libraryWithPrefix() throws IOException, InterruptedException {
+  public void libraryWithPrefix() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "library_with_prefix", tmp);
     workspace.setUp();
@@ -126,7 +126,7 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
-  public void libraryWithPrefixAfterChange() throws IOException, InterruptedException {
+  public void libraryWithPrefixAfterChange() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "library_with_prefix", tmp);
     workspace.setUp();
@@ -143,7 +143,7 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
-  public void nonGoLibraryDepErrors() throws IOException, InterruptedException {
+  public void nonGoLibraryDepErrors() throws IOException {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(Matchers.containsString("is not an instance of go_library"));
 
@@ -155,7 +155,7 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
-  public void exportedDeps() throws IOException, InterruptedException {
+  public void exportedDeps() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "exported_deps", tmp);
     workspace.setUp();
@@ -163,7 +163,7 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
-  public void generatedSources() throws IOException, InterruptedException {
+  public void generatedSources() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "generated_source", tmp);
     workspace.setUp();
@@ -171,7 +171,7 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
-  public void generatedSourceDir() throws IOException, InterruptedException {
+  public void generatedSourceDir() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "generated_source_dir", tmp);
     workspace.setUp();
@@ -179,7 +179,7 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
-  public void emptySources() throws IOException, InterruptedException {
+  public void emptySources() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "empty_sources", tmp);
     workspace.setUp();

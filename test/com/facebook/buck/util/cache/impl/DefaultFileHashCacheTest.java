@@ -70,12 +70,12 @@ public class DefaultFileHashCacheTest {
         .collect(ImmutableList.toImmutableList());
   }
 
-  public DefaultFileHashCacheTest(FileHashCacheMode fileHashCacheMode) throws IOException {
+  public DefaultFileHashCacheTest(FileHashCacheMode fileHashCacheMode) {
     this.fileHashCacheMode = fileHashCacheMode;
   }
 
   @Test
-  public void whenPathIsPutCacheContainsPath() throws IOException, InterruptedException {
+  public void whenPathIsPutCacheContainsPath() throws IOException {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     Path path = Paths.get("SomeClass.java");
     filesystem.touch(path);
@@ -88,7 +88,7 @@ public class DefaultFileHashCacheTest {
   }
 
   @Test
-  public void whenPathIsPutPathGetReturnsHash() throws IOException, InterruptedException {
+  public void whenPathIsPutPathGetReturnsHash() throws IOException {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     Path path = Paths.get("SomeClass.java");
     filesystem.touch(path);
@@ -101,8 +101,7 @@ public class DefaultFileHashCacheTest {
   }
 
   @Test
-  public void whenPathIsPutThenInvalidatedCacheDoesNotContainPath()
-      throws IOException, InterruptedException {
+  public void whenPathIsPutThenInvalidatedCacheDoesNotContainPath() throws IOException {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     Path path = Paths.get("SomeClass.java");
     filesystem.touch(path);
@@ -321,7 +320,7 @@ public class DefaultFileHashCacheTest {
   }
 
   @Test
-  public void thatBuckoutCacheWillGetIsCorrect() throws IOException, InterruptedException {
+  public void thatBuckoutCacheWillGetIsCorrect() throws IOException {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     Path buckOut = filesystem.getBuckPaths().getBuckOut();
     filesystem.mkdirs(buckOut);
@@ -337,7 +336,7 @@ public class DefaultFileHashCacheTest {
   }
 
   @Test
-  public void thatNonBuckoutCacheWillGetIsCorrect() throws IOException, InterruptedException {
+  public void thatNonBuckoutCacheWillGetIsCorrect() throws IOException {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     Path buckOut = filesystem.getBuckPaths().getBuckOut();
     filesystem.mkdirs(buckOut);

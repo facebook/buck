@@ -153,7 +153,7 @@ class NativeLibraryMergeEnhancer {
             .sorted(Comparator.comparing(NativeLinkable::getBuildTarget))
             .collect(ImmutableList.toImmutableList());
 
-    final ImmutableSet<NativeLinkable> linkableAssetSet = linkableAssetSetBuilder.build();
+    ImmutableSet<NativeLinkable> linkableAssetSet = linkableAssetSetBuilder.build();
     Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership =
         makeConstituentMap(buildTarget, mergeMap, allLinkables, linkableAssetSet);
 
@@ -241,7 +241,7 @@ class NativeLibraryMergeEnhancer {
       if (module != constituentModule) {
         StringBuilder sb = new StringBuilder();
         sb.append("Native library merge of ")
-            .append(linkable.toString())
+            .append(linkable)
             .append(" has inconsistent application module mappings: ");
         for (NativeLinkable innerConstituent : linkable.constituents.getLinkables()) {
           APKModule innerConstituentModule = linkableToModuleMap.get(constituent);
@@ -249,9 +249,9 @@ class NativeLibraryMergeEnhancer {
         }
         throw new RuntimeException(
             "Native library merge of "
-                + linkable.toString()
+                + linkable
                 + " has inconsistent application module mappings: "
-                + sb.toString());
+                + sb);
       }
     }
     return Preconditions.checkNotNull(module);
@@ -360,7 +360,7 @@ class NativeLibraryMergeEnhancer {
   /** Topo-sort the constituents objects so we can process deps first. */
   private static Iterable<MergedNativeLibraryConstituents> getOrderedMergedConstituents(
       BuildTarget buildTarget,
-      final Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership) {
+      Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership) {
     MutableDirectedGraph<MergedNativeLibraryConstituents> graph = new MutableDirectedGraph<>();
     for (MergedNativeLibraryConstituents constituents : linkableMembership.values()) {
       graph.addNode(constituents);
@@ -433,10 +433,10 @@ class NativeLibraryMergeEnhancer {
       Optional<ImmutableSortedSet<String>> symbolsToLocalize,
       Iterable<MergedNativeLibraryConstituents> orderedConstituents) {
     // Map from original linkables to the Linkables they have been merged into.
-    final Map<NativeLinkable, MergedLibNativeLinkable> mergeResults = new HashMap<>();
+    Map<NativeLinkable, MergedLibNativeLinkable> mergeResults = new HashMap<>();
 
     for (MergedNativeLibraryConstituents constituents : orderedConstituents) {
-      final ImmutableCollection<NativeLinkable> preMergeLibs = constituents.getLinkables();
+      ImmutableCollection<NativeLinkable> preMergeLibs = constituents.getLinkables();
 
       List<MergedLibNativeLinkable> orderedDeps =
           getStructuralDeps(constituents, NativeLinkable::getNativeLinkableDeps, mergeResults);
@@ -761,13 +761,13 @@ class NativeLibraryMergeEnhancer {
 
     @Override
     public Iterable<? extends NativeLinkable> getNativeLinkableDepsForPlatform(
-        final CxxPlatform cxxPlatform) {
+        CxxPlatform cxxPlatform) {
       return getMappedDeps(l -> l.getNativeLinkableDepsForPlatform(cxxPlatform));
     }
 
     @Override
     public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
-        final CxxPlatform cxxPlatform) {
+        CxxPlatform cxxPlatform) {
       return getMappedDeps(l -> l.getNativeLinkableExportedDepsForPlatform(cxxPlatform));
     }
 
@@ -789,8 +789,8 @@ class NativeLibraryMergeEnhancer {
 
     @Override
     public NativeLinkableInput getNativeLinkableInput(
-        final CxxPlatform cxxPlatform,
-        final Linker.LinkableDepType type,
+        CxxPlatform cxxPlatform,
+        Linker.LinkableDepType type,
         boolean forceLinkWhole,
         ImmutableSet<LanguageExtensions> languageExtensions) {
 
@@ -830,7 +830,7 @@ class NativeLibraryMergeEnhancer {
     }
 
     private NativeLinkableInput getImmediateNativeLinkableInput(CxxPlatform cxxPlatform) {
-      final Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
+      Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
       ImmutableList.Builder<NativeLinkableInput> builder = ImmutableList.builder();
       ImmutableList<NativeLinkable> usingGlue = ImmutableList.of();
       if (glueLinkable.isPresent() && constituents.isActuallyMerged()) {
@@ -935,8 +935,7 @@ class NativeLibraryMergeEnhancer {
       return ImmutableList.of(
           new Step() {
             @Override
-            public StepExecutionResult execute(ExecutionContext context)
-                throws IOException, InterruptedException {
+            public StepExecutionResult execute(ExecutionContext context) throws IOException {
               // Copy the output into place, then fix it in-place with mmap.
               Files.copy(linkOutput, finalOutput, StandardCopyOption.REPLACE_EXISTING);
 

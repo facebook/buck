@@ -43,7 +43,7 @@ public class LogFormatter extends java.util.logging.Formatter {
   }
 
   @VisibleForTesting
-  LogFormatter(ThreadIdToCommandIdMapper mapper, final Locale locale, final TimeZone timeZone) {
+  LogFormatter(ThreadIdToCommandIdMapper mapper, Locale locale, TimeZone timeZone) {
     this.mapper = mapper;
     simpleDateFormat =
         new ThreadLocal<SimpleDateFormat>() {

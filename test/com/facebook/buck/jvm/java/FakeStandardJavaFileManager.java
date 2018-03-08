@@ -82,15 +82,13 @@ class FakeStandardJavaFileManager implements StandardJavaFileManager {
       JavaFileManager.Location location,
       String packageName,
       Set<JavaFileObject.Kind> kinds,
-      boolean recurse)
-      throws IOException {
+      boolean recurse) {
     return files;
   }
 
   @Override
   public JavaFileObject getJavaFileForInput(
-      JavaFileManager.Location location, String className, JavaFileObject.Kind kind)
-      throws IOException {
+      JavaFileManager.Location location, String className, JavaFileObject.Kind kind) {
     return getFile(className);
   }
 
@@ -99,15 +97,13 @@ class FakeStandardJavaFileManager implements StandardJavaFileManager {
       JavaFileManager.Location location,
       String className,
       JavaFileObject.Kind kind,
-      FileObject sibling)
-      throws IOException {
+      FileObject sibling) {
     return getFile(className);
   }
 
   @Override
   public FileObject getFileForInput(
-      JavaFileManager.Location location, String packageName, String relativeName)
-      throws IOException {
+      JavaFileManager.Location location, String packageName, String relativeName) {
     return getFile(relativeName);
   }
 
@@ -116,8 +112,7 @@ class FakeStandardJavaFileManager implements StandardJavaFileManager {
       JavaFileManager.Location location,
       String packageName,
       String relativeName,
-      FileObject sibling)
-      throws IOException {
+      FileObject sibling) {
     return getFile(relativeName);
   }
 
@@ -168,7 +163,7 @@ class FakeStandardJavaFileManager implements StandardJavaFileManager {
   }
 
   @Override
-  public void flush() throws IOException {
+  public void flush() {
     throw new UnsupportedOperationException();
   }
 
@@ -178,8 +173,7 @@ class FakeStandardJavaFileManager implements StandardJavaFileManager {
   }
 
   @Override
-  public void setLocation(JavaFileManager.Location location, Iterable<? extends File> path)
-      throws IOException {
+  public void setLocation(JavaFileManager.Location location, Iterable<? extends File> path) {
     throw new UnsupportedOperationException();
   }
 
@@ -256,27 +250,27 @@ class FakeStandardJavaFileManager implements StandardJavaFileManager {
     }
 
     @Override
-    public InputStream openInputStream() throws IOException {
+    public InputStream openInputStream() {
       return null;
     }
 
     @Override
-    public Reader openReader(boolean ignoreEncodingErrors) throws IOException {
+    public Reader openReader(boolean ignoreEncodingErrors) {
       return null;
     }
 
     @Override
-    public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
+    public CharSequence getCharContent(boolean ignoreEncodingErrors) {
       return null;
     }
 
     @Override
-    public OutputStream openOutputStream() throws IOException {
+    public OutputStream openOutputStream() {
       return null;
     }
 
     @Override
-    public Writer openWriter() throws IOException {
+    public Writer openWriter() {
       return null;
     }
 

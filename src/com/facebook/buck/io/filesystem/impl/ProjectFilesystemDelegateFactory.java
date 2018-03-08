@@ -38,8 +38,7 @@ public final class ProjectFilesystemDelegateFactory {
   private ProjectFilesystemDelegateFactory() {}
 
   /** Must always create a new delegate for the specified {@code root}. */
-  public static ProjectFilesystemDelegate newInstance(Path root, Config config)
-      throws InterruptedException {
+  public static ProjectFilesystemDelegate newInstance(Path root, Config config) {
     Optional<EdenClientPool> pool = EdenClientPool.tryToCreateEdenClientPool(root);
 
     if (pool.isPresent()) {

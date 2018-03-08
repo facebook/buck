@@ -156,13 +156,13 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
         LinkerMapMode.FLAVOR_DOMAIN.getValue(buildTarget);
     buildTarget =
         LinkerMapMode.removeLinkerMapModeFlavorInTarget(buildTarget, flavoredLinkerMapMode);
-    final UnflavoredBuildTarget unflavoredBuildTarget = buildTarget.getUnflavoredBuildTarget();
+    UnflavoredBuildTarget unflavoredBuildTarget = buildTarget.getUnflavoredBuildTarget();
 
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, CxxPlatform>> platform =
         getCxxPlatforms().getFlavorAndValue(buildTarget);
-    final ImmutableSortedSet<Flavor> buildFlavors = buildTarget.getFlavors();
+    ImmutableSortedSet<Flavor> buildFlavors = buildTarget.getFlavors();
     ImmutableSortedSet<BuildRule> filteredExtraDeps =
         params
             .getExtraDeps()
@@ -188,7 +188,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
     CellPathResolver cellRoots = context.getCellPathResolver();
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     if (!buildFlavors.contains(SWIFT_COMPANION_FLAVOR) && platform.isPresent()) {
-      final CxxPlatform cxxPlatform = platform.get().getValue();
+      CxxPlatform cxxPlatform = platform.get().getValue();
       Optional<SwiftPlatform> swiftPlatform = swiftPlatformFlavorDomain.getValue(buildTarget);
       if (!swiftPlatform.isPresent()) {
         throw new HumanReadableException("Platform %s is missing swift compiler", cxxPlatform);
@@ -272,7 +272,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
       Preprocessor preprocessor = cxxPlatform.getCpp().resolve(resolver);
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
-      final BuildTarget buildTargetCopy = buildTarget;
+      BuildTarget buildTargetCopy = buildTarget;
       return new SwiftCompile(
           cxxPlatform,
           swiftBuckConfig,
@@ -390,7 +390,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
       BuildRuleParams params,
-      final BuildRuleResolver resolver,
+      BuildRuleResolver resolver,
       CxxLibraryDescription.CommonArg args) {
     if (!isSwiftTarget(buildTarget)) {
       boolean hasSwiftSource =
@@ -437,7 +437,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
     args.getSrcs().forEach(src -> srcsDepsBuilder.add(src));
     BuildRuleParams paramsWithSrcDeps = params.copyAppendingExtraDeps(srcsDepsBuilder.build());
 
-    final BuildTarget buildTargetCopy = buildTarget;
+    BuildTarget buildTargetCopy = buildTarget;
     return new SwiftCompile(
         cxxPlatform,
         swiftBuckConfig,

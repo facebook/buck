@@ -60,13 +60,13 @@ public class WatchmanWatcher {
     NONE,
     POST_OVERFLOW_EVENT,
     ;
-  };
+  }
 
   // The type of cursor used to communicate with Watchman
   public enum CursorType {
     NAMED,
     CLOCK_ID,
-  };
+  }
 
   private static final Logger LOG = Logger.get(WatchmanWatcher.class);
   /**
@@ -175,8 +175,7 @@ public class WatchmanWatcher {
             excludeAnyOf.add(Lists.newArrayList("dirname", ignorePath.toString()));
           } else {
             excludeAnyOf.add(
-                Lists.newArrayList(
-                    "match", ignorePath.toString() + File.separator + "*", "wholename"));
+                Lists.newArrayList("match", ignorePath + File.separator + "*", "wholename"));
           }
           break;
         case GLOB:

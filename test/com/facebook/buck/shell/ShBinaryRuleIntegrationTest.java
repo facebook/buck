@@ -23,7 +23,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -62,7 +62,7 @@ public class ShBinaryRuleIntegrationTest {
   }
 
   @Test
-  public void testExecutableFromCache() throws IOException, InterruptedException {
+  public void testExecutableFromCache() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace =
@@ -82,7 +82,7 @@ public class ShBinaryRuleIntegrationTest {
 
     // Now delete the buck-out directory (but not buck-cache).
     Path buckOutDir = workspace.getPath("buck-out");
-    MoreFiles.deleteRecursivelyIfExists(buckOutDir);
+    MostFiles.deleteRecursivelyIfExists(buckOutDir);
 
     // Now run the genrule that depends on the sh_binary above. This will force buck to fetch the
     // sh_binary output from cache. If the executable flag is lost somewhere along the way, this
@@ -141,7 +141,7 @@ public class ShBinaryRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "sh_binary_pwd", temporaryFolder);
     workspace.setUp();
 
-    String alteredPwd = workspace.getDestPath().toString() + "////////";
+    String alteredPwd = workspace.getDestPath() + "////////";
     ProcessResult buildResult =
         workspace.runBuckCommandWithEnvironmentOverridesAndContext(
             workspace.getDestPath(),

@@ -32,10 +32,9 @@ import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultCellPathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -63,7 +62,7 @@ public class GraphEnhancementQueryEnvironmentTest {
   }
 
   @Test
-  public void getTargetsMatchingPatternThrowsInformativeException() throws Exception {
+  public void getTargetsMatchingPatternThrowsInformativeException() {
     BuildTarget target = BuildTargetFactory.newInstance(ROOT, "//foo/bar:bar");
     GraphEnhancementQueryEnvironment envWithoutDeps =
         new GraphEnhancementQueryEnvironment(
@@ -141,9 +140,7 @@ public class GraphEnhancementQueryEnvironmentTest {
             .addDep(sublibNode.getBuildTarget())
             .build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(bottomNode, libNode, sublibNode);
-    BuildRuleResolver realResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver realResolver = new TestBuildRuleResolver(targetGraph);
 
     FakeJavaLibrary bottomRule =
         realResolver.addToIndex(new FakeJavaLibrary(bottomNode.getBuildTarget()));
@@ -171,7 +168,7 @@ public class GraphEnhancementQueryEnvironmentTest {
   }
 
   @Test
-  public void getFwdDeps() throws Exception {
+  public void getFwdDeps() {
     GraphEnhancementQueryEnvironment env = buildQueryEnvironmentWithGraph();
     // lib -> sublib
     assertThat(
@@ -197,7 +194,7 @@ public class GraphEnhancementQueryEnvironmentTest {
   }
 
   @Test
-  public void getClasspath() throws Exception {
+  public void getClasspath() {
     GraphEnhancementQueryEnvironment env = buildQueryEnvironmentWithGraph();
     ImmutableSet<QueryTarget> classpath =
         env.getFirstOrderClasspath(ImmutableSet.of(getQueryTarget("//:lib")))

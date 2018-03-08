@@ -94,8 +94,8 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
       ImmutableList<String> compilerFlags,
       ImmutableList<String> linkerFlags,
       ImmutableSet<SourcePath> interfaces,
-      final ImmutableSortedMap<String, HaskellPackage> packages,
-      final ImmutableSortedMap<String, HaskellPackage> exposedPackages,
+      ImmutableSortedMap<String, HaskellPackage> packages,
+      ImmutableSortedMap<String, HaskellPackage> exposedPackages,
       HaskellPackageInfo packageInfo,
       HaskellPlatform platform,
       Preprocessor preprocessor,
@@ -121,7 +121,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       HaskellSources sources,
-      final Tool haddockTool,
+      Tool haddockTool,
       ImmutableList<String> haddockFlags,
       ImmutableList<String> compilerFlags,
       ImmutableList<String> linkerFlags,
@@ -374,7 +374,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
     }
   }
 
-  public static enum Type {
+  public enum Type {
     HTML,
     HOOGLE
   }

@@ -102,7 +102,7 @@ public class StubJarTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void createTempFilesystem() throws InterruptedException, IOException {
+  public void createTempFilesystem() throws IOException {
     File out = temp.newFolder();
     filesystem = TestProjectFilesystems.createProjectFilesystem(out.toPath());
   }
@@ -4509,7 +4509,7 @@ public class StubJarTest {
 
   public class Foo<T> implements Callable<T> {
     @Override
-    public T call() throws Exception {
+    public T call() {
       return null;
     }
   }
@@ -5107,21 +5107,21 @@ public class StubJarTest {
       return this;
     }
 
-    public Tester addStubJarToClasspath() throws IOException {
+    public Tester addStubJarToClasspath() {
       classpath =
           ImmutableSortedSet.<Path>naturalOrder().addAll(classpath).add(stubJarPath).build();
       resetActuals();
       return this;
     }
 
-    public Tester addFullJarToClasspath() throws IOException {
+    public Tester addFullJarToClasspath() {
       classpath =
           ImmutableSortedSet.<Path>naturalOrder().addAll(classpath).add(fullJarPath).build();
       resetActuals();
       return this;
     }
 
-    public Tester addFullJarToClasspathAlways() throws IOException {
+    public Tester addFullJarToClasspathAlways() {
       universalClasspath =
           ImmutableSortedSet.<Path>naturalOrder()
               .addAll(universalClasspath)
@@ -5209,7 +5209,7 @@ public class StubJarTest {
           result.append("        .addExpectedFullAbi(\n");
           result.append(indent);
           result.append('"');
-          result.append(fileName.substring(0, fileName.length() - ".class".length()));
+          result.append(fileName, 0, fileName.length() - ".class".length());
 
           for (String abiLine : actualFullAbis.get(fileName)) {
             result.append("\",\n");
@@ -5224,7 +5224,7 @@ public class StubJarTest {
           result.append("        .addExpectedStub(\n");
           result.append(indent);
           result.append('"');
-          result.append(fileName.substring(0, fileName.length() - ".class".length()));
+          result.append(fileName, 0, fileName.length() - ".class".length());
 
           for (String stubLine : actualStubs.get(fileName)) {
             result.append("\",\n");

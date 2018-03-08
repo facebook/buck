@@ -195,8 +195,7 @@ public class PythonTestIntegrationTest {
     workspace.runBuckCommand("test", "//:test-success").assertSuccess();
   }
 
-  private void assumePythonVersionIsAtLeast(String expectedVersion, String message)
-      throws InterruptedException {
+  private void assumePythonVersionIsAtLeast(String expectedVersion, String message) {
     PythonVersion actualVersion =
         PythonPlatformsProviderFactoryUtils.getPythonEnvironment(
                 FakeBuckConfig.builder().build(),
@@ -211,7 +210,7 @@ public class PythonTestIntegrationTest {
             >= 0);
   }
 
-  private PythonBuckConfig getPythonBuckConfig() throws InterruptedException, IOException {
+  private PythonBuckConfig getPythonBuckConfig() throws IOException {
     Config rawConfig = Configs.createDefaultConfig(tmp.getRoot());
     BuckConfig buckConfig =
         new BuckConfig(

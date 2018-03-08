@@ -70,7 +70,7 @@ public class JavacOptionsTest {
   }
 
   @Test
-  public void shouldSetTheAnnotationSource() throws InterruptedException {
+  public void shouldSetTheAnnotationSource() {
     AnnotationProcessingParams params =
         AnnotationProcessingParams.builder()
             .setLegacySafeAnnotationProcessors(Collections.emptySet())
@@ -85,7 +85,7 @@ public class JavacOptionsTest {
   }
 
   @Test
-  public void shouldAddAllAddedAnnotationProcessors() throws InterruptedException {
+  public void shouldAddAllAddedAnnotationProcessors() {
     AnnotationProcessingParams params =
         AnnotationProcessingParams.builder()
             .setLegacyAnnotationProcessorDeps(Collections.emptySet())

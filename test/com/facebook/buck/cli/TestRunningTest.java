@@ -38,16 +38,15 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildEngine;
 import com.facebook.buck.rules.FakeTestRule;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.shell.GenruleDescriptionArg;
@@ -108,7 +107,7 @@ public class TestRunningTest {
    * absent.
    */
   @Test
-  public void testGeneratedSourceFile() throws Exception {
+  public void testGeneratedSourceFile() {
     BuildTarget genSrcTarget = BuildTargetFactory.newInstance("//:gensrc");
 
     TargetNode<GenruleDescriptionArg, GenruleDescription> sourceGenerator =
@@ -122,9 +121,7 @@ public class TestRunningTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(sourceGenerator, javaLibraryNode);
 
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     JavaLibrary javaLibrary = (JavaLibrary) ruleResolver.requireRule(javaLibraryTarget);
@@ -151,7 +148,7 @@ public class TestRunningTest {
    * source tmp corresponding to a non-generated source path.
    */
   @Test
-  public void testNonGeneratedSourceFile() throws Exception {
+  public void testNonGeneratedSourceFile() {
     Path pathToNonGenFile = Paths.get("package/src/SourceFile1.java");
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//foo:bar");
@@ -160,9 +157,7 @@ public class TestRunningTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(javaLibraryNode);
 
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     JavaLibrary javaLibrary = (JavaLibrary) ruleResolver.requireRule(javaLibraryTarget);
@@ -187,7 +182,7 @@ public class TestRunningTest {
   }
 
   @Test
-  public void testNonGeneratedSourceFileWithoutPathElements() throws Exception {
+  public void testNonGeneratedSourceFileWithoutPathElements() {
     Path pathToNonGenFile = Paths.get("package/src/SourceFile1.java");
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//foo:bar");
@@ -196,9 +191,7 @@ public class TestRunningTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(javaLibraryNode);
 
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     JavaLibrary javaLibrary = (JavaLibrary) ruleResolver.requireRule(javaLibraryTarget);
@@ -218,7 +211,7 @@ public class TestRunningTest {
    * correct source tmp corresponding to the unified source path.
    */
   @Test
-  public void testUnifiedSourceFile() throws Exception {
+  public void testUnifiedSourceFile() {
     Path pathToNonGenFile = Paths.get("java/package/src/SourceFile1.java");
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//foo:bar");
@@ -227,9 +220,7 @@ public class TestRunningTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(javaLibraryNode);
 
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     JavaLibrary javaLibrary = (JavaLibrary) ruleResolver.requireRule(javaLibraryTarget);
@@ -258,7 +249,7 @@ public class TestRunningTest {
    * the generated file comes first in the ordered set.
    */
   @Test
-  public void testMixedSourceFile() throws Exception {
+  public void testMixedSourceFile() {
     BuildTarget genSrcTarget = BuildTargetFactory.newInstance("//:gensrc");
 
     TargetNode<GenruleDescriptionArg, GenruleDescription> sourceGenerator =
@@ -279,9 +270,7 @@ public class TestRunningTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(sourceGenerator, javaLibraryNode);
 
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     JavaLibrary javaLibrary = (JavaLibrary) ruleResolver.requireRule(javaLibraryTarget);
@@ -299,8 +288,7 @@ public class TestRunningTest {
     Path rootPath = javaLibrary.getProjectFilesystem().getRootPath();
     ImmutableSet<String> expected =
         ImmutableSet.of(
-            rootPath.resolve("package/src-gen").toString() + "/",
-            rootPath.resolve("package/src").toString() + "/");
+            rootPath.resolve("package/src-gen") + "/", rootPath.resolve("package/src") + "/");
 
     assertEquals(
         "The non-generated source files are under two different source folders.", expected, result);
@@ -428,7 +416,7 @@ public class TestRunningTest {
     AtomicInteger atomicExecutionOrder = new AtomicInteger(0);
     ExecutionOrderAwareFakeStep separateTestStep1 =
         new ExecutionOrderAwareFakeStep("teststep1", "teststep1", 0, atomicExecutionOrder);
-    final TestResults fakeTestResults =
+    TestResults fakeTestResults =
         FakeTestResults.of(
             ImmutableList.of(
                 new TestCaseSummary(
@@ -498,10 +486,7 @@ public class TestRunningTest {
                 BuildResult.success(separateTest3, BUILT_LOCALLY, CacheResult.miss())));
     ExecutionContext fakeExecutionContext = TestExecutionContext.newInstance();
     DefaultStepRunner stepRunner = new DefaultStepRunner();
-    SourcePathRuleFinder ruleFinder =
-        new SourcePathRuleFinder(
-            new SingleThreadedBuildRuleResolver(
-                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
     int ret =
         TestRunning.runTests(
             commandRunnerParams,
@@ -530,7 +515,7 @@ public class TestRunningTest {
     AtomicInteger atomicExecutionOrder = new AtomicInteger(0);
     ExecutionOrderAwareFakeStep separateTestStep1 =
         new ExecutionOrderAwareFakeStep("teststep1", "teststep1", 0, atomicExecutionOrder);
-    final TestResults fakeTestResults =
+    TestResults fakeTestResults =
         FakeTestResults.of(
             ImmutableList.of(
                 new TestCaseSummary(
@@ -659,10 +644,7 @@ public class TestRunningTest {
                 .build());
     ExecutionContext fakeExecutionContext = TestExecutionContext.newInstance();
     DefaultStepRunner stepRunner = new DefaultStepRunner();
-    SourcePathRuleFinder ruleFinder =
-        new SourcePathRuleFinder(
-            new SingleThreadedBuildRuleResolver(
-                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
     int ret =
         TestRunning.runTests(
             commandRunnerParams,
@@ -745,7 +727,7 @@ public class TestRunningTest {
   @Test
   public void whenSeparateTestFailsThenBuildFails() throws Exception {
     CommandRunnerParams commandRunnerParams = CommandRunnerParamsForTesting.builder().build();
-    final TestResults failingTestResults =
+    TestResults failingTestResults =
         FakeTestResults.of(
             ImmutableList.of(
                 new TestCaseSummary(
@@ -761,10 +743,7 @@ public class TestRunningTest {
                             null,
                             null)))));
     BuildTarget failingTestTarget = BuildTargetFactory.newInstance("//:failingtest");
-    SourcePathRuleFinder ruleFinder =
-        new SourcePathRuleFinder(
-            new SingleThreadedBuildRuleResolver(
-                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     FakeTestRule failingTest =
         new FakeTestRule(

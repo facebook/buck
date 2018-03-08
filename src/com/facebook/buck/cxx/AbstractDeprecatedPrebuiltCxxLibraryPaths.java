@@ -60,7 +60,7 @@ abstract class AbstractDeprecatedPrebuiltCxxLibraryPaths implements PrebuiltCxxL
 
   // Platform unlike most macro expanders needs access to the cxx build flavor.
   // Because of that it can't be like normal expanders. So just create a handler here.
-  private static MacroHandler getMacroHandler(final Optional<CxxPlatform> cxxPlatform) {
+  private static MacroHandler getMacroHandler(Optional<CxxPlatform> cxxPlatform) {
     String flav = cxxPlatform.map(input -> input.getFlavor().toString()).orElse("");
     return new MacroHandler(
         ImmutableMap.of(

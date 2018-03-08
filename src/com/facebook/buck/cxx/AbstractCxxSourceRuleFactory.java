@@ -638,13 +638,13 @@ abstract class AbstractCxxSourceRuleFactory {
       String name = entry.getKey();
       CxxSource source = entry.getValue();
 
-      Preconditions.checkState(
-          CxxSourceTypes.isPreprocessableType(source.getType()),
-          "Only preprocessable source types are currently supported");
-
       if (sourceFilter.isBlacklisted(source)) {
         continue;
       }
+
+      Preconditions.checkState(
+          CxxSourceTypes.isPreprocessableType(source.getType()),
+          "Only preprocessable source types are currently supported");
 
       CxxInferCapture rule = requireInferCaptureBuildRule(name, source, inferConfig);
       objects.add(rule);

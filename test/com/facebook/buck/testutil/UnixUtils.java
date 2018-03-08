@@ -32,11 +32,15 @@ public class UnixUtils extends PlatformUtils {
     super(Quoter.DOUBLE);
   }
 
-  /** Returns a buck command builder for a unix platform, which runs buck through its .pex file */
+  /** Returns a command builder for a unix platform */
   @Override
   public ImmutableList.Builder<String> getCommandBuilder() {
-    ImmutableList.Builder<String> commandBuilder = ImmutableList.<String>builder();
-    commandBuilder.add(BUCK_EXE);
-    return commandBuilder;
+    return ImmutableList.<String>builder();
+  }
+
+  /** Returns a buck command builder for a unix platform, which runs buck through its .pex file */
+  @Override
+  public ImmutableList.Builder<String> getBuckCommandBuilder() {
+    return getCommandBuilder().add(BUCK_EXE);
   }
 }

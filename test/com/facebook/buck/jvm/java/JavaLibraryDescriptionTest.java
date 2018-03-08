@@ -25,10 +25,9 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
@@ -60,16 +59,14 @@ public class JavaLibraryDescriptionTest extends AbiCompilationModeTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(exportedNode, exportingNode);
 
-    resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    resolver = new TestBuildRuleResolver(targetGraph);
 
     exportedRule = resolver.requireRule(exportedNode.getBuildTarget());
     exportingRule = resolver.requireRule(exportingNode.getBuildTarget());
   }
 
   @Test
-  public void rulesExportedFromDepsBecomeFirstOrderDeps() throws Exception {
+  public void rulesExportedFromDepsBecomeFirstOrderDeps() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildRule javaLibrary =
         JavaLibraryBuilder.createBuilder(target, javaBuckConfig)
@@ -81,11 +78,11 @@ public class JavaLibraryDescriptionTest extends AbiCompilationModeTest {
       exportedRule = resolver.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
     }
 
-    assertThat(javaLibrary.getBuildDeps(), Matchers.<BuildRule>hasItem(exportedRule));
+    assertThat(javaLibrary.getBuildDeps(), Matchers.hasItem(exportedRule));
   }
 
   @Test
-  public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() throws Exception {
+  public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildRule javaLibrary =
         JavaLibraryBuilder.createBuilder(target, javaBuckConfig)
@@ -97,6 +94,6 @@ public class JavaLibraryDescriptionTest extends AbiCompilationModeTest {
       exportedRule = resolver.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
     }
 
-    assertThat(javaLibrary.getBuildDeps(), Matchers.<BuildRule>hasItem(exportedRule));
+    assertThat(javaLibrary.getBuildDeps(), Matchers.hasItem(exportedRule));
   }
 }

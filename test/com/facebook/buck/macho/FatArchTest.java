@@ -21,7 +21,7 @@ import org.junit.Test;
 
 public class FatArchTest {
   @Test
-  public void testCreatingFromBytesBigEndian() throws Exception {
+  public void testCreatingFromBytesBigEndian() {
     FatArch arch =
         FatArchUtils.createFromBuffer(
             ByteBuffer.wrap(FatArchTestData.getBigEndian()).order(ByteOrder.BIG_ENDIAN));
@@ -29,7 +29,7 @@ public class FatArchTest {
   }
 
   @Test
-  public void testCreatingFromBytesLittleEndian() throws Exception {
+  public void testCreatingFromBytesLittleEndian() {
     FatArch arch =
         FatArchUtils.createFromBuffer(
             ByteBuffer.wrap(FatArchTestData.getLittleEndian()).order(ByteOrder.LITTLE_ENDIAN));

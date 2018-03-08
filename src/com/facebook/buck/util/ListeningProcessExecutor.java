@@ -229,7 +229,7 @@ public class ListeningProcessExecutor {
    * Launches a process and asynchronously sends notifications to {@code listener} on a background
    * thread when the process starts, has I/O, or exits.
    */
-  public LaunchedProcess launchProcess(ProcessExecutorParams params, final ProcessListener listener)
+  public LaunchedProcess launchProcess(ProcessExecutorParams params, ProcessListener listener)
       throws IOException {
     LOG.debug("Launching process with params %s", params);
 

@@ -110,11 +110,11 @@ public class PatternTestSelector implements TestSelector {
       builder.append('!');
     }
     if (classPattern != null) {
-      builder.append(classPattern.toString());
+      builder.append(classPattern);
     }
     builder.append('#');
     if (methodPattern != null) {
-      builder.append(methodPattern.toString());
+      builder.append(methodPattern);
     }
     return builder.toString();
   }

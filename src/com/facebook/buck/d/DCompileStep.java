@@ -55,7 +55,7 @@ public class DCompileStep extends ShellStep {
         .addAll(compiler)
         .addAll(flags)
         .add("-c")
-        .add("-of" + output.toString())
+        .add("-of" + output)
         .addAll(inputs.stream().map(Object::toString).iterator())
         .build();
   }

@@ -52,7 +52,7 @@ public class HttpArtifactCacheEventListener implements BuckEventListener {
   }
 
   @Override
-  public void outputTrace(final BuildId buildId) {
+  public void outputTrace(BuildId buildId) {
     List<ListenableFuture<Void>> futures = new ArrayList<>();
     futures.add(fetchRequestLogger.forceFlush());
     futures.add(storeRequestLogger.forceFlush());
@@ -69,7 +69,7 @@ public class HttpArtifactCacheEventListener implements BuckEventListener {
 
   @Subscribe
   public void onHttpArtifactCacheEvent(HttpArtifactCacheEvent.Finished event) {
-    final String buildIdString = event.getBuildId().toString();
+    String buildIdString = event.getBuildId().toString();
 
     if (event.getOperation() == ArtifactCacheEvent.Operation.FETCH) {
       HttpArtifactCacheEventFetchData data = event.getFetchData();

@@ -27,9 +27,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.DefaultCellPathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
@@ -101,8 +99,7 @@ public class CxxPlatformUtils {
     return DefaultCxxPlatforms.build(Platform.detect(), config);
   }
 
-  private static CxxPlatform getDefaultPlatform(Path root)
-      throws InterruptedException, IOException {
+  private static CxxPlatform getDefaultPlatform(Path root) throws IOException {
     Config rawConfig = Configs.createDefaultConfig(root);
     BuckConfig buckConfig =
         new BuckConfig(
@@ -117,9 +114,7 @@ public class CxxPlatformUtils {
 
   public static HeaderMode getHeaderModeForDefaultPlatform(Path root)
       throws InterruptedException, IOException {
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     CxxPlatform defaultPlatform = getDefaultPlatform(root);
     return defaultPlatform.getCpp().resolve(ruleResolver).supportsHeaderMaps()
         ? HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP

@@ -22,8 +22,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
-import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
@@ -103,7 +103,7 @@ public class UnzipTest {
 
     // getFakeTime returs time with some non-zero millis. By doing division and multiplication by
     // 1000 we get rid of that.
-    final long time = ZipConstants.getFakeTime() / 1000 * 1000;
+    long time = ZipConstants.getFakeTime() / 1000 * 1000;
 
     // Create a simple zip archive using apache's commons-compress to store executable info.
     try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(zipFile.toFile())) {
@@ -142,7 +142,7 @@ public class UnzipTest {
     // Create a simple zip archive using apache's commons-compress to store executable info.
     try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(zipFile.toFile())) {
       ZipArchiveEntry entry = new ZipArchiveEntry("link.txt");
-      entry.setUnixMode((int) MoreFiles.S_IFLNK);
+      entry.setUnixMode((int) MostFiles.S_IFLNK);
       String target = "target.txt";
       entry.setSize(target.getBytes(Charsets.UTF_8).length);
       entry.setMethod(ZipEntry.STORED);
@@ -173,7 +173,7 @@ public class UnzipTest {
     // Create a simple zip archive using apache's commons-compress to store executable info.
     try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(zipFile.toFile())) {
       ZipArchiveEntry entry = new ZipArchiveEntry("link.txt");
-      entry.setUnixMode((int) MoreFiles.S_IFLNK);
+      entry.setUnixMode((int) MostFiles.S_IFLNK);
       String target = "target.txt";
       entry.setSize(target.getBytes(Charsets.UTF_8).length);
       entry.setMethod(ZipEntry.STORED);
@@ -316,7 +316,7 @@ public class UnzipTest {
   }
 
   @Test
-  public void testStripsPrefixAndIgnoresSiblings() throws IOException, InterruptedException {
+  public void testStripsPrefixAndIgnoresSiblings() throws IOException {
     byte[] bazDotSh = "echo \"baz.sh\"\n".getBytes(Charsets.UTF_8);
     try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(zipFile.toFile())) {
       zip.putArchiveEntry(new ZipArchiveEntry("foo"));

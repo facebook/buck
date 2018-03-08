@@ -27,12 +27,15 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -53,6 +56,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
   private Boolean ranWithBuckd = false;
 
   private static final String TESTDATA_DIRECTORY = "testdata";
+  private static final Long buildResultTimeoutMS = TimeUnit.SECONDS.toMillis(5);
 
   private PlatformUtils platformUtils = PlatformUtils.getForPlatform();
 
@@ -60,9 +64,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
    * Constructor for EndToEndWorkspace. Note that setup and teardown should be called in between
    * tests (easy way to do this is to use @Rule)
    */
-  public EndToEndWorkspace() {
-    super();
-  }
+  public EndToEndWorkspace() {}
 
   /**
    * Used for @Rule functionality so that EndToEndWorkspace can be automatically set up and torn
@@ -81,6 +83,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
   public void setup() throws Throwable {
     this.tempPath.before();
     this.destPath = tempPath.getRoot();
+    System.out.println("EndToEndWorkspace created");
   }
 
   /**
@@ -98,9 +101,10 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
     }
     this.tempPath.after();
     this.destPath = null;
+    System.out.println("EndToEndWorkspace torn down");
   }
 
-  private Statement statement(final Statement base) {
+  private Statement statement(Statement base) {
     return new Statement() {
       @Override
       public void evaluate() throws Throwable {
@@ -174,6 +178,21 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
   }
 
   /**
+   * Runs buck given command-line arguments and environment variables as overrides of the current
+   * system environment based on a given EndToEndTestDescriptor
+   *
+   * @param testDescriptor provides buck command arguments/environment variables
+   * @return the result of running Buck, which includes the exit code, stdout, and stderr.
+   */
+  public ProcessResult runBuckCommand(EndToEndTestDescriptor testDescriptor) throws Exception {
+    return runBuckCommand(
+        testDescriptor.getBuckdEnabled(),
+        ImmutableMap.copyOf(testDescriptor.getVariableMap()),
+        testDescriptor.getTemplateSet(),
+        testDescriptor.getFullCommand());
+  }
+
+  /**
    * Runs Buck with the specified list of command-line arguments with the given map of environment
    * variables as overrides of the current system environment.
    *
@@ -191,11 +210,26 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
       String[] templates,
       String... args)
       throws Exception {
+    System.out.println("Running buck command: " + String.join(" ", args));
     for (String template : templates) {
       this.addPremadeTemplate(template);
     }
-    ImmutableList.Builder<String> commandBuilder = platformUtils.getCommandBuilder();
+    ImmutableList.Builder<String> commandBuilder = platformUtils.getBuckCommandBuilder();
     List<String> command = commandBuilder.addAll(ImmutableList.copyOf(args)).build();
+    ranWithBuckd = ranWithBuckd || buckdEnabled;
+    return runCommand(buckdEnabled, environmentOverrides, command, Optional.empty());
+  }
+
+  /**
+   * Runs a given built command and buckdEnabled/environmentOverride settings, and returns a {@link
+   * ProcessResult} If an empty timeoutMS is given, then the command will have no timeout.
+   */
+  private ProcessResult runCommand(
+      boolean buckdEnabled,
+      ImmutableMap<String, String> environmentOverrides,
+      List<String> command,
+      Optional<Long> timeoutMS)
+      throws Exception {
     ImmutableMap<String, String> environment =
         overrideSystemEnvironment(buckdEnabled, environmentOverrides);
     ProcessExecutorParams params =
@@ -204,18 +238,54 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
             .setEnvironment(environment)
             .setDirectory(destPath.toAbsolutePath())
             .build();
-    ProcessExecutor.Result result = processExecutor.launchAndExecute(params);
-    ranWithBuckd = ranWithBuckd || buckdEnabled;
+    ProcessExecutor.Result result =
+        processExecutor.launchAndExecute(
+            params,
+            /* context */ ImmutableMap.of(),
+            /* options */ ImmutableSet.of(),
+            /* stdin */ Optional.empty(),
+            timeoutMS,
+            /* timeoutHandler */ Optional.empty());
     return new ProcessResult(
         ExitCode.map(result.getExitCode()),
         result.getStdout().orElse(""),
-        result.getStderr().orElse(""));
+        result.getStderr().orElse(""),
+        result.isTimedOut());
   }
 
   /** Replaces platform-specific placeholders configurations with their appropriate replacements */
   private void postAddPlatformConfiguration() throws IOException {
     platformUtils.checkAssumptions();
     platformUtils.setUpWorkspace(this);
+  }
+
+  /**
+   * Runs the process that is built by the given fully qualified target name. The program should be
+   * already built to run it.
+   */
+  public ProcessResult runBuiltResult(String target, String... args) throws Exception {
+    String fullTarget = EndToEndHelper.getProperBuildTarget(target);
+    ProcessResult targetsResult =
+        runBuckCommand(ranWithBuckd, "targets", fullTarget, "--show-output");
+    if (targetsResult.getExitCode().getCode() > 0) {
+      throw new RuntimeException(
+          "buck targets command getting outputPath failed: " + targetsResult.getStderr());
+    }
+    String[] targetsOutput = targetsResult.getStdout().split(" ");
+    if (targetsOutput.length != 2) {
+      throw new IllegalStateException(
+          "Expect to receive single target and path pair from buck targets --show-output, got:"
+              + targetsResult.getStdout());
+    }
+    String outputPath = targetsOutput[1].replaceAll("[ \n]", "");
+    ImmutableList.Builder<String> commandBuilder = platformUtils.getCommandBuilder();
+    List<String> command =
+        commandBuilder.add(outputPath).addAll(ImmutableList.copyOf(args)).build();
+    return runCommand(
+        ranWithBuckd,
+        ImmutableMap.<String, String>builder().build(),
+        command,
+        Optional.of(buildResultTimeoutMS));
   }
 
   /**

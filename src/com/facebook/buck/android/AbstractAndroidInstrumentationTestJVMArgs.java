@@ -69,7 +69,7 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
 
     args.add(
         "-classpath",
-        getTestRunnerClasspath().toString()
+        getTestRunnerClasspath()
             + File.pathSeparator
             + this.getDdmlibJarPath()
             + File.pathSeparator

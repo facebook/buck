@@ -168,6 +168,7 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
         .setDistBuildConfig(this.getDistBuildConfig())
         .setMaxActionGraphParallelism(this.getMaxActionGraphParallelism())
         .setActionGraphParallelizationMode(this.getActionGraphParallelizationMode())
+        .setToolchainProvider(this.getRootCell().getToolchainProvider())
         .build();
   }
 

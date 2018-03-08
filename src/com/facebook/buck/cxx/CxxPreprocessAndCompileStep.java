@@ -207,8 +207,7 @@ class CxxPreprocessAndCompileStep implements Step {
     return result;
   }
 
-  private void processResult(ProcessExecutor.Result result, ExecutionContext context)
-      throws IOException {
+  private void processResult(ProcessExecutor.Result result, ExecutionContext context) {
     // If we generated any error output, print that to the console.
     String err = result.getStderr().orElse("");
     if (!err.isEmpty()) {

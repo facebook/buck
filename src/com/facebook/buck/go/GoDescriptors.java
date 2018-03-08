@@ -67,9 +67,9 @@ abstract class GoDescriptors {
 
   @SuppressWarnings("unchecked")
   public static ImmutableSet<GoLinkable> requireTransitiveGoLinkables(
-      final BuildTarget sourceTarget,
-      final BuildRuleResolver resolver,
-      final GoPlatform platform,
+      BuildTarget sourceTarget,
+      BuildRuleResolver resolver,
+      GoPlatform platform,
       Iterable<BuildTarget> targets,
       boolean includeSelf) {
     FluentIterable<GoLinkable> linkables =
@@ -206,7 +206,7 @@ abstract class GoDescriptors {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      final BuildRuleResolver resolver,
+      BuildRuleResolver resolver,
       GoBuckConfig goBuckConfig,
       GoToolchain goToolchain,
       CxxPlatform cxxPlatform,
@@ -371,11 +371,11 @@ abstract class GoDescriptors {
   }
 
   private static ImmutableSet<GoLinkable> requireGoLinkables(
-      final BuildTarget sourceTarget,
-      final BuildRuleResolver resolver,
-      final GoPlatform platform,
+      BuildTarget sourceTarget,
+      BuildRuleResolver resolver,
+      GoPlatform platform,
       Iterable<BuildTarget> targets) {
-    final ImmutableSet.Builder<GoLinkable> linkables = ImmutableSet.builder();
+    ImmutableSet.Builder<GoLinkable> linkables = ImmutableSet.builder();
     new AbstractBreadthFirstTraversal<BuildTarget>(targets) {
       @Override
       public Iterable<BuildTarget> visit(BuildTarget target) {
@@ -446,6 +446,6 @@ abstract class GoDescriptors {
     Path output = resolver.getRelativePath(ruleOutput);
 
     String extension = Files.getFileExtension(output.toString());
-    return Paths.get(goPackageName.toString() + (extension.equals("") ? "" : "." + extension));
+    return Paths.get(goPackageName + (extension.equals("") ? "" : "." + extension));
   }
 }

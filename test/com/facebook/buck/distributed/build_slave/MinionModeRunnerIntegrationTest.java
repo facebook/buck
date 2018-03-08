@@ -35,6 +35,7 @@ import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.slb.ThriftException;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
@@ -91,7 +92,7 @@ public class MinionModeRunnerIntegrationTest {
         .andReturn(
             new Closeable() {
               @Override
-              public void close() throws IOException {}
+              public void close() {}
             })
         .anyTimes();
     EasyMock.replay(service);
@@ -116,9 +117,9 @@ public class MinionModeRunnerIntegrationTest {
             new NoOpMinionBuildProgressTracker(),
             CONNECTION_TIMEOUT_MILLIS);
 
-    int exitCode = minion.runAndReturnExitCode(createFakeHeartbeatService());
+    ExitCode exitCode = minion.runAndReturnExitCode(createFakeHeartbeatService());
     // Server does not exit because the build has already been marked as finished.
-    Assert.assertEquals(0, exitCode);
+    Assert.assertEquals(ExitCode.SUCCESS, exitCode);
   }
 
   @Test
@@ -164,9 +165,9 @@ public class MinionModeRunnerIntegrationTest {
     //         |
     //         +-- (miss target 3)
 
-    final String MISS_TARGET_1 = ROOT_TARGET + "_miss1";
-    final String MISS_TARGET_2 = ROOT_TARGET + "_miss2";
-    final String MISS_TARGET_3 = ROOT_TARGET + "_miss3";
+    String MISS_TARGET_1 = ROOT_TARGET + "_miss1";
+    String MISS_TARGET_2 = ROOT_TARGET + "_miss2";
+    String MISS_TARGET_3 = ROOT_TARGET + "_miss3";
 
     MinionBuildProgressTracker unexpectedCacheMissTracker =
         EasyMock.createMock(MinionBuildProgressTracker.class);
@@ -175,7 +176,7 @@ public class MinionModeRunnerIntegrationTest {
     EasyMock.expect(
             buildExecutor.waitForBuildToFinish(
                 EasyMock.anyObject(), EasyMock.anyObject(), EasyMock.anyObject()))
-        .andReturn(0)
+        .andReturn(ExitCode.SUCCESS)
         .anyTimes();
 
     EasyMock.expect(buildExecutor.initializeBuild(EasyMock.anyObject()))
@@ -260,8 +261,8 @@ public class MinionModeRunnerIntegrationTest {
               POLL_LOOP_INTERVAL_MILLIS,
               unexpectedCacheMissTracker,
               CONNECTION_TIMEOUT_MILLIS);
-      int exitCode = minion.runAndReturnExitCode(service);
-      Assert.assertEquals(0, exitCode);
+      ExitCode exitCode = minion.runAndReturnExitCode(service);
+      Assert.assertEquals(ExitCode.SUCCESS, exitCode);
     }
   }
 
@@ -291,16 +292,14 @@ public class MinionModeRunnerIntegrationTest {
     }
 
     @Override
-    public int buildLocallyAndReturnExitCode(
-        Iterable<String> targetsToBuild, Optional<Path> pathToBuildReport)
-        throws IOException, InterruptedException {
+    public ExitCode buildLocallyAndReturnExitCode(
+        Iterable<String> targetsToBuild, Optional<Path> pathToBuildReport) {
       buildTargets.addAll(ImmutableList.copyOf((targetsToBuild)));
-      return 0;
+      return ExitCode.SUCCESS;
     }
 
     @Override
-    public List<BuildEngineResult> initializeBuild(Iterable<String> targetsToBuild)
-        throws IOException {
+    public List<BuildEngineResult> initializeBuild(Iterable<String> targetsToBuild) {
 
       buildTargets.addAll(ImmutableList.copyOf((targetsToBuild)));
 
@@ -324,11 +323,11 @@ public class MinionModeRunnerIntegrationTest {
     }
 
     @Override
-    public int waitForBuildToFinish(
+    public ExitCode waitForBuildToFinish(
         Iterable<String> targetsToBuild,
         List<BuildEngineResult> resultFutures,
         Optional<Path> pathToBuildReport) {
-      return 0;
+      return ExitCode.SUCCESS;
     }
 
     @Override
@@ -337,7 +336,7 @@ public class MinionModeRunnerIntegrationTest {
     }
 
     @Override
-    public void shutdown() throws IOException {
+    public void shutdown() {
       // Nothing to cleanup in this implementation
     }
   }

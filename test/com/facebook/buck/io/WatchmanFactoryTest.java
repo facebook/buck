@@ -105,8 +105,7 @@ public class WatchmanFactoryTest {
   }
 
   @Test
-  public void shouldReturnEmptyWatchmanIfVersionCheckFails()
-      throws InterruptedException, IOException {
+  public void shouldReturnEmptyWatchmanIfVersionCheckFails() throws InterruptedException {
     SettableFakeClock clock = SettableFakeClock.DO_NOT_CARE;
     FakeListeningProcessExecutor executor =
         new FakeListeningProcessExecutor(

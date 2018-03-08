@@ -113,6 +113,14 @@ An <code>android_binary()</code> rule is used to generate an Android APK.
 {/call}
 
 {call buck.arg}
+  {param name : 'aapt_mode' /}
+  {param default : 'aapt1' /}
+  {param desc}
+  Set to <code>"aapt2"</code> to build resources for this app with aapt2.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name : 'skip_crunch_pngs' /}
   {param default : 'False' /}
   {param desc}
@@ -319,6 +327,18 @@ An <code>android_binary()</code> rule is used to generate an Android APK.
   A list of additional arguments to pass to the ReDex binary.
   </p>
   {call .redexLink /}
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name : 'native_library_merge_map' /}
+  {{param default : '{}' /}}
+  {param desc}
+  <p>
+    An advanced option for apps with many native libraries.
+    For more details,
+    see <a href="https://github.com/fbsamples/android-native-library-merging-demo">this article</a>.
+  </p>
   {/param}
 {/call}
 

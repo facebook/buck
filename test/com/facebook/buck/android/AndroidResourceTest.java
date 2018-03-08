@@ -27,15 +27,14 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -57,7 +56,7 @@ import org.junit.Test;
 public class AndroidResourceTest {
 
   @Test
-  public void testRuleKeyForDifferentInputFilenames() throws Exception {
+  public void testRuleKeyForDifferentInputFilenames() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/src/com/facebook/base:res");
     Function<Path, BuildRuleResolver> createResourceRule =
         (Path resourcePath) -> {
@@ -78,8 +77,7 @@ public class AndroidResourceTest {
                   .build();
 
           TargetGraph targetGraph = TargetGraphFactory.newInstance(resourceNode);
-          return new SingleThreadedBuildRuleResolver(
-              targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+          return new TestBuildRuleResolver(targetGraph);
         };
 
     FakeFileHashCache hashCache =
@@ -121,10 +119,7 @@ public class AndroidResourceTest {
         BuildTargetFactory.newInstance(
             projectFilesystem.getRootPath(), "//java/src/com/facebook/base:res");
     BuildRuleParams params = TestBuildRuleParams.create();
-    SourcePathRuleFinder ruleFinder =
-        new SourcePathRuleFinder(
-            new SingleThreadedBuildRuleResolver(
-                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     AndroidResource androidResource =
         new AndroidResource(
@@ -155,10 +150,7 @@ public class AndroidResourceTest {
         BuildTargetFactory.newInstance(
             projectFilesystem.getRootPath(), "//java/src/com/facebook/base:res");
     BuildRuleParams params = TestBuildRuleParams.create();
-    SourcePathRuleFinder ruleFinder =
-        new SourcePathRuleFinder(
-            new SingleThreadedBuildRuleResolver(
-                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     AndroidResource androidResource =
         new AndroidResource(
@@ -196,9 +188,7 @@ public class AndroidResourceTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, resourceNode);
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
 
     AndroidResource dep = (AndroidResource) resolver.requireRule(depNode.getBuildTarget());
     AndroidResource resource =

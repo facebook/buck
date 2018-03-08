@@ -70,7 +70,7 @@ public class BlockingHttpEndpointTest {
     private final long delayPeriodMillis;
 
     @Override
-    public InputStream getInputStream() throws IOException {
+    public InputStream getInputStream() {
       try {
         Thread.sleep(delayPeriodMillis);
       } catch (InterruptedException e) {
@@ -81,7 +81,7 @@ public class BlockingHttpEndpointTest {
     }
 
     @Override
-    public OutputStream getOutputStream() throws IOException {
+    public OutputStream getOutputStream() {
       try {
         Thread.sleep(delayPeriodMillis);
       } catch (InterruptedException e) {
@@ -104,6 +104,6 @@ public class BlockingHttpEndpointTest {
     }
 
     @Override
-    public void connect() throws IOException {}
+    public void connect() {}
   }
 }

@@ -271,8 +271,7 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
       Path relPath,
       Optional<String> memberRelPath,
       Optional<HashCode> hashCode,
-      List<PathWithUnixSeparators> children)
-      throws IOException {
+      List<PathWithUnixSeparators> children) {
     relPath = MorePaths.normalize(relPath);
     if (remoteFileHashes.containsAndAddPath(relPath)) {
       return;

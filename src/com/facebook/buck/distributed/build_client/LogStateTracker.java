@@ -182,7 +182,7 @@ public class LogStateTracker {
         return buildSlaveInfo.getStdErrCurrentBatchNumber();
       case UNKNOWN:
       default:
-        throw new RuntimeException("Unsupported stream type: " + streamType.toString());
+        throw new RuntimeException("Unsupported stream type: " + streamType);
     }
   }
 
@@ -195,7 +195,7 @@ public class LogStateTracker {
         return buildSlaveInfo.getStdErrCurrentBatchLineCount();
       case UNKNOWN:
       default:
-        throw new RuntimeException("Unsupported stream type: " + streamType.toString());
+        throw new RuntimeException("Unsupported stream type: " + streamType);
     }
   }
 

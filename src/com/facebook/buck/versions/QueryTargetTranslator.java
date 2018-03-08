@@ -74,14 +74,14 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
     StringBuilder builder = new StringBuilder();
     int lastEnd = 0;
     while (matcher.find()) {
-      builder.append(queryString.substring(lastEnd, matcher.start()));
+      builder.append(queryString, lastEnd, matcher.start());
       BuildTarget target =
           BuildTargetParser.INSTANCE.parse(matcher.group(), pattern, cellPathResolver);
       Optional<BuildTarget> translated = translator.translate(cellPathResolver, pattern, target);
       builder.append(translated.orElse(target).getFullyQualifiedName());
       lastEnd = matcher.end();
     }
-    builder.append(queryString.substring(lastEnd, queryString.length()));
+    builder.append(queryString, lastEnd, queryString.length());
     String newQuery = builder.toString();
 
     return queryString.equals(newQuery)

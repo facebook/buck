@@ -39,7 +39,7 @@ public class GroovyBuckConfig {
 
   Supplier<Tool> getGroovyCompiler() {
     Optional<Path> path = delegate.getPath("groovy", "groovy_home");
-    final Path groovyHomePath;
+    Path groovyHomePath;
     if (path.isPresent()) {
       groovyHomePath = path.get();
     } else {

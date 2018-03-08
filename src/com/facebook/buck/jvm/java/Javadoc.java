@@ -110,7 +110,7 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
           new ZipStep(
               getProjectFilesystem(),
               output,
-              ImmutableSet.<Path>of(),
+              ImmutableSet.of(),
               /* junk paths */ false,
               ZipCompressionLevel.NONE,
               output));

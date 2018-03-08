@@ -98,7 +98,7 @@ class GroovycStep implements Step {
   }
 
   private ImmutableList<String> createCommand() {
-    final ImmutableList.Builder<String> command = ImmutableList.builder();
+    ImmutableList.Builder<String> command = ImmutableList.builder();
 
     command.addAll(groovyc.getCommandPrefix(resolver));
 
@@ -126,7 +126,7 @@ class GroovycStep implements Step {
         pathToSrcsList);
   }
 
-  private void addCrossCompilationOptions(final ImmutableList.Builder<String> command) {
+  private void addCrossCompilationOptions(ImmutableList.Builder<String> command) {
     if (shouldCrossCompile()) {
       command.add("-j");
       javacOptions.appendOptionsTo(

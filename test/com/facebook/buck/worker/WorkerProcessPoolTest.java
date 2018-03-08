@@ -34,8 +34,8 @@ public class WorkerProcessPoolTest {
   @Test
   public void testProvidesWorkersAccordingToCapacityThenBlocks() throws InterruptedException {
     int maxWorkers = 3;
-    final WorkerProcessPool pool = createPool(maxWorkers);
-    final Set<WorkerProcess> createdWorkers = concurrentSet();
+    WorkerProcessPool pool = createPool(maxWorkers);
+    Set<WorkerProcess> createdWorkers = concurrentSet();
 
     Thread[] tasks = new Thread[maxWorkers + 1];
     for (int i = 0; i < tasks.length; i++) {
@@ -56,8 +56,8 @@ public class WorkerProcessPoolTest {
   @Test
   public void testReusesWorkerProcesses() throws InterruptedException {
     int maxWorkers = 3;
-    final WorkerProcessPool pool = createPool(maxWorkers);
-    final ConcurrentHashMap<Runnable, WorkerProcess> usedWorkers = new ConcurrentHashMap<>();
+    WorkerProcessPool pool = createPool(maxWorkers);
+    ConcurrentHashMap<Runnable, WorkerProcess> usedWorkers = new ConcurrentHashMap<>();
 
     Thread[] threads = {
       new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
@@ -84,8 +84,8 @@ public class WorkerProcessPoolTest {
   @Test
   public void testUnlimitedPool() throws InterruptedException {
     int numThreads = 20;
-    final WorkerProcessPool pool = createPool(Integer.MAX_VALUE);
-    final Set<WorkerProcess> createdWorkers = concurrentSet();
+    WorkerProcessPool pool = createPool(Integer.MAX_VALUE);
+    Set<WorkerProcess> createdWorkers = concurrentSet();
 
     Thread[] threads = new Thread[numThreads];
     for (int i = 0; i < numThreads; i++) {
@@ -103,8 +103,8 @@ public class WorkerProcessPoolTest {
   @Test
   public void testReusesWorkerProcessesInUnlimitedPools() throws InterruptedException {
     int numThreads = 3;
-    final WorkerProcessPool pool = createPool(Integer.MAX_VALUE);
-    final ConcurrentHashMap<Runnable, WorkerProcess> usedWorkers = new ConcurrentHashMap<>();
+    WorkerProcessPool pool = createPool(Integer.MAX_VALUE);
+    ConcurrentHashMap<Runnable, WorkerProcess> usedWorkers = new ConcurrentHashMap<>();
 
     Thread[] threads = new Thread[numThreads];
     for (int i = 0; i < numThreads; i++) {
@@ -132,8 +132,8 @@ public class WorkerProcessPoolTest {
 
   @Test
   public void destroysProcessOnFailure() throws InterruptedException {
-    final WorkerProcessPool pool = createPool(1);
-    final ConcurrentHashMap<Runnable, WorkerProcess> usedWorkers = new ConcurrentHashMap<>();
+    WorkerProcessPool pool = createPool(1);
+    ConcurrentHashMap<Runnable, WorkerProcess> usedWorkers = new ConcurrentHashMap<>();
     Thread t = new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers));
     t.start();
     t.join();
@@ -153,15 +153,15 @@ public class WorkerProcessPoolTest {
 
   @Test
   public void returnAndDestroyDoNotInterrupt() throws InterruptedException, IOException {
-    final WorkerProcessPool pool = createPool(1);
-    final WorkerProcess process = pool.borrowWorkerProcess();
+    WorkerProcessPool pool = createPool(1);
+    WorkerProcess process = pool.borrowWorkerProcess();
     process.ensureLaunchAndHandshake();
 
     Threads.interruptCurrentThread();
     pool.returnWorkerProcess(process);
     assertThat(Thread.interrupted(), Matchers.is(true));
 
-    final WorkerProcess process2 = pool.borrowWorkerProcess();
+    WorkerProcess process2 = pool.borrowWorkerProcess();
     process2.ensureLaunchAndHandshake();
     assertThat(process2, Matchers.is(process));
 
@@ -172,13 +172,13 @@ public class WorkerProcessPoolTest {
 
   @Test
   public void cleansUpDeadProcesses() throws InterruptedException, IOException {
-    final WorkerProcessPool pool = createPool(1);
-    final WorkerProcess process = pool.borrowWorkerProcess();
+    WorkerProcessPool pool = createPool(1);
+    WorkerProcess process = pool.borrowWorkerProcess();
     process.ensureLaunchAndHandshake();
     pool.returnWorkerProcess(process);
     process.close();
 
-    final WorkerProcess process2 = pool.borrowWorkerProcess();
+    WorkerProcess process2 = pool.borrowWorkerProcess();
     process2.ensureLaunchAndHandshake();
     assertThat(process2, Matchers.not(process));
     pool.returnWorkerProcess(process2);

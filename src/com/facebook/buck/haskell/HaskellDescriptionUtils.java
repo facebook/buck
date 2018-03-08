@@ -96,13 +96,13 @@ public class HaskellDescriptionUtils {
    */
   private static HaskellCompileRule createCompileRule(
       BuildTarget target,
-      final ProjectFilesystem projectFilesystem,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
-      final BuildRuleResolver resolver,
+      BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
       ImmutableSet<BuildRule> deps,
       HaskellPlatform platform,
-      final Linker.LinkableDepType depType,
+      Linker.LinkableDepType depType,
       boolean hsProfile,
       Optional<String> main,
       Optional<HaskellPackageInfo> packageInfo,
@@ -111,11 +111,11 @@ public class HaskellDescriptionUtils {
 
     CxxPlatform cxxPlatform = platform.getCxxPlatform();
 
-    final Map<BuildTarget, ImmutableList<String>> depFlags = new TreeMap<>();
-    final Map<BuildTarget, ImmutableList<SourcePath>> depIncludes = new TreeMap<>();
-    final ImmutableSortedMap.Builder<String, HaskellPackage> exposedPackagesBuilder =
+    Map<BuildTarget, ImmutableList<String>> depFlags = new TreeMap<>();
+    Map<BuildTarget, ImmutableList<SourcePath>> depIncludes = new TreeMap<>();
+    ImmutableSortedMap.Builder<String, HaskellPackage> exposedPackagesBuilder =
         ImmutableSortedMap.naturalOrder();
-    final ImmutableSortedMap.Builder<String, HaskellPackage> packagesBuilder =
+    ImmutableSortedMap.Builder<String, HaskellPackage> packagesBuilder =
         ImmutableSortedMap.naturalOrder();
     new AbstractBreadthFirstTraversal<BuildRule>(deps) {
       private final ImmutableSet<BuildRule> empty = ImmutableSet.of();
@@ -406,10 +406,10 @@ public class HaskellDescriptionUtils {
   /** Give a rule that will result in a ghci session for the target */
   public static HaskellGhciRule requireGhciRule(
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       CellPathResolver cellPathResolver,
-      final BuildRuleResolver resolver,
+      BuildRuleResolver resolver,
       HaskellPlatform platform,
       CxxBuckConfig cxxBuckConfig,
       ImmutableSortedSet<BuildTarget> argDeps,

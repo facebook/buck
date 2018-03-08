@@ -109,8 +109,8 @@ public class JarGenrule extends Genrule implements BinaryBuildRule {
             RmStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(), getProjectFilesystem(), pathToOutput)))
-        .addAll(super.getBuildStepsWithoutRecordingOutput(context))
-        .add(new MoveStep(getProjectFilesystem(), super.pathToOutFile, pathToOutput))
+        .addAll(getBuildStepsWithoutRecordingOutput(context))
+        .add(new MoveStep(getProjectFilesystem(), pathToOutFile, pathToOutput))
         .build();
   }
 

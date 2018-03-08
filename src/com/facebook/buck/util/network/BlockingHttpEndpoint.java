@@ -76,7 +76,7 @@ public class BlockingHttpEndpoint implements HttpEndpoint {
   }
 
   @Override
-  public ListenableFuture<HttpResponse> post(final String content) {
+  public ListenableFuture<HttpResponse> post(String content) {
     return requestService.submit(
         () -> {
           try {
@@ -90,7 +90,7 @@ public class BlockingHttpEndpoint implements HttpEndpoint {
   }
 
   @VisibleForTesting
-  HttpResponse send(final HttpURLConnection connection, final String content) throws IOException {
+  HttpResponse send(HttpURLConnection connection, String content) throws IOException {
     try (DataOutputStream out = new DataOutputStream(connection.getOutputStream())) {
       out.writeBytes(content);
       out.flush();

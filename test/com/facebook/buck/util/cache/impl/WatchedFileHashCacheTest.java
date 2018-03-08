@@ -144,8 +144,7 @@ public class WatchedFileHashCacheTest {
   }
 
   @Test
-  public void directoryHashChangesWhenFileInsideDirectoryChanges()
-      throws InterruptedException, IOException {
+  public void directoryHashChangesWhenFileInsideDirectoryChanges() throws IOException {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     WatchedFileHashCache cache = new WatchedFileHashCache(filesystem, fileHashCacheMode);
     tmp.newFolder("foo", "bar");
@@ -232,7 +231,7 @@ public class WatchedFileHashCacheTest {
   }
 
   @Test
-  public void thatWillGetIsCorrect() throws IOException, InterruptedException {
+  public void thatWillGetIsCorrect() throws IOException {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     Path buckOut = filesystem.getBuckPaths().getBuckOut();
     filesystem.mkdirs(buckOut);

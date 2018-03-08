@@ -79,13 +79,13 @@ public class NumberFormatterTest {
   public void parseLongWithUSEnglishUsesThousandsComma() throws ParseException {
     Object parsed = new NumberFormatter(decimalFormatCreator()).parse(Locale.US, "123,456,789");
     assertThat(parsed, instanceOf(Long.class));
-    assertThat((Long) parsed, equalTo(123456789L));
+    assertThat(parsed, equalTo(123456789L));
   }
 
   @Test
   public void parseLongWithGermanUsesThousandsComma() throws ParseException {
     Object parsed = new NumberFormatter(decimalFormatCreator()).parse(Locale.GERMAN, "123.456.789");
     assertThat(parsed, instanceOf(Long.class));
-    assertThat((Long) parsed, equalTo(123456789L));
+    assertThat(parsed, equalTo(123456789L));
   }
 }

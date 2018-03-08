@@ -45,7 +45,7 @@ public class PatternsMatcher {
   }
 
   /** @return true if the given string matches some of the patterns or there are no patterns */
-  public boolean matches(final String string) {
+  public boolean matches(String string) {
     if (!hasPatterns) {
       return true;
     }
@@ -61,7 +61,7 @@ public class PatternsMatcher {
    * @return true if a substring of the given string matches some of the patterns or there are no
    *     patterns
    */
-  public boolean substringMatches(final String string) {
+  public boolean substringMatches(String string) {
     if (!hasPatterns()) {
       return true;
     }
@@ -79,7 +79,7 @@ public class PatternsMatcher {
   }
 
   /** @return a view of the given map where all non-matching keys are removed. */
-  public <V> Map<String, V> filterMatchingMapKeys(final Map<String, V> entries) {
+  public <V> Map<String, V> filterMatchingMapKeys(Map<String, V> entries) {
     if (!hasPatterns) {
       return entries;
     }

@@ -136,13 +136,13 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
   public void fatJarWithAlternateJavaBin() throws IOException, InterruptedException {
     setUpProjectWorkspaceForScenario("fat_jar");
     Path jar = workspace.buildAndReturnOutput("//:bin-alternate-java");
-    String javaHomeArg = "-Dbuck.fatjar.java.home=" + tmp.getRoot().toString();
+    String javaHomeArg = "-Dbuck.fatjar.java.home=" + tmp.getRoot();
     ProcessExecutor.Result result = workspace.runJar(jar, ImmutableList.of(javaHomeArg));
     assertEquals("Running java wrapper\nRunning inner jar", result.getStdout().get().trim());
   }
 
   @Test
-  public void jarWithMetaInfo() throws IOException, InterruptedException {
+  public void jarWithMetaInfo() throws IOException {
     setUpProjectWorkspaceForScenario("java_binary_with_meta_inf");
     Path jar = workspace.buildAndReturnOutput("//:bin-meta-inf");
     try (JarFile jarFile = new JarFile(jar.toFile())) {

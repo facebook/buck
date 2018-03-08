@@ -71,7 +71,7 @@ public class IjProject {
    * @throws IOException
    */
   public ImmutableSet<BuildTarget> write() throws IOException {
-    final ImmutableSet.Builder<BuildTarget> requiredBuildTargets = ImmutableSet.builder();
+    ImmutableSet.Builder<BuildTarget> requiredBuildTargets = ImmutableSet.builder();
     IjLibraryFactory libraryFactory =
         new DefaultIjLibraryFactory(
             new DefaultIjLibraryFactoryResolver(

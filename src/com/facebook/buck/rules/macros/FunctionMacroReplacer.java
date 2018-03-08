@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.model.macros.MacroMatchResult;
 import com.facebook.buck.model.macros.MacroReplacer;
 import com.google.common.collect.ImmutableList;
@@ -32,7 +31,7 @@ public class FunctionMacroReplacer<T> implements MacroReplacer<T> {
   }
 
   @Override
-  public T replace(MacroMatchResult input) throws MacroException {
+  public T replace(MacroMatchResult input) {
     return function.apply(input.getMacroInput());
   }
 }

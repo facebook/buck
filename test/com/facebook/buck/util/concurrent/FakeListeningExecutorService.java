@@ -51,7 +51,7 @@ public class FakeListeningExecutorService extends AbstractListeningExecutorServi
   }
 
   @Override
-  public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+  public boolean awaitTermination(long timeout, TimeUnit unit) {
     return false;
   }
 

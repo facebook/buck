@@ -194,14 +194,14 @@ public class AndroidPlatformTargetProducer {
     public AndroidPlatformTarget newInstance(
         AndroidBuildToolsLocation androidBuildToolsLocation,
         AndroidSdkLocation androidSdkLocation,
-        final String apiLevel,
+        String apiLevel,
         Optional<Path> aaptOverride,
         Optional<Path> aapt2Override) {
       // TODO(natthu): Use Paths instead of Strings everywhere in this file.
       Path androidSdkDir = androidSdkLocation.getSdkRootPath();
       File addonsParentDir = androidSdkDir.resolve("add-ons").toFile();
       String apiDirPrefix = "addon-google_apis-google-" + apiLevel;
-      final Pattern apiDirPattern = Pattern.compile(apiDirPrefix + API_DIR_SUFFIX);
+      Pattern apiDirPattern = Pattern.compile(apiDirPrefix + API_DIR_SUFFIX);
 
       if (addonsParentDir.isDirectory()) {
         String[] addonsApiDirs =
@@ -264,7 +264,7 @@ public class AndroidPlatformTargetProducer {
     public AndroidPlatformTarget newInstance(
         AndroidBuildToolsLocation androidBuildToolsLocation,
         AndroidSdkLocation androidSdkLocation,
-        final String apiLevel,
+        String apiLevel,
         Optional<Path> aaptOverride,
         Optional<Path> aapt2Override) {
       return createFromDefaultDirectoryStructure(

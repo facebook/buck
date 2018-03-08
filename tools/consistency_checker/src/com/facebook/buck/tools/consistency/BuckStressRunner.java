@@ -62,7 +62,7 @@ public class BuckStressRunner {
       throws StressorException {
     ExecutorService service = Executors.newFixedThreadPool(parallelism);
     ExecutorCompletionService<Integer> completionService = new ExecutorCompletionService<>(service);
-    final List<Path> filePaths =
+    List<Path> filePaths =
         IntStream.range(0, runners.size())
             .mapToObj(i -> outputDirectory.resolve(Integer.toString(i) + ".log"))
             .collect(Collectors.toList());

@@ -59,8 +59,7 @@ public class ShellStepTest {
   private static final int EXIT_SUCCESS = 0;
 
   private static ExecutionContext createContext(
-      ImmutableMap<ProcessExecutorParams, FakeProcess> processes, final Console console)
-      throws IOException {
+      ImmutableMap<ProcessExecutorParams, FakeProcess> processes, Console console) {
     ExecutionContext context =
         TestExecutionContext.newBuilder()
             .setConsole(console)
@@ -103,12 +102,12 @@ public class ShellStepTest {
   }
 
   private static ShellStep createCommand(
-      final ImmutableMap<String, String> env,
-      final ImmutableList<String> cmd,
+      ImmutableMap<String, String> env,
+      ImmutableList<String> cmd,
       Path workingDirectory,
-      final boolean shouldPrintStdErr,
-      final boolean shouldPrintStdOut,
-      final Optional<String> stdin) {
+      boolean shouldPrintStdErr,
+      boolean shouldPrintStdOut,
+      Optional<String> stdin) {
     workingDirectory =
         workingDirectory == null ? Paths.get(".").toAbsolutePath().normalize() : workingDirectory;
 
@@ -286,7 +285,7 @@ public class ShellStepTest {
 
   @Test
   public void testStdinGetsToProcessWhenPresent() throws Exception {
-    final Optional<String> stdin = Optional.of("hello world!");
+    Optional<String> stdin = Optional.of("hello world!");
     ShellStep command =
         createCommand(
             ImmutableMap.of(),
@@ -305,7 +304,7 @@ public class ShellStepTest {
 
   @Test
   public void testStdinDoesNotGetToProcessWhenAbsent() throws Exception {
-    final Optional<String> stdin = Optional.empty();
+    Optional<String> stdin = Optional.empty();
     ShellStep command =
         createCommand(
             ImmutableMap.of(),

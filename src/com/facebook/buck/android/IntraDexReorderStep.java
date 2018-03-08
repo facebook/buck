@@ -71,7 +71,7 @@ public class IntraDexReorderStep implements Step {
       BuildTarget buildTarget,
       Path inputPrimaryDexPath,
       Path outputPrimaryDexPath,
-      final Optional<Supplier<Multimap<Path, Path>>> secondaryDexMap,
+      Optional<Supplier<Multimap<Path, Path>>> secondaryDexMap,
       String inputSubDir,
       String outputSubDir) {
     this.target = target;
@@ -119,7 +119,7 @@ public class IntraDexReorderStep implements Step {
       Path inputPath, boolean isPrimaryDex, ImmutableList.Builder<Step> steps) {
 
     if (!isPrimaryDex) {
-      String tmpname = "dex-tmp-" + inputPath.getFileName().toString() + "-%s";
+      String tmpname = "dex-tmp-" + inputPath.getFileName() + "-%s";
       Path temp = BuildTargets.getScratchPath(filesystem, buildTarget, tmpname);
       // Create tmp directory if necessary
       steps.addAll(

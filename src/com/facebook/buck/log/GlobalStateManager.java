@@ -83,12 +83,12 @@ public class GlobalStateManager {
   }
 
   public LoggerIsMappedToThreadScope setupLoggers(
-      final InvocationInfo info,
+      InvocationInfo info,
       OutputStream consoleHandlerStream,
-      final OutputStream consoleHandlerOriginalStream,
-      final Verbosity consoleHandlerVerbosity) {
-    final long threadId = Thread.currentThread().getId();
-    final String commandId = info.getCommandId();
+      OutputStream consoleHandlerOriginalStream,
+      Verbosity consoleHandlerVerbosity) {
+    long threadId = Thread.currentThread().getId();
+    String commandId = info.getCommandId();
 
     ReferenceCountedWriter defaultWriter = createReferenceCountedWriter(info.getLogFilePath());
     ReferenceCountedWriter newWriter = defaultWriter.newReference();
@@ -113,8 +113,7 @@ public class GlobalStateManager {
     return new LoggerIsMappedToThreadScope() {
       @Override
       public Closeable setWriter(ConsoleHandlerState.Writer writer) {
-        final ConsoleHandlerState.Writer previousWriter =
-            commandIdToConsoleHandlerWriter.get(commandId);
+        ConsoleHandlerState.Writer previousWriter = commandIdToConsoleHandlerWriter.get(commandId);
         commandIdToConsoleHandlerWriter.put(commandId, writer);
         return () -> commandIdToConsoleHandlerWriter.put(commandId, previousWriter);
       }
@@ -153,7 +152,7 @@ public class GlobalStateManager {
     };
   }
 
-  private void createUserFriendlySymLink(final InvocationInfo info) {
+  private void createUserFriendlySymLink(InvocationInfo info) {
     try {
       String symlinkName = "last_" + info.getSubCommand();
       Path symlinkPath = info.getBuckLogDir().resolve(symlinkName);
@@ -282,7 +281,7 @@ public class GlobalStateManager {
    * @exception IOException if an I/O error occurs.
    */
   @Override
-  protected void finalize() throws IOException {
+  protected void finalize() {
     // Close off any log file writers that may still be hanging about.
     List<String> allKeys = Lists.newArrayList(commandIdToLogFileHandlerWriter.keySet());
     for (String commandId : allKeys) {

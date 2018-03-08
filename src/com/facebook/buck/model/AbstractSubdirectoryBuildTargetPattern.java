@@ -47,8 +47,8 @@ abstract class AbstractSubdirectoryBuildTargetPattern implements BuildTargetPatt
       return true;
     }
 
-    // If the getPathWithinCell() is empty, we match the top level directory in the cell. _Everything_ is
-    // a subdirectory of that.
+    // If the getPathWithinCell() is empty, we match the top level directory in the cell.
+    // _Everything_ is a subdirectory of that.
     return "".equals(getPathWithinCell().toString());
   }
 
@@ -59,6 +59,6 @@ abstract class AbstractSubdirectoryBuildTargetPattern implements BuildTargetPatt
 
   @Override
   public String toString() {
-    return getCellPath().getFileName().toString() + "//" + getPathWithinCell().toString() + "/...";
+    return getCellPath().getFileName() + "//" + getPathWithinCell() + "/...";
   }
 }

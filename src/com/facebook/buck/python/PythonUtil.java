@@ -179,21 +179,21 @@ public class PythonUtil {
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
       Iterable<BuildRule> deps,
-      final PythonPackageComponents packageComponents,
-      final PythonPlatform pythonPlatform,
+      PythonPackageComponents packageComponents,
+      PythonPlatform pythonPlatform,
       CxxBuckConfig cxxBuckConfig,
-      final CxxPlatform cxxPlatform,
+      CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags,
-      final NativeLinkStrategy nativeLinkStrategy,
-      final ImmutableSet<BuildTarget> preloadDeps) {
+      NativeLinkStrategy nativeLinkStrategy,
+      ImmutableSet<BuildTarget> preloadDeps) {
 
-    final PythonPackageComponents.Builder allComponents =
+    PythonPackageComponents.Builder allComponents =
         new PythonPackageComponents.Builder(buildTarget);
 
-    final Map<BuildTarget, CxxPythonExtension> extensions = new LinkedHashMap<>();
-    final Map<BuildTarget, NativeLinkable> nativeLinkableRoots = new LinkedHashMap<>();
+    Map<BuildTarget, CxxPythonExtension> extensions = new LinkedHashMap<>();
+    Map<BuildTarget, NativeLinkable> nativeLinkableRoots = new LinkedHashMap<>();
 
-    final OmnibusRoots.Builder omnibusRoots = OmnibusRoots.builder(cxxPlatform, preloadDeps);
+    OmnibusRoots.Builder omnibusRoots = OmnibusRoots.builder(cxxPlatform, preloadDeps);
 
     // Add the top-level components.
     allComponents.addComponent(packageComponents, buildTarget);

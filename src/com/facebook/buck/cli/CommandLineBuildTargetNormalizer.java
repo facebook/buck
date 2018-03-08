@@ -72,7 +72,7 @@ class CommandLineBuildTargetNormalizer {
 
   private final Function<String, ImmutableSet<String>> normalizer;
 
-  CommandLineBuildTargetNormalizer(final BuckConfig buckConfig) {
+  CommandLineBuildTargetNormalizer(BuckConfig buckConfig) {
     this.normalizer =
         arg -> {
           ImmutableSet<String> aliasValues = buckConfig.getBuildTargetForAliasAsString(arg);
@@ -99,7 +99,7 @@ class CommandLineBuildTargetNormalizer {
   }
 
   @VisibleForTesting
-  static String normalizeBuildTargetIdentifier(final String buildTargetFromCommandLine) {
+  static String normalizeBuildTargetIdentifier(String buildTargetFromCommandLine) {
 
     // Build rules in the root are weird, but they do happen. Special-case them.
     if (buildTargetFromCommandLine.startsWith("//:")) {

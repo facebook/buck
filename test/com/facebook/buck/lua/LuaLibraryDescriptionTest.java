@@ -24,11 +24,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -42,15 +41,13 @@ import org.junit.Test;
 public class LuaLibraryDescriptionTest {
 
   @Test
-  public void unnamedSource() throws Exception {
+  public void unnamedSource() {
     LuaLibraryBuilder builder =
         new LuaLibraryBuilder(BuildTargetFactory.newInstance("//some:rule"))
             .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("some/foo.lua")));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     LuaLibrary library = builder.build(resolver, filesystem, targetGraph);
     assertThat(
         library.getLuaPackageComponents().getModules(),
@@ -60,15 +57,13 @@ public class LuaLibraryDescriptionTest {
   }
 
   @Test
-  public void namedSource() throws Exception {
+  public void namedSource() {
     LuaLibraryBuilder builder =
         new LuaLibraryBuilder(BuildTargetFactory.newInstance("//some:rule"))
             .setSrcs(ImmutableSortedMap.of("bar.lua", FakeSourcePath.of("foo.lua")));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     LuaLibrary library = builder.build(resolver, filesystem, targetGraph);
     assertThat(
         library.getLuaPackageComponents().getModules(),
@@ -78,15 +73,13 @@ public class LuaLibraryDescriptionTest {
   }
 
   @Test
-  public void baseModuleSource() throws Exception {
+  public void baseModuleSource() {
     LuaLibraryBuilder builder =
         new LuaLibraryBuilder(BuildTargetFactory.newInstance("//some:rule"))
             .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("some/foo.lua")))
             .setBaseModule("blah");
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     LuaLibrary library = builder.build(resolver, filesystem, targetGraph);
     assertThat(
@@ -97,7 +90,7 @@ public class LuaLibraryDescriptionTest {
   }
 
   @Test
-  public void platformDeps() throws Exception {
+  public void platformDeps() {
     LuaLibraryBuilder libraryABuilder =
         new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:libA"));
     LuaLibraryBuilder libraryBBuilder =
@@ -118,9 +111,7 @@ public class LuaLibraryDescriptionTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             libraryABuilder.build(), libraryBBuilder.build(), ruleBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     LuaLibrary rule = (LuaLibrary) resolver.requireRule(ruleBuilder.getTarget());
     assertThat(
         RichStream.from(rule.getLuaPackageDeps(CxxPlatformUtils.DEFAULT_PLATFORM))

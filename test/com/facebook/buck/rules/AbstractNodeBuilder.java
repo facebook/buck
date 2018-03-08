@@ -27,6 +27,8 @@ import com.facebook.buck.rules.query.QueryCache;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.rules.visibility.VisibilityPatternParser;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -49,6 +51,7 @@ public abstract class AbstractNodeBuilder<
 
   protected final TDescription description;
   protected final ProjectFilesystem filesystem;
+  protected final ToolchainProvider toolchainProvider;
   protected final BuildTarget target;
   protected final TArgBuilder argBuilder;
   protected final CellPathResolver cellRoots;
@@ -56,12 +59,17 @@ public abstract class AbstractNodeBuilder<
   private Optional<ImmutableMap<BuildTarget, Version>> selectedVersions = Optional.empty();
 
   protected AbstractNodeBuilder(TDescription description, BuildTarget target) {
-    this(description, target, new FakeProjectFilesystem(), null);
+    this(
+        description,
+        target,
+        new FakeProjectFilesystem(),
+        new ToolchainProviderBuilder().build(),
+        null);
   }
 
   protected AbstractNodeBuilder(
       TDescription description, BuildTarget target, ProjectFilesystem projectFilesystem) {
-    this(description, target, projectFilesystem, null);
+    this(description, target, projectFilesystem, new ToolchainProviderBuilder().build(), null);
   }
 
   protected AbstractNodeBuilder(
@@ -69,8 +77,18 @@ public abstract class AbstractNodeBuilder<
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
       HashCode hashCode) {
+    this(description, target, projectFilesystem, new ToolchainProviderBuilder().build(), hashCode);
+  }
+
+  protected AbstractNodeBuilder(
+      TDescription description,
+      BuildTarget target,
+      ProjectFilesystem projectFilesystem,
+      ToolchainProvider toolchainProvider,
+      HashCode hashCode) {
     this.description = description;
     this.filesystem = projectFilesystem;
+    this.toolchainProvider = toolchainProvider;
     this.target = target;
     this.argBuilder = makeArgBuilder(description);
     this.rawHashCode = hashCode;
@@ -123,7 +141,8 @@ public abstract class AbstractNodeBuilder<
     TBuildRule rule =
         (TBuildRule)
             description.createBuildRule(
-                ImmutableBuildRuleCreationContext.of(targetGraph, resolver, filesystem, cellRoots),
+                ImmutableBuildRuleCreationContext.of(
+                    targetGraph, resolver, filesystem, cellRoots, toolchainProvider),
                 target,
                 params,
                 builtArg);

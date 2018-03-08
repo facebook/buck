@@ -69,7 +69,7 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void usesFirstCacheAbsolutePath() throws InterruptedException, IOException {
+  public void usesFirstCacheAbsolutePath() throws IOException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     Path path = Paths.get("world.txt");
@@ -84,7 +84,7 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void usesFirstCache() throws InterruptedException, IOException {
+  public void usesFirstCache() throws IOException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     Path path = Paths.get("world.txt");
@@ -134,7 +134,7 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void usesSecondCacheAbsolutePath() throws InterruptedException, IOException {
+  public void usesSecondCacheAbsolutePath() throws IOException {
     Path path = Paths.get("world.txt");
     Path fullPath = tmp2.getRoot().resolve(path);
 
@@ -155,7 +155,7 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void usesSecondCache() throws InterruptedException, IOException {
+  public void usesSecondCache() throws IOException {
     ProjectFileHashCache innerCache =
         DefaultFileHashCache.createDefaultFileHashCache(
             TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()), fileHashCacheMode);
@@ -174,7 +174,7 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void usesSecondCacheForArchivePathAbsolutePath() throws InterruptedException, IOException {
+  public void usesSecondCacheForArchivePathAbsolutePath() throws IOException {
     Path path = Paths.get("world.jar");
     Path fullPath = tmp2.getRoot().resolve(path);
 
@@ -199,7 +199,7 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void usesSecondCacheForArchivePath() throws InterruptedException, IOException {
+  public void usesSecondCacheForArchivePath() throws IOException {
     ProjectFileHashCache innerCache =
         DefaultFileHashCache.createDefaultFileHashCache(
             TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()), fileHashCacheMode);
@@ -242,8 +242,7 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void skipsFirstCacheForArchiveMemberPathAbsolutePath()
-      throws InterruptedException, IOException {
+  public void skipsFirstCacheForArchiveMemberPathAbsolutePath() throws IOException {
     Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.PARALLEL_COMPARISON);
     Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.LIMITED_PREFIX_TREE_PARALLEL);
 
@@ -260,7 +259,7 @@ public class StackedFileHashCacheTest {
   }
 
   @Test
-  public void skipsFirstCacheForArchiveMemberPath() throws InterruptedException, IOException {
+  public void skipsFirstCacheForArchiveMemberPath() throws IOException {
     Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.PARALLEL_COMPARISON);
     Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.LIMITED_PREFIX_TREE_PARALLEL);
 

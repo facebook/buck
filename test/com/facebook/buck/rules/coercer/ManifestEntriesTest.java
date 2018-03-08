@@ -30,7 +30,7 @@ import org.junit.Test;
 public class ManifestEntriesTest {
 
   @Test
-  public void hasAnyRespectsAllParams() throws Exception {
+  public void hasAnyRespectsAllParams() {
     assertFalse(ManifestEntries.builder().build().hasAny());
     assertTrue(ManifestEntries.builder().setMinSdkVersion(1).build().hasAny());
     assertTrue(ManifestEntries.builder().setTargetSdkVersion(1).build().hasAny());
@@ -45,7 +45,7 @@ public class ManifestEntriesTest {
   }
 
   @Test
-  public void shouldUpdateRuleKey() throws Exception {
+  public void shouldUpdateRuleKey() {
 
     RuleKeyObjectSink ruleKeyBuilder = createMock(RuleKeyObjectSink.class);
 

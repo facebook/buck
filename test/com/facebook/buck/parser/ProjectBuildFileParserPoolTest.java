@@ -61,14 +61,14 @@ public class ProjectBuildFileParserPoolTest {
 
   private void assertHowManyParserInstancesAreCreated(
       ListeningExecutorService executorService,
-      final int maxParsers,
+      int maxParsers,
       int numRequests,
       int expectedCreateCount)
       throws Exception {
-    final AtomicInteger createCount = new AtomicInteger(0);
+    AtomicInteger createCount = new AtomicInteger(0);
     Cell cell = new TestCellBuilder().build();
 
-    final CountDownLatch createParserLatch = new CountDownLatch(expectedCreateCount);
+    CountDownLatch createParserLatch = new CountDownLatch(expectedCreateCount);
     try (ProjectBuildFileParserPool parserPool =
         createParserPool(
             maxParsers,
@@ -118,21 +118,20 @@ public class ProjectBuildFileParserPoolTest {
 
   @Test
   public void closesCreatedParsers() throws Exception {
-    final int parsersCount = 4;
-    final AtomicInteger parserCount = new AtomicInteger(0);
+    int parsersCount = 4;
+    AtomicInteger parserCount = new AtomicInteger(0);
     Cell cell = new TestCellBuilder().build();
     ListeningExecutorService executorService =
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(parsersCount));
 
-    final CountDownLatch createParserLatch = new CountDownLatch(parsersCount);
+    CountDownLatch createParserLatch = new CountDownLatch(parsersCount);
     try (ProjectBuildFileParserPool parserPool =
         createParserPool(
             parsersCount,
             input -> {
               parserCount.incrementAndGet();
 
-              final ProjectBuildFileParser parser =
-                  EasyMock.createMock(ProjectBuildFileParser.class);
+              ProjectBuildFileParser parser = EasyMock.createMock(ProjectBuildFileParser.class);
               try {
                 EasyMock.expect(
                         parser.getAllRulesAndMetaRules(
@@ -150,7 +149,7 @@ public class ProjectBuildFileParserPoolTest {
                     .andAnswer(
                         new IAnswer<Void>() {
                           @Override
-                          public Void answer() throws Throwable {
+                          public Void answer() {
                             parserCount.decrementAndGet();
                             return null;
                           }
@@ -181,7 +180,7 @@ public class ProjectBuildFileParserPoolTest {
 
   @Test
   public void fuzzForConcurrentAccess() throws Exception {
-    final int parsersCount = 3;
+    int parsersCount = 3;
     Cell cell = new TestCellBuilder().build();
     ListeningExecutorService executorService =
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(4));
@@ -190,7 +189,7 @@ public class ProjectBuildFileParserPoolTest {
         createParserPool(
             parsersCount,
             input -> {
-              final AtomicInteger sleepCallCount = new AtomicInteger(0);
+              AtomicInteger sleepCallCount = new AtomicInteger(0);
               return createMockParser(
                   () -> {
                     int numCalls = sleepCallCount.incrementAndGet();
@@ -217,8 +216,8 @@ public class ProjectBuildFileParserPoolTest {
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
 
     int numberOfJobs = 5;
-    final CountDownLatch waitTillAllWorkIsDone = new CountDownLatch(numberOfJobs);
-    final CountDownLatch waitTillCanceled = new CountDownLatch(1);
+    CountDownLatch waitTillAllWorkIsDone = new CountDownLatch(numberOfJobs);
+    CountDownLatch waitTillCanceled = new CountDownLatch(1);
     try (ProjectBuildFileParserPool parserPool =
         createParserPool(
             /* maxParsers */ 1,
@@ -250,9 +249,9 @@ public class ProjectBuildFileParserPoolTest {
     ListeningExecutorService executorService =
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
 
-    final CountDownLatch waitTillClosed = new CountDownLatch(1);
-    final CountDownLatch firstJobRunning = new CountDownLatch(1);
-    final AtomicInteger postCloseWork = new AtomicInteger(0);
+    CountDownLatch waitTillClosed = new CountDownLatch(1);
+    CountDownLatch firstJobRunning = new CountDownLatch(1);
+    AtomicInteger postCloseWork = new AtomicInteger(0);
     ImmutableSet<ListenableFuture<?>> futures;
 
     try (ProjectBuildFileParserPool parserPool =
@@ -302,8 +301,8 @@ public class ProjectBuildFileParserPoolTest {
     ListeningExecutorService executorService =
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
 
-    final String exceptionMessage = "haha!";
-    final AtomicBoolean throwWhileParsing = new AtomicBoolean(true);
+    String exceptionMessage = "haha!";
+    AtomicBoolean throwWhileParsing = new AtomicBoolean(true);
     try (ProjectBuildFileParserPool parserPool =
         createParserPool(
             /* maxParsers */ 2,
@@ -367,9 +366,9 @@ public class ProjectBuildFileParserPoolTest {
   }
 
   private Function<Cell, ProjectBuildFileParser> createMockParserFactory(
-      final IAnswer<ImmutableList<Map<String, Object>>> parseFn) {
+      IAnswer<ImmutableList<Map<String, Object>>> parseFn) {
     return input -> {
-      final AssertScopeExclusiveAccess exclusiveAccess = new AssertScopeExclusiveAccess();
+      AssertScopeExclusiveAccess exclusiveAccess = new AssertScopeExclusiveAccess();
       return createMockParser(
           () -> {
             try (AssertScopeExclusiveAccess.Scope scope = exclusiveAccess.scope()) {

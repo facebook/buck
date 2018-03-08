@@ -50,8 +50,8 @@ public class FilterResourcesStepTest {
   @Test
   public void testFilterDrawables() throws IOException, InterruptedException {
     final String first = "/first-path/res";
-    final Path baseDestination = Paths.get("/dest");
-    final ImmutableBiMap<Path, Path> inResDirToOutResDirMap =
+    Path baseDestination = Paths.get("/dest");
+    ImmutableBiMap<Path, Path> inResDirToOutResDirMap =
         ImmutableBiMap.of(
             Paths.get(first), baseDestination.resolve("1"),
             Paths.get("/second-path/res"), baseDestination.resolve("2"),
@@ -89,8 +89,7 @@ public class FilterResourcesStepTest {
 
               @Override
               public void scale(
-                  double factor, Path source, Path destination, ExecutionContext context)
-                  throws IOException, InterruptedException {}
+                  double factor, Path source, Path destination, ExecutionContext context) {}
             });
 
     // We'll use this to verify the source->destination mappings created by the command.
@@ -206,11 +205,11 @@ public class FilterResourcesStepTest {
 
   @Test
   public void nonDrawableResourcesFiltered() throws IOException, InterruptedException {
-    final ResourceFilters.Density targetDensity = ResourceFilters.Density.MDPI;
-    final ResourceFilters.Density excludedDensity = ResourceFilters.Density.LDPI;
+    ResourceFilters.Density targetDensity = ResourceFilters.Density.MDPI;
+    ResourceFilters.Density excludedDensity = ResourceFilters.Density.LDPI;
     final String file = "somefile";
-    final Path resDir = Paths.get("res");
-    final Path resOutDir = Paths.get("res-out");
+    Path resDir = Paths.get("res");
+    Path resOutDir = Paths.get("res-out");
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.mkdirs(resDir);
@@ -260,11 +259,11 @@ public class FilterResourcesStepTest {
 
   @Test
   public void xmlDrawableResourcesFiltered() throws IOException, InterruptedException {
-    final ResourceFilters.Density targetDensity = ResourceFilters.Density.MDPI;
-    final ResourceFilters.Density excludedDensity = ResourceFilters.Density.LDPI;
+    ResourceFilters.Density targetDensity = ResourceFilters.Density.MDPI;
+    ResourceFilters.Density excludedDensity = ResourceFilters.Density.LDPI;
     final String file = "somefile.xml";
-    final Path resDir = Paths.get("res");
-    final Path resOutDir = Paths.get("res-out");
+    Path resDir = Paths.get("res");
+    Path resOutDir = Paths.get("res-out");
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.mkdirs(resDir);
@@ -302,11 +301,11 @@ public class FilterResourcesStepTest {
   @Test
   public void fallsBackToDefaultWhenAllTargetsNotPresent()
       throws IOException, InterruptedException {
-    final ResourceFilters.Density targetDensity = ResourceFilters.Density.MDPI;
-    final ResourceFilters.Density providedDensity = ResourceFilters.Density.TVDPI;
+    ResourceFilters.Density targetDensity = ResourceFilters.Density.MDPI;
+    ResourceFilters.Density providedDensity = ResourceFilters.Density.TVDPI;
     final String file = "somefile";
-    final Path resDir = Paths.get("res/foo/bar");
-    final Path resOutDir = Paths.get("res-out");
+    Path resDir = Paths.get("res/foo/bar");
+    Path resOutDir = Paths.get("res-out");
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.mkdirs(resDir);
@@ -358,11 +357,11 @@ public class FilterResourcesStepTest {
 
   @Test
   public void fallsBackToDefaultWhenOneTargetNotPresent() throws IOException, InterruptedException {
-    final ResourceFilters.Density targetDensityIncluded = ResourceFilters.Density.MDPI;
-    final ResourceFilters.Density targetDensityExcluded = ResourceFilters.Density.XHDPI;
+    ResourceFilters.Density targetDensityIncluded = ResourceFilters.Density.MDPI;
+    ResourceFilters.Density targetDensityExcluded = ResourceFilters.Density.XHDPI;
     final String file = "somefile";
-    final Path resDir = Paths.get("res/foo/bar");
-    final Path resOutDir = Paths.get("res-out");
+    Path resDir = Paths.get("res/foo/bar");
+    Path resOutDir = Paths.get("res-out");
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.mkdirs(resDir);
@@ -414,10 +413,10 @@ public class FilterResourcesStepTest {
 
   @Test
   public void valuesAlwaysIncludesFallback() throws IOException, InterruptedException {
-    final ResourceFilters.Density targetDensity = ResourceFilters.Density.MDPI;
+    ResourceFilters.Density targetDensity = ResourceFilters.Density.MDPI;
     final String file = "somefile.xml";
-    final Path resDir = Paths.get("res/foo/bar");
-    final Path resOutDir = Paths.get("res-out");
+    Path resDir = Paths.get("res/foo/bar");
+    Path resOutDir = Paths.get("res-out");
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.mkdirs(resDir);
@@ -466,7 +465,7 @@ public class FilterResourcesStepTest {
       ImmutableSet<Path> whitelistedStringDirs,
       ImmutableSet<String> locales,
       Optional<String> localizedStringFileName)
-      throws IOException, InterruptedException {
+      throws IOException {
     FilterResourcesSteps step =
         new FilterResourcesSteps(
             null,

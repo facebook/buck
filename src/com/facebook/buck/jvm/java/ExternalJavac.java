@@ -61,7 +61,7 @@ public class ExternalJavac implements Javac {
   private final Either<Path, BuildTargetSourcePath> actualPath;
   private final String shortName;
 
-  public ExternalJavac(final Either<Path, SourcePath> pathToJavac) {
+  public ExternalJavac(Either<Path, SourcePath> pathToJavac) {
     // TODO(cjhopman): This is weird. It shouldn't be taking in a Path, it should get that as a
     // PathSourcePath instead.
     if (pathToJavac.isRight() && pathToJavac.getRight() instanceof BuildTargetSourcePath) {
@@ -69,7 +69,7 @@ public class ExternalJavac implements Javac {
       this.shortName = buildTargetPath.getTarget().toString();
       this.actualPath = Either.ofRight(buildTargetPath);
       this.javac =
-          MoreSuppliers.<Tool>memoize(
+          MoreSuppliers.memoize(
               () ->
                   new Tool() {
                     @AddToRuleKey
@@ -113,7 +113,7 @@ public class ExternalJavac implements Javac {
                 }
                 Optional<String> stderr = result.getStderr();
                 String output = stderr.orElse("").trim();
-                final String version;
+                String version;
                 if (Strings.isNullOrEmpty(output)) {
                   version = actualPath.toString();
                 } else {
@@ -188,13 +188,13 @@ public class ExternalJavac implements Javac {
 
     return new Invocation() {
       @Override
-      public int buildSourceOnlyAbiJar() throws InterruptedException {
+      public int buildSourceOnlyAbiJar() {
         throw new UnsupportedOperationException(
             "Cannot build source-only ABI jar with external javac.");
       }
 
       @Override
-      public int buildSourceAbiJar() throws InterruptedException {
+      public int buildSourceAbiJar() {
         throw new UnsupportedOperationException("Cannot build source ABI jar with external javac.");
       }
 

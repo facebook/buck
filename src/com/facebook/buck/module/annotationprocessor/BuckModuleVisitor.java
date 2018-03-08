@@ -165,7 +165,7 @@ class BuckModuleVisitor extends SimpleElementVisitor6<Void, TypeElement> {
     }
 
     @SuppressWarnings("unchecked")
-    final List<AnnotationValue> parameters = (List<AnnotationValue>) parameter;
+    List<AnnotationValue> parameters = (List<AnnotationValue>) parameter;
 
     Types types = processingEnv.getTypeUtils();
     List<TypeElement> typeElements = new ArrayList<>();

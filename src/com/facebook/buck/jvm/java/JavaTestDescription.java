@@ -132,6 +132,7 @@ public class JavaTestDescription
         DefaultJavaLibrary.rulesBuilder(
                 buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR),
                 projectFilesystem,
+                context.getToolchainProvider(),
                 params,
                 resolver,
                 cellRoots,
@@ -139,6 +140,7 @@ public class JavaTestDescription
                 javaBuckConfig,
                 args)
             .setJavacOptions(javacOptions)
+            .setToolchainProvider(context.getToolchainProvider())
             .build();
 
     if (HasJavaAbi.isAbiTarget(buildTarget)) {
@@ -238,7 +240,7 @@ public class JavaTestDescription
         ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
         Optional<Boolean> useCxxLibraries,
-        final ImmutableSet<BuildTarget> cxxLibraryWhitelist,
+        ImmutableSet<BuildTarget> cxxLibraryWhitelist,
         BuildRuleResolver resolver,
         SourcePathRuleFinder ruleFinder,
         CxxPlatform cxxPlatform) {

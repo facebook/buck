@@ -42,8 +42,8 @@ public class XzStepTest {
   @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
   @Test
-  public void testXzStepDefaultDestinationFile() throws InterruptedException {
-    final Path sourceFile = Paths.get("/path/to/source.file");
+  public void testXzStepDefaultDestinationFile() {
+    Path sourceFile = Paths.get("/path/to/source.file");
     XzStep step =
         new XzStep(
             TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath()), sourceFile);
@@ -52,9 +52,9 @@ public class XzStepTest {
 
   @Test
   public void testXzStep() throws InterruptedException, IOException {
-    final Path sourceFile =
+    Path sourceFile =
         TestDataHelper.getTestDataScenario(this, "xz_with_rm_and_check").resolve("xzstep.data");
-    final File destinationFile = tmp.newFile("xzstep.data.xz");
+    File destinationFile = tmp.newFile("xzstep.data.xz");
 
     XzStep step =
         new XzStep(

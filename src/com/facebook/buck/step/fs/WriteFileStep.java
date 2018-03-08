@@ -16,7 +16,7 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -58,15 +58,12 @@ public class WriteFileStep implements Step {
   }
 
   public WriteFileStep(
-      ProjectFilesystem filesystem,
-      final Supplier<String> content,
-      Path outputPath,
-      boolean executable) {
+      ProjectFilesystem filesystem, Supplier<String> content, Path outputPath, boolean executable) {
     this(
         filesystem,
         new ByteSource() {
           @Override
-          public InputStream openStream() throws IOException {
+          public InputStream openStream() {
             // echo by default writes a trailing new line and so should we.
             return new ByteArrayInputStream((content.get() + "\n").getBytes(Charsets.UTF_8));
           }
@@ -82,7 +79,7 @@ public class WriteFileStep implements Step {
       filesystem.copyToPath(sourceStream, outputPath, StandardCopyOption.REPLACE_EXISTING);
       if (executable) {
         Path resolvedPath = filesystem.resolve(outputPath);
-        MoreFiles.makeExecutable(resolvedPath);
+        MostFiles.makeExecutable(resolvedPath);
       }
       return StepExecutionResults.SUCCESS;
     }

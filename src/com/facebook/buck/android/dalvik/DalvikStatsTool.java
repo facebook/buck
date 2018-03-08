@@ -152,7 +152,7 @@ public class DalvikStatsTool {
   }
 
   @Nullable
-  private static String getBoxingType(final Type type) {
+  private static String getBoxingType(Type type) {
     switch (type.getSort()) {
       case Type.BOOLEAN:
         return "java/lang/Boolean";

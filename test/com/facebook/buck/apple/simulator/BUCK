@@ -48,7 +48,6 @@ java_test(
         "//src/com/facebook/buck/jvm/scala:scala",
         "//src/com/facebook/buck/log:log",
         "//src/com/facebook/buck/maven:util",
-        "//src/com/facebook/buck/message_ipc:message_ipc",
         "//src/com/facebook/buck/model:build_id",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/parser:config",

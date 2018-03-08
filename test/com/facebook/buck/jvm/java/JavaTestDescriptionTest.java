@@ -23,10 +23,9 @@ import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import java.nio.file.Paths;
 import java.util.SortedSet;
@@ -44,7 +43,7 @@ public class JavaTestDescriptionTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void rulesExportedFromDepsBecomeFirstOrderDeps() throws Exception {
+  public void rulesExportedFromDepsBecomeFirstOrderDeps() {
     TargetNode<?, ?> exportedNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
@@ -64,9 +63,7 @@ public class JavaTestDescriptionTest extends AbiCompilationModeTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(exportedNode, exportingNode, javaTestNode);
 
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
 
     JavaTest javaTest = (JavaTest) resolver.requireRule(javaTestNode.getBuildTarget());
     BuildRule exportedRule = resolver.requireRule(exportedNode.getBuildTarget());
@@ -81,7 +78,7 @@ public class JavaTestDescriptionTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() throws Exception {
+  public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() {
     TargetNode<?, ?> exportedNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
@@ -101,9 +98,7 @@ public class JavaTestDescriptionTest extends AbiCompilationModeTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(exportedNode, exportingNode, javaTestNode);
 
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
 
     JavaTest javaTest = (JavaTest) resolver.requireRule(javaTestNode.getBuildTarget());
     BuildRule exportedRule = resolver.requireRule(exportedNode.getBuildTarget());

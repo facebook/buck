@@ -105,7 +105,7 @@ public class JsBundleDescription
       JsBundleDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-    final ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
+    ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
 
     // Source maps are exposed individually using a special flavor
     if (flavors.contains(JsFlavors.SOURCE_MAP)) {
@@ -152,7 +152,7 @@ public class JsBundleDescription
     // all dependencies to libraries are removed
     params = JsUtil.withWorkerDependencyOnly(params, resolver, args.getWorker());
 
-    final Either<ImmutableSet<String>, String> entryPoint = args.getEntry();
+    Either<ImmutableSet<String>, String> entryPoint = args.getEntry();
     TransitiveLibraryDependencies libsResolver =
         new TransitiveLibraryDependencies(buildTarget, context.getTargetGraph(), resolver);
     ImmutableSortedSet<JsLibrary> libraryDeps = libsResolver.collect(args.getDeps());
@@ -212,16 +212,16 @@ public class JsBundleDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       Optional<String> rDotJavaPackage) {
-    final BuildTarget bundleTarget =
+    BuildTarget bundleTarget =
         buildTarget
             .withAppendedFlavors(JsFlavors.FORCE_JS_BUNDLE)
             .withoutFlavors(JsFlavors.ANDROID_RESOURCES)
             .withoutFlavors(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR);
     resolver.requireRule(bundleTarget);
 
-    final JsBundle jsBundle = resolver.getRuleWithType(bundleTarget, JsBundle.class);
+    JsBundle jsBundle = resolver.getRuleWithType(bundleTarget, JsBundle.class);
     if (buildTarget.getFlavors().contains(JsFlavors.ANDROID_RESOURCES)) {
-      final String rDot =
+      String rDot =
           rDotJavaPackage.orElseThrow(
               () ->
                   new HumanReadableException(
@@ -240,8 +240,8 @@ public class JsBundleDescription
       BuildRuleResolver resolver,
       JsBundle jsBundle) {
 
-    final BuildTarget resourceTarget = buildTarget.withAppendedFlavors(JsFlavors.ANDROID_RESOURCES);
-    final BuildRule resource = resolver.requireRule(resourceTarget);
+    BuildTarget resourceTarget = buildTarget.withAppendedFlavors(JsFlavors.ANDROID_RESOURCES);
+    BuildRule resource = resolver.requireRule(resourceTarget);
 
     return new JsBundleAndroid(
         buildTarget,
@@ -358,7 +358,7 @@ public class JsBundleDescription
       this.targetGraph = targetGraph;
       this.resolver = resolver;
 
-      final ImmutableSortedSet<Flavor> bundleFlavors = bundleTarget.getFlavors();
+      ImmutableSortedSet<Flavor> bundleFlavors = bundleTarget.getFlavors();
       extraFlavors =
           bundleFlavors
               .stream()
@@ -377,11 +377,11 @@ public class JsBundleDescription
       new AbstractBreadthFirstTraversal<BuildTarget>(deps) {
         @Override
         public Iterable<BuildTarget> visit(BuildTarget target) throws RuntimeException {
-          final TargetNode<?, ?> targetNode = targetGraph.get(target);
-          final Description<?> description = targetNode.getDescription();
+          TargetNode<?, ?> targetNode = targetGraph.get(target);
+          Description<?> description = targetNode.getDescription();
 
           if (description instanceof JsLibraryDescription) {
-            final JsLibrary library = requireLibrary(target);
+            JsLibrary library = requireLibrary(target);
             jsLibraries.add(library);
             return getLibraryDependencies(library);
           } else if (description instanceof AndroidLibraryDescription

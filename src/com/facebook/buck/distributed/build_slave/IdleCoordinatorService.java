@@ -22,7 +22,6 @@ import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.ReportMinionAliveRequest;
 import com.facebook.buck.distributed.thrift.ReportMinionAliveResponse;
 import com.google.common.collect.Lists;
-import org.apache.thrift.TException;
 
 /**
  * Handles Coordinator requests while the build is still idle waiting for everything to be
@@ -40,8 +39,7 @@ public class IdleCoordinatorService implements CoordinatorService.Iface {
   }
 
   @Override
-  public ReportMinionAliveResponse reportMinionAlive(ReportMinionAliveRequest request)
-      throws TException {
+  public ReportMinionAliveResponse reportMinionAlive(ReportMinionAliveRequest request) {
     return new ReportMinionAliveResponse();
   }
 }

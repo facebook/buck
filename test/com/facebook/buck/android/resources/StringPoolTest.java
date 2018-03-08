@@ -55,7 +55,7 @@ public class StringPoolTest {
   }
 
   @Test
-  public void testCreateStringPool() throws Exception {
+  public void testCreateStringPool() {
     String[] strings = new String[] {"string1", "string2", "string3"};
     StringPool pool = StringPool.create(Arrays.asList(strings));
     assertEquals(strings.length, pool.getStringCount());

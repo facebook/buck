@@ -382,7 +382,7 @@ public class RustCompileUtils {
       executableBuilder.addInputs(rustSharedLibraries.values());
     }
 
-    final RustCompileRule buildRule =
+    RustCompileRule buildRule =
         (RustCompileRule)
             resolver.computeIfAbsent(
                 binaryTarget,
@@ -408,7 +408,7 @@ public class RustCompileUtils {
     // Add the binary as the first argument.
     executableBuilder.addArg(SourcePathArg.of(buildRule.getSourcePathToOutput()));
 
-    final CommandTool executable = executableBuilder.build();
+    CommandTool executable = executableBuilder.build();
 
     return new BinaryWrapperRule(
         buildTarget, projectFilesystem, params.copyAppendingExtraDeps(buildRule)) {

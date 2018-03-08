@@ -138,7 +138,7 @@ public class OfflineScribeLogger extends ScribeLogger {
   }
 
   @Override
-  public ListenableFuture<Void> log(final String category, final Iterable<String> lines) {
+  public ListenableFuture<Void> log(String category, Iterable<String> lines) {
     ListenableFuture<Void> upload = scribeLogger.log(category, lines);
     Futures.addCallback(
         upload,

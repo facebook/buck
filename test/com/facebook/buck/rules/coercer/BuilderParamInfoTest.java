@@ -59,7 +59,7 @@ public class BuilderParamInfoTest {
   }
 
   @Test
-  public void optionalsForAbstractClass() throws Exception {
+  public void optionalsForAbstractClass() {
     for (ParamInfo param :
         CoercedTypeCache.INSTANCE
             .getAllParamInfo(new DefaultTypeCoercerFactory(), DtoWithOptionals.class)
@@ -69,7 +69,7 @@ public class BuilderParamInfoTest {
   }
 
   @Test
-  public void optionalsForInterface() throws Exception {
+  public void optionalsForInterface() {
     for (ParamInfo param :
         CoercedTypeCache.INSTANCE
             .getAllParamInfo(new DefaultTypeCoercerFactory(), DtoWithOptionalsFromInterface.class)
@@ -93,18 +93,18 @@ public class BuilderParamInfoTest {
   }
 
   @Test
-  public void get() throws Exception {
+  public void get() {
     assertEquals(
         "foo", getParamInfo().get(DtoWithOneParameter.builder().setSomeString("foo").build()));
   }
 
   @Test
-  public void getName() throws Exception {
+  public void getName() {
     assertEquals("someString", getParamInfo().getName());
   }
 
   @Test
-  public void getPythonName() throws Exception {
+  public void getPythonName() {
     assertEquals("some_string", getParamInfo().getPythonName());
   }
 

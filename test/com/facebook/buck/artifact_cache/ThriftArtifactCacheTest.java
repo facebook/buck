@@ -114,8 +114,7 @@ public class ThriftArtifactCacheTest {
   }
 
   private void testWithMetadataAndPayloadInfo(
-      @Nullable ArtifactMetadata artifactMetadata, boolean setPayloadInfo)
-      throws InterruptedException, IOException {
+      @Nullable ArtifactMetadata artifactMetadata, boolean setPayloadInfo) throws IOException {
     HttpService storeClient = EasyMock.createNiceMock(HttpService.class);
     HttpService fetchClient = EasyMock.createMock(HttpService.class);
     BuckEventBus eventBus = EasyMock.createNiceMock(BuckEventBus.class);
@@ -216,7 +215,7 @@ public class ThriftArtifactCacheTest {
     }
 
     @Override
-    public long contentLength() throws IOException {
+    public long contentLength() {
       return response.length;
     }
 
@@ -235,7 +234,7 @@ public class ThriftArtifactCacheTest {
   }
 
   @Test
-  public void testMultiFetch() throws InterruptedException, IOException {
+  public void testMultiFetch() throws IOException {
     HttpService storeClient = EasyMock.createNiceMock(HttpService.class);
     HttpService fetchClient = EasyMock.createMock(HttpService.class);
     BuckEventBus eventBus = EasyMock.createNiceMock(BuckEventBus.class);
@@ -345,7 +344,7 @@ public class ThriftArtifactCacheTest {
   }
 
   @Test
-  public void testMultiContains() throws InterruptedException, IOException {
+  public void testMultiContains() throws IOException {
     HttpService storeClient = EasyMock.createNiceMock(HttpService.class);
     HttpService fetchClient = EasyMock.createMock(HttpService.class);
     BuckEventBus eventBus = EasyMock.createNiceMock(BuckEventBus.class);

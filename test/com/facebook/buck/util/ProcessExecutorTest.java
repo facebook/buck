@@ -84,7 +84,7 @@ public class ProcessExecutorTest {
     @SuppressWarnings("PMD.PrematureDeclaration")
     ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole(Verbosity.ALL));
 
-    final AtomicBoolean called = new AtomicBoolean(false);
+    AtomicBoolean called = new AtomicBoolean(false);
     String cmd = (Platform.detect() == Platform.WINDOWS) ? "ping -n 50 0.0.0.0" : "sleep 50";
     ProcessExecutorParams params = ProcessExecutorParams.ofCommand(makeCommandArray(cmd));
     ProcessExecutor.Result result =

@@ -118,7 +118,7 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
     return ImmutableList.<String>builder()
         .addAll(getExecutableCommand().getCommandPrefix(pathResolver))
         .add("--gtest_color=no")
-        .add("--gtest_output=xml:" + getProjectFilesystem().resolve(output).toString())
+        .add("--gtest_output=xml:" + getProjectFilesystem().resolve(output))
         .build();
   }
 
@@ -129,7 +129,7 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
 
   @Override
   protected ImmutableList<TestResultSummary> parseResults(Path exitCode, Path output, Path results)
-      throws IOException, SAXException {
+      throws IOException {
 
     // Make sure we didn't die abnormally
     Optional<String> abnormalExitError = validateExitCode(getProjectFilesystem().resolve(exitCode));

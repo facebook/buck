@@ -58,8 +58,8 @@ public class HeartbeatServiceTest {
   }
 
   @Test
-  public void testCallbackIsCalled() throws IOException {
-    final AtomicInteger callCount = new AtomicInteger();
+  public void testCallbackIsCalled() {
+    AtomicInteger callCount = new AtomicInteger();
     HeartbeatCallback callback = () -> callCount.incrementAndGet();
     try (HeartbeatService service = createService(callback)) {
       runnable.getValue().run();
@@ -68,8 +68,8 @@ public class HeartbeatServiceTest {
   }
 
   @Test
-  public void testCallbackKeepsBeingCalledAfterIOException() throws IOException {
-    final AtomicInteger callCount = new AtomicInteger();
+  public void testCallbackKeepsBeingCalledAfterIOException() {
+    AtomicInteger callCount = new AtomicInteger();
     HeartbeatCallback callback =
         () -> {
           callCount.incrementAndGet();

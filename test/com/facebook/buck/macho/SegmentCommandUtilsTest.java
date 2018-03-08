@@ -31,16 +31,16 @@ import org.junit.Test;
 
 public class SegmentCommandUtilsTest {
   @Test
-  public void testAligning() throws Exception {
+  public void testAligning() {
     assertThat(SegmentCommandUtils.alignValue(10), equalTo(32 * 1024));
     assertThat(SegmentCommandUtils.alignValue(100 * 1024), equalTo(128 * 1024));
     assertThat(SegmentCommandUtils.alignValue(987 * 1024), equalTo(992 * 1024));
   }
 
   @Test
-  public void testGettingHeaderSize64Bit() throws Exception {
+  public void testGettingHeaderSize64Bit() {
     byte[] bytes = SegmentCommandTestData.getBigEndian64Bits();
-    final int commandSize = bytes.length;
+    int commandSize = bytes.length;
     SegmentCommand command =
         SegmentCommandUtils.createFromBuffer(
             ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN),
@@ -49,9 +49,9 @@ public class SegmentCommandUtilsTest {
   }
 
   @Test
-  public void testGettingHeaderSize32Bit() throws Exception {
+  public void testGettingHeaderSize32Bit() {
     byte[] bytes = SegmentCommandTestData.getBigEndian32Bits();
-    final int commandSize = bytes.length;
+    int commandSize = bytes.length;
     SegmentCommand command =
         SegmentCommandUtils.createFromBuffer(
             ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN),
@@ -60,9 +60,9 @@ public class SegmentCommandUtilsTest {
   }
 
   @Test
-  public void testUpdatingSegmentCommandInByteBuffer64Bit() throws Exception {
+  public void testUpdatingSegmentCommandInByteBuffer64Bit() {
     byte[] bytes = SegmentCommandTestData.getBigEndian64Bits();
-    final int commandSize = bytes.length;
+    int commandSize = bytes.length;
     SegmentCommand command =
         SegmentCommandUtils.createFromBuffer(
             ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN),
@@ -84,9 +84,9 @@ public class SegmentCommandUtilsTest {
   }
 
   @Test
-  public void testUpdatingSegmentCommandInByteBuffer32Bit() throws Exception {
+  public void testUpdatingSegmentCommandInByteBuffer32Bit() {
     byte[] bytes = SegmentCommandTestData.getBigEndian32Bits();
-    final int commandSize = bytes.length;
+    int commandSize = bytes.length;
 
     SegmentCommand command =
         SegmentCommandUtils.createFromBuffer(
@@ -110,7 +110,7 @@ public class SegmentCommandUtilsTest {
 
   @Test
   public void testEnumeratingSections64Bit() throws Exception {
-    final int sectionSize = SectionTestData.getBigEndian64Bit().length;
+    int sectionSize = SectionTestData.getBigEndian64Bit().length;
     byte[] sectionData1 = SectionTestData.getBigEndian64Bit();
     sectionData1[51] = (byte) 0x01; // offset = 1
 
@@ -141,7 +141,7 @@ public class SegmentCommandUtilsTest {
     buffer.put(sectionData2);
     buffer.put(sectionData3);
 
-    final List<Section> enumeratedSections = new ArrayList<>();
+    List<Section> enumeratedSections = new ArrayList<>();
 
     SegmentCommandUtils.enumerateSectionsInSegmentLoadCommand(
         buffer,
@@ -173,7 +173,7 @@ public class SegmentCommandUtilsTest {
 
   @Test
   public void testEnumeratingSections32Bit() throws Exception {
-    final int sectionSize = SectionTestData.getBigEndian32Bit().length;
+    int sectionSize = SectionTestData.getBigEndian32Bit().length;
     byte[] sectionData1 = SectionTestData.getBigEndian32Bit();
     sectionData1[43] = (byte) 0x01; // offset = 1
 
@@ -204,7 +204,7 @@ public class SegmentCommandUtilsTest {
     buffer.put(sectionData2);
     buffer.put(sectionData3);
 
-    final List<Section> enumeratedSections = new ArrayList<>();
+    List<Section> enumeratedSections = new ArrayList<>();
 
     SegmentCommandUtils.enumerateSectionsInSegmentLoadCommand(
         buffer,
@@ -240,7 +240,7 @@ public class SegmentCommandUtilsTest {
     // It was fixed roughly by the next formula: offset = cmd.offset + cmd.sizeOfHeader
     // So this test checks this
 
-    final int sectionSize = SectionTestData.getBigEndian64Bit().length;
+    int sectionSize = SectionTestData.getBigEndian64Bit().length;
     byte[] sectionData1 = SectionTestData.getBigEndian64Bit();
     sectionData1[51] = (byte) 0x01; // offset = 1
 
@@ -273,7 +273,7 @@ public class SegmentCommandUtilsTest {
     buffer.put(sectionData2);
     buffer.put(sectionData3);
 
-    final List<Section> enumeratedSections = new ArrayList<>();
+    List<Section> enumeratedSections = new ArrayList<>();
 
     SegmentCommandUtils.enumerateSectionsInSegmentLoadCommand(
         buffer,

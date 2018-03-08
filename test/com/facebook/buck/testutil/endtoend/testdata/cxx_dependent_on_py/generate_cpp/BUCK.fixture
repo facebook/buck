@@ -1,0 +1,27 @@
+genrule(
+    name = "generate_cpp",
+    out = "generated.cpp",
+    bash = "$(exe //py_bin:generate_cpp) > $OUT",
+    cmd_exe = "$(exe //py_bin:generate_cpp) > %OUT%",
+)
+
+cxx_library(
+    name = "generated",
+    srcs = [":generate_cpp"],
+    exported_headers = ["generated.h"],
+    link_style = "static",
+    platform_compiler_flags = [
+        [
+            "windows",
+            WINDOWS_COMPILE_FLAGS,
+        ],
+    ],
+    platform_linker_flags = [
+        [
+            "windows",
+            WINDOWS_LINK_FLAGS,
+        ],
+    ],
+    visibility = ["PUBLIC"],
+    deps = [],
+)

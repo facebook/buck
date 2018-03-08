@@ -22,14 +22,12 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -99,10 +97,7 @@ public class PreprocessorFlagsTest {
 
     @Test
     public void shouldAffectRuleKey() {
-      SourcePathRuleFinder ruleFinder =
-          new SourcePathRuleFinder(
-              new SingleThreadedBuildRuleResolver(
-                  TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       FakeFileHashCache hashCache =
@@ -134,14 +129,11 @@ public class PreprocessorFlagsTest {
   public static class OtherTests {
     @Test
     public void flagsAreSanitized() {
-      SourcePathRuleFinder ruleFinder =
-          new SourcePathRuleFinder(
-              new SingleThreadedBuildRuleResolver(
-                  TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-      final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-      final FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of());
-      final BuildRule fakeBuildRule = new FakeBuildRule(target);
+      FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of());
+      BuildRule fakeBuildRule = new FakeBuildRule(target);
 
       class TestData {
         public RuleKey generate(String prefix) {

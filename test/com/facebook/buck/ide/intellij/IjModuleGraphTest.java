@@ -51,14 +51,12 @@ import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -464,8 +462,8 @@ public class IjModuleGraphTest {
 
   @Test
   public void testExtraClassPath() {
-    final Path rDotJavaClassPath = Paths.get("buck-out/product/rdotjava_classpath");
-    final TargetNode<?, ?> productTarget =
+    Path rDotJavaClassPath = Paths.get("buck-out/product/rdotjava_classpath");
+    TargetNode<?, ?> productTarget =
         AndroidLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/src/com/facebook/product:product"))
             .addSrc(Paths.get("java/src/com/facebook/File.java"))
@@ -622,7 +620,7 @@ public class IjModuleGraphTest {
 
   public static IjModuleGraph createModuleGraph(
       ImmutableSet<TargetNode<?, ?>> targets,
-      final ImmutableMap<TargetNode<?, ?>, SourcePath> javaLibraryPaths,
+      ImmutableMap<TargetNode<?, ?>, SourcePath> javaLibraryPaths,
       Function<? super TargetNode<?, ?>, Optional<Path>> rDotJavaClassPathResolver) {
     return createModuleGraph(
         targets, javaLibraryPaths, rDotJavaClassPathResolver, AggregationMode.AUTO);
@@ -630,14 +628,11 @@ public class IjModuleGraphTest {
 
   public static IjModuleGraph createModuleGraph(
       ImmutableSet<TargetNode<?, ?>> targets,
-      final ImmutableMap<TargetNode<?, ?>, SourcePath> javaLibraryPaths,
-      final Function<? super TargetNode<?, ?>, Optional<Path>> rDotJavaClassPathResolver,
+      ImmutableMap<TargetNode<?, ?>, SourcePath> javaLibraryPaths,
+      Function<? super TargetNode<?, ?>, Optional<Path>> rDotJavaClassPathResolver,
       AggregationMode aggregationMode) {
-    final SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+    SourcePathResolver sourcePathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     IjLibraryFactoryResolver sourceOnlyResolver =
         new IjLibraryFactoryResolver() {
           @Override
@@ -724,7 +719,7 @@ public class IjModuleGraphTest {
   }
 
   public static IjProjectElement getProjectElementForTarget(
-      IjModuleGraph graph, Class<? extends IjProjectElement> type, final TargetNode<?, ?> target) {
+      IjModuleGraph graph, Class<? extends IjProjectElement> type, TargetNode<?, ?> target) {
     return FluentIterable.from(graph.getNodes())
         .filter(type)
         .firstMatch(
@@ -734,11 +729,11 @@ public class IjModuleGraphTest {
         .get();
   }
 
-  public static IjModule getModuleForTarget(IjModuleGraph graph, final TargetNode<?, ?> target) {
+  public static IjModule getModuleForTarget(IjModuleGraph graph, TargetNode<?, ?> target) {
     return (IjModule) getProjectElementForTarget(graph, IjModule.class, target);
   }
 
-  public static IjLibrary getLibraryForTarget(IjModuleGraph graph, final TargetNode<?, ?> target) {
+  public static IjLibrary getLibraryForTarget(IjModuleGraph graph, TargetNode<?, ?> target) {
     return (IjLibrary) getProjectElementForTarget(graph, IjLibrary.class, target);
   }
 }

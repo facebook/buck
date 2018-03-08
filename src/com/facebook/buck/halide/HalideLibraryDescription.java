@@ -324,7 +324,7 @@ public class HalideLibraryDescription
       // we use the host flavor here, regardless of the flavors on the build
       // target.
       CxxPlatform hostCxxPlatform = cxxPlatforms.getValue(CxxPlatforms.getHostFlavor());
-      final ImmutableSortedSet<BuildTarget> compilerDeps = args.getCompilerDeps();
+      ImmutableSortedSet<BuildTarget> compilerDeps = args.getCompilerDeps();
       return createHalideCompiler(
           buildTarget,
           projectFilesystem,

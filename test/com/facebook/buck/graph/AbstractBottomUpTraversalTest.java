@@ -38,7 +38,7 @@ public class AbstractBottomUpTraversalTest {
     //    \ /
     //     F
     MutableDirectedGraph<String> mutableGraph = new MutableDirectedGraph<String>();
-    final Set<String> nodes = ImmutableSet.of("A", "B", "C", "D", "E", "F");
+    Set<String> nodes = ImmutableSet.of("A", "B", "C", "D", "E", "F");
     for (String node : nodes) {
       mutableGraph.addNode(node);
     }
@@ -53,7 +53,7 @@ public class AbstractBottomUpTraversalTest {
 
     DirectedAcyclicGraph<String> immutableGraph = new DirectedAcyclicGraph<>(mutableGraph);
 
-    final List<String> visitedNodes = new LinkedList<>();
+    List<String> visitedNodes = new LinkedList<>();
     AbstractBottomUpTraversal<String, RuntimeException> traversal =
         new AbstractBottomUpTraversal<String, RuntimeException>(immutableGraph) {
 
@@ -85,7 +85,7 @@ public class AbstractBottomUpTraversalTest {
     //  /
     // Z
     MutableDirectedGraph<String> mutableGraph = new MutableDirectedGraph<String>();
-    final Set<String> nodes = ImmutableSet.of("A", "V", "W", "X", "Y", "Z");
+    Set<String> nodes = ImmutableSet.of("A", "V", "W", "X", "Y", "Z");
     for (String node : nodes) {
       mutableGraph.addNode(node);
     }
@@ -97,7 +97,7 @@ public class AbstractBottomUpTraversalTest {
 
     DirectedAcyclicGraph<String> immutableGraph = new DirectedAcyclicGraph<String>(mutableGraph);
 
-    final List<String> visitedNodes = new LinkedList<>();
+    List<String> visitedNodes = new LinkedList<>();
     AbstractBottomUpTraversal<String, RuntimeException> traversal =
         new AbstractBottomUpTraversal<String, RuntimeException>(immutableGraph) {
 

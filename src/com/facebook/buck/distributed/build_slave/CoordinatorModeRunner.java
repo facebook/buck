@@ -23,6 +23,7 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.trace.uploader.launcher.UploaderLauncher;
 import com.facebook.buck.util.trace.uploader.types.CompressionType;
 import com.google.common.base.Preconditions;
@@ -111,7 +112,7 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
   }
 
   @Override
-  public int runAndReturnExitCode(HeartbeatService heartbeatService) throws IOException {
+  public ExitCode runAndReturnExitCode(HeartbeatService heartbeatService) throws IOException {
     try (AsyncCoordinatorRun run = new AsyncCoordinatorRun(heartbeatService, queue)) {
       return run.getExitCode();
     }
@@ -119,7 +120,7 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
 
   /** Reports back to the servers that the coordinator is healthy and alive. */
   public static HeartbeatCallback createHeartbeatCallback(
-      final StampedeId stampedeId, final DistBuildService service) {
+      StampedeId stampedeId, DistBuildService service) {
     return new HeartbeatCallback() {
       @Override
       public void runHeartbeat() throws IOException {
@@ -178,8 +179,8 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
           service.addCallback("BuildStatusCheck", () -> server.checkBuildStatusIsNotTerminated()));
     }
 
-    public int getExitCode() {
-      return server.waitUntilBuildCompletesAndReturnExitCode();
+    public ExitCode getExitCode() {
+      return ExitCode.map(server.waitUntilBuildCompletesAndReturnExitCode());
     }
 
     public int getPort() {
@@ -196,7 +197,7 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
     private void dumpAndUploadChromeTrace() {
       try {
         Path traceFilePath = logDirectoryPath.resolve(BuckConstant.DIST_BUILD_TRACE_FILE_NAME);
-        this.server.traceSnapshot().dumpToChromeTrace(traceFilePath);
+        this.server.generateTrace().dumpToChromeTrace(traceFilePath);
 
         if (!clientBuildId.isPresent()) {
           LOG.warn("Not uploading distbuild chrome trace because original build uuid is unset");

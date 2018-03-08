@@ -96,8 +96,7 @@ public class TypeCoercerTest {
   }
 
   @Test
-  public void coercingSortedSetsShouldThrowOnDuplicates()
-      throws CoerceFailedException, NoSuchFieldException {
+  public void coercingSortedSetsShouldThrowOnDuplicates() throws NoSuchFieldException {
     Type type = TestFields.class.getField("sortedSetOfStrings").getGenericType();
     TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
@@ -170,7 +169,7 @@ public class TypeCoercerTest {
         (TypeCoercer<ImmutableMap<String, ImmutableList<String>>>)
             typeCoercerFactory.typeCoercerForType(type);
 
-    final ImmutableMap<String, ImmutableList<String>> input =
+    ImmutableMap<String, ImmutableList<String>> input =
         ImmutableMap.of(
             "foo", ImmutableList.of("//foo:bar", "//foo:baz"),
             "bar", ImmutableList.of(":bar", "//foo:foo"));
@@ -286,7 +285,7 @@ public class TypeCoercerTest {
         (TypeCoercer<Either<String, List<String>>>) typeCoercerFactory.typeCoercerForType(type);
 
     TestTraversal traversal = new TestTraversal();
-    Either<String, List<String>> input = Either.ofRight((List<String>) ImmutableList.of("foo"));
+    Either<String, List<String>> input = Either.ofRight(ImmutableList.of("foo"));
     coercer.traverse(cellRoots, input, traversal);
     assertThat(
         traversal.getObjects(),
@@ -299,7 +298,7 @@ public class TypeCoercerTest {
     Either<String, List<String>> input2 = Either.ofLeft("foo");
     coercer.traverse(cellRoots, input2, traversal);
     assertThat(traversal.getObjects(), hasSize(1));
-    assertThat(traversal.getObjects().get(0), sameInstance((Object) "foo"));
+    assertThat(traversal.getObjects().get(0), sameInstance("foo"));
   }
 
   static class TestTraversal implements TypeCoercer.Traversal {
@@ -741,7 +740,7 @@ public class TypeCoercerTest {
     public ImmutableList<NeededCoverageSpec> listOfNeededCoverageSpecs;
   }
 
-  private static enum TestEnum {
+  private enum TestEnum {
     RED,
     PURPLE,
     yellow,

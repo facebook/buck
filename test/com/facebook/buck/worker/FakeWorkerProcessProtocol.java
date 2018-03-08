@@ -25,10 +25,10 @@ public class FakeWorkerProcessProtocol {
     private boolean isClosed = false;
 
     @Override
-    public void handshake(int messageId) throws IOException {}
+    public void handshake(int messageId) {}
 
     @Override
-    public void send(int messageId, WorkerProcessCommand command) throws IOException {}
+    public void send(int messageId, WorkerProcessCommand command) {}
 
     @Override
     public int receiveCommandResponse(int messageID) throws IOException {
@@ -50,18 +50,18 @@ public class FakeWorkerProcessProtocol {
     private boolean isClosed = false;
 
     @Override
-    public void handshake(int messageId) throws IOException {}
+    public void handshake(int messageId) {}
 
     @Override
-    public WorkerProcessCommand receiveCommand(int messageId) throws IOException {
+    public WorkerProcessCommand receiveCommand(int messageId) {
       return WorkerProcessCommand.of(Paths.get(""), Paths.get(""), Paths.get(""));
     }
 
     @Override
-    public void sendResponse(int messageId, String type, int exitCode) throws IOException {}
+    public void sendResponse(int messageId, String type, int exitCode) {}
 
     @Override
-    public boolean shouldClose() throws IOException {
+    public boolean shouldClose() {
       return false;
     }
 

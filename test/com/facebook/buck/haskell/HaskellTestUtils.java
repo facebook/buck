@@ -94,7 +94,7 @@ class HaskellTestUtils {
   private HaskellTestUtils() {}
 
   /** Assume that we can find a haskell compiler on the system. */
-  static HaskellVersion assumeSystemCompiler() throws IOException, InterruptedException {
+  static HaskellVersion assumeSystemCompiler() throws IOException {
     ExecutableFinder executableFinder = new ExecutableFinder();
     Optional<Path> compilerOptional =
         executableFinder.getOptionalExecutable(

@@ -119,24 +119,23 @@ public class DistBuildLogsCommandIntegrationTest {
     }
 
     @Override
-    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-        throws IOException {
+    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
       return FileVisitResult.CONTINUE;
     }
 
     @Override
-    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
       absPaths.add(file.toAbsolutePath().toString());
       return FileVisitResult.CONTINUE;
     }
 
     @Override
-    public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+    public FileVisitResult visitFileFailed(Path file, IOException exc) {
       return FileVisitResult.CONTINUE;
     }
 
     @Override
-    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+    public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
       return FileVisitResult.CONTINUE;
     }
   }
@@ -147,7 +146,6 @@ public class DistBuildLogsCommandIntegrationTest {
     private final List<LogDir> logDirs;
 
     public Server(BuildJob buildJob, List<LogDir> logDirs) throws IOException {
-      super();
       this.buildJob = buildJob;
       this.logDirs = logDirs;
     }

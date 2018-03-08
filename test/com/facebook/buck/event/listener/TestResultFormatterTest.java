@@ -290,7 +290,7 @@ public class TestResultFormatterTest {
   }
 
   @Test
-  public void allTestsPassingShouldNotShowTestStatusMessages() throws IOException {
+  public void allTestsPassingShouldNotShowTestStatusMessages() {
     TestResultFormatter formatter = createSilentFormatter();
     TestCaseSummary summary =
         new TestCaseSummary("com.example.FooTest", ImmutableList.of(successTest));
@@ -328,7 +328,7 @@ public class TestResultFormatterTest {
   }
 
   @Test
-  public void failingTestShouldShowTestStatusMessages() throws IOException {
+  public void failingTestShouldShowTestStatusMessages() {
     TestResultFormatter formatter = createSilentFormatter();
     TestCaseSummary summary =
         new TestCaseSummary("com.example.FooTest", ImmutableList.of(successTest, failingTest));

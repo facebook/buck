@@ -20,14 +20,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
-import java.util.concurrent.ExecutionException;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class ConcurrentMapCacheTest {
 
   @Test
-  public void shouldAllowAnEntryToBeAdded() throws ExecutionException {
+  public void shouldAllowAnEntryToBeAdded() {
     ConcurrentMapCache<String, Integer> cache = new ConcurrentMapCache<>(1);
     cache.putIfAbsentAndGet("cake", 1);
 
@@ -37,7 +36,7 @@ public class ConcurrentMapCacheTest {
   }
 
   @Test
-  public void shouldRemoveValues() throws ExecutionException {
+  public void shouldRemoveValues() {
     ConcurrentMapCache<String, Integer> cache = new ConcurrentMapCache<>(1);
     cache.putIfAbsentAndGet("cake", 1);
 
@@ -47,7 +46,7 @@ public class ConcurrentMapCacheTest {
   }
 
   @Test
-  public void shouldOnlyAddAnItemOnceToTheCache() throws ExecutionException {
+  public void shouldOnlyAddAnItemOnceToTheCache() {
     ConcurrentMapCache<String, WeirdInt> cache = new ConcurrentMapCache<>(1);
     WeirdInt value = new WeirdInt(42);
     WeirdInt value2 = new WeirdInt(42);
@@ -59,7 +58,7 @@ public class ConcurrentMapCacheTest {
   }
 
   @Test(expected = NullPointerException.class)
-  public void disallowsNullValuesInTheCache() throws ExecutionException {
+  public void disallowsNullValuesInTheCache() {
     ConcurrentMapCache<String, Integer> cache = new ConcurrentMapCache<>(1);
     cache.putIfAbsentAndGet("cake", null);
   }

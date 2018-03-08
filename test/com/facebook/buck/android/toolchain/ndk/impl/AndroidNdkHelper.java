@@ -85,8 +85,7 @@ public class AndroidNdkHelper {
     return androidNdk;
   }
 
-  public static NdkCxxPlatform getNdkCxxPlatform(ProjectFilesystem filesystem)
-      throws IOException, InterruptedException {
+  public static NdkCxxPlatform getNdkCxxPlatform(ProjectFilesystem filesystem) {
     // TODO(cjhopman): is this really the simplest way to get the objdump tool?
     Optional<AndroidNdk> androidNdk = detectAndroidNdk(filesystem);
 

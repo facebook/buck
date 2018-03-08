@@ -278,8 +278,8 @@ public class HaskellBinaryDescription
     ImmutableList<Arg> linkInputs = linkInputsBuilder.build();
     ImmutableList<Arg> linkFlags = linkFlagsBuilder.build();
 
-    final CommandTool executable = executableBuilder.build();
-    final HaskellLinkRule linkRule =
+    CommandTool executable = executableBuilder.build();
+    HaskellLinkRule linkRule =
         HaskellDescriptionUtils.createLinkRule(
             binaryTarget,
             projectFilesystem,

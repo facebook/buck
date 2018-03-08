@@ -125,8 +125,7 @@ public class TimeoutIntegrationTest {
    * Swaps all instances of {@code @Test} with {@code @Test(timeout = 10000)} in the specified Java
    * file, as determined by the value of {@code addTimeout}.
    */
-  private void modifyTimeoutInTestAnnotation(String path, final boolean addTimeout)
-      throws IOException {
+  private void modifyTimeoutInTestAnnotation(String path, boolean addTimeout) throws IOException {
     Function<String, String> transform =
         line -> {
           String original = addTimeout ? "@Test" : "@Test(timeout = 100000)";

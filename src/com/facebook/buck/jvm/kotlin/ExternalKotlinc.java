@@ -48,7 +48,7 @@ public class ExternalKotlinc implements Kotlinc, RuleKeyAppendable {
   private final Path pathToKotlinc;
   private final Supplier<KotlincVersion> version;
 
-  public ExternalKotlinc(final Path pathToKotlinc) {
+  public ExternalKotlinc(Path pathToKotlinc) {
     this.pathToKotlinc = pathToKotlinc;
 
     this.version =

@@ -35,19 +35,16 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.ImmutableBuildRuleCreationContext;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.rules.TestBuildRuleParams;
-import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleStep;
@@ -106,19 +103,16 @@ public class ApkGenruleTest {
 
   @Test
   @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
-  public void testCreateAndRunApkGenrule()
-      throws InterruptedException, IOException, NoSuchBuildTargetException {
+  public void testCreateAndRunApkGenrule() throws IOException, NoSuchBuildTargetException {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     FileSystem fileSystem = projectFilesystem.getRootPath().getFileSystem();
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     createSampleAndroidBinaryRule(ruleResolver, projectFilesystem);
 
     // From the Python object, create a ApkGenruleBuildRuleFactory to create a ApkGenrule.Builder
     // that builds a ApkGenrule from the Python object.
     BuildTargetParser parser = EasyMock.createNiceMock(BuildTargetParser.class);
-    final BuildTarget apkTarget =
+    BuildTarget apkTarget =
         BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:fb4a");
 
     EasyMock.expect(
@@ -157,11 +151,7 @@ public class ApkGenruleTest {
     ApkGenrule apkGenrule =
         (ApkGenrule)
             description.createBuildRule(
-                ImmutableBuildRuleCreationContext.of(
-                    TargetGraph.EMPTY,
-                    ruleResolver,
-                    projectFilesystem,
-                    TestCellBuilder.createCellRoots(projectFilesystem)),
+                TestBuildRuleCreationContextFactory.create(ruleResolver, projectFilesystem),
                 buildTarget,
                 params,
                 arg);
@@ -170,7 +160,7 @@ public class ApkGenruleTest {
     // Verify all of the observers of the Genrule.
     Path expectedApkOutput =
         projectFilesystem.resolve(
-            projectFilesystem.getBuckPaths().getGenDir().toString()
+            projectFilesystem.getBuckPaths().getGenDir()
                 + "/src/com/facebook/sign_fb4a/sign_fb4a.apk");
     assertEquals(expectedApkOutput, apkGenrule.getAbsoluteOutputFilePath());
     assertEquals(

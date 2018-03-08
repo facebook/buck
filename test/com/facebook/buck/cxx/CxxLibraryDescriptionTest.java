@@ -56,18 +56,17 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.DependencyAggregationTestUtil;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -150,7 +149,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void createBuildRule() throws Exception {
+  public void createBuildRule() {
     Assume.assumeFalse("This test assumes no sandboxing", cxxBuckConfig.sandboxSources());
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -229,9 +228,7 @@ public class CxxLibraryDescriptionTest {
             cxxLibraryBuilder.build());
 
     // Build the rules.
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     genHeaderBuilder.build(resolver, filesystem, targetGraph);
     genSourceBuilder.build(resolver, filesystem, targetGraph);
     depBuilder.build(resolver, filesystem, targetGraph);
@@ -252,7 +249,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         publicHeaders.getNameToPathMap(),
         equalTo(
-            ImmutableMap.<Path, SourcePath>of(
+            ImmutableMap.of(
                 Paths.get(headerName),
                 FakeSourcePath.of(headerName),
                 Paths.get(genHeaderName),
@@ -339,7 +336,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void overrideSoname() throws Exception {
+  public void overrideSoname() {
 
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxPlatform cxxPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
@@ -358,9 +355,7 @@ public class CxxLibraryDescriptionTest {
             .setSoname(soname)
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.cpp"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(ruleBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     CxxLink rule = (CxxLink) ruleBuilder.build(resolver, filesystem, targetGraph);
@@ -372,7 +367,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void overrideStaticLibraryBasename() throws Exception {
+  public void overrideStaticLibraryBasename() {
 
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -389,9 +384,7 @@ public class CxxLibraryDescriptionTest {
             .setStaticLibraryBasename(basename)
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.cpp"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(ruleBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     Archive rule = (Archive) ruleBuilder.build(resolver, filesystem, targetGraph);
@@ -401,7 +394,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void linkWhole() throws Exception {
+  public void linkWhole() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxPlatform cxxPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
 
@@ -413,9 +406,7 @@ public class CxxLibraryDescriptionTest {
         new CxxLibraryBuilder(target, cxxBuckConfig)
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test.cpp"))));
     TargetGraph normalGraph = TargetGraphFactory.newInstance(normalBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            normalGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(normalGraph);
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     CxxLibrary normal = (CxxLibrary) normalBuilder.build(resolver, filesystem, normalGraph);
@@ -442,9 +433,7 @@ public class CxxLibraryDescriptionTest {
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.cpp"))));
 
     TargetGraph linkWholeGraph = TargetGraphFactory.newInstance(linkWholeBuilder.build());
-    resolver =
-        new SingleThreadedBuildRuleResolver(
-            normalGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    resolver = new TestBuildRuleResolver(normalGraph);
     CxxLibrary linkWhole =
         (CxxLibrary)
             linkWholeBuilder
@@ -460,7 +449,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void createCxxLibraryBuildRules() throws Exception {
+  public void createCxxLibraryBuildRules() {
     Assume.assumeFalse("This test assumes no sandboxing", cxxBuckConfig.sandboxSources());
 
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -527,9 +516,7 @@ public class CxxLibraryDescriptionTest {
             cxxLibraryBuilder.build());
 
     // Construct C/C++ library build rules.
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     genHeaderBuilder.build(resolver, filesystem, targetGraph);
     genSourceBuilder.build(resolver, filesystem, targetGraph);
     depBuilder.build(resolver, filesystem, targetGraph);
@@ -665,7 +652,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void supportedPlatforms() throws Exception {
+  public void supportedPlatforms() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
 
@@ -675,9 +662,7 @@ public class CxxLibraryDescriptionTest {
         new CxxLibraryBuilder(target, cxxBuckConfig)
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test.c"))));
     TargetGraph targetGraph1 = TargetGraphFactory.newInstance(cxxLibraryBuilder.build());
-    BuildRuleResolver resolver1 =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph1, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver1 = new TestBuildRuleResolver(targetGraph1);
     CxxLibrary cxxLibrary =
         (CxxLibrary) cxxLibraryBuilder.build(resolver1, filesystem, targetGraph1);
     assertThat(
@@ -692,9 +677,7 @@ public class CxxLibraryDescriptionTest {
     // Now, verify we get nothing when the supported platform regex excludes our platform.
     cxxLibraryBuilder.setSupportedPlatformsRegex(Pattern.compile("nothing"));
     TargetGraph targetGraph2 = TargetGraphFactory.newInstance(cxxLibraryBuilder.build());
-    BuildRuleResolver resolver2 =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph2, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver2 = new TestBuildRuleResolver(targetGraph2);
     cxxLibrary = (CxxLibrary) cxxLibraryBuilder.build(resolver2, filesystem, targetGraph2);
     assertThat(
         cxxLibrary.getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM).entrySet(), empty());
@@ -707,16 +690,14 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void staticPicLibUsedForStaticPicLinkage() throws Exception {
+  public void staticPicLibUsedForStaticPicLinkage() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxLibraryBuilder libBuilder = new CxxLibraryBuilder(target, cxxBuckConfig);
     libBuilder.setSrcs(
         ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of(filesystem, "test.cpp"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     CxxLibrary lib = (CxxLibrary) libBuilder.build(resolver, filesystem, targetGraph);
     NativeLinkableInput nativeLinkableInput =
         lib.getNativeLinkableInput(
@@ -732,7 +713,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void linkerFlagsLocationMacro() throws Exception {
+  public void linkerFlagsLocationMacro() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target =
         BuildTargetFactory.newInstance("//:rule")
@@ -749,9 +730,7 @@ public class CxxLibraryDescriptionTest {
                         "--linker-script=%s", LocationMacro.of(depBuilder.getTarget()))))
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.c"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depBuilder.build(), builder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     Genrule dep = depBuilder.build(resolver, filesystem, targetGraph);
@@ -765,7 +744,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void locationMacroExpandedLinkerFlag() throws Exception {
+  public void locationMacroExpandedLinkerFlag() {
     BuildTarget location = BuildTargetFactory.newInstance("//:loc");
     BuildTarget target =
         BuildTargetFactory.newInstance("//foo:bar")
@@ -783,9 +762,7 @@ public class CxxLibraryDescriptionTest {
             StringWithMacrosUtils.format("-Wl,--version-script=%s", LocationMacro.of(location))));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(libBuilder.build(), locBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     ExportFile loc = locBuilder.build(resolver, filesystem, targetGraph);
     CxxLink lib = (CxxLink) libBuilder.build(resolver, filesystem, targetGraph);
 
@@ -802,7 +779,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void locationMacroExpandedPlatformLinkerFlagPlatformMatch() throws Exception {
+  public void locationMacroExpandedPlatformLinkerFlagPlatformMatch() {
     BuildTarget location = BuildTargetFactory.newInstance("//:loc");
     BuildTarget target =
         BuildTargetFactory.newInstance("//foo:bar")
@@ -825,9 +802,7 @@ public class CxxLibraryDescriptionTest {
             .build());
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(libBuilder.build(), locBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     ExportFile loc = locBuilder.build(resolver, filesystem, targetGraph);
@@ -847,7 +822,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void locationMacroExpandedPlatformLinkerFlagNoPlatformMatch() throws Exception {
+  public void locationMacroExpandedPlatformLinkerFlagNoPlatformMatch() {
     BuildTarget location = BuildTargetFactory.newInstance("//:loc");
     BuildTarget target =
         BuildTargetFactory.newInstance("//foo:bar")
@@ -870,9 +845,7 @@ public class CxxLibraryDescriptionTest {
             .build());
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(libBuilder.build(), locBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     ExportFile loc = locBuilder.build(resolver, filesystem, targetGraph);
     CxxLink lib = (CxxLink) libBuilder.build(resolver, filesystem, targetGraph);
 
@@ -890,7 +863,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void locationMacroExpandedExportedLinkerFlag() throws Exception {
+  public void locationMacroExpandedExportedLinkerFlag() {
     BuildTarget location = BuildTargetFactory.newInstance("//:loc");
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -904,9 +877,7 @@ public class CxxLibraryDescriptionTest {
             StringWithMacrosUtils.format("-Wl,--version-script=%s", LocationMacro.of(location))));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(libBuilder.build(), locBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     ExportFile loc = locBuilder.build(resolver, filesystem, targetGraph);
     CxxLibrary lib = (CxxLibrary) libBuilder.build(resolver, filesystem, targetGraph);
 
@@ -930,7 +901,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void locationMacroExpandedExportedPlatformLinkerFlagPlatformMatch() throws Exception {
+  public void locationMacroExpandedExportedPlatformLinkerFlagPlatformMatch() {
     BuildTarget location = BuildTargetFactory.newInstance("//:loc");
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -949,9 +920,7 @@ public class CxxLibraryDescriptionTest {
             .build());
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(libBuilder.build(), locBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     ExportFile loc = locBuilder.build(resolver, filesystem, targetGraph);
     CxxLibrary lib = (CxxLibrary) libBuilder.build(resolver, filesystem, targetGraph);
 
@@ -975,7 +944,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void locationMacroExpandedExportedPlatformLinkerFlagNoPlatformMatch() throws Exception {
+  public void locationMacroExpandedExportedPlatformLinkerFlagNoPlatformMatch() {
     BuildTarget location = BuildTargetFactory.newInstance("//:loc");
     BuildTarget target =
         BuildTargetFactory.newInstance("//foo:bar")
@@ -996,9 +965,7 @@ public class CxxLibraryDescriptionTest {
             .build());
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(libBuilder.build(), locBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     ExportFile loc = locBuilder.build(resolver, filesystem, targetGraph);
     CxxLibrary lib = (CxxLibrary) libBuilder.build(resolver, filesystem, targetGraph);
 
@@ -1023,7 +990,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void libraryWithoutSourcesDoesntHaveOutput() throws Exception {
+  public void libraryWithoutSourcesDoesntHaveOutput() {
     BuildTarget target =
         BuildTargetFactory.newInstance("//foo:bar")
             .withFlavors(
@@ -1032,16 +999,14 @@ public class CxxLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxLibraryBuilder libBuilder = new CxxLibraryBuilder(target, cxxBuckConfig);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     BuildRule lib = libBuilder.build(resolver, filesystem, targetGraph);
 
     assertThat(lib.getSourcePathToOutput(), nullValue());
   }
 
   @Test
-  public void libraryWithoutSourcesDoesntBuildAnything() throws Exception {
+  public void libraryWithoutSourcesDoesntBuildAnything() {
     BuildTarget target =
         BuildTargetFactory.newInstance("//foo:bar")
             .withFlavors(
@@ -1050,9 +1015,7 @@ public class CxxLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxLibraryBuilder libBuilder = new CxxLibraryBuilder(target, cxxBuckConfig);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     BuildRule lib = libBuilder.build(resolver, filesystem, targetGraph);
 
     assertThat(lib.getBuildDeps(), is(empty()));
@@ -1062,9 +1025,7 @@ public class CxxLibraryDescriptionTest {
 
   @Test
   public void nativeLinkableDeps() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     CxxLibrary dep =
         (CxxLibrary)
             new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"), cxxBuckConfig)
@@ -1085,9 +1046,7 @@ public class CxxLibraryDescriptionTest {
 
   @Test
   public void nativeLinkableExportedDeps() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     CxxLibrary dep =
         (CxxLibrary)
             new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"), cxxBuckConfig)
@@ -1108,9 +1067,7 @@ public class CxxLibraryDescriptionTest {
 
   @Test
   public void nativeLinkTargetMode() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     CxxLibrary rule =
         (CxxLibrary)
             new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"), cxxBuckConfig)
@@ -1123,9 +1080,7 @@ public class CxxLibraryDescriptionTest {
 
   @Test
   public void nativeLinkTargetDeps() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     CxxLibrary dep =
         (CxxLibrary)
             new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"), cxxBuckConfig)
@@ -1146,16 +1101,14 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void nativeLinkTargetInput() throws Exception {
+  public void nativeLinkTargetInput() {
     CxxLibraryBuilder ruleBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"), cxxBuckConfig)
             .setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("--flag")))
             .setExportedLinkerFlags(
                 ImmutableList.of(StringWithMacrosUtils.format("--exported-flag")));
     BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraphFactory.newInstance(ruleBuilder.build()),
-            new DefaultTargetNodeToBuildRuleTransformer());
+        new TestBuildRuleResolver(TargetGraphFactory.newInstance(ruleBuilder.build()));
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     CxxLibrary rule = (CxxLibrary) ruleBuilder.build(resolver);
@@ -1164,7 +1117,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void exportedDepsArePropagatedToRuntimeDeps() throws Exception {
+  public void exportedDepsArePropagatedToRuntimeDeps() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxBinaryBuilder cxxBinaryBuilder =
         new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:dep"));
@@ -1172,9 +1125,8 @@ public class CxxLibraryDescriptionTest {
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:lib"), cxxBuckConfig)
             .setExportedDeps(ImmutableSortedSet.of(cxxBinaryBuilder.getTarget()));
     BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraphFactory.newInstance(cxxLibraryBuilder.build(), cxxBinaryBuilder.build()),
-            new DefaultTargetNodeToBuildRuleTransformer());
+        new TestBuildRuleResolver(
+            TargetGraphFactory.newInstance(cxxLibraryBuilder.build(), cxxBinaryBuilder.build()));
     cxxBinaryBuilder.build(resolver, filesystem);
     CxxLibrary cxxLibrary = (CxxLibrary) cxxLibraryBuilder.build(resolver, filesystem);
     assertThat(
@@ -1185,7 +1137,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void sharedLibraryShouldLinkOwnRequiredLibraries() throws Exception {
+  public void sharedLibraryShouldLinkOwnRequiredLibraries() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxPlatform platform = CxxPlatformUtils.DEFAULT_PLATFORM;
 
@@ -1205,9 +1157,7 @@ public class CxxLibraryDescriptionTest {
                 FrameworkPath.ofSourcePath(FakeSourcePath.of("/another/path/liba.dylib"))))
         .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.c"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libraryBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     CxxLink library = (CxxLink) libraryBuilder.build(resolver, filesystem, targetGraph);
@@ -1217,7 +1167,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void sharedLibraryShouldLinkOwnRequiredLibrariesForCxxLibrary() throws Exception {
+  public void sharedLibraryShouldLinkOwnRequiredLibrariesForCxxLibrary() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxPlatform platform = CxxPlatformUtils.DEFAULT_PLATFORM;
 
@@ -1232,22 +1182,18 @@ public class CxxLibraryDescriptionTest {
         .setLibraries(libraries)
         .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.c"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libraryBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     CxxLibrary library = (CxxLibrary) libraryBuilder.build(resolver, filesystem, targetGraph);
     assertThat(library.getNativeLinkTargetInput(platform).getLibraries(), equalTo(libraries));
   }
 
   @Test
-  public void ruleWithoutHeadersDoesNotUseSymlinkTree() throws Exception {
+  public void ruleWithoutHeadersDoesNotUseSymlinkTree() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxLibraryBuilder cxxLibraryBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"), cxxBuckConfig);
     BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraphFactory.newInstance(cxxLibraryBuilder.build()),
-            new DefaultTargetNodeToBuildRuleTransformer());
+        new TestBuildRuleResolver(TargetGraphFactory.newInstance(cxxLibraryBuilder.build()));
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(resolver, filesystem);
     CxxPreprocessorInput input = rule.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM);
@@ -1256,7 +1202,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void thinArchiveSettingIsPropagatedToArchive() throws Exception {
+  public void thinArchiveSettingIsPropagatedToArchive() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildTarget target =
@@ -1276,9 +1222,7 @@ public class CxxLibraryDescriptionTest {
                     .build()),
             CxxPlatformUtils.DEFAULT_PLATFORMS);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     libBuilder.setSrcs(
         ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of(filesystem, "test.cpp"))));
     Archive lib = (Archive) libBuilder.build(resolver, filesystem, targetGraph);
@@ -1286,15 +1230,13 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void forceStatic() throws Exception {
+  public void forceStatic() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxLibraryBuilder cxxLibraryBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"), cxxBuckConfig)
             .setPreferredLinkage(NativeLinkable.Linkage.STATIC);
     BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraphFactory.newInstance(cxxLibraryBuilder.build()),
-            new DefaultTargetNodeToBuildRuleTransformer());
+        new TestBuildRuleResolver(TargetGraphFactory.newInstance(cxxLibraryBuilder.build()));
     CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(resolver, filesystem);
     assertThat(
         rule.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
@@ -1302,7 +1244,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void srcsFromCxxGenrule() throws Exception {
+  public void srcsFromCxxGenrule() {
     CxxGenruleBuilder srcBuilder =
         new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:src")).setOut("foo.cpp");
     CxxLibraryBuilder libraryBuilder =
@@ -1312,9 +1254,7 @@ public class CxxLibraryDescriptionTest {
                     SourceWithFlags.of(DefaultBuildTargetSourcePath.of(srcBuilder.getTarget()))));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(srcBuilder.build(), libraryBuilder.build());
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
     ruleResolver.requireRule(
         libraryBuilder
             .getTarget()
@@ -1325,7 +1265,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void headersFromCxxGenrule() throws Exception {
+  public void headersFromCxxGenrule() {
     CxxGenruleBuilder srcBuilder =
         new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:src")).setOut("foo.h");
     CxxLibraryBuilder libraryBuilder =
@@ -1335,9 +1275,7 @@ public class CxxLibraryDescriptionTest {
                 ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(srcBuilder.getTarget())));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(srcBuilder.build(), libraryBuilder.build());
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
     ruleResolver.requireRule(
         libraryBuilder
             .getTarget()
@@ -1348,7 +1286,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void locationMacroFromCxxGenrule() throws Exception {
+  public void locationMacroFromCxxGenrule() {
     CxxGenruleBuilder srcBuilder =
         new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:src")).setOut("linker.script");
     CxxLibraryBuilder libraryBuilder =
@@ -1359,9 +1297,7 @@ public class CxxLibraryDescriptionTest {
                     StringWithMacrosUtils.format("%s", LocationMacro.of(srcBuilder.getTarget()))));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(srcBuilder.build(), libraryBuilder.build());
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
     ruleResolver.requireRule(
         libraryBuilder
             .getTarget()
@@ -1372,7 +1308,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void platformDeps() throws Exception {
+  public void platformDeps() {
     CxxLibraryBuilder depABuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep_a"), cxxBuckConfig);
     CxxLibraryBuilder depBBuilder =
@@ -1387,10 +1323,9 @@ public class CxxLibraryDescriptionTest {
                     .add(Pattern.compile("other"), ImmutableSortedSet.of(depBBuilder.getTarget()))
                     .build());
     BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
+        new TestBuildRuleResolver(
             TargetGraphFactory.newInstance(
-                depABuilder.build(), depBBuilder.build(), cxxLibraryBuilder.build()),
-            new DefaultTargetNodeToBuildRuleTransformer());
+                depABuilder.build(), depBBuilder.build(), cxxLibraryBuilder.build()));
     resolver.requireRule(depABuilder.getTarget());
     resolver.requireRule(depBBuilder.getTarget());
     CxxLibrary rule = (CxxLibrary) resolver.requireRule(cxxLibraryBuilder.getTarget());
@@ -1403,7 +1338,7 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  public void inferCaptureAllIncludesExportedDeps() throws Exception {
+  public void inferCaptureAllIncludesExportedDeps() {
     CxxLibraryBuilder exportedDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:exported_dep"), cxxBuckConfig)
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("dep.c"))));
@@ -1412,9 +1347,7 @@ public class CxxLibraryDescriptionTest {
             .setExportedDeps(ImmutableSortedSet.of(exportedDepBuilder.getTarget()));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(exportedDepBuilder.build(), ruleBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     BuildRule rule =
         resolver.requireRule(
             ruleBuilder

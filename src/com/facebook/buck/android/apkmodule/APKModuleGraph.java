@@ -73,10 +73,10 @@ public class APKModuleGraph implements AddsToRuleKey {
   private final Supplier<ImmutableMap<BuildTarget, APKModule>> targetToModuleMapSupplier =
       MoreSuppliers.memoize(
           () -> {
-            final Builder<BuildTarget, APKModule> mapBuilder = ImmutableMap.builder();
+            Builder<BuildTarget, APKModule> mapBuilder = ImmutableMap.builder();
             new AbstractBreadthFirstTraversal<APKModule>(getGraph().getNodesWithNoIncomingEdges()) {
               @Override
-              public ImmutableSet<APKModule> visit(final APKModule node) {
+              public ImmutableSet<APKModule> visit(APKModule node) {
                 if (node.equals(rootAPKModuleSupplier.get())) {
                   return ImmutableSet.of();
                 }
@@ -96,7 +96,7 @@ public class APKModuleGraph implements AddsToRuleKey {
   private final Supplier<ImmutableSet<APKModule>> modulesSupplier =
       MoreSuppliers.memoize(
           () -> {
-            final ImmutableSet.Builder<APKModule> moduleBuilder = ImmutableSet.builder();
+            ImmutableSet.Builder<APKModule> moduleBuilder = ImmutableSet.builder();
             new AbstractBreadthFirstTraversal<APKModule>(getRootAPKModule()) {
               @Override
               public Iterable<APKModule> visit(APKModule apkModule) throws RuntimeException {
@@ -121,9 +121,9 @@ public class APKModuleGraph implements AddsToRuleKey {
    * @param target The root target to use to traverse the graph
    */
   public APKModuleGraph(
-      final Optional<Map<String, List<BuildTarget>>> seedConfigMap,
-      final TargetGraph targetGraph,
-      final BuildTarget target) {
+      Optional<Map<String, List<BuildTarget>>> seedConfigMap,
+      TargetGraph targetGraph,
+      BuildTarget target) {
     this.targetGraph = targetGraph;
     this.target = target;
     this.seedTargets = Optional.empty();
@@ -138,9 +138,7 @@ public class APKModuleGraph implements AddsToRuleKey {
    * @param seedTargets The set of seed targets to use for creating {@code APKModule}.
    */
   public APKModuleGraph(
-      final TargetGraph targetGraph,
-      final BuildTarget target,
-      final Optional<Set<BuildTarget>> seedTargets) {
+      TargetGraph targetGraph, BuildTarget target, Optional<Set<BuildTarget>> seedTargets) {
     this.targetGraph = targetGraph;
     this.target = target;
     this.seedTargets = seedTargets;
@@ -166,7 +164,7 @@ public class APKModuleGraph implements AddsToRuleKey {
     }
     HashMap<String, List<BuildTarget>> seedConfigMapMutable = new HashMap<>();
     for (BuildTarget seedTarget : seedTargets.get()) {
-      final String moduleName = generateNameFromTarget(seedTarget);
+      String moduleName = generateNameFromTarget(seedTarget);
       seedConfigMapMutable.put(moduleName, ImmutableList.of(seedTarget));
     }
     ImmutableMap<String, List<BuildTarget>> seedConfigMapImmutable =
@@ -222,13 +220,13 @@ public class APKModuleGraph implements AddsToRuleKey {
    * @throws IOException
    */
   public static ImmutableMultimap<APKModule, String> getAPKModuleToClassesMap(
-      final ImmutableMultimap<APKModule, Path> apkModuleToJarPathMap,
-      final Function<String, String> translatorFunction,
-      final ProjectFilesystem filesystem)
+      ImmutableMultimap<APKModule, Path> apkModuleToJarPathMap,
+      Function<String, String> translatorFunction,
+      ProjectFilesystem filesystem)
       throws IOException {
-    final ImmutableMultimap.Builder<APKModule, String> builder = ImmutableSetMultimap.builder();
+    ImmutableMultimap.Builder<APKModule, String> builder = ImmutableSetMultimap.builder();
     if (!apkModuleToJarPathMap.isEmpty()) {
-      for (final APKModule dexStore : apkModuleToJarPathMap.keySet()) {
+      for (APKModule dexStore : apkModuleToJarPathMap.keySet()) {
         for (Path jarFilePath : apkModuleToJarPathMap.get(dexStore)) {
           ClasspathTraverser classpathTraverser = new DefaultClasspathTraverser();
           classpathTraverser.traverse(
@@ -258,7 +256,7 @@ public class APKModuleGraph implements AddsToRuleKey {
    * @return The graph of APKModules with edges representing dependencies between modules
    */
   private DirectedAcyclicGraph<APKModule> generateGraph() {
-    final MutableDirectedGraph<APKModule> apkModuleGraph = new MutableDirectedGraph<>();
+    MutableDirectedGraph<APKModule> apkModuleGraph = new MutableDirectedGraph<>();
 
     apkModuleGraph.addNode(rootAPKModuleSupplier.get());
 
@@ -278,7 +276,7 @@ public class APKModuleGraph implements AddsToRuleKey {
    * @return The root APK Module
    */
   private APKModule generateRootModule() {
-    final Set<BuildTarget> rootTargets = new HashSet<>();
+    Set<BuildTarget> rootTargets = new HashSet<>();
     if (targetGraph != TargetGraph.EMPTY) {
       new AbstractBreadthFirstTraversal<TargetNode<?, ?>>(targetGraph.get(target)) {
         @Override
@@ -307,10 +305,10 @@ public class APKModuleGraph implements AddsToRuleKey {
    * @return the Multimap containing targets and the seed modules that contain them
    */
   private Multimap<BuildTarget, String> mapTargetsToContainingModules() {
-    final Multimap<BuildTarget, String> targetToContainingApkModuleNameMap =
+    Multimap<BuildTarget, String> targetToContainingApkModuleNameMap =
         MultimapBuilder.treeKeys().treeSetValues().build();
     for (Map.Entry<String, List<BuildTarget>> seedConfig : getSeedConfigMap().get().entrySet()) {
-      final String seedModuleName = seedConfig.getKey();
+      String seedModuleName = seedConfig.getKey();
       for (BuildTarget seedTarget : seedConfig.getValue()) {
         targetToContainingApkModuleNameMap.put(seedTarget, seedModuleName);
         new AbstractBreadthFirstTraversal<TargetNode<?, ?>>(targetGraph.get(seedTarget)) {
@@ -346,7 +344,7 @@ public class APKModuleGraph implements AddsToRuleKey {
       Multimap<BuildTarget, String> targetToContainingApkModulesMap) {
 
     // Sort the targets into APKModuleBuilders based on their seed dependencies
-    final Map<ImmutableSet<String>, APKModule> combinedModuleHashToModuleMap = new HashMap<>();
+    Map<ImmutableSet<String>, APKModule> combinedModuleHashToModuleMap = new HashMap<>();
     for (Map.Entry<BuildTarget, Collection<String>> entry :
         targetToContainingApkModulesMap.asMap().entrySet()) {
       ImmutableSet<String> containingModuleSet = ImmutableSet.copyOf(entry.getValue());

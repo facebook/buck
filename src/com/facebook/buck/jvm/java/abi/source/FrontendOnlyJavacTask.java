@@ -92,12 +92,12 @@ public class FrontendOnlyJavacTask extends BuckJavacTask {
   }
 
   @Override
-  public Iterable<? extends Element> analyze() throws IOException {
+  public Iterable<? extends Element> analyze() {
     throw new UnsupportedOperationException("Code analysis not supported");
   }
 
   @Override
-  public Iterable<? extends JavaFileObject> generate() throws IOException {
+  public Iterable<? extends JavaFileObject> generate() {
     throw new UnsupportedOperationException("Code generation not supported");
   }
 

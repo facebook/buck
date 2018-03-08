@@ -29,7 +29,7 @@ import org.junit.Test;
 
 public class InstallEventTest {
   @Test
-  public void testEquals() throws Exception {
+  public void testEquals() {
     InstallEvent.Started started =
         configureTestEvent(InstallEvent.started(BuildTargetFactory.newInstance("//foo:bar")));
     InstallEvent.Started startedTwo =

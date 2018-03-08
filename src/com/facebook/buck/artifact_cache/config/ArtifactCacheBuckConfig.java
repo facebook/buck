@@ -393,7 +393,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
 
   private CacheReadMode getCacheReadMode(String section, String fieldName, String defaultValue) {
     String cacheMode = buckConfig.getValue(section, fieldName).orElse(defaultValue);
-    final CacheReadMode result;
+    CacheReadMode result;
     try {
       result = CacheReadMode.valueOf(cacheMode.toUpperCase());
     } catch (IllegalArgumentException e) {
@@ -426,8 +426,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   }
 
   private DirCacheEntry obtainDirEntryForName(Optional<String> cacheName) {
-    final String section =
-        Joiner.on('#').skipNulls().join(CACHE_SECTION_NAME, cacheName.orElse(null));
+    String section = Joiner.on('#').skipNulls().join(CACHE_SECTION_NAME, cacheName.orElse(null));
 
     CacheReadMode readMode = getCacheReadMode(section, DIR_MODE_FIELD, DEFAULT_DIR_CACHE_MODE);
 
@@ -485,7 +484,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   }
 
   private SQLiteCacheEntry obtainSQLiteEntryForName(String cacheName) {
-    final String section = String.join("#", CACHE_SECTION_NAME, cacheName);
+    String section = String.join("#", CACHE_SECTION_NAME, cacheName);
 
     CacheReadMode readMode =
         getCacheReadMode(section, SQLITE_MODE_FIELD, DEFAULT_SQLITE_CACHE_MODE);

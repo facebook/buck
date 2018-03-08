@@ -339,10 +339,10 @@ public class LogStateTrackerTest {
             "runTwoStdOutLine6"));
   }
 
-  private void assertLogLines(String filePath, final List<String> logLines) throws IOException {
+  private void assertLogLines(String filePath, List<String> logLines) throws IOException {
     assertTrue("Log file does not exist: " + filePath, logDir.resolve(filePath).toFile().exists());
     try (Stream<String> stream = Files.lines(logDir.resolve(filePath).toAbsolutePath())) {
-      final AtomicInteger lineIndex = new AtomicInteger(0);
+      AtomicInteger lineIndex = new AtomicInteger(0);
       stream.forEachOrdered(
           line -> {
             assertThat(

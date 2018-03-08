@@ -28,6 +28,6 @@ class SourceAbiCompatibleSignatureVisitor extends SignatureVisitorWrapper {
   public SignatureVisitor visitClassBound() {
     // Because we can't know whether inferred types are classes or interfaces, we treat everything
     // as interfaces.
-    return super.visitInterfaceBound();
+    return visitInterfaceBound();
   }
 }

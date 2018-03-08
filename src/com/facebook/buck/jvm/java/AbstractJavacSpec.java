@@ -52,8 +52,8 @@ abstract class AbstractJavacSpec implements AddsToRuleKey {
     }
 
     String compilerClassName = getCompilerClassName().orElse(COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL);
-    final Javac.Source javacSource = getJavacSource();
-    final Javac.Location javacLocation = getJavacLocation();
+    Javac.Source javacSource = getJavacSource();
+    Javac.Location javacLocation = getJavacLocation();
     switch (javacSource) {
       case EXTERNAL:
         return new ConstantJavacProvider(ExternalJavac.createJavac(getJavacPath().get()));

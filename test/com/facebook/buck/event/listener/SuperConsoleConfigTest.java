@@ -32,7 +32,7 @@ import org.junit.Test;
 public class SuperConsoleConfigTest {
 
   @Test
-  public void testIsEnabled() throws Exception {
+  public void testIsEnabled() {
     Console nonAnsiConsole =
         new Console(
             Verbosity.STANDARD_INFORMATION,

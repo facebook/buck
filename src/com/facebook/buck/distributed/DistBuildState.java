@@ -64,7 +64,7 @@ public class DistBuildState {
   private final ImmutableBiMap<Integer, Cell> cells;
   private final Map<ProjectFilesystem, BuildJobStateFileHashes> fileHashes;
 
-  private DistBuildState(BuildJobState remoteState, final ImmutableBiMap<Integer, Cell> cells) {
+  private DistBuildState(BuildJobState remoteState, ImmutableBiMap<Integer, Cell> cells) {
     this.remoteState = remoteState;
     this.cells = cells;
     this.fileHashes =

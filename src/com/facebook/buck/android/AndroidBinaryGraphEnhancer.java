@@ -102,6 +102,7 @@ public class AndroidBinaryGraphEnhancer {
   private final BuildTarget originalBuildTarget;
   private final SortedSet<BuildRule> originalDeps;
   private final ProjectFilesystem projectFilesystem;
+  private final ToolchainProvider toolchainProvider;
   private final AndroidPlatformTarget androidPlatformTarget;
   private final BuildRuleParams buildRuleParams;
   private final boolean trimResourceIds;
@@ -191,6 +192,7 @@ public class AndroidBinaryGraphEnhancer {
     this.androidPlatformTarget = androidPlatformTarget;
     Preconditions.checkArgument(originalParams.getExtraDeps().get().isEmpty());
     this.projectFilesystem = projectFilesystem;
+    this.toolchainProvider = toolchainProvider;
     this.buildRuleParams = originalParams;
     this.originalBuildTarget = originalBuildTarget;
     this.originalDeps = originalParams.getBuildDeps();
@@ -330,6 +332,7 @@ public class AndroidBinaryGraphEnhancer {
                   originalBuildTarget.withAppendedFlavors(
                       COMPILE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR),
                   projectFilesystem,
+                  toolchainProvider,
                   paramsForCompileGenCode,
                   ruleResolver,
                   cellPathResolver,
@@ -418,6 +421,7 @@ public class AndroidBinaryGraphEnhancer {
         DefaultJavaLibrary.rulesBuilder(
                 originalBuildTarget.withAppendedFlavors(COMPILE_UBER_R_DOT_JAVA_FLAVOR),
                 projectFilesystem,
+                toolchainProvider,
                 paramsForCompileUberRDotJava,
                 ruleResolver,
                 cellPathResolver,

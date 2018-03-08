@@ -112,9 +112,7 @@ public class SymlinkTreeTest {
     // The output path used by the buildable for the link tree.
     outputPath = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root");
 
-    ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver = new TestBuildRuleResolver();
     ruleFinder = new SourcePathRuleFinder(ruleResolver);
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -131,7 +129,7 @@ public class SymlinkTreeTest {
   }
 
   @Test
-  public void testSymlinkTreeBuildSteps() throws IOException {
+  public void testSymlinkTreeBuildSteps() {
 
     // Create the fake build contexts.
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
@@ -177,10 +175,7 @@ public class SymlinkTreeTest {
                     projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), aFile))),
             ImmutableMultimap.of(),
             ruleFinder);
-    SourcePathRuleFinder ruleFinder =
-        new SourcePathRuleFinder(
-            new SingleThreadedBuildRuleResolver(
-                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     // Calculate their rule keys and verify they're different.
@@ -423,9 +418,7 @@ public class SymlinkTreeTest {
       throws Exception {
     // If a dependent of a symlink tree uses the symlink tree's output as an input, that dependent's
     // rulekey must change when the link contents change.
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     ruleResolver.addToIndex(symlinkTreeBuildRule);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -456,8 +449,7 @@ public class SymlinkTreeTest {
   }
 
   @Test
-  public void testSymlinkTreeInputBasedRuleKeysAreImmuneToLinkSourceContentChanges()
-      throws Exception {
+  public void testSymlinkTreeInputBasedRuleKeysAreImmuneToLinkSourceContentChanges() {
     Genrule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
@@ -513,9 +505,7 @@ public class SymlinkTreeTest {
 
   @Test
   public void resolveDuplicateRelativePathsIsNoopWhenThereAreNoDuplicates() {
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     SourcePathResolver resolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 
@@ -535,9 +525,7 @@ public class SymlinkTreeTest {
 
   @Test
   public void resolveDuplicateRelativePaths() throws InterruptedException, IOException {
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     SourcePathResolver resolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     tmp.getRoot().resolve("one").toFile().mkdir();
@@ -563,9 +551,7 @@ public class SymlinkTreeTest {
 
   @Test
   public void resolveDuplicateRelativePathsWithConflicts() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     SourcePathResolver resolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     tmp.getRoot().resolve("a-fs").toFile().mkdir();
@@ -596,8 +582,7 @@ public class SymlinkTreeTest {
   }
 
   @Test
-  public void mergesDirectoryContentsIntoMainSymlinkTree()
-      throws IOException, InterruptedException {
+  public void mergesDirectoryContentsIntoMainSymlinkTree() throws IOException {
     BuildTarget exportFileTarget1 = BuildTargetFactory.newInstance("//test:dir1");
     BuildTarget exportFileTarget2 = BuildTargetFactory.newInstance("//test:dir2");
     ExportFile exportFile1 =

@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_test", "java_immutables_library")
 
 java_test(
     name = "impl",
@@ -14,14 +14,14 @@ java_test(
     ],
 )
 
-java_library(
+java_immutables_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],
         exclude = ["*Test.java"],
     ),
     exported_deps = [
-        "//src/com/facebook/buck/android/toolchain:toolchain",
+        "//src/com/facebook/buck/toolchain:toolchain",
     ],
     visibility = [
         "PUBLIC",
@@ -31,6 +31,5 @@ java_library(
         "//src/com/facebook/buck/toolchain/impl:impl",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/config:FakeBuckConfig",
-        "//test/com/facebook/buck/cxx/toolchain:testutil",
     ],
 )

@@ -93,7 +93,7 @@ abstract class AbstractLuaScriptStarter implements Starter {
                         getProjectFilesystem(), templateTarget, "%s/starter.lua.in"),
                     /* executable */ false));
 
-    final Tool lua = getLuaPlatform().getLua().resolve(getRuleResolver());
+    Tool lua = getLuaPlatform().getLua().resolve(getRuleResolver());
     WriteStringTemplateRule writeStringTemplateRule =
         getRuleResolver()
             .addToIndex(

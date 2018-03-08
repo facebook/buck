@@ -108,10 +108,10 @@ public class MacroArg implements Arg, RuleKeyAppendable {
   }
 
   public static Function<String, Arg> toMacroArgFunction(
-      final MacroHandler handler,
-      final BuildTarget target,
-      final CellPathResolver cellNames,
-      final BuildRuleResolver resolver) {
+      MacroHandler handler,
+      BuildTarget target,
+      CellPathResolver cellNames,
+      BuildRuleResolver resolver) {
     return unexpanded -> {
       MacroArg arg = new MacroArg(handler, target, cellNames, resolver, unexpanded);
       try {

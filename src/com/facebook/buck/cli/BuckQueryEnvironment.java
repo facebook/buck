@@ -390,7 +390,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
   private Optional<ListenableFuture<Void>> discoverNewTargetsConcurrently(
       BuildTarget buildTarget, ConcurrentHashMap<BuildTarget, ListenableFuture<Void>> jobsCache)
-      throws BuildFileParseException, BuildTargetException {
+      throws BuildFileParseException {
     ListenableFuture<Void> job = jobsCache.get(buildTarget);
     if (job != null) {
       return Optional.empty();
@@ -406,7 +406,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
             targetNode -> {
               targetsToNodes.put(buildTarget, targetNode);
               List<ListenableFuture<Void>> depsFuture = new ArrayList<>();
-              final Set<BuildTarget> parseDeps = targetNode.getParseDeps();
+              Set<BuildTarget> parseDeps = targetNode.getParseDeps();
               for (BuildTarget parseDep : parseDeps) {
                 discoverNewTargetsConcurrently(parseDep, jobsCache)
                     .ifPresent(
@@ -448,9 +448,9 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getBuildFiles(Set<QueryTarget> targets) throws QueryException {
-    final ProjectFilesystem cellFilesystem = rootCell.getFilesystem();
-    final Path rootPath = cellFilesystem.getRootPath();
+  public ImmutableSet<QueryTarget> getBuildFiles(Set<QueryTarget> targets) {
+    ProjectFilesystem cellFilesystem = rootCell.getFilesystem();
+    Path rootPath = cellFilesystem.getRootPath();
     Preconditions.checkState(rootPath.isAbsolute());
 
     ImmutableSet.Builder<QueryTarget> builder = ImmutableSet.builder();
@@ -473,8 +473,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getFileOwners(ImmutableList<String> files)
-      throws QueryException {
+  public ImmutableSet<QueryTarget> getFileOwners(ImmutableList<String> files) {
     OwnersReport report = ownersReportBuilder.build(buildFileTrees, executor, files);
     report
         .getInputsWithNoOwners()
@@ -502,8 +501,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
   @Override
   public ImmutableSet<Object> filterAttributeContents(
-      QueryTarget target, String attribute, final Predicate<Object> predicate)
-      throws QueryException {
+      QueryTarget target, String attribute, Predicate<Object> predicate) throws QueryException {
     return QueryTargetAccessor.filterAttributeContents(
         typeCoercerFactory, getNode(target), attribute, predicate);
   }

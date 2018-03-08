@@ -16,6 +16,8 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.distributed.build_slave.DistBuildTrace.MinionThread;
+import com.facebook.buck.distributed.build_slave.DistBuildTrace.MinionTrace;
 import com.facebook.buck.distributed.build_slave.DistBuildTrace.RuleTrace;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.WorkUnit;
@@ -23,8 +25,6 @@ import com.facebook.buck.util.timing.SettableFakeClock;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
-import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -51,16 +51,19 @@ public class DistBuildTraceTrackerTest {
 
     tracker.updateWork("m1", Collections.singletonList("bbb"), Collections.emptyList());
 
-    DistBuildTrace snapshot = tracker.snapshot();
-    List<RuleTrace> historyForMinion1 = snapshot.rulesByMinionId.get("m1");
-    Assert.assertThat(historyForMinion1, Matchers.hasSize(2));
+    DistBuildTrace trace = tracker.generateTrace();
+    Assert.assertEquals(1, trace.minions.size());
+    MinionTrace historyForMinion1 = trace.minions.get(0);
+    Assert.assertEquals(1, historyForMinion1.threads.size());
+    MinionThread historyForThread1 = historyForMinion1.threads.get(0);
+    Assert.assertEquals(2, historyForThread1.ruleTraces.size());
 
-    RuleTrace entry0 = historyForMinion1.get(0);
+    RuleTrace entry0 = historyForThread1.ruleTraces.get(0);
     Assert.assertEquals("aaa", entry0.ruleName);
     Assert.assertEquals(ts0 + 1000, entry0.startEpochMillis);
     Assert.assertEquals(ts0 + 2000, entry0.finishEpochMillis);
 
-    RuleTrace entry1 = historyForMinion1.get(1);
+    RuleTrace entry1 = historyForThread1.ruleTraces.get(1);
     Assert.assertEquals("bbb", entry1.ruleName);
     Assert.assertEquals(ts0 + 2000, entry1.startEpochMillis);
     Assert.assertEquals(ts0 + 3000, entry1.finishEpochMillis);

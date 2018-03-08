@@ -77,6 +77,9 @@ public class CxxBuckConfig {
       "default_reexport_all_header_dependencies";
   private static final String SHLIB_INTERFACES = "shlib_interfaces";
   private static final String SHARED_LIBRARY_INTERFACES = "shared_library_interfaces";
+  private static final String INDEPENDENT_SHLIB_INTERFACES = "independent_shlib_interfaces";
+  private static final String INDEPENDENT_SHLIB_INTERFACE_LDFLAGS =
+      "independent_shlib_interface_ldflags";
   private static final String ENABLE_DEPRECATED_PREBUILT_CXX_LIBRARY_API =
       "enable_deprecated_prebuilt_cxx_library_api";
   private static final String DECLARED_PLATFORMS = "declared_platforms";
@@ -475,6 +478,22 @@ public class CxxBuckConfig {
 
     // Default.
     return SharedLibraryInterfaceParams.Type.DISABLED;
+  }
+
+  /**
+   * @return additional flags to pass to the linker when linking independent shared library
+   *     interfaces.
+   */
+  public Optional<ImmutableList<String>> getIndependentShlibInterfacesLdflags() {
+    return getFlags(INDEPENDENT_SHLIB_INTERFACE_LDFLAGS);
+  }
+
+  /**
+   * @return whether to generate a rule's shared library interface directly from it's object files,
+   *     to avoid having to wait for it's shared library to build.
+   */
+  public boolean isIndependentSharedLibraryInterfaces() {
+    return delegate.getBooleanValue(cxxSection, INDEPENDENT_SHLIB_INTERFACES, false);
   }
 
   public boolean isDeprecatedPrebuiltCxxLibraryApiEnabled() {

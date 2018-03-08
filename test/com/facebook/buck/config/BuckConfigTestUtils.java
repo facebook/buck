@@ -32,7 +32,7 @@ public class BuckConfigTestUtils {
   private BuckConfigTestUtils() {}
 
   public static BuckConfig createWithDefaultFilesystem(
-      TemporaryPaths temporaryFolder, Reader reader) throws InterruptedException, IOException {
+      TemporaryPaths temporaryFolder, Reader reader) throws IOException {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
     return createFromReader(

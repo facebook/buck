@@ -123,7 +123,7 @@ public class PackageStringAssets extends AbstractBuildRule {
                 context.getBuildCellRootPath(),
                 getProjectFilesystem(),
                 pathToDirContainingAssetsDir)));
-    final Path pathToStrings = pathToDirContainingAssetsDir.resolve("assets").resolve("strings");
+    Path pathToStrings = pathToDirContainingAssetsDir.resolve("assets").resolve("strings");
     Function<String, Path> assetPathBuilder =
         locale -> pathToStrings.resolve(locale + STRING_ASSET_FILE_EXTENSION);
     Path pathToStringAssetsZip = getPathToStringAssetsZip();

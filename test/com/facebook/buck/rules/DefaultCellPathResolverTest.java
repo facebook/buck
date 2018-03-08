@@ -51,8 +51,7 @@ public class DefaultCellPathResolverTest {
     DefaultCellPathResolver cellPathResolver =
         DefaultCellPathResolver.of(
             cell1Root,
-            ConfigBuilder.createFromText(
-                REPOSITORIES_SECTION, " simple = " + cell2Root.toString()));
+            ConfigBuilder.createFromText(REPOSITORIES_SECTION, " simple = " + cell2Root));
 
     assertThat(
         cellPathResolver.getPathMapping(),
@@ -76,8 +75,7 @@ public class DefaultCellPathResolverTest {
     DefaultCellPathResolver cellPathResolver =
         DefaultCellPathResolver.of(
             cell1Root,
-            ConfigBuilder.createFromText(
-                REPOSITORIES_SECTION, " simple = " + cell2Root.toString()));
+            ConfigBuilder.createFromText(REPOSITORIES_SECTION, " simple = " + cell2Root));
 
     // Allow non-existant paths; Buck should allow paths whose .buckconfigs
     // cannot be loaded.
@@ -145,18 +143,18 @@ public class DefaultCellPathResolverTest {
             cell1Root,
             ConfigBuilder.createFromText(
                 REPOSITORIES_SECTION,
-                " left = " + cellLeftRoot.toString(),
-                " right = " + cellRightRoot.toString(),
-                " center = " + cellCenterRoot.toString()));
+                " left = " + cellLeftRoot,
+                " right = " + cellRightRoot,
+                " center = " + cellCenterRoot));
 
     Files.write(
         cellLeftRoot.resolve(".buckconfig"),
-        ImmutableList.of(REPOSITORIES_SECTION, " center = " + cellCenterRoot.toString()),
+        ImmutableList.of(REPOSITORIES_SECTION, " center = " + cellCenterRoot),
         StandardCharsets.UTF_8);
 
     Files.write(
         cellRightRoot.resolve(".buckconfig"),
-        ImmutableList.of(REPOSITORIES_SECTION, " center = " + cellCenterRoot.toString()),
+        ImmutableList.of(REPOSITORIES_SECTION, " center = " + cellCenterRoot),
         StandardCharsets.UTF_8);
 
     assertThat(

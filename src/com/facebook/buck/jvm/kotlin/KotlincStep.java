@@ -149,7 +149,7 @@ public class KotlincStep implements Step {
       Path outputDirectory,
       ImmutableSortedSet<Path> buildClasspathEntries) {
 
-    final ImmutableList.Builder<String> builder = ImmutableList.builder();
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     if (outputDirectory != null) {
       builder.add(DESTINATION_FLAG, filesystem.resolve(outputDirectory).toString());

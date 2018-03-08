@@ -565,7 +565,7 @@ public class TargetsCommandIntegrationTest {
     JsonNode observed =
         ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
 
-    System.out.println(observed.toString());
+    System.out.println(observed);
 
     String expectedJson = workspace.getFileContents("output_path_json.js");
     JsonNode expected =

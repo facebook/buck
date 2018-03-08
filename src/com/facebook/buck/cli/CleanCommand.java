@@ -46,7 +46,7 @@ public class CleanCommand extends AbstractCommand {
   )
   private boolean dryRun = false;
 
-  private void cleanCell(CommandRunnerParams params, Cell cell) throws IOException {
+  private void cleanCell(CommandRunnerParams params, Cell cell) {
     // Ideally, we would like the implementation of this method to be as simple as:
     //
     // getProjectFilesystem().deleteRecursivelyIfExists(BuckConstant.BUCK_OUTPUT_DIRECTORY);

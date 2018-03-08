@@ -22,12 +22,10 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
@@ -42,10 +40,7 @@ public class AppleAssetCatalogTest {
 
   private ProjectFilesystem filesystem;
   private SourcePathResolver resolver =
-      DefaultSourcePathResolver.from(
-          new SourcePathRuleFinder(
-              new SingleThreadedBuildRuleResolver(
-                  TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+      DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
 
   @Rule public final TemporaryPaths tmp = new TemporaryPaths();
 

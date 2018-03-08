@@ -133,8 +133,7 @@ public class DistBuildControllerTest {
     invocationInfo = FakeInvocationInfoFactory.create();
   }
 
-  private DistBuildController createController(ListenableFuture<BuildJobState> asyncBuildJobState)
-      throws IOException, InterruptedException {
+  private DistBuildController createController(ListenableFuture<BuildJobState> asyncBuildJobState) {
 
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     BuildExecutorArgs executorArgs =
@@ -192,7 +191,7 @@ public class DistBuildControllerTest {
   }
 
   private DistBuildController.ExecutionResult runBuildWithController(
-      DistBuildController distBuildController) throws IOException, InterruptedException {
+      DistBuildController distBuildController) throws InterruptedException {
     // Normally LOCAL_PREPARATION get started in BuildCommand, so simulate that here,
     // otherwise when we stop the timer it will fail with an exception about not being started.
     distBuildClientStatsTracker.startTimer(LOCAL_PREPARATION);
@@ -248,7 +247,7 @@ public class DistBuildControllerTest {
   @Test
   public void testReturnsExecutionResultOnSyncPreparationFailure()
       throws IOException, InterruptedException {
-    final BuildJobState buildJobState = createMinimalFakeBuildJobState();
+    BuildJobState buildJobState = createMinimalFakeBuildJobState();
 
     DistBuildController controller = createController(Futures.immediateFuture(buildJobState));
 
@@ -301,12 +300,12 @@ public class DistBuildControllerTest {
   @Test
   public void testReturnsExecutionResultOnDistBuildException()
       throws IOException, InterruptedException, DistBuildRejectedException {
-    final BuildSlaveRunId buildSlaveRunId = new BuildSlaveRunId();
+    BuildSlaveRunId buildSlaveRunId = new BuildSlaveRunId();
     buildSlaveRunId.setId("my-fav-runid");
     BuildJob job = new BuildJob();
     job.setStampedeId(stampedeId);
 
-    final BuildJobState buildJobState = createMinimalFakeBuildJobState();
+    BuildJobState buildJobState = createMinimalFakeBuildJobState();
 
     setupExpectationsForSuccessfulDistBuildPrepStep(job, buildJobState);
 
@@ -338,12 +337,12 @@ public class DistBuildControllerTest {
   @Test
   public void testOrderlyExecution()
       throws IOException, InterruptedException, DistBuildRejectedException {
-    final BuildSlaveRunId buildSlaveRunId = new BuildSlaveRunId();
+    BuildSlaveRunId buildSlaveRunId = new BuildSlaveRunId();
     buildSlaveRunId.setId("my-fav-runid");
     BuildJob job = new BuildJob();
     job.setStampedeId(stampedeId);
 
-    final BuildJobState buildJobState = createMinimalFakeBuildJobState();
+    BuildJobState buildJobState = createMinimalFakeBuildJobState();
 
     setupExpectationsForSuccessfulDistBuildPrepStep(job, buildJobState);
 

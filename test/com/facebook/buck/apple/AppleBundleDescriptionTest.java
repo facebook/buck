@@ -26,10 +26,9 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.types.Either;
@@ -158,7 +157,7 @@ public class AppleBundleDescriptionTest {
   }
 
   @Test
-  public void metadataTraversalForFrameworkDependenciesAreTerminated() throws Exception {
+  public void metadataTraversalForFrameworkDependenciesAreTerminated() {
     BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:binary");
     TargetNode<?, ?> binaryNode = new AppleBinaryBuilder(binaryTarget).build();
 
@@ -171,9 +170,7 @@ public class AppleBundleDescriptionTest {
             .build();
 
     BuildRuleResolver buildRuleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraphFactory.newInstance(bundleNode, binaryNode),
-            new DefaultTargetNodeToBuildRuleTransformer());
+        new TestBuildRuleResolver(TargetGraphFactory.newInstance(bundleNode, binaryNode));
     assertTrue(
         "Although querying a binary's framework dependencies should not return empty...",
         buildRuleResolver

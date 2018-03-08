@@ -49,7 +49,7 @@ class CxxLinkStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    return ImmutableList.<String>builder().addAll(linker).add("@" + argFilePath.toString()).build();
+    return ImmutableList.<String>builder().addAll(linker).add("@" + argFilePath).build();
   }
 
   @Override

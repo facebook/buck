@@ -31,7 +31,7 @@ class SameThreadFailOnTimeout extends Statement {
   private final Callable<Throwable> callable;
 
   public SameThreadFailOnTimeout(
-      ExecutorService executor, long timeout, String testName, final Statement next) {
+      ExecutorService executor, long timeout, String testName, Statement next) {
     this.executor = executor;
     this.timeout = timeout;
     this.testName = testName;

@@ -163,7 +163,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
         DirArtifactCacheTestUtil.getPathForRuleKey(
             dirCache, new RuleKey(ruleKey.asHashCode()), Optional.empty());
     FileSystem zipFs = FileSystems.newFileSystem(artifactZip, /* loader */ null);
-    Path outputInZip = zipFs.getPath("/" + outputPath.toString());
+    Path outputInZip = zipFs.getPath("/" + outputPath);
     new ZipOutputStream(Files.newOutputStream(outputInZip, StandardOpenOption.TRUNCATE_EXISTING))
         .close();
     zipFs.close();
@@ -629,18 +629,18 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     Path bizClassUsageFilePath =
         BuildTargets.getGenPath(filesystem, bizTarget, "lib__%s__output/used-classes.json");
 
-    final List<String> lines = Files.readAllLines(workspace.getPath(bizClassUsageFilePath), UTF_8);
+    List<String> lines = Files.readAllLines(workspace.getPath(bizClassUsageFilePath), UTF_8);
 
     assertEquals("Expected just one line of JSON", 1, lines.size());
 
-    final String utilJarPath;
+    String utilJarPath;
     if (compileAgainstAbis.equals(TRUE)) {
       utilJarPath =
           MorePaths.pathWithPlatformSeparators("buck-out/gen/util#class-abi/util-abi.jar");
     } else {
       utilJarPath = MorePaths.pathWithPlatformSeparators("buck-out/gen/lib__util__output/util.jar");
     }
-    final String utilClassPath = MorePaths.pathWithPlatformSeparators("com/example/Util.class");
+    String utilClassPath = MorePaths.pathWithPlatformSeparators("com/example/Util.class");
 
     JsonNode jsonNode = ObjectMappers.READER.readTree(lines.get(0));
     assertThat(
@@ -660,7 +660,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     BuildTarget bizTarget = BuildTargetFactory.newInstance("//:biz");
     workspace.runBuckBuild(bizTarget.getFullyQualifiedName()).assertSuccess();
 
-    final BuckBuildLog cleanBuildLog = workspace.getBuildLog();
+    BuckBuildLog cleanBuildLog = workspace.getBuildLog();
     cleanBuildLog.assertTargetBuiltLocally("away_cell//util:util");
     cleanBuildLog.assertTargetBuiltLocally("//:biz");
 
@@ -669,7 +669,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
         crossCellRoot.resolve("util/MoreUtil.java").toString(), "//public_method", "");
     workspace.runBuckBuild(bizTarget.getFullyQualifiedName()).assertSuccess();
 
-    final BuckBuildLog depFileHitLog = workspace.getBuildLog();
+    BuckBuildLog depFileHitLog = workspace.getBuildLog();
     depFileHitLog.assertTargetBuiltLocally("away_cell//util:util");
     depFileHitLog.assertTargetHadMatchingDepfileRuleKey("//:biz");
 
@@ -678,7 +678,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
         crossCellRoot.resolve("util/Util.java").toString(), "//public_method", "");
     workspace.runBuckBuild(bizTarget.getFullyQualifiedName()).assertSuccess();
 
-    final BuckBuildLog depFileMissLog = workspace.getBuildLog();
+    BuckBuildLog depFileMissLog = workspace.getBuildLog();
     depFileMissLog.assertTargetBuiltLocally("away_cell//util:util");
     depFileMissLog.assertTargetBuiltLocally("//:biz");
   }
@@ -696,9 +696,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     Path bizClassUsageFilePath =
         BuildTargets.getGenPath(filesystem, bizTarget, "lib__%s__output/used-classes.json");
 
-    final String usedClasses = getContents(workspace.getPath(bizClassUsageFilePath));
+    String usedClasses = getContents(workspace.getPath(bizClassUsageFilePath));
 
-    final String utilJarPath;
+    String utilJarPath;
     if (compileAgainstAbis.equals(TRUE)) {
       utilJarPath =
           MorePaths.pathWithPlatformSeparators(
@@ -708,9 +708,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
           MorePaths.pathWithPlatformSeparators(
               "/away_cell/buck-out/gen/util/lib__util__output/util.jar");
     }
-    final String utilClassPath = MorePaths.pathWithPlatformSeparators("com/example/Util.class");
+    String utilClassPath = MorePaths.pathWithPlatformSeparators("com/example/Util.class");
 
-    final JsonMatcher expectedOutputMatcher =
+    JsonMatcher expectedOutputMatcher =
         new JsonMatcher(String.format("{ \"%s\": [ \"%s\" ] }", utilJarPath, utilClassPath));
     assertThat(usedClasses, expectedOutputMatcher);
   }
@@ -1039,7 +1039,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
   }
 
   private ImmutableList<Path> getAllFilesInPath(Path path) throws IOException {
-    final List<Path> allFiles = new ArrayList<>();
+    List<Path> allFiles = new ArrayList<>();
     Files.walkFileTree(
         path,
         ImmutableSet.of(),

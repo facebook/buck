@@ -133,7 +133,7 @@ public class BuckQueryEnvironmentTest {
   }
 
   @After
-  public void cleanUp() throws Exception {
+  public void cleanUp() {
     parserState.close();
     executor.shutdown();
   }

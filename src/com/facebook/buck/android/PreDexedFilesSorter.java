@@ -265,25 +265,24 @@ public class PreDexedFilesSorter {
 
     /** @see com.facebook.buck.android.dalvik.CanaryFactory#create(String, int) */
     private DexWithClasses createCanary(
-        final ProjectFilesystem filesystem,
+        ProjectFilesystem filesystem,
         String storeName,
-        final int index,
+        int index,
         ImmutableList.Builder<Step> steps) {
-      final FileLike fileLike = CanaryFactory.create(storeName, index);
-      final String canaryDirName = "canary_" + storeName + "_" + String.valueOf(index);
-      final Path scratchDirectoryForCanaryClass = scratchDirectory.resolve(canaryDirName);
+      FileLike fileLike = CanaryFactory.create(storeName, index);
+      String canaryDirName = "canary_" + storeName + "_" + String.valueOf(index);
+      Path scratchDirectoryForCanaryClass = scratchDirectory.resolve(canaryDirName);
 
       // Strip the .class suffix to get the class name for the DexWithClasses object.
-      final String relativePathToClassFile = fileLike.getRelativePath();
+      String relativePathToClassFile = fileLike.getRelativePath();
       Preconditions.checkState(relativePathToClassFile.endsWith(".class"));
-      final String className = relativePathToClassFile.replaceFirst("\\.class$", "");
+      String className = relativePathToClassFile.replaceFirst("\\.class$", "");
 
       // Write out the .class file.
       steps.add(
           new AbstractExecutionStep("write_canary_class") {
             @Override
-            public StepExecutionResult execute(ExecutionContext context)
-                throws IOException, InterruptedException {
+            public StepExecutionResult execute(ExecutionContext context) throws IOException {
               Path classFile = scratchDirectoryForCanaryClass.resolve(relativePathToClassFile);
               try (InputStream inputStream = fileLike.getInput()) {
                 filesystem.createParentDirs(classFile);
@@ -336,7 +335,7 @@ public class PreDexedFilesSorter {
         Set<SourcePath> primaryDexInputs,
         Multimap<Path, SourcePath> secondaryOutputToInputs,
         Map<Path, DexWithClasses> metadataTxtDexEntries,
-        final ImmutableMap<SourcePath, Sha1HashCode> dexInputHashes) {
+        ImmutableMap<SourcePath, Sha1HashCode> dexInputHashes) {
       this.apkModule = apkModule;
       this.primaryDexInputs = primaryDexInputs;
       this.secondaryOutputToInputs = secondaryOutputToInputs;

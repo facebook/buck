@@ -71,7 +71,7 @@ public class BuildRuleEventManagerTest {
   }
 
   @Test
-  public void testPublishesOnlyCacheSynchronizedEvents() throws InterruptedException {
+  public void testPublishesOnlyCacheSynchronizedEvents() {
     // Setup expectations for how long event manager will sleep
     // BUILD_TARGET_ONE/TWO are synchronized at time 12
     EasyMock.expect(clock.currentTimeMillis()).andReturn((long) 12);

@@ -103,7 +103,7 @@ public class InMemoryBuildFileTree extends BuildFileTree {
   }
 
   @VisibleForTesting
-  Collection<Path> getChildPaths(final Path path) {
+  Collection<Path> getChildPaths(Path path) {
     Node node = Preconditions.checkNotNull(basePathToNodeIndex.get(path));
     if (node.children == null) {
       return ImmutableList.of();

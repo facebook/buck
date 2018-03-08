@@ -249,7 +249,7 @@ public class CxxPlatformXcodeConfigGeneratorTest {
 
   @Test
   public void testResultHasValuesMergedFromAppendConfig() {
-    final String someCrazyKey = "SOME_CRAZY_KEY";
+    String someCrazyKey = "SOME_CRAZY_KEY";
 
     LinkedHashMap<String, String> appendConfig = new LinkedHashMap<String, String>();
     appendConfig.put(someCrazyKey, "value");
@@ -272,7 +272,7 @@ public class CxxPlatformXcodeConfigGeneratorTest {
 
   @Test
   public void testAllBuildConfigurationsHaveSameConfigs() {
-    final String someCrazyKey = "SOME_CRAZY_KEY";
+    String someCrazyKey = "SOME_CRAZY_KEY";
 
     LinkedHashMap<String, String> appendConfig = new LinkedHashMap<String, String>();
     appendConfig.put(someCrazyKey, "value");

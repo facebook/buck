@@ -42,10 +42,6 @@ class InferLogLine {
 
   @Override
   public String toString() {
-    return buildTarget.toString()
-        + SPLIT_TOKEN
-        + flavors.toString()
-        + SPLIT_TOKEN
-        + output.toString();
+    return buildTarget + SPLIT_TOKEN + flavors + SPLIT_TOKEN + output;
   }
 }

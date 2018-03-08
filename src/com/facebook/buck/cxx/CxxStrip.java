@@ -103,7 +103,7 @@ public class CxxStrip extends AbstractBuildRule
             + "build targets and caused the returned rule's build target to differ from the "
             + "requested one. This is now explicitly disallowed to catch existing and future "
             + "programming errors of this kind. (Applied to target "
-            + buildTarget.toString()
+            + buildTarget
             + ")");
     if (flavoredStripStyle.isPresent()) {
       return buildTarget.withoutFlavors(flavoredStripStyle.get().getFlavor());

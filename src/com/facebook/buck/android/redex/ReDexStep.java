@@ -84,7 +84,7 @@ public class ReDexStep extends ShellStep {
 
   public static ImmutableList<Step> createSteps(
       BuildTarget target,
-      final ProjectFilesystem filesystem,
+      ProjectFilesystem filesystem,
       AndroidSdkLocation androidSdkLocation,
       SourcePathResolver resolver,
       RedexOptions redexOptions,
@@ -127,7 +127,7 @@ public class ReDexStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    ImmutableList.Builder<String> args = ImmutableList.<String>builder();
+    ImmutableList.Builder<String> args = ImmutableList.builder();
 
     // In practice, redexBinaryArgs is likely to be a single argument, which is the path to the
     // ReDex binary.

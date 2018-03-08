@@ -33,7 +33,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -87,8 +86,7 @@ public class HttpFileIntegrationTest {
   }
 
   @Test
-  public void setsExecutableBitToTrue()
-      throws IOException, InterruptedException, URISyntaxException {
+  public void setsExecutableBitToTrue() throws IOException, InterruptedException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     workspace.setUp();
@@ -113,8 +111,7 @@ public class HttpFileIntegrationTest {
   }
 
   @Test
-  public void setsExecutableBitToFalse()
-      throws IOException, InterruptedException, URISyntaxException {
+  public void setsExecutableBitToFalse() throws IOException, InterruptedException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     workspace.setUp();
@@ -139,8 +136,7 @@ public class HttpFileIntegrationTest {
   }
 
   @Test
-  public void doesNotWriteFileIfDownloadFails()
-      throws URISyntaxException, IOException, InterruptedException {
+  public void doesNotWriteFileIfDownloadFails() throws IOException, InterruptedException {
     workspace.setUp();
     rewriteBuckFileTemplate();
 
@@ -167,8 +163,7 @@ public class HttpFileIntegrationTest {
   }
 
   @Test
-  public void doesNotWriteFileIfShaVerificationFails()
-      throws IOException, InterruptedException, URISyntaxException {
+  public void doesNotWriteFileIfShaVerificationFails() throws IOException, InterruptedException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     workspace.setUp();
@@ -199,8 +194,7 @@ public class HttpFileIntegrationTest {
   }
 
   @Test
-  public void downloadsFileAndValidatesIt()
-      throws URISyntaxException, IOException, InterruptedException {
+  public void downloadsFileAndValidatesIt() throws IOException, InterruptedException {
     workspace.setUp();
     rewriteBuckFileTemplate();
 

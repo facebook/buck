@@ -25,7 +25,7 @@ import org.junit.Test;
 
 public class AndroidInstrumentationTestTest {
   @Test
-  public void testFilterBasics() throws Throwable {
+  public void testFilterBasics() {
     assertEquals(
         Optional.<String>empty(),
         AndroidInstrumentationTest.getFilterString(TestRunningOptions.builder().build()));

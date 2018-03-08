@@ -119,7 +119,7 @@ public class DTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      final ExecutionContext executionContext,
+      ExecutionContext executionContext,
       SourcePathResolver pathResolver,
       boolean isUsingTestSelectors) {
     return () -> {

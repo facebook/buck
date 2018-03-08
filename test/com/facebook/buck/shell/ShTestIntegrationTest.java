@@ -74,7 +74,7 @@ public class ShTestIntegrationTest {
         .runBuckCommand(
             "test",
             "-c",
-            "test.external_runner=" + workspace.getPath("external_runner.sh").toString(),
+            "test.external_runner=" + workspace.getPath("external_runner.sh"),
             "//:test")
         .assertSuccess();
   }

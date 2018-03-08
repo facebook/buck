@@ -63,6 +63,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Option;
 
@@ -71,6 +72,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
 
   public static final String BUILD_STATE_FILE_ARG_NAME = "--build-state-file";
   public static final String BUILD_STATE_FILE_ARG_USAGE = "File containing the BuildStateJob data.";
+  public static final int SHUTDOWN_TIMEOUT_MINUTES = 1;
 
   @Nullable
   @Option(name = BUILD_STATE_FILE_ARG_NAME, usage = BUILD_STATE_FILE_ARG_USAGE)
@@ -183,7 +185,11 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
             getConcurrencyLimit(state.getRootCell().getBuckConfig());
 
         try (CommandThreadManager pool =
-                new CommandThreadManager(getClass().getName(), concurrencyLimit);
+                new CommandThreadManager(
+                    getClass().getName(),
+                    concurrencyLimit,
+                    SHUTDOWN_TIMEOUT_MINUTES,
+                    TimeUnit.MINUTES);
             RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
                 new EventPostingRuleKeyCacheScope<>(
                     params.getBuckEventBus(),
@@ -224,21 +230,28 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
               () -> timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_PREPARATION_TIME));
 
           LOG.info("Starting to process build with DistBuildExecutor.");
+
           // All preparation work is done, so start building.
-          int returnCode = distBuildExecutor.buildAndReturnExitCode();
+          ExitCode returnCode;
+          try {
+            returnCode = distBuildExecutor.buildAndReturnExitCode();
+          } catch (Throwable ex) {
+            LOG.error(ex, "buildAndReturnExitCode() failed");
+            throw ex;
+          }
           LOG.info(
               "%s returned with exit code: [%d].",
-              distBuildExecutor.getClass().getName(), returnCode);
+              distBuildExecutor.getClass().getName(), returnCode.getCode());
           multiSourceFileContentsProvider.close();
           LOG.info("Successfully shut down the source file provider.");
           timeStatsTracker.stopTimer(SlaveEvents.TOTAL_RUNTIME);
 
           if (slaveEventListener != null) {
             slaveEventListener.sendFinalServerUpdates();
-            slaveEventListener.publishBuildSlaveFinishedEvent(returnCode);
+            slaveEventListener.publishBuildSlaveFinishedEvent(returnCode.getCode());
           }
 
-          if (returnCode == 0) {
+          if (returnCode == ExitCode.SUCCESS) {
             console.printSuccess(
                 String.format(
                     "Successfully ran distributed build [%s] in [%d millis].",
@@ -248,7 +261,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                 "Failed distributed build [%s] in [%d millis].",
                 buildName, timeStatsTracker.getElapsedTimeMs(SlaveEvents.TOTAL_RUNTIME));
           }
-          return ExitCode.map(returnCode);
+          return returnCode;
         }
       } catch (HumanReadableException e) {
         logBuildFailureEvent(e.getHumanReadableErrorMessage(), slaveEventListener);

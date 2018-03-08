@@ -29,7 +29,7 @@ import org.junit.Test;
 public class SwiftBuckConfigTest {
 
   @Test
-  public void testGetFlags() throws Exception {
+  public void testGetFlags() {
     SwiftBuckConfig swiftBuckConfig =
         new SwiftBuckConfig(
             FakeBuckConfig.builder()

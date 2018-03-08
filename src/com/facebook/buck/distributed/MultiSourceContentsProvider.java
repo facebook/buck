@@ -43,8 +43,7 @@ public class MultiSourceContentsProvider implements FileContentsProvider {
       FileMaterializationStatsTracker fileMaterializationStatsTracker,
       ListeningExecutorService executor,
       ProjectFilesystemFactory projectFilesystemFactory,
-      Optional<Path> localCacheAbsPath)
-      throws InterruptedException, IOException {
+      Optional<Path> localCacheAbsPath) {
     this(
         new InlineContentsProvider(executor),
         localCacheAbsPath.map(

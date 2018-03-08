@@ -22,12 +22,10 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.modern.DefaultBuildCellRelativePathFactory;
 import com.facebook.buck.step.Step;
@@ -71,10 +69,7 @@ public class SrcZipAwareFileBundlerTest {
 
     SrcZipAwareFileBundler bundler = new SrcZipAwareFileBundler(basePath);
     DefaultSourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     bundler.copy(
         filesystem,
         new DefaultBuildCellRelativePathFactory(
@@ -119,7 +114,7 @@ public class SrcZipAwareFileBundlerTest {
   }
 
   @Test
-  public void shouldBundleFilesIfInputIsADirectory() throws InterruptedException, IOException {
+  public void shouldBundleFilesIfInputIsADirectory() throws IOException {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     src = Paths.get("src");
     dest = filesystem.getPath("dest");
@@ -144,7 +139,7 @@ public class SrcZipAwareFileBundlerTest {
   }
 
   @Test
-  public void shouldBundleFilesAndKeepHierarchy() throws InterruptedException, IOException {
+  public void shouldBundleFilesAndKeepHierarchy() throws IOException {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     src = Paths.get("src");
     dest = filesystem.getPath("dest");
@@ -169,8 +164,7 @@ public class SrcZipAwareFileBundlerTest {
   }
 
   @Test(expected = HumanReadableException.class)
-  public void shouldThrowAnExceptionIfBundlerOverwritesFiles()
-      throws InterruptedException, IOException {
+  public void shouldThrowAnExceptionIfBundlerOverwritesFiles() throws IOException {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
     dest = filesystem.getRootPath().resolve("dest");
@@ -186,8 +180,7 @@ public class SrcZipAwareFileBundlerTest {
   }
 
   @Test
-  public void shouldBundleFilesAndKeepSrcFilesUnderBasePath()
-      throws InterruptedException, IOException {
+  public void shouldBundleFilesAndKeepSrcFilesUnderBasePath() throws IOException {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
     dest = filesystem.getPath("dest");

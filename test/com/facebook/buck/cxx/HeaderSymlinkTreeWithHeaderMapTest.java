@@ -29,16 +29,14 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
@@ -108,9 +106,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     symlinkTreeRoot =
         BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root");
 
-    ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    ruleResolver = new TestBuildRuleResolver();
     ruleFinder = new SourcePathRuleFinder(ruleResolver);
     resolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -121,7 +117,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
   }
 
   @Test
-  public void testSymlinkTreeBuildSteps() throws IOException {
+  public void testSymlinkTreeBuildSteps() {
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(resolver);
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
@@ -193,8 +189,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
   }
 
   @Test
-  public void testSymlinkTreeRuleKeyChangesIfLinkTargetsChange()
-      throws InterruptedException, IOException {
+  public void testSymlinkTreeRuleKeyChangesIfLinkTargetsChange() throws IOException {
     ruleResolver.addToIndex(symlinkTreeBuildRule);
 
     DefaultFileHashCache hashCache =

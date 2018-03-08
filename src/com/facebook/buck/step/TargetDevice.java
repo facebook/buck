@@ -24,7 +24,7 @@ public class TargetDevice {
   private final Type type;
   private final Optional<String> identifier;
 
-  public static enum Type {
+  public enum Type {
     REAL_DEVICE,
     EMULATOR,
     BY_SERIAL
