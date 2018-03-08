@@ -48,6 +48,10 @@ public abstract class VersionedTargetGraphEvent extends AbstractBuckEvent
     return new Finished(started);
   }
 
+  public static Timeout timeout() {
+    return new Timeout();
+  }
+
   public static class Started extends VersionedTargetGraphEvent {
 
     private Started() {
@@ -104,6 +108,18 @@ public abstract class VersionedTargetGraphEvent extends AbstractBuckEvent
     @Override
     public String getEventName() {
       return eventName;
+    }
+  }
+
+  public static class Timeout extends VersionedTargetGraphEvent {
+
+    private Timeout() {
+      super(EventKey.unique());
+    }
+
+    @Override
+    public String getEventName() {
+      return "VersionedTargetGraphTimedOut";
     }
   }
 }
