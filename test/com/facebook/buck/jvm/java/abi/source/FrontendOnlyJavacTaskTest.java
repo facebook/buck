@@ -109,7 +109,7 @@ public class FrontendOnlyJavacTaskTest extends CompilerTreeApiParameterizedTest 
   @Test
   public void testTaskListenersGetEvents() throws Exception {
     assumeTrue(testingTrees());
-    final List<String> events = new ArrayList<>();
+    List<String> events = new ArrayList<>();
 
     initCompiler(ImmutableMap.of("Foo.java", "public class Foo { }"));
 
@@ -150,11 +150,11 @@ public class FrontendOnlyJavacTaskTest extends CompilerTreeApiParameterizedTest 
   @Test
   public void testTaskListenersCanWorkWithElements() throws Exception {
     assumeTrue(testingTrees());
-    final AtomicBoolean listenerRan = new AtomicBoolean(false);
+    AtomicBoolean listenerRan = new AtomicBoolean(false);
 
     initCompiler(ImmutableMap.of("Foo.java", "public class Foo { }"));
 
-    final Elements elements = testCompiler.getElements();
+    Elements elements = testCompiler.getElements();
 
     testCompiler.addPlugin(
         new BuckJavacPlugin() {
@@ -190,7 +190,7 @@ public class FrontendOnlyJavacTaskTest extends CompilerTreeApiParameterizedTest 
 
   @Test
   public void testCompileRunsAllPhases() throws Exception {
-    final List<String> events = new ArrayList<>();
+    List<String> events = new ArrayList<>();
 
     initCompiler(ImmutableMap.of("Foo.java", "public class Foo { }"));
 
@@ -230,7 +230,7 @@ public class FrontendOnlyJavacTaskTest extends CompilerTreeApiParameterizedTest 
 
   @Test
   public void testAnnotationProcessorGetsNewElementsEachRound() throws Exception {
-    final AtomicBoolean processorRan = new AtomicBoolean(false);
+    AtomicBoolean processorRan = new AtomicBoolean(false);
 
     initCompiler(ImmutableMap.of("Foo.java", "public class Foo { }"));
 

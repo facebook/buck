@@ -38,7 +38,7 @@ public class AndroidTransitiveDependencyGraph {
 
   public ImmutableSet<SourcePath> findManifestFiles() {
 
-    final ImmutableSet.Builder<SourcePath> manifestFiles = ImmutableSet.builder();
+    ImmutableSet.Builder<SourcePath> manifestFiles = ImmutableSet.builder();
 
     new AbstractBreadthFirstTraversal<BuildRule>(rulesToTraverseForTransitiveDeps) {
       @Override

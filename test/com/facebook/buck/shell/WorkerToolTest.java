@@ -25,13 +25,11 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -44,9 +42,7 @@ public class WorkerToolTest {
 
   @Test
   public void testCreateWorkerTool() throws NoSuchBuildTargetException {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
@@ -70,9 +66,7 @@ public class WorkerToolTest {
 
   @Test
   public void testCreateWorkerToolWithBadExeValue() throws NoSuchBuildTargetException {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
 
     BuildRule nonBinaryBuildRule = new FakeBuildRule(BuildTargetFactory.newInstance("//:fake"));
     resolver.addToIndex(nonBinaryBuildRule);
@@ -91,9 +85,7 @@ public class WorkerToolTest {
 
   @Test
   public void testArgsWithLocationMacroAffectDependenciesAndExpands() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -127,9 +119,7 @@ public class WorkerToolTest {
 
   @Test
   public void testEnvWithLocationMacroAffectDependenciesAndExpands() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -164,9 +154,7 @@ public class WorkerToolTest {
 
   @Test
   public void testUnderlyingToolIncludesDependenciesAsInputs() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
 
     BuildRule shBinaryRule =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))

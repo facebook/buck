@@ -182,7 +182,7 @@ public class PythonRunTestsStep implements Step {
         .getDescription(context);
   }
 
-  private ShellStep getShellStepWithArgs(final String... args) {
+  private ShellStep getShellStepWithArgs(String... args) {
     return new ShellStep(Optional.of(buildTarget), workingDirectory) {
       @Override
       public StepExecutionResult execute(ExecutionContext context)

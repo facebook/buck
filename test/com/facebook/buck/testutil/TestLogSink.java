@@ -74,7 +74,7 @@ public final class TestLogSink extends Handler implements TestRule {
   }
 
   @Override
-  public Statement apply(final Statement base, Description description) {
+  public Statement apply(Statement base, Description description) {
     return new Statement() {
       @Override
       public void evaluate() throws Throwable {

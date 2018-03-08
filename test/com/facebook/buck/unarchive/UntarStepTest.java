@@ -34,7 +34,7 @@ import org.junit.Test;
 public class UntarStepTest {
 
   @Test
-  public void testGetShortName() throws InterruptedException {
+  public void testGetShortName() {
     Path tarFile = Paths.get("the/tarchive.tar");
     Path outputDirectory = Paths.get("an/output/dir");
     UntarStep untarStep =

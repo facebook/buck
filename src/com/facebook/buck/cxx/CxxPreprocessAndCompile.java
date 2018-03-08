@@ -177,7 +177,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
       ImmutableMap<Path, SourcePath> links = sandboxTree.get().getLinks();
       for (Path path : ImmutableSortedSet.copyOf(links.keySet())) {
         SourcePath source = links.get(path);
-        sink.setReflectively("sandbox(" + path.toString() + ")", source);
+        sink.setReflectively("sandbox(" + path + ")", source);
       }
     }
     precompiledHeaderRule.ifPresent(
@@ -186,7 +186,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
   }
 
   private Path getDepFilePath() {
-    return output.getFileSystem().getPath(output.toString() + ".dep");
+    return output.getFileSystem().getPath(output + ".dep");
   }
 
   @VisibleForTesting

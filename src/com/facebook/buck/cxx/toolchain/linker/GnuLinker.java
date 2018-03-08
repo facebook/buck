@@ -185,7 +185,7 @@ public class GnuLinker extends DelegatingTool implements Linker {
     @Override
     public ImmutableList<Step> getBuildSteps(
         BuildContext context, BuildableContext buildableContext) {
-      final Path linkerScript = getLinkerScript();
+      Path linkerScript = getLinkerScript();
       buildableContext.recordArtifact(linkerScript);
       return ImmutableList.of(
           MkdirStep.of(

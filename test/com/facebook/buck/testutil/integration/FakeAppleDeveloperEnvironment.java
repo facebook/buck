@@ -50,7 +50,7 @@ public class FakeAppleDeveloperEnvironment {
       MoreSuppliers.memoize(
               () -> {
                 ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
-                final Path searchPath =
+                Path searchPath =
                     Paths.get(
                         System.getProperty("user.home")
                             + "/Library/MobileDevice/Provisioning Profiles");
@@ -84,7 +84,7 @@ public class FakeAppleDeveloperEnvironment {
     return (numCodeSigningIdentities > 0);
   }
 
-  public static boolean hasDeviceCurrentlyConnected(Path pathToHelper) throws InterruptedException {
+  public static boolean hasDeviceCurrentlyConnected(Path pathToHelper) {
     AppleDeviceHelper helper =
         new AppleDeviceHelper(new DefaultProcessExecutor(new TestConsole()), pathToHelper);
     return (helper.getConnectedDevices().size() > 0);

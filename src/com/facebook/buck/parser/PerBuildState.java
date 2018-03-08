@@ -149,8 +149,7 @@ public class PerBuildState implements AutoCloseable {
     register(rootCell);
   }
 
-  public TargetNode<?, ?> getTargetNode(BuildTarget target)
-      throws BuildFileParseException, BuildTargetException {
+  public TargetNode<?, ?> getTargetNode(BuildTarget target) throws BuildFileParseException {
     Cell owningCell = getCell(target);
 
     return targetNodeParsePipeline.getNode(
@@ -229,7 +228,7 @@ public class PerBuildState implements AutoCloseable {
 
   private void registerInputsUnderSymlinks(Path buildFile, TargetNode<?, ?> node)
       throws IOException {
-    Cell currentCell = cells.get(node.getBuildTarget().getCellPath());
+    Cell currentCell = getCell(node.getBuildTarget());
     symlinkCache.registerInputsUnderSymlinks(
         currentCell, getCell(node.getBuildTarget()), buildFile, node);
   }

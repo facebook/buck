@@ -126,7 +126,7 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
     @Override
     public StepExecutionResult execute(ExecutionContext context)
         throws IOException, InterruptedException {
-      final ProjectFilesystem projectFilesystem = getProjectFilesystem();
+      ProjectFilesystem projectFilesystem = getProjectFilesystem();
       try (Writer out =
           new BufferedWriter(
               new OutputStreamWriter(projectFilesystem.newFileOutputStream(getMappingPath())))) {
@@ -156,7 +156,7 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
     @Override
     public StepExecutionResult execute(ExecutionContext context)
         throws IOException, InterruptedException {
-      final ProjectFilesystem projectFilesystem = getProjectFilesystem();
+      ProjectFilesystem projectFilesystem = getProjectFilesystem();
       try (Writer out =
           new BufferedWriter(
               new OutputStreamWriter(projectFilesystem.newFileOutputStream(getTargetsPath())))) {

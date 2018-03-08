@@ -57,7 +57,7 @@ public class TargetGraphAndTargets {
   }
 
   public static TargetGraphAndTargets create(
-      final ImmutableSet<BuildTarget> graphRoots,
+      ImmutableSet<BuildTarget> graphRoots,
       TargetGraph projectGraph,
       boolean isWithTests,
       ImmutableSet<BuildTarget> explicitTests) {

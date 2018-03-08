@@ -339,7 +339,7 @@ public class TestCommand extends BuildCommand {
   }
 
   private ExitCode runTestsExternal(
-      final CommandRunnerParams params,
+      CommandRunnerParams params,
       Build build,
       Iterable<String> command,
       Iterable<TestRule> testRules,
@@ -421,7 +421,7 @@ public class TestCommand extends BuildCommand {
     ForwardingProcessListener processListener =
         new ForwardingProcessListener(
             params.getConsole().getStdOut(), params.getConsole().getStdErr());
-    final ImmutableSet<String> testTargets =
+    ImmutableSet<String> testTargets =
         StreamSupport.stream(testRules.spliterator(), /* parallel */ false)
             .map(BuildRule::getBuildTarget)
             .map(Object::toString)
@@ -554,6 +554,7 @@ public class TestCommand extends BuildCommand {
               .getActionGraph(
                   params.getBuckEventBus(),
                   targetGraphAndBuildTargets.getTargetGraph(),
+                  params.getCell().getToolchainProvider(),
                   params.getBuckConfig(),
                   params.getRuleKeyConfiguration(),
                   poolSupplier);
@@ -619,7 +620,7 @@ public class TestCommand extends BuildCommand {
                     isKeepGoing())) {
 
           // Build all of the test rules.
-          int exitCodeInt =
+          ExitCode exitCode =
               build.executeAndPrintFailuresToEventBus(
                   RichStream.from(testRules)
                       .map(TestRule::getBuildTarget)
@@ -627,7 +628,6 @@ public class TestCommand extends BuildCommand {
                   params.getBuckEventBus(),
                   params.getConsole(),
                   getPathToBuildReport(params.getBuckConfig()));
-          ExitCode exitCode = ExitCode.map(exitCodeInt);
           params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
           if (exitCode != ExitCode.SUCCESS) {
             return exitCode;

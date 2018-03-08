@@ -47,8 +47,7 @@ public class CellTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Test
-  public void shouldReturnItselfIfRequestedToGetACellWithAnAbsentOptionalName()
-      throws IOException, InterruptedException {
+  public void shouldReturnItselfIfRequestedToGetACellWithAnAbsentOptionalName() {
     Cell cell = new TestCellBuilder().build();
 
     BuildTarget target =
@@ -59,8 +58,7 @@ public class CellTest {
   }
 
   @Test
-  public void shouldThrowAnExceptionIfTheNamedCellIsNotPresent()
-      throws IOException, InterruptedException {
+  public void shouldThrowAnExceptionIfTheNamedCellIsNotPresent() {
     Cell cell = new TestCellBuilder().build();
 
     BuildTarget target =
@@ -73,8 +71,7 @@ public class CellTest {
   }
 
   @Test
-  public void shouldResolveNamesOfCellsAgainstThoseGivenInTheBuckConfig()
-      throws IOException, InterruptedException {
+  public void shouldResolveNamesOfCellsAgainstThoseGivenInTheBuckConfig() throws IOException {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
 
     Path root = vfs.getPath("/opt/local/");
@@ -90,7 +87,7 @@ public class CellTest {
     BuckConfig config =
         FakeBuckConfig.builder()
             .setFilesystem(filesystem1)
-            .setSections("[repositories]", "example = " + filesystem2.getRootPath().toString())
+            .setSections("[repositories]", "example = " + filesystem2.getRootPath())
             .build();
 
     Cell cell1 = new TestCellBuilder().setBuckConfig(config).setFilesystem(filesystem1).build();
@@ -102,7 +99,7 @@ public class CellTest {
   }
 
   @Test
-  public void shouldResolveFallbackCell() throws IOException, InterruptedException {
+  public void shouldResolveFallbackCell() throws IOException {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
 
     Path root = vfs.getPath("/opt/local/");
@@ -118,7 +115,7 @@ public class CellTest {
     BuckConfig config =
         FakeBuckConfig.builder()
             .setFilesystem(filesystem1)
-            .setSections("[repositories]", "example = " + filesystem2.getRootPath().toString())
+            .setSections("[repositories]", "example = " + filesystem2.getRootPath())
             .build();
 
     Cell cell1 = new TestCellBuilder().setBuckConfig(config).setFilesystem(filesystem1).build();
@@ -128,7 +125,7 @@ public class CellTest {
   }
 
   @Test
-  public void shouldApplyCellConfigOverrides() throws IOException, InterruptedException {
+  public void shouldApplyCellConfigOverrides() throws IOException {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
 
     Path root = vfs.getPath("/opt/local/");
@@ -148,15 +145,12 @@ public class CellTest {
     BuckConfig config =
         FakeBuckConfig.builder()
             .setFilesystem(filesystem1)
-            .setSections(
-                "[repositories]",
-                "second = " + cell2Root.toString(),
-                "third = " + cell3Root.toString())
+            .setSections("[repositories]", "second = " + cell2Root, "third = " + cell3Root)
             .build();
 
     Files.write(
         cell2Root.resolve(".buckconfig"),
-        ImmutableList.of("[repositories]", "third = " + cell3Root.toString()),
+        ImmutableList.of("[repositories]", "third = " + cell3Root),
         StandardCharsets.UTF_8);
 
     Cell cell1 =

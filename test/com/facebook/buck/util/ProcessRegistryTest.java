@@ -37,8 +37,8 @@ public class ProcessRegistryTest {
 
   @Test
   public void testInteraction() {
-    final List<ProcessInfo> registeredProcesses1 = new ArrayList<>();
-    final List<ProcessInfo> registeredProcesses2 = new ArrayList<>();
+    List<ProcessInfo> registeredProcesses1 = new ArrayList<>();
+    List<ProcessInfo> registeredProcesses2 = new ArrayList<>();
     ProcessRegistry.ProcessRegisterCallback callback1 =
         (process, params, context) ->
             registeredProcesses1.add(new ProcessInfo(process, params, context));

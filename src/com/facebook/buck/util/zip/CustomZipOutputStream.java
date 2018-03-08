@@ -151,7 +151,7 @@ public class CustomZipOutputStream extends OutputStream {
    * State of a {@link CustomZipOutputStream}. Certain operations are only available when the stream
    * is in a particular state.
    */
-  private static enum State {
+  private enum State {
     CLEAN, // Open but no data written.
     OPEN, // Open and data written.
     CLOSED, // Just as it says on the tin.

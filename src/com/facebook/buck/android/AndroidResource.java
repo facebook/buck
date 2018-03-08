@@ -135,7 +135,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
-      final ImmutableSortedSet<BuildRule> deps,
+      ImmutableSortedSet<BuildRule> deps,
       @Nullable SourcePath res,
       ImmutableSortedMap<Path, SourcePath> resSrcs,
       @Nullable String rDotJavaPackageArgument,
@@ -187,7 +187,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
           } else {
             throw new RuntimeException(
                 "rDotJavaPackage for "
-                    + AndroidResource.this.getBuildTarget().toString()
+                    + AndroidResource.this.getBuildTarget()
                     + " was requested before it was made available.");
           }
         };
@@ -196,10 +196,10 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   public AndroidResource(
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
-      final ImmutableSortedSet<BuildRule> deps,
+      ImmutableSortedSet<BuildRule> deps,
       @Nullable SourcePath res,
       ImmutableSortedMap<Path, SourcePath> resSrcs,
       @Nullable String rDotJavaPackageArgument,
@@ -226,10 +226,10 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   public AndroidResource(
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
-      final ImmutableSortedSet<BuildRule> deps,
+      ImmutableSortedSet<BuildRule> deps,
       @Nullable SourcePath res,
       ImmutableSortedMap<Path, SourcePath> resSrcs,
       @Nullable String rDotJavaPackageArgument,
@@ -281,7 +281,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context, final BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(Preconditions.checkNotNull(pathToTextSymbolsFile));
     buildableContext.recordArtifact(Preconditions.checkNotNull(pathToRDotJavaPackageFile));
 

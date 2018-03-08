@@ -42,7 +42,7 @@ class PipelineNodeCache<K, T> {
    *     ongoing job (job cache hit) or a new job (miss).
    */
   protected final ListenableFuture<T> getJobWithCacheLookup(
-      final Cell cell, final K key, JobSupplier<T> jobSupplier) throws BuildTargetException {
+      Cell cell, K key, JobSupplier<T> jobSupplier) throws BuildTargetException {
     Optional<T> cacheLookupResult = cache.lookupComputedNode(cell, key);
     if (cacheLookupResult.isPresent()) {
       return Futures.immediateFuture(cacheLookupResult.get());
@@ -64,7 +64,7 @@ class PipelineNodeCache<K, T> {
     }
     // Ok, "our" candidate future went into the jobsCache, schedule the job and 'chain' the result
     // to the SettableFuture, so that anyone else waiting on it will get the same result.
-    final SettableFuture<T> resultFuture = resultFutureCandidate;
+    SettableFuture<T> resultFuture = resultFutureCandidate;
     try {
       ListenableFuture<T> nodeJob =
           Futures.transformAsync(

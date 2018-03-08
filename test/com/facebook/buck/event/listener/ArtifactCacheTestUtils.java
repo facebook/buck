@@ -93,7 +93,7 @@ public class ArtifactCacheTestUtils {
       Optional<String> rulekey,
       ImmutableSet<RuleKey> ruleKeys,
       boolean configureEvent) {
-    final HttpArtifactCacheEvent.Scheduled scheduled =
+    HttpArtifactCacheEvent.Scheduled scheduled =
         HttpArtifactCacheEvent.newStoreScheduledEvent(rulekey, ruleKeys, StoreType.ARTIFACT);
     HttpArtifactCacheEvent.Started event = HttpArtifactCacheEvent.newStoreStartedEvent(scheduled);
     if (configureEvent) {

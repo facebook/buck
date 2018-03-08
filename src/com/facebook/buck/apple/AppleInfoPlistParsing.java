@@ -51,7 +51,7 @@ public class AppleInfoPlistParsing {
         throw new IOException(e);
       } catch (ArrayIndexOutOfBoundsException e) {
         throw new HumanReadableException(
-            plistPath.toString() + ": the content of the plist is invalid or empty.");
+            plistPath + ": the content of the plist is invalid or empty.");
       }
     }
     NSObject bundleId = infoPlist.objectForKey("CFBundleIdentifier");

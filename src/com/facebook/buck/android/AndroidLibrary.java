@@ -40,6 +40,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.DependencyMode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -60,6 +61,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   public static Builder builder(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      ToolchainProvider toolchainProvider,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellPathResolver,
@@ -70,6 +72,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     return new Builder(
         buildTarget,
         projectFilesystem,
+        toolchainProvider,
         params,
         buildRuleResolver,
         cellPathResolver,
@@ -136,6 +139,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     protected Builder(
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
+        ToolchainProvider toolchainProvider,
         BuildRuleParams params,
         BuildRuleResolver buildRuleResolver,
         CellPathResolver cellPathResolver,
@@ -148,6 +152,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
           new DefaultJavaLibraryRules.Builder(
               buildTarget,
               projectFilesystem,
+              toolchainProvider,
               params,
               buildRuleResolver,
               cellPathResolver,

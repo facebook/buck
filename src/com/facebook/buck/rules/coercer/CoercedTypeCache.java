@@ -119,13 +119,12 @@ public class CoercedTypeCache {
                     TypeCoercerFactory, LoadingCache<Class<?>, ImmutableMap<String, ParamInfo>>>() {
                   @Override
                   public LoadingCache<Class<?>, ImmutableMap<String, ParamInfo>> load(
-                      TypeCoercerFactory typeCoercerFactory) throws Exception {
+                      TypeCoercerFactory typeCoercerFactory) {
                     return CacheBuilder.newBuilder()
                         .build(
                             new CacheLoader<Class<?>, ImmutableMap<String, ParamInfo>>() {
                               @Override
-                              public ImmutableMap<String, ParamInfo> load(Class<?> coercableType)
-                                  throws Exception {
+                              public ImmutableMap<String, ParamInfo> load(Class<?> coercableType) {
 
                                 if (Types.getSupertypes(coercableType)
                                     .stream()

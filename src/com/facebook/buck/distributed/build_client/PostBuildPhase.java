@@ -154,7 +154,7 @@ public class PostBuildPhase {
       return Futures.immediateFuture(null);
     }
 
-    final List<ListenableFuture<Pair<BuildSlaveRunId, Optional<BuildSlaveFinishedStats>>>>
+    List<ListenableFuture<Pair<BuildSlaveRunId, Optional<BuildSlaveFinishedStats>>>>
         slaveFinishedStatsFutures = new ArrayList<>(job.getBuildSlavesSize());
     for (BuildSlaveInfo info : job.getBuildSlaves()) {
       BuildSlaveRunId runId = info.getBuildSlaveRunId();
@@ -166,7 +166,7 @@ public class PostBuildPhase {
               }));
     }
 
-    final Builder builder = BuildSlaveStats.builder().setStampedeId(job.getStampedeId());
+    Builder builder = BuildSlaveStats.builder().setStampedeId(job.getStampedeId());
     return Futures.transform(
         Futures.allAsList(slaveFinishedStatsFutures),
         statsList -> createAndPublishBuildSlaveStats(builder, statsList, consoleEventsDispatcher),

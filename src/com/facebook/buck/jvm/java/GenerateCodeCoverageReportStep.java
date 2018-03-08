@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java;
 import static com.facebook.buck.jvm.java.JacocoConstants.JACOCO_EXEC_COVERAGE_FILE;
 import static java.util.stream.Collectors.joining;
 
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.shell.ShellStep;
@@ -107,7 +107,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
       return executeInternal(context, extractedClassesDirectories);
     } finally {
       for (Path tempDir : tempDirs) {
-        MoreFiles.deleteRecursively(tempDir);
+        MostFiles.deleteRecursively(tempDir);
       }
     }
   }
@@ -130,7 +130,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
       Set<Path> extractedClassesDirectories,
       OutputStream outputStream)
       throws IOException {
-    final Properties properties = new Properties();
+    Properties properties = new Properties();
 
     properties.setProperty("jacoco.output.dir", filesystem.resolve(outputDirectory).toString());
     properties.setProperty("jacoco.exec.data.file", JACOCO_EXEC_COVERAGE_FILE);

@@ -89,7 +89,7 @@ class InstallLimitingAndroidDevice extends DelegatingAndroidDevice {
     return super.installApkOnDevice(apk, installViaSd, quiet, verifyTempWritable);
   }
 
-  private void validateInstallFile(Path targetDevicePath, Path source) throws Exception {
+  private void validateInstallFile(Path targetDevicePath, Path source) {
     assertTrue(
         String.format(
             "Exopackage should only install files to the install root (%s, %s)",
@@ -124,7 +124,7 @@ class InstallLimitingAndroidDevice extends DelegatingAndroidDevice {
       }
     } else if (relativePath.startsWith(ModuleExoHelper.MODULAR_DEX_DIR)) {
       installedModules.add(source);
-      final Path fileName = relativePath.getFileName();
+      Path fileName = relativePath.getFileName();
       if (!fileName.equals(Paths.get("metadata.txt"))
           && !fileName.toString().endsWith(".metadata")) {
         allowedInstalledModules--;

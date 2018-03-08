@@ -23,12 +23,10 @@ import static org.hamcrest.Matchers.oneOf;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.Ansi;
 import com.google.common.collect.ImmutableList;
@@ -49,9 +47,7 @@ public class CxxErrorTransformerTest {
   @Parameterized.Parameters(name = "{index}: {0}")
   public static Collection<Object[]> data() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 

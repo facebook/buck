@@ -22,12 +22,11 @@ import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.MacroContainer;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -146,8 +145,7 @@ public class CommandAliasBuilder
   public BuildResult buildResult() {
     nodes.add(build());
     TargetGraph graph = TargetGraphFactory.newInstance(nodes);
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(graph);
 
     return new BuildResult(
         (CommandAlias) resolver.requireRule(getTarget()), getPopulatedArg(), resolver, cellRoots);

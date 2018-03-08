@@ -130,7 +130,7 @@ public class ChromeTraceBuildListenerTest {
   }
 
   @Test
-  public void testEventsUseNanoTime() throws InterruptedException, IOException {
+  public void testEventsUseNanoTime() throws IOException {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
@@ -163,7 +163,7 @@ public class ChromeTraceBuildListenerTest {
   }
 
   @Test
-  public void testMetadataEventsUseNanoTime() throws InterruptedException, IOException {
+  public void testMetadataEventsUseNanoTime() throws IOException {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
@@ -192,7 +192,7 @@ public class ChromeTraceBuildListenerTest {
   }
 
   @Test
-  public void testWritesSortIndexEvenIfThreadInfoNull() throws InterruptedException, IOException {
+  public void testWritesSortIndexEvenIfThreadInfoNull() throws IOException {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
@@ -211,7 +211,7 @@ public class ChromeTraceBuildListenerTest {
             chromeTraceConfig(3, false));
 
     FakeBuckEvent event = new FakeBuckEvent();
-    final int threadId = 1;
+    int threadId = 1;
     event.configure(1, 1, 1, threadId, invocationInfo.getBuildId());
     listener.writeChromeTraceEvent("category", "name", Phase.METADATA, ImmutableMap.of(), event);
 
@@ -235,7 +235,7 @@ public class ChromeTraceBuildListenerTest {
   }
 
   @Test
-  public void testDeleteFiles() throws InterruptedException, IOException {
+  public void testDeleteFiles() throws IOException {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
@@ -284,7 +284,7 @@ public class ChromeTraceBuildListenerTest {
   }
 
   @Test
-  public void testBuildJson() throws InterruptedException, IOException {
+  public void testBuildJson() throws IOException {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
@@ -369,7 +369,7 @@ public class ChromeTraceBuildListenerTest {
         ArtifactCacheTestUtils.newFinishedEvent(httpStarted, false);
     eventBus.post(httpFinished);
 
-    final CompilerPluginDurationEvent.Started processingPartOneStarted =
+    CompilerPluginDurationEvent.Started processingPartOneStarted =
         CompilerPluginDurationEvent.started(
             target, annotationProcessorName, "processingPartOne", ImmutableMap.of());
     eventBus.post(processingPartOneStarted);
@@ -397,12 +397,10 @@ public class ChromeTraceBuildListenerTest {
             Optional.empty(),
             Optional.empty()));
 
-    try (final SimplePerfEvent.Scope scope1 =
+    try (SimplePerfEvent.Scope scope1 =
         SimplePerfEvent.scope(
-            eventBus,
-            PerfEventId.of("planning"),
-            ImmutableMap.<String, Object>of("nefarious", true))) {
-      try (final SimplePerfEvent.Scope scope2 =
+            eventBus, PerfEventId.of("planning"), ImmutableMap.of("nefarious", true))) {
+      try (SimplePerfEvent.Scope scope2 =
           SimplePerfEvent.scope(eventBus, PerfEventId.of("scheming"))) {
         scope2.appendFinishedInfo("success", false);
       }
@@ -656,7 +654,7 @@ public class ChromeTraceBuildListenerTest {
   }
 
   @Test
-  public void testOutputFailed() throws InterruptedException, IOException {
+  public void testOutputFailed() throws IOException {
     File folder = tmpDir.newFolder();
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(folder.toPath());
@@ -682,7 +680,7 @@ public class ChromeTraceBuildListenerTest {
   }
 
   @Test
-  public void outputFileUsesCurrentTime() throws InterruptedException, IOException {
+  public void outputFileUsesCurrentTime() throws IOException {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
@@ -702,7 +700,7 @@ public class ChromeTraceBuildListenerTest {
   }
 
   @Test
-  public void canCompressTraces() throws InterruptedException, IOException {
+  public void canCompressTraces() throws IOException {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 

@@ -22,13 +22,12 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.ImmutableBuildRuleCreationContext;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestCellPathResolver;
+import com.facebook.buck.rules.TestBuildRuleCreationContextFactory;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
@@ -56,9 +55,7 @@ public class HttpFileDescriptionTest {
   @Before
   public void setUp() {
     description = new HttpFileDescription((eventBus, uri, output) -> false);
-    buildRuleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    buildRuleResolver = new TestBuildRuleResolver();
     filesystem = TestProjectFilesystems.createProjectFilesystem(temporaryDir.getRoot());
     targetGraph = TargetGraph.EMPTY;
   }
@@ -67,8 +64,7 @@ public class HttpFileDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance(targetName);
     return (HttpFile)
         description.createBuildRule(
-            ImmutableBuildRuleCreationContext.of(
-                targetGraph, buildRuleResolver, filesystem, TestCellPathResolver.get(filesystem)),
+            TestBuildRuleCreationContextFactory.create(targetGraph, buildRuleResolver, filesystem),
             target,
             new BuildRuleParams(
                 ImmutableSortedSet::of, ImmutableSortedSet::of, ImmutableSortedSet.of()),

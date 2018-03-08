@@ -59,8 +59,8 @@ public class LicenseCheckTest {
     private static final Pattern LICENSE_FRAGMENT =
         Pattern.compile(
             // TODO(simons): This is very lame.
-            // The newline character doesn't match "\w", "\\n" so do a non-greedy match until the next
-            // part of the copyright.
+            // The newline character doesn't match "\w", "\\n" so do a non-greedy match until the
+            // next part of the copyright.
             "^/\\\\*.*?"
                 + "\\\\* Copyright 20\\d\\d-present Facebook, Inc\\..*?"
                 + "\\\\* Licensed under the Apache License, Version 2.0 \\(the \"License\"\\); you may.*",
@@ -75,7 +75,7 @@ public class LicenseCheckTest {
     }
 
     @Override
-    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
       if (!"java".equals(MorePaths.getFileExtension(file))
           ||
           // Ignore dangling symlinks.
@@ -95,8 +95,7 @@ public class LicenseCheckTest {
     }
 
     @Override
-    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-        throws IOException {
+    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
       if (ignoreTestData && TEST_DATA.equals(dir.getFileName())) {
         return FileVisitResult.SKIP_SUBTREE;
       }

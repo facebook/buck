@@ -98,10 +98,8 @@ public class LoadCommandUtils {
    */
   @SuppressWarnings("unchecked")
   public static <T extends LoadCommand> ImmutableList<T> findLoadCommandsWithClass(
-      ByteBuffer buffer,
-      NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder,
-      final Class<T> type) {
-    final List<T> results = new ArrayList<>();
+      ByteBuffer buffer, NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder, Class<T> type) {
+    List<T> results = new ArrayList<>();
     enumerateLoadCommandsInFile(
         buffer,
         nulTerminatedCharsetDecoder,

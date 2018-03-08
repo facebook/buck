@@ -41,7 +41,7 @@ public final class EdenClientPool {
    */
   private final ThreadLocal<EdenClient> clientFactory;
 
-  private EdenClientPool(final Path socketFile) {
+  private EdenClientPool(Path socketFile) {
     this(
         new ThreadLocal<EdenClient>() {
           @Override
@@ -52,7 +52,7 @@ public final class EdenClientPool {
   }
 
   @VisibleForTesting
-  EdenClientPool(final EdenClient edenClient) {
+  EdenClientPool(EdenClient edenClient) {
     this(
         new ThreadLocal<EdenClient>() {
           @Override
@@ -82,7 +82,7 @@ public final class EdenClientPool {
     return newInstanceFromSocket(socketFile);
   }
 
-  public static Optional<EdenClientPool> newInstanceFromSocket(final Path socketFile) {
+  public static Optional<EdenClientPool> newInstanceFromSocket(Path socketFile) {
     // We forcibly try to create an EdenClient as a way of verifying that `socketFile` is a
     // valid UNIX domain socket for talking to Eden. If this is not the case, then we should not
     // return a new EdenClientPool.

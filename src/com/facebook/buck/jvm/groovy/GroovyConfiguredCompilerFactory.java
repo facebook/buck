@@ -24,6 +24,7 @@ import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.base.Preconditions;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -42,7 +43,8 @@ public class GroovyConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       ProjectFilesystem projectFilesystem,
       @Nullable JvmLibraryArg args,
       JavacOptions javacOptions,
-      BuildRuleResolver buildRuleResolver) {
+      BuildRuleResolver buildRuleResolver,
+      ToolchainProvider toolchainProvider) {
     GroovyLibraryDescription.CoreArg groovyArgs =
         (GroovyLibraryDescription.CoreArg) Preconditions.checkNotNull(args);
     return new GroovycToJarStepFactory(

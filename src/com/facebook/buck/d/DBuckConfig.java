@@ -111,7 +111,7 @@ public class DBuckConfig {
     Path usrLib = Paths.get("/usr", "lib");
     Path usrLocalLib = Paths.get("/usr", "local", "lib");
     Architecture architecture = delegate.getArchitecture();
-    String platformName = architecture.toString() + "-" + delegate.getPlatform().getAutoconfName();
+    String platformName = architecture + "-" + delegate.getPlatform().getAutoconfName();
     String platformNameGnu = platformName + "-gnu";
 
     ImmutableSet<Path> searchPath =

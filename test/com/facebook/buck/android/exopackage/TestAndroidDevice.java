@@ -18,9 +18,8 @@ package com.facebook.buck.android.exopackage;
 
 import static org.junit.Assert.assertTrue;
 
-import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.agent.util.AgentUtil;
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -139,7 +138,7 @@ public class TestAndroidDevice implements AndroidDevice {
   }
 
   @Override
-  public void stopPackage(String packageName) throws Exception {
+  public void stopPackage(String packageName) {
     // noop
   }
 
@@ -156,9 +155,9 @@ public class TestAndroidDevice implements AndroidDevice {
   }
 
   @Override
-  public void uninstallPackage(String packageName) throws InstallException {
+  public void uninstallPackage(String packageName) {
     try {
-      MoreFiles.deleteRecursively(getPackageDirectory(packageName));
+      MostFiles.deleteRecursively(getPackageDirectory(packageName));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -190,7 +189,7 @@ public class TestAndroidDevice implements AndroidDevice {
   }
 
   @Override
-  public AutoCloseable createForward() throws Exception {
+  public AutoCloseable createForward() {
     // TODO(cjhopman): track correct forwarding usage
     return () -> {};
   }
@@ -215,7 +214,7 @@ public class TestAndroidDevice implements AndroidDevice {
   }
 
   @Override
-  public String getProperty(String name) throws Exception {
+  public String getProperty(String name) {
     switch (name) {
       case "ro.build.version.sdk":
         return "20";
@@ -224,17 +223,17 @@ public class TestAndroidDevice implements AndroidDevice {
   }
 
   @Override
-  public List<String> getDeviceAbis() throws Exception {
+  public List<String> getDeviceAbis() {
     return ImmutableList.of(abi);
   }
 
   @Override
-  public void killProcess(String packageName) throws Exception {
+  public void killProcess(String packageName) {
     // noop
   }
 
   @Override
-  public void sendBroadcast(String action, Map<String, String> stringExtras) throws Exception {
+  public void sendBroadcast(String action, Map<String, String> stringExtras) {
     // noop
   }
 

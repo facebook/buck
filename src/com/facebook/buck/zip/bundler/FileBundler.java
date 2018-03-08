@@ -68,7 +68,7 @@ public abstract class FileBundler {
 
   private ImmutableMap<Path, Path> createRelativeMap(
       ProjectFilesystem filesystem,
-      final SourcePathResolver resolver,
+      SourcePathResolver resolver,
       ImmutableSortedSet<SourcePath> toCopy) {
     Map<Path, Path> relativePathMap = new HashMap<>();
 

@@ -171,14 +171,14 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
   @Override
   public ImmutableMultimap<APKModule, Path> execute() throws IOException {
     ClasspathTraverser classpathTraverser = new DefaultClasspathTraverser();
-    final Set<String> secondaryTail = new HashSet<String>();
+    Set<String> secondaryTail = new HashSet<String>();
 
     // Start out by writing the primary zip and recording which entries were added to it.
     primaryOut = newZipOutput(outPrimary);
     secondaryDexWriter.reset();
 
-    final ImmutableMap.Builder<String, FileLike> entriesBuilder = ImmutableMap.builder();
-    final List<String> additionalDexStoreEntries = new ArrayList<>();
+    ImmutableMap.Builder<String, FileLike> entriesBuilder = ImmutableMap.builder();
+    List<String> additionalDexStoreEntries = new ArrayList<>();
 
     // Iterate over all of the inFiles and add all entries that match the requiredInPrimaryZip
     // predicate.
@@ -359,7 +359,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
     }
 
     @Override
-    public InputStream getInput() throws IOException {
+    public InputStream getInput() {
       return new ByteArrayInputStream(contents);
     }
   }

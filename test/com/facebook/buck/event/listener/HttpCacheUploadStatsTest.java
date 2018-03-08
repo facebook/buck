@@ -19,7 +19,6 @@ import com.facebook.buck.artifact_cache.ArtifactCacheEvent.StoreType;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEventStoreData;
 import com.google.common.collect.ImmutableSet;
-import java.io.IOException;
 import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Test;
@@ -30,7 +29,7 @@ public class HttpCacheUploadStatsTest {
   private static final long ARTIFACT_ONE_AND_TWO_TOTAL_BYTES = 30;
 
   @Test
-  public void testCacheUploadEvents() throws IOException {
+  public void testCacheUploadEvents() {
     HttpCacheUploadStats uploadStats = new HttpCacheUploadStats();
 
     // Schedule, start, and finish upload event one.

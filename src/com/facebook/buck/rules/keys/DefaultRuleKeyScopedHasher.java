@@ -40,8 +40,8 @@ public class DefaultRuleKeyScopedHasher<HASH> implements RuleKeyScopedHasher {
 
   /** Hashes the key iff non-empty (i.e. if anything gets hashed during its scope). */
   @Override
-  public Scope keyScope(final String key) {
-    final long hasherCount = hasher.getCount();
+  public Scope keyScope(String key) {
+    long hasherCount = hasher.getCount();
     return () -> {
       if (hasher.getCount() > hasherCount) {
         hasher.putKey(key);
@@ -51,8 +51,8 @@ public class DefaultRuleKeyScopedHasher<HASH> implements RuleKeyScopedHasher {
 
   /** Hashes the wrapper iff non-empty (i.e. if any element gets hashed during its scope). */
   @Override
-  public Scope wrapperScope(final RuleKeyHasher.Wrapper wrapper) {
-    final long hasherCount = hasher.getCount();
+  public Scope wrapperScope(RuleKeyHasher.Wrapper wrapper) {
+    long hasherCount = hasher.getCount();
     return () -> {
       if (hasher.getCount() > hasherCount) {
         hasher.putWrapper(wrapper);
@@ -66,7 +66,7 @@ public class DefaultRuleKeyScopedHasher<HASH> implements RuleKeyScopedHasher {
    * <p>Note that an element scope needs to be created for each element!
    */
   @Override
-  public ContainerScope containerScope(final RuleKeyHasher.Container container) {
+  public ContainerScope containerScope(RuleKeyHasher.Container container) {
     return new DefaultContainerScope(hasher, container);
   }
 
@@ -84,7 +84,7 @@ public class DefaultRuleKeyScopedHasher<HASH> implements RuleKeyScopedHasher {
     /** Increases element count if anything gets hashed during the element scope. */
     @Override
     public Scope elementScope() {
-      final long hasherCount = hasher.getCount();
+      long hasherCount = hasher.getCount();
       return () -> {
         if (hasher.getCount() > hasherCount) {
           elementCount++;

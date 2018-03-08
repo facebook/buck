@@ -99,7 +99,7 @@ class ProguardTranslatorFactory {
       builder.put(
           isForObfuscation ? original : obfuscated, isForObfuscation ? obfuscated : original);
     }
-    final Map<String, String> map = builder.build();
+    Map<String, String> map = builder.build();
 
     return input -> {
       String mapped = map.get(input);

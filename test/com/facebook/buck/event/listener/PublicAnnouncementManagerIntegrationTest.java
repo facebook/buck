@@ -51,7 +51,6 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Request;
@@ -74,7 +73,7 @@ public class PublicAnnouncementManagerIntegrationTest {
 
   @Test
   public void testAnnouncementsWork() throws Exception {
-    final AtomicReference<byte[]> requestBody = new AtomicReference<>();
+    AtomicReference<byte[]> requestBody = new AtomicReference<>();
 
     try (HttpdForTests httpd = new HttpdForTests()) {
       httpd.addHandler(
@@ -85,7 +84,7 @@ public class PublicAnnouncementManagerIntegrationTest {
                 Request request,
                 HttpServletRequest httpServletRequest,
                 HttpServletResponse httpServletResponse)
-                throws IOException, ServletException {
+                throws IOException {
               httpServletResponse.setStatus(200);
               request.setHandled(true);
               if (request.getUri().getPath().equals("/status.php")) {

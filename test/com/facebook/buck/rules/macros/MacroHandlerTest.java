@@ -31,8 +31,7 @@ import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.model.macros.MacroMatchResult;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -61,10 +60,7 @@ public class MacroHandlerTest {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.newFolder().toPath());
     target = BuildTargetFactory.newInstance("//:test");
     JavaLibraryBuilder builder = JavaLibraryBuilder.createBuilder(target);
-    resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraphFactory.newInstance(builder.build()),
-            new DefaultTargetNodeToBuildRuleTransformer());
+    resolver = new TestBuildRuleResolver(TargetGraphFactory.newInstance(builder.build()));
     builder.build(resolver, filesystem);
   }
 
@@ -125,7 +121,7 @@ public class MacroHandlerTest {
 
   @Test
   public void testHandlingMacroExpanderWithPrecomputedWork() throws Exception {
-    final AtomicInteger expansionCount = new AtomicInteger(0);
+    AtomicInteger expansionCount = new AtomicInteger(0);
     AbstractMacroExpander<String, String> expander =
         new AbstractMacroExpander<String, String>() {
           @Override
@@ -140,8 +136,7 @@ public class MacroHandlerTest {
 
           @Override
           protected String parse(
-              BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
-              throws MacroException {
+              BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input) {
             return "Parsed Result";
           }
 
@@ -150,8 +145,7 @@ public class MacroHandlerTest {
               BuildTarget target,
               CellPathResolver cellNames,
               BuildRuleResolver resolver,
-              String input)
-              throws MacroException {
+              String input) {
             expansionCount.incrementAndGet();
             return "Precomputed Work";
           }
@@ -162,8 +156,7 @@ public class MacroHandlerTest {
               CellPathResolver cellNames,
               BuildRuleResolver resolver,
               String input,
-              String precomputedWork)
-              throws MacroException {
+              String precomputedWork) {
             return StringArg.of(precomputedWork);
           }
         };

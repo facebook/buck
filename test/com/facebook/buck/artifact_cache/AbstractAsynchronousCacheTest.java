@@ -50,8 +50,7 @@ public class AbstractAsynchronousCacheTest {
     List<ImmutableList<RuleKey>> requestedRuleKeys = new ArrayList<>();
 
     try (AbstractAsynchronousCache cache =
-        new RequestedKeyRecordingAsynchronousCache(
-            service, filesystem, requestedRuleKeys, 3, 3); ) {
+        new RequestedKeyRecordingAsynchronousCache(service, filesystem, requestedRuleKeys, 3, 3)) {
 
       List<ListenableFuture<CacheResult>> results = new ArrayList<>();
       List<RuleKey> keys = new ArrayList<>();
@@ -105,8 +104,7 @@ public class AbstractAsynchronousCacheTest {
     List<ImmutableList<RuleKey>> requestedRuleKeys = new ArrayList<>();
 
     try (AbstractAsynchronousCache cache =
-        new RequestedKeyRecordingAsynchronousCache(
-            service, filesystem, requestedRuleKeys, 3, 3); ) {
+        new RequestedKeyRecordingAsynchronousCache(service, filesystem, requestedRuleKeys, 3, 3)) {
 
       // Make an async fetch request and allow it to run on the Executor
       ListenableFuture<CacheResult> fetchRequestOne =
@@ -215,14 +213,13 @@ public class AbstractAsynchronousCacheTest {
     }
 
     @Override
-    protected FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) throws IOException {
+    protected FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) {
       requestedRuleKeys.add(ImmutableList.of(ruleKey));
       return hit();
     }
 
     @Override
-    protected MultiContainsResult multiContainsImpl(ImmutableSet<RuleKey> ruleKeys)
-        throws IOException {
+    protected MultiContainsResult multiContainsImpl(ImmutableSet<RuleKey> ruleKeys) {
       throw new UnsupportedOperationException("multiContains is not supported");
     }
 
@@ -235,18 +232,18 @@ public class AbstractAsynchronousCacheTest {
     }
 
     @Override
-    protected StoreResult storeImpl(ArtifactInfo info, Path file) throws IOException {
+    protected StoreResult storeImpl(ArtifactInfo info, Path file) {
       return null;
     }
 
     @Override
-    protected CacheDeleteResult deleteImpl(List<RuleKey> ruleKeys) throws IOException {
+    protected CacheDeleteResult deleteImpl(List<RuleKey> ruleKeys) {
       throw new RuntimeException("Delete operation is not supported");
     }
 
     @Override
     protected MultiFetchResult multiFetchImpl(
-        Iterable<AbstractAsynchronousCache.FetchRequest> requests) throws IOException {
+        Iterable<AbstractAsynchronousCache.FetchRequest> requests) {
       List<FetchResult> result = new ArrayList<>();
       result.add(hit());
       ImmutableList<RuleKey> keys =

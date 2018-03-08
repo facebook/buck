@@ -228,16 +228,16 @@ public class BuildPhaseTest {
     mockDistBuildService.reportCoordinatorIsAlive(stampedeId);
     expectLastCall().anyTimes();
 
-    final BuildJob job0 = new BuildJob().setStampedeId(stampedeId).setStatus(BuildStatus.BUILDING);
-    final BuildJob job1 =
+    BuildJob job0 = new BuildJob().setStampedeId(stampedeId).setStatus(BuildStatus.BUILDING);
+    BuildJob job1 =
         new BuildJob()
             .setStampedeId(stampedeId)
             .setStatus(BuildStatus.BUILDING)
             .setBuildModeInfo(new BuildModeInfo().setNumberOfMinions(NUM_MINIONS));
-    final BuildJob job2 =
+    BuildJob job2 =
         new BuildJob().setStampedeId(stampedeId).setStatus(BuildStatus.FINISHED_SUCCESSFULLY);
-    final ImmutableList<BuildJob> jobs = ImmutableList.of(job0, job1, job2);
-    final AtomicInteger testStage = new AtomicInteger(0);
+    ImmutableList<BuildJob> jobs = ImmutableList.of(job0, job1, job2);
+    AtomicInteger testStage = new AtomicInteger(0);
     expect(mockDistBuildService.startBuild(stampedeId, false)).andReturn(jobs.get(0)).times(1);
 
     expect(mockDistBuildService.getCurrentBuildJobState(stampedeId))
@@ -298,7 +298,7 @@ public class BuildPhaseTest {
   public void testFetchingSlaveEvents()
       throws IOException, ExecutionException, InterruptedException {
     createBuildPhase();
-    final BuildJob job = PostBuildPhaseTest.createBuildJobWithSlaves(stampedeId);
+    BuildJob job = PostBuildPhaseTest.createBuildJobWithSlaves(stampedeId);
     List<BuildSlaveRunId> buildSlaveRunIds =
         job.getBuildSlaves()
             .stream()
@@ -373,7 +373,7 @@ public class BuildPhaseTest {
   public void testRealTimeLogStreaming()
       throws IOException, ExecutionException, InterruptedException {
     createBuildPhase();
-    final BuildJob job = PostBuildPhaseTest.createBuildJobWithSlaves(stampedeId);
+    BuildJob job = PostBuildPhaseTest.createBuildJobWithSlaves(stampedeId);
 
     // Test that we don't fetch logs if the tracker says we don't need to.
     expect(mockLogStateTracker.createRealtimeLogRequests(job.getBuildSlaves()))
@@ -415,7 +415,7 @@ public class BuildPhaseTest {
   public void testFetchingSlaveStatuses()
       throws IOException, ExecutionException, InterruptedException {
     createBuildPhase();
-    final BuildJob job = PostBuildPhaseTest.createBuildJobWithSlaves(stampedeId);
+    BuildJob job = PostBuildPhaseTest.createBuildJobWithSlaves(stampedeId);
     List<BuildSlaveRunId> buildSlaveRunIds =
         job.getBuildSlaves()
             .stream()

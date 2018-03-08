@@ -550,7 +550,7 @@ public class AppleDescriptions {
       BuildTarget binary,
       Either<AppleBundleExtension, String> extension,
       Optional<String> productName,
-      final SourcePath infoPlist,
+      SourcePath infoPlist,
       ImmutableMap<String, String> infoPlistSubstitutions,
       ImmutableSortedSet<BuildTarget> deps,
       ImmutableSortedSet<BuildTarget> tests,
@@ -837,7 +837,7 @@ public class AppleDescriptions {
     }
     BuildTarget buildTarget = binary.withFlavors(binaryFlavorsBuilder.build());
 
-    final TargetNode<?, ?> binaryTargetNode = targetGraph.get(buildTarget);
+    TargetNode<?, ?> binaryTargetNode = targetGraph.get(buildTarget);
 
     if (binaryTargetNode.getDescription() instanceof AppleTestDescription) {
       return resolver.getRule(binary);
@@ -864,11 +864,9 @@ public class AppleDescriptions {
   }
 
   private static BuildRuleParams getBundleParamsWithUpdatedDeps(
-      BuildRuleParams params,
-      final BuildTarget originalBinaryTarget,
-      final Set<BuildRule> newDeps) {
+      BuildRuleParams params, BuildTarget originalBinaryTarget, Set<BuildRule> newDeps) {
     // Remove the unflavored binary rule and add the flavored one instead.
-    final Predicate<BuildRule> notOriginalBinaryRule =
+    Predicate<BuildRule> notOriginalBinaryRule =
         BuildRules.isBuildRuleWithTarget(originalBinaryTarget).negate();
     return params
         .withDeclaredDeps(

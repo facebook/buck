@@ -62,22 +62,17 @@ public class NdkLibraryBuilder
   }
 
   public NdkLibraryBuilder(BuildTarget target, ProjectFilesystem filesystem) {
-    super(
-        new NdkLibraryDescription(createToolchainProvider()) {
-          @Override
-          protected ImmutableSortedSet<SourcePath> findSources(
-              ProjectFilesystem filesystem, Path buildRulePath) {
-            return ImmutableSortedSet.of(
-                PathSourcePath.of(filesystem, buildRulePath.resolve("Android.mk")));
-          }
-        },
-        target,
-        filesystem);
+    this(target, filesystem, createToolchainProviderForNdkLibrary());
   }
 
   public NdkLibraryBuilder(BuildTarget target, ToolchainProvider toolchainProvider) {
+    this(target, new FakeProjectFilesystem(), toolchainProvider);
+  }
+
+  public NdkLibraryBuilder(
+      BuildTarget target, ProjectFilesystem filesystem, ToolchainProvider toolchainProvider) {
     super(
-        new NdkLibraryDescription(toolchainProvider) {
+        new NdkLibraryDescription() {
           @Override
           protected ImmutableSortedSet<SourcePath> findSources(
               ProjectFilesystem filesystem, Path buildRulePath) {
@@ -86,10 +81,12 @@ public class NdkLibraryBuilder
           }
         },
         target,
-        new FakeProjectFilesystem());
+        filesystem,
+        toolchainProvider,
+        null);
   }
 
-  private static ToolchainProvider createToolchainProvider() {
+  public static ToolchainProvider createToolchainProviderForNdkLibrary() {
     ToolchainProvider toolchainProvider =
         new ToolchainProviderBuilder()
             .withToolchain(

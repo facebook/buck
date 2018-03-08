@@ -30,7 +30,7 @@ import org.junit.Test;
 public class CompilerPluginDurationEventTest {
 
   @Test
-  public void testEquals() throws Exception {
+  public void testEquals() {
     BuildTarget target = BuildTargetFactory.newInstance("//fake:rule");
     String pluginName = "com.facebook.FakePlugin";
     String durationName = "fakeDuration";
@@ -49,7 +49,7 @@ public class CompilerPluginDurationEventTest {
   }
 
   @Test
-  public void testIsRelated() throws Exception {
+  public void testIsRelated() {
     BuildTarget target = BuildTargetFactory.newInstance("//fake:rule");
     String pluginName = "com.facebook.FakePlugin";
     String durationName = "fakeDuration";

@@ -26,7 +26,7 @@ import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.toolchain.AppleToolchain;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.testutil.TestLogSink;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
@@ -138,7 +138,7 @@ public class AppleToolchainDiscoveryTest {
   public void shouldEmitLogMessageWhenFailingToReadToolchainInfo() throws Exception {
     Path root = Paths.get("test/com/facebook/buck/apple/testdata/toolchain-discovery");
     Path tempRoot = temp.getRoot().toPath();
-    MoreFiles.copyRecursively(root, tempRoot);
+    MostFiles.copyRecursively(root, tempRoot);
     Files.delete(tempRoot.resolve("Toolchains/foo.xctoolchain/ToolchainInfo.plist"));
     Files.write(
         tempRoot.resolve("Toolchains/bar.xctoolchain/Info.plist"),

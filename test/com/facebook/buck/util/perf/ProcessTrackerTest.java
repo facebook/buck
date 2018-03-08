@@ -271,11 +271,11 @@ public class ProcessTrackerTest {
     for (ProcessResourceConsumptionEvent event : events) {
       System.err.println("{'" + event.getExecutableName() + "', " + event.getParams() + "}");
     }
-    System.err.println("");
+    System.err.println();
   }
 
   private ProcessTrackerForTest createProcessTracker(
-      final BlockingQueue<ProcessResourceConsumptionEvent> events) {
+      BlockingQueue<ProcessResourceConsumptionEvent> events) {
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     eventBus.register(
         new Object() {
@@ -310,27 +310,26 @@ public class ProcessTrackerTest {
     }
 
     @Override
-    protected void startUp() throws Exception {}
+    protected void startUp() {}
 
     @Override
-    public void runOneIteration() throws Exception {}
+    public void runOneIteration() {}
 
     @Override
-    public void shutDown() throws Exception {}
+    public void shutDown() {}
 
-    void verifyNoProcessInfo(long pid) throws Exception {
+    void verifyNoProcessInfo(long pid) {
       assertFalse(processesInfo.containsKey(pid));
     }
 
-    void verifyThisProcessInfo(long pid, String name) throws Exception {
+    void verifyThisProcessInfo(long pid, String name) {
       ProcessInfo info = processesInfo.get(pid);
       assertThat(info, CoreMatchers.instanceOf(ThisProcessInfo.class));
       assertEquals(pid, ((ThisProcessInfo) info).pid);
       assertSame(name, ((ThisProcessInfo) info).name);
     }
 
-    void verifyExternalProcessInfo(long pid, NuProcess process, ProcessExecutorParams params)
-        throws Exception {
+    void verifyExternalProcessInfo(long pid, NuProcess process, ProcessExecutorParams params) {
       ProcessInfo info = processesInfo.get(pid);
       assertThat(info, CoreMatchers.instanceOf(ExternalProcessInfo.class));
       assertEquals(pid, ((ExternalProcessInfo) info).pid);

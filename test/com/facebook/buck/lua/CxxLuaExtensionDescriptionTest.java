@@ -21,8 +21,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
@@ -31,14 +30,12 @@ import org.junit.Test;
 public class CxxLuaExtensionDescriptionTest {
 
   @Test
-  public void baseModule() throws Exception {
+  public void baseModule() {
     CxxLuaExtensionBuilder builder =
         new CxxLuaExtensionBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setBaseModule("hello.world");
     BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraphFactory.newInstance(builder.build()),
-            new DefaultTargetNodeToBuildRuleTransformer());
+        new TestBuildRuleResolver(TargetGraphFactory.newInstance(builder.build()));
     CxxLuaExtension extension = builder.build(resolver);
     assertThat(
         Paths.get(extension.getModule(CxxPlatformUtils.DEFAULT_PLATFORM)),

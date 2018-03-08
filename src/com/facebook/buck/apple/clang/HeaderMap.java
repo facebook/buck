@@ -143,7 +143,7 @@ public class HeaderMap {
     return builder.toString();
   }
 
-  public void print(final Appendable stream) {
+  public void print(Appendable stream) {
     visit(
         (str, prefix, suffix) -> {
           try {
@@ -218,7 +218,7 @@ public class HeaderMap {
 
       map = HeaderMap.deserialize(buffer);
       if (map == null) {
-        throw new IOException("Error while parsing header map " + hmapFile.toString());
+        throw new IOException("Error while parsing header map " + hmapFile);
       }
     }
     return map;
@@ -341,7 +341,7 @@ public class HeaderMap {
       while (result == AddResult.FAILURE_FULL) {
         // the table is full, let's start all over again with a doubled number of bucket
         // and (optimization) the same size of string bytes
-        final HeaderMap newHeaderMap =
+        HeaderMap newHeaderMap =
             new HeaderMap(headerMap.numBuckets * 2, headerMap.stringBytes.length);
         headerMap.visit(
             (str, prefix1, suffix1) -> {
@@ -361,7 +361,7 @@ public class HeaderMap {
         result[0] = "";
         result[1] = path.toString();
       } else {
-        result[0] = path.getParent().toString() + "/";
+        result[0] = path.getParent() + "/";
         result[1] = path.getFileName().toString();
       }
       return result;

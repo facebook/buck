@@ -33,14 +33,12 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -69,12 +67,10 @@ public class RemoteFileTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void ensureOutputIsAddedToBuildableContextSoItIsCached() throws Exception {
+  public void ensureOutputIsAddedToBuildableContextSoItIsCached() {
     Downloader downloader = new ExplodingDownloader();
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:cake");
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     RemoteFile remoteFile =
@@ -144,7 +140,7 @@ public class RemoteFileTest {
   @Test
   public void shouldUnzipExplodedArchive() throws Exception {
     // zip archive of a directory called hello, which contains hello.txt file with "hello\n" content
-    final byte[] archiveContent = {
+    byte[] archiveContent = {
       0x50,
       0x4B,
       0x03,
@@ -509,7 +505,7 @@ public class RemoteFileTest {
     };
   }
 
-  private static Matcher<Path> hasContent(final byte[] content) {
+  private static Matcher<Path> hasContent(byte[] content) {
     return new BaseMatcher<Path>() {
       @Override
       public boolean matches(Object o) {
@@ -541,7 +537,7 @@ public class RemoteFileTest {
     return runTheMagic(downloader, contentsOfFile.getBytes(UTF_8), hashCode, type);
   }
 
-  private Path runTheMagic(final byte[] contentsOfFile, HashCode hashCode, RemoteFile.Type type)
+  private Path runTheMagic(byte[] contentsOfFile, HashCode hashCode, RemoteFile.Type type)
       throws Exception {
 
     Downloader downloader =
@@ -555,7 +551,7 @@ public class RemoteFileTest {
 
   private Path runTheMagic(
       @Nullable Downloader downloader,
-      final byte[] contentsOfFile,
+      byte[] contentsOfFile,
       HashCode hashCode,
       RemoteFile.Type type)
       throws Exception {
@@ -584,9 +580,7 @@ public class RemoteFileTest {
             hashCode,
             "output.txt",
             type);
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     resolver.addToIndex(remoteFile);
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));

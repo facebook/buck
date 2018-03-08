@@ -66,7 +66,7 @@ public class OCamlIntegrationTest {
   private ProjectWorkspace workspace;
 
   @Before
-  public void checkOcamlIsConfigured() throws InterruptedException, IOException {
+  public void checkOcamlIsConfigured() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "ocaml", tmp);
     workspace.setUp();
 
@@ -177,7 +177,7 @@ public class OCamlIntegrationTest {
   }
 
   @Test
-  public void testNativePlugin() throws IOException, Exception {
+  public void testNativePlugin() throws Exception {
     // Build the plugin
     BuildTarget pluginTarget =
         BuildTargetFactory.newInstance(workspace.getDestPath(), "//ocaml_native_plugin:plugin");

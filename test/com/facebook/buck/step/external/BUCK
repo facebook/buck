@@ -5,7 +5,6 @@ standard_java_test(
     deps = [
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/jvm/java:support",
-        "//src/com/facebook/buck/message_ipc:message_ipc",
         "//src/com/facebook/buck/step/external:external",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util/environment:platform",

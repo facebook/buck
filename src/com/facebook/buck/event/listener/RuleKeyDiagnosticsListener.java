@@ -194,7 +194,7 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
     try {
       projectFilesystem.createParentDirs(path);
       try (OutputStream os = projectFilesystem.newUnbufferedFileOutputStream(path, false);
-          ThrowingPrintWriter out = new ThrowingPrintWriter(os, StandardCharsets.UTF_8); ) {
+          ThrowingPrintWriter out = new ThrowingPrintWriter(os, StandardCharsets.UTF_8)) {
         out.println(rulesInfo.size());
         for (Map.Entry<BuildRule, RuleInfo> entry : rulesInfo.entrySet()) {
           BuildRule rule = entry.getKey();

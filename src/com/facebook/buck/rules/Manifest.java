@@ -220,7 +220,7 @@ public class Manifest {
   }
 
   private static Function<SourcePath, String> sourcePathToManifestHeaderFunction(
-      final SourcePathResolver resolver) {
+      SourcePathResolver resolver) {
     return input -> sourcePathToManifestHeader(input, resolver);
   }
 

@@ -88,14 +88,14 @@ class StandaloneDeclaredType extends StandaloneTypeMirror implements DeclaredTyp
   public String toString() {
     StringBuilder builder = new StringBuilder();
 
-    builder.append(typeElement.toString());
+    builder.append(typeElement);
     if (!typeArguments.isEmpty()) {
       builder.append('<');
       for (int i = 0; i < typeArguments.size(); i++) {
         if (i > 0) {
           builder.append(',');
         }
-        builder.append(typeArguments.get(i).toString());
+        builder.append(typeArguments.get(i));
       }
       builder.append('>');
     }

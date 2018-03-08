@@ -111,8 +111,8 @@ public class ParsePipelineTest {
 
   @Test
   public void speculativeDepsTraversal() throws Exception {
-    final Fixture fixture = createMultiThreadedFixture("pipeline_test");
-    final Cell cell = fixture.getCell();
+    Fixture fixture = createMultiThreadedFixture("pipeline_test");
+    Cell cell = fixture.getCell();
     TargetNode<?, ?> libTargetNode =
         fixture
             .getTargetNodeParsePipeline()
@@ -130,8 +130,8 @@ public class ParsePipelineTest {
 
   @Test
   public void speculativeDepsTraversalWhenGettingAllNodes() throws Exception {
-    final Fixture fixture = createMultiThreadedFixture("pipeline_test");
-    final Cell cell = fixture.getCell();
+    Fixture fixture = createMultiThreadedFixture("pipeline_test");
+    Cell cell = fixture.getCell();
     ImmutableSet<TargetNode<?, ?>> libTargetNodes =
         fixture
             .getTargetNodeParsePipeline()
@@ -221,7 +221,7 @@ public class ParsePipelineTest {
       fixture
           .getRawNodeParsePipelineCache()
           .putComputedNodeIfNotPresent(
-              cell, rootBuildFilePath, ImmutableSet.of(ImmutableMap.of("name", (Object) "bar")));
+              cell, rootBuildFilePath, ImmutableSet.of(ImmutableMap.of("name", "bar")));
       expectedException.expect(IllegalStateException.class);
       expectedException.expectMessage("malformed raw data");
       fixture
@@ -286,7 +286,7 @@ public class ParsePipelineTest {
   @Test
   public void recoversAfterSyntaxError() throws Exception {
     try (Fixture fixture = createSynchronousExecutionFixture("syntax_error")) {
-      final Cell cell = fixture.getCell();
+      Cell cell = fixture.getCell();
       try {
         fixture
             .getTargetNodeParsePipeline()
@@ -395,8 +395,8 @@ public class ParsePipelineTest {
       this.knownBuildRuleTypes = knownBuildRuleTypesFactory.create(cell);
       this.targetNodeParsePipelineCache = new TypedParsePipelineCache<>();
       this.rawNodeParsePipelineCache = new RawNodeParsePipelineCache();
-      final TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
-      final ConstructorArgMarshaller constructorArgMarshaller =
+      TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
+      ConstructorArgMarshaller constructorArgMarshaller =
           new ConstructorArgMarshaller(coercerFactory);
 
       projectBuildFileParserPool =
@@ -418,13 +418,13 @@ public class ParsePipelineTest {
                 return buildFileParser;
               },
               false);
-      final TargetNodeListener<TargetNode<?, ?>> nodeListener = (buildFile, node) -> {};
+      TargetNodeListener<TargetNode<?, ?>> nodeListener = (buildFile, node) -> {};
       LoadingCache<Cell, BuildFileTree> buildFileTrees =
           CacheBuilder.newBuilder()
               .build(
                   new CacheLoader<Cell, BuildFileTree>() {
                     @Override
-                    public BuildFileTree load(Cell cell) throws Exception {
+                    public BuildFileTree load(Cell cell) {
                       return new FilesystemBackedBuildFileTree(
                           cell.getFilesystem(), cell.getBuildFileName());
                     }

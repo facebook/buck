@@ -118,7 +118,7 @@ public class PreBuildPhase {
             buildId, buildMode, numberOfMinions, repository, tenantId, buildTargets, buildLabel);
     distBuildClientStats.stopTimer(CREATE_DISTRIBUTED_BUILD);
 
-    final StampedeId stampedeId = job.getStampedeId();
+    StampedeId stampedeId = job.getStampedeId();
     eventBus.post(new DistBuildCreatedEvent(stampedeId));
 
     LOG.info("Created job. Build id = " + stampedeId.getId());

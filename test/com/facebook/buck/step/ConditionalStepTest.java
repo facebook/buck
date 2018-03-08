@@ -32,7 +32,7 @@ public class ConditionalStepTest extends EasyMockSupport {
   public void testExecuteConditionalStepWhenTrue() throws IOException, InterruptedException {
     // Create a Supplier<Boolean> that returns a value once an external condition has been
     // satisfied.
-    final AtomicReference<Optional<Boolean>> condition = new AtomicReference<>(Optional.empty());
+    AtomicReference<Optional<Boolean>> condition = new AtomicReference<>(Optional.empty());
     Supplier<Boolean> conditional =
         () -> {
           if (!condition.get().isPresent()) {
@@ -43,12 +43,11 @@ public class ConditionalStepTest extends EasyMockSupport {
         };
 
     // Create a step to run when the Supplier<Boolean> is true. Exit code is always 37.
-    final AtomicInteger numCalls = new AtomicInteger(0);
+    AtomicInteger numCalls = new AtomicInteger(0);
     Step stepToRunWhenSupplierIsTrue =
         new AbstractExecutionStep("inc") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context)
-              throws IOException, InterruptedException {
+          public StepExecutionResult execute(ExecutionContext context) {
             numCalls.incrementAndGet();
             return StepExecutionResult.of(37);
           }
@@ -70,7 +69,7 @@ public class ConditionalStepTest extends EasyMockSupport {
   public void testExecuteConditionalStepWhenFalse() throws IOException, InterruptedException {
     // Create a Supplier<Boolean> that returns a value once an external condition has been
     // satisfied.
-    final AtomicReference<Optional<Boolean>> condition = new AtomicReference<>(Optional.empty());
+    AtomicReference<Optional<Boolean>> condition = new AtomicReference<>(Optional.empty());
     Supplier<Boolean> conditional =
         () -> {
           if (!condition.get().isPresent()) {
@@ -82,12 +81,11 @@ public class ConditionalStepTest extends EasyMockSupport {
 
     // Create a step to run when the Supplier<Boolean> is true. Because the Supplier<Boolean> will
     // be false, this step should not be run.
-    final AtomicInteger numCalls = new AtomicInteger(0);
+    AtomicInteger numCalls = new AtomicInteger(0);
     Step stepToRunWhenSupplierIsTrue =
         new AbstractExecutionStep("inc") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context)
-              throws IOException, InterruptedException {
+          public StepExecutionResult execute(ExecutionContext context) {
             numCalls.incrementAndGet();
             throw new IllegalStateException("This step should not be executed.");
           }

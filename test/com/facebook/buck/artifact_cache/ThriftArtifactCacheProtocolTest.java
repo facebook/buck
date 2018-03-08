@@ -206,12 +206,12 @@ public class ThriftArtifactCacheProtocolTest {
     }
   }
 
-  private OutputStream wrapBuffer(final byte[] buffer) {
+  private OutputStream wrapBuffer(byte[] buffer) {
     return new OutputStream() {
       private int pos = 0;
 
       @Override
-      public void write(int b) throws IOException {
+      public void write(int b) {
         buffer[pos++] = (byte) b;
       }
     };
@@ -228,8 +228,7 @@ public class ThriftArtifactCacheProtocolTest {
 
   // TODO(ruibm): Use Base64 response data generated from the real server implementation.
   private BuckCacheResponse serializeData(
-      String errorMessage, OutputStream rawStream, byte[]... payloads)
-      throws IOException, TException {
+      String errorMessage, OutputStream rawStream, byte[]... payloads) throws IOException {
     BuckCacheResponse cacheResponse = new BuckCacheResponse();
     cacheResponse.setErrorMessage(errorMessage);
     for (byte[] payload : payloads) {

@@ -56,9 +56,7 @@ public class MacroHandler {
   }
 
   public Function<String, String> getExpander(
-      final BuildTarget target,
-      final CellPathResolver cellNames,
-      final BuildRuleResolver resolver) {
+      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver) {
     return blob -> {
       try {
         return expand(target, cellNames, resolver, blob);
@@ -87,18 +85,15 @@ public class MacroHandler {
   }
 
   public String expand(
-      final BuildTarget target,
-      final CellPathResolver cellNames,
-      final BuildRuleResolver resolver,
-      String blob)
+      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, String blob)
       throws MacroException {
     return expand(target, cellNames, resolver, blob, new HashMap<>());
   }
 
   public String expand(
-      final BuildTarget target,
-      final CellPathResolver cellNames,
-      final BuildRuleResolver resolver,
+      BuildTarget target,
+      CellPathResolver cellNames,
+      BuildRuleResolver resolver,
       String blob,
       Map<MacroMatchResult, Object> precomputedWorkCache)
       throws MacroException {
@@ -108,18 +103,18 @@ public class MacroHandler {
   }
 
   private ImmutableMap<String, MacroReplacer<String>> getMacroReplacers(
-      final BuildTarget target,
-      final CellPathResolver cellNames,
-      final BuildRuleResolver resolver,
+      BuildTarget target,
+      CellPathResolver cellNames,
+      BuildRuleResolver resolver,
       Map<MacroMatchResult, Object> precomputedWorkCache) {
     ImmutableMap.Builder<String, MacroReplacer<String>> replacers = ImmutableMap.builder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-    for (final Map.Entry<String, MacroExpander> entry : expanders.entrySet()) {
+    for (Map.Entry<String, MacroExpander> entry : expanders.entrySet()) {
       MacroReplacer<String> replacer;
-      final boolean shouldOutputToFile = entry.getKey().startsWith("@");
+      boolean shouldOutputToFile = entry.getKey().startsWith("@");
       try {
-        final MacroExpander expander = getExpander(entry.getKey());
+        MacroExpander expander = getExpander(entry.getKey());
         replacer =
             input -> {
               Object precomputedWork =

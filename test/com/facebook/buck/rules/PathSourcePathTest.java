@@ -33,10 +33,7 @@ public class PathSourcePathTest {
     PathSourcePath path = FakeSourcePath.of(projectFilesystem, "cheese");
 
     SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     Path resolved = resolver.getRelativePath(path);
 
     assertEquals(Paths.get("cheese"), resolved);

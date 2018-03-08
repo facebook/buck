@@ -153,7 +153,7 @@ public class IjProjectWriter {
             .resolve(Util.normalizeIntelliJName(library.getName()) + ".xml");
 
     ST contents = StringTemplateFile.LIBRARY_TEMPLATE.getST();
-    final IjProjectPaths projectPaths = projectConfig.getProjectPaths();
+    IjProjectPaths projectPaths = projectConfig.getProjectPaths();
     contents.add("name", library.getName());
     contents.add(
         "binaryJars",

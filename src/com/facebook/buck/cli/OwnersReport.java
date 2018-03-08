@@ -211,7 +211,7 @@ final class OwnersReport {
         ListeningExecutorService executor,
         Iterable<String> arguments) {
       ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
-      final Path rootPath = rootCellFilesystem.getRootPath();
+      Path rootPath = rootCellFilesystem.getRootPath();
       Preconditions.checkState(rootPath.isAbsolute());
 
       // Order cells by cell path length so that nested cells will resolve to the most specific

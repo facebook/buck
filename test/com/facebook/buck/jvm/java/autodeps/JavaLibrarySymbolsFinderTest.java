@@ -66,7 +66,7 @@ public class JavaLibrarySymbolsFinderTest {
           JavacOptions.builder().setSourceLevel("7").setTargetLevel("7").build());
 
   @Test
-  public void extractSymbolsFromSrcs() throws InterruptedException, IOException {
+  public void extractSymbolsFromSrcs() throws IOException {
     TestDataHelper.createProjectWorkspaceForScenario(this, "java_library_symbols_finder", tmp)
         .setUp();
     ProjectFilesystem projectFilesystem =
@@ -92,17 +92,17 @@ public class JavaLibrarySymbolsFinderTest {
 
   @Test
   @SuppressWarnings("PMD.PrematureDeclaration")
-  public void onlyNonGeneratedSrcsShouldAffectRuleKey() throws InterruptedException, IOException {
+  public void onlyNonGeneratedSrcsShouldAffectRuleKey() throws IOException {
     TestDataHelper.createProjectWorkspaceForScenario(this, "java_library_symbols_finder", tmp)
         .setUp();
-    final ProjectFilesystem projectFilesystem =
+    ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
     Function<String, SourcePath> convert =
         src -> PathSourcePath.of(projectFilesystem, Paths.get(src));
     SourcePath example1 = convert.apply("Example1.java");
     SourcePath example2 = convert.apply("Example2.java");
-    final BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:GenEx.java");
+    BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:GenEx.java");
     SourcePath generated = DefaultBuildTargetSourcePath.of(fakeBuildTarget);
 
     JavaLibrarySymbolsFinder example1Finder =
@@ -114,8 +114,8 @@ public class JavaLibrarySymbolsFinderTest {
 
     // Mock out calls to a SourcePathResolver so we can create a legitimate
     // DefaultRuleKeyFactory.
-    final SourcePathRuleFinder ruleFinder = createMock(SourcePathRuleFinder.class);
-    final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathRuleFinder ruleFinder = createMock(SourcePathRuleFinder.class);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     expect(ruleFinder.getRule(anyObject(SourcePath.class)))
         .andAnswer(
             () -> {
@@ -129,12 +129,12 @@ public class JavaLibrarySymbolsFinderTest {
         .anyTimes();
 
     // Calculates the RuleKey for a JavaSymbolsRule with the specified JavaLibrarySymbolsFinder.
-    final FileHashCache fileHashCache =
+    FileHashCache fileHashCache =
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
                     projectFilesystem, FileHashCacheMode.DEFAULT)));
-    final DefaultRuleKeyFactory ruleKeyFactory =
+    DefaultRuleKeyFactory ruleKeyFactory =
         new TestDefaultRuleKeyFactory(fileHashCache, pathResolver, ruleFinder);
     Function<JavaLibrarySymbolsFinder, RuleKey> createRuleKey =
         finder -> {

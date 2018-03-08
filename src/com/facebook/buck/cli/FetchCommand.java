@@ -73,7 +73,7 @@ public class FetchCommand extends BuildCommand {
     }
 
     FetchTargetNodeToBuildRuleTransformer ruleGenerator = createFetchTransformer(params);
-    int exitCodeInt;
+    ExitCode exitCode;
 
     try (CommandThreadManager pool =
             new CommandThreadManager("Fetch", getConcurrencyLimit(params.getBuckConfig()));
@@ -105,6 +105,7 @@ public class FetchCommand extends BuildCommand {
                         params.getBuckEventBus(),
                         ruleGenerator,
                         result.getTargetGraph(),
+                        params.getCell().getToolchainProvider(),
                         params.getBuckConfig().getActionGraphParallelizationMode(),
                         params.getBuckConfig().getShouldInstrumentActionGraph(),
                         params.getBuckConfig().getIncrementalActionGraphMode(),
@@ -166,7 +167,7 @@ public class FetchCommand extends BuildCommand {
                   params.getClock(),
                   getExecutionContext(),
                   isKeepGoing())) {
-        exitCodeInt =
+        exitCode =
             build.executeAndPrintFailuresToEventBus(
                 buildTargets,
                 params.getBuckEventBus(),
@@ -174,8 +175,6 @@ public class FetchCommand extends BuildCommand {
                 getPathToBuildReport(params.getBuckConfig()));
       }
     }
-
-    ExitCode exitCode = ExitCode.map(exitCodeInt);
 
     params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
 

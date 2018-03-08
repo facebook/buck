@@ -27,17 +27,15 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -56,7 +54,7 @@ import org.junit.Test;
 public class GenAidlTest {
 
   @Test
-  public void testSimpleGenAidlRule() throws InterruptedException, IOException {
+  public void testSimpleGenAidlRule() throws IOException {
     ProjectFilesystem stubFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Files.createDirectories(stubFilesystem.getRootPath().resolve("java/com/example/base"));
 
@@ -64,10 +62,10 @@ public class GenAidlTest {
         FakeSourcePath.of(stubFilesystem, "java/com/example/base/IWhateverService.aidl");
     String importPath = Paths.get("java/com/example/base").toString();
 
-    final String pathToAidlExecutable = Paths.get("/usr/local/bin/aidl").toString();
-    final String pathToFrameworkAidl =
+    String pathToAidlExecutable = Paths.get("/usr/local/bin/aidl").toString();
+    String pathToFrameworkAidl =
         Paths.get("/home/root/android/platforms/android-16/framework.aidl").toString();
-    final AndroidPlatformTarget androidPlatformTarget =
+    AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTarget.of(
             "android",
             Paths.get(""),
@@ -88,10 +86,7 @@ public class GenAidlTest {
             stubFilesystem.getRootPath(), "//java/com/example/base:IWhateverService");
     BuildRuleParams params = TestBuildRuleParams.create();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     GenAidl genAidlRule =
         new GenAidl(
             target,
@@ -103,7 +98,7 @@ public class GenAidlTest {
             pathToAidl,
             importPath);
 
-    GenAidlDescription description = new GenAidlDescription(new ToolchainProviderBuilder().build());
+    GenAidlDescription description = new GenAidlDescription();
     assertEquals(
         Description.getBuildRuleType(GenAidlDescription.class),
         Description.getBuildRuleType(description));

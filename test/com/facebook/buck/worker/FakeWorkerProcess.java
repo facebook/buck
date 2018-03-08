@@ -47,12 +47,12 @@ public class FakeWorkerProcess extends WorkerProcess {
   }
 
   @Override
-  public synchronized void ensureLaunchAndHandshake() throws IOException {
+  public synchronized void ensureLaunchAndHandshake() {
     isAlive = true;
   }
 
   @Override
-  public synchronized WorkerJobResult submitAndWaitForJob(String jobArgs) throws IOException {
+  public synchronized WorkerJobResult submitAndWaitForJob(String jobArgs) {
     WorkerJobResult result = this.jobArgsToJobResultMap.get(jobArgs);
     if (result == null) {
       throw new IllegalArgumentException(

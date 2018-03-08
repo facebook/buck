@@ -128,7 +128,7 @@ public class OcamlLink extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     if (isLibrary && buildNativePlugin) {
       ImmutableList.Builder<String> ocamlInputBuilder = ImmutableList.builder();
 
-      final String linkExt = OcamlCompilables.OCAML_CMXS;
+      String linkExt = OcamlCompilables.OCAML_CMXS;
 
       for (String linkInput : Arg.stringify(depInput, context.getSourcePathResolver())) {
         if (linkInput.endsWith(linkExt)) {

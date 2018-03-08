@@ -26,6 +26,7 @@ import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.DaemonEvent;
+import com.facebook.buck.event.FlushConsoleEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.ParsingEvent;
@@ -957,6 +958,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       return;
     }
     logEvents.add(event);
+  }
+
+  @Subscribe
+  public void forceRender(@SuppressWarnings("unused") FlushConsoleEvent event) {
+    render();
   }
 
   @Override

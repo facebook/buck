@@ -107,7 +107,7 @@ abstract class AbstractMergeAndroidResourceSourcesStep implements Step {
     sb.append(' ');
     Joiner.on(',').appendTo(sb, getResPaths());
     sb.append(" -> ");
-    sb.append(getOutFolderPath().toString());
+    sb.append(getOutFolderPath());
     return sb.toString();
   }
 

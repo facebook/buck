@@ -46,7 +46,7 @@ public class QueryCache {
 
   @VisibleForTesting
   boolean isPresent(TargetGraph targetGraph, GraphEnhancementQueryEnvironment env, Query query)
-      throws ExecutionException, QueryException {
+      throws QueryException {
     CachingQueryEvaluator evaluator = evaluators.getIfPresent(targetGraph);
     return Objects.nonNull(evaluator)
         && evaluator.isPresent(QueryExpression.parse(query.getQuery(), env));

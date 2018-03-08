@@ -64,7 +64,7 @@ public class BundledExternalProcessLauncher {
       case UNKNOWN:
         return getCommandForWhenProbablyRunningUnderTest(entryPoint);
       default:
-        throw new RuntimeException("Unknown build type " + buildType.toString());
+        throw new RuntimeException("Unknown build type " + buildType);
     }
   }
 

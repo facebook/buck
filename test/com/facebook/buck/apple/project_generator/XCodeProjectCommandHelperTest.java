@@ -193,7 +193,7 @@ public class XCodeProjectCommandHelperTest {
             /* withDependenciesTests = */ false);
 
     assertEquals(
-        ImmutableSortedSet.<TargetNode<?, ?>>of(
+        ImmutableSortedSet.of(
             workspaceNode,
             fooBinNode,
             fooBinBinaryNode,
@@ -215,7 +215,7 @@ public class XCodeProjectCommandHelperTest {
             /* withDependenciesTests */ true);
 
     assertEquals(
-        ImmutableSortedSet.<TargetNode<?, ?>>of(
+        ImmutableSortedSet.of(
             workspaceNode,
             fooBinNode,
             fooBinBinaryNode,
@@ -240,7 +240,7 @@ public class XCodeProjectCommandHelperTest {
             /* withDependenciesTests */ false);
 
     assertEquals(
-        ImmutableSortedSet.<TargetNode<?, ?>>of(
+        ImmutableSortedSet.of(
             workspaceNode,
             fooBinNode,
             fooBinBinaryNode,
@@ -260,7 +260,7 @@ public class XCodeProjectCommandHelperTest {
             /* withDependenciesTests */ true);
 
     assertEquals(
-        ImmutableSortedSet.<TargetNode<?, ?>>of(
+        ImmutableSortedSet.of(
             workspaceNode,
             fooBinNode,
             fooBinBinaryNode,

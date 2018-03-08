@@ -63,7 +63,7 @@ public class PrebuiltJarIntegrationTest {
   }
 
   @Test
-  public void testAbiKeyIsHashOfFileContents() throws IOException, InterruptedException {
+  public void testAbiKeyIsHashOfFileContents() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "prebuilt", temp);
     workspace.setUp();

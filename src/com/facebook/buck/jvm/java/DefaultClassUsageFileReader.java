@@ -55,9 +55,9 @@ class DefaultClassUsageFileReader {
       CellPathResolver cellPathResolver,
       Path classUsageFilePath,
       ImmutableMap<Path, SourcePath> jarPathToSourcePath) {
-    final ImmutableList.Builder<SourcePath> builder = ImmutableList.builder();
+    ImmutableList.Builder<SourcePath> builder = ImmutableList.builder();
     try {
-      final ImmutableSet<Map.Entry<String, ImmutableList<String>>> classUsageEntries =
+      ImmutableSet<Map.Entry<String, ImmutableList<String>>> classUsageEntries =
           loadClassUsageMap(classUsageFilePath).entrySet();
       for (Map.Entry<String, ImmutableList<String>> jarUsedClassesEntry : classUsageEntries) {
         Path jarAbsolutePath =
@@ -88,8 +88,8 @@ class DefaultClassUsageFileReader {
       CellPathResolver cellPathResolver,
       Path classUsageFilePath)
       throws IOException {
-    final ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
-    final ImmutableSet<Map.Entry<String, ImmutableList<String>>> classUsageEntries =
+    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
+    ImmutableSet<Map.Entry<String, ImmutableList<String>>> classUsageEntries =
         loadClassUsageMap(classUsageFilePath).entrySet();
     for (Map.Entry<String, ImmutableList<String>> jarUsedClassesEntry : classUsageEntries) {
       Path jarAbsolutePath =
@@ -102,7 +102,7 @@ class DefaultClassUsageFileReader {
 
   private static Path convertRecordedJarPathToAbsolute(
       ProjectFilesystem projectFilesystem, CellPathResolver cellPathResolver, String jarPath) {
-    final Path recordedPath = Paths.get(jarPath);
+    Path recordedPath = Paths.get(jarPath);
     Path jarAbsolutePath =
         recordedPath.isAbsolute()
             ? getAbsolutePathForCellRootedPath(recordedPath, cellPathResolver)
@@ -121,15 +121,15 @@ class DefaultClassUsageFileReader {
   private static Path getAbsolutePathForCellRootedPath(
       Path cellRootedPath, CellPathResolver cellPathResolver) {
     Preconditions.checkArgument(cellRootedPath.isAbsolute(), "Path must begin with /<cell_name>");
-    final Iterator<Path> pathIterator = cellRootedPath.iterator();
-    final Path cellName = pathIterator.next();
+    Iterator<Path> pathIterator = cellRootedPath.iterator();
+    Path cellName = pathIterator.next();
     Path relativeToCellRoot = pathIterator.next();
     while (pathIterator.hasNext()) {
       relativeToCellRoot = relativeToCellRoot.resolve(pathIterator.next());
     }
     return cellPathResolver
         .getCellPath(Optional.of(cellName.toString()))
-        .orElseThrow(() -> new AssertionError("Cell name does not exist: " + cellName.toString()))
+        .orElseThrow(() -> new AssertionError("Cell name does not exist: " + cellName))
         .resolve(relativeToCellRoot);
   }
 }

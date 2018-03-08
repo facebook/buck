@@ -24,6 +24,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.collect.ImmutableSet;
 
 class FetchTargetNodeToBuildRuleTransformer implements TargetNodeToBuildRuleTransformer {
@@ -42,9 +43,12 @@ class FetchTargetNodeToBuildRuleTransformer implements TargetNodeToBuildRuleTran
 
   @Override
   public <T, U extends Description<T>> BuildRule transform(
-      TargetGraph targetGraph, BuildRuleResolver ruleResolver, TargetNode<T, U> targetNode) {
+      TargetGraph targetGraph,
+      ToolchainProvider toolchainProvider,
+      BuildRuleResolver ruleResolver,
+      TargetNode<T, U> targetNode) {
     TargetNode<?, ?> node = substituteTargetNodeIfNecessary(targetNode);
-    return delegate.transform(targetGraph, ruleResolver, node);
+    return delegate.transform(targetGraph, toolchainProvider, ruleResolver, node);
   }
 
   public ImmutableSet<BuildTarget> getDownloadableTargets() {

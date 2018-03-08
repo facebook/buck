@@ -46,8 +46,7 @@ public class FakeProcessExecutor extends DefaultProcessExecutor {
   }
 
   public FakeProcessExecutor(
-      final Iterable<Map.Entry<ProcessExecutorParams, FakeProcess>> processIterable,
-      Console console) {
+      Iterable<Map.Entry<ProcessExecutorParams, FakeProcess>> processIterable, Console console) {
     this(
         new Function<ProcessExecutorParams, FakeProcess>() {
           final Iterator<Map.Entry<ProcessExecutorParams, FakeProcess>> processIterator =

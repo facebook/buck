@@ -91,15 +91,21 @@ public class WindowsUtils extends PlatformUtils {
     return Optional.of("windows-x86_64");
   }
 
+  /** Returns a buck command builder for a unix platform, which runs programs through cmd */
+  @Override
+  public ImmutableList.Builder<String> getCommandBuilder() {
+    ImmutableList.Builder<String> commandBuilder = ImmutableList.<String>builder();
+    commandBuilder.add("cmd").add("/c");
+    return commandBuilder;
+  }
+
   /**
    * Returns a buck command builder for a unix platform, which runs buck through cmd.exe running
    * bin/buck
    */
   @Override
-  public ImmutableList.Builder<String> getCommandBuilder() {
-    ImmutableList.Builder<String> commandBuilder = ImmutableList.<String>builder();
-    commandBuilder.add("cmd").add("/c").add(BUCK_EXE);
-    return commandBuilder;
+  public ImmutableList.Builder<String> getBuckCommandBuilder() {
+    return getCommandBuilder().add(BUCK_EXE);
   }
 
   /** Gets the location of vcvarsallbat on the windows platform */

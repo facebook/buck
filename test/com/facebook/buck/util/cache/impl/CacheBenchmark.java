@@ -58,7 +58,7 @@ public class CacheBenchmark {
   }
 
   @BeforeExperiment
-  public void setUpBenchmark() throws Exception {
+  public void setUpBenchmark() {
     while (leaves.size() < leavesCount) {
       String path = folders.get(random.nextInt(folders.size()));
       // create a folder? 25% chance of doing so.
@@ -87,7 +87,7 @@ public class CacheBenchmark {
     addEntries();
   }
 
-  private void addEntries() throws Exception {
+  private void addEntries() {
     leaves.forEach(
         leaf -> {
           try {
@@ -106,7 +106,7 @@ public class CacheBenchmark {
   }
 
   @Benchmark
-  public void invalidateEntries() throws Exception {
+  public void invalidateEntries() {
     leaves.forEach(
         leaf ->
             cache.onFileSystemChange(

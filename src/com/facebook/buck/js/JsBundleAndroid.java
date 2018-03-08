@@ -57,7 +57,7 @@ public class JsBundleAndroid extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    final SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
+    SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
 
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToOutput()));
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToSourceMap()));

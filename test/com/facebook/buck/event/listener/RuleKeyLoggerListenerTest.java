@@ -72,7 +72,7 @@ public class RuleKeyLoggerListenerTest {
   }
 
   @Test
-  public void testFileIsNotCreatedWithoutEvents() throws InterruptedException, IOException {
+  public void testFileIsNotCreatedWithoutEvents() throws InterruptedException {
     RuleKeyLoggerListener listener = newInstance(1);
     listener.outputTrace(info.getBuildId());
     Assert.assertFalse(Files.exists(listener.getLogFilePath()));
@@ -88,7 +88,7 @@ public class RuleKeyLoggerListenerTest {
   }
 
   @Test
-  public void testSendingInvalidHttpCacheEvent() throws InterruptedException, IOException {
+  public void testSendingInvalidHttpCacheEvent() throws InterruptedException {
     RuleKeyLoggerListener listener = newInstance(1);
     listener.onArtifactCacheEvent(createArtifactCacheEvent(CacheResultType.HIT));
     listener.outputTrace(info.getBuildId());

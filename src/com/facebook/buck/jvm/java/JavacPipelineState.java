@@ -88,8 +88,7 @@ public class JavacPipelineState implements RulePipelineState {
     return invocation != null;
   }
 
-  public Javac.Invocation getJavacInvocation(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public Javac.Invocation getJavacInvocation(ExecutionContext context) throws IOException {
     if (invocation == null) {
       javacOptions.validateOptions(classpathChecker::validateClasspath);
 
@@ -131,10 +130,17 @@ public class JavacPipelineState implements RulePipelineState {
          processors that generates java source files to compile. So we pass the directories
          where potencially generated files will be, and here, which runs after all kotlin steps
          we filter for only java files, or don't invoke the compiler, if there aren't any */
+
+      ImmutableSortedSet<Path> sources = compilerParameters.getSourceFilePaths();
+      System.out.println(sources.stream()
+          .map(path -> path.toString())
+          .reduce("", (s, s2) -> s + ", " + s2));
+
       ImmutableSortedSet<Path> sourcePaths = ImmutableSortedSet.copyOf(
-          PathHelper.flatmapDirectories(filesystem, compilerParameters.getSourceFilePaths())
+          PathHelper.flatmapDirectories(filesystem, sources)
           .stream()
-          .filter(input -> new PathOrGlobMatcher("**.java").matches(input))
+          .filter(input -> new PathOrGlobMatcher("**.java").matches(input) ||
+              new PathOrGlobMatcher("**.zip").matches(input))
           .collect(Collectors.toSet()));
 
       if (!sourcePaths.isEmpty()) {
@@ -222,7 +228,7 @@ public class JavacPipelineState implements RulePipelineState {
       Path generatedCodeDirectory,
       ExecutionContext context,
       ImmutableSortedSet<Path> buildClasspathEntries) {
-    final ImmutableList.Builder<String> builder = ImmutableList.builder();
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     javacOptions.appendOptionsTo(
         new OptionsConsumer() {

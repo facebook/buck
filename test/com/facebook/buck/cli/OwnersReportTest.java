@@ -67,7 +67,6 @@ import java.util.function.Function;
 import org.immutables.value.Value;
 import org.junit.Before;
 import org.junit.Test;
-import org.kohsuke.args4j.CmdLineException;
 
 /** Reports targets that own a specified list of files. */
 public class OwnersReportTest {
@@ -127,8 +126,7 @@ public class OwnersReportTest {
   }
 
   @Test
-  public void verifyPathsThatAreNotFilesAreCorrectlyReported()
-      throws CmdLineException, IOException, InterruptedException {
+  public void verifyPathsThatAreNotFilesAreCorrectlyReported() throws IOException {
     filesystem.mkdirs(filesystem.getPath("java/somefolder/badfolder"));
     filesystem.mkdirs(filesystem.getPath("com/test/subtest"));
 
@@ -147,8 +145,7 @@ public class OwnersReportTest {
   }
 
   @Test
-  public void verifyMissingFilesAreCorrectlyReported()
-      throws CmdLineException, IOException, InterruptedException {
+  public void verifyMissingFilesAreCorrectlyReported() {
     // Inputs that should be treated as missing files
     String input = "java/somefolder/badfolder/somefile.java";
 
@@ -164,8 +161,7 @@ public class OwnersReportTest {
   }
 
   @Test
-  public void verifyInputsWithoutOwnersAreCorrectlyReported()
-      throws CmdLineException, IOException, InterruptedException {
+  public void verifyInputsWithoutOwnersAreCorrectlyReported() throws IOException {
     // Inputs that should be treated as existing files
     String input = "java/somefolder/badfolder/somefile.java";
     Path inputPath = filesystem.getPath(input);
@@ -186,8 +182,7 @@ public class OwnersReportTest {
   }
 
   @Test
-  public void verifyInputsAgainstRulesThatListDirectoryInputs()
-      throws IOException, InterruptedException {
+  public void verifyInputsAgainstRulesThatListDirectoryInputs() throws IOException {
     // Inputs that should be treated as existing files
     String input = "java/somefolder/badfolder/somefile.java";
     Path inputPath = filesystem.getPath(input);
@@ -211,8 +206,7 @@ public class OwnersReportTest {
 
   /** Verify that owners are correctly detected: - one owner, multiple inputs */
   @Test
-  public void verifyInputsWithOneOwnerAreCorrectlyReported()
-      throws CmdLineException, IOException, InterruptedException {
+  public void verifyInputsWithOneOwnerAreCorrectlyReported() throws IOException {
 
     ImmutableList<String> inputs =
         ImmutableList.of("java/somefolder/badfolder/somefile.java", "java/somefolder/perfect.java");
@@ -243,8 +237,7 @@ public class OwnersReportTest {
 
   /** Verify that owners are correctly detected: - inputs that belong to multiple targets */
   @Test
-  public void verifyInputsWithMultipleOwnersAreCorrectlyReported()
-      throws CmdLineException, IOException, InterruptedException {
+  public void verifyInputsWithMultipleOwnersAreCorrectlyReported() throws IOException {
     String input = "java/somefolder/badfolder/somefile.java";
     Path inputPath = filesystem.getPath(input);
 
@@ -271,8 +264,7 @@ public class OwnersReportTest {
   }
 
   @Test
-  public void verifyThatRequestedFilesThatDoNotExistOnDiskAreReported()
-      throws IOException, InterruptedException {
+  public void verifyThatRequestedFilesThatDoNotExistOnDiskAreReported() {
     String input = "java/some_file";
 
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();

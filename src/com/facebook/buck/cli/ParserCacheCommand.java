@@ -77,7 +77,7 @@ public class ParserCacheCommand extends AbstractCommand {
       invalidateChanges(params);
       RemoteDaemonicParserState state = params.getParser().storeParserState(params.getCell());
       try (FileOutputStream fos = new FileOutputStream(saveFilename);
-          ZipOutputStream zipos = new ZipOutputStream(fos); ) {
+          ZipOutputStream zipos = new ZipOutputStream(fos)) {
         zipos.putNextEntry(new ZipEntry("parser_data"));
         try (ObjectOutputStream oos = new ObjectOutputStream(zipos)) {
           oos.writeObject(state);
@@ -85,7 +85,7 @@ public class ParserCacheCommand extends AbstractCommand {
       }
     } else if (loadFilename != null) {
       try (FileInputStream fis = new FileInputStream(loadFilename);
-          ZipInputStream zipis = new ZipInputStream(fis); ) {
+          ZipInputStream zipis = new ZipInputStream(fis)) {
         ZipEntry entry = zipis.getNextEntry();
         Preconditions.checkState(entry.getName().equals("parser_data"));
         try (ObjectInputStream ois = new ObjectInputStream(zipis)) {

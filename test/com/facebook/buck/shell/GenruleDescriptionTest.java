@@ -28,11 +28,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.macros.ClasspathMacro;
@@ -108,7 +107,7 @@ public class GenruleDescriptionTest {
   }
 
   @Test
-  public void testClasspathTransitiveDepsBecomeFirstOrderDeps() throws Exception {
+  public void testClasspathTransitiveDepsBecomeFirstOrderDeps() {
     TargetNode<?, ?> transitiveDepNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
             .addSrc(Paths.get("Dep.java"))
@@ -126,9 +125,7 @@ public class GenruleDescriptionTest {
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(transitiveDepNode, depNode, genruleNode);
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
 
     BuildRule dep = resolver.requireRule(depNode.getBuildTarget());
     BuildRule transitiveDep = resolver.requireRule(transitiveDepNode.getBuildTarget());

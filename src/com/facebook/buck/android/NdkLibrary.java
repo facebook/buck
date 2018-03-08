@@ -142,7 +142,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context, final BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     // .so files are written to the libs/ subdirectory of the output directory.
@@ -187,8 +187,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(
         new AbstractExecutionStep("cache_unstripped_so") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context)
-              throws IOException, InterruptedException {
+          public StepExecutionResult execute(ExecutionContext context) throws IOException {
             Set<Path> unstrippedSharedObjs =
                 getProjectFilesystem()
                     .getFilesUnderPath(

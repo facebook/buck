@@ -100,8 +100,7 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     // If the class is to be removed from the Jar create a NoOp FileObject.
     if (removeClassesPredicate.test(className)) {
       LOG.info(
-          "%s was excluded from the Jar because it matched a remove_classes pattern.",
-          className.toString());
+          "%s was excluded from the Jar because it matched a remove_classes pattern.", className);
       return getJavaNoOpFileObject(path, kind);
     }
 

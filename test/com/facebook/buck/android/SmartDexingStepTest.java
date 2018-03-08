@@ -42,7 +42,6 @@ import com.google.common.io.Files;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -288,7 +287,7 @@ public class SmartDexingStepTest {
         DxStep.DX);
   }
 
-  private AndroidPlatformTarget createAndroidPlatformTarget() throws IOException {
+  private AndroidPlatformTarget createAndroidPlatformTarget() {
     AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTarget.of(
             "android",

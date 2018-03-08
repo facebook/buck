@@ -81,7 +81,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.kohsuke.args4j.CmdLineException;
 
 public class TargetsCommandTest {
 
@@ -137,8 +136,7 @@ public class TargetsCommandTest {
   }
 
   @Test
-  public void testJsonOutputForBuildTarget()
-      throws IOException, BuildFileParseException, InterruptedException {
+  public void testJsonOutputForBuildTarget() throws IOException, BuildFileParseException {
     // run `buck targets` on the build file and parse the observed JSON.
     Iterable<TargetNode<?, ?>> nodes = buildTargetNodes(filesystem, "//:test-library");
 
@@ -208,8 +206,7 @@ public class TargetsCommandTest {
   }
 
   @Test
-  public void testJsonOutputForMissingBuildTarget()
-      throws BuildFileParseException, IOException, InterruptedException {
+  public void testJsonOutputForMissingBuildTarget() throws BuildFileParseException {
     // nonexistent target should not exist.
     Iterable<TargetNode<?, ?>> buildRules = buildTargetNodes(filesystem, "//:nonexistent");
     targetsCommand.printJsonForTargets(
@@ -232,7 +229,7 @@ public class TargetsCommandTest {
   }
 
   @Test
-  public void testGetMatchingBuildTargets() throws CmdLineException, IOException {
+  public void testGetMatchingBuildTargets() {
     BuildTarget prebuiltJarTarget = BuildTargetFactory.newInstance("//empty:empty");
     TargetNode<?, ?> prebuiltJarNode =
         PrebuiltJarBuilder.createBuilder(prebuiltJarTarget)
@@ -383,7 +380,7 @@ public class TargetsCommandTest {
   }
 
   @Test
-  public void testGetMatchingAppleLibraryBuildTarget() throws CmdLineException, IOException {
+  public void testGetMatchingAppleLibraryBuildTarget() {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
     TargetNode<?, ?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
@@ -418,7 +415,7 @@ public class TargetsCommandTest {
   }
 
   @Test
-  public void testGetMatchingAppleTestBuildTarget() throws CmdLineException, IOException {
+  public void testGetMatchingAppleTestBuildTarget() {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
     TargetNode<?, ?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
@@ -472,7 +469,7 @@ public class TargetsCommandTest {
   }
 
   @Test
-  public void testPathsUnderDirectories() throws CmdLineException, IOException {
+  public void testPathsUnderDirectories() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     Path resDir = Paths.get("some/resources/dir");
     BuildTarget androidResourceTarget = BuildTargetFactory.newInstance("//:res");
@@ -507,9 +504,7 @@ public class TargetsCommandTest {
     matchingBuildRules =
         targetsCommand.getMatchingNodes(
             targetGraph,
-            Optional.of(
-                ImmutableSet.of(
-                    Paths.get(resDir.toString() + "_extra").resolve("some_resource.txt"))),
+            Optional.of(ImmutableSet.of(Paths.get(resDir + "_extra").resolve("some_resource.txt"))),
             Optional.empty(),
             Optional.empty(),
             false,
@@ -532,7 +527,7 @@ public class TargetsCommandTest {
   }
 
   @Test
-  public void testDetectTestChanges() throws CmdLineException, IOException {
+  public void testDetectTestChanges() {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
     BuildTarget libraryTestTarget1 = BuildTargetFactory.newInstance("//foo:xctest1");
     BuildTarget libraryTestTarget2 = BuildTargetFactory.newInstance("//foo:xctest2");

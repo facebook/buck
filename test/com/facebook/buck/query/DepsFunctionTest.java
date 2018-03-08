@@ -98,14 +98,14 @@ public class DepsFunctionTest {
   private QueryEnvironment makeFakeQueryEnvironment(TargetGraph targetGraph) throws Exception {
     QueryEnvironment env = createNiceMock(QueryEnvironment.class);
 
-    final Capture<String> stringCapture = Capture.newInstance();
+    Capture<String> stringCapture = Capture.newInstance();
     expect(env.getTargetsMatchingPattern(EasyMock.capture(stringCapture)))
         .andStubAnswer(
             () ->
                 ImmutableSet.of(
                     QueryBuildTarget.of(BuildTargetFactory.newInstance(stringCapture.getValue()))));
 
-    final Capture<Iterable<QueryTarget>> targetsCapture = Capture.newInstance();
+    Capture<Iterable<QueryTarget>> targetsCapture = Capture.newInstance();
     expect(env.getFwdDeps(EasyMock.capture(targetsCapture)))
         .andStubAnswer(
             () ->

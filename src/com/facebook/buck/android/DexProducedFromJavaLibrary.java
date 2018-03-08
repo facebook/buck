@@ -116,7 +116,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context, final BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     steps.add(
@@ -133,12 +133,11 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
                 getPathToDex().getParent())));
 
     // If there are classes, run dx.
-    final ImmutableSortedMap<String, HashCode> classNamesToHashes =
-        javaLibrary.getClassNamesToHashes();
-    final boolean hasClassesToDx = !classNamesToHashes.isEmpty();
-    final Supplier<Integer> weightEstimate;
+    ImmutableSortedMap<String, HashCode> classNamesToHashes = javaLibrary.getClassNamesToHashes();
+    boolean hasClassesToDx = !classNamesToHashes.isEmpty();
+    Supplier<Integer> weightEstimate;
 
-    @Nullable final DxStep dx;
+    @Nullable DxStep dx;
 
     if (hasClassesToDx) {
       Path pathToOutputFile =
@@ -182,8 +181,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
     AbstractExecutionStep recordArtifactAndMetadataStep =
         new AbstractExecutionStep(stepName) {
           @Override
-          public StepExecutionResult execute(ExecutionContext context)
-              throws IOException, InterruptedException {
+          public StepExecutionResult execute(ExecutionContext context) throws IOException {
             if (hasClassesToDx) {
               buildableContext.recordArtifact(getPathToDex());
 

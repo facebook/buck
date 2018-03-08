@@ -55,7 +55,7 @@ public class SegmentCommandUtils {
      * https://github.com/llvm-mirror/lld/blob/master/lib/ReaderWriter/MachO/ArchHandler_arm64.cpp
      * https://github.com/llvm-mirror/lld/blob/master/lib/ReaderWriter/MachO/ArchHandler_arm.cpp
      */
-    final int universalAlignment = 32 * 1024;
+    int universalAlignment = 32 * 1024;
     return universalAlignment * (int) (Math.ceil((double) value / universalAlignment));
   }
 
@@ -122,8 +122,8 @@ public class SegmentCommandUtils {
       NulTerminatedCharsetDecoder decoder,
       Function<Section, Boolean> callback)
       throws IOException {
-    final int sectionHeaderSize = SectionUtils.sizeOfSectionHeader(magicInfo.is64Bit());
-    final int sectionsOffset =
+    int sectionHeaderSize = SectionUtils.sizeOfSectionHeader(magicInfo.is64Bit());
+    int sectionsOffset =
         segmentCommand.getLoadCommandCommonFields().getOffsetInBinary()
             + SegmentCommandUtils.getSegmentCommandHeaderSize(segmentCommand);
     for (int i = 0; i < segmentCommand.getNsects().intValue(); i++) {

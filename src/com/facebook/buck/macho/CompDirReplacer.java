@@ -53,7 +53,7 @@ public class CompDirReplacer {
   }
 
   private void processThinBinary(
-      final MachoMagicInfo magicInfo, final String oldCompDir, final String updatedCompDir) {
+      MachoMagicInfo magicInfo, String oldCompDir, String updatedCompDir) {
     buffer.position(0);
     ImmutableList<SegmentCommand> segmentCommands =
         LoadCommandUtils.findLoadCommandsWithClass(
@@ -69,8 +69,8 @@ public class CompDirReplacer {
   private void processSectionsInSegmentCommand(
       SegmentCommand segmentCommand,
       MachoMagicInfo magicInfo,
-      final String oldCompDir,
-      final String updatedCompDir) {
+      String oldCompDir,
+      String updatedCompDir) {
     try {
       SegmentCommandUtils.enumerateSectionsInSegmentLoadCommand(
           buffer,
@@ -95,7 +95,7 @@ public class CompDirReplacer {
 
   private void findAndUpdateCompDirInDebugSection(
       Section section, String oldCompDir, String updatedCompDir) {
-    final long maximumValidOffset = section.getOffset().longValue() + section.getSize().longValue();
+    long maximumValidOffset = section.getOffset().longValue() + section.getSize().longValue();
     int offset = section.getOffset().intValue();
     while (offset < maximumValidOffset) {
       buffer.position(offset);

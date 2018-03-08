@@ -35,7 +35,7 @@ import org.junit.Test;
 public class PythonPlatformsProviderFactoryTest {
 
   @Test
-  public void testDefaultPythonLibrary() throws InterruptedException {
+  public void testDefaultPythonLibrary() {
     BuildTarget library = BuildTargetFactory.newInstance("//:library");
     BuckConfig buckConfig =
         FakeBuckConfig.builder()

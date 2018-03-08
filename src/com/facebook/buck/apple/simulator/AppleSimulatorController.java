@@ -50,7 +50,7 @@ public class AppleSimulatorController {
 
   public enum LaunchBehavior {
     DO_NOT_WAIT_FOR_DEBUGGER,
-    WAIT_FOR_DEBUGGER;
+    WAIT_FOR_DEBUGGER
   }
 
   public AppleSimulatorController(
@@ -171,7 +171,7 @@ public class AppleSimulatorController {
    * @return The number of milliseconds waited if the specified simulator booted, {@code
    *     Optional.empty()} otherwise.
    */
-  private Optional<Long> waitForSimulatorToBoot(long timeoutMillis, final String simulatorUdid)
+  private Optional<Long> waitForSimulatorToBoot(long timeoutMillis, String simulatorUdid)
       throws IOException, InterruptedException {
     return waitForSimulatorState(
         timeoutMillis,

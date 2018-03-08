@@ -27,13 +27,12 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -109,9 +108,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(aNode, bNode, cNode, dNode, eNode, zNode);
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
     resolver = DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 
     a = ruleResolver.requireRule(aNode.getBuildTarget());
@@ -123,7 +120,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void getOutputClasspathEntries() throws Exception {
+  public void getOutputClasspathEntries() {
     JavaLibrary aLib = (JavaLibrary) a;
     assertEquals(
         ImmutableSet.of(
@@ -139,7 +136,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void getClasspathFromLibraries() throws Exception {
+  public void getClasspathFromLibraries() {
     assertEquals(
         ImmutableSet.of(getFullOutput(a), getFullOutput(c), getFullOutput(e)),
         // b is non-java so b and d do not appear
@@ -173,7 +170,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void getTransitiveClasspaths() throws Exception {
+  public void getTransitiveClasspaths() {
     JavaLibrary aLib = (JavaLibrary) a;
     assertEquals(
         ImmutableSet.builder()
@@ -195,9 +192,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(aNode, bNode, cNode, dNode, eNode, zNode, noOutputNode);
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
 
     JavaLibrary noOutput = (JavaLibrary) ruleResolver.requireRule(noOutputNode.getBuildTarget());
 
@@ -227,7 +222,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void getJavaLibraryDeps() throws Exception {
+  public void getJavaLibraryDeps() {
     assertThat(
         JavaLibraryClasspathProvider.getJavaLibraryDeps(ImmutableList.of(a, b, c, d, e)),
         Matchers.containsInAnyOrder(a, c, d, e));
@@ -251,8 +246,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
       Iterable<String> srcs,
       Iterable<TargetNode<?, ?>> deps,
       @Nullable Iterable<TargetNode<?, ?>> exportedDeps,
-      final ProjectFilesystem filesystem)
-      throws Exception {
+      ProjectFilesystem filesystem) {
     JavaLibraryBuilder builder;
     BuildTarget parsedTarget = BuildTargetFactory.newInstance(target);
     JavaBuckConfig testConfig = getJavaBuckConfigWithCompilationMode();

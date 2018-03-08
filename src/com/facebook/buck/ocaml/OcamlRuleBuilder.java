@@ -73,7 +73,7 @@ public class OcamlRuleBuilder {
 
   private OcamlRuleBuilder() {}
 
-  public static Function<BuildRule, ImmutableList<String>> getLibInclude(final boolean isBytecode) {
+  public static Function<BuildRule, ImmutableList<String>> getLibInclude(boolean isBytecode) {
     return input -> {
       if (input instanceof OcamlLibrary) {
         OcamlLibrary library = (OcamlLibrary) input;
@@ -106,15 +106,15 @@ public class OcamlRuleBuilder {
       ToolchainProvider toolchainProvider,
       OcamlBuckConfig ocamlBuckConfig,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       ImmutableList<OcamlSource> srcs,
       boolean isLibrary,
       boolean bytecodeOnly,
       ImmutableList<Arg> argFlags,
-      final ImmutableList<String> linkerFlags,
-      final ImmutableList<String> ocamlDepFlags,
+      ImmutableList<String> linkerFlags,
+      ImmutableList<String> ocamlDepFlags,
       boolean buildNativePlugin) {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
@@ -204,15 +204,15 @@ public class OcamlRuleBuilder {
       ToolchainProvider toolchainProvider,
       OcamlBuckConfig ocamlBuckConfig,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       ImmutableList<OcamlSource> srcs,
       boolean isLibrary,
       boolean bytecodeOnly,
       ImmutableList<Arg> argFlags,
-      final ImmutableList<String> linkerFlags,
-      final ImmutableList<String> ocamlDepFlags) {
+      ImmutableList<String> linkerFlags,
+      ImmutableList<String> ocamlDepFlags) {
     CxxPlatform defaultCxxPlatform =
         toolchainProvider
             .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
@@ -317,7 +317,7 @@ public class OcamlRuleBuilder {
             .setCPreprocessor(ocamlToolchain.getCPreprocessor().resolve(resolver))
             .build();
 
-    final OcamlBuild ocamlLibraryBuild =
+    OcamlBuild ocamlLibraryBuild =
         new OcamlBuild(
             compileBuildTarget,
             projectFilesystem,
@@ -370,15 +370,15 @@ public class OcamlRuleBuilder {
       ToolchainProvider toolchainProvider,
       OcamlBuckConfig ocamlBuckConfig,
       BuildTarget buildTarget,
-      final ProjectFilesystem projectFilesystem,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       ImmutableList<OcamlSource> srcs,
       boolean isLibrary,
       boolean bytecodeOnly,
       ImmutableList<Arg> argFlags,
-      final ImmutableList<String> linkerFlags,
-      final ImmutableList<String> ocamlDepFlags,
+      ImmutableList<String> linkerFlags,
+      ImmutableList<String> ocamlDepFlags,
       boolean buildNativePlugin) {
     CxxPlatform defaultCxxPlatform =
         toolchainProvider
@@ -420,7 +420,7 @@ public class OcamlRuleBuilder {
             ? createStaticLibraryBuildTarget(buildTarget)
             : createOcamlLinkTarget(buildTarget);
 
-    final BuildRuleParams compileParams =
+    BuildRuleParams compileParams =
         params
             .withDeclaredDeps(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -552,10 +552,11 @@ public class OcamlRuleBuilder {
   private static ImmutableMap<Path, ImmutableList<Path>> getMLInputWithDeps(
       BuildTarget target, Path baseDir, OcamlBuildContext ocamlContext) {
 
-    ImmutableList<String> ocamlDepFlags = ImmutableList.<String>builder()
-      .addAll(ocamlContext.getIncludeFlags(/* isBytecode */ false, /* excludeDeps */ true))
-      .addAll(ocamlContext.getOcamlDepFlags())
-      .build();
+    ImmutableList<String> ocamlDepFlags =
+        ImmutableList.<String>builder()
+            .addAll(ocamlContext.getIncludeFlags(/* isBytecode */ false, /* excludeDeps */ true))
+            .addAll(ocamlContext.getOcamlDepFlags())
+            .build();
 
     OcamlDepToolStep depToolStep =
         new OcamlDepToolStep(
@@ -589,7 +590,7 @@ public class OcamlRuleBuilder {
   }
 
   private static ImmutableMap<Path, ImmutableList<Path>> filterCurrentRuleInput(
-      final Set<Path> mlInput, ImmutableMap<Path, ImmutableList<Path>> deps) {
+      Set<Path> mlInput, ImmutableMap<Path, ImmutableList<Path>> deps) {
     ImmutableMap.Builder<Path, ImmutableList<Path>> builder = ImmutableMap.builder();
     for (ImmutableMap.Entry<Path, ImmutableList<Path>> entry : deps.entrySet()) {
       if (mlInput.contains(entry.getKey())) {

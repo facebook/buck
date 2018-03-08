@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple.project_generator;
 
+import static com.facebook.buck.apple.AppleBundleDescription.WATCH_OS_FLAVOR;
 import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -94,15 +95,14 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -164,6 +164,8 @@ public class ProjectGeneratorTest {
       OUTPUT_PROJECT_BUNDLE_PATH.resolve("project.pbxproj");
   private static final CxxPlatform DEFAULT_PLATFORM = CxxPlatformUtils.DEFAULT_PLATFORM;
   private static final Flavor DEFAULT_FLAVOR = InternalFlavor.of("default");
+  private static final String WATCH_EXTENSION_PRODUCT_TYPE =
+      "com.apple.product-type.watchkit2-extension";
   private SettableFakeClock clock;
   private ProjectFilesystem projectFilesystem;
   private Cell projectCell;
@@ -2417,7 +2419,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testAppleLibraryDependentsSearchHeadersAndLibraries() throws IOException {
     ImmutableSortedMap<String, ImmutableMap<String, String>> configs =
-        ImmutableSortedMap.of("Debug", ImmutableMap.<String, String>of());
+        ImmutableSortedMap.of("Debug", ImmutableMap.of());
 
     BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
     TargetNode<?, ?> libraryNode =
@@ -2537,7 +2539,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testAppleLibraryTransitiveDependentsSearchHeadersAndLibraries() throws IOException {
     ImmutableSortedMap<String, ImmutableMap<String, String>> configs =
-        ImmutableSortedMap.of("Debug", ImmutableMap.<String, String>of());
+        ImmutableSortedMap.of("Debug", ImmutableMap.of());
 
     BuildTarget libraryDepTarget = BuildTargetFactory.newInstance(rootPath, "//bar", "lib");
     TargetNode<?, ?> libraryDepNode =
@@ -3120,19 +3122,35 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleWatchTarget() throws IOException {
+    BuildTarget watchExtensionBinaryTarget =
+        BuildTargetFactory.newInstance(rootPath, "//foo", "WatchExtensionBinary");
+    TargetNode<?, ?> watchExtensionBinaryNode =
+        AppleBinaryBuilder.createBuilder(watchExtensionBinaryTarget).build();
+
+    BuildTarget watchExtensionTarget =
+        BuildTargetFactory.newInstance(rootPath, "//foo", "WatchExtension", WATCH_OS_FLAVOR);
+    TargetNode<?, ?> watchExtensionNode =
+        AppleBundleBuilder.createBuilder(watchExtensionTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.APPEX))
+            .setXcodeProductType(Optional.of(WATCH_EXTENSION_PRODUCT_TYPE))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setBinary(watchExtensionBinaryTarget)
+            .build();
+
     BuildTarget watchAppBinaryTarget =
         BuildTargetFactory.newInstance(rootPath, "//foo", "WatchAppBinary");
     TargetNode<?, ?> watchAppBinaryNode =
         AppleBinaryBuilder.createBuilder(watchAppBinaryTarget).build();
 
     BuildTarget watchAppTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "WatchApp", DEFAULT_FLAVOR);
+        BuildTargetFactory.newInstance(rootPath, "//foo", "WatchApp", WATCH_OS_FLAVOR);
     TargetNode<?, ?> watchAppNode =
         AppleBundleBuilder.createBuilder(watchAppTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.APP))
-            .setXcodeProductType(Optional.of("com.apple.product-type.application.watchapp2"))
+            .setXcodeProductType(Optional.of(ProductTypes.WATCH_APPLICATION.getIdentifier()))
             .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .setBinary(watchAppBinaryTarget)
+            .setDeps(ImmutableSortedSet.of(watchExtensionTarget))
             .build();
 
     BuildTarget hostAppBinaryTarget =
@@ -3151,18 +3169,41 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGeneratorForCombinedProject(
-            ImmutableSet.of(watchAppNode, watchAppBinaryNode, hostAppNode, hostAppBinaryNode));
+            ImmutableSet.of(
+                watchExtensionNode,
+                watchExtensionBinaryNode,
+                watchAppNode,
+                watchAppBinaryNode,
+                hostAppNode,
+                hostAppBinaryNode));
     projectGenerator.createXcodeProjects();
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:HostApp");
-    assertEquals(target.getProductType(), ProductTypes.APPLICATION);
+    PBXProject generatedProject = projectGenerator.getGeneratedProject();
+    PBXTarget generatedHostAppTarget =
+        assertTargetExistsAndReturnTarget(generatedProject, "//foo:HostApp");
+    // Use the fully qualified name of the watch build targets, since they include a flavor
+    PBXTarget generatedWatchAppTarget =
+        assertTargetExistsAndReturnTarget(generatedProject, watchAppTarget.getFullyQualifiedName());
+    PBXTarget generatedWatchExtensionTarget =
+        assertTargetExistsAndReturnTarget(
+            generatedProject, watchExtensionTarget.getFullyQualifiedName());
+    assertEquals(generatedHostAppTarget.getProductType(), ProductTypes.APPLICATION);
+    assertEquals(generatedWatchAppTarget.getProductType(), ProductTypes.WATCH_APPLICATION);
+    assertEquals(
+        generatedWatchExtensionTarget.getProductType(),
+        ProductType.of(WATCH_EXTENSION_PRODUCT_TYPE));
 
     ProjectGeneratorTestUtils.assertHasSingletonCopyFilesPhaseWithFileEntries(
-        target, ImmutableList.of("$BUILT_PRODUCTS_DIR/WatchApp.app"));
+        generatedHostAppTarget, ImmutableList.of("$BUILT_PRODUCTS_DIR/WatchApp.app"));
+
+    ProjectGeneratorTestUtils.assertHasDependency(
+        generatedProject, generatedHostAppTarget, watchAppTarget.getFullyQualifiedName());
+    ProjectGeneratorTestUtils.assertHasDependency(
+        generatedProject, generatedWatchAppTarget, watchExtensionTarget.getFullyQualifiedName());
 
     PBXCopyFilesBuildPhase copyBuildPhase =
-        ProjectGeneratorTestUtils.getSingletonPhaseByType(target, PBXCopyFilesBuildPhase.class);
+        ProjectGeneratorTestUtils.getSingletonPhaseByType(
+            generatedHostAppTarget, PBXCopyFilesBuildPhase.class);
     assertEquals(
         copyBuildPhase.getDstSubfolderSpec(),
         CopyFilePhaseDestinationSpec.builder()
@@ -4473,7 +4514,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testAppleLibraryWithoutHeaderMaps() throws IOException {
     ImmutableSortedMap<String, ImmutableMap<String, String>> configs =
-        ImmutableSortedMap.of("Debug", ImmutableMap.<String, String>of());
+        ImmutableSortedMap.of("Debug", ImmutableMap.of());
 
     BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
     TargetNode<?, ?> libraryNode =
@@ -4751,10 +4792,8 @@ public class ProjectGeneratorTest {
             .build();
     ImmutableSet<TargetNode<?, ?>> nodes =
         ImmutableSet.of(frameworkBinaryNode, frameworkNode, resourceNode, binaryNode, bundleNode);
-    final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes));
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes));
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     ProjectGenerator projectGenerator =
         createProjectGeneratorForCombinedProject(
             nodes,
@@ -5229,11 +5268,11 @@ public class ProjectGeneratorTest {
             .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("lib4.h")))
             .build();
 
-    final TargetGraph targetGraph =
+    TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             ImmutableSet.of(lib1Node, lib2Node, lib3Node, testNode, lib4Node));
-    final AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
-    final ProjectGenerationStateCache projStateCache = new ProjectGenerationStateCache();
+    AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
+    ProjectGenerationStateCache projStateCache = new ProjectGenerationStateCache();
 
     ProjectGenerator projectGeneratorLib2 =
         new ProjectGenerator(
@@ -5264,7 +5303,7 @@ public class ProjectGeneratorTest {
 
     // The merged header map should not generated at this point.
     Path hmapPath = Paths.get("buck-out/gen/_p/pub-hmap/.hmap");
-    assertFalse(hmapPath.toString() + " should NOT exist.", projectFilesystem.isFile(hmapPath));
+    assertFalse(hmapPath + " should NOT exist.", projectFilesystem.isFile(hmapPath));
     // Checks the content of the header search paths.
     PBXProject project2 = projectGeneratorLib2.getGeneratedProject();
     PBXTarget testPBXTarget2 = assertTargetExistsAndReturnTarget(project2, "//bar:lib2");
@@ -5308,7 +5347,7 @@ public class ProjectGeneratorTest {
     projectGeneratorLib1.createXcodeProjects();
 
     // The merged header map should not generated at this point.
-    assertTrue(hmapPath.toString() + " should exist.", projectFilesystem.isFile(hmapPath));
+    assertTrue(hmapPath + " should exist.", projectFilesystem.isFile(hmapPath));
     assertThatHeaderMapWithoutSymLinksContains(
         Paths.get("buck-out/gen/_p/pub-hmap"),
         ImmutableMap.of(
@@ -5369,7 +5408,7 @@ public class ProjectGeneratorTest {
       Collection<TargetNode<?, ?>> initialTargetNodes,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions,
       ImmutableSet<String> appleCxxFlavors) {
-    final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
     return createProjectGeneratorForCombinedProject(
         allNodes,
         initialTargetNodes,
@@ -5381,7 +5420,7 @@ public class ProjectGeneratorTest {
   private ProjectGenerator createProjectGeneratorForCombinedProject(
       Collection<TargetNode<?, ?>> allNodes,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions) {
-    final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
     return createProjectGeneratorForCombinedProject(
         allNodes,
         allNodes,
@@ -5410,9 +5449,9 @@ public class ProjectGeneratorTest {
             .map(TargetNode::getBuildTarget)
             .collect(ImmutableSet.toImmutableSet());
 
-    final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
-    final AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
-    final ProjectGenerationStateCache projStateCache = new ProjectGenerationStateCache();
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
+    AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
+    ProjectGenerationStateCache projStateCache = new ProjectGenerationStateCache();
     return new ProjectGenerator(
         targetGraph,
         cache,
@@ -5439,10 +5478,8 @@ public class ProjectGeneratorTest {
   }
 
   private Function<TargetNode<?, ?>, BuildRuleResolver> getBuildRuleResolverNodeFunction(
-      final TargetGraph targetGraph) {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+      TargetGraph targetGraph) {
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException> bottomUpTraversal =
         new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(targetGraph) {
           @Override

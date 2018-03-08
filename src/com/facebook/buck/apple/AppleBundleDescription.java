@@ -107,7 +107,7 @@ public class AppleBundleDescription
   }
 
   @Override
-  public boolean hasFlavors(final ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
     if (appleLibraryDescription.hasFlavors(flavors)) {
       return true;
     }
@@ -211,7 +211,7 @@ public class AppleBundleDescription
     }
 
     String platformName = cxxPlatform.getFlavor().getName();
-    final Flavor actualWatchFlavor;
+    Flavor actualWatchFlavor;
     if (ApplePlatform.isSimulator(platformName)) {
       actualWatchFlavor = WATCH_SIMULATOR_FLAVOR;
     } else if (platformName.startsWith(ApplePlatform.IPHONEOS.getName())

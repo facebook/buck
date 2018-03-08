@@ -16,9 +16,6 @@
 
 package com.facebook.buck.toolchain.impl;
 
-import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
-import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.toolchain.BaseToolchainProvider;
 import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.toolchain.ToolchainInstantiationException;
@@ -36,16 +33,9 @@ public class ToolchainProviderBuilder {
 
   public ToolchainProviderBuilder() {}
 
-  public ToolchainProviderBuilder withDefaultNdkCxxPlatforms() {
-    return withToolchain(
-        NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.of(ImmutableMap.of()));
-  }
-
-  public ToolchainProviderBuilder withDefaultCxxPlatforms() {
-    return withToolchain(
-        CxxPlatformsProvider.DEFAULT_NAME,
-        CxxPlatformsProvider.of(
-            CxxPlatformUtils.DEFAULT_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORMS));
+  public ToolchainProviderBuilder withToolchain(NamedToolchain toolchain) {
+    toolchains.put(toolchain.getName(), toolchain.getToolchain());
+    return this;
   }
 
   public ToolchainProviderBuilder withToolchain(String name, Toolchain toolchain) {

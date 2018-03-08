@@ -78,8 +78,7 @@ public class UnstrippedNativeLibraries extends AbstractBuildRuleWithDeclaredAndE
         .add(
             new AbstractExecutionStep("write_native_libs_paths") {
               @Override
-              public StepExecutionResult execute(ExecutionContext context)
-                  throws IOException, InterruptedException {
+              public StepExecutionResult execute(ExecutionContext context) throws IOException {
                 List<String> lines =
                     inputs
                         .stream()

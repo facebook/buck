@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android.resources;
 
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Charsets;
@@ -232,7 +232,7 @@ public class ExoResourcesRewriter {
           mappedLines.add(String.format("int styleable %s %d", m.group(2), newIdx));
         }
       }
-      MoreFiles.writeLinesToFile(mappedLines, outputRDotTxt);
+      MostFiles.writeLinesToFile(mappedLines, outputRDotTxt);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

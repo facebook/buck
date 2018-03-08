@@ -23,7 +23,6 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableSortedMap;
@@ -38,7 +37,6 @@ public class AndroidResourceBuilder
   private AndroidResourceBuilder(BuildTarget target, ProjectFilesystem filesystem) {
     super(
         new AndroidResourceDescription(
-            new ToolchainProviderBuilder().build(),
             new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect())),
         target,
         filesystem);

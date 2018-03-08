@@ -144,7 +144,7 @@ public class StackedDownloader implements Downloader {
   }
 
   @Override
-  public boolean fetch(BuckEventBus eventBus, URI uri, Path output) throws IOException {
+  public boolean fetch(BuckEventBus eventBus, URI uri, Path output) {
     for (Downloader downloader : delegates) {
       try {
         if (downloader.fetch(eventBus, uri, output)) {

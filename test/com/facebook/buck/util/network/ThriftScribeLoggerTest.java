@@ -83,25 +83,25 @@ public class ThriftScribeLoggerTest {
   }
 
   @Test
-  public void handlingThriftCallSucceeding() throws Exception {
+  public void handlingThriftCallSucceeding() {
     logger = new ThriftScribeLogger(getNotThrowingThriftService(true), executorService);
     Futures.addCallback(logger.log(CATEGORY, LINES), getCallback(true));
   }
 
   @Test
-  public void handlingThriftCallFailing() throws Exception {
+  public void handlingThriftCallFailing() {
     logger = new ThriftScribeLogger(getNotThrowingThriftService(false), executorService);
     Futures.addCallback(logger.log(CATEGORY, LINES), getCallback(false));
   }
 
   @Test
-  public void handlingThriftCallThrowing() throws Exception {
+  public void handlingThriftCallThrowing() {
     logger = new ThriftScribeLogger(getThrowingThriftService(), executorService);
     Futures.addCallback(logger.log(CATEGORY, LINES), getCallback(false));
   }
 
   @Test
-  public void requestIsCorrectlyCreated() throws Exception {
+  public void requestIsCorrectlyCreated() {
     ThriftService<FrontendRequest, FrontendResponse> thriftService = createDefaultListener();
     logger = new ThriftScribeLogger(thriftService, executorService);
     logger.log(CATEGORY, LINES);
@@ -124,7 +124,7 @@ public class ThriftScribeLoggerTest {
       }
 
       @Override
-      public void close() throws IOException {}
+      public void close() {}
     };
   }
 
@@ -141,7 +141,7 @@ public class ThriftScribeLoggerTest {
   }
 
   private ThriftService<FrontendRequest, FrontendResponse> getNotThrowingThriftService(
-      final boolean wasSuccessful) {
+      boolean wasSuccessful) {
     return new ThriftService<FrontendRequest, FrontendResponse>() {
       @Override
       public void makeRequest(FrontendRequest frontendRequest, FrontendResponse frontendResponse) {
@@ -149,7 +149,7 @@ public class ThriftScribeLoggerTest {
       }
 
       @Override
-      public void close() throws IOException {}
+      public void close() {}
     };
   }
 
@@ -162,11 +162,11 @@ public class ThriftScribeLoggerTest {
       }
 
       @Override
-      public void close() throws IOException {}
+      public void close() {}
     };
   }
 
-  private FutureCallback<Void> getCallback(final boolean shouldSucceed) {
+  private FutureCallback<Void> getCallback(boolean shouldSucceed) {
     return new FutureCallback<Void>() {
       @Override
       public void onSuccess(@Nullable Void result) {

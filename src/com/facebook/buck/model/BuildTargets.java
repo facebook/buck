@@ -100,7 +100,7 @@ public class BuildTargets {
         .resolve(String.format(format, target.getShortNameAndFlavorPostfix()));
   }
 
-  public static Predicate<BuildTarget> containsFlavors(final FlavorDomain<?> domain) {
+  public static Predicate<BuildTarget> containsFlavors(FlavorDomain<?> domain) {
     return input -> {
       ImmutableSet<Flavor> flavorSet =
           Sets.intersection(domain.getFlavors(), input.getFlavors()).immutableCopy();
@@ -108,7 +108,7 @@ public class BuildTargets {
     };
   }
 
-  public static Predicate<BuildTarget> containsFlavor(final Flavor flavor) {
+  public static Predicate<BuildTarget> containsFlavor(Flavor flavor) {
     return input -> input.getFlavors().contains(flavor);
   }
 

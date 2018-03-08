@@ -281,7 +281,7 @@ public class CxxLibraryDescription
       CellPathResolver cellRoots,
       CxxLibraryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
-      final Class<U> metadataClass) {
+      Class<U> metadataClass) {
     return cxxLibraryMetadataFactory.createMetadata(
         buildTarget, resolver, cellRoots, args, metadataClass);
   }

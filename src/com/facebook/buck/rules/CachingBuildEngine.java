@@ -74,11 +74,11 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   static final String STEP_TYPE_CONTEXT_KEY = "step_type";
   private final ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks;
 
-  static enum StepType {
+  enum StepType {
     BUILD_STEP,
     POST_BUILD_STEP,
     ;
-  };
+  }
 
   /** The mode in which to build rules. */
   public enum BuildMode {
@@ -157,7 +157,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       DepFiles depFiles,
       long maxDepFileCacheEntries,
       Optional<Long> artifactCacheSizeLimit,
-      final BuildRuleResolver resolver,
+      BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
       BuildInfoStoreManager buildInfoStoreManager,
@@ -332,9 +332,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   // Provide a future that resolves to the result of executing this rule and its runtime
   // dependencies.
   private ListenableFuture<BuildResult> getBuildRuleResultWithRuntimeDepsUnlocked(
-      final BuildRule rule,
-      final BuildEngineBuildContext buildContext,
-      final ExecutionContext executionContext) {
+      BuildRule rule, BuildEngineBuildContext buildContext, ExecutionContext executionContext) {
 
     // If the rule is already executing, return its result future from the cache.
     ListenableFuture<BuildResult> existingResult = results.get(rule.getBuildTarget());
@@ -396,7 +394,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     }
   }
 
-  public ListenableFuture<?> walkRule(BuildRule rule, final Set<BuildRule> seen) {
+  public ListenableFuture<?> walkRule(BuildRule rule, Set<BuildRule> seen) {
     return Futures.transformAsync(
         Futures.immediateFuture(ruleDeps.get(rule)),
         deps -> {
@@ -415,7 +413,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   public int getNumRulesToBuild(Iterable<BuildRule> rules) {
     Set<BuildRule> seen = Sets.newConcurrentHashSet();
     ImmutableList.Builder<ListenableFuture<?>> results = ImmutableList.builder();
-    for (final BuildRule rule : rules) {
+    for (BuildRule rule : rules) {
       if (seen.add(rule)) {
         results.add(walkRule(rule, seen));
       }
@@ -487,12 +485,12 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private ListenableFuture<BuildResult> processBuildRule(
       BuildRule rule, BuildEngineBuildContext buildContext, ExecutionContext executionContext) {
 
-    final BuildInfoStore buildInfoStore =
+    BuildInfoStore buildInfoStore =
         buildInfoStoreManager.get(rule.getProjectFilesystem(), metadataStorage);
-    final OnDiskBuildInfo onDiskBuildInfo =
+    OnDiskBuildInfo onDiskBuildInfo =
         buildContext.createOnDiskBuildInfoFor(
             rule.getBuildTarget(), rule.getProjectFilesystem(), buildInfoStore);
-    final BuildInfoRecorder buildInfoRecorder =
+    BuildInfoRecorder buildInfoRecorder =
         buildContext
             .createBuildInfoRecorder(
                 rule.getBuildTarget(), rule.getProjectFilesystem(), buildInfoStore)
@@ -500,7 +498,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                 BuildInfo.MetadataKey.RULE_KEY,
                 ruleKeyFactories.getDefaultRuleKeyFactory().build(rule).toString())
             .addBuildMetadata(BuildInfo.MetadataKey.BUILD_ID, buildContext.getBuildId().toString());
-    final BuildableContext buildableContext = new DefaultBuildableContext(buildInfoRecorder);
+    BuildableContext buildableContext = new DefaultBuildableContext(buildInfoRecorder);
     return new CachingBuildRuleBuilder(
             new DefaultBuildRuleBuilderDelegate(this, buildContext),
             artifactCacheSizeLimit,

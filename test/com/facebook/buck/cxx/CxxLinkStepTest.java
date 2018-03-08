@@ -51,7 +51,7 @@ public class CxxLinkStepTest {
     ImmutableList<String> expected =
         ImmutableList.<String>builder()
             .addAll(linker)
-            .add("@" + projectFilesystem.getRootPath().resolve("argfile.txt").toString())
+            .add("@" + projectFilesystem.getRootPath().resolve("argfile.txt"))
             .build();
     ImmutableList<String> actual = cxxLinkStep.getShellCommand(context);
     assertEquals(expected, actual);

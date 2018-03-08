@@ -74,7 +74,7 @@ public class AidlStep extends ShellStep {
     // the flag value.
 
     // file created by --preprocess to import
-    args.add("-p" + androidPlatformTarget.getAndroidFrameworkIdlFile().toString());
+    args.add("-p" + androidPlatformTarget.getAndroidFrameworkIdlFile());
 
     // search path for import statements
     for (String importDirectoryPath : importDirectoryPaths) {

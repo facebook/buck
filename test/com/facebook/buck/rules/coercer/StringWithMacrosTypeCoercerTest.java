@@ -197,8 +197,7 @@ public class StringWithMacrosTypeCoercerTest {
         CellPathResolver cellRoots,
         ProjectFilesystem filesystem,
         Path pathRelativeToProjectRoot,
-        ImmutableList<String> args)
-        throws CoerceFailedException {
+        ImmutableList<String> args) {
       return new TestMacro(args);
     }
   }

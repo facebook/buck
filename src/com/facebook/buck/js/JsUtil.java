@@ -90,8 +90,8 @@ public class JsUtil {
       BuildTarget buildTarget,
       SourcePathResolver sourcePathResolver,
       ProjectFilesystem projectFilesystem) {
-    final Tool tool = worker.getTool();
-    final WorkerJobParams params =
+    Tool tool = worker.getTool();
+    WorkerJobParams params =
         WorkerJobParams.of(
             jobArgs,
             WorkerProcessParams.of(
@@ -102,7 +102,7 @@ public class JsUtil {
                 worker.isPersistent()
                     ? Optional.of(
                         WorkerProcessIdentity.of(
-                            buildTarget.getCellPath().toString() + buildTarget.toString(),
+                            buildTarget.getCellPath().toString() + buildTarget,
                             worker.getInstanceKey()))
                     : Optional.empty()));
     return new WorkerShellStep(

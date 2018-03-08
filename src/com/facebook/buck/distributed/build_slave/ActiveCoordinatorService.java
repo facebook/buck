@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import org.apache.thrift.TException;
 
 /** Handles Coordinator requests while the build is actively running. */
 public class ActiveCoordinatorService implements CoordinatorService.Iface {
@@ -90,7 +89,7 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
 
     // TODO(alisdair): experiment with only sending started event for first node in chain,
     // and then send events for later nodes in the chain as their children finish.
-    ImmutableList.Builder<String> startedTargetsBuilder = ImmutableList.<String>builder();
+    ImmutableList.Builder<String> startedTargetsBuilder = ImmutableList.builder();
     for (WorkUnit workUnit : newWorkUnitsForMinion) {
       startedTargetsBuilder.addAll(workUnit.getBuildTargets());
     }
@@ -123,8 +122,7 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
   }
 
   @Override
-  public ReportMinionAliveResponse reportMinionAlive(ReportMinionAliveRequest request)
-      throws TException {
+  public ReportMinionAliveResponse reportMinionAlive(ReportMinionAliveRequest request) {
     minionHealthTracker.reportMinionAlive(request.minionId);
     return new ReportMinionAliveResponse();
   }

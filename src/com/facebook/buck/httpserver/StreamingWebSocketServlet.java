@@ -34,7 +34,7 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
   private final Set<MyWebSocket> connections;
 
   public StreamingWebSocketServlet() {
-    this.connections = Collections.newSetFromMap(Maps.<MyWebSocket, Boolean>newConcurrentMap());
+    this.connections = Collections.newSetFromMap(Maps.newConcurrentMap());
   }
 
   @Override

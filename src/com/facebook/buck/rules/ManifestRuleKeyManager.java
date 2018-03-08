@@ -108,7 +108,7 @@ public class ManifestRuleKeyManager {
 
     ManifestStoreResult.Builder resultBuilder = ManifestStoreResult.builder();
 
-    final Path manifestPath = getManifestPath(rule);
+    Path manifestPath = getManifestPath(rule);
     Manifest manifest = new Manifest(manifestKey.getRuleKey());
     resultBuilder.setDidCreateNewManifest(true);
 
@@ -147,7 +147,7 @@ public class ManifestRuleKeyManager {
       manifest.serialize(outputStream);
     }
 
-    final Path tempFile = Files.createTempFile("buck.", ".manifest");
+    Path tempFile = Files.createTempFile("buck.", ".manifest");
     // Upload the manifest to the cache.  We stage the manifest into a temp file first since the
     // `ArtifactCache` interface uses raw paths.
     try (InputStream inputStream = rule.getProjectFilesystem().newFileInputStream(manifestPath);
@@ -186,7 +186,7 @@ public class ManifestRuleKeyManager {
         (SupportsDependencyFileRuleKey) rule, eventBus, ruleKeyFactories);
   }
 
-  public ListenableFuture<CacheResult> fetchManifest(RuleKey key) throws IOException {
+  public ListenableFuture<CacheResult> fetchManifest(RuleKey key) {
     Preconditions.checkState(useManifestCaching());
 
     Path path = getManifestPath(rule);

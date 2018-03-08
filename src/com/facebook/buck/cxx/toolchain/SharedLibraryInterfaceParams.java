@@ -17,12 +17,16 @@
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.model.BuildTarget;
+import com.google.common.collect.ImmutableList;
 
 public interface SharedLibraryInterfaceParams {
 
   Iterable<BuildTarget> getParseTimeDeps();
 
   Kind getKind();
+
+  /** @return additional flags to pass to the linker when linking interfaces. */
+  ImmutableList<String> getLdflags();
 
   /** The configured mode for shared library interfaces. */
   enum Type {

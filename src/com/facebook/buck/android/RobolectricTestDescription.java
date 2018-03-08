@@ -58,15 +58,11 @@ import org.immutables.value.Value;
 public class RobolectricTestDescription implements Description<RobolectricTestDescriptionArg> {
 
 
-  private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
   private final AndroidLibraryCompilerFactory compilerFactory;
 
   public RobolectricTestDescription(
-      ToolchainProvider toolchainProvider,
-      JavaBuckConfig javaBuckConfig,
-      AndroidLibraryCompilerFactory compilerFactory) {
-    this.toolchainProvider = toolchainProvider;
+      JavaBuckConfig javaBuckConfig, AndroidLibraryCompilerFactory compilerFactory) {
     this.javaBuckConfig = javaBuckConfig;
     this.compilerFactory = compilerFactory;
   }
@@ -99,6 +95,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
           Preconditions.checkNotNull(testRule.getSourcePathToOutput()));
     }
 
+    ToolchainProvider toolchainProvider = context.getToolchainProvider();
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
             toolchainProvider
@@ -167,6 +164,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             DefaultJavaLibrary.rulesBuilder(
                     testLibraryBuildTarget,
                     projectFilesystem,
+                    context.getToolchainProvider(),
                     params,
                     resolver,
                     cellRoots,

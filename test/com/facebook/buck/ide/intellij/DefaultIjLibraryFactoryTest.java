@@ -26,15 +26,13 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -62,10 +60,7 @@ public class DefaultIjLibraryFactoryTest {
   @Before
   public void setUp() throws Exception {
     sourcePathResolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     guavaJarPath = Paths.get("third_party/java/guava.jar");
     guava =
         PrebuiltJarBuilder.createBuilder(

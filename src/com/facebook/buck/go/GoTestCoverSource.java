@@ -80,10 +80,9 @@ public class GoTestCoverSource extends AbstractBuildRule {
             .build();
 
     // Generate annotation variables for source files
-    ImmutableMap.Builder<String, Path> variables = ImmutableMap.<String, Path>builder();
-    ImmutableMap.Builder<SourcePath, SourcePath> coveredSources =
-        ImmutableMap.<SourcePath, SourcePath>builder();
-    ImmutableSet.Builder<SourcePath> testSources = ImmutableSet.<SourcePath>builder();
+    ImmutableMap.Builder<String, Path> variables = ImmutableMap.builder();
+    ImmutableMap.Builder<SourcePath, SourcePath> coveredSources = ImmutableMap.builder();
+    ImmutableSet.Builder<SourcePath> testSources = ImmutableSet.builder();
 
     for (SourcePath path : srcs) {
       if (!isTestFile(pathResolver, buildTarget, path)) {

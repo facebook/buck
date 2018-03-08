@@ -147,7 +147,7 @@ public class CxxTestDescription
       BuildRuleCreationContext context,
       BuildTarget inputBuildTarget,
       BuildRuleParams params,
-      final CxxTestDescriptionArg args) {
+      CxxTestDescriptionArg args) {
     Optional<StripStyle> flavoredStripStyle = StripStyle.FLAVOR_DOMAIN.getValue(inputBuildTarget);
     Optional<LinkerMapMode> flavoredLinkerMapMode =
         LinkerMapMode.FLAVOR_DOMAIN.getValue(inputBuildTarget);
@@ -155,7 +155,7 @@ public class CxxTestDescription
         CxxStrip.removeStripStyleFlavorInTarget(inputBuildTarget, flavoredStripStyle);
     inputBuildTarget =
         LinkerMapMode.removeLinkerMapModeFlavorInTarget(inputBuildTarget, flavoredLinkerMapMode);
-    final BuildTarget buildTarget = inputBuildTarget;
+    BuildTarget buildTarget = inputBuildTarget;
 
     CxxPlatform cxxPlatform = getCxxPlatform(buildTarget, args);
     BuildRuleResolver resolver = context.getBuildRuleResolver();
@@ -195,7 +195,7 @@ public class CxxTestDescription
     }
 
     // Generate the link rule that builds the test binary.
-    final CxxLinkAndCompileRules cxxLinkAndCompileRules =
+    CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
             buildTarget,
             projectFilesystem,
@@ -401,7 +401,7 @@ public class CxxTestDescription
       CellPathResolver cellRoots,
       CxxTestDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
-      final Class<U> metadataClass) {
+      Class<U> metadataClass) {
     return cxxBinaryMetadataFactory.createMetadata(
         buildTarget, resolver, args.getDeps(), metadataClass);
   }

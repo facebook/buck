@@ -38,10 +38,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.RuleDepsCache;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
@@ -87,9 +85,7 @@ public class BuildTargetsQueueTest {
 
   @Test
   public void testResolverWithoutAnyTargets() {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     BuildTargetsQueue queue = createQueueWithoutRemoteCache(resolver, ImmutableList.of());
     List<WorkUnit> zeroDepTargets = dequeueNoFinishedTargets(queue);
     Assert.assertEquals(0, zeroDepTargets.size());
@@ -131,8 +127,7 @@ public class BuildTargetsQueueTest {
   }
 
   @Test
-  public void testResolverWithTargetThatHasRuntimeDep()
-      throws NoSuchBuildTargetException, InterruptedException {
+  public void testResolverWithTargetThatHasRuntimeDep() throws NoSuchBuildTargetException {
     BuildRuleResolver resolver = CustomBuildRuleResolverFactory.createSimpleRuntimeDepsResolver();
     BuildTarget target =
         BuildTargetFactory.newInstance(CustomBuildRuleResolverFactory.HAS_RUNTIME_DEP_RULE);

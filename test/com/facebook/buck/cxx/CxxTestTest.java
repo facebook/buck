@@ -24,16 +24,14 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeTestRule;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -98,7 +96,7 @@ public class CxxTestTest {
 
   @Test
   public void runTests() {
-    final ImmutableList<String> command = ImmutableList.of("hello", "world");
+    ImmutableList<String> command = ImmutableList.of("hello", "world");
 
     FakeCxxTest cxxTest =
         new FakeCxxTest() {
@@ -146,13 +144,11 @@ public class CxxTestTest {
 
   @Test
   public void interpretResults() throws Exception {
-    final Path expectedExitCode = Paths.get("output");
-    final Path expectedOutput = Paths.get("output");
-    final Path expectedResults = Paths.get("results");
+    Path expectedExitCode = Paths.get("output");
+    Path expectedOutput = Paths.get("output");
+    Path expectedResults = Paths.get("results");
 
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     FakeCxxTest cxxTest =
         new FakeCxxTest() {
 
@@ -178,7 +174,7 @@ public class CxxTestTest {
 
           @Override
           protected ImmutableList<TestResultSummary> parseResults(
-              Path exitCode, Path output, Path results) throws Exception {
+              Path exitCode, Path output, Path results) {
             assertEquals(expectedExitCode, exitCode);
             assertEquals(expectedOutput, output);
             assertEquals(expectedResults, results);

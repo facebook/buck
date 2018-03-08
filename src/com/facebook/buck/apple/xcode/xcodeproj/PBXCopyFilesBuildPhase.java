@@ -42,7 +42,7 @@ public class PBXCopyFilesBuildPhase extends PBXBuildPhase {
       return value;
     }
 
-    private Destination(int value) {
+    Destination(int value) {
       this.value = value;
     }
   }

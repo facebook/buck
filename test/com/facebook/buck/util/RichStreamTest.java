@@ -126,7 +126,7 @@ public class RichStreamTest {
   }
 
   @Test(expected = MyRuntimeException.class)
-  public void forEachOrderedThrowingCanPassThroughRuntimeException() throws IOException {
+  public void forEachOrderedThrowingCanPassThroughRuntimeException() {
     RichStream.of("a")
         .forEachOrderedThrowing(
             f -> {
@@ -144,7 +144,7 @@ public class RichStreamTest {
   }
 
   @Test(expected = MyRuntimeException.class)
-  public void forEachThrowingCanPassThroughRuntimeException() throws IOException {
+  public void forEachThrowingCanPassThroughRuntimeException() {
     RichStream.of("a")
         .forEachThrowing(
             f -> {

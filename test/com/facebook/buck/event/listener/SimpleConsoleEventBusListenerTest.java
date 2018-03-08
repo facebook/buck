@@ -97,7 +97,7 @@ public class SimpleConsoleEventBusListenerTest {
     Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
     FakeBuildRule fakeRule = new FakeBuildRule(fakeTarget, ImmutableSortedSet.of());
 
-    final long threadId = 0;
+    long threadId = 0;
 
     BuildEvent.Started buildEventStarted = BuildEvent.started(buildArgs);
     eventBus.postWithoutConfiguring(
@@ -304,7 +304,7 @@ public class SimpleConsoleEventBusListenerTest {
     Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
     FakeBuildRule fakeRule = new FakeBuildRule(fakeTarget, ImmutableSortedSet.of());
 
-    final long threadId = 0;
+    long threadId = 0;
 
     BuildEvent.Started buildEventStarted = BuildEvent.started(buildArgs);
     eventBus.postWithoutConfiguring(

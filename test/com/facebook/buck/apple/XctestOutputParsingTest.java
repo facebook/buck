@@ -103,7 +103,7 @@ public class XctestOutputParsingTest {
   private static final double EPSILON = 1e-6;
 
   private static XctestOutputParsing.XctestEventCallback eventCallbackAddingEventsToList(
-      final List<Object> streamedObjects) {
+      List<Object> streamedObjects) {
     return new XctestOutputParsing.XctestEventCallback() {
       @Override
       public void handleBeginXctestEvent(XctestOutputParsing.BeginXctestEvent event) {
@@ -141,7 +141,7 @@ public class XctestOutputParsingTest {
   public void streamingSimpleSuccess() throws Exception {
     Path outputPath =
         TestDataHelper.getTestDataDirectory(this).resolve("xctest-output/simple-success.txt");
-    final List<Object> streamedObjects = new ArrayList<>();
+    List<Object> streamedObjects = new ArrayList<>();
     try (Reader outputReader = Files.newBufferedReader(outputPath, StandardCharsets.UTF_8)) {
       XctestOutputParsing.streamOutput(
           outputReader, eventCallbackAddingEventsToList(streamedObjects));
@@ -216,7 +216,7 @@ public class XctestOutputParsingTest {
   public void streamingSimpleFailure() throws Exception {
     Path outputPath =
         TestDataHelper.getTestDataDirectory(this).resolve("xctest-output/simple-failure.txt");
-    final List<Object> streamedObjects = new ArrayList<>();
+    List<Object> streamedObjects = new ArrayList<>();
     try (Reader outputReader = Files.newBufferedReader(outputPath, StandardCharsets.UTF_8)) {
       XctestOutputParsing.streamOutput(
           outputReader, eventCallbackAddingEventsToList(streamedObjects));
@@ -294,7 +294,7 @@ public class XctestOutputParsingTest {
 
   @Test
   public void streamingEmptyReaderDoesNotCauseFailure() {
-    final List<Object> streamedObjects = new ArrayList<>();
+    List<Object> streamedObjects = new ArrayList<>();
     XctestOutputParsing.streamOutput(
         new StringReader(""), eventCallbackAddingEventsToList(streamedObjects));
     assertThat(streamedObjects, hasSize(2));

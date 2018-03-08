@@ -110,7 +110,7 @@ public class PostBuildPhaseTest {
 
   @Test
   public void testPublishingBuildSlaveFinishedStats() throws IOException {
-    final BuildJob job = PostBuildPhaseTest.createBuildJobWithSlaves(stampedeId);
+    BuildJob job = PostBuildPhaseTest.createBuildJobWithSlaves(stampedeId);
     List<BuildSlaveRunId> buildSlaveRunIds =
         job.getBuildSlaves()
             .stream()

@@ -1,0 +1,9 @@
+python_library(
+    name = "util",
+    srcs = [
+        "util.py",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

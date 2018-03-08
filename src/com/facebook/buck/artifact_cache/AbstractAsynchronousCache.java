@@ -355,7 +355,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   }
 
   @Override
-  public final ListenableFuture<Void> store(final ArtifactInfo info, final BorrowablePath output) {
+  public final ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
     if (!getCacheReadMode().isWritable()) {
       return Futures.immediateFuture(null);
     }
@@ -368,11 +368,11 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
       return Futures.immediateFuture(null);
     }
 
-    final Path tmp;
+    Path tmp;
     try {
       tmp = getPathForArtifact(output);
     } catch (IOException e) {
-      LOG.error(e, "Failed to store artifact in temp file: " + output.getPath().toString());
+      LOG.error(e, "Failed to store artifact in temp file: " + output.getPath());
       return Futures.immediateFuture(null);
     }
 

@@ -148,9 +148,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      final ExecutionContext context,
-      SourcePathResolver pathResolver,
-      boolean isUsingTestSelectors) {
+      ExecutionContext context, SourcePathResolver pathResolver, boolean isUsingTestSelectors) {
     return () -> {
       Optional<String> resultsFileContents =
           getProjectFilesystem().readFileIfItExists(getPathToTestOutputResult());

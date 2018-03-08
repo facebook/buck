@@ -167,7 +167,7 @@ public class InstrumentationTestRunner {
     }
 
     try {
-      final RemoteAndroidTestRunner runner =
+      RemoteAndroidTestRunner runner =
           new RemoteAndroidTestRunner(this.packageName, this.testRunner, getDevice(deviceSerial));
 
       for (Map.Entry<String, String> entry : this.extraInstrumentationArguments.entrySet()) {

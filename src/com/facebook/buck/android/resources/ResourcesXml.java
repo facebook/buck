@@ -175,7 +175,8 @@ public class ResourcesXml extends ResChunk {
   // After reassigning ids, we need to make sure that these assumptions still
   // hold.
   //
-  // See https://android.googlesource.com/platform/frameworks/base/+/nougat-release/include/androidfw/AttributeFinder.h
+  // See
+  // https://android.googlesource.com/platform/frameworks/base/+/nougat-release/include/androidfw/AttributeFinder.h
   //
   // If there's no refmap, this doesn't ensure that the attributes are sorted correctly, but in
   // that case, Android doesn't need them sorted anyway.
@@ -233,7 +234,7 @@ public class ResourcesXml extends ResChunk {
 
   public void dump(PrintStream out) {
     int indent = 0;
-    final Map<String, String> nsMap = new HashMap<>();
+    Map<String, String> nsMap = new HashMap<>();
     nodeBuf.position(0);
     while (nodeBuf.position() < nodeBuf.limit()) {
       int nodeSize = nodeBuf.get(nodeBuf.position() + 4) & 0xFF;

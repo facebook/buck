@@ -43,7 +43,6 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
       Cache<Path, ImmutableSet<Map<String, Object>>> cache,
       ProjectBuildFileParserPool projectBuildFileParserPool,
       ListeningExecutorService executorService) {
-    super();
     this.executorService = executorService;
     this.cache = new PipelineNodeCache<>(cache);
     this.projectBuildFileParserPool = projectBuildFileParserPool;
@@ -82,10 +81,7 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
 
   @Override
   public ListenableFuture<ImmutableSet<Map<String, Object>>> getAllNodesJob(
-      final Cell cell,
-      KnownBuildRuleTypes knownBuildRuleTypes,
-      final Path buildFile,
-      AtomicLong processedBytes)
+      Cell cell, KnownBuildRuleTypes knownBuildRuleTypes, Path buildFile, AtomicLong processedBytes)
       throws BuildTargetException {
 
     if (shuttingDown()) {
@@ -107,9 +103,9 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
 
   @Override
   public ListenableFuture<Map<String, Object>> getNodeJob(
-      final Cell cell,
+      Cell cell,
       KnownBuildRuleTypes knownBuildRuleTypes,
-      final BuildTarget buildTarget,
+      BuildTarget buildTarget,
       AtomicLong processedBytes)
       throws BuildTargetException {
     return Futures.transformAsync(

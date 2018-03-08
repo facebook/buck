@@ -32,14 +32,12 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -59,7 +57,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
-import javax.xml.transform.TransformerException;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Developer;
 import org.apache.maven.model.Model;
@@ -67,7 +64,6 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.junit.Rule;
 import org.junit.Test;
-import org.xml.sax.SAXException;
 
 public class PomIntegrationTest {
 
@@ -76,9 +72,7 @@ public class PomIntegrationTest {
   private static final String URL = "http://example.com";
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
-  private final BuildRuleResolver ruleResolver =
-      new SingleThreadedBuildRuleResolver(
-          TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+  private final BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
   private final SourcePathResolver pathResolver =
       DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 
@@ -170,8 +164,7 @@ public class PomIntegrationTest {
     }
   }
 
-  private static void removeDependencies(Model model, Path pomFile)
-      throws IOException, SAXException, TransformerException {
+  private static void removeDependencies(Model model, Path pomFile) throws IOException {
     model.setDependencies(Collections.emptyList());
     serializePom(model, pomFile);
   }

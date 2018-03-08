@@ -29,10 +29,7 @@ public class ExplicitBuildTargetSourcePathTest {
   @Test
   public void explicitlySetPath() {
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
     FakeBuildRule rule = new FakeBuildRule(target);
     Path path = Paths.get("blah");

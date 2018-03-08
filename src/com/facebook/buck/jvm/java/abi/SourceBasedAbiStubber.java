@@ -36,7 +36,7 @@ public final class SourceBasedAbiStubber {
       Class<?> validatingTaskListenerClass =
           pluginLoader.loadClass(
               "com.facebook.buck.jvm.java.abi.source.ValidatingTaskListener", Object.class);
-      final Constructor<?> constructor =
+      Constructor<?> constructor =
           validatingTaskListenerClass.getConstructor(
               BuckJavacTaskProxy.class,
               SourceOnlyAbiRuleInfo.class,

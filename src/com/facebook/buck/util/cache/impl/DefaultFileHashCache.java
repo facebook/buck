@@ -80,7 +80,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
           }
         };
 
-    final FileHashCacheEngine.ValueLoader<HashCode> fileHashLoader =
+    FileHashCacheEngine.ValueLoader<HashCode> fileHashLoader =
         (path) -> {
           try {
             return getFileHashCode(path);
@@ -89,7 +89,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
           }
         };
 
-    final FileHashCacheEngine.ValueLoader<HashCodeAndFileType> dirHashLoader =
+    FileHashCacheEngine.ValueLoader<HashCodeAndFileType> dirHashLoader =
         (path) -> {
           try {
             return getDirHashCode(path);
@@ -124,8 +124,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
                     "limited"));
         break;
       default:
-        throw new RuntimeException(
-            "Unsupported file hash cache engine: " + fileHashCacheMode.toString());
+        throw new RuntimeException("Unsupported file hash cache engine: " + fileHashCacheMode);
     }
   }
 

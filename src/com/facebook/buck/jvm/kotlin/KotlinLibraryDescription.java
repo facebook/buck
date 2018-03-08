@@ -129,6 +129,7 @@ public class KotlinLibraryDescription
         KotlinLibraryBuilder.newInstance(
                 buildTarget,
                 projectFilesystem,
+                context.getToolchainProvider(),
                 params,
                 resolver,
                 context.getCellPathResolver(),

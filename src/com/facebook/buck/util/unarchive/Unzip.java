@@ -16,8 +16,8 @@
 
 package com.facebook.buck.util.unarchive;
 
-import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -146,7 +146,7 @@ public class Unzip extends Unarchiver {
         MorePosixFilePermissions.fromMode(entry.getExternalAttributes() >> 16);
     if (permissions.contains(PosixFilePermission.OWNER_EXECUTE)
         && file.getCanonicalFile().exists()) {
-      MoreFiles.makeExecutable(filePath);
+      MostFiles.makeExecutable(filePath);
     }
   }
 

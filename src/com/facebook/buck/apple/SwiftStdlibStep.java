@@ -17,7 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -111,7 +111,7 @@ class SwiftStdlibStep implements Step {
     try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(temp)) {
       if (dirStream.iterator().hasNext()) {
         Files.createDirectories(destinationDirectory);
-        MoreFiles.copyRecursively(temp, destinationDirectory);
+        MostFiles.copyRecursively(temp, destinationDirectory);
       }
     }
     return StepExecutionResults.SUCCESS;

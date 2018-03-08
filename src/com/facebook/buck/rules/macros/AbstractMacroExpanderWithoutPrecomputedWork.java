@@ -33,8 +33,7 @@ public abstract class AbstractMacroExpanderWithoutPrecomputedWork<T>
 
   @Override
   public final Object precomputeWorkFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, T input)
-      throws MacroException {
+      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, T input) {
     return NO_PRECOMPUTED_WORK;
   }
 

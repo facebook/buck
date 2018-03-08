@@ -48,13 +48,13 @@ public class AndroidConsistencyIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testModuleConsistencyStep() throws IOException, InterruptedException {
+  public void testModuleConsistencyStep() throws IOException {
     String target = "//apps/multidex:app-with-consistency-check";
     workspace.runBuckCommand("build", target).assertSuccess();
   }
 
   @Test
-  public void testModuleConsistencyFailure() throws IOException, InterruptedException {
+  public void testModuleConsistencyFailure() throws IOException {
     String target = "//apps/multidex:app-with-consistency-failure";
     workspace.runBuckCommand("build", target).assertFailure();
   }

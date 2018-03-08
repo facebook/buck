@@ -39,7 +39,7 @@ public class RuleKeyCacheResultEvent extends AbstractBuckEvent {
 
   @Override
   protected String getValueString() {
-    return getEventName() + getEventKey().toString();
+    return getEventName() + getEventKey();
   }
 
   public boolean isCacheHitExpected() {

@@ -52,10 +52,10 @@ final class PrebuiltJarSymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
     ProjectFilesystem filesystem = sourcePath.getFilesystem();
     Path absolutePath = filesystem.resolve(sourcePath.getRelativePath());
 
-    final Set<String> providedSymbols = new HashSet<>();
+    Set<String> providedSymbols = new HashSet<>();
     new ZipFileTraversal(absolutePath) {
       @Override
-      public void visit(ZipFile zipFile, ZipEntry zipEntry) throws IOException {
+      public void visit(ZipFile zipFile, ZipEntry zipEntry) {
         String name = zipEntry.getName();
         if (!name.endsWith(CLASS_SUFFIX) || name.contains("$")) {
           return;

@@ -135,8 +135,7 @@ public class ThriftCoordinatorServerIntegrationTest {
     EasyMock.verify(eventListener);
   }
 
-  public static ThriftCoordinatorServer createServerOnRandomPort(BuildTargetsQueue queue)
-      throws IOException {
+  public static ThriftCoordinatorServer createServerOnRandomPort(BuildTargetsQueue queue) {
     return createCoordinatorServer(OptionalInt.empty(), queue);
   }
 

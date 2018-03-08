@@ -170,7 +170,7 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
 
     @Override
     public StoreEvents storeScheduled(ArtifactInfo info, long artifactSizeBytes) {
-      final HttpArtifactCacheEvent.Scheduled scheduled =
+      HttpArtifactCacheEvent.Scheduled scheduled =
           HttpArtifactCacheEvent.newStoreScheduledEvent(
               ArtifactCacheEvent.getTarget(info.getMetadata()),
               info.getRuleKeys(),

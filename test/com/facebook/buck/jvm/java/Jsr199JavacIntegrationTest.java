@@ -28,14 +28,12 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -89,11 +87,7 @@ public class Jsr199JavacIntegrationTest {
 
     assertEquals(
         String.format(
-            "javac -source %s -target %s -g "
-                + "-d %s "
-                + "-classpath '' "
-                + "@"
-                + pathToSrcsList.toString(),
+            "javac -source %s -target %s -g " + "-d %s " + "-classpath '' " + "@" + pathToSrcsList,
             JavacOptions.TARGETED_JAVA_VERSION,
             JavacOptions.TARGETED_JAVA_VERSION,
             pathToOutputDir),
@@ -140,9 +134,7 @@ public class Jsr199JavacIntegrationTest {
             .newBuildInvocation(
                 javacExecutionContext,
                 DefaultSourcePathResolver.from(
-                    new SourcePathRuleFinder(
-                        new SingleThreadedBuildRuleResolver(
-                            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
+                    new SourcePathRuleFinder(new TestBuildRuleResolver())),
                 BuildTargetFactory.newInstance("//some:example"),
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -172,9 +164,7 @@ public class Jsr199JavacIntegrationTest {
   @Test
   public void shouldWriteResolvedBuildTargetSourcePathsToClassesFile()
       throws IOException, InterruptedException {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     BuildRule rule = new FakeBuildRule("//:fake");
     resolver.addToIndex(rule);
 
@@ -198,9 +188,7 @@ public class Jsr199JavacIntegrationTest {
             .newBuildInvocation(
                 javacExecutionContext,
                 DefaultSourcePathResolver.from(
-                    new SourcePathRuleFinder(
-                        new SingleThreadedBuildRuleResolver(
-                            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
+                    new SourcePathRuleFinder(new TestBuildRuleResolver())),
                 BuildTargetFactory.newInstance("//some:example"),
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -264,9 +252,7 @@ public class Jsr199JavacIntegrationTest {
 
   @Test
   public void shouldUseSpecifiedJavacJar() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     BuildRule rule = new FakeBuildRule("//:fake");
     resolver.addToIndex(rule);
 
@@ -304,10 +290,7 @@ public class Jsr199JavacIntegrationTest {
       javac
           .newBuildInvocation(
               javacExecutionContext,
-              DefaultSourcePathResolver.from(
-                  new SourcePathRuleFinder(
-                      new SingleThreadedBuildRuleResolver(
-                          TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
+              DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver())),
               BuildTargetFactory.newInstance("//some:example"),
               ImmutableList.of(),
               ImmutableList.of(),
@@ -358,7 +341,7 @@ public class Jsr199JavacIntegrationTest {
     return createJavac(withSyntaxError, Optional.empty());
   }
 
-  private ProjectFilesystem createProjectFilesystem() throws InterruptedException {
+  private ProjectFilesystem createProjectFilesystem() {
     return TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
   }
 
@@ -395,10 +378,7 @@ public class Jsr199JavacIntegrationTest {
     Invocation buildInvocation =
         javac.newBuildInvocation(
             javacExecutionContext,
-            DefaultSourcePathResolver.from(
-                new SourcePathRuleFinder(
-                    new SingleThreadedBuildRuleResolver(
-                        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver())),
             BuildTargetFactory.newInstance("//some:example"),
             ImmutableList.of(),
             ImmutableList.of(),

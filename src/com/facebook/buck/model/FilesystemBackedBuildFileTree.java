@@ -87,7 +87,7 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
             .build(
                 new CacheLoader<Path, Boolean>() {
                   @Override
-                  public Boolean load(Path key) throws Exception {
+                  public Boolean load(Path key) {
                     return FilesystemBackedBuildFileTree.this.projectFilesystem.isFile(key);
                   }
                 });
@@ -98,9 +98,9 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
   public Collection<Path> getChildPaths(BuildTarget target) {
     // Crawl the subdirectories of target's base path, looking for build files.
     // When we find one, we can stop crawling anything under the directory it's in.
-    final ImmutableSet.Builder<Path> childPaths = ImmutableSet.builder();
-    final Path basePath = target.getBasePath();
-    final ImmutableSet<PathOrGlobMatcher> ignoredPaths = projectFilesystem.getIgnorePaths();
+    ImmutableSet.Builder<Path> childPaths = ImmutableSet.builder();
+    Path basePath = target.getBasePath();
+    ImmutableSet<PathOrGlobMatcher> ignoredPaths = projectFilesystem.getIgnorePaths();
     try {
       projectFilesystem.walkRelativeFileTree(
           basePath,

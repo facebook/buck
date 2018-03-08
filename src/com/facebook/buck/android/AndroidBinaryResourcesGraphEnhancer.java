@@ -260,7 +260,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     resultBuilder.setPackageStringAssets(packageStringAssets);
 
     SourcePath pathToRDotTxt;
-    final ImmutableList<ExopackagePathAndHash> exoResources;
+    ImmutableList<ExopackagePathAndHash> exoResources;
     if (exopackageForResources) {
       MergeAssets mergeAssets =
           createMergeAssetsRule(packageableCollection.getAssetsDirectories(), Optional.empty());

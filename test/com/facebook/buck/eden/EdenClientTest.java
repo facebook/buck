@@ -47,7 +47,7 @@ public class EdenClientTest {
   private EdenClientPool pool;
 
   @Before
-  public void setUp() throws EdenError, TException {
+  public void setUp() {
     thriftClient = createMock(EdenClient.class);
     fs = Jimfs.newFileSystem(Configuration.unix());
     pool = new EdenClientPool(thriftClient);
@@ -66,8 +66,7 @@ public class EdenClientTest {
   }
 
   @Test
-  public void getMountForMatchesProjectRootEqualToMount()
-      throws EdenError, IOException, TException {
+  public void getMountForMatchesProjectRootEqualToMount() throws IOException {
     Path projectRoot = fs.getPath("/home/mbolin/src/eden");
     Files.createDirectories(projectRoot.resolve(".eden"));
     Files.createSymbolicLink(projectRoot.resolve(".eden").resolve("root"), projectRoot);
@@ -79,7 +78,7 @@ public class EdenClientTest {
   }
 
   @Test
-  public void getMountForMatchesProjectRootUnderMount() throws EdenError, IOException, TException {
+  public void getMountForMatchesProjectRootUnderMount() throws IOException {
     Path edenMountRoot = fs.getPath("/home/mbolin/src/eden");
     Path projectRoot = fs.getPath("/home/mbolin/src/eden/deep/project");
     Files.createDirectories(projectRoot.resolve(".eden"));
@@ -92,8 +91,7 @@ public class EdenClientTest {
   }
 
   @Test
-  public void getMountForReturnsNullWhenMissingMountPoint()
-      throws EdenError, IOException, TException {
+  public void getMountForReturnsNullWhenMissingMountPoint() {
     Path projectRoot = Paths.get("/home/mbolin/src/other_project");
     Optional<EdenMount> mount = EdenMount.createEdenMountForProjectRoot(projectRoot, pool);
     assertFalse(mount.isPresent());

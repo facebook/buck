@@ -42,9 +42,7 @@ public class CommandToolRuleKeyTest {
 
   @Before
   public void setUp() throws Exception {
-    resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    resolver = new TestBuildRuleResolver();
     ruleFinder = new SourcePathRuleFinder(resolver);
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
   }

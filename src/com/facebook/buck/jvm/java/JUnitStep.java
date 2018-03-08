@@ -111,7 +111,7 @@ public class JUnitStep extends ShellStep {
   }
 
   @Override
-  protected Optional<Consumer<Process>> getTimeoutHandler(final ExecutionContext context) {
+  protected Optional<Consumer<Process>> getTimeoutHandler(ExecutionContext context) {
     return Optional.of(
         process -> {
           Optional<Long> pid = Optional.empty();

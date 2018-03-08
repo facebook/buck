@@ -59,8 +59,8 @@ public class SymTabCommandUtils {
    */
   public static Nlist getNlistAtIndex(
       ByteBuffer buffer, SymTabCommand command, int index, boolean is64Bit) {
-    final int nlistSizeInBytes = NlistUtils.getSizeInBytes(is64Bit);
-    final int offset = command.getSymoff().intValue() + index * nlistSizeInBytes;
+    int nlistSizeInBytes = NlistUtils.getSizeInBytes(is64Bit);
+    int offset = command.getSymoff().intValue() + index * nlistSizeInBytes;
     buffer.position(offset);
     return NlistUtils.createFromBuffer(buffer, is64Bit);
   }

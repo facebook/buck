@@ -36,7 +36,6 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -62,7 +61,7 @@ public class AndroidBuildConfigTest {
   }
 
   @Test
-  public void testBuildInternal() throws IOException {
+  public void testBuildInternal() {
     AndroidBuildConfig buildConfig = createSimpleBuildConfigRule();
     List<Step> steps =
         buildConfig.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext());

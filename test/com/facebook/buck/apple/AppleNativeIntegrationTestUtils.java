@@ -58,7 +58,7 @@ public class AppleNativeIntegrationTestUtils {
   }
 
   private static Optional<AppleSdk> anySdkForPlatform(
-      final ApplePlatform platform, final ImmutableMap<AppleSdk, AppleSdkPaths> sdkPaths) {
+      ApplePlatform platform, ImmutableMap<AppleSdk, AppleSdkPaths> sdkPaths) {
     return sdkPaths
         .keySet()
         .stream()

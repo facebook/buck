@@ -71,11 +71,11 @@ public class AuditInputCommand extends AbstractCommand {
   }
 
   @Override
-  public ExitCode runWithoutHelp(final CommandRunnerParams params)
+  public ExitCode runWithoutHelp(CommandRunnerParams params)
       throws IOException, InterruptedException {
     // Create a TargetGraph that is composed of the transitive closure of all of the dependent
     // TargetNodes for the specified BuildTargets.
-    final ImmutableSet<String> fullyQualifiedBuildTargets =
+    ImmutableSet<String> fullyQualifiedBuildTargets =
         ImmutableSet.copyOf(getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
 
     if (fullyQualifiedBuildTargets.isEmpty()) {
@@ -126,8 +126,8 @@ public class AuditInputCommand extends AbstractCommand {
   }
 
   @VisibleForTesting
-  ExitCode printJsonInputs(final CommandRunnerParams params, TargetGraph graph) throws IOException {
-    final SortedMap<String, ImmutableSortedSet<Path>> targetToInputs = new TreeMap<>();
+  ExitCode printJsonInputs(CommandRunnerParams params, TargetGraph graph) throws IOException {
+    SortedMap<String, ImmutableSortedSet<Path>> targetToInputs = new TreeMap<>();
 
     new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(graph) {
 
@@ -161,7 +161,7 @@ public class AuditInputCommand extends AbstractCommand {
     return ExitCode.SUCCESS;
   }
 
-  private ExitCode printInputs(final CommandRunnerParams params, TargetGraph graph) {
+  private ExitCode printInputs(CommandRunnerParams params, TargetGraph graph) {
     // Traverse the TargetGraph and print out all of the inputs used to produce each TargetNode.
     // Keep track of the inputs that have been displayed to ensure that they are not displayed more
     // than once.

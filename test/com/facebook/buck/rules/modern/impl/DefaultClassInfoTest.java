@@ -29,16 +29,14 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.keys.AlterRuleKeys;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
@@ -107,7 +105,7 @@ public class DefaultClassInfoTest {
   }
 
   @Test
-  public void testDerivedClass() throws Exception {
+  public void testDerivedClass() {
     BuildTarget target1 = BuildTarget.of(Paths.get("some1"), "//some1", "name");
     BuildTarget target2 = BuildTarget.of(Paths.get("some2"), "//some2", "name");
     BuildTarget target3 = BuildTarget.of(Paths.get("some3"), "//some3", "name");
@@ -281,9 +279,7 @@ public class DefaultClassInfoTest {
         new NoOpModernBuildRule(
             BuildTargetFactory.newInstance("//some:target"),
             new FakeProjectFilesystem(),
-            new SourcePathRuleFinder(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))));
+            new SourcePathRuleFinder(new TestBuildRuleResolver())));
   }
 
   static class NoOpModernBuildRule extends ModernBuildRule<NoOpModernBuildRule>

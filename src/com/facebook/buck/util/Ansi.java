@@ -196,7 +196,7 @@ public final class Ansi {
     return ANSI_ERASE_TO_THE_END_OF_LINE;
   }
 
-  public static enum SeverityLevel {
+  public enum SeverityLevel {
     OK,
     WARNING,
     ERROR
@@ -222,7 +222,7 @@ public final class Ansi {
 
   /** @return the index of the first character that's not a tab, or -1 if none is found. */
   private static int indexOfFirstNonTab(String s) {
-    final int length = s.length();
+    int length = s.length();
     for (int i = 1; i < length; i++) {
       if (s.charAt(i) != '\t') {
         return i;

@@ -37,7 +37,7 @@ public class BuildTargetSourcePathAsSrcIntegrationTest {
 
   @Test
   public void testNewGenfileIsIncludedInJar() throws IOException {
-    final Charset charsetForTest = StandardCharsets.UTF_8;
+    Charset charsetForTest = StandardCharsets.UTF_8;
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "build_rule_source_path_as_src_test", tmp);

@@ -125,7 +125,7 @@ public class DaemonicParserState {
     public Optional<T> lookupComputedNode(Cell cell, BuildTarget target)
         throws BuildTargetException {
       invalidateIfProjectBuildFileParserStateChanged(cell);
-      final Path buildFile = cell.getAbsolutePathToBuildFileUnsafe(target);
+      Path buildFile = cell.getAbsolutePathToBuildFileUnsafe(target);
       invalidateIfBuckConfigOrEnvHasChanged(cell, buildFile);
 
       PipelineNodeCache.Cache<BuildTarget, T> state = getCache(cell);
@@ -146,7 +146,7 @@ public class DaemonicParserState {
           "Unexpected invalidation due to build file parser state change for %s %s",
           cell.getRoot(),
           target);
-      final Path buildFile = cell.getAbsolutePathToBuildFileUnsafe(target);
+      Path buildFile = cell.getAbsolutePathToBuildFileUnsafe(target);
       Preconditions.checkState(
           !invalidateIfBuckConfigOrEnvHasChanged(cell, buildFile),
           "Unexpected invalidation due to config/env change for %s %s",
@@ -210,8 +210,7 @@ public class DaemonicParserState {
       // invalidated mid-way through the parse).
       invalidateIfProjectBuildFileParserStateChanged(cell);
 
-      final ImmutableSet.Builder<Map<String, Object>> withoutMetaIncludesBuilder =
-          ImmutableSet.builder();
+      ImmutableSet.Builder<Map<String, Object>> withoutMetaIncludesBuilder = ImmutableSet.builder();
       ImmutableSet.Builder<Path> dependentsOfEveryNode = ImmutableSet.builder();
       ImmutableMap<String, Optional<String>> env = ImmutableMap.of();
       for (Map<String, Object> rawNode : rawNodes) {
@@ -225,15 +224,13 @@ public class DaemonicParserState {
           env =
               ImmutableMap.copyOf(
                   Maps.transformValues(
-                      Preconditions.<Map<String, String>>checkNotNull(
-                          (Map<String, String>) rawNode.get(ENV_META_RULE)),
+                      Preconditions.checkNotNull((Map<String, String>) rawNode.get(ENV_META_RULE)),
                       Optional::ofNullable));
         } else {
           withoutMetaIncludesBuilder.add(rawNode);
         }
       }
-      final ImmutableSet<Map<String, Object>> withoutMetaIncludes =
-          withoutMetaIncludesBuilder.build();
+      ImmutableSet<Map<String, Object>> withoutMetaIncludes = withoutMetaIncludesBuilder.build();
 
       // We also know that the rules all depend on the default includes for the
       // cell.
@@ -342,7 +339,7 @@ public class DaemonicParserState {
             .build(
                 new CacheLoader<Cell, BuildFileTree>() {
                   @Override
-                  public BuildFileTree load(Cell cell) throws Exception {
+                  public BuildFileTree load(Cell cell) {
                     return new FilesystemBackedBuildFileTree(
                         cell.getFilesystem(), cell.getBuildFileName());
                   }

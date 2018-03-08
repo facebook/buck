@@ -68,7 +68,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       CompilerParameters compilerParameters,
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters) {
-    final JavacOptions buildTimeOptions =
+    JavacOptions buildTimeOptions =
         javacOptions.withBootclasspathFromContext(extraClasspathProvider);
 
     return new JavacPipelineState(
@@ -91,7 +91,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       /* output params */
       Builder<Step> steps,
       BuildableContext buildableContext) {
-    final JavacOptions buildTimeOptions =
+    JavacOptions buildTimeOptions =
         javacOptions.withBootclasspathFromContext(extraClasspathProvider);
 
     boolean generatingCode = !javacOptions.getAnnotationProcessingParams().isEmpty();
@@ -214,7 +214,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
         postprocessClassesCommands.toString());
 
     if (isSpoolingToJarEnabled) {
-      final JavacOptions buildTimeOptions =
+      JavacOptions buildTimeOptions =
           javacOptions.withBootclasspathFromContext(extraClasspathProvider);
       boolean generatingCode = !buildTimeOptions.getAnnotationProcessingParams().isEmpty();
       if (generatingCode) {

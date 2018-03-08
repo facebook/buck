@@ -45,7 +45,7 @@ abstract class AbstractDependencyFileEntry {
 
   public static DependencyFileEntry fromSourcePath(
       SourcePath sourcePath, SourcePathResolver resolver) {
-    final DependencyFileEntry.Builder builder = DependencyFileEntry.builder();
+    DependencyFileEntry.Builder builder = DependencyFileEntry.builder();
     if (sourcePath instanceof ArchiveMemberSourcePath) {
       ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) sourcePath;
       ArchiveMemberPath relativeArchiveMemberPath =

@@ -28,7 +28,7 @@ import org.junit.Test;
 public class UnknownCommandUtilsTest {
 
   @Test
-  public void testCreatingFromBuffer() throws Exception {
+  public void testCreatingFromBuffer() {
     byte[] commandBytes = BaseEncoding.base16().decode("FFFF000000AA00000008");
 
     ByteBuffer buffer = ByteBuffer.wrap(commandBytes).order(ByteOrder.BIG_ENDIAN);

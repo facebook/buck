@@ -80,7 +80,7 @@ public class WatchmanClientIntegrationTest {
     if (Platform.detect() == Platform.WINDOWS) {
       Random random = new Random(0);
       UUID uuid = new UUID(random.nextLong(), random.nextLong());
-      watchmanSockFile = Paths.get("\\\\.\\pipe\\watchman-test-" + uuid.toString());
+      watchmanSockFile = Paths.get("\\\\.\\pipe\\watchman-test-" + uuid);
     } else {
       watchmanSockFile = watchmanBaseDir.getRoot().resolve("sock");
     }

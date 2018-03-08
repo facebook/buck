@@ -21,7 +21,6 @@ import com.facebook.buck.event.listener.ArtifactCacheTestUtils;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.ImmutableSet;
-import java.io.IOException;
 import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Test;
@@ -34,7 +33,7 @@ public class HttpArtifactCacheEventTest {
   private static final RuleKey TEST_RULE_KEY = new RuleKey("4321");
 
   @Test
-  public void storeDataContainsRuleKeys() throws IOException {
+  public void storeDataContainsRuleKeys() {
     HttpArtifactCacheEvent.Started started =
         ArtifactCacheTestUtils.newUploadConfiguredStartedEvent(
             new BuildId("monkey"), Optional.of("target"), TEST_RULE_KEYS);
@@ -44,7 +43,7 @@ public class HttpArtifactCacheEventTest {
   }
 
   @Test
-  public void fetchDataContainsRuleKey() throws IOException {
+  public void fetchDataContainsRuleKey() {
     HttpArtifactCacheEvent.Finished finished =
         ArtifactCacheTestUtils.newFetchFinishedEvent(
             ArtifactCacheTestUtils.newFetchConfiguredStartedEvent(TEST_RULE_KEY),

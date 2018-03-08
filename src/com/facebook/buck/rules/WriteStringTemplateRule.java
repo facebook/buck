@@ -17,7 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -78,9 +78,8 @@ public class WriteStringTemplateRule extends AbstractBuildRuleWithDeclaredAndExt
       steps.add(
           new AbstractExecutionStep("chmod +x") {
             @Override
-            public StepExecutionResult execute(ExecutionContext context)
-                throws IOException, InterruptedException {
-              MoreFiles.makeExecutable(getProjectFilesystem().resolve(output));
+            public StepExecutionResult execute(ExecutionContext context) throws IOException {
+              MostFiles.makeExecutable(getProjectFilesystem().resolve(output));
               return StepExecutionResult.of(0, Optional.empty());
             }
           });

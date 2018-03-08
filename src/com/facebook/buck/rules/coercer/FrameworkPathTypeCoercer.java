@@ -102,7 +102,7 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
                   .join(
                       Iterables.transform(
                           ImmutableList.copyOf(PBXReference.SourceTree.values()),
-                          input -> "$" + input.toString())));
+                          input -> "$" + input)));
         }
       } else {
         return FrameworkPath.ofSourcePath(

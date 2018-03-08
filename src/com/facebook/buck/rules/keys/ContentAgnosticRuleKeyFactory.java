@@ -47,17 +47,17 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
       new FileHashLoader() {
 
         @Override
-        public HashCode get(Path path) throws IOException {
+        public HashCode get(Path path) {
           return HashCode.fromLong(0);
         }
 
         @Override
-        public long getSize(Path path) throws IOException {
+        public long getSize(Path path) {
           return 0;
         }
 
         @Override
-        public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
+        public HashCode get(ArchiveMemberPath archiveMemberPath) {
           throw new AssertionError();
         }
       };

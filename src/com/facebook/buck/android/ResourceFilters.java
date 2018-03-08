@@ -239,7 +239,7 @@ public class ResourceFilters {
       Collection<Path> candidates,
       Set<ResourceFilters.Density> targetDensities,
       boolean canDownscale) {
-    final Set<Path> pathsToRemove = filterByDensity(candidates, targetDensities, canDownscale);
+    Set<Path> pathsToRemove = filterByDensity(candidates, targetDensities, canDownscale);
     return path -> !pathsToRemove.contains(path);
   }
 
@@ -268,9 +268,9 @@ public class ResourceFilters {
    * Density#NO_QUALIFIER} when the target does not exists.
    */
   public static Predicate<Path> createDensityFilter(
-      final ProjectFilesystem filesystem, final Set<Density> targetDensities) {
+      ProjectFilesystem filesystem, Set<Density> targetDensities) {
     return resourceFile -> {
-      final Path resourceFolder = getResourceFolder(resourceFile);
+      Path resourceFolder = getResourceFolder(resourceFile);
       if (resourceFolder.getFileName().toString().startsWith("drawable")) {
         // Drawables are handled independently, so do not do anything with them.
         return true;
@@ -287,7 +287,7 @@ public class ResourceFilters {
       }
 
       if (density.equals(Density.NO_QUALIFIER)) {
-        final String resourceType = getResourceType(resourceFolder);
+        String resourceType = getResourceType(resourceFolder);
         return resourceType.equals("values")
             || FluentIterable.from(targetDensities)
                 .anyMatch(

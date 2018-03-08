@@ -98,7 +98,7 @@ class TreeBackedTypes implements Types {
         return isSameIntersectionType((IntersectionType) t1, (IntersectionType) t2);
       case ARRAY:
         return isSameType(((ArrayType) t1).getComponentType(), ((ArrayType) t2).getComponentType());
-        //$CASES-OMITTED$
+        // $CASES-OMITTED$
       default:
         throw new UnsupportedOperationException(
             String.format("isSameType NYI for kind %s", t1.getKind()));

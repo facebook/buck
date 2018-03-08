@@ -84,8 +84,7 @@ public class MergeThirdPartyJarResources extends ModernBuildRule<MergeThirdParty
       ImmutableSet<Path> thirdPartyJars, Path absoluteMergedPath) {
     return new AbstractExecutionStep("merging_third_party_jar_resources") {
       @Override
-      public StepExecutionResult execute(ExecutionContext context)
-          throws IOException, InterruptedException {
+      public StepExecutionResult execute(ExecutionContext context) throws IOException {
         try (ResourcesZipBuilder builder = new ResourcesZipBuilder(absoluteMergedPath)) {
           for (Path jar : thirdPartyJars) {
             try (ZipFile base = new ZipFile(jar.toFile())) {

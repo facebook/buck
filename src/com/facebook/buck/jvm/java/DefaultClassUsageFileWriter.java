@@ -49,7 +49,7 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
       ImmutableSetMultimap<Path, Path> classUsageMap,
       ProjectFilesystem filesystem,
       CellPathResolver cellPathResolver) {
-    final ImmutableSetMultimap.Builder<Path, Path> builder = ImmutableSetMultimap.builder();
+    ImmutableSetMultimap.Builder<Path, Path> builder = ImmutableSetMultimap.builder();
 
     // Ensure deterministic ordering.
     builder.orderKeysBy(Comparator.naturalOrder());
@@ -85,11 +85,11 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
    */
   private static Optional<Path> getCrossCellPath(Path jarAbsolutePath, CellPathResolver resolver) {
     for (Map.Entry<String, Path> cellEntry : resolver.getCellPaths().entrySet()) {
-      final Path cellRoot = cellEntry.getValue();
+      Path cellRoot = cellEntry.getValue();
       if (jarAbsolutePath.startsWith(cellRoot)) {
         Path relativePath = cellRoot.relativize(jarAbsolutePath);
         // We use an absolute path to represent a path rooted in another cell
-        final Path cellNameRoot = cellRoot.getRoot().resolve(cellEntry.getKey());
+        Path cellNameRoot = cellRoot.getRoot().resolve(cellEntry.getKey());
         return Optional.of(cellNameRoot.resolve(relativePath));
       }
     }

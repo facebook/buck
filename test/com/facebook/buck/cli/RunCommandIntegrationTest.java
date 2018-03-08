@@ -38,7 +38,7 @@ public class RunCommandIntegrationTest extends EasyMockSupport {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  public void testRunCommandWithNoArguments() throws IOException, InterruptedException {
+  public void testRunCommandWithNoArguments() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "run-command", temporaryFolder);
     workspace.setUp();
@@ -51,7 +51,7 @@ public class RunCommandIntegrationTest extends EasyMockSupport {
   }
 
   @Test
-  public void testRunCommandWithNonExistentDirectory() throws IOException, InterruptedException {
+  public void testRunCommandWithNonExistentDirectory() throws IOException {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage("//does/not/exist:exist references non-existent directory does/not/exist");
     ProjectWorkspace workspace =
@@ -62,7 +62,7 @@ public class RunCommandIntegrationTest extends EasyMockSupport {
   }
 
   @Test
-  public void testRunCommandWithNonExistentTarget() throws IOException, InterruptedException {
+  public void testRunCommandWithNonExistentTarget() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "run-command", temporaryFolder);
     workspace.setUp();

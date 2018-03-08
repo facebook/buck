@@ -212,14 +212,14 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), getBinPath())));
 
-    final Path pathToNativeLibs = getPathToNativeLibsDir();
+    Path pathToNativeLibs = getPathToNativeLibsDir();
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), pathToNativeLibs)));
 
-    final Path pathToNativeLibsAssets = getPathToNativeLibsAssetsDir();
+    Path pathToNativeLibsAssets = getPathToNativeLibsAssetsDir();
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
@@ -252,7 +252,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
     addStepsForCopyingStrippedNativeLibrariesOrAssets(
         context, getProjectFilesystem(), stripLibAssetRules, pathToNativeLibsAssets, steps);
 
-    final Path pathToMetadataTxt = getPathToMetadataTxt();
+    Path pathToMetadataTxt = getPathToMetadataTxt();
     steps.add(
         createMetadataStep(getProjectFilesystem(), getPathToMetadataTxt(), getPathToAllLibsDir()));
 
@@ -267,8 +267,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
       ProjectFilesystem filesystem, Path pathToMetadataTxt, Path pathToAllLibsDir) {
     return new AbstractExecutionStep("hash_native_libs") {
       @Override
-      public StepExecutionResult execute(ExecutionContext context)
-          throws IOException, InterruptedException {
+      public StepExecutionResult execute(ExecutionContext context) throws IOException {
         ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
         for (Path nativeLib : filesystem.getFilesUnderPath(pathToAllLibsDir)) {
           Sha1HashCode filesha1 = filesystem.computeSha1(nativeLib);
@@ -289,9 +288,9 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
 
   static void copyNativeLibrary(
       BuildContext context,
-      final ProjectFilesystem filesystem,
+      ProjectFilesystem filesystem,
       Path sourceDir,
-      final Path destinationDir,
+      Path destinationDir,
       ImmutableSet<TargetCpuType> cpuFilters,
       ImmutableList.Builder<Step> steps) {
 
@@ -304,14 +303,14 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
         Optional<String> abiDirectoryComponent = getAbiDirectoryComponent(cpuType);
         Preconditions.checkState(abiDirectoryComponent.isPresent());
 
-        final Path libSourceDir = sourceDir.resolve(abiDirectoryComponent.get());
+        Path libSourceDir = sourceDir.resolve(abiDirectoryComponent.get());
         Path libDestinationDir = destinationDir.resolve(abiDirectoryComponent.get());
 
-        final MkdirStep mkDirStep =
+        MkdirStep mkDirStep =
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(), filesystem, libDestinationDir));
-        final CopyStep copyStep =
+        CopyStep copyStep =
             CopyStep.forDirectory(
                 filesystem, libSourceDir, libDestinationDir, CopyStep.DirectoryMode.CONTENTS_ONLY);
         steps.add(
@@ -355,15 +354,13 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
     steps.add(
         new AbstractExecutionStep("rename_native_executables") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context)
-              throws IOException, InterruptedException {
-            final ImmutableSet.Builder<Path> executablesBuilder = ImmutableSet.builder();
+          public StepExecutionResult execute(ExecutionContext context) throws IOException {
+            ImmutableSet.Builder<Path> executablesBuilder = ImmutableSet.builder();
             filesystem.walkRelativeFileTree(
                 destinationDir,
                 new SimpleFileVisitor<Path>() {
                   @Override
-                  public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                      throws IOException {
+                  public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                     if (file.toString().endsWith("-disguised-exe")) {
                       executablesBuilder.add(file);
                     }

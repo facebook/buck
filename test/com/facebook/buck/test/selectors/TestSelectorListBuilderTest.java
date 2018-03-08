@@ -26,11 +26,11 @@ import org.junit.Test;
 /** Testing parsing of test selectors to be used by TestCommand */
 public class TestSelectorListBuilderTest {
   @Test
-  public void addRawSelectors() throws Exception {
-    final TestSelectorList.Builder builder = TestSelectorList.builder();
+  public void addRawSelectors() {
+    TestSelectorList.Builder builder = TestSelectorList.builder();
     builder.addRawSelectors("com.foo.Foo");
     builder.addRawSelectors("!com.bar.Bar");
-    final TestSelectorList list = builder.build();
+    TestSelectorList list = builder.build();
 
     assertTrue(list.possiblyIncludesClassName("com.foo.Foo"));
     assertFalse(list.possiblyIncludesClassName("com.bar.Bar"));
@@ -38,13 +38,13 @@ public class TestSelectorListBuilderTest {
 
   @Test
   public void addFileSelectors() throws Exception {
-    final TestSelectorList.Builder builder = TestSelectorList.builder();
-    final Path tempFile = Files.createTempFile("test", "selectors");
+    TestSelectorList.Builder builder = TestSelectorList.builder();
+    Path tempFile = Files.createTempFile("test", "selectors");
     try (BufferedWriter writer = Files.newBufferedWriter(tempFile)) {
       writer.write("com.foo.Foo\n!com.bar.Bar");
     }
-    builder.addRawSelectors(":" + tempFile.toString());
-    final TestSelectorList list = builder.build();
+    builder.addRawSelectors(":" + tempFile);
+    TestSelectorList list = builder.build();
 
     assertTrue(list.possiblyIncludesClassName("com.foo.Foo"));
     assertFalse(list.possiblyIncludesClassName("com.bar.Bar"));

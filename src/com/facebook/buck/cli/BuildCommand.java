@@ -59,7 +59,7 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.listener.DistBuildClientEventListener;
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
@@ -410,7 +410,7 @@ public class BuildCommand extends AbstractCommand {
                 params.getCell(),
                 params.getBuckEventBus(),
                 params.getBuckConfig(),
-                params.getEnvironment()); ) {
+                params.getEnvironment())) {
       prehook.startPrehookScript();
       return run(params, pool, ImmutableSet.of());
     }
@@ -500,7 +500,7 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private void checkSingleBuildTargetSpecifiedForOutBuildMode(
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets) throws ActionGraphCreationException {
+      TargetGraphAndBuildTargets targetGraphAndBuildTargets) {
     // Ideally, we would error out of this before we build the entire graph, but it is possible
     // that `getArguments().size()` is 1 but `targetGraphAndBuildTargets.getBuildTargets().size()`
     // is greater than 1 if the lone argument is a wildcard build target that ends in "...".
@@ -520,7 +520,7 @@ public class BuildCommand extends AbstractCommand {
       CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier)
       throws IOException, InterruptedException, ActionGraphCreationException {
     ExitCode exitCode = ExitCode.SUCCESS;
-    final ActionAndTargetGraphs graphs;
+    ActionAndTargetGraphs graphs;
     if (useDistributedBuild) {
       DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
       ClientStatsTracker distBuildClientStatsTracker =
@@ -551,7 +551,7 @@ public class BuildCommand extends AbstractCommand {
                   ruleKeyCacheScope);
         } catch (Throwable ex) {
           String stackTrace = Throwables.getStackTraceAsString(ex);
-          distBuildClientStatsTracker.setBuckClientErrorMessage(ex.toString() + "\n" + stackTrace);
+          distBuildClientStatsTracker.setBuckClientErrorMessage(ex + "\n" + stackTrace);
           distBuildClientStatsTracker.setBuckClientError(true);
 
           throw ex;
@@ -678,7 +678,7 @@ public class BuildCommand extends AbstractCommand {
     // Clean up last buck-out/last.
     Path lastOutputDirPath =
         params.getCell().getFilesystem().getBuckPaths().getLastOutputDir().toAbsolutePath();
-    MoreFiles.deleteRecursivelyIfExists(lastOutputDirPath);
+    MostFiles.deleteRecursivelyIfExists(lastOutputDirPath);
     Files.createDirectories(lastOutputDirPath);
 
     SourcePathRuleFinder ruleFinder =
@@ -701,9 +701,9 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private AsyncJobStateAndCells computeDistBuildState(
-      final CommandRunnerParams params,
+      CommandRunnerParams params,
       ActionAndTargetGraphs graphs,
-      final WeightedListeningExecutorService executorService,
+      WeightedListeningExecutorService executorService,
       Optional<ClientStatsTracker> clientStatsTracker) {
     DistBuildCellIndexer cellIndexer = new DistBuildCellIndexer(params.getCell());
 
@@ -837,9 +837,8 @@ public class BuildCommand extends AbstractCommand {
     Preconditions.checkNotNull(distBuildClientEventListener);
 
     Preconditions.checkArgument(
-        (distBuildConfig.getPerformRuleKeyConsistencyCheck()
-                && distBuildConfig.getLogMaterializationEnabled())
-            || !distBuildConfig.getPerformRuleKeyConsistencyCheck(),
+        !distBuildConfig.getPerformRuleKeyConsistencyCheck()
+            || distBuildConfig.getLogMaterializationEnabled(),
         "Log materialization must be enabled to perform rule key consistency check.");
 
     if (distributedBuildStateFile == null
@@ -1233,7 +1232,7 @@ public class BuildCommand extends AbstractCommand {
             .printf(
                 "%s%s%s\n",
                 rule.getFullyQualifiedName(),
-                showRuleKey ? " " + ruleKeyFactory.get().build(rule).toString() : "",
+                showRuleKey ? " " + ruleKeyFactory.get().build(rule) : "",
                 showOutput || showFullOutput
                     ? " " + outputPath.map(Object::toString).orElse("")
                     : "");
@@ -1283,6 +1282,7 @@ public class BuildCommand extends AbstractCommand {
             .getActionGraph(
                 params.getBuckEventBus(),
                 targetGraphAndBuildTargets.getTargetGraph(),
+                params.getCell().getToolchainProvider(),
                 params.getBuckConfig(),
                 params.getRuleKeyConfiguration(),
                 ruleKeyLogger,
@@ -1349,11 +1349,11 @@ public class BuildCommand extends AbstractCommand {
             .append(getAdditionalTargetsToBuild(actionGraphAndResolver.getResolver()))
             .transform(target -> target.getFullyQualifiedName())
             .toList();
-    int code =
+    ExitCode code =
         builder.buildLocallyAndReturnExitCode(
             targetStrings, getPathToBuildReport(params.getBuckConfig()));
     builder.shutdown();
-    return ExitCode.map(code);
+    return code;
   }
 
   RuleKeyCacheScope<RuleKey> getDefaultRuleKeyCacheScope(

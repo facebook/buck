@@ -127,7 +127,7 @@ public class WindowsLinker extends DelegatingTool implements Linker, HasImportLi
 
   @Override
   public Iterable<Arg> importLibrary(Path output) {
-    return StringArg.from("/IMPLIB:" + importLibraryPath(output).toString());
+    return StringArg.from("/IMPLIB:" + importLibraryPath(output));
   }
 
   @Override

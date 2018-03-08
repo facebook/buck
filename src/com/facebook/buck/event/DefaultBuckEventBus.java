@@ -71,7 +71,7 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
     this.shutdownTimeoutMillis = shutdownTimeoutMillis;
   }
 
-  private void dispatch(final BuckEvent event) {
+  private void dispatch(BuckEvent event) {
     // keep track the number of active tasks so we can do proper shutdown
     synchronized (lock) {
       activeTasks++;

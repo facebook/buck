@@ -52,7 +52,7 @@ public class OnDiskMavenDownloaderTest {
   }
 
   @Test
-  public void shouldOnlyAcceptMvnUris() throws IOException, URISyntaxException {
+  public void shouldOnlyAcceptMvnUris() throws IOException {
     Path relativePath = filesystem.getPath("some/file.txt");
     Path output = filesystem.getPath("output.txt");
 

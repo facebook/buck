@@ -25,7 +25,7 @@ public enum FrameworkVersion {
 
   private final String dirName;
 
-  private FrameworkVersion(String dirName) {
+  FrameworkVersion(String dirName) {
     this.dirName = dirName;
   }
 

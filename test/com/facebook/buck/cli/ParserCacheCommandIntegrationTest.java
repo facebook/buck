@@ -21,7 +21,6 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
-import com.facebook.buck.query.QueryException;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -42,7 +41,7 @@ public class ParserCacheCommandIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void testSaveAndLoad() throws IOException, InterruptedException, QueryException {
+  public void testSaveAndLoad() throws IOException {
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -93,7 +92,7 @@ public class ParserCacheCommandIntegrationTest {
   }
 
   @Test
-  public void testInvalidate() throws IOException, InterruptedException, QueryException {
+  public void testInvalidate() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "parser_with_cell", tmp);
     workspace.setUp();

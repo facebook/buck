@@ -72,14 +72,14 @@ public class MoreThrowablesTest {
   }
 
   @Test
-  public void testGetInitialCauseSingleThrowable() throws Exception {
+  public void testGetInitialCauseSingleThrowable() {
     Exception exception = new Exception();
 
     assertEquals(getInitialCause(exception), exception);
   }
 
   @Test
-  public void testGetInitialCauseChainedThrowables() throws Exception {
+  public void testGetInitialCauseChainedThrowables() {
     Exception lowLevelException = new Exception();
     Exception midLevelExceptionA = new Exception(lowLevelException);
     Exception midLevelExceptionB = new Exception(midLevelExceptionA);
@@ -90,7 +90,7 @@ public class MoreThrowablesTest {
   }
 
   @Test
-  public void testGetInitialCauseLoopedThrowables() throws Exception {
+  public void testGetInitialCauseLoopedThrowables() {
     Exception lowLevelException = new Exception();
     Exception midLevelExceptionA = new Exception(lowLevelException);
     Exception midLevelExceptionB = new Exception(midLevelExceptionA);
@@ -102,7 +102,7 @@ public class MoreThrowablesTest {
   }
 
   @Test
-  public void testGetOrigin() throws Exception {
+  public void testGetOrigin() {
     Exception exception = new Exception();
     String expectedPrefix =
         this.getClass().getCanonicalName()

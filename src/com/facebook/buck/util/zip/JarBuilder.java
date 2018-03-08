@@ -363,7 +363,7 @@ public class JarBuilder {
     }
 
     @Override
-    public Stream<JarEntrySupplier> stream() throws IOException {
+    public Stream<JarEntrySupplier> stream() {
       return Stream.of(supplier);
     }
 

@@ -184,7 +184,7 @@ public class CellProviderFactory {
 
   public static CellProvider createForDistributedBuild(
       DistBuildCellParams rootCell, ImmutableMap<Path, DistBuildCellParams> cellParams) {
-    final Map<String, Path> cellPaths =
+    Map<String, Path> cellPaths =
         cellParams
             .values()
             .stream()
@@ -216,7 +216,7 @@ public class CellProviderFactory {
                   currentCellResolver =
                       new CellPathResolverView(
                           rootCellResolver, declaredCellNames, currentCellRoot);
-                  final BuckConfig configWithResolver =
+                  BuckConfig configWithResolver =
                       cellParam.getConfig().withCellPathResolver(currentCellResolver);
                   RuleKeyConfiguration ruleKeyConfiguration =
                       ConfigRuleKeyConfigurationFactory.create(

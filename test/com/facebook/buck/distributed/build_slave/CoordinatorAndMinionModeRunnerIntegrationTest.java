@@ -25,6 +25,7 @@ import com.facebook.buck.event.listener.NoOpCoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
@@ -93,8 +94,8 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
             CONNECTION_TIMEOUT_MILLIS);
     CoordinatorAndMinionModeRunner jointRunner =
         new CoordinatorAndMinionModeRunner(coordinator, minion);
-    int exitCode = jointRunner.runAndReturnExitCode(heartbeatService);
-    Assert.assertEquals(0, exitCode);
+    ExitCode exitCode = jointRunner.runAndReturnExitCode(heartbeatService);
+    Assert.assertEquals(ExitCode.SUCCESS, exitCode);
     Assert.assertEquals(4, localBuilder.getBuildTargets().size());
     Assert.assertEquals(
         CustomBuildRuleResolverFactory.ROOT_TARGET, localBuilder.getBuildTargets().get(3));

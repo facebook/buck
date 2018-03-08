@@ -163,7 +163,7 @@ public class PerfTimesEventListener implements BuckEventListener {
   }
 
   @Override
-  public void outputTrace(BuildId buildId) throws InterruptedException {}
+  public void outputTrace(BuildId buildId) {}
 
   public static class PerfTimesEvent extends AbstractBuckEvent {
     private String eventName;

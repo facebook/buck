@@ -17,7 +17,6 @@
 package com.facebook.buck.testutil.endtoend;
 
 import com.facebook.buck.testutil.ProcessResult;
-import com.google.common.collect.ImmutableMap;
 import org.junit.runners.model.Statement;
 
 /**
@@ -41,13 +40,8 @@ public class BuckInvoker extends Statement {
         testDescriptor.getMethod().getDeclaringClass().getSimpleName(),
         testDescriptor.getMethod().getName());
     try {
-      ProcessResult result =
-          workspace.runBuckCommand(
-              testDescriptor.getBuckdEnabled(),
-              ImmutableMap.copyOf(testDescriptor.getVariableMap()),
-              testDescriptor.getTemplateSet(),
-              testDescriptor.getFullCommand());
-      testDescriptor.getMethod().invokeExplosively(target, testDescriptor, result);
+      ProcessResult result = workspace.runBuckCommand(testDescriptor);
+      testDescriptor.getMethod().invokeExplosively(target, testDescriptor, workspace, result);
     } finally {
       workspace.teardown();
     }

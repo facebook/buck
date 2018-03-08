@@ -47,7 +47,7 @@ public class MoreSuppliersTest {
   public void weakMemoizeShouldRunDelegateOnlyOnceOnConcurrentAccess() throws Exception {
     final int numFetchers = 10;
 
-    final Semaphore semaphore = new Semaphore(0);
+    Semaphore semaphore = new Semaphore(0);
 
     class TestDelegate implements Supplier<Object> {
       private int timesCalled = 0;
@@ -73,7 +73,7 @@ public class MoreSuppliersTest {
     }
 
     TestDelegate delegate = new TestDelegate();
-    final Supplier<Object> supplier = MoreSuppliers.weakMemoize(delegate);
+    Supplier<Object> supplier = MoreSuppliers.weakMemoize(delegate);
     ExecutorService threadPool = Executors.newFixedThreadPool(numFetchers);
 
     try {

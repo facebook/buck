@@ -165,7 +165,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
       BuildRuleParams params,
-      final PrebuiltCxxLibraryGroupDescriptionArg args) {
+      PrebuiltCxxLibraryGroupDescriptionArg args) {
     BuildRuleResolver resolverLocal = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinderLocal = new SourcePathRuleFinder(resolverLocal);
     return new CustomPrebuiltCxxLibrary(

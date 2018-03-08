@@ -36,7 +36,7 @@ public class ScalaBuckConfig {
 
   private final BuckConfig delegate;
 
-  public ScalaBuckConfig(final BuckConfig delegate) {
+  public ScalaBuckConfig(BuckConfig delegate) {
     this.delegate = delegate;
   }
 

@@ -24,12 +24,11 @@ import com.facebook.buck.module.BuckModuleManager;
 import com.facebook.buck.module.impl.BuckModuleJarHashProvider;
 import com.facebook.buck.module.impl.DefaultBuckModuleManager;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
-import java.io.IOException;
 import org.pf4j.PluginManager;
 
 public class NonModuleClassTest {
 
-  public static void main(String... args) throws IOException {
+  public static void main(String... args) {
     testBuckModuleHashProvider();
   }
 

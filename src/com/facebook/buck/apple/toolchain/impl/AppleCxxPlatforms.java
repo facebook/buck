@@ -152,7 +152,7 @@ public class AppleCxxPlatforms {
       AppleSdk targetSdk,
       String minVersion,
       String targetArchitecture,
-      final AppleSdkPaths sdkPaths,
+      AppleSdkPaths sdkPaths,
       BuckConfig buckConfig,
       XcodeToolFinder xcodeToolFinder,
       XcodeBuildVersionCache xcodeBuildVersionCache,
@@ -398,7 +398,7 @@ public class AppleCxxPlatforms {
     whitelistBuilder.add("^" + Pattern.quote(sdkPaths.getSdkPath().toString()) + "\\/.*");
     whitelistBuilder.add(
         "^"
-            + Pattern.quote(sdkPaths.getPlatformPath().toString() + "/Developer/Library/Frameworks")
+            + Pattern.quote(sdkPaths.getPlatformPath() + "/Developer/Library/Frameworks")
             + "\\/.*");
     for (Path toolchainPath : sdkPaths.getToolchainPaths()) {
       LOG.debug("Apple toolchain path: %s", toolchainPath);
@@ -544,11 +544,11 @@ public class AppleCxxPlatforms {
   }
 
   private static Optional<Tool> getOptionalToolWithParams(
-      final String tool,
+      String tool,
       ImmutableList<Path> toolSearchPaths,
       XcodeToolFinder xcodeToolFinder,
-      final String version,
-      final ImmutableList<String> params) {
+      String version,
+      ImmutableList<String> params) {
     return xcodeToolFinder
         .getToolPath(toolSearchPaths, tool)
         .map(

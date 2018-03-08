@@ -297,16 +297,15 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
     linkerArgsBuilder.addAll(Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform)));
 
-    final boolean delegateWantsArtifact =
+    boolean delegateWantsArtifact =
         delegate
             .map(
                 d ->
                     d.getShouldProduceLibraryArtifact(
                         getBuildTarget(), ruleResolver, cxxPlatform, type, forceLinkWhole))
             .orElse(false);
-    final boolean headersOnly = headerOnly.test(cxxPlatform);
-    final boolean shouldProduceArtifact =
-        (!headersOnly || delegateWantsArtifact) && propagateLinkables;
+    boolean headersOnly = headerOnly.test(cxxPlatform);
+    boolean shouldProduceArtifact = (!headersOnly || delegateWantsArtifact) && propagateLinkables;
 
     Preconditions.checkState(
         shouldProduceArtifact || !delegateWantsArtifact,
@@ -362,7 +361,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       }
     }
 
-    final ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
+    ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
 
     return NativeLinkableInput.of(
         linkerArgs, Preconditions.checkNotNull(frameworks), Preconditions.checkNotNull(libraries));

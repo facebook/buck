@@ -165,10 +165,10 @@ public class RealAndroidDevice implements AndroidDevice {
       return Optional.empty();
     }
 
-    final String packagePrefix = "  Package [" + packageName + "] (";
-    final String otherPrefix = "  Package [";
+    String packagePrefix = "  Package [" + packageName + "] (";
+    String otherPrefix = "  Package [";
     boolean sawPackageLine = false;
-    final Splitter splitter = Splitter.on('=').limit(2);
+    Splitter splitter = Splitter.on('=').limit(2);
 
     String codePath = null;
     String resourcePath = null;
@@ -313,7 +313,7 @@ public class RealAndroidDevice implements AndroidDevice {
                   : null;
             }
           };
-      final String waitForDebuggerFlag = waitForDebugger ? "-D" : "";
+      String waitForDebuggerFlag = waitForDebugger ? "-D" : "";
       device.executeShellCommand(
           //  0x10200000 is FLAG_ACTIVITY_RESET_TASK_IF_NEEDED | FLAG_ACTIVITY_NEW_TASK; the
           // constant values are public ABI.  This way of invoking "am start" makes buck install -r
@@ -629,7 +629,7 @@ public class RealAndroidDevice implements AndroidDevice {
   public void rmFiles(String dirPath, Iterable<String> filesToDelete) throws Exception {
     String commandPrefix = "cd " + dirPath + " && rm ";
     // Add a fudge factor for separators and error checking.
-    final int overhead = commandPrefix.length() + 100;
+    int overhead = commandPrefix.length() + 100;
     for (List<String> rmArgs : chunkArgs(filesToDelete, MAX_ADB_COMMAND_SIZE - overhead)) {
       String command = commandPrefix + Joiner.on(' ').join(rmArgs);
       LOG.debug("Executing %s", command);

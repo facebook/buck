@@ -155,7 +155,7 @@ public class WorkerMacroArg extends ProxyArg {
 
   public Optional<String> getPersistentWorkerKey() {
     if (workerTool.isPersistent()) {
-      return Optional.of(workerTarget.getCellPath().toString() + workerTarget.toString());
+      return Optional.of(workerTarget.getCellPath().toString() + workerTarget);
     } else {
       return Optional.empty();
     }

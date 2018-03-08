@@ -51,7 +51,7 @@ public class DummyFileHashCache implements FileHashCache {
   public void set(Path path, HashCode hashCode) {}
 
   @Override
-  public FileHashCacheVerificationResult verify() throws IOException {
+  public FileHashCacheVerificationResult verify() {
     return FileHashCacheVerificationResult.builder()
         .setCachesExamined(1)
         .setFilesExamined(0)

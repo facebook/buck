@@ -113,7 +113,7 @@ class TracingProcessorWrapper implements Processor {
 
     filteredStackTraceLines.forEach(messageBuilder::writeLine);
 
-    return new HumanReadableException(e, "\n" + messageBuilder.toString());
+    return new HumanReadableException(e, "\n" + messageBuilder);
   }
 
   private List<String> getStackTraceEndingAtAnnotationProcessor(Throwable e) {

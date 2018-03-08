@@ -252,15 +252,17 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
    */
   private void validateTestMethodArgs(FrameworkMethod testMethod, List<Throwable> errors) {
     Class<?>[] paramTypes = testMethod.getMethod().getParameterTypes();
-    if (paramTypes.length != 2
+    if (paramTypes.length != 3
         || !EndToEndTestDescriptor.class.isAssignableFrom(paramTypes[0])
-        || !ProcessResult.class.isAssignableFrom(paramTypes[1])) {
+        || !EndToEndWorkspace.class.isAssignableFrom(paramTypes[1])
+        || !ProcessResult.class.isAssignableFrom(paramTypes[2])) {
       errors.add(
           new AnnotationFormatError(
               "Methods marked by @Test in the EndToEndRunner must support taking an "
-                  + "EndToEndTestDescriptor and ProcessResult. Example:\n"
+                  + "EndToEndTestDescriptor, EndToEndWorkspace, and ProcessResult. Example:\n"
                   + "@Test\n"
-                  + "public void shouldRun(EndToEndTestDescriptor test, ProcessResult result) {\n\n}"));
+                  + "public void shouldRun(\n"
+                  + "    EndToEndTestDescriptor test, EndToEndWorkspace workspace, ProcessResult result) {\n\n}"));
     }
   }
 
@@ -327,7 +329,7 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
   }
 
   /** Creates the test statement for a testDescriptor */
-  private Statement methodBlock(final EndToEndTestDescriptor testDescriptor) {
+  private Statement methodBlock(EndToEndTestDescriptor testDescriptor) {
     Object test;
     try {
       test =
@@ -386,7 +388,7 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
    * RunNotifier with the test Result.
    */
   @Override
-  protected void runChild(EndToEndTestDescriptor child, final RunNotifier notifier) {
+  protected void runChild(EndToEndTestDescriptor child, RunNotifier notifier) {
     Description description = describeChild(child);
     Statement statement;
     if (setupError != null) {

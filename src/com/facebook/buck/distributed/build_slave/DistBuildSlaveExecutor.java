@@ -37,6 +37,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -82,7 +83,7 @@ public class DistBuildSlaveExecutor {
     }
   }
 
-  public int buildAndReturnExitCode() throws IOException, InterruptedException {
+  public ExitCode buildAndReturnExitCode() throws IOException, InterruptedException {
     Optional<BuildId> clientBuildId = fetchClientBuildId();
 
     DistBuildModeRunner runner = null;
@@ -182,7 +183,7 @@ public class DistBuildSlaveExecutor {
 
         default:
           LOG.error("Unknown distributed build mode [%s].", args.getDistBuildMode().toString());
-          return -1;
+          return ExitCode.FATAL_GENERIC;
       }
 
       return setPreparationCallbackAndRun(runner);
@@ -206,7 +207,7 @@ public class DistBuildSlaveExecutor {
     }
   }
 
-  private int setPreparationCallbackAndRun(DistBuildModeRunner runner)
+  private ExitCode setPreparationCallbackAndRun(DistBuildModeRunner runner)
       throws IOException, InterruptedException {
     runner
         .getAsyncPrepFuture()

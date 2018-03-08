@@ -42,8 +42,7 @@ public class FilteredTestIntegrationTest {
                     "[python]",
                     "  path_to_python_test_main = "
                         + Paths.get("src/com/facebook/buck/python/__test_main__.py")
-                            .toAbsolutePath()
-                            .toString())),
+                            .toAbsolutePath())),
         ".buckconfig");
 
     // This will attempt to build the broken test, //:broken, which will fail to build.

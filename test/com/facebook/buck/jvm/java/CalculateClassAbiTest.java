@@ -27,13 +27,11 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
@@ -69,9 +67,7 @@ public class CalculateClassAbiTest {
 
   @Test
   public void ruleKeysChangeIfGeneratedBinaryJarChanges() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -113,9 +109,7 @@ public class CalculateClassAbiTest {
         "new stuff", pathResolver.getRelativePath(javaLibrary.getSourcePathToOutput()));
 
     // Re-setup some entities to drop internal rule key caching.
-    resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    resolver = new TestBuildRuleResolver();
     ruleFinder = new SourcePathRuleFinder(resolver);
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     builder.build(resolver, filesystem);
@@ -135,9 +129,7 @@ public class CalculateClassAbiTest {
 
   @Test
   public void inputRuleKeyDoesNotChangeIfGeneratedBinaryJarDoesNotChange() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -177,9 +169,7 @@ public class CalculateClassAbiTest {
     filesystem.writeContentsToPath("new stuff", input);
 
     // Re-setup some entities to drop internal rule key caching.
-    resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    resolver = new TestBuildRuleResolver();
     ruleFinder = new SourcePathRuleFinder(resolver);
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     builder.build(resolver, filesystem);

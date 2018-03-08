@@ -72,7 +72,7 @@ public class WorkerShellStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(final ExecutionContext context)
+  public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
     WorkerProcessPool pool = null;
     WorkerProcess process = null;

@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 
 public class RealAndroidDeviceTest {
-  private TestDevice createDeviceForShellCommandTest(final String output) {
+  private TestDevice createDeviceForShellCommandTest(String output) {
     return new TestDevice() {
       @Override
       public void executeShellCommand(
@@ -63,13 +63,12 @@ public class RealAndroidDeviceTest {
   @Test
   public void testSuccessfulDeviceInstall() {
     File apk = new File("/some/file.apk");
-    final AtomicReference<String> apkPath = new AtomicReference<>();
+    AtomicReference<String> apkPath = new AtomicReference<>();
 
     TestDevice device =
         new TestDevice() {
           @Override
-          public void installPackage(String s, boolean b, String... strings)
-              throws InstallException {
+          public void installPackage(String s, boolean b, String... strings) {
             apkPath.set(s);
           }
         };
@@ -162,8 +161,8 @@ public class RealAndroidDeviceTest {
   }
 
   @Test
-  public void testDeviceStartActivityWaitForDebugger() throws Exception {
-    final AtomicReference<String> runDeviceCommand = new AtomicReference<>();
+  public void testDeviceStartActivityWaitForDebugger() {
+    AtomicReference<String> runDeviceCommand = new AtomicReference<>();
     TestDevice device =
         new TestDevice() {
           @Override
@@ -180,8 +179,8 @@ public class RealAndroidDeviceTest {
   }
 
   @Test
-  public void testDeviceStartActivityDoNotWaitForDebugger() throws Exception {
-    final AtomicReference<String> runDeviceCommand = new AtomicReference<>();
+  public void testDeviceStartActivityDoNotWaitForDebugger() {
+    AtomicReference<String> runDeviceCommand = new AtomicReference<>();
     TestDevice device =
         new TestDevice() {
           @Override
@@ -199,7 +198,7 @@ public class RealAndroidDeviceTest {
 
   @Test
   public void testDeviceBroadcast() throws Exception {
-    final AtomicReference<String> runDeviceCommand = new AtomicReference<>();
+    AtomicReference<String> runDeviceCommand = new AtomicReference<>();
     TestDevice device =
         new TestDevice() {
           @Override
@@ -210,7 +209,7 @@ public class RealAndroidDeviceTest {
         };
     createAndroidDevice(device)
         .sendBroadcast("com.foo.ACTION", ImmutableMap.of("extra1", "value1"));
-    final String command = runDeviceCommand.get();
+    String command = runDeviceCommand.get();
     assertTrue(command.contains("am broadcast"));
     assertTrue(command.contains("com.foo.ACTION"));
     assertTrue(command.contains("--es extra1"));

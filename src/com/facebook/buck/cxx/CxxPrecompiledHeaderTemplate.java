@@ -90,8 +90,8 @@ public class CxxPrecompiledHeaderTemplate extends PreInclude {
 
     // Language needs to be part of the key, PCHs built under a different language are incompatible.
     // (Replace `c++` with `cxx`; avoid default scrubbing which would make it the cryptic `c__`.)
-    final String langCode = sourceType.getLanguage().replaceAll("c\\+\\+", "cxx");
-    final String pchBaseID = "pch-" + langCode + "-" + getBaseHash.apply(compilerFlags);
+    String langCode = sourceType.getLanguage().replaceAll("c\\+\\+", "cxx");
+    String pchBaseID = "pch-" + langCode + "-" + getBaseHash.apply(compilerFlags);
 
     for (BuildRule rule : getBuildDeps()) {
       depsBuilder.add(rule);

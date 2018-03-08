@@ -28,16 +28,14 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -56,7 +54,7 @@ public class AndroidResourceDescriptionTest {
   @Rule public TemporaryFolder tmpFolder = new TemporaryFolder();
 
   @Test
-  public void testNonAssetFilesAndDirsAreIgnored() throws InterruptedException, IOException {
+  public void testNonAssetFilesAndDirsAreIgnored() throws IOException {
     tmpFolder.newFolder("res");
 
     tmpFolder.newFile("res/image.png");
@@ -100,7 +98,6 @@ public class AndroidResourceDescriptionTest {
 
     AndroidResourceDescription description =
         new AndroidResourceDescription(
-            new ToolchainProviderBuilder().build(),
             new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()));
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot().toPath());
@@ -121,7 +118,7 @@ public class AndroidResourceDescriptionTest {
   }
 
   @Test
-  public void testPossibleResourceFileFiltering() throws IOException {
+  public void testPossibleResourceFileFiltering() {
     ImmutableList<Path> inputPaths =
         ImmutableList.of(
             Paths.get("res/image.png"),
@@ -188,9 +185,7 @@ public class AndroidResourceDescriptionTest {
                     "not_ignored", FakeSourcePath.of(filesystem, "assets/CVS")))
             .build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(targetNode);
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     AndroidResource resource = (AndroidResource) resolver.requireRule(target);
 
     ImmutableList<BuildRule> deps = ImmutableList.copyOf(resource.getBuildDeps());

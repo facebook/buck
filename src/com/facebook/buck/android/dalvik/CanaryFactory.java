@@ -72,9 +72,9 @@ public class CanaryFactory {
    * @param store dex store name of the current zip (to ensure unique names).
    * @param index Index of the current zip (to ensure unique names).
    */
-  public static FileLike create(final String store, final int index) {
-    final byte[] canaryClass = Arrays.copyOf(CANARY_TEMPLATE, CANARY_TEMPLATE.length);
-    final String canaryIndexStr = String.format("%02d", index);
+  public static FileLike create(String store, int index) {
+    byte[] canaryClass = Arrays.copyOf(CANARY_TEMPLATE, CANARY_TEMPLATE.length);
+    String canaryIndexStr = String.format("%02d", index);
     byte[] canaryIndexBytes = canaryIndexStr.getBytes(Charsets.UTF_8);
     Preconditions.checkState(
         canaryIndexBytes.length == 2,
@@ -89,7 +89,7 @@ public class CanaryFactory {
     return getCanaryClass(relativePath, canaryClass);
   }
 
-  private static FileLike getCanaryClass(final String relativePath, final byte[] canaryClass) {
+  private static FileLike getCanaryClass(String relativePath, byte[] canaryClass) {
     return new AbstractFileLike() {
       @Override
       public Path getContainer() {

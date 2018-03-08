@@ -554,7 +554,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
         // Fall back to getting CODE_SIGN_ENTITLEMENTS from info_plist_substitutions.
         if (!entitlementsPlist.isPresent()) {
-          final Path srcRoot =
+          Path srcRoot =
               getProjectFilesystem().getRootPath().resolve(getBuildTarget().getBasePath());
           Optional<String> entitlementsPlistString =
               InfoPlistSubstitution.getVariableExpansionForPlatform(
@@ -591,9 +591,9 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
             Optional.of(
                 BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s.xcent"));
 
-        final Path dryRunResultPath = bundleRoot.resolve(PP_DRY_RUN_RESULT_FILE);
+        Path dryRunResultPath = bundleRoot.resolve(PP_DRY_RUN_RESULT_FILE);
 
-        final ProvisioningProfileCopyStep provisioningProfileCopyStep =
+        ProvisioningProfileCopyStep provisioningProfileCopyStep =
             new ProvisioningProfileCopyStep(
                 getProjectFilesystem(),
                 infoPlistOutputPath,
@@ -650,9 +650,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       addSwiftStdlibStepIfNeeded(
           context.getSourcePathResolver(),
           bundleRoot.resolve(destinations.getFrameworksPath()),
-          dryRunCodeSigning
-              ? Optional.<Supplier<CodeSignIdentity>>empty()
-              : Optional.of(codeSignIdentitySupplier),
+          dryRunCodeSigning ? Optional.empty() : Optional.of(codeSignIdentitySupplier),
           stepsBuilder,
           false /* is for packaging? */);
 
@@ -694,7 +692,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       addSwiftStdlibStepIfNeeded(
           context.getSourcePathResolver(),
           bundleRoot.resolve(destinations.getFrameworksPath()),
-          Optional.<Supplier<CodeSignIdentity>>empty(),
+          Optional.empty(),
           stepsBuilder,
           false /* is for packaging? */);
     }
@@ -724,18 +722,14 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private boolean needsPkgInfoFile() {
-    if (extension.equals(AppleBundleExtension.XPC.toFileExtension())) {
-      return false;
-    }
-
-    return true;
+    return !extension.equals(AppleBundleExtension.XPC.toFileExtension());
   }
 
   private void appendCopyBinarySteps(
       ImmutableList.Builder<Step> stepsBuilder, BuildContext context) {
     Preconditions.checkArgument(hasBinary);
 
-    final Path binaryOutputPath =
+    Path binaryOutputPath =
         context
             .getSourcePathResolver()
             .getRelativePath(Preconditions.checkNotNull(binary.get().getSourcePathToOutput()));
@@ -787,7 +781,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableList.Builder<Step> stepsBuilder, BuildContext context, Path binaryOutputPath) {
     if ((isLegacyWatchApp() || platform.getName().contains("watch"))
         && binary.get() instanceof WriteFile) {
-      final Path watchKitStubDir = bundleRoot.resolve("_WatchKitStub");
+      Path watchKitStubDir = bundleRoot.resolve("_WatchKitStub");
       stepsBuilder.add(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
@@ -906,13 +900,9 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private boolean needsAppInfoPlistKeysOnMac() {
-    if (extension.equals(AppleBundleExtension.XPC.toFileExtension())) {
-      // XPC bundles on macOS don't require app-specific keys
-      // (which also confuses Finder in displaying the XPC bundles as apps)
-      return false;
-    }
-
-    return true;
+    // XPC bundles on macOS don't require app-specific keys
+    // (which also confuses Finder in displaying the XPC bundles as apps)
+    return !extension.equals(AppleBundleExtension.XPC.toFileExtension());
   }
 
   private ImmutableMap<String, NSObject> getInfoPlistAdditionalKeys() {

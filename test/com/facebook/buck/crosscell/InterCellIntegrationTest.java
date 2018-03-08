@@ -45,17 +45,14 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -242,13 +239,13 @@ public class InterCellIntegrationTest {
     // debug symbols.
   }
 
-  private ImmutableMap<String, HashCode> findObjectFiles(final ProjectWorkspace workspace)
-      throws InterruptedException, IOException {
+  private ImmutableMap<String, HashCode> findObjectFiles(ProjectWorkspace workspace)
+      throws IOException {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
-    final Path buckOut = workspace.getPath(filesystem.getBuckPaths().getBuckOut());
+    Path buckOut = workspace.getPath(filesystem.getBuckPaths().getBuckOut());
 
-    final ImmutableMap.Builder<String, HashCode> objectHashCodes = ImmutableMap.builder();
+    ImmutableMap.Builder<String, HashCode> objectHashCodes = ImmutableMap.builder();
     Files.walkFileTree(
         buckOut,
         new SimpleFileVisitor<Path>() {
@@ -342,7 +339,7 @@ public class InterCellIntegrationTest {
   @SuppressWarnings("PMD.EmptyCatchBlock")
   @Test
   public void xCellVisibilityShouldWorkAsExpected()
-      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
+      throws IOException, InterruptedException, BuildFileParseException {
     try {
       parseTargetForXCellVisibility("//:not-visible-target");
       fail("Did not expect parsing to succeed");
@@ -353,30 +350,30 @@ public class InterCellIntegrationTest {
 
   @Test
   public void xCellVisibilityPatternsBasedOnPublicBuildTargetsWork()
-      throws InterruptedException, BuildFileParseException, IOException, BuildTargetException {
+      throws InterruptedException, BuildFileParseException, IOException {
     parseTargetForXCellVisibility("//:public-target");
   }
 
   @Test
   public void xCellVisibilityPatternsBasedOnExplicitBuildTargetsWork()
-      throws InterruptedException, BuildFileParseException, IOException, BuildTargetException {
+      throws InterruptedException, BuildFileParseException, IOException {
     parseTargetForXCellVisibility("//:visible-target");
   }
 
   @Test
   public void xCellSingleDirectoryVisibilityPatternsWork()
-      throws InterruptedException, BuildFileParseException, IOException, BuildTargetException {
+      throws InterruptedException, BuildFileParseException, IOException {
     parseTargetForXCellVisibility("//sub2:directory");
   }
 
   @Test
   public void xCellSubDirectoryVisibilityPatternsWork()
-      throws InterruptedException, BuildFileParseException, IOException, BuildTargetException {
+      throws InterruptedException, BuildFileParseException, IOException {
     parseTargetForXCellVisibility("//sub:wild-card");
   }
 
   private void parseTargetForXCellVisibility(String targetName)
-      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
+      throws IOException, InterruptedException, BuildFileParseException {
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
         prepare("inter-cell/visibility/primary", "inter-cell/visibility/secondary");
 
@@ -654,10 +651,7 @@ public class InterCellIntegrationTest {
 
     NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(primary.asCell().getFilesystem());
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     Path tmpDir = tmp.newFolder("merging_tmp");
     SymbolGetter syms =
         new SymbolGetter(
@@ -702,10 +696,7 @@ public class InterCellIntegrationTest {
 
     NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(primary.asCell().getFilesystem());
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     Path tmpDir = tmp.newFolder("merging_tmp");
     SymbolGetter syms =
         new SymbolGetter(
@@ -919,7 +910,7 @@ public class InterCellIntegrationTest {
   }
 
   private ProjectWorkspace createWorkspace(String scenarioName) throws IOException {
-    final Path tmpSubfolder = tmp.newFolder();
+    Path tmpSubfolder = tmp.newFolder();
     ProjectWorkspace projectWorkspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, scenarioName, tmpSubfolder);
     projectWorkspace.setUp();

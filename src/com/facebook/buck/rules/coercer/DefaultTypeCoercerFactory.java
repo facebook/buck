@@ -101,8 +101,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
               CellPathResolver cellRoots,
               ProjectFilesystem filesystem,
               Path pathRelativeToProjectRoot,
-              Object object)
-              throws CoerceFailedException {
+              Object object) {
             // This is only actually used directly by ConstructorArgMarshaller, for parsing the
             // groups list. It's also queried (but not actually used) when Descriptions declare
             // deps fields.

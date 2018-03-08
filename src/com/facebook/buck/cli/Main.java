@@ -64,7 +64,7 @@ import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.WatchmanWatcher;
 import com.facebook.buck.io.WatchmanWatcher.FreshInstanceAction;
 import com.facebook.buck.io.WatchmanWatcherException;
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -380,7 +380,7 @@ public final class Main {
   }
 
   /* Define all error handling surrounding main command */
-  private void runMainThenExit(String[] args, final long initTimestamp) {
+  private void runMainThenExit(String[] args, long initTimestamp) {
 
     ExitCode exitCode = ExitCode.SUCCESS;
 
@@ -547,7 +547,7 @@ public final class Main {
       ImmutableMap<String, String> clientEnvironment,
       CommandMode commandMode,
       WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction,
-      final long initTimestamp,
+      long initTimestamp,
       ImmutableList<String> unexpandedCommandLineArgs)
       throws IOException, InterruptedException {
 
@@ -938,7 +938,7 @@ public final class Main {
             // event bus to dispatch all pending events before we proceed to termination
             // procedures
             CloseableWrapper<BuckEventBus, InterruptedException> waitEvents =
-                getWaitEventsWrapper(buildEventBus); ) {
+                getWaitEventsWrapper(buildEventBus)) {
 
           LOG.debug(invocationInfo.toLogLine());
 
@@ -1301,7 +1301,7 @@ public final class Main {
     Thread mainThread = Thread.currentThread();
     context.addClientListener(
         reason -> {
-          LOG.info("Nailgun client disconnected with " + reason.toString());
+          LOG.info("Nailgun client disconnected with " + reason);
           if (Main.isSessionLeader && Main.commandSemaphoreNgClient.orElse(null) == context) {
             // Process no longer wants work done on its behalf.
             LOG.debug("Killing background processes on client disconnect");
@@ -1369,7 +1369,7 @@ public final class Main {
         console
             .getStdErr()
             .format("Atomic moves not supported, falling back to synchronous delete: %s", e);
-        MoreFiles.deleteRecursivelyIfExists(pathToMove);
+        MostFiles.deleteRecursivelyIfExists(pathToMove);
       }
     }
   }
@@ -1475,20 +1475,20 @@ public final class Main {
   }
 
   private static ConsoleHandlerState.Writer createWriterForConsole(
-      final AbstractConsoleEventBusListener console) {
+      AbstractConsoleEventBusListener console) {
     return new ConsoleHandlerState.Writer() {
       @Override
-      public void write(String line) throws IOException {
+      public void write(String line) {
         console.printSevereWarningDirectly(line);
       }
 
       @Override
-      public void flush() throws IOException {
+      public void flush() {
         // Intentional no-op.
       }
 
       @Override
-      public void close() throws IOException {
+      public void close() {
         // Intentional no-op.
       }
     };
@@ -1528,7 +1528,7 @@ public final class Main {
       ImmutableList.Builder<BuckEventListener> eventListeners,
       ProjectFilesystem projectFilesystem,
       BuckConfig config) {
-    final ImmutableSet<String> paths = config.getListenerJars();
+    ImmutableSet<String> paths = config.getListenerJars();
     if (paths.isEmpty()) {
       return;
     }
@@ -1776,7 +1776,7 @@ public final class Main {
     return new BuildId(specifiedBuildId);
   }
 
-  private static void installUncaughtExceptionHandler(final Optional<NGContext> context) {
+  private static void installUncaughtExceptionHandler(Optional<NGContext> context) {
     // Override the default uncaught exception handler for background threads to log
     // to java.util.logging then exit the JVM with an error code.
     //
@@ -2031,7 +2031,7 @@ public final class Main {
    * of {@link #main(String[])} so that the given context can be used to listen for client
    * disconnections and interrupt command processing when they occur.
    */
-  public static void nailMain(final NGContext context) throws InterruptedException {
+  public static void nailMain(NGContext context) {
     obtainResourceFileLock();
     try (IdleKiller.CommandExecutionScope ignored =
         DaemonBootstrap.getDaemonKillers().newCommandExecutionScope()) {

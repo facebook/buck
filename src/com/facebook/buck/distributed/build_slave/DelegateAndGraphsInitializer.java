@@ -147,8 +147,7 @@ public class DelegateAndGraphsInitializer {
   }
 
   // TODO(ruibm): This thing is time consuming and should execute in the background.
-  private ActionGraphAndResolver createActionGraphAndResolver(TargetGraph targetGraph)
-      throws IOException, InterruptedException {
+  private ActionGraphAndResolver createActionGraphAndResolver(TargetGraph targetGraph) {
     args.getTimingStatsTracker().startTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
     try {
       LOG.info(
@@ -162,6 +161,7 @@ public class DelegateAndGraphsInitializer {
                   /* checkActionGraphs */ false,
                   /* skipActionGraphCache */ false,
                   Preconditions.checkNotNull(targetGraph),
+                  args.getToolchainProvider(),
                   args.getRuleKeyConfiguration(),
                   args.getActionGraphParallelizationMode(),
                   Optional.empty(),
@@ -185,8 +185,7 @@ public class DelegateAndGraphsInitializer {
 
   /** Creates the delegate for the distributed build. */
   private CachingBuildEngineDelegate createBuildEngineDelegate(
-      StackedFileHashCaches caches, ActionGraphAndResolver actionGraphAndResolver)
-      throws IOException, InterruptedException {
+      StackedFileHashCaches caches, ActionGraphAndResolver actionGraphAndResolver) {
     CachingBuildEngineDelegate cachingBuildEngineDelegate = null;
     DistBuildConfig remoteConfig = new DistBuildConfig(args.getState().getRemoteRootCellConfig());
     if (remoteConfig.materializeSourceFilesOnDemand()) {
@@ -277,8 +276,7 @@ public class DelegateAndGraphsInitializer {
     }
   }
 
-  private StackedFileHashCaches createStackedFileHashesAndPreload()
-      throws InterruptedException, IOException {
+  private StackedFileHashCaches createStackedFileHashesAndPreload() throws InterruptedException {
     args.getTimingStatsTracker().startTimer(SlaveEvents.SOURCE_FILE_PRELOAD_TIME);
     try {
       StackedFileHashCache stackedFileHashCache = createStackOfDefaultFileHashCache();

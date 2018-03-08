@@ -190,10 +190,10 @@ public class IjProjectTemplateDataPreparer {
   }
 
   private ImmutableList<ContentRoot> createContentRoots(
-      final IjModule module,
+      IjModule module,
       Path contentRootPath,
       ImmutableCollection<IjFolder> folders,
-      final Path moduleLocationBasePath) {
+      Path moduleLocationBasePath) {
     ImmutableListMultimap<Path, IjFolder> simplifiedFolders =
         sourceRootSimplifier.simplify(
             contentRootPath.toString().isEmpty() ? 0 : contentRootPath.getNameCount(),
@@ -227,18 +227,17 @@ public class IjProjectTemplateDataPreparer {
     return contentRootsBuilder.build();
   }
 
-  public ImmutableCollection<IjFolder> createExcludes(final IjModule module) throws IOException {
-    final Path moduleBasePath = module.getModuleBasePath();
+  public ImmutableCollection<IjFolder> createExcludes(IjModule module) throws IOException {
+    Path moduleBasePath = module.getModuleBasePath();
     if (!projectFilesystem.exists(moduleBasePath)) {
       return ImmutableList.of();
     }
-    final ImmutableList.Builder<IjFolder> excludesBuilder = ImmutableList.builder();
+    ImmutableList.Builder<IjFolder> excludesBuilder = ImmutableList.builder();
     projectFilesystem.walkRelativeFileTree(
         moduleBasePath,
         new FileVisitor<Path>() {
           @Override
-          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-              throws IOException {
+          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
             // This is another module that's nested in this one. The entire subtree will be handled
             // When we create excludes for that module.
             if (filesystemTraversalBoundaryPaths.contains(dir) && !moduleBasePath.equals(dir)) {
@@ -258,18 +257,17 @@ public class IjProjectTemplateDataPreparer {
           }
 
           @Override
-          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-              throws IOException {
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
             return FileVisitResult.CONTINUE;
           }
 
           @Override
-          public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+          public FileVisitResult visitFileFailed(Path file, IOException exc) {
             return FileVisitResult.CONTINUE;
           }
 
           @Override
-          public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+          public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
             return FileVisitResult.CONTINUE;
           }
         },
@@ -294,7 +292,7 @@ public class IjProjectTemplateDataPreparer {
   public ImmutableList<ContentRoot> getContentRoots(IjModule module) throws IOException {
     Path moduleBasePath = module.getModuleBasePath();
     Path moduleLocation = module.getModuleImlFilePath();
-    final Path moduleLocationBasePath =
+    Path moduleLocationBasePath =
         (moduleLocation.getParent() == null) ? Paths.get("") : moduleLocation.getParent();
     ImmutableList<IjFolder> sourcesAndExcludes =
         Stream.concat(module.getFolders().stream(), createExcludes(module).stream())
@@ -303,7 +301,7 @@ public class IjProjectTemplateDataPreparer {
     return createContentRoots(module, moduleBasePath, sourcesAndExcludes, moduleLocationBasePath);
   }
 
-  public ImmutableSet<IjSourceFolder> getGeneratedSourceFolders(final IjModule module) {
+  public ImmutableSet<IjSourceFolder> getGeneratedSourceFolders(IjModule module) {
     return module
         .getGeneratedSourceCodeFolders()
         .stream()

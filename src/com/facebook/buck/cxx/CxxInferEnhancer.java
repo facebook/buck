@@ -256,11 +256,11 @@ public final class CxxInferEnhancer {
   }
 
   private <T extends BuildRule> ImmutableSet<T> requireTransitiveDependentLibraries(
-      final CxxPlatform cxxPlatform,
-      final Iterable<? extends BuildRule> deps,
-      final Flavor requiredFlavor,
-      final Class<T> ruleClass) {
-    final ImmutableSet.Builder<T> depsBuilder = ImmutableSet.builder();
+      CxxPlatform cxxPlatform,
+      Iterable<? extends BuildRule> deps,
+      Flavor requiredFlavor,
+      Class<T> ruleClass) {
+    ImmutableSet.Builder<T> depsBuilder = ImmutableSet.builder();
     new AbstractBreadthFirstTraversal<BuildRule>(deps) {
       @Override
       public Iterable<BuildRule> visit(BuildRule buildRule) {

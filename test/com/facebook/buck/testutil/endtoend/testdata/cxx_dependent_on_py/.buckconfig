@@ -1,0 +1,25 @@
+[build]
+  depfiles=disabled
+
+[buildfile]
+  includes = //BUILD_DEFS
+
+[cxx]
+  sandbox_sources=true
+
+[cxx#windows-x86_64]
+  cc=$CL_EXE$
+  cc_type=windows
+  cpp=$CL_EXE$
+  cpp_type=windows
+  cxx=$CL_EXE$
+  cxx_type=windows
+  cxxpp=$CL_EXE$
+  cxxpp_type=windows
+  ld=$LINK_EXE$
+  linker_platform=windows
+  ar=$LIB_EXE$
+  archiver_platform=windows
+
+[project]
+  windows_symlinks=yes

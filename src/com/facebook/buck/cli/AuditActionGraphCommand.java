@@ -81,6 +81,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
               .getActionGraph(
                   params.getBuckEventBus(),
                   targetGraphAndBuildTargets.getTargetGraph(),
+                  params.getCell().getToolchainProvider(),
                   params.getBuckConfig(),
                   params.getRuleKeyConfiguration(),
                   poolSupplier);

@@ -136,7 +136,7 @@ public class DefaultClassUsageFileWriterTest {
         Platform.detect() == Platform.WINDOWS
             ? Escaper.Quoter.DOUBLE_WINDOWS_JAVAC
             : Escaper.Quoter.DOUBLE;
-    final String escapedExpectedAwayCellPath = quoter.quote(expectedAwayCellPath.toString());
+    String escapedExpectedAwayCellPath = quoter.quote(expectedAwayCellPath.toString());
     assertThat(
         new String(Files.readAllBytes(outputOne)),
         new JsonMatcher(

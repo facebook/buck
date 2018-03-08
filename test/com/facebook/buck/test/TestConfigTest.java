@@ -33,7 +33,7 @@ public class TestConfigTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
-  public void testDefaultSummaryVerbosity() throws IOException {
+  public void testDefaultSummaryVerbosity() {
     TestResultSummaryVerbosity summaryVerbosity =
         new TestConfig(FakeBuckConfig.builder().build()).getResultSummaryVerbosity();
     assertTrue(summaryVerbosity.getIncludeStdErr());

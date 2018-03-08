@@ -59,7 +59,7 @@ public class ProGuardConfigTest {
   }
 
   @Test(expected = HumanReadableException.class)
-  public void whenProGuardJarNotFound() throws IOException {
+  public void whenProGuardJarNotFound() {
     Path proGuardJar = Paths.get("proguard.jar");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -78,7 +78,7 @@ public class ProGuardConfigTest {
   }
 
   @Test
-  public void whenProGuardMaxHeapSizeOverrideUsed() throws IOException {
+  public void whenProGuardMaxHeapSizeOverrideUsed() {
     String proGuardMaxHeapSize = "1234M";
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 

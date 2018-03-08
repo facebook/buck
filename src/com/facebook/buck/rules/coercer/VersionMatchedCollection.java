@@ -80,8 +80,7 @@ public class VersionMatchedCollection<T> {
   }
 
   public static <T> VersionMatchedCollection<T> of() {
-    return new VersionMatchedCollection<>(
-        ImmutableList.<Pair<ImmutableMap<BuildTarget, Version>, T>>of());
+    return new VersionMatchedCollection<>(ImmutableList.of());
   }
 
   @Override

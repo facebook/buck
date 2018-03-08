@@ -117,10 +117,7 @@ public class ParamInfo implements Comparable<ParamInfo> {
 
               // Unfortunately @Value.Default isn't retained at runtime, so we use abstract-ness
               // as a proxy for whether something has a default value.
-              if (!Modifier.isAbstract(getter.getModifiers())) {
-                return true;
-              }
-              return false;
+              return !Modifier.isAbstract(getter.getModifiers());
             });
 
     StringBuilder builder = new StringBuilder();
@@ -232,7 +229,7 @@ public class ParamInfo implements Comparable<ParamInfo> {
     }
   }
 
-  public boolean hasElementTypes(final Class<?>... types) {
+  public boolean hasElementTypes(Class<?>... types) {
     return typeCoercer.hasElementClass(types);
   }
 

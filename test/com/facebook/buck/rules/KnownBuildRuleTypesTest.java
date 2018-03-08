@@ -111,7 +111,7 @@ public class KnownBuildRuleTypesTest {
   }
 
   @BeforeClass
-  public static void setupBuildParams() throws IOException {
+  public static void setupBuildParams() {
     projectFilesystem = new FakeProjectFilesystem();
     buildTarget = BuildTargetFactory.newInstance("//:foo");
     buildRuleParams = TestBuildRuleParams.create();
@@ -125,16 +125,10 @@ public class KnownBuildRuleTypesTest {
                 Description.getBuildRuleType(JavaLibraryDescription.class));
 
     JavaLibraryDescriptionArg arg = JavaLibraryDescriptionArg.builder().setName("foo").build();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     return (DefaultJavaLibrary)
         description.createBuildRule(
-            ImmutableBuildRuleCreationContext.of(
-                TargetGraph.EMPTY,
-                resolver,
-                projectFilesystem,
-                TestCellBuilder.createCellRoots(projectFilesystem)),
+            TestBuildRuleCreationContextFactory.create(resolver, projectFilesystem),
             buildTarget,
             buildRuleParams,
             arg);
@@ -143,7 +137,7 @@ public class KnownBuildRuleTypesTest {
   @Test
   public void whenJavacIsSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithDifferentRuleKey()
       throws Exception {
-    final Path javac;
+    Path javac;
     if (Platform.detect() == Platform.WINDOWS) {
       javac = Paths.get("C:/Windows/system32/rundll32.exe");
     } else {
@@ -177,10 +171,7 @@ public class KnownBuildRuleTypesTest {
         KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, processExecutor);
     DefaultJavaLibrary configuredRule = createJavaLibrary(configuredBuildRuleTypes);
 
-    SourcePathRuleFinder ruleFinder =
-        new SourcePathRuleFinder(
-            new SingleThreadedBuildRuleResolver(
-                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     FakeFileHashCache hashCache =
         new FakeFileHashCache(
@@ -194,7 +185,7 @@ public class KnownBuildRuleTypesTest {
   }
 
   @Test(expected = IllegalStateException.class)
-  public void whenRegisteringDescriptionsWithSameTypeErrorIsThrown() throws Exception {
+  public void whenRegisteringDescriptionsWithSameTypeErrorIsThrown() {
     KnownBuildRuleTypes.Builder buildRuleTypesBuilder = KnownBuildRuleTypes.builder();
     buildRuleTypesBuilder.addDescriptions(new KnownRuleTestDescription("Foo"));
     buildRuleTypesBuilder.addDescriptions(new KnownRuleTestDescription("Bar"));
@@ -222,7 +213,7 @@ public class KnownBuildRuleTypesTest {
     KnownBuildRuleTypes knownBuildRuleTypes1 =
         KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
 
-    final Path javac = temporaryFolder.newExecutableFile();
+    Path javac = temporaryFolder.newExecutableFile();
     ImmutableMap<String, ImmutableMap<String, String>> sections =
         ImmutableMap.of("tools", ImmutableMap.of("javac", javac.toString()));
     buckConfig = FakeBuckConfig.builder().setFilesystem(filesystem).setSections(sections).build();

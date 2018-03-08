@@ -28,10 +28,8 @@ import com.facebook.buck.python.toolchain.PexToolProvider;
 import com.facebook.buck.python.toolchain.PythonInterpreter;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
@@ -43,14 +41,12 @@ import org.junit.Test;
 public class PexToolProviderFactoryTest {
 
   @Test
-  public void testPexArgs() throws Exception {
+  public void testPexArgs() {
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
             .setSections(ImmutableMap.of("python", ImmutableMap.of("pex_flags", "--hello --world")))
             .build();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     PexToolProviderFactory pexToolProviderFactory = new PexToolProviderFactory();
     PexToolProvider pexToolProvider =
         pexToolProviderFactory

@@ -215,6 +215,6 @@ public class WorkspaceGeneratorTest {
     NSObject autocreate =
         ((NSDictionary) object).get("IDEWorkspaceSharedSettings_AutocreateContextsIfNeeded");
     assertThat(autocreate, instanceOf(NSNumber.class));
-    assertThat((NSNumber) autocreate, equalTo(new NSNumber(false)));
+    assertThat(autocreate, equalTo(new NSNumber(false)));
   }
 }

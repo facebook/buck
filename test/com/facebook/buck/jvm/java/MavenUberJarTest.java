@@ -27,9 +27,8 @@ import com.facebook.buck.python.PythonLibrary;
 import com.facebook.buck.python.PythonLibraryBuilder;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import java.util.Optional;
@@ -58,9 +57,7 @@ public class MavenUberJarTest {
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(pythonLibraryBuilder.build(), javaLibraryBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
 
     PythonLibrary pythonLibrary = pythonLibraryBuilder.build(resolver, filesystem, targetGraph);
     JavaLibrary javaLibrary = javaLibraryBuilder.build(resolver, filesystem, targetGraph);

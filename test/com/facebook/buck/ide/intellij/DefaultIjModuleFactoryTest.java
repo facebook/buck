@@ -57,16 +57,14 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
@@ -569,7 +567,7 @@ public class DefaultIjModuleFactoryTest {
   }
 
   @Test
-  public void testOverrideSdk() throws Exception {
+  public void testOverrideSdk() {
     IjModuleFactory factory = createIjModuleFactory();
 
     Path moduleBasePath = Paths.get("java/com/example");
@@ -598,7 +596,7 @@ public class DefaultIjModuleFactoryTest {
   }
 
   @Test
-  public void testOverrideSdkFromBuckConfig() throws Exception {
+  public void testOverrideSdkFromBuckConfig() {
     IjModuleFactory factory = createIjModuleFactory();
 
     Path moduleBasePath = Paths.get("java/com/example");
@@ -628,12 +626,10 @@ public class DefaultIjModuleFactoryTest {
 
   @Test
   public void testAndroidPrebuiltAar() {
-    final SourcePath androidSupportBinaryPath =
-        FakeSourcePath.of("third_party/java/support/support.aar");
-    final Path androidSupportSourcesPath =
-        Paths.get("third_party/java/support/support-sources.jar");
-    final String androidSupportJavadocUrl = "file:///support/docs";
-    final TargetNode<?, ?> androidPrebuiltAar =
+    SourcePath androidSupportBinaryPath = FakeSourcePath.of("third_party/java/support/support.aar");
+    Path androidSupportSourcesPath = Paths.get("third_party/java/support/support-sources.jar");
+    String androidSupportJavadocUrl = "file:///support/docs";
+    TargetNode<?, ?> androidPrebuiltAar =
         AndroidPrebuiltAarBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//third_party/java/support:support"))
             .setBinaryAar(androidSupportBinaryPath)
@@ -641,10 +637,8 @@ public class DefaultIjModuleFactoryTest {
             .setJavadocUrl(androidSupportJavadocUrl)
             .build();
 
-    final BuildRuleResolver buildRuleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    final SourcePathResolver sourcePathResolver =
+    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
+    SourcePathResolver sourcePathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
     IjLibraryFactoryResolver ijLibraryFactoryResolver =
         new IjLibraryFactoryResolver() {

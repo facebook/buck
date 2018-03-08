@@ -320,7 +320,7 @@ public class ArtifactCacheBuckConfigTest {
 
   @Test
   public void errorMessageFormatter() throws IOException {
-    final String testText = "this is a test";
+    String testText = "this is a test";
     ArtifactCacheBuckConfig config =
         createFromText("[cache]", "http_error_message_format = " + testText);
 

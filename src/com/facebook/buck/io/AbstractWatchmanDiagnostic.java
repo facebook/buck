@@ -25,7 +25,7 @@ interface AbstractWatchmanDiagnostic {
   enum Level {
     WARNING,
     ERROR
-  };
+  }
 
   Level getLevel();
 

@@ -575,7 +575,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @Override
-  public void reportProfile() throws IOException {
+  public void reportProfile() {
     // TODO(ttsugrii): implement
   }
 

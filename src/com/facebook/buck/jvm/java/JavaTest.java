@@ -397,10 +397,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      final ExecutionContext context,
-      SourcePathResolver pathResolver,
-      final boolean isUsingTestSelectors) {
-    final ImmutableSet<String> contacts = getContacts();
+      ExecutionContext context, SourcePathResolver pathResolver, boolean isUsingTestSelectors) {
+    ImmutableSet<String> contacts = getContacts();
     return () -> {
       // It is possible that this rule was not responsible for running any tests because all tests
       // were run by its deps. In this case, return an empty TestResults.
@@ -555,21 +553,21 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         return ImmutableSet.of();
       }
 
-      final Set<String> sourceClassNames = Sets.newHashSetWithExpectedSize(sources.size());
+      Set<String> sourceClassNames = Sets.newHashSetWithExpectedSize(sources.size());
       for (SourcePath path : sources) {
         // We support multiple languages in this rule - the file extension doesn't matter so long
         // as the language supports filename == classname.
         sourceClassNames.add(MorePaths.getNameWithoutExtension(resolver.getRelativePath(path)));
       }
 
-      final ImmutableSet.Builder<String> testClassNames = ImmutableSet.builder();
+      ImmutableSet.Builder<String> testClassNames = ImmutableSet.builder();
       Path jarFile = projectFilesystem.getPathForRelativePath(jarFilePath);
       ZipFileTraversal traversal =
           new ZipFileTraversal(jarFile) {
 
             @Override
             public void visit(ZipFile zipFile, ZipEntry zipEntry) {
-              final String name = new File(zipEntry.getName()).getName();
+              String name = new File(zipEntry.getName()).getName();
 
               // Ignore non-.class files.
               if (!name.endsWith(".class")) {
@@ -667,9 +665,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .add(
             new AbstractExecutionStep("write classpath file") {
               @Override
-              public StepExecutionResult execute(ExecutionContext context)
-                  throws IOException, InterruptedException {
-                ImmutableSet.Builder<Path> builder = ImmutableSet.<Path>builder();
+              public StepExecutionResult execute(ExecutionContext context) throws IOException {
+                ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
                 if (unbundledResourcesRoot.isPresent()) {
                   builder.add(
                       buildContext

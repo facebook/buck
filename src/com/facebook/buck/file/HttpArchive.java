@@ -122,6 +122,6 @@ public class HttpArchive extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       case ZIP:
         return new UnzipStep(filesystem, archiveFile, destinationDirectory, stripPrefix);
     }
-    throw new RuntimeException("Invalid format type " + format.toString());
+    throw new RuntimeException("Invalid format type " + format);
   }
 }

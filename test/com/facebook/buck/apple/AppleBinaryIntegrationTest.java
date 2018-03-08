@@ -85,7 +85,7 @@ public class AppleBinaryIntegrationTest {
 
     Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
     assertThat(Files.exists(outputPath), is(true));
-    assertThat(Files.exists(Paths.get(outputPath.toString() + "-LinkMap.txt")), is(true));
+    assertThat(Files.exists(Paths.get(outputPath + "-LinkMap.txt")), is(true));
     assertThat(
         workspace.runCommand("file", outputPath.toString()).getStdout().get(),
         containsString("executable"));
@@ -108,7 +108,7 @@ public class AppleBinaryIntegrationTest {
 
     Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
     assertThat(Files.exists(outputPath), is(true));
-    assertThat(Files.exists(Paths.get(outputPath.toString() + "-LinkMap.txt")), is(false));
+    assertThat(Files.exists(Paths.get(outputPath + "-LinkMap.txt")), is(false));
     assertThat(
         workspace.runCommand("file", outputPath.toString()).getStdout().get(),
         containsString("executable"));
@@ -131,7 +131,7 @@ public class AppleBinaryIntegrationTest {
 
     Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
     assertThat(Files.exists(outputPath), is(true));
-    assertThat(Files.exists(Paths.get(outputPath.toString() + "-LinkMap.txt")), is(true));
+    assertThat(Files.exists(Paths.get(outputPath + "-LinkMap.txt")), is(true));
     assertThat(
         workspace.runCommand("file", outputPath.toString()).getStdout().get(),
         containsString("executable"));
@@ -156,7 +156,7 @@ public class AppleBinaryIntegrationTest {
 
     Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
     assertThat(Files.exists(outputPath), is(true));
-    assertThat(Files.exists(Paths.get(outputPath.toString() + "-LinkMap.txt")), is(true));
+    assertThat(Files.exists(Paths.get(outputPath + "-LinkMap.txt")), is(true));
     assertThat(
         workspace.runCommand("file", outputPath.toString()).getStdout().get(),
         containsString("executable"));
@@ -279,7 +279,7 @@ public class AppleBinaryIntegrationTest {
 
     Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
     assertThat(Files.exists(outputPath), is(true));
-    assertThat(Files.isDirectory(Paths.get(outputPath.toString() + "-lto")), is(true));
+    assertThat(Files.isDirectory(Paths.get(outputPath + "-lto")), is(true));
     assertThat(
         workspace.runCommand("file", outputPath.toString()).getStdout().get(),
         containsString("executable"));
@@ -305,7 +305,7 @@ public class AppleBinaryIntegrationTest {
                 BuildTargetFactory.newInstance("//Apps/TestApp:TestApp#macosx-x86_64")
                     .withAppendedFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR),
                 "%s"));
-    assertThat(Files.isDirectory(Paths.get(outputPath.toString() + "-lto")), is(true));
+    assertThat(Files.isDirectory(Paths.get(outputPath + "-lto")), is(true));
 
     Path bundlePath =
         workspace.getPath(
@@ -534,8 +534,7 @@ public class AppleBinaryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryPropagatesExportedPlatformLinkerFlags()
-      throws IOException, InterruptedException {
+  public void testAppleLibraryPropagatesExportedPlatformLinkerFlags() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 

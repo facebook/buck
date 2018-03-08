@@ -41,9 +41,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -118,7 +116,7 @@ public class CxxLibraryIntegrationTest {
   }
 
   @Test
-  public void libraryBuildPathIsSoName() throws InterruptedException, IOException {
+  public void libraryBuildPathIsSoName() throws IOException {
     assumeTrue(Platform.detect() == Platform.LINUX);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "shared_library", tmp);
@@ -184,9 +182,7 @@ public class CxxLibraryIntegrationTest {
   public void thinArchivesDoNotContainAbsolutePaths() throws IOException {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
-    BuildRuleResolver ruleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     assumeTrue(cxxPlatform.getAr().resolve(ruleResolver).supportsThinArchives());
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_library", tmp);
@@ -432,7 +428,7 @@ public class CxxLibraryIntegrationTest {
   }
 
   @Test
-  public void buildWithUniqueLibraryNames() throws InterruptedException, IOException {
+  public void buildWithUniqueLibraryNames() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_library", tmp);
     workspace.setUp();

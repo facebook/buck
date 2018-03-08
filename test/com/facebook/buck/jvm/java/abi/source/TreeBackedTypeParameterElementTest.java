@@ -39,7 +39,7 @@ public class TreeBackedTypeParameterElementTest extends CompilerTreeApiParameter
     compile("class Foo<T> { }");
 
     TypeElement fooElement = elements.getTypeElement("Foo");
-    final List<? extends TypeParameterElement> typeParameters = fooElement.getTypeParameters();
+    List<? extends TypeParameterElement> typeParameters = fooElement.getTypeParameters();
 
     assertSame(1, typeParameters.size());
     TypeParameterElement typeParam = typeParameters.get(0);
@@ -52,7 +52,7 @@ public class TreeBackedTypeParameterElementTest extends CompilerTreeApiParameter
     compile("class Foo<T extends java.lang.Runnable> { }");
 
     TypeElement fooElement = elements.getTypeElement("Foo");
-    final List<? extends TypeParameterElement> typeParameters = fooElement.getTypeParameters();
+    List<? extends TypeParameterElement> typeParameters = fooElement.getTypeParameters();
 
     assertSame(1, typeParameters.size());
     TypeParameterElement typeParam = typeParameters.get(0);
@@ -109,7 +109,7 @@ public class TreeBackedTypeParameterElementTest extends CompilerTreeApiParameter
     compile("class Foo<T> { }");
 
     TypeElement fooElement = elements.getTypeElement("Foo");
-    final List<? extends TypeParameterElement> typeParameters = fooElement.getTypeParameters();
+    List<? extends TypeParameterElement> typeParameters = fooElement.getTypeParameters();
 
     assertSame(1, typeParameters.size());
     TypeParameterElement typeParam = typeParameters.get(0);
@@ -122,7 +122,7 @@ public class TreeBackedTypeParameterElementTest extends CompilerTreeApiParameter
     compile("class Foo<T> { }");
 
     TypeElement fooElement = elements.getTypeElement("Foo");
-    final List<? extends TypeParameterElement> typeParameters = fooElement.getTypeParameters();
+    List<? extends TypeParameterElement> typeParameters = fooElement.getTypeParameters();
 
     assertSame(1, typeParameters.size());
     TypeParameterElement typeParam = typeParameters.get(0);

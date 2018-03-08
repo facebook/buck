@@ -268,10 +268,10 @@ public class BuildPhase {
       ListenableFuture<ParallelRuleKeyCalculator<RuleKey>> localRuleKeyCalculator)
       throws IOException, InterruptedException {
     distBuildClientStats.startTimer(PERFORM_DISTRIBUTED_BUILD);
-    final BuildJob job =
+    BuildJob job =
         distBuildService.startBuild(
             stampedeId, !buildMode.equals(DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR));
-    LOG.info("Started job. Build status: " + job.getStatus().toString());
+    LOG.info("Started job. Build status: " + job.getStatus());
 
     nextEventIdBySlaveRunId.clear();
     ScheduledFuture<?> distBuildStatusUpdatingFuture =
@@ -327,14 +327,14 @@ public class BuildPhase {
 
   private BuildJob fetchBuildInformationFromServerAndPublishPendingEvents(
       BuildJob job, ListeningExecutorService networkExecutorService) throws InterruptedException {
-    final StampedeId stampedeId = job.getStampedeId();
+    StampedeId stampedeId = job.getStampedeId();
 
     try {
       job = distBuildService.getCurrentBuildJobState(stampedeId);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-    LOG.info("Got build status: " + job.getStatus().toString());
+    LOG.info("Got build status: " + job.getStatus());
 
     if (!job.isSetBuildSlaves()) {
       consoleEventsDispatcher.postDistBuildStatusEvent(job, ImmutableList.of());

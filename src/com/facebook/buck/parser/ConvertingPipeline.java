@@ -50,10 +50,7 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
 
   @Override
   public ListenableFuture<ImmutableSet<T>> getAllNodesJob(
-      final Cell cell,
-      KnownBuildRuleTypes knownBuildRuleTypes,
-      final Path buildFile,
-      AtomicLong processedBytes)
+      Cell cell, KnownBuildRuleTypes knownBuildRuleTypes, Path buildFile, AtomicLong processedBytes)
       throws BuildTargetException {
     // TODO(csarbora): this hits the chained pipeline before hitting the cache
     ListenableFuture<List<T>> allNodesListJob =
@@ -66,7 +63,7 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
 
               ImmutableList.Builder<ListenableFuture<T>> allNodeJobs = ImmutableList.builder();
 
-              for (final F from : allToConvert) {
+              for (F from : allToConvert) {
                 if (isValid(from)) {
                   BuildTarget target =
                       getBuildTarget(cell.getRoot(), cell.getCanonicalName(), buildFile, from);
@@ -92,9 +89,9 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
 
   @Override
   public ListenableFuture<T> getNodeJob(
-      final Cell cell,
+      Cell cell,
       KnownBuildRuleTypes knownBuildRuleTypes,
-      final BuildTarget buildTarget,
+      BuildTarget buildTarget,
       AtomicLong processedBytes)
       throws BuildTargetException {
     return cache.getJobWithCacheLookup(

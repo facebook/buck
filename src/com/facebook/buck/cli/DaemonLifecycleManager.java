@@ -88,12 +88,8 @@ class DaemonLifecycleManager {
   /** Manually kill the daemon instance, used for testing. */
   synchronized void resetDaemon() {
     if (daemon != null) {
-      try {
-        LOG.info("Closing daemon on reset request.");
-        daemon.close();
-      } catch (IOException e) { // NOPMD
-        // Swallow exceptions while closing daemon.
-      }
+      LOG.info("Closing daemon on reset request.");
+      daemon.close();
     }
     daemon = null;
   }

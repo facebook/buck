@@ -153,7 +153,7 @@ public class BuildTraces {
 
   /** The most recent trace (the one with the greatest last-modified time) will be listed first. */
   public List<Path> listTraceFilesByLastModified() throws IOException {
-    final List<Path> allTraces = new ArrayList<>();
+    List<Path> allTraces = new ArrayList<>();
 
     projectFilesystem.walkFileTree(
         projectFilesystem.getBuckPaths().getLogDir(),
@@ -203,7 +203,7 @@ public class BuildTraces {
    * <p>A given build might have more than one trace file (for example, the buck.py launcher has its
    * own trace file).
    */
-  private Collection<Path> getPathsToTraces(final String id) throws IOException {
+  private Collection<Path> getPathsToTraces(String id) throws IOException {
     Preconditions.checkArgument(TRACE_ID_PATTERN.matcher(id).matches());
     List<Path> traces =
         listTraceFilesByLastModified()

@@ -55,8 +55,7 @@ class BuildPrehook implements AutoCloseable {
       Cell cell,
       BuckEventBus eventBus,
       BuckConfig buckConfig,
-      ImmutableMap<String, String> environment)
-      throws IOException {
+      ImmutableMap<String, String> environment) {
     this.processExecutor = processExecutor;
     this.cell = cell;
     this.eventBus = eventBus;
@@ -65,7 +64,7 @@ class BuildPrehook implements AutoCloseable {
   }
 
   /** Start the build prehook script. */
-  public synchronized void startPrehookScript() throws IOException, InterruptedException {
+  public synchronized void startPrehookScript() throws IOException {
     Optional<String> pathToPrehookScript = buckConfig.getPathToBuildPrehookScript();
     if (!pathToPrehookScript.isPresent()) {
       return;
@@ -156,7 +155,7 @@ class BuildPrehook implements AutoCloseable {
 
   /** Kill the build prehook script. */
   @Override
-  public synchronized void close() throws InterruptedException, IOException {
+  public synchronized void close() throws IOException {
     if (process == null) {
       return;
     }

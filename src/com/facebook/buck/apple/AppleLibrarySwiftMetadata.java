@@ -45,7 +45,7 @@ public class AppleLibrarySwiftMetadata {
   }
 
   public static AppleLibrarySwiftMetadata from(
-      final ImmutableSortedSet<SourceWithFlags> allSources, final SourcePathResolver pathResolver) {
+      ImmutableSortedSet<SourceWithFlags> allSources, SourcePathResolver pathResolver) {
     Map<Boolean, List<SourceWithFlags>> swiftAndNonSwiftSources =
         allSources
             .stream()

@@ -273,7 +273,7 @@ class TreeBackedElements extends ElementsExtendedImpl {
         nameBuilder.append("$");
       } else {
         // package
-        nameBuilder.append(enclosingElement.toString());
+        nameBuilder.append(enclosingElement);
         nameBuilder.append(".");
       }
       nameBuilder.append(type.getSimpleName());

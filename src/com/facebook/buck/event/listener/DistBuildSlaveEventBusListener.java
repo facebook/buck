@@ -172,7 +172,7 @@ public class DistBuildSlaveEventBusListener
   }
 
   @Override
-  public void outputTrace(BuildId buildId) throws InterruptedException {}
+  public void outputTrace(BuildId buildId) {}
 
   @Override
   public void close() throws IOException {

@@ -65,7 +65,7 @@ class ClassUsageTracker implements FileManagerListener {
     // The jar: scheme is somewhat underspecified. See the JarURLConnection docs
     // for the closest thing it has to documentation.
     String jarUriSchemeSpecificPart = classFileJarUri.getRawSchemeSpecificPart();
-    final String[] split = jarUriSchemeSpecificPart.split("!/");
+    String[] split = jarUriSchemeSpecificPart.split("!/");
     Preconditions.checkState(split.length == 2);
 
     if (isLocalOrAnonymousClass(split[1])) {

@@ -116,12 +116,12 @@ public class AccumulateClassNamesStep implements Step {
   /** @return an Optional that will be absent if there was an error. */
   public static Optional<ImmutableSortedMap<String, HashCode>> calculateClassHashes(
       ExecutionContext context, ProjectFilesystem filesystem, Path path) {
-    final Map<String, HashCode> classNames = new HashMap<>();
+    Map<String, HashCode> classNames = new HashMap<>();
 
     ClasspathTraversal traversal =
         new ClasspathTraversal(Collections.singleton(path), filesystem) {
           @Override
-          public void visit(final FileLike fileLike) throws IOException {
+          public void visit(FileLike fileLike) throws IOException {
             // When traversing a JAR file, it may have resources or directory entries that do not
             // end in .class, which should be ignored.
             if (!FileLikes.isClassFile(fileLike)) {
@@ -161,7 +161,7 @@ public class AccumulateClassNamesStep implements Step {
    * @param lines that were written in the same format output by {@link #execute(ExecutionContext)}.
    */
   public static ImmutableSortedMap<String, HashCode> parseClassHashes(List<String> lines) {
-    final Map<String, HashCode> classNames = new HashMap<>();
+    Map<String, HashCode> classNames = new HashMap<>();
 
     for (String line : lines) {
       List<String> parts = CLASS_NAME_AND_HASH_SPLITTER.splitToList(line);

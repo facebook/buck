@@ -110,11 +110,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
                       Iterables.transform(
                           compilerPlugins,
                           input ->
-                              "-Xplugin:"
-                                  + context
-                                      .getSourcePathResolver()
-                                      .getRelativePath(input)
-                                      .toString()))
+                              "-Xplugin:" + context.getSourcePathResolver().getRelativePath(input)))
                   .build(),
               resolver,
               outputDirectory,

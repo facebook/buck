@@ -136,9 +136,9 @@ public class DeterministicManifestTest {
 
   @Test
   public void testLinesSplitLikeJavaImpl() throws IOException {
-    final String entryName = "test";
-    final String key = "12345678";
-    final String value =
+    String entryName = "test";
+    String key = "12345678";
+    String value =
         "138-char value + 8 char key + 2 char padding = 148 chars.  |"
             + "69-character second line                                            |"
             + "last line";

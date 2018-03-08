@@ -63,11 +63,11 @@ public class TargetGraphHashing {
   private final LoadingCache<BuildTarget, HashCode> allHashes;
 
   public TargetGraphHashing(
-      final BuckEventBus eventBus,
-      final TargetGraph targetGraph,
-      final FileHashLoader fileHashLoader,
-      final int numThreads,
-      final Iterable<TargetNode<?, ?>> roots) {
+      BuckEventBus eventBus,
+      TargetGraph targetGraph,
+      FileHashLoader fileHashLoader,
+      int numThreads,
+      Iterable<TargetNode<?, ?>> roots) {
     this.eventBus = eventBus;
     this.targetGraph = targetGraph;
     this.fileHashLoader = fileHashLoader;
@@ -102,12 +102,12 @@ public class TargetGraphHashing {
           .traverse(roots)
           .forEach(
               node -> {
-                final BuildTarget buildTarget = node.getBuildTarget();
+                BuildTarget buildTarget = node.getBuildTarget();
                 targetNodes.put(buildTarget, node);
                 workQueue.add(buildTarget);
               });
 
-      final ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
+      ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
       executorService.invokeAll(
           Collections.nCopies(
               numThreads,
@@ -154,7 +154,7 @@ public class TargetGraphHashing {
     ProjectFilesystem cellFilesystem = node.getFilesystem();
 
     try (SimplePerfEvent.Scope ignored =
-        SimplePerfEvent.scope(eventBus, PerfEventId.of("hashing_inputs")); ) {
+        SimplePerfEvent.scope(eventBus, PerfEventId.of("hashing_inputs"))) {
       // Hash the contents of all input files and directories.
       for (Path input : ImmutableSortedSet.copyOf(node.getInputs())) {
         try {

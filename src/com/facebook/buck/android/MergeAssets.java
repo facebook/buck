@@ -117,8 +117,7 @@ public class MergeAssets extends AbstractBuildRule {
     steps.add(
         new AbstractExecutionStep("finding_assets") {
           @Override
-          public StepExecutionResult execute(ExecutionContext context)
-              throws IOException, InterruptedException {
+          public StepExecutionResult execute(ExecutionContext context) throws IOException {
             for (SourcePath sourcePath : assetsDirectories) {
               Path relativePath = pathResolver.getRelativePath(sourcePath);
               Path absolutePath = pathResolver.getAbsolutePath(sourcePath);

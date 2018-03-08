@@ -24,6 +24,10 @@ import org.junit.runner.RunWith;
 @RunWith(EndToEndRunner.class)
 public class EndToEndRunnerTest {
 
+  private static final String successTarget =
+      "//simple_successful_helloworld:simple_successful_helloworld";
+  private static final String failTarget = "//simple_failed_helloworld:simple_failed_helloworld";
+
   public static EndToEndEnvironment getBaseEnvironment() {
     return new EndToEndEnvironment()
         .withBuckdToggled(ToggleState.ON_OFF)
@@ -33,30 +37,35 @@ public class EndToEndRunnerTest {
 
   @Environment
   public static EndToEndEnvironment setSuccessEnvironment() {
-    return getBaseEnvironment()
-        .withTargets("//simple_successful_helloworld:simple_successful_helloworld");
+    return getBaseEnvironment().withTargets(successTarget);
   }
 
   @EnvironmentFor(testNames = {"shouldNotBuildSuccessfully"})
   public static EndToEndEnvironment setFailEnvironment() {
-    return getBaseEnvironment().withTargets("//simple_failed_helloworld:simple_failed_helloworld");
+    return getBaseEnvironment().withTargets(failTarget);
   }
 
   @Test
-  public void shouldBuildSuccessfully(EndToEndTestDescriptor test, ProcessResult result) {
+  public void shouldBuildAndRunSuccessfully(
+      EndToEndTestDescriptor test, EndToEndWorkspace workspace, ProcessResult result)
+      throws Exception {
     result.assertExitCode(
         String.format("%s did not successfully build", test.getName()), ExitCode.map(0));
+    ProcessResult targetResult = workspace.runBuiltResult(successTarget);
+    targetResult.assertSuccess();
   }
 
   @Test
-  public void shouldFailInSuccessfulEnv(EndToEndTestDescriptor test, ProcessResult result) {
+  public void shouldFailInSuccessfulEnv(
+      EndToEndTestDescriptor test, EndToEndWorkspace workspace, ProcessResult result) {
     // Uses successful environment, but fixture BUCK file is empty
     result.assertFailure(
         String.format("%s successfully built when it has an empty BUCK file", test.getName()));
   }
 
   @Test
-  public void shouldNotBuildSuccessfully(EndToEndTestDescriptor test, ProcessResult result) {
+  public void shouldNotBuildSuccessfully(
+      EndToEndTestDescriptor test, EndToEndWorkspace workspace, ProcessResult result) {
     result.assertFailure(
         String.format(
             "%s successfully built when it should have failed to compile", test.getName()));

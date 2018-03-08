@@ -61,7 +61,7 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
       Optional<Arg> bash,
       Optional<Arg> cmdExe) {
 
-    final BuildRule apk = resolver.getRule(args.getApk());
+    BuildRule apk = resolver.getRule(args.getApk());
     if (!(apk instanceof HasInstallableApk)) {
       throw new HumanReadableException(
           "The 'apk' argument of %s, %s, must correspond to an "
@@ -69,7 +69,7 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
           buildTarget, args.getApk().getFullyQualifiedName());
     }
 
-    final Supplier<? extends SortedSet<BuildRule>> originalExtraDeps = params.getExtraDeps();
+    Supplier<? extends SortedSet<BuildRule>> originalExtraDeps = params.getExtraDeps();
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new ApkGenrule(

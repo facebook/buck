@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -82,7 +81,7 @@ public class BuildRulePipelinesRunnerTest {
   }
 
   @Test
-  public void testNotPipelined() throws Exception {
+  public void testNotPipelined() {
     tester.setNumRules(4);
 
     assertFalse(tester.isRuleRunning(1));
@@ -182,7 +181,7 @@ public class BuildRulePipelinesRunnerTest {
   }
 
   @Test
-  public void testDoesntDependOnPrevious() throws Exception {
+  public void testDoesntDependOnPrevious() {
     BuildRulePipelinesRunner runner = new BuildRulePipelinesRunner();
 
     TestPipelineRule first = new TestPipelineRule("//pipeline:1", null);
@@ -195,7 +194,7 @@ public class BuildRulePipelinesRunnerTest {
   }
 
   @Test
-  public void testIncludesExtraDeps() throws Exception {
+  public void testIncludesExtraDeps() {
     BuildRulePipelinesRunner runner = new BuildRulePipelinesRunner();
 
     TestPipelineRule first = new TestPipelineRule("//pipeline:1", null);
@@ -253,8 +252,7 @@ public class BuildRulePipelinesRunnerTest {
       return this;
     }
 
-    public PipelineTester waitForEntirePipelineToFinish()
-        throws ExecutionException, InterruptedException {
+    public PipelineTester waitForEntirePipelineToFinish() throws InterruptedException {
       executor.shutdown();
       executor.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
       return this;

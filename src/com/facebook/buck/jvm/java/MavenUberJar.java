@@ -233,7 +233,7 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
           ImmutableSortedSet.naturalOrder();
 
       ImmutableSortedSet.Builder<JavaLibrary> candidates = ImmutableSortedSet.naturalOrder();
-      for (final BuildRule root : roots) {
+      for (BuildRule root : roots) {
         Preconditions.checkState(root instanceof HasClasspathEntries);
         candidates.addAll(
             ((HasClasspathEntries) root)

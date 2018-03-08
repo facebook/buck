@@ -26,11 +26,10 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -82,9 +81,7 @@ public class QueryPathsMacroExpanderTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, targetNode);
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
 
     // Ensure that the root rule is in the resolver
     resolver.requireRule(targetNode.getBuildTarget());
@@ -126,9 +123,7 @@ public class QueryPathsMacroExpanderTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(node);
 
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     BuildRule rule = resolver.requireRule(node.getBuildTarget());
 
     ImmutableSet<Path> inputs = node.getInputs();
@@ -164,8 +159,7 @@ public class QueryPathsMacroExpanderTest {
 
     TargetGraph graph = TargetGraphFactory.newInstance(dep, target);
 
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(graph);
     BuildRule depRule = resolver.requireRule(dep.getBuildTarget());
     BuildRule rule = resolver.requireRule(target.getBuildTarget());
 

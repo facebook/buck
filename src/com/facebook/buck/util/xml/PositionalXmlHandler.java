@@ -62,8 +62,7 @@ public class PositionalXmlHandler extends DefaultHandler {
   }
 
   @Override
-  public void startElement(String uri, String localName, String qName, Attributes attributes)
-      throws SAXException {
+  public void startElement(String uri, String localName, String qName, Attributes attributes) {
     addText();
     Preconditions.checkNotNull(document);
     Element element = document.createElementNS(uri, qName);
@@ -89,7 +88,7 @@ public class PositionalXmlHandler extends DefaultHandler {
   }
 
   @Override
-  public void characters(char ch[], int start, int length) throws SAXException {
+  public void characters(char ch[], int start, int length) {
     textBuffer.append(ch, start, length);
   }
 
@@ -130,7 +129,7 @@ public class PositionalXmlHandler extends DefaultHandler {
 
   @Override
   public void error(SAXParseException ex) throws SAXException {
-    //nests ex to conserve exception line number
+    // nests ex to conserve exception line number
     throw new SAXException(ex.getMessage(), ex);
   }
 
@@ -140,6 +139,6 @@ public class PositionalXmlHandler extends DefaultHandler {
   }
 
   @Override
-  public void warning(SAXParseException exception) throws SAXException { //do nothing
+  public void warning(SAXParseException exception) { // do nothing
   }
 }

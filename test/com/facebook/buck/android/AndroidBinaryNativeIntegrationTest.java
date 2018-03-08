@@ -31,11 +31,9 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -190,7 +188,7 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testNativeLibraryMergeErrors() throws IOException, InterruptedException {
+  public void testNativeLibraryMergeErrors() throws IOException {
     try {
       workspace.runBuckBuild("//apps/sample:app_with_merge_lib_into_two_targets");
       Assert.fail("No exception from trying to merge lib into two targets.");
@@ -363,10 +361,7 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
   private SymbolGetter getSymbolGetter() throws IOException, InterruptedException {
     NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(filesystem);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     Path tmpDir = tmpFolder.newFolder("symbols_tmp");
     return new SymbolGetter(
         new DefaultProcessExecutor(new TestConsole()), tmpDir, platform.getObjdump(), pathResolver);

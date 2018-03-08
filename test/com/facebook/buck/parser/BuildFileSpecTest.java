@@ -252,7 +252,7 @@ public class BuildFileSpecTest {
         ImmutableMap.of(),
         Optional.of(Paths.get(".watchman-sock"))) {
       @Override
-      public WatchmanClient createClient() throws IOException {
+      public WatchmanClient createClient() {
         return client;
       }
     };

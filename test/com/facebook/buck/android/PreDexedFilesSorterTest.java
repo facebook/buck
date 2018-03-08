@@ -237,9 +237,9 @@ public class PreDexedFilesSorterTest {
 
   private DexWithClasses createFakeDexWithClasses(
       ProjectFilesystem filesystem,
-      final Path pathToDex,
-      final ImmutableSet<String> classNames,
-      final int weightEstimate) {
+      Path pathToDex,
+      ImmutableSet<String> classNames,
+      int weightEstimate) {
     return new DexWithClasses() {
       @Override
       public SourcePath getSourcePathToDexFile() {

@@ -90,7 +90,7 @@ public class JavaLibraryRules {
    *     system-specific library names to their {@link SourcePath} objects.
    */
   public static ImmutableMap<String, SourcePath> getNativeLibraries(
-      Iterable<BuildRule> deps, final CxxPlatform cxxPlatform) {
+      Iterable<BuildRule> deps, CxxPlatform cxxPlatform) {
     // Allow the transitive walk to find NativeLinkables through the BuildRuleParams deps of a
     // JavaLibrary or CalculateAbi object. The deps may be either one depending if we're compiling
     // against ABI rules or full rules

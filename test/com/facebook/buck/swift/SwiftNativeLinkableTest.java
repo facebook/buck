@@ -21,11 +21,9 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.rules.args.Arg;
@@ -49,9 +47,7 @@ public class SwiftNativeLinkableTest {
     swiftcTool = VersionedTool.of(Paths.get("swiftc"), "foo", "1.0");
     swiftStdTool = VersionedTool.of(Paths.get("swift-std"), "foo", "1.0");
 
-    BuildRuleResolver buildRuleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
   }

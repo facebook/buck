@@ -32,6 +32,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Scope;
@@ -74,6 +75,7 @@ public class ActionGraphCache {
   public ActionGraphAndResolver getActionGraph(
       BuckEventBus eventBus,
       TargetGraph targetGraph,
+      ToolchainProvider toolchainProvider,
       BuckConfig buckConfig,
       RuleKeyConfiguration ruleKeyConfiguration,
       CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier) {
@@ -82,6 +84,7 @@ public class ActionGraphCache {
         buckConfig.isActionGraphCheckingEnabled(),
         buckConfig.isSkipActionGraphCache(),
         targetGraph,
+        toolchainProvider,
         ruleKeyConfiguration,
         buckConfig.getActionGraphParallelizationMode(),
         Optional.empty(),
@@ -94,6 +97,7 @@ public class ActionGraphCache {
   public ActionGraphAndResolver getActionGraph(
       BuckEventBus eventBus,
       TargetGraph targetGraph,
+      ToolchainProvider toolchainProvider,
       BuckConfig buckConfig,
       RuleKeyConfiguration ruleKeyConfiguration,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
@@ -103,6 +107,7 @@ public class ActionGraphCache {
         buckConfig.isActionGraphCheckingEnabled(),
         buckConfig.isSkipActionGraphCache(),
         targetGraph,
+        toolchainProvider,
         ruleKeyConfiguration,
         buckConfig.getActionGraphParallelizationMode(),
         ruleKeyLogger,
@@ -112,13 +117,14 @@ public class ActionGraphCache {
   }
 
   public ActionGraphAndResolver getActionGraph(
-      final BuckEventBus eventBus,
-      final boolean checkActionGraphs,
-      final boolean skipActionGraphCache,
-      final TargetGraph targetGraph,
+      BuckEventBus eventBus,
+      boolean checkActionGraphs,
+      boolean skipActionGraphCache,
+      TargetGraph targetGraph,
+      ToolchainProvider toolchainProvider,
       RuleKeyConfiguration ruleKeyConfiguration,
       ActionGraphParallelizationMode parallelizationMode,
-      final boolean shouldInstrumentGraphBuilding,
+      boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
       CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier) {
     return getActionGraph(
@@ -126,6 +132,7 @@ public class ActionGraphCache {
         checkActionGraphs,
         skipActionGraphCache,
         targetGraph,
+        toolchainProvider,
         ruleKeyConfiguration,
         parallelizationMode,
         Optional.empty(),
@@ -148,14 +155,15 @@ public class ActionGraphCache {
    * @return a {@link ActionGraphAndResolver}
    */
   public ActionGraphAndResolver getActionGraph(
-      final BuckEventBus eventBus,
-      final boolean checkActionGraphs,
-      final boolean skipActionGraphCache,
-      final TargetGraph targetGraph,
+      BuckEventBus eventBus,
+      boolean checkActionGraphs,
+      boolean skipActionGraphCache,
+      TargetGraph targetGraph,
+      ToolchainProvider toolchainProvider,
       RuleKeyConfiguration ruleKeyConfiguration,
       ActionGraphParallelizationMode parallelizationMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
-      final boolean shouldInstrumentGraphBuilding,
+      boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
       CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
@@ -173,6 +181,7 @@ public class ActionGraphCache {
               eventBus,
               cachedActionGraph,
               targetGraph,
+              toolchainProvider,
               fieldLoader,
               parallelizationMode,
               ruleKeyLogger,
@@ -200,6 +209,7 @@ public class ActionGraphCache {
                     eventBus,
                     new DefaultTargetNodeToBuildRuleTransformer(),
                     targetGraph,
+                    toolchainProvider,
                     parallelizationMode,
                     shouldInstrumentGraphBuilding,
                     incrementalActionGraphMode,
@@ -227,10 +237,11 @@ public class ActionGraphCache {
    * @return a {@link ActionGraphAndResolver}
    */
   public ActionGraphAndResolver getFreshActionGraph(
-      final BuckEventBus eventBus,
-      final TargetGraph targetGraph,
+      BuckEventBus eventBus,
+      TargetGraph targetGraph,
+      ToolchainProvider toolchainProvider,
       ActionGraphParallelizationMode parallelizationMode,
-      final boolean shouldInstrumentGraphBuilding,
+      boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
       CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier) {
     TargetNodeToBuildRuleTransformer transformer = new DefaultTargetNodeToBuildRuleTransformer();
@@ -238,6 +249,7 @@ public class ActionGraphCache {
         eventBus,
         transformer,
         targetGraph,
+        toolchainProvider,
         parallelizationMode,
         shouldInstrumentGraphBuilding,
         incrementalActionGraphMode,
@@ -256,11 +268,12 @@ public class ActionGraphCache {
    * @return It returns a {@link ActionGraphAndResolver}
    */
   public ActionGraphAndResolver getFreshActionGraph(
-      final BuckEventBus eventBus,
-      final TargetNodeToBuildRuleTransformer transformer,
-      final TargetGraph targetGraph,
+      BuckEventBus eventBus,
+      TargetNodeToBuildRuleTransformer transformer,
+      TargetGraph targetGraph,
+      ToolchainProvider toolchainProvider,
       ActionGraphParallelizationMode parallelizationMode,
-      final boolean shouldInstrumentGraphBuilding,
+      boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
       CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
@@ -271,6 +284,7 @@ public class ActionGraphCache {
             eventBus,
             transformer,
             targetGraph,
+            toolchainProvider,
             parallelizationMode,
             shouldInstrumentGraphBuilding,
             incrementalActionGraphMode,
@@ -281,11 +295,12 @@ public class ActionGraphCache {
   }
 
   private ActionGraphAndResolver createActionGraph(
-      final BuckEventBus eventBus,
+      BuckEventBus eventBus,
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
+      ToolchainProvider toolchainProvider,
       ActionGraphParallelizationMode parallelizationMode,
-      final boolean shouldInstrumentGraphBuilding,
+      boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
       CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier) {
 
@@ -329,12 +344,18 @@ public class ActionGraphCache {
     switch (parallelizationMode) {
       case ENABLED:
         return createActionGraphInParallel(
-            eventBus, transformer, targetGraph, incrementalActionGraphMode, poolSupplier.get());
+            eventBus,
+            transformer,
+            targetGraph,
+            toolchainProvider,
+            incrementalActionGraphMode,
+            poolSupplier.get());
       case DISABLED:
         return createActionGraphSerially(
             eventBus,
             transformer,
             targetGraph,
+            toolchainProvider,
             shouldInstrumentGraphBuilding,
             incrementalActionGraphMode);
       case EXPERIMENT_UNSTABLE:
@@ -346,13 +367,15 @@ public class ActionGraphCache {
   }
 
   private ActionGraphAndResolver createActionGraphInParallel(
-      final BuckEventBus eventBus,
+      BuckEventBus eventBus,
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
+      ToolchainProvider toolchainProvider,
       IncrementalActionGraphMode incrementalActionGraphMode,
       ForkJoinPool pool) {
     BuildRuleResolver resolver =
-        new MultiThreadedBuildRuleResolver(pool, targetGraph, transformer, eventBus);
+        new MultiThreadedBuildRuleResolver(
+            pool, targetGraph, transformer, toolchainProvider, eventBus);
     HashMap<BuildTarget, CompletableFuture<BuildRule>> futures = new HashMap<>();
 
     if (incrementalActionGraphMode == IncrementalActionGraphMode.ENABLED) {
@@ -413,14 +436,15 @@ public class ActionGraphCache {
   }
 
   private ActionGraphAndResolver createActionGraphSerially(
-      final BuckEventBus eventBus,
+      BuckEventBus eventBus,
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
-      final boolean shouldInstrumentGraphBuilding,
+      ToolchainProvider toolchainProvider,
+      boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode) {
     // TODO: Reduce duplication between the serial and parallel creation methods.
     BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(targetGraph, transformer, eventBus);
+        new SingleThreadedBuildRuleResolver(targetGraph, transformer, toolchainProvider, eventBus);
 
     if (incrementalActionGraphMode == IncrementalActionGraphMode.ENABLED) {
       nodeCache.prepareForTargetGraphWalk(targetGraph, resolver);
@@ -516,13 +540,14 @@ public class ActionGraphCache {
    * @param poolSupplier The thread poolSupplier to use for parallel action graph construction
    */
   private void compareActionGraphs(
-      final BuckEventBus eventBus,
-      final ActionGraphAndResolver lastActionGraphAndResolver,
-      final TargetGraph targetGraph,
-      final RuleKeyFieldLoader fieldLoader,
+      BuckEventBus eventBus,
+      ActionGraphAndResolver lastActionGraphAndResolver,
+      TargetGraph targetGraph,
+      ToolchainProvider toolchainProvider,
+      RuleKeyFieldLoader fieldLoader,
       ActionGraphParallelizationMode parallelizationMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
-      final boolean shouldInstrumentGraphBuilding,
+      boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
       CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier) {
     try (SimplePerfEvent.Scope scope =
@@ -537,6 +562,7 @@ public class ActionGraphCache {
                   eventBus,
                   new DefaultTargetNodeToBuildRuleTransformer(),
                   targetGraph,
+                  toolchainProvider,
                   parallelizationMode,
                   shouldInstrumentGraphBuilding,
                   incrementalActionGraphMode,

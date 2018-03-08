@@ -156,9 +156,9 @@ public class DistBuildTargetGraphCodec {
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider)
       throws InterruptedException {
 
-    final ConcurrentMap<BuildTarget, TargetNode<?, ?>> index = new ConcurrentHashMap<>();
-    final ConcurrentMap<BuildTarget, TargetNode<?, ?>> graphNodes = new ConcurrentHashMap<>();
-    final ConcurrentMap<BuildTarget, Boolean> buildTargets = new ConcurrentHashMap<>();
+    ConcurrentMap<BuildTarget, TargetNode<?, ?>> index = new ConcurrentHashMap<>();
+    ConcurrentMap<BuildTarget, TargetNode<?, ?>> graphNodes = new ConcurrentHashMap<>();
+    ConcurrentMap<BuildTarget, Boolean> buildTargets = new ConcurrentHashMap<>();
 
     List<ListenableFuture<Void>> processRemoteBuildTargetFutures = new LinkedList<>();
 

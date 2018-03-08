@@ -63,7 +63,7 @@ public class SymlinkTreeMergeStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return getShortName() + " @ " + root.toString();
+    return getShortName() + " @ " + root;
   }
 
   @Override

@@ -28,7 +28,7 @@ import org.junit.Test;
 
 public class StartActivityEventTest {
   @Test
-  public void testEquals() throws Exception {
+  public void testEquals() {
     StartActivityEvent.Started started =
         configureTestEvent(
             StartActivityEvent.started(BuildTargetFactory.newInstance("//foo:bar"), "com.foo.bar"));

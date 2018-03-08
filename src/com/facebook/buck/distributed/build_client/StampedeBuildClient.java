@@ -242,8 +242,8 @@ public class StampedeBuildClient {
   }
 
   private static DistBuildControllerInvoker createDistBuildControllerInvoker(
-      final DistBuildController distBuildController,
-      final DistBuildControllerInvocationArgs distBuildControllerInvocationArgs) {
+      DistBuildController distBuildController,
+      DistBuildControllerInvocationArgs distBuildControllerInvocationArgs) {
     return () -> {
       DistBuildController.ExecutionResult distBuildResult =
           distBuildController.executeAndPrintFailuresToEventBus(

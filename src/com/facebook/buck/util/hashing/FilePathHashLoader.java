@@ -46,7 +46,7 @@ public class FilePathHashLoader implements FileHashLoader {
   private final boolean allowSymlinks;
 
   public FilePathHashLoader(
-      final Path defaultCellRoot, ImmutableSet<Path> assumeModifiedFiles, boolean allowSymlinks)
+      Path defaultCellRoot, ImmutableSet<Path> assumeModifiedFiles, boolean allowSymlinks)
       throws IOException {
     this.defaultCellRoot = defaultCellRoot;
     this.allowSymlinks = allowSymlinks;
@@ -61,7 +61,7 @@ public class FilePathHashLoader implements FileHashLoader {
   public HashCode get(Path root) throws IOException {
     // In case the root path is a directory, collect all files contained in it and sort them before
     // hashing to avoid non-deterministic directory traversal order from influencing the hash.
-    final ImmutableSortedSet.Builder<Path> files = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<Path> files = ImmutableSortedSet.naturalOrder();
     Files.walkFileTree(
         defaultCellRoot.resolve(root),
         ImmutableSet.of(FileVisitOption.FOLLOW_LINKS),

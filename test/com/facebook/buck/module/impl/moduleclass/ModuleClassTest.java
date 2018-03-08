@@ -27,13 +27,12 @@ import com.facebook.buck.module.impl.TestExtension;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import java.io.IOException;
 import java.util.List;
 import org.pf4j.PluginManager;
 
 public class ModuleClassTest {
 
-  public static void main(String... args) throws IOException {
+  public static void main(String... args) {
     TestExtension testExtension = loadTestExtensionFromPlugin();
 
     testBuckModuleHashProvider(testExtension);

@@ -97,7 +97,7 @@ public class BuckXmlTestRunListener extends XmlTestRunListener {
    * @return a file
    * @throws IOException
    */
-  protected File getResultFile(File reportDir) throws IOException {
+  protected File getResultFile(File reportDir) {
     File reportFile = new File(reportDir, TEST_RESULT_FILE);
     return reportFile;
   }

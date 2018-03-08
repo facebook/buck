@@ -578,7 +578,7 @@ public class AppleLibraryDescription
     AppleDescriptions.populateCxxLibraryDescriptionArg(
         pathResolver, delegateArg, args, buildTarget);
 
-    final BuildRuleParams newParams;
+    BuildRuleParams newParams;
     Optional<BuildRule> swiftCompanionBuildRule =
         swiftDelegate.flatMap(
             swift -> swift.createCompanionBuildRule(context, buildTarget, params, resolver, args));
@@ -639,7 +639,7 @@ public class AppleLibraryDescription
       AppleNativeTargetDescriptionArg args,
       Class<U> metadataClass) {
 
-    final SourcePathResolver pathResolver =
+    SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
     // Forward to C/C++ library description.
@@ -793,9 +793,9 @@ public class AppleLibraryDescription
 
   @Override
   public void findDepsForTargetFromConstructorArgs(
-      final BuildTarget buildTarget,
-      final CellPathResolver cellRoots,
-      final AbstractAppleLibraryDescriptionArg constructorArg,
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      AbstractAppleLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder.addAll(

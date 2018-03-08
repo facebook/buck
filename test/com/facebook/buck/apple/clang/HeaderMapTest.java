@@ -33,7 +33,7 @@ import org.junit.Test;
 
 public class HeaderMapTest {
 
-  private void assertThatHeaderMapsAreEqual(final HeaderMap hmap1, final HeaderMap hmap2) {
+  private void assertThatHeaderMapsAreEqual(HeaderMap hmap1, HeaderMap hmap2) {
     hmap1.visit((str, prefix, suffix) -> assertEquals(prefix + suffix, hmap2.lookup(str)));
     if (hmap1 == hmap2) {
       return;

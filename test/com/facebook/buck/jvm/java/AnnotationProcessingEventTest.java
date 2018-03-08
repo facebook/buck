@@ -29,7 +29,7 @@ import org.junit.Test;
 public class AnnotationProcessingEventTest {
 
   @Test
-  public void testEquals() throws Exception {
+  public void testEquals() {
     BuildTarget target = BuildTargetFactory.newInstance("//fake:rule");
     BuildTarget targetTwo = BuildTargetFactory.newInstance("//fake:rule2");
     String annotationProcessorName = "com.facebook.FakeProcessor";

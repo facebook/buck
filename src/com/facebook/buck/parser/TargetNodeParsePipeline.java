@@ -102,13 +102,13 @@ public class TargetNodeParsePipeline
   @Override
   @SuppressWarnings("CheckReturnValue")
   protected TargetNode<?, ?> computeNode(
-      final Cell cell,
-      final KnownBuildRuleTypes knownBuildRuleTypes,
-      final BuildTarget buildTarget,
-      final Map<String, Object> rawNode,
+      Cell cell,
+      KnownBuildRuleTypes knownBuildRuleTypes,
+      BuildTarget buildTarget,
+      Map<String, Object> rawNode,
       AtomicLong processedBytes)
       throws BuildTargetException {
-    try (final SimplePerfEvent.Scope scope =
+    try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scopeIgnoringShortEvents(
             eventBus,
             PerfEventId.of("GetTargetNode"),
@@ -121,7 +121,7 @@ public class TargetNodeParsePipeline
           perfEventId ->
               SimplePerfEvent.scopeIgnoringShortEvents(
                   eventBus, perfEventId, scope, getMinimumPerfEventTimeMs(), TimeUnit.MILLISECONDS);
-      final TargetNode<?, ?> targetNode =
+      TargetNode<?, ?> targetNode =
           delegate.createTargetNode(
               cell,
               knownBuildRuleTypes,

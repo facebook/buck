@@ -208,7 +208,7 @@ public class ResourcePoolTest {
                 TestResource testResource =
                     new TestResource(id) {
                       @Override
-                      public void close() throws Exception {
+                      public void close() {
                         synchronized (closedResourcesSet) {
                           closedResourcesSet.add(this);
                         }

@@ -27,13 +27,11 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.shell.ShBinaryBuilder;
 import com.facebook.buck.shell.WorkerToolBuilder;
@@ -46,9 +44,7 @@ import org.junit.Test;
 public class WorkerMacroArgTest {
   @Test
   public void testWorkerMacroArgConstruction() throws MacroException, NoSuchBuildTargetException {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
@@ -89,9 +85,7 @@ public class WorkerMacroArgTest {
 
   @Test
   public void testWorkerMacroArgWithNoMacros() throws MacroException, NoSuchBuildTargetException {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
 
     MacroHandler macroHandler =
         new MacroHandler(ImmutableMap.of("worker", new WorkerMacroExpander()));
@@ -115,9 +109,7 @@ public class WorkerMacroArgTest {
   @Test
   public void testWorkerMacroArgWithBadReference()
       throws MacroException, NoSuchBuildTargetException {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
 
     BuildRule nonWorkerBuildRule =
         new FakeBuildRule(BuildTargetFactory.newInstance("//:not_worker_rule"));
@@ -144,9 +136,7 @@ public class WorkerMacroArgTest {
 
   @Test
   public void testWorkerMacroArgWithMacroInWrongLocation() {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
 
     MacroHandler macroHandler =
         new MacroHandler(ImmutableMap.of("worker", new WorkerMacroExpander()));

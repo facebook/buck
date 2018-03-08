@@ -27,11 +27,10 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSortedSet;
@@ -43,9 +42,7 @@ public class JavaBinaryDescriptionTest {
 
   @Test
   public void rulesExportedFromDepsBecomeFirstOrderDeps() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
 
     FakeJavaLibrary transitiveLibrary =
         resolver.addToIndex(
@@ -68,7 +65,7 @@ public class JavaBinaryDescriptionTest {
   }
 
   @Test
-  public void defaultCxxPlatform() throws Exception {
+  public void defaultCxxPlatform() {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.DEFAULT_PLATFORM.withFlavor(InternalFlavor.of("newplatform"));
     SourcePath lib = FakeSourcePath.of("lib");
@@ -89,9 +86,7 @@ public class JavaBinaryDescriptionTest {
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(cxxLibBuilder.build(), javaBinBuilder.build());
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
 
     JarFattener javaBinary = (JarFattener) resolver.requireRule(javaBinBuilder.getTarget());
 

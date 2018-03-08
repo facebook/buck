@@ -51,8 +51,8 @@ abstract class AbstractCxxIncludePaths {
    * <p>Combinines their path lists, deduping them (keeping the earlier of the repeated instance).
    */
   public static CxxIncludePaths concat(Iterator<CxxIncludePaths> itemIter) {
-    ImmutableSet.Builder<CxxHeaders> ipathBuilder = ImmutableSet.<CxxHeaders>builder();
-    ImmutableSet.Builder<FrameworkPath> fpathBuilder = ImmutableSet.<FrameworkPath>builder();
+    ImmutableSet.Builder<CxxHeaders> ipathBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<FrameworkPath> fpathBuilder = ImmutableSet.builder();
 
     while (itemIter.hasNext()) {
       CxxIncludePaths item = itemIter.next();

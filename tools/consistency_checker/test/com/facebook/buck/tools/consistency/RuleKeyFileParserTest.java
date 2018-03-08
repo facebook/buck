@@ -44,7 +44,7 @@ public class RuleKeyFileParserTest {
   private RuleKeyLogFileReader reader = new RuleKeyLogFileReader();
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     logPath = temporaryFolder.newFile("out.bin.log").toAbsolutePath();
   }
 

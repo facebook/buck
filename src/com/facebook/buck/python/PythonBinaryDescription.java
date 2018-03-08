@@ -260,7 +260,7 @@ public class PythonBinaryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       PythonBinaryDescriptionArg args) {
-    if (!(args.getMain().isPresent() ^ args.getMainModule().isPresent())) {
+    if (args.getMain().isPresent() == args.getMainModule().isPresent()) {
       throw new HumanReadableException(
           "%s: must set exactly one of `main_module` and `main`", buildTarget);
     }

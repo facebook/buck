@@ -74,7 +74,7 @@ public class GoLibraryDescription
   @Override
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
-      final BuildRuleResolver resolver,
+      BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       GoLibraryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,

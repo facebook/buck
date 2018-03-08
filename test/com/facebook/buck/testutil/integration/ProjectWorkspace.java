@@ -145,7 +145,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   @VisibleForTesting
-  ProjectWorkspace(Path templateDir, final Path targetFolder) {
+  ProjectWorkspace(Path templateDir, Path targetFolder) {
     this(templateDir, targetFolder, false);
   }
 
@@ -661,7 +661,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
    * @param templateSubdirectory An optional subdirectory to check. Only files in this directory
    *     will be compared.
    */
-  private void assertPathsEqual(final Path templateSubdirectory, final Path destinationSubdirectory)
+  private void assertPathsEqual(Path templateSubdirectory, Path destinationSubdirectory)
       throws IOException {
     SimpleFileVisitor<Path> copyDirVisitor =
         new SimpleFileVisitor<Path>() {

@@ -54,7 +54,7 @@ public class InferBuckConfig implements RuleKeyAppendable {
     return config.getValue(INFER_SECTION_PREFIX, name);
   }
 
-  public InferBuckConfig(final BuckConfig delegate) {
+  public InferBuckConfig(BuckConfig delegate) {
     this.delegate = delegate;
     this.clangCompiler =
         MoreSuppliers.memoize(

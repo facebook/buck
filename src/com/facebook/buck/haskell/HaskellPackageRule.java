@@ -106,14 +106,14 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       SourcePathRuleFinder ruleFinder,
-      final Tool ghcPkg,
+      Tool ghcPkg,
       HaskellVersion haskellVersion,
       Linker.LinkableDepType depType,
       HaskellPackageInfo packageInfo,
-      final ImmutableSortedMap<String, HaskellPackage> depPackages,
+      ImmutableSortedMap<String, HaskellPackage> depPackages,
       ImmutableSortedSet<String> modules,
-      final ImmutableSortedSet<SourcePath> libraries,
-      final ImmutableSortedSet<SourcePath> interfaces,
+      ImmutableSortedSet<SourcePath> libraries,
+      ImmutableSortedSet<SourcePath> interfaces,
       ImmutableSortedSet<SourcePath> objects) {
     Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
         MoreSuppliers.memoize(
@@ -222,7 +222,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
                 context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir)));
 
     // Setup the package DB directory.
-    final Path packageDb = getPackageDb();
+    Path packageDb = getPackageDb();
     steps.add(
         RmStep.of(
                 BuildCellRelativePath.fromCellRelativePath(

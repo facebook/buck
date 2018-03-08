@@ -104,8 +104,8 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   private AtomicReference<Path> currentBuildFile = new AtomicReference<Path>();
 
   public PythonDslProjectBuildFileParser(
-      final ProjectBuildFileParserOptions options,
-      final TypeCoercerFactory typeCoercerFactory,
+      ProjectBuildFileParserOptions options,
+      TypeCoercerFactory typeCoercerFactory,
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus,
       ProcessExecutor processExecutor) {
@@ -488,7 +488,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
             String.format(
                 "Invalid diagnostic(level=%s, message=%s, source=%s)", level, message, source));
       }
-      if (source != null && source.equals("watchman")) {
+      if ("watchman".equals(source)) {
         handleWatchmanDiagnostic(buildFile, level, message, buckEventBus);
       } else {
         String header;

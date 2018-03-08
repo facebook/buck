@@ -57,6 +57,6 @@ public class LogContentsOfFileStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return "log contents of file: " + absolutePath.toString();
+    return "log contents of file: " + absolutePath;
   }
 }

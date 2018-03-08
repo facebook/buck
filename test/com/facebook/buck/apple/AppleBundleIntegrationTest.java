@@ -131,7 +131,7 @@ public class AppleBundleIntegrationTest {
             this, "simple_application_bundle_no_debug", tmp);
     workspace.setUp();
 
-    final String target = "//:DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks";
+    String target = "//:DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks";
 
     workspace.enableDirCache();
     workspace.runBuckBuild("-c", "apple.cache_bundles_and_packages=false", target).assertSuccess();
@@ -530,8 +530,7 @@ public class AppleBundleIntegrationTest {
     AppleDsymTestUtil.checkDsymFileHasDebugSymbolForMain(workspace, dwarfPath);
 
     ProcessExecutor.Result result =
-        workspace.runCommand(
-            "dsymutil", "-o", binaryPath.toString() + ".test.dSYM", binaryPath.toString());
+        workspace.runCommand("dsymutil", "-o", binaryPath + ".test.dSYM", binaryPath.toString());
 
     String dsymutilOutput = "";
     if (result.getStderr().isPresent()) {
@@ -828,9 +827,9 @@ public class AppleBundleIntegrationTest {
       String needle, ProjectWorkspace workspace, BuildTarget target, String genPathFormat)
       throws IOException {
     Path outputPath = BuildTargets.getGenPath(filesystem, target, genPathFormat);
-    final Path path = workspace.getPath(outputPath);
+    Path path = workspace.getPath(outputPath);
     assertTrue(Files.exists(path));
-    final String contents = workspace.getFileContents(outputPath);
+    String contents = workspace.getFileContents(outputPath);
     assertTrue(contents.contains(needle));
   }
 
@@ -1018,7 +1017,7 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void watchApplicationBundle() throws IOException, InterruptedException {
+  public void watchApplicationBundle() throws IOException {
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.WATCHOS));
 
     ProjectWorkspace workspace =
@@ -1054,7 +1053,7 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void legacyWatchApplicationBundle() throws IOException, InterruptedException {
+  public void legacyWatchApplicationBundle() throws IOException {
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.WATCHOS));
 
     ProjectWorkspace workspace =
@@ -1166,8 +1165,7 @@ public class AppleBundleIntegrationTest {
                 "%s")
             .resolve(target.getShortName() + ".app");
     assertThat(
-        result.getStdout(),
-        Matchers.startsWith(target.getFullyQualifiedName() + " " + appPath.toString()));
+        result.getStdout(), Matchers.startsWith(target.getFullyQualifiedName() + " " + appPath));
 
     // test debug output
     target = BuildTargetFactory.newInstance("//:DemoApp#dwarf-and-dsym");
@@ -1180,12 +1178,11 @@ public class AppleBundleIntegrationTest {
                 "%s")
             .resolve(target.getShortName() + ".app");
     assertThat(
-        result.getStdout(),
-        Matchers.startsWith(target.getFullyQualifiedName() + " " + appPath.toString()));
+        result.getStdout(), Matchers.startsWith(target.getFullyQualifiedName() + " " + appPath));
   }
 
   @Test
-  public void macAppWithExtraBinary() throws IOException, InterruptedException {
+  public void macAppWithExtraBinary() throws IOException {
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1214,7 +1211,7 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void macAppWithXPCService() throws IOException, InterruptedException {
+  public void macAppWithXPCService() throws IOException {
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1244,7 +1241,7 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void macAppWithPlugin() throws IOException, InterruptedException {
+  public void macAppWithPlugin() throws IOException {
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1273,7 +1270,7 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void macAppWithPrefPane() throws IOException, InterruptedException {
+  public void macAppWithPrefPane() throws IOException {
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =

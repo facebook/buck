@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -46,7 +45,7 @@ import org.junit.Test;
 public class JUnitStepTest {
 
   @Test
-  public void testGetShellCommand() throws InterruptedException, IOException {
+  public void testGetShellCommand() {
     String testClass1 = "com.facebook.buck.shell.JUnitCommandTest";
     String testClass2 = "com.facebook.buck.shell.InstrumentCommandTest";
     Set<String> testClassNames = ImmutableSet.of(testClass1, testClass2);
@@ -125,7 +124,7 @@ public class JUnitStepTest {
   }
 
   @Test
-  public void testGetEnvironmentVariables() throws InterruptedException {
+  public void testGetEnvironmentVariables() {
     BuildId pretendBuildId = new BuildId("pretend-build-id");
     Path modulePath = Paths.get("module/submodule");
 
@@ -163,7 +162,7 @@ public class JUnitStepTest {
   }
 
   @Test
-  public void ensureThatDebugFlagCausesJavaDebugCommandFlagToBeAdded() throws InterruptedException {
+  public void ensureThatDebugFlagCausesJavaDebugCommandFlagToBeAdded() {
     String testClass1 = "com.facebook.buck.shell.JUnitCommandTest";
     String testClass2 = "com.facebook.buck.shell.InstrumentCommandTest";
     Set<String> testClassNames = ImmutableSet.of(testClass1, testClass2);

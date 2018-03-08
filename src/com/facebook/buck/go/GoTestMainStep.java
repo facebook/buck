@@ -69,7 +69,7 @@ public class GoTestMainStep extends ShellStep {
       }
 
       StringBuilder pkgFlag = new StringBuilder();
-      pkgFlag.append(pkg.getKey().toString());
+      pkgFlag.append(pkg.getKey());
       pkgFlag.append(':');
 
       boolean first = true;
@@ -81,7 +81,7 @@ public class GoTestMainStep extends ShellStep {
 
         pkgFlag.append(pkgVars.getKey());
         pkgFlag.append('=');
-        pkgFlag.append(pkgVars.getValue().toString());
+        pkgFlag.append(pkgVars.getValue());
       }
 
       command.add("--cover-pkgs", pkgFlag.toString());

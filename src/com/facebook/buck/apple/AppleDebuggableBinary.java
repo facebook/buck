@@ -146,12 +146,8 @@ public class AppleDebuggableBinary extends AbstractBuildRule
     }
 
     // fat/thin binaries and dynamic libraries may have dSYMs
-    if (buildRule instanceof HasAppleDebugSymbolDeps
-        || buildRule instanceof AppleDebuggableBinary) {
-      return true;
-    }
-
-    return false;
+    return buildRule instanceof HasAppleDebugSymbolDeps
+        || buildRule instanceof AppleDebuggableBinary;
   }
 
   @Override

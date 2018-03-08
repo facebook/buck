@@ -127,10 +127,6 @@ public class BuildCacheArtifactUploader {
     }
 
     // If the rule's outputs are bigger than the preset size limit, don't cache it.
-    if (artifactCacheSizeLimit.isPresent() && outputSize > artifactCacheSizeLimit.get()) {
-      return false;
-    }
-
-    return true;
+    return !artifactCacheSizeLimit.isPresent() || outputSize <= artifactCacheSizeLimit.get();
   }
 }

@@ -47,7 +47,7 @@ public final class TaskEventMirror {
      * @since 9
      */
     COMPILATION,
-  };
+  }
 
   private final Object original;
   private final Kind kind;

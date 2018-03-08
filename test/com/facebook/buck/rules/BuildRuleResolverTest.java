@@ -31,6 +31,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -76,14 +78,18 @@ public class BuildRuleResolverTest {
         new Object[][] {
           {
             SingleThreadedBuildRuleResolver.class,
-            (BuildRuleResolverFactory) SingleThreadedBuildRuleResolver::new,
+            (BuildRuleResolverFactory)
+                (graph, transformer) ->
+                    new SingleThreadedBuildRuleResolver(
+                        graph, transformer, new ToolchainProviderBuilder().build(), null),
             MoreExecutors.newDirectExecutorService(),
           },
           {
             MultiThreadedBuildRuleResolver.class,
             (BuildRuleResolverFactory)
                 (graph, transformer) ->
-                    new MultiThreadedBuildRuleResolver(pool, graph, transformer, null),
+                    new MultiThreadedBuildRuleResolver(
+                        pool, graph, transformer, new ToolchainProviderBuilder().build(), null),
             pool,
           },
         });
@@ -104,7 +110,7 @@ public class BuildRuleResolverTest {
   }
 
   @Test
-  public void testBuildAndAddToIndexRejectsDuplicateBuildTarget() throws Exception {
+  public void testBuildAndAddToIndexRejectsDuplicateBuildTarget() {
     BuildRuleResolver buildRuleResolver = buildRuleResolverFactory.create(TargetGraph.EMPTY);
 
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
@@ -121,7 +127,7 @@ public class BuildRuleResolverTest {
   }
 
   @Test
-  public void testRequireNonExistingBuildRule() throws Exception {
+  public void testRequireNonExistingBuildRule() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     TargetNode<?, ?> library = JavaLibraryBuilder.createBuilder(target).build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(library);
@@ -133,7 +139,7 @@ public class BuildRuleResolverTest {
   }
 
   @Test
-  public void testRequireExistingBuildRule() throws Exception {
+  public void testRequireExistingBuildRule() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     JavaLibraryBuilder builder = JavaLibraryBuilder.createBuilder(target);
     TargetNode<?, ?> library = builder.build();
@@ -150,7 +156,7 @@ public class BuildRuleResolverTest {
   }
 
   @Test
-  public void getRuleWithTypeMissingRule() throws Exception {
+  public void getRuleWithTypeMissingRule() {
     BuildRuleResolver resolver = buildRuleResolverFactory.create(TargetGraph.EMPTY);
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(Matchers.containsString("could not be resolved"));
@@ -158,7 +164,7 @@ public class BuildRuleResolverTest {
   }
 
   @Test
-  public void getRuleWithTypeWrongType() throws Exception {
+  public void getRuleWithTypeWrongType() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     JavaLibraryBuilder builder = JavaLibraryBuilder.createBuilder(target);
     TargetNode<?, ?> library = builder.build();
@@ -221,6 +227,7 @@ public class BuildRuleResolverTest {
               @Override
               public <T, U extends Description<T>> BuildRule transform(
                   TargetGraph targetGraph,
+                  ToolchainProvider toolchainProvider,
                   BuildRuleResolver ruleResolver,
                   TargetNode<T, U> targetNode) {
                 Assert.assertFalse(ruleResolver.getRuleOptional(target).isPresent());
@@ -253,6 +260,7 @@ public class BuildRuleResolverTest {
               @Override
               public <T, U extends Description<T>> BuildRule transform(
                   TargetGraph targetGraph,
+                  ToolchainProvider toolchainProvider,
                   BuildRuleResolver ruleResolver,
                   TargetNode<T, U> targetNode) {
                 Boolean existing = transformCalls.put(targetNode.getBuildTarget(), true);
@@ -341,6 +349,7 @@ public class BuildRuleResolverTest {
                 @Override
                 public <T, U extends Description<T>> BuildRule transform(
                     TargetGraph targetGraph,
+                    ToolchainProvider toolchainProvider,
                     BuildRuleResolver ruleResolver,
                     TargetNode<T, U> targetNode) {
 
@@ -362,6 +371,7 @@ public class BuildRuleResolverTest {
                   return new FakeBuildRule(targetNode.getBuildTarget());
                 }
               },
+              new ToolchainProviderBuilder().build(),
               null);
 
       // mimic our actual parallel action graph construction, in which we call requireRule with

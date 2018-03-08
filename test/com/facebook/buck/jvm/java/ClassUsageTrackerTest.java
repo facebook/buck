@@ -73,7 +73,7 @@ public class ClassUsageTrackerTest {
 
   @Test
   public void testWindowsPathsDontBlowUp() throws IOException {
-    final JavaFileObject javaFileObject =
+    JavaFileObject javaFileObject =
         fileManager.getJavaFileForInput(null, WINDOWS_FILE_NAME, JavaFileObject.Kind.CLASS);
 
     javaFileObject.openInputStream();
@@ -91,7 +91,7 @@ public class ClassUsageTrackerTest {
 
   @Test
   public void readingFileFromGetJavaFileForInputShouldBeTracked() throws IOException {
-    final JavaFileObject javaFileObject =
+    JavaFileObject javaFileObject =
         fileManager.getJavaFileForInput(null, SINGLE_FILE_NAME, JavaFileObject.Kind.CLASS);
 
     javaFileObject.openInputStream();
@@ -100,7 +100,7 @@ public class ClassUsageTrackerTest {
 
   @Test
   public void readingFileFromGetJavaFileForOutputShouldBeTracked() throws IOException {
-    final JavaFileObject javaFileObject =
+    JavaFileObject javaFileObject =
         fileManager.getJavaFileForOutput(null, SINGLE_FILE_NAME, JavaFileObject.Kind.CLASS, null);
 
     javaFileObject.openInputStream();
@@ -109,7 +109,7 @@ public class ClassUsageTrackerTest {
 
   @Test
   public void readingJavaFileFromGetFileForInputShouldBeTracked() throws IOException {
-    final FileObject fileObject = fileManager.getFileForInput(null, null, SINGLE_FILE_NAME);
+    FileObject fileObject = fileManager.getFileForInput(null, null, SINGLE_FILE_NAME);
 
     fileObject.openInputStream();
     assertFilesRead(TEST_JAR_PATH, SINGLE_FILE_NAME);
@@ -117,7 +117,7 @@ public class ClassUsageTrackerTest {
 
   @Test
   public void readingJavaFileFromGetFileForOutputShouldBeTracked() throws IOException {
-    final FileObject fileObject = fileManager.getFileForOutput(null, null, SINGLE_FILE_NAME, null);
+    FileObject fileObject = fileManager.getFileForOutput(null, null, SINGLE_FILE_NAME, null);
 
     fileObject.openInputStream();
     assertFilesRead(TEST_JAR_PATH, SINGLE_FILE_NAME);
@@ -125,8 +125,7 @@ public class ClassUsageTrackerTest {
 
   @Test
   public void readingNonJavaFileFromGetFileForInputShouldBeTracked() throws IOException {
-    final FileObject fileObject =
-        fileManager.getFileForInput(null, null, SINGLE_NON_JAVA_FILE_NAME);
+    FileObject fileObject = fileManager.getFileForInput(null, null, SINGLE_NON_JAVA_FILE_NAME);
 
     fileObject.openInputStream();
     assertTrue(fileWasRead(TEST_JAR_PATH, SINGLE_NON_JAVA_FILE_NAME));
@@ -134,7 +133,7 @@ public class ClassUsageTrackerTest {
 
   @Test
   public void readingNonJavaFileFromGetFileForOutputShouldBeTracked() throws IOException {
-    final FileObject fileObject =
+    FileObject fileObject =
         fileManager.getFileForOutput(null, null, SINGLE_NON_JAVA_FILE_NAME, null);
 
     fileObject.openInputStream();
@@ -143,7 +142,7 @@ public class ClassUsageTrackerTest {
 
   @Test
   public void readingFileFromGetJavaFileObjectsFromFilesShouldNotBeTracked() throws IOException {
-    final Iterable<? extends JavaFileObject> javaFileObjects =
+    Iterable<? extends JavaFileObject> javaFileObjects =
         fileManager.getJavaFileObjectsFromFiles(Lists.newArrayList(SINGLE_FILE));
 
     for (JavaFileObject javaFileObject : javaFileObjects) {
@@ -167,7 +166,7 @@ public class ClassUsageTrackerTest {
   @Test
   public void readingAnnotationProcessorFileFromGetJavaFileForOutputShouldNotBeTracked()
       throws IOException {
-    final JavaFileObject javaFileObject =
+    JavaFileObject javaFileObject =
         fileManager.getJavaFileForOutput(
             ANNOTATION_PROCESSOR_PATH, SINGLE_FILE_NAME, JavaFileObject.Kind.CLASS, null);
 
@@ -178,7 +177,7 @@ public class ClassUsageTrackerTest {
   @Test
   public void readingAnnotationProcessorFileFromGetJavaFileForInputShouldBeTracked()
       throws IOException {
-    final JavaFileObject javaFileObject =
+    JavaFileObject javaFileObject =
         fileManager.getJavaFileForInput(
             ANNOTATION_PROCESSOR_PATH, SINGLE_FILE_NAME, JavaFileObject.Kind.CLASS);
 
@@ -189,7 +188,7 @@ public class ClassUsageTrackerTest {
   @Test
   public void readingJavaAnnotationProcessorFileFromGetFileForInputShouldNotBeTracked()
       throws IOException {
-    final FileObject fileObject =
+    FileObject fileObject =
         fileManager.getFileForInput(ANNOTATION_PROCESSOR_PATH, null, SINGLE_FILE_NAME);
 
     fileObject.openInputStream();
@@ -199,7 +198,7 @@ public class ClassUsageTrackerTest {
   @Test
   public void readingJavaAnnotationProcessorFileFromGetFileForOutputShouldNotBeTracked()
       throws IOException {
-    final FileObject fileObject =
+    FileObject fileObject =
         fileManager.getFileForOutput(ANNOTATION_PROCESSOR_PATH, null, SINGLE_FILE_NAME, null);
 
     fileObject.openInputStream();
@@ -209,7 +208,7 @@ public class ClassUsageTrackerTest {
   @Test
   public void readingNonJavaAnnotationProcessorFileFromGetFileForInputShouldNotBeTracked()
       throws IOException {
-    final FileObject fileObject =
+    FileObject fileObject =
         fileManager.getFileForInput(ANNOTATION_PROCESSOR_PATH, null, SINGLE_NON_JAVA_FILE_NAME);
 
     fileObject.openInputStream();
@@ -219,7 +218,7 @@ public class ClassUsageTrackerTest {
   @Test
   public void readingNonJavaAnnotationProcessorFileFromGetFileForOutputShouldNotBeTracked()
       throws IOException {
-    final FileObject fileObject =
+    FileObject fileObject =
         fileManager.getFileForOutput(
             ANNOTATION_PROCESSOR_PATH, null, SINGLE_NON_JAVA_FILE_NAME, null);
 
@@ -229,7 +228,7 @@ public class ClassUsageTrackerTest {
 
   @Test
   public void readingFileFromGetJavaFileObjectsFileOverloadShouldNotBeTracked() throws IOException {
-    final Iterable<? extends JavaFileObject> javaFileObjects =
+    Iterable<? extends JavaFileObject> javaFileObjects =
         fileManager.getJavaFileObjects(SINGLE_FILE);
 
     for (JavaFileObject javaFileObject : javaFileObjects) {
@@ -241,7 +240,7 @@ public class ClassUsageTrackerTest {
 
   @Test
   public void readingFileFromGetJavaFileObjectsFromStringsShouldNotBeTracked() throws IOException {
-    final Iterable<? extends JavaFileObject> javaFileObjects =
+    Iterable<? extends JavaFileObject> javaFileObjects =
         fileManager.getJavaFileObjectsFromStrings(Lists.newArrayList(SINGLE_FILE_NAME));
 
     for (JavaFileObject javaFileObject : javaFileObjects) {
@@ -254,7 +253,7 @@ public class ClassUsageTrackerTest {
   @Test
   public void readingFileFromGetJavaFileObjectsStringsOverloadShouldNotBeTracked()
       throws IOException {
-    final Iterable<? extends JavaFileObject> javaFileObjects =
+    Iterable<? extends JavaFileObject> javaFileObjects =
         fileManager.getJavaFileObjects(SINGLE_FILE_NAME);
 
     for (JavaFileObject javaFileObject : javaFileObjects) {
@@ -266,7 +265,7 @@ public class ClassUsageTrackerTest {
 
   @Test
   public void readingFileByOpeningStreamShouldBeTracked() throws IOException {
-    final JavaFileObject javaFileObject =
+    JavaFileObject javaFileObject =
         fileManager.getJavaFileForInput(null, SINGLE_FILE_NAME, JavaFileObject.Kind.CLASS);
 
     javaFileObject.openInputStream();
@@ -275,7 +274,7 @@ public class ClassUsageTrackerTest {
 
   @Test
   public void readingFileByOpeningReaderShouldBeTracked() throws IOException {
-    final JavaFileObject javaFileObject =
+    JavaFileObject javaFileObject =
         fileManager.getJavaFileForInput(null, SINGLE_FILE_NAME, JavaFileObject.Kind.CLASS);
 
     javaFileObject.openReader(false);
@@ -284,7 +283,7 @@ public class ClassUsageTrackerTest {
 
   @Test
   public void readingFileWithGetCharContentShouldBeTracked() throws IOException {
-    final JavaFileObject javaFileObject =
+    JavaFileObject javaFileObject =
         fileManager.getJavaFileForInput(null, SINGLE_FILE_NAME, JavaFileObject.Kind.CLASS);
 
     javaFileObject.getCharContent(false);
@@ -331,8 +330,7 @@ public class ClassUsageTrackerTest {
   }
 
   private boolean fileTypeIsTracked(JavaFileObject.Kind kind) throws IOException {
-    final JavaFileObject javaFileObject =
-        fileManager.getJavaFileForInput(null, kind.toString(), kind);
+    JavaFileObject javaFileObject = fileManager.getJavaFileForInput(null, kind.toString(), kind);
 
     javaFileObject.openInputStream();
 
@@ -340,16 +338,16 @@ public class ClassUsageTrackerTest {
   }
 
   private boolean fileWasRead(Path jarPath, String fileName) {
-    final ImmutableSetMultimap<Path, Path> classUsageMap = tracker.getClassUsageMap();
-    final ImmutableSet<Path> paths = classUsageMap.get(jarPath);
+    ImmutableSetMultimap<Path, Path> classUsageMap = tracker.getClassUsageMap();
+    ImmutableSet<Path> paths = classUsageMap.get(jarPath);
 
     return paths.contains(Paths.get(fileName));
   }
 
   private void assertFilesRead(Path jarPath, String... files) {
-    final ImmutableSetMultimap<Path, Path> classUsageMap = tracker.getClassUsageMap();
+    ImmutableSetMultimap<Path, Path> classUsageMap = tracker.getClassUsageMap();
 
-    final ImmutableSet<Path> paths = classUsageMap.get(jarPath);
+    ImmutableSet<Path> paths = classUsageMap.get(jarPath);
 
     assertEquals(files.length, paths.size());
 

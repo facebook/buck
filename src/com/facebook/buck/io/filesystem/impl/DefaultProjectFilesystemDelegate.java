@@ -53,7 +53,7 @@ public final class DefaultProjectFilesystemDelegate implements ProjectFilesystem
 
   @Override
   public Sha1HashCode computeSha1(Path pathRelativeToProjectRootOrJustAbsolute) throws IOException {
-    final Path fileToHash = getPathForRelativePath(pathRelativeToProjectRootOrJustAbsolute);
+    Path fileToHash = getPathForRelativePath(pathRelativeToProjectRootOrJustAbsolute);
 
     // Normally, we would just use `Files.hash(fileToHash.toFile(), Hashing.sha1())`, but if
     // fileToHash is backed by Jimfs, its toFile() method throws an UnsupportedOperationException.

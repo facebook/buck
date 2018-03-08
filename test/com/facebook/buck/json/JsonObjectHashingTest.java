@@ -24,7 +24,6 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.devtools.build.lib.collect.nestedset.NestedSetBuilder;
 import com.google.devtools.build.lib.syntax.SkylarkNestedSet;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -41,55 +40,55 @@ public class JsonObjectHashingTest {
   }
 
   @Test
-  public void emptyMapSha1Hash() throws IOException {
+  public void emptyMapSha1Hash() {
     JsonObjectHashing.hashJsonObject(hasher, ImmutableMap.of());
     assertEquals("29e24643a6328cb4ea893738b89c63b842ce24e7", hasher.hash().toString());
   }
 
   @Test
-  public void stringSha1Hash() throws IOException {
+  public void stringSha1Hash() {
     JsonObjectHashing.hashJsonObject(hasher, ImmutableMap.of("k", "v"));
     assertEquals("fe58988370f1bac4597f7cffc04a315d3ea5493d", hasher.hash().toString());
   }
 
   @Test
-  public void booleanSha1Hash() throws IOException {
+  public void booleanSha1Hash() {
     JsonObjectHashing.hashJsonObject(hasher, ImmutableMap.of("k", true));
     assertEquals("b3913145947a4a567ff95e9a321d4133cfbe602f", hasher.hash().toString());
   }
 
   @Test
-  public void shortSha1Hash() throws IOException {
+  public void shortSha1Hash() {
     JsonObjectHashing.hashJsonObject(hasher, ImmutableMap.of("k", 4096L));
     assertEquals("d052359a75b28c9f1097fdbcab6e9f2b52b47193", hasher.hash().toString());
   }
 
   @Test
-  public void intSha1Hash() throws IOException {
+  public void intSha1Hash() {
     JsonObjectHashing.hashJsonObject(hasher, ImmutableMap.of("k", 64738L));
     assertEquals("a41891d41f003499d698a2e7d7aa3f0760a5c6d2", hasher.hash().toString());
   }
 
   @Test
-  public void longSha1Hash() throws IOException {
+  public void longSha1Hash() {
     JsonObjectHashing.hashJsonObject(hasher, ImmutableMap.of("k", 2147483648L));
     assertEquals("5ec3ef74c52a97a02c1367767ae81a47554c36e4", hasher.hash().toString());
   }
 
   @Test
-  public void floatSha1Hash() throws IOException {
+  public void floatSha1Hash() {
     JsonObjectHashing.hashJsonObject(hasher, ImmutableMap.of("k", 123.456));
     assertEquals("c1c8a5cd9eddc08ffb1221d886eec398a4565bd9", hasher.hash().toString());
   }
 
   @Test
-  public void doubleSha1Hash() throws IOException {
+  public void doubleSha1Hash() {
     JsonObjectHashing.hashJsonObject(hasher, ImmutableMap.of("k", 1.79769313486231570e+308));
     assertEquals("93e9a1600777d06a6c8e1d2926b7d8c6d601d4b8", hasher.hash().toString());
   }
 
   @Test
-  public void nullSha1Hash() throws IOException {
+  public void nullSha1Hash() {
     Map<String, Object> map = new HashMap<>();
     map.put("k", null);
     JsonObjectHashing.hashJsonObject(hasher, map);
@@ -97,19 +96,19 @@ public class JsonObjectHashingTest {
   }
 
   @Test
-  public void arraySha1Hash() throws IOException {
+  public void arraySha1Hash() {
     JsonObjectHashing.hashJsonObject(hasher, ImmutableMap.of("k", ImmutableList.of(1L, 2L, 3L)));
     assertEquals("a1175b70883560d2b89caee549c86157048f3859", hasher.hash().toString());
   }
 
   @Test
-  public void objectSha1Hash() throws IOException {
+  public void objectSha1Hash() {
     JsonObjectHashing.hashJsonObject(hasher, ImmutableMap.of("k", ImmutableMap.of("k2", "v2")));
     assertEquals("d19ac4d9a68ce5a15574fa3d2064084d93aac18c", hasher.hash().toString());
   }
 
   @Test
-  public void rawShortSha1Hash() throws IOException {
+  public void rawShortSha1Hash() {
     // RawParser coerces integers to Long. Let's bypass it to test
     // this code path.
     Short val = 4096;
@@ -118,14 +117,14 @@ public class JsonObjectHashingTest {
   }
 
   @Test
-  public void rawIntSha1Hash() throws IOException {
+  public void rawIntSha1Hash() {
     Integer val = 64738;
     JsonObjectHashing.hashJsonObject(hasher, val);
     assertEquals("7dbf423da794e905ef3107b7cc46bda8b7977eba", hasher.hash().toString());
   }
 
   @Test
-  public void rawFloatSha1Hash() throws IOException {
+  public void rawFloatSha1Hash() {
     Float val = 123.456f;
     JsonObjectHashing.hashJsonObject(hasher, val);
     assertEquals("fe1a9e33f321868d26f299524c79bf8753ab100b", hasher.hash().toString());

@@ -283,7 +283,7 @@ class XctoolRunTestsStep implements Step {
     ProcessExecutorParams processExecutorParams = processExecutorParamsBuilder.build();
 
     // Only launch one instance of xctool at the time
-    final AtomicBoolean stutterLockIsNotified = new AtomicBoolean(false);
+    AtomicBoolean stutterLockIsNotified = new AtomicBoolean(false);
     try {
       LOG.debug("Running command: %s", processExecutorParams);
 
@@ -559,8 +559,7 @@ class XctoolRunTestsStep implements Step {
     }
   }
 
-  private void acquireStutterLock(final AtomicBoolean stutterLockIsNotified)
-      throws InterruptedException {
+  private void acquireStutterLock(AtomicBoolean stutterLockIsNotified) throws InterruptedException {
     if (!xctoolStutterTimeout.isPresent()) {
       return;
     }

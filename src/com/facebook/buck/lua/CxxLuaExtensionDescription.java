@@ -281,7 +281,7 @@ public class CxxLuaExtensionDescription
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
       BuildRuleParams params,
-      final CxxLuaExtensionDescriptionArg args) {
+      CxxLuaExtensionDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     FlavorDomain<LuaPlatform> luaPlatforms = getLuaPlatformsProvider().getLuaPlatforms();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
@@ -300,7 +300,7 @@ public class CxxLuaExtensionDescription
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return new CxxLuaExtension(buildTarget, projectFilesystem, params) {
 
       @Override

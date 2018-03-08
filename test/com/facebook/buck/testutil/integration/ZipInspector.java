@@ -41,7 +41,7 @@ public class ZipInspector {
   public ZipInspector(Path zip) throws IOException {
     this.zipFile = Preconditions.checkNotNull(zip);
 
-    final ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
     try (ZipFile zipFile = new ZipFile(zip.toFile())) {
       Enumeration<? extends ZipEntry> entries = zipFile.entries();
       while (entries.hasMoreElements()) {

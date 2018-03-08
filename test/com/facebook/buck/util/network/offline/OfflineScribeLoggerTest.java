@@ -49,7 +49,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -76,9 +75,8 @@ public class OfflineScribeLoggerTest {
 
     final ImmutableList<String> blacklistCategories = ImmutableList.of(blacklistedCategory);
     final int maxScribeOfflineLogsKB = 7;
-    final ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    final Path logDir = filesystem.getBuckPaths().getOfflineLogDir();
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    Path logDir = filesystem.getBuckPaths().getOfflineLogDir();
     String[] ids = {"test1", "test2", "test3", "test4"};
 
     char[] longLineBytes = new char[1000];
@@ -132,7 +130,7 @@ public class OfflineScribeLoggerTest {
             hasItem(expectedLogPaths[1]),
             hasItem(expectedLogPaths[2]),
             hasItem(expectedLogPaths[3]),
-            IsIterableWithSize.<Path>iterableWithSize(3)));
+            IsIterableWithSize.iterableWithSize(3)));
 
     // Check that last logger logged correct data.
     assertEquals(3, fakeLogger.getAttemptStoringCategoriesWithLinesCount());
@@ -154,7 +152,7 @@ public class OfflineScribeLoggerTest {
               Matchers.allOf(
                   hasItem(whitelistedLines[dataNum][0]),
                   hasItem(whitelistedLines[dataNum][1]),
-                  IsIterableWithSize.<String>iterableWithSize(2)));
+                  IsIterableWithSize.iterableWithSize(2)));
 
           dataNum++;
         }
@@ -169,19 +167,18 @@ public class OfflineScribeLoggerTest {
 
   @Test
   public void sendStoredLogs() throws Exception {
-    final ImmutableList<String> blacklistCategories = ImmutableList.of();
-    final int maxScribeOfflineLogsKB = 2;
-    final ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    final Path logDir = filesystem.getBuckPaths().getOfflineLogDir();
-    final String[] ids = {"test1", "test2", "test3"};
-    final String[] uniqueCategories = {"cat1", "cat2"};
-    final String[] categories = {uniqueCategories[0], uniqueCategories[1], uniqueCategories[0]};
+    ImmutableList<String> blacklistCategories = ImmutableList.of();
+    int maxScribeOfflineLogsKB = 2;
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    Path logDir = filesystem.getBuckPaths().getOfflineLogDir();
+    String[] ids = {"test1", "test2", "test3"};
+    String[] uniqueCategories = {"cat1", "cat2"};
+    String[] categories = {uniqueCategories[0], uniqueCategories[1], uniqueCategories[0]};
     final String testCategory = "test_category";
     final String line = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
-    final List<Pair<String, Iterable<String>>> sentData = new ArrayList<>();
+    List<Pair<String, Iterable<String>>> sentData = new ArrayList<>();
 
-    final ScribeLogger succeeddingLogger =
+    ScribeLogger succeeddingLogger =
         new ScribeLogger() {
           @Override
           public ListenableFuture<Void> log(String category, Iterable<String> lines) {
@@ -192,7 +189,7 @@ public class OfflineScribeLoggerTest {
           }
 
           @Override
-          public void close() throws IOException {}
+          public void close() {}
         };
 
     // Create 3 dummy logfiles - each will have 3 categories x 4 lines ~ 0.9KB. Hence, when reading
@@ -230,9 +227,9 @@ public class OfflineScribeLoggerTest {
     // Check read&sent data is as expected - for first category we expect clustered 8 lines from
     // 2x4.
     assertEquals(4, sentData.size());
-    final String[] expectedCategories =
+    String[] expectedCategories =
         ObjectArrays.concat(uniqueCategories, uniqueCategories, String.class);
-    final String[] seenCategories = new String[sentData.size()];
+    String[] seenCategories = new String[sentData.size()];
     for (int i = 0; i < sentData.size(); i++) {
       seenCategories[i] = sentData.get(i).getFirst();
       int expectedCount = (sentData.get(i).getFirst().equals(uniqueCategories[0])) ? 8 : 4;
@@ -250,7 +247,7 @@ public class OfflineScribeLoggerTest {
     Path notRemovedLog =
         filesystem.resolve(logDir.resolve(LOGFILE_PREFIX + ids[0] + LOGFILE_SUFFIX));
     assertThat(
-        logs, Matchers.allOf(hasItem(notRemovedLog), IsIterableWithSize.<Path>iterableWithSize(1)));
+        logs, Matchers.allOf(hasItem(notRemovedLog), IsIterableWithSize.iterableWithSize(1)));
   }
 
   /**
@@ -271,8 +268,7 @@ public class OfflineScribeLoggerTest {
         int maxScribeOfflineLogs,
         ProjectFilesystem filesystem,
         Path logDir,
-        BuildId id)
-        throws IOException {
+        BuildId id) {
       this.blacklistCategories = blacklistCategories;
       this.id = id;
       this.filesystem = filesystem;
@@ -289,7 +285,7 @@ public class OfflineScribeLoggerTest {
     }
 
     @Override
-    public ListenableFuture<Void> log(final String category, final Iterable<String> lines) {
+    public ListenableFuture<Void> log(String category, Iterable<String> lines) {
       ListenableFuture<Void> upload = offlineScribeLogger.log(category, lines);
       Futures.addCallback(
           upload,
@@ -318,7 +314,7 @@ public class OfflineScribeLoggerTest {
       return storedCategoriesWithLines.get();
     }
 
-    Path getStoredLog() throws FileNotFoundException {
+    Path getStoredLog() {
       return filesystem.resolve(logDir.resolve(LOGFILE_PREFIX + id + LOGFILE_SUFFIX));
     }
   }

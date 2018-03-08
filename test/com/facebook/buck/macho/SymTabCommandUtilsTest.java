@@ -21,7 +21,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.util.charset.NulTerminatedCharsetDecoder;
 import com.google.common.primitives.UnsignedInteger;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -49,8 +48,7 @@ public class SymTabCommandUtilsTest {
     checkWithBytes(NlistTestData.getLittleEndian32Bit(), false, true);
   }
 
-  private void checkWithBytes(byte[] nlistTemplateBytes, boolean is64Bit, boolean isSwapped)
-      throws IOException {
+  private void checkWithBytes(byte[] nlistTemplateBytes, boolean is64Bit, boolean isSwapped) {
 
     byte[] nlistBytes1 = Arrays.copyOf(nlistTemplateBytes, nlistTemplateBytes.length);
     if (isSwapped) {
@@ -74,7 +72,7 @@ public class SymTabCommandUtilsTest {
     } else {
       commandBytes = SymTabCommandTestData.getBigEndian();
     }
-    final int cmdSize = commandBytes.length;
+    int cmdSize = commandBytes.length;
     if (isSwapped) {
       commandBytes[8] = (byte) cmdSize; // symoff
       commandBytes[12] = (byte) 2; // nsyms
@@ -109,13 +107,13 @@ public class SymTabCommandUtilsTest {
 
   @Test
   public void testGettingStringTableValueForNlist() throws Exception {
-    final String stringTableEntry = "string_table_entry";
+    String stringTableEntry = "string_table_entry";
 
     byte[] nlistBytes = NlistTestData.getBigEndian64Bit();
     nlistBytes[3] = (byte) (0x01); // strx - first entry
 
     byte[] commandBytes = SymTabCommandTestData.getBigEndian();
-    final int cmdSize = commandBytes.length;
+    int cmdSize = commandBytes.length;
     commandBytes[11] = (byte) cmdSize; // symoff
     commandBytes[15] = (byte) 1; // nsyms
     commandBytes[19] = (byte) (cmdSize + nlistBytes.length); // stroff
@@ -150,20 +148,20 @@ public class SymTabCommandUtilsTest {
   }
 
   @Test
-  public void testGettingStringTableEntrySize() throws Exception {
+  public void testGettingStringTableEntrySize() {
     assertThat(SymTabCommandUtils.sizeOfStringTableEntryWithContents("abc"), equalTo(4));
   }
 
   @Test
-  public void testInsertingNewStringTableEntry() throws Exception {
+  public void testInsertingNewStringTableEntry() {
     byte[] commandBytes = SymTabCommandTestData.getBigEndian();
-    final int cmdSize = commandBytes.length;
+    int cmdSize = commandBytes.length;
     commandBytes[11] = (byte) cmdSize; // symoff
     commandBytes[15] = (byte) 0; // nsyms
     commandBytes[19] = (byte) cmdSize; // stroff
     commandBytes[23] = (byte) 20; // strsize
 
-    final String content = "new_entry";
+    String content = "new_entry";
 
     ByteBuffer byteBuffer =
         ByteBuffer.allocate(
@@ -186,9 +184,9 @@ public class SymTabCommandUtilsTest {
   }
 
   @Test
-  public void testUpdatingSymTabCommand() throws Exception {
+  public void testUpdatingSymTabCommand() {
     byte[] commandBytes = SymTabCommandTestData.getBigEndian();
-    final int cmdSize = commandBytes.length;
+    int cmdSize = commandBytes.length;
     commandBytes[11] = (byte) cmdSize; // symoff
     commandBytes[15] = (byte) 3; // nsyms
     commandBytes[18] = (byte) cmdSize; // stroff
@@ -198,7 +196,7 @@ public class SymTabCommandUtilsTest {
         SymTabCommandUtils.createFromBuffer(
             ByteBuffer.wrap(commandBytes).order(ByteOrder.BIG_ENDIAN));
 
-    final String content = "new_entry";
+    String content = "new_entry";
 
     ByteBuffer byteBuffer =
         ByteBuffer.allocate(
@@ -235,12 +233,12 @@ public class SymTabCommandUtilsTest {
   }
 
   @Test
-  public void testCheckingForNulValue() throws Exception {
+  public void testCheckingForNulValue() {
     byte[] nlistBytes = NlistTestData.getBigEndian64Bit();
     nlistBytes[3] = (byte) 0x00; // strx - first entry
 
     byte[] commandBytes = SymTabCommandTestData.getBigEndian();
-    final int cmdSize = commandBytes.length;
+    int cmdSize = commandBytes.length;
     commandBytes[11] = (byte) cmdSize; // symoff
     commandBytes[15] = (byte) 1; // nsyms
     commandBytes[19] = (byte) (cmdSize + nlistBytes.length); // stroff
@@ -259,14 +257,14 @@ public class SymTabCommandUtilsTest {
   }
 
   @Test
-  public void testCheckingSlashesAtStartAndEnd() throws Exception {
+  public void testCheckingSlashesAtStartAndEnd() {
     byte[] nlistBytes = NlistTestData.getBigEndian64Bit();
     nlistBytes[3] = (byte) 0x01; // strx
 
     String entryContents = "/some/path/";
 
     byte[] commandBytes = SymTabCommandTestData.getBigEndian();
-    final int cmdSize = commandBytes.length;
+    int cmdSize = commandBytes.length;
     commandBytes[11] = (byte) cmdSize; // symoff
     commandBytes[15] = (byte) 1; // nsyms
     commandBytes[19] = (byte) (cmdSize + nlistBytes.length); // stroff
@@ -296,12 +294,12 @@ public class SymTabCommandUtilsTest {
   }
 
   @Test
-  public void testCheckingForEmptyString() throws Exception {
+  public void testCheckingForEmptyString() {
     byte[] nlistBytes = NlistTestData.getBigEndian64Bit();
     nlistBytes[3] = (byte) 0x01; // strx
 
     byte[] commandBytes = SymTabCommandTestData.getBigEndian();
-    final int cmdSize = commandBytes.length;
+    int cmdSize = commandBytes.length;
     commandBytes[11] = (byte) cmdSize; // symoff
     commandBytes[15] = (byte) 1; // nsyms
     commandBytes[19] = (byte) (cmdSize + nlistBytes.length); // stroff

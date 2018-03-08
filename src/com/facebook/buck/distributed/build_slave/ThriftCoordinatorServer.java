@@ -154,6 +154,7 @@ public class ThriftCoordinatorServer implements Closeable {
   }
 
   public ThriftCoordinatorServer start() throws IOException {
+    LOG.info("Starting ThriftCoordinatorServer.");
     synchronized (lock) {
       TNonblockingServerSocket transport;
       try {
@@ -242,10 +243,10 @@ public class ThriftCoordinatorServer implements Closeable {
     }
   }
 
-  /** Create a snapshot of dist build trace. */
-  public DistBuildTrace traceSnapshot() {
+  /** Create a {@link DistBuildTrace} based on timestamps of rules processed by the minions. */
+  public DistBuildTrace generateTrace() {
     synchronized (lock) {
-      return chromeTraceTracker.snapshot();
+      return chromeTraceTracker.generateTrace();
     }
   }
 
@@ -268,6 +269,7 @@ public class ThriftCoordinatorServer implements Closeable {
   private void switchToActiveModeOrFail(Future<BuildTargetsQueue> queue) {
     Preconditions.checkState(queue.isDone());
     try {
+      LOG.info("Switching Coordinator to Active mode now.");
       MinionWorkloadAllocator allocator = new MinionWorkloadAllocator(queue.get());
       this.handler =
           new ActiveCoordinatorService(
@@ -282,13 +284,12 @@ public class ThriftCoordinatorServer implements Closeable {
       this.handler =
           new Iface() {
             @Override
-            public GetWorkResponse getWork(GetWorkRequest request) throws TException {
+            public GetWorkResponse getWork(GetWorkRequest request) {
               throw new RuntimeException(msg, e);
             }
 
             @Override
-            public ReportMinionAliveResponse reportMinionAlive(ReportMinionAliveRequest request)
-                throws TException {
+            public ReportMinionAliveResponse reportMinionAlive(ReportMinionAliveRequest request) {
               return new ReportMinionAliveResponse();
             }
           };

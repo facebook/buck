@@ -222,7 +222,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
    * Convenience wrapper for {@link SimplePerfEvent#scope(BuckEventBus, PerfEventId, ImmutableMap)}.
    */
   public static Scope scope(BuckEventBus bus, String perfEventName) {
-    return scope(bus, PerfEventId.of(perfEventName), ImmutableMap.<String, Object>of());
+    return scope(bus, PerfEventId.of(perfEventName), ImmutableMap.of());
   }
 
   /**

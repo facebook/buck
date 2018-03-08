@@ -16,6 +16,8 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.distributed.build_slave.DistBuildTrace.MinionThread;
+import com.facebook.buck.distributed.build_slave.DistBuildTrace.MinionTrace;
 import com.facebook.buck.distributed.build_slave.DistBuildTrace.RuleTrace;
 import com.facebook.buck.event.chrome_trace.ChromeTraceEvent;
 import com.facebook.buck.event.chrome_trace.ChromeTraceEvent.Phase;
@@ -27,165 +29,108 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 /** Chrome trace generator for {@link DistBuildTrace} object. */
 public class DistBuildChromeTraceRenderer {
 
-  private static class MinionRenderLine {
-    List<RuleTrace> ruleTraces = new ArrayList<>();
+  private final DistBuildTrace trace;
+  private final ChromeTraceWriter chromeTraceWriter;
+
+  private DistBuildChromeTraceRenderer(DistBuildTrace trace, OutputStream outputStream)
+      throws IOException {
+    this.trace = trace;
+    this.chromeTraceWriter = new ChromeTraceWriter(outputStream);
   }
 
-  private static class MinionTraceIntermediate {
-    final String id;
-    List<MinionRenderLine> lines = new ArrayList<>();
-
-    MinionTraceIntermediate(String id) {
-      this.id = id;
-    }
-
-    void addItem(RuleTrace historyEntry) {
-      for (MinionRenderLine line : lines) {
-        RuleTrace lineLastEntry = line.ruleTraces.get(line.ruleTraces.size() - 1);
-        if (lineLastEntry.finishEpochMillis <= historyEntry.startEpochMillis) {
-          line.ruleTraces.add(historyEntry);
-          return;
-        }
-      }
-      MinionRenderLine newLine = new MinionRenderLine();
-      lines.add(newLine);
-      newLine.ruleTraces.add(historyEntry);
-    }
+  private void writeTraceFile() throws IOException {
+    chromeTraceWriter.writeStart();
+    // This metadata is not visible in Chrome trace display
+    // but can be extracted with tools like jq
+    chromeTraceWriter.writeEvent(
+        new ChromeTraceEvent(
+            "buck",
+            "global_metadata",
+            Phase.METADATA,
+            0,
+            0,
+            0,
+            0,
+            ImmutableMap.of(
+                "stampedeId", trace.stampedeId,
+                "hostname", HostnameFetching.getHostname(),
+                "timestamp", Instant.now().toString())));
+    renderMinions();
+    chromeTraceWriter.writeEnd();
+    chromeTraceWriter.close();
   }
 
-  private static class TraceIntermediate {
-    List<MinionTraceIntermediate> minionTraceIntermediates = new ArrayList<>();
-  }
+  private void renderMinions() throws IOException {
+    for (int minionIndex = 0; minionIndex < trace.minions.size(); minionIndex++) {
+      MinionTrace minionTrace = trace.minions.get(minionIndex);
 
-  private static class Writer {
+      int processIndexInTrace = minionIndex + 1;
 
-    private final DistBuildTrace trace;
-    private final TraceIntermediate traceIntermediateIntermediate;
-    private final ChromeTraceWriter chromeTraceWriter;
-
-    Writer(
-        DistBuildTrace trace,
-        TraceIntermediate traceIntermediateIntermediate,
-        OutputStream outputStream)
-        throws IOException {
-      this.trace = trace;
-      this.traceIntermediateIntermediate = traceIntermediateIntermediate;
-      this.chromeTraceWriter = new ChromeTraceWriter(outputStream);
-    }
-
-    public void write() throws IOException {
-      chromeTraceWriter.writeStart();
-      // This metadata is not visible in Chrome trace display
-      // but can be extracted with tools like jq
       chromeTraceWriter.writeEvent(
           new ChromeTraceEvent(
               "buck",
-              "global_metadata",
+              "process_name",
               Phase.METADATA,
+              processIndexInTrace,
               0,
               0,
               0,
-              0,
-              ImmutableMap.of(
-                  "stampedeId", trace.stampedeId,
-                  "hostname", HostnameFetching.getHostname(),
-                  "timestamp", Instant.now().toString())));
-      renderContent();
-      chromeTraceWriter.writeEnd();
-      chromeTraceWriter.close();
-    }
+              ImmutableMap.of("name", minionTrace.minionId)));
 
-    private void renderContent() throws IOException {
-      for (int minionIndex = 0;
-          minionIndex < traceIntermediateIntermediate.minionTraceIntermediates.size();
-          minionIndex++) {
-        MinionTraceIntermediate minionTraceIntermediate =
-            traceIntermediateIntermediate.minionTraceIntermediates.get(minionIndex);
+      for (int threadIndex = 0; threadIndex < minionTrace.threads.size(); threadIndex++) {
+        MinionThread line = minionTrace.threads.get(threadIndex);
 
-        int processIndexInTrace = minionIndex + 1;
+        long lastEventFinishMicros = 0;
 
-        chromeTraceWriter.writeEvent(
-            new ChromeTraceEvent(
-                "buck",
-                "process_name",
-                Phase.METADATA,
-                processIndexInTrace,
-                0,
-                0,
-                0,
-                ImmutableMap.of("name", minionTraceIntermediate.id)));
+        for (RuleTrace ruleEntry : line.ruleTraces) {
+          // Work around Chrome trace renderer: it renders new lines
+          // for zero width events connected to previous events.
+          // So we are adjusting events so that:
+          // * each event is at least 1 microsecond
+          // * adjusted events do not overlap
+          // For example, this sequence event would produce two lines:
+          // | 5ms event | 0ms event | 5ms event |
+          // So we render these events like this:
+          // | 5ms event | 0us event | 4ms499us event |
 
-        for (int lineIndex = 0; lineIndex < minionTraceIntermediate.lines.size(); lineIndex++) {
-          MinionRenderLine line = minionTraceIntermediate.lines.get(lineIndex);
+          long startMicros = Math.max(ruleEntry.startEpochMillis * 1000, lastEventFinishMicros);
 
-          long lastEventFinishMicros = 0;
+          lastEventFinishMicros = Math.max(ruleEntry.finishEpochMillis * 1000, startMicros + 1);
 
-          for (RuleTrace historyEntry : line.ruleTraces) {
-            // Work around Chrome trace renderer: it renders new lines
-            // for zero width events connected to previous events.
-            // So we are adjusting events so that:
-            // * each event is at least 1 microsecond
-            // * adjusted events do not overlap
-            // For example, this sequence event would produce two lines:
-            // | 5ms event | 0ms event | 5ms event |
-            // So we render these events like this:
-            // | 5ms event | 0us event | 4ms499us event |
-
-            long startMicros =
-                Math.max(historyEntry.startEpochMillis * 1000, lastEventFinishMicros);
-
-            lastEventFinishMicros =
-                Math.max(historyEntry.finishEpochMillis * 1000, startMicros + 1);
-
-            chromeTraceWriter.writeEvent(
-                new ChromeTraceEvent(
-                    "buck",
-                    historyEntry.ruleName,
-                    Phase.BEGIN,
-                    processIndexInTrace,
-                    lineIndex,
-                    startMicros,
-                    0,
-                    ImmutableMap.of()));
-            chromeTraceWriter.writeEvent(
-                new ChromeTraceEvent(
-                    "buck",
-                    historyEntry.ruleName,
-                    Phase.END,
-                    processIndexInTrace,
-                    lineIndex,
-                    lastEventFinishMicros,
-                    0,
-                    ImmutableMap.of()));
-          }
+          chromeTraceWriter.writeEvent(
+              new ChromeTraceEvent(
+                  "buck",
+                  ruleEntry.ruleName,
+                  Phase.BEGIN,
+                  processIndexInTrace,
+                  threadIndex,
+                  startMicros,
+                  0,
+                  ImmutableMap.of()));
+          chromeTraceWriter.writeEvent(
+              new ChromeTraceEvent(
+                  "buck",
+                  ruleEntry.ruleName,
+                  Phase.END,
+                  processIndexInTrace,
+                  threadIndex,
+                  lastEventFinishMicros,
+                  0,
+                  ImmutableMap.of()));
         }
       }
     }
   }
 
-  /** Generate self-contains HTML for trace snapshot. */
-  public static void render(DistBuildTrace history, Path path) throws IOException {
-    TraceIntermediate traceIntermediateIntermediate = new TraceIntermediate();
-
-    for (Map.Entry<String, List<RuleTrace>> entry : history.rulesByMinionId.entrySet()) {
-      MinionTraceIntermediate minionTraceIntermediate = new MinionTraceIntermediate(entry.getKey());
-      for (RuleTrace historyEntry : entry.getValue()) {
-        minionTraceIntermediate.addItem(historyEntry);
-      }
-
-      traceIntermediateIntermediate.minionTraceIntermediates.add(minionTraceIntermediate);
-    }
-
+  /** Generate an HTML Chrome-trace based on the given {@link DistBuildTrace} object. */
+  public static void render(DistBuildTrace trace, Path path) throws IOException {
     try (FileOutputStream outputStream = new FileOutputStream(path.toFile())) {
-      Writer writer = new Writer(history, traceIntermediateIntermediate, outputStream);
-      writer.write();
+      DistBuildChromeTraceRenderer renderer = new DistBuildChromeTraceRenderer(trace, outputStream);
+      renderer.writeTraceFile();
     }
   }
 }

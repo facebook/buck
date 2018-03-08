@@ -49,7 +49,7 @@ public enum AppleBundleExtension {
       case PREFPANE:
         return "prefPane";
       default:
-        throw new IllegalStateException("Invalid bundle extension value: " + this.toString());
+        throw new IllegalStateException("Invalid bundle extension value: " + this);
     }
   }
 }

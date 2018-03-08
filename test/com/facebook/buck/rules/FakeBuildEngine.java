@@ -21,7 +21,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.SettableFuture;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 /** Fake implementation of {@link BuildEngine} for use in tests. */
 public class FakeBuildEngine implements BuildEngine {
@@ -41,13 +40,12 @@ public class FakeBuildEngine implements BuildEngine {
   }
 
   @Override
-  public BuildResult getBuildRuleResult(BuildTarget buildTarget)
-      throws ExecutionException, InterruptedException {
+  public BuildResult getBuildRuleResult(BuildTarget buildTarget) {
     return buildResults.get(buildTarget);
   }
 
   @Override
-  public boolean isRuleBuilt(BuildTarget buildTarget) throws InterruptedException {
+  public boolean isRuleBuilt(BuildTarget buildTarget) {
     return buildResults.containsKey(buildTarget);
   }
 

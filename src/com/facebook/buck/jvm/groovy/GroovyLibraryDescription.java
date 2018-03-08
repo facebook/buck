@@ -78,6 +78,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
         new DefaultJavaLibraryRules.Builder(
                 buildTarget,
                 projectFilesystem,
+                context.getToolchainProvider(),
                 params,
                 resolver,
                 context.getCellPathResolver(),

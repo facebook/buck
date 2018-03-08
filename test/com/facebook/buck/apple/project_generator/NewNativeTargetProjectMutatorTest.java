@@ -55,15 +55,13 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.FluentIterable;
@@ -88,14 +86,9 @@ public class NewNativeTargetProjectMutatorTest {
   public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     generatedProject = new PBXProject("TestProject");
-    buildRuleResolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    buildRuleResolver = new TestBuildRuleResolver();
     sourcePathResolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new SingleThreadedBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     pathRelativizer =
         new PathRelativizer(Paths.get("_output"), sourcePathResolver::getRelativePath);
   }
@@ -451,7 +444,7 @@ public class NewNativeTargetProjectMutatorTest {
     return mutator;
   }
 
-  private static void assertHasTargetGroupWithName(PBXProject project, final String name) {
+  private static void assertHasTargetGroupWithName(PBXProject project, String name) {
     assertThat(
         "Should contain a target group named: " + name,
         Iterables.filter(
@@ -459,7 +452,7 @@ public class NewNativeTargetProjectMutatorTest {
         not(emptyIterable()));
   }
 
-  private static PBXGroup assertHasSubgroupAndReturnIt(PBXGroup group, final String subgroupName) {
+  private static PBXGroup assertHasSubgroupAndReturnIt(PBXGroup group, String subgroupName) {
     ImmutableList<PBXGroup> candidates =
         FluentIterable.from(group.getChildren())
             .filter(input -> input.getName().equals(subgroupName))

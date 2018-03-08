@@ -173,7 +173,7 @@ public class AndroidBuildToolsResolverTest {
     resolver.getBuildToolsPath();
   }
 
-  private void createBuildToolsVersions(Path sdkDir, String... directoryNames) throws IOException {
+  private void createBuildToolsVersions(Path sdkDir, String... directoryNames) {
     for (int i = 0; i < directoryNames.length; i++) {
       File folder = sdkDir.resolve(directoryNames[i]).toFile();
       assertThat(folder.mkdirs(), Matchers.is(true));

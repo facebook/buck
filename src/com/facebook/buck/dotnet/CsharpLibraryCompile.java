@@ -63,9 +63,7 @@ public class CsharpLibraryCompile extends ShellStep {
         DotnetFramework.resolveFramework(context.getEnvironment(), version);
 
     ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.add(csc.toAbsolutePath().toString())
-        .add("/target:library")
-        .add("/out:" + output.toString());
+    args.add(csc.toAbsolutePath().toString()).add("/target:library").add("/out:" + output);
 
     for (Either<Path, String> ref : references) {
       args.add("/reference:" + resolveReference(netFramework, ref));

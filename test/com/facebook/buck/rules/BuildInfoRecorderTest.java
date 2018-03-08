@@ -135,13 +135,13 @@ public class BuildInfoRecorderTest {
   }
 
   @Test
-  public void testPerformUploadToArtifactCache() throws IOException, InterruptedException {
+  public void testPerformUploadToArtifactCache() throws IOException {
 
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(filesystem);
     BuckEventBus bus = new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("BUILD"));
 
-    final byte[] contents = "contents".getBytes();
+    byte[] contents = "contents".getBytes();
 
     Path file = Paths.get("file");
     filesystem.writeBytesToPath(contents, file);
@@ -160,8 +160,8 @@ public class BuildInfoRecorderTest {
 
     buildInfoRecorder.writeMetadataToDisk(true);
 
-    final AtomicBoolean stored = new AtomicBoolean(false);
-    final ArtifactCache cache =
+    AtomicBoolean stored = new AtomicBoolean(false);
+    ArtifactCache cache =
         new NoopArtifactCache() {
           @Override
           public CacheReadMode getCacheReadMode() {

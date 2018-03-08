@@ -24,7 +24,6 @@ import com.facebook.eden.thrift.EdenError;
 import com.facebook.eden.thrift.EdenService;
 import com.facebook.eden.thrift.SHA1Result;
 import com.facebook.thrift.TException;
-import com.facebook.thrift.transport.TTransportException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import com.sun.jna.LastErrorException;
@@ -36,7 +35,7 @@ import org.junit.Test;
 public class ReconnectingEdenClientTest extends EasyMockSupport {
   @Test
   public void requestToAStaleClientShouldBeRetriedWithAFreshClient()
-      throws EdenError, IOException, TException, TTransportException {
+      throws EdenError, IOException, TException {
     String mountPoint = "/some/mountPoint";
     List<String> paths = ImmutableList.of(".buckconfig");
     HashCode hash = HashCode.fromString("2b8b815229aa8a61e483fb4ba0588b8b6c491890");

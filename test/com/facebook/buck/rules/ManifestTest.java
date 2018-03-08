@@ -40,10 +40,7 @@ import org.junit.Test;
 public class ManifestTest {
 
   private static final SourcePathResolver RESOLVER =
-      DefaultSourcePathResolver.from(
-          new SourcePathRuleFinder(
-              new SingleThreadedBuildRuleResolver(
-                  TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+      DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
 
   @Test
   public void toMap() {

@@ -490,9 +490,9 @@ public class HaskellLibraryDescription
 
     // Collect all Haskell deps
     ImmutableSet.Builder<SourcePath> haddockInterfaces = ImmutableSet.builder();
-    final ImmutableSortedMap.Builder<String, HaskellPackage> packagesBuilder =
+    ImmutableSortedMap.Builder<String, HaskellPackage> packagesBuilder =
         ImmutableSortedMap.naturalOrder();
-    final ImmutableSortedMap.Builder<String, HaskellPackage> exposedPackagesBuilder =
+    ImmutableSortedMap.Builder<String, HaskellPackage> exposedPackagesBuilder =
         ImmutableSortedMap.naturalOrder();
 
     // Traverse all deps to pull interfaces
@@ -659,14 +659,14 @@ public class HaskellLibraryDescription
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
       BuildRuleParams params,
-      final HaskellLibraryDescriptionArg args) {
+      HaskellLibraryDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     HaskellPlatformsProvider haskellPlatformsProvider = getHaskellPlatformsProvider();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     FlavorDomain<HaskellPlatform> platforms = haskellPlatformsProvider.getHaskellPlatforms();
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     CxxDeps allDeps =
         CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
 

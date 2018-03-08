@@ -47,9 +47,9 @@ public class DistBuildIntegrationTest {
 
   private void runSimpleDistBuildScenario(String scenario, String targetToBuild)
       throws IOException {
-    final Path sourceFolderPath = temporaryFolder.newFolder("source");
+    Path sourceFolderPath = temporaryFolder.newFolder("source");
     Path stateFilePath = temporaryFolder.getRoot().resolve("state_dump.bin");
-    final Path destinationFolderPath = temporaryFolder.newFolder("destination");
+    Path destinationFolderPath = temporaryFolder.newFolder("destination");
 
     ProjectWorkspace sourceWorkspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, scenario, sourceFolderPath);
@@ -80,9 +80,9 @@ public class DistBuildIntegrationTest {
 
   @Test
   public void canBuildAppleBundles() throws Exception {
-    final Path sourceFolderPath = temporaryFolder.newFolder("source");
-    final Path destinationFolderPath = temporaryFolder.newFolder("destination");
-    final Path stateFilePath = temporaryFolder.getRoot().resolve("state_dump.bin");
+    Path sourceFolderPath = temporaryFolder.newFolder("source");
+    Path destinationFolderPath = temporaryFolder.newFolder("destination");
+    Path stateFilePath = temporaryFolder.getRoot().resolve("state_dump.bin");
 
     Assume.assumeTrue(Platform.detect() == Platform.MACOS);
     Assume.assumeTrue(
@@ -125,9 +125,9 @@ public class DistBuildIntegrationTest {
   }
 
   private void testCrossCell(String scenario) throws Exception {
-    final Path sourceFolderPath = temporaryFolder.newFolder("source");
-    final Path destinationFolderPath = temporaryFolder.newFolder("destination");
-    final Path stateFilePath = temporaryFolder.getRoot().resolve("state_dump.bin");
+    Path sourceFolderPath = temporaryFolder.newFolder("source");
+    Path destinationFolderPath = temporaryFolder.newFolder("destination");
+    Path stateFilePath = temporaryFolder.getRoot().resolve("state_dump.bin");
 
     ProjectWorkspace mainCellWorkspace = setupCell(scenario, "main_cell", sourceFolderPath);
     setupCell(scenario, "secondary_cell", sourceFolderPath);
@@ -155,9 +155,9 @@ public class DistBuildIntegrationTest {
 
   @Test
   public void canBuildCrossCellWithSymlinksAndAbsPathTools() throws Exception {
-    final Path sourceFolderPath = temporaryFolder.newFolder("source");
-    final Path destinationFolderPath = temporaryFolder.newFolder("destination");
-    final String scenario = "multi_cell_java_target";
+    Path sourceFolderPath = temporaryFolder.newFolder("source");
+    Path destinationFolderPath = temporaryFolder.newFolder("destination");
+    String scenario = "multi_cell_java_target";
     Path stateFilePath = temporaryFolder.getRoot().resolve("state_dump.bin");
 
     ProjectWorkspace mainCellWorkspace = setupCell(scenario, "main_cell", sourceFolderPath);
@@ -229,9 +229,7 @@ public class DistBuildIntegrationTest {
 
   private static class Server extends FakeFrontendHttpServer {
 
-    public Server() throws IOException {
-      super();
-    }
+    public Server() throws IOException {}
 
     @Override
     public FrontendResponse handleRequest(FrontendRequest request) {

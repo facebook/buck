@@ -105,9 +105,9 @@ public class Symbols {
       Path lib,
       String symbolFlag)
       throws IOException, InterruptedException {
-    final ImmutableSet.Builder<String> undefined = ImmutableSet.builder();
-    final ImmutableSet.Builder<String> global = ImmutableSet.builder();
-    final ImmutableSet.Builder<String> all = ImmutableSet.builder();
+    ImmutableSet.Builder<String> undefined = ImmutableSet.builder();
+    ImmutableSet.Builder<String> global = ImmutableSet.builder();
+    ImmutableSet.Builder<String> all = ImmutableSet.builder();
 
     runObjdump(
         executor,
@@ -117,7 +117,7 @@ public class Symbols {
         ImmutableList.of(symbolFlag),
         new LineProcessor<Void>() {
           @Override
-          public boolean processLine(String line) throws IOException {
+          public boolean processLine(String line) {
             SymbolInfo si = extractSymbolInfo(line);
             if (si == null) {
               return true;
@@ -143,9 +143,9 @@ public class Symbols {
   public static ImmutableSet<String> getDtNeeded(
       ProcessExecutor executor, Tool objdump, SourcePathResolver resolver, Path lib)
       throws IOException, InterruptedException {
-    final ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
 
-    final Pattern re = Pattern.compile("^ *NEEDED *(\\S*)$");
+    Pattern re = Pattern.compile("^ *NEEDED *(\\S*)$");
 
     runObjdump(
         executor,
@@ -155,7 +155,7 @@ public class Symbols {
         ImmutableList.of("-p"),
         new LineProcessor<Void>() {
           @Override
-          public boolean processLine(String line) throws IOException {
+          public boolean processLine(String line) {
             Matcher m = re.matcher(line);
             if (!m.matches()) {
               return true;

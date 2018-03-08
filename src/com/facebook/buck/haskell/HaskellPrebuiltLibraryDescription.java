@@ -61,7 +61,7 @@ public class HaskellPrebuiltLibraryDescription
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
       BuildRuleParams params,
-      final HaskellPrebuiltLibraryDescriptionArg args) {
+      HaskellPrebuiltLibraryDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     return new PrebuiltHaskellLibrary(buildTarget, context.getProjectFilesystem(), params) {
 

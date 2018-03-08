@@ -48,7 +48,6 @@ import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -128,7 +127,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   @Override
-  public ImmutableList<AndroidDevice> getDevices(boolean quiet) throws InterruptedException {
+  public ImmutableList<AndroidDevice> getDevices(boolean quiet) {
     ImmutableList<AndroidDevice> devices = devicesSupplier.get();
     if (!quiet && devices.size() > 1) {
       // Report if multiple devices are matching the filter.
@@ -165,7 +164,7 @@ public class AdbHelper implements AndroidDevicesHelper {
 
     // Start executions on all matching devices.
     List<ListenableFuture<Boolean>> futures = new ArrayList<>();
-    for (final AndroidDevice device : devices) {
+    for (AndroidDevice device : devices) {
       futures.add(
           getExecutorService()
               .submit(
@@ -223,11 +222,7 @@ public class AdbHelper implements AndroidDevicesHelper {
       return executorService;
     }
     int deviceCount;
-    try {
-      deviceCount = getDevices(true).size();
-    } catch (InterruptedException e) {
-      throw new BuckUncheckedExecutionException(e);
-    }
+    deviceCount = getDevices(true).size();
     int adbThreadCount = options.getAdbThreadCount();
     if (adbThreadCount <= 0) {
       adbThreadCount = deviceCount;
@@ -299,7 +294,7 @@ public class AdbHelper implements AndroidDevicesHelper {
       HasInstallableApk hasInstallableApk,
       @Nullable String activity,
       boolean waitForDebugger)
-      throws IOException, InterruptedException {
+      throws IOException {
 
     // Might need the package name and activities from the AndroidManifest.
     Path pathToManifest =
@@ -326,7 +321,7 @@ public class AdbHelper implements AndroidDevicesHelper {
       activity = reader.getPackage() + "/" + activity;
     }
 
-    final String activityToRun = activity;
+    String activityToRun = activity;
 
     printMessage(String.format("Starting activity %s...", activityToRun));
 
@@ -353,7 +348,7 @@ public class AdbHelper implements AndroidDevicesHelper {
    * @see #installApk(SourcePathResolver, HasInstallableApk, boolean, boolean, String)
    */
   @Override
-  public boolean uninstallApp(final String packageName, final boolean shouldKeepUserData)
+  public boolean uninstallApp(String packageName, boolean shouldKeepUserData)
       throws InterruptedException {
     Preconditions.checkArgument(AdbHelper.PACKAGE_NAME_PATTERN.matcher(packageName).matches());
 
@@ -622,9 +617,9 @@ public class AdbHelper implements AndroidDevicesHelper {
 
   private boolean installApkDirectly(
       SourcePathResolver pathResolver,
-      final HasInstallableApk hasInstallableApk,
-      final boolean installViaSd,
-      final boolean quiet)
+      HasInstallableApk hasInstallableApk,
+      boolean installViaSd,
+      boolean quiet)
       throws InterruptedException {
     File apk = pathResolver.getAbsolutePath(hasInstallableApk.getApkInfo().getApkPath()).toFile();
     boolean success =

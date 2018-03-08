@@ -50,7 +50,7 @@ public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testBuildAndroidPrebuiltAar() throws InterruptedException, IOException {
+  public void testBuildAndroidPrebuiltAar() throws IOException {
     String target = "//:app";
     workspace.runBuckBuild(target).assertSuccess();
     ZipInspector zipInspector =
@@ -77,8 +77,7 @@ public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testPrebuiltRDotTxtContainsTransitiveDependencies()
-      throws InterruptedException, IOException {
+  public void testPrebuiltRDotTxtContainsTransitiveDependencies() throws IOException {
     String target = "//third-party/design-library:design-library";
     workspace.runBuckBuild(target).assertSuccess();
 

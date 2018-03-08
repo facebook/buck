@@ -55,7 +55,7 @@ public abstract class DebugPathSanitizer {
 
   public abstract String getCompilationDirectory();
 
-  public Function<String, String> sanitize(final Optional<Path> workingDir) {
+  public Function<String, String> sanitize(Optional<Path> workingDir) {
     return input -> DebugPathSanitizer.this.sanitize(workingDir, input);
   }
 

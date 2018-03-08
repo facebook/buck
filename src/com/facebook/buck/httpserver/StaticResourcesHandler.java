@@ -22,7 +22,6 @@ import com.google.common.io.ByteStreams;
 import com.google.common.net.MediaType;
 import java.io.IOException;
 import java.io.InputStream;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Request;
@@ -41,7 +40,7 @@ class StaticResourcesHandler extends AbstractHandler {
   @Override
   public void handle(
       String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
-      throws IOException, ServletException {
+      throws IOException {
     if (!"GET".equals(request.getMethod())) {
       Responses.writeFailedResponse(baseRequest, response);
       return;

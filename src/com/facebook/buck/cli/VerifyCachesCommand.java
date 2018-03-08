@@ -30,6 +30,7 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -63,6 +64,7 @@ public class VerifyCachesCommand extends AbstractCommand {
 
   private boolean verifyRuleKeyCache(
       BuckEventBus eventBus,
+      ToolchainProvider toolchainProvider,
       PrintStream stdOut,
       RuleKeyConfiguration ruleKeyConfiguration,
       FileHashCache fileHashCache,
@@ -71,7 +73,10 @@ public class VerifyCachesCommand extends AbstractCommand {
     RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(ruleKeyConfiguration);
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer(), eventBus);
+            TargetGraph.EMPTY,
+            new DefaultTargetNodeToBuildRuleTransformer(),
+            toolchainProvider,
+            eventBus);
     contents.forEach(e -> resolver.addToIndex(e.getKey()));
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -124,6 +129,7 @@ public class VerifyCachesCommand extends AbstractCommand {
                 recycler ->
                     verifyRuleKeyCache(
                         params.getBuckEventBus(),
+                        params.getCell().getToolchainProvider(),
                         params.getConsole().getStdOut(),
                         params.getRuleKeyConfiguration(),
                         params.getFileHashCache(),

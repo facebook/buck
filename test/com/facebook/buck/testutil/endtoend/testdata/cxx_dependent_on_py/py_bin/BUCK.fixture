@@ -1,0 +1,20 @@
+python_binary(
+    name = "generate_cpp",
+    main_module = "py_bin.generate_cpp",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":generate_cpp_lib",
+    ],
+)
+
+python_library(
+    name = "generate_cpp_lib",
+    srcs = [
+        "generate_cpp.py",
+    ],
+    deps = [
+        "//py_lib:util",
+    ],
+)

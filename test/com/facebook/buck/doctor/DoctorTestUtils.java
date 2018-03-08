@@ -132,7 +132,7 @@ final class DoctorTestUtils {
     }
 
     @Override
-    public DefectSubmitResult submitReport(DefectReport defectReport) throws IOException {
+    public DefectSubmitResult submitReport(DefectReport defectReport) {
       this.defectReport = defectReport;
       return DefectSubmitResult.builder()
           .setRequestProtocol(DoctorProtocolVersion.SIMPLE)

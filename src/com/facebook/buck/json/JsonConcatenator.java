@@ -100,7 +100,7 @@ class JsonConcatenator {
     if (result.isPresent()) {
       return result.get();
     } else {
-      throw new IOException("Error loading " + input.toString());
+      throw new IOException("Error loading " + input);
     }
   }
 

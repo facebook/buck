@@ -43,7 +43,6 @@ import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
@@ -56,6 +55,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.swift.SwiftBuckConfig;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
@@ -302,7 +302,7 @@ public class XCodeProjectCommandHelper {
   /** Run xcode specific project generation actions. */
   private ExitCode runXcodeProjectGenerator(
       ListeningExecutorService executor,
-      final TargetGraphAndTargets targetGraphAndTargets,
+      TargetGraphAndTargets targetGraphAndTargets,
       ImmutableSet<BuildTarget> passedInTargetsSet)
       throws IOException, InterruptedException {
     ExitCode exitCode = ExitCode.SUCCESS;
@@ -380,7 +380,7 @@ public class XCodeProjectCommandHelper {
       BuckConfig buckConfig,
       RuleKeyConfiguration ruleKeyConfiguration,
       ListeningExecutorService executorService,
-      final TargetGraphAndTargets targetGraphAndTargets,
+      TargetGraphAndTargets targetGraphAndTargets,
       ImmutableSet<BuildTarget> passedInTargetsSet,
       ImmutableSet<ProjectGenerator.Option> options,
       ImmutableSet<String> appleCxxFlavors,
@@ -402,11 +402,12 @@ public class XCodeProjectCommandHelper {
     }
 
     LazyActionGraph lazyActionGraph =
-        new LazyActionGraph(targetGraphAndTargets.getTargetGraph(), buckEventBus);
+        new LazyActionGraph(
+            targetGraphAndTargets.getTargetGraph(), cell.getToolchainProvider(), buckEventBus);
 
     LOG.debug("Generating workspace for config targets %s", targets);
     ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
-    for (final BuildTarget inputTarget : targets) {
+    for (BuildTarget inputTarget : targets) {
       TargetNode<?, ?> inputNode = targetGraphAndTargets.getTargetGraph().get(inputTarget);
       XcodeWorkspaceConfigDescriptionArg workspaceArgs;
       if (inputNode.getDescription() instanceof XcodeWorkspaceConfigDescription) {
@@ -674,7 +675,7 @@ public class XCodeProjectCommandHelper {
 
   private TargetGraph getProjectGraphForIde(
       ListeningExecutorService executor, ImmutableSet<BuildTarget> passedInTargets)
-      throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
+      throws InterruptedException, BuildFileParseException, IOException {
 
     if (passedInTargets.isEmpty()) {
       return parser
@@ -700,8 +701,7 @@ public class XCodeProjectCommandHelper {
       boolean isWithDependenciesTests,
       boolean needsFullRecursiveParse,
       ListeningExecutorService executor)
-      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
-          VersionException {
+      throws IOException, InterruptedException, BuildFileParseException, VersionException {
 
     ImmutableSet<BuildTarget> explicitTestTargets = ImmutableSet.of();
     ImmutableSet<BuildTarget> graphRootsOrSourceTargets =
@@ -836,11 +836,15 @@ public class XCodeProjectCommandHelper {
     private final TargetGraph targetGraph;
     private final BuildRuleResolver resolver;
 
-    public LazyActionGraph(TargetGraph targetGraph, BuckEventBus buckEventBus) {
+    public LazyActionGraph(
+        TargetGraph targetGraph, ToolchainProvider toolchainProvider, BuckEventBus buckEventBus) {
       this.targetGraph = targetGraph;
       this.resolver =
           new SingleThreadedBuildRuleResolver(
-              targetGraph, new DefaultTargetNodeToBuildRuleTransformer(), buckEventBus);
+              targetGraph,
+              new DefaultTargetNodeToBuildRuleTransformer(),
+              toolchainProvider,
+              buckEventBus);
     }
 
     public BuildRuleResolver getBuildRuleResolverWhileRequiringSubgraph(TargetNode<?, ?> root) {

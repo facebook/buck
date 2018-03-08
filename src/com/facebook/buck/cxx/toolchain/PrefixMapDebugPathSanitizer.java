@@ -20,7 +20,6 @@ import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.Comparator;
@@ -55,7 +54,7 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
   }
 
   @Override
-  public void restoreCompilationDirectory(Path path, Path workingDir) throws IOException {
+  public void restoreCompilationDirectory(Path path, Path workingDir) {
     // There should be nothing to sanitize in the compilation directory because the compilation
     // flags took care of it.
   }

@@ -627,9 +627,9 @@ public class AppleBinaryDescription
 
   @Override
   public void findDepsForTargetFromConstructorArgs(
-      final BuildTarget buildTarget,
-      final CellPathResolver cellRoots,
-      final AbstractAppleBinaryDescriptionArg constructorArg,
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      AbstractAppleBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     ImmutableList<ImmutableSortedSet<Flavor>> thinFlavorSets =

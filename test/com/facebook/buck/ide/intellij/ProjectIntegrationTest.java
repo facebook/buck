@@ -366,9 +366,9 @@ public class ProjectIntegrationTest {
             target);
     result.assertSuccess();
 
-    final String libImlPath = ".idea/libraries/secondary__java_com_crosscell_crosscell.xml";
+    String libImlPath = ".idea/libraries/secondary__java_com_crosscell_crosscell.xml";
     Node doc = XmlDomParser.parse(primary.getFileContents(libImlPath));
-    final String urlXpath = "/component/library/CLASSES/root/@url";
+    String urlXpath = "/component/library/CLASSES/root/@url";
     // Assert that the library URL is inside the project root
     assertThat(
         doc,

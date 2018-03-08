@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.hamcrest.Matchers;
@@ -43,8 +42,7 @@ public class SimplePerfEventTest {
     assertThat(perfEvent.getEventId(), Matchers.equalTo(id));
     assertThat(perfEvent.getEventType(), Matchers.equalTo(type));
     assertThat(
-        Maps.transformValues(perfEvent.getEventInfo(), Object::toString),
-        Matchers.equalTo((Map<String, String>) info));
+        Maps.transformValues(perfEvent.getEventInfo(), Object::toString), Matchers.equalTo(info));
   }
 
   @Test
@@ -208,7 +206,7 @@ public class SimplePerfEventTest {
   }
 
   @Test
-  public void testMinimumTimeScope() throws Exception {
+  public void testMinimumTimeScope() {
     PerfEventId ignoredEventId = PerfEventId.of("IgnoreMe");
     PerfEventId loggedEventId = PerfEventId.of("LogMe");
     PerfEventId parentId = PerfEventId.of("Parent");

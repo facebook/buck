@@ -20,10 +20,9 @@ import static org.junit.Assume.assumeNoException;
 
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
-import java.io.IOException;
 
 abstract class RustAssumptions {
-  public static void assumeRustCompilerAvailable() throws InterruptedException, IOException {
+  public static void assumeRustCompilerAvailable() {
     Throwable exception = null;
     try {
       new RustBuckConfig(FakeBuckConfig.builder().build()).getRustCompiler();

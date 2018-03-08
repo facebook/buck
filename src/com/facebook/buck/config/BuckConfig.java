@@ -149,7 +149,7 @@ public class BuckConfig implements ConfigPathGetter {
    * @param cls Class of the config view.
    * @param <T> Type of the config view.
    */
-  public <T extends ConfigView<BuckConfig>> T getView(final Class<T> cls) {
+  public <T extends ConfigView<BuckConfig>> T getView(Class<T> cls) {
     return viewCache.getView(cls);
   }
 

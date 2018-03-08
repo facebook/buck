@@ -155,7 +155,7 @@ public class LinkedBlockingStackTest {
     LinkedBlockingStack<Integer> stack = new LinkedBlockingStack<>();
 
     stack.addAll(ImmutableList.of(5, 8, 3, 6, 7));
-    assertThat(stack.toArray(), is(arrayContaining((Object) 7, 6, 3, 8, 5)));
+    assertThat(stack.toArray(), is(arrayContaining(7, 6, 3, 8, 5)));
     assertThat(stack.toArray(new Integer[7]), is(arrayContaining(7, 6, 3, 8, 5, null, null)));
   }
 

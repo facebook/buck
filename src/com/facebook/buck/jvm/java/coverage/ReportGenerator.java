@@ -83,7 +83,7 @@ public class ReportGenerator {
   private final String coverageExcludes;
 
   /** Create a new generator based for the given project. */
-  public ReportGenerator(final Properties properties) {
+  public ReportGenerator(Properties properties) {
     String jacocoOutputDir = properties.getProperty("jacoco.output.dir");
     this.title = properties.getProperty("jacoco.title");
     this.executionDataFile =
@@ -116,12 +116,12 @@ public class ReportGenerator {
     // class folder and each jar you want in your report. If you have
     // more than one bundle you will need to add a grouping node to your
     // report
-    final IBundleCoverage bundleCoverage = analyzeStructure();
+    IBundleCoverage bundleCoverage = analyzeStructure();
 
     createReport(bundleCoverage);
   }
 
-  private void createReport(final IBundleCoverage bundleCoverage) throws IOException {
+  private void createReport(IBundleCoverage bundleCoverage) throws IOException {
     Set<String> unknownFormats = Sets.difference(reportFormats, KNOWN_REPORT_FORMATS);
     if (!unknownFormats.isEmpty()) {
       throw new RuntimeException(
@@ -175,8 +175,8 @@ public class ReportGenerator {
   }
 
   private IBundleCoverage analyzeStructure() throws IOException {
-    final CoverageBuilder coverageBuilder = new CoverageBuilder();
-    final Analyzer analyzer = new Analyzer(execFileLoader.getExecutionDataStore(), coverageBuilder);
+    CoverageBuilder coverageBuilder = new CoverageBuilder();
+    Analyzer analyzer = new Analyzer(execFileLoader.getExecutionDataStore(), coverageBuilder);
 
     String[] classesDirs = classesPath.split(":");
     for (String classesDir : classesDirs) {
@@ -192,7 +192,7 @@ public class ReportGenerator {
   }
 
   private ISourceFileLocator createSourceFileLocator() {
-    final MultiSourceFileLocator result = new MultiSourceFileLocator(TAB_WIDTH);
+    MultiSourceFileLocator result = new MultiSourceFileLocator(TAB_WIDTH);
 
     String[] sourceDirectoryPaths = sourcesPath.split(":");
     for (String sourceDirectoryPath : sourceDirectoryPaths) {
@@ -210,16 +210,16 @@ public class ReportGenerator {
    *     that will be used to generate reports for
    * @throws IOException
    */
-  public static void main(final String[] args) throws IOException {
-    final Properties properties = loadProperties(args[0]);
-    final ReportGenerator generator = new ReportGenerator(properties);
+  public static void main(String[] args) throws IOException {
+    Properties properties = loadProperties(args[0]);
+    ReportGenerator generator = new ReportGenerator(properties);
     generator.create();
   }
 
-  private static Properties loadProperties(final String filename) throws IOException {
+  private static Properties loadProperties(String filename) throws IOException {
     try (InputStream inputStream = new FileInputStream(filename)) {
       try (Reader reader = new InputStreamReader(inputStream, "utf8")) {
-        final Properties result = new Properties();
+        Properties result = new Properties();
         result.load(reader);
         return result;
       }

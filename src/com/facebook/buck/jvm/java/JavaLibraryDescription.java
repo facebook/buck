@@ -186,6 +186,7 @@ public class JavaLibraryDescription
         DefaultJavaLibrary.rulesBuilder(
                 buildTarget,
                 projectFilesystem,
+                context.getToolchainProvider(),
                 params,
                 resolver,
                 context.getCellPathResolver(),
@@ -193,6 +194,7 @@ public class JavaLibraryDescription
                 javaBuckConfig,
                 args)
             .setJavacOptions(javacOptions)
+            .setToolchainProvider(context.getToolchainProvider())
             .build();
 
     if (HasJavaAbi.isAbiTarget(buildTarget)) {

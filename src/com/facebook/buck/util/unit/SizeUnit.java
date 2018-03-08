@@ -34,7 +34,7 @@ public enum SizeUnit {
   private final int ordinal;
   private final String abbreviation;
 
-  private SizeUnit(int ordinal, String abbreviation) {
+  SizeUnit(int ordinal, String abbreviation) {
     this.ordinal = ordinal;
     this.abbreviation = abbreviation;
   }

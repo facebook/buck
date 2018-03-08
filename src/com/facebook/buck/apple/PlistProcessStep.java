@@ -92,10 +92,9 @@ class PlistProcessStep implements Step {
           | ParserConfigurationException
           | SAXException
           | UnsupportedOperationException e) {
-        throw new IOException(input.toString() + ": " + e);
+        throw new IOException(input + ": " + e);
       } catch (ArrayIndexOutOfBoundsException e) {
-        throw new HumanReadableException(
-            input.toString() + ": the content of the plist is invalid or empty.");
+        throw new HumanReadableException(input + ": the content of the plist is invalid or empty.");
       }
 
       if (infoPlist instanceof NSDictionary) {
@@ -112,7 +111,7 @@ class PlistProcessStep implements Step {
                 | ParseException
                 | ParserConfigurationException
                 | SAXException e) {
-              throw new IOException(additionalInputToMerge.toString() + ": " + e);
+              throw new IOException(additionalInputToMerge + ": " + e);
             }
 
             dictionary.putAll(((NSDictionary) mergeInfoPlist).getHashMap());

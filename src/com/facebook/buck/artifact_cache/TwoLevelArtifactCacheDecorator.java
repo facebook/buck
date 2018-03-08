@@ -186,7 +186,7 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
   }
 
   @Override
-  public ListenableFuture<Void> store(final ArtifactInfo info, final BorrowablePath output) {
+  public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
 
     return Futures.transformAsync(
         attemptTwoLevelStore(info, output),
@@ -219,8 +219,7 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
     return delegate;
   }
 
-  private ListenableFuture<Boolean> attemptTwoLevelStore(
-      final ArtifactInfo info, final BorrowablePath output) {
+  private ListenableFuture<Boolean> attemptTwoLevelStore(ArtifactInfo info, BorrowablePath output) {
 
     return Futures.transformAsync(
         Futures.immediateFuture(null),

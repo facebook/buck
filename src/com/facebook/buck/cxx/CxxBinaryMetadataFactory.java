@@ -35,7 +35,7 @@ public class CxxBinaryMetadataFactory {
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
       ImmutableSortedSet<BuildTarget> deps,
-      final Class<U> metadataClass) {
+      Class<U> metadataClass) {
     if (!metadataClass.isAssignableFrom(CxxCompilationDatabaseDependencies.class)
         || !buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       return Optional.empty();

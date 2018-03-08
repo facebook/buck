@@ -100,15 +100,15 @@ public class IJProjectCleaner {
   }
 
   public void clean(
-      final BuckConfig buckConfig,
-      final Path librariesXmlBase,
-      final boolean runPostGenerationCleaner,
-      final boolean removeOldLibraries) {
+      BuckConfig buckConfig,
+      Path librariesXmlBase,
+      boolean runPostGenerationCleaner,
+      boolean removeOldLibraries) {
     if (!runPostGenerationCleaner && !removeOldLibraries) {
       return;
     }
 
-    final Set<File> buckDirectories = new HashSet<>();
+    Set<File> buckDirectories = new HashSet<>();
     buckDirectories.add(
         convertPathToFile(
             projectFilesystem.resolve(projectFilesystem.getBuckPaths().getBuckOut())));

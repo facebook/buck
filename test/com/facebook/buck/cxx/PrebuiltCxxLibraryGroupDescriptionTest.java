@@ -27,12 +27,10 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -47,9 +45,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
 
   @Test
   public void exportedPreprocessorFlags() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:lib");
     CxxPreprocessorDep lib =
         (CxxPreprocessorDep)
@@ -63,9 +59,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
 
   @Test
   public void includeDirs() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:lib");
     SourcePath includes = FakeSourcePath.of("include");
     CxxPreprocessorDep lib =
@@ -82,9 +76,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
 
   @Test
   public void staticLink() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:lib");
     SourcePath path = FakeSourcePath.of("include");
     NativeLinkable lib =
@@ -107,9 +99,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
 
   @Test
   public void staticPicLink() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:lib");
     SourcePath path = FakeSourcePath.of("include");
     NativeLinkable lib =
@@ -132,9 +122,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
 
   @Test
   public void sharedLink() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:lib");
     SourcePath lib1 = FakeSourcePath.of("dir/lib1.so");
     PathSourcePath lib2 = FakeSourcePath.of("dir/lib2.so");
@@ -161,9 +149,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
 
   @Test
   public void exportedDeps() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:lib");
     CxxLibrary dep =
         (CxxLibrary)
@@ -180,9 +166,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
 
   @Test
   public void providedSharedLibs() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:lib");
     SourcePath lib1 = FakeSourcePath.of("dir/lib1.so");
     SourcePath lib2 = FakeSourcePath.of("dir/lib2.so");
@@ -207,9 +191,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
 
   @Test
   public void preferredLinkage() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
 
     NativeLinkable any =
         (NativeLinkable)
@@ -241,7 +223,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
   }
 
   @Test
-  public void cxxGenruleLib() throws Exception {
+  public void cxxGenruleLib() {
     CxxGenruleBuilder cxxGenruleBuilder =
         new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:dep")).setOut("libtest.so");
     PrebuiltCxxLibraryGroupBuilder builder =
@@ -251,9 +233,8 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 ImmutableList.of(DefaultBuildTargetSourcePath.of(cxxGenruleBuilder.getTarget())));
 
     BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraphFactory.newInstance(cxxGenruleBuilder.build(), builder.build()),
-            new DefaultTargetNodeToBuildRuleTransformer());
+        new TestBuildRuleResolver(
+            TargetGraphFactory.newInstance(cxxGenruleBuilder.build(), builder.build()));
 
     CxxGenrule cxxGenrule = (CxxGenrule) cxxGenruleBuilder.build(resolver);
     NativeLinkable library = (NativeLinkable) builder.build(resolver);
@@ -266,9 +247,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
 
   @Test
   public void supportedPlatforms() throws Exception {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     CxxLibrary dep1 =
         (CxxLibrary)
             new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep")).build(resolver);

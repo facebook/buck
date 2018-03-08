@@ -47,7 +47,7 @@ public class FakeNuProcess implements NuProcess {
   }
 
   @Override
-  public int waitFor(long timeout, TimeUnit timeUnit) throws InterruptedException {
+  public int waitFor(long timeout, TimeUnit timeUnit) {
     running.set(false);
     return exitCode;
   }

@@ -45,7 +45,7 @@ public abstract class AbstractBreadthFirstTraversal<Node>
    * @param visitor Typically a lambda expression
    */
   public static <Node> void traverse(
-      Iterable<? extends Node> initialNodes, final Visitor<Node, RuntimeException> visitor) {
+      Iterable<? extends Node> initialNodes, Visitor<Node, RuntimeException> visitor) {
     new StaticBreadthFirstTraversal<>(initialNodes, visitor).start();
   }
 }

@@ -46,7 +46,7 @@ public class UnixArchiveTest {
   }
 
   @Test
-  public void testCheckingHeader() throws IOException {
+  public void testCheckingHeader() {
     byte[] bytes = "!<arch>\n..........".getBytes(Charsets.UTF_8);
     assertThat(
         UnixArchive.checkHeader(ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN)), equalTo(true));

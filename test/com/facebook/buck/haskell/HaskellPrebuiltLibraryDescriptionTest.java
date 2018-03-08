@@ -30,13 +30,12 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -50,7 +49,7 @@ import org.junit.Test;
 public class HaskellPrebuiltLibraryDescriptionTest {
 
   @Test
-  public void staticLibraries() throws Exception {
+  public void staticLibraries() {
     PathSourcePath lib = FakeSourcePath.of("libfoo.a");
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     PrebuiltHaskellLibraryBuilder builder =
@@ -60,9 +59,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
             .setStaticLibs(ImmutableList.of(lib));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     PrebuiltHaskellLibrary library = builder.build(resolver, filesystem, targetGraph);
     NativeLinkableInput input =
         library.getNativeLinkableInput(
@@ -79,7 +76,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
   }
 
   @Test
-  public void sharedLibraries() throws Exception {
+  public void sharedLibraries() {
     PathSourcePath lib = FakeSourcePath.of("libfoo.so");
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     PrebuiltHaskellLibraryBuilder builder =
@@ -89,9 +86,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
             .setSharedLibs(ImmutableMap.of("libfoo.so", lib));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     PrebuiltHaskellLibrary library = builder.build(resolver, filesystem, targetGraph);
     NativeLinkableInput input =
         library.getNativeLinkableInput(
@@ -108,7 +103,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
   }
 
   @Test
-  public void interfaces() throws Exception {
+  public void interfaces() {
     PathSourcePath interfaces = FakeSourcePath.of("interfaces");
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     PrebuiltHaskellLibraryBuilder builder =
@@ -118,9 +113,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
             .setImportDirs(ImmutableList.of(interfaces));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     PrebuiltHaskellLibrary library = builder.build(resolver, filesystem, targetGraph);
     HaskellCompileInput input =
         library.getCompileInput(
@@ -129,16 +122,14 @@ public class HaskellPrebuiltLibraryDescriptionTest {
   }
 
   @Test
-  public void packageDb() throws Exception {
+  public void packageDb() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     PathSourcePath db = FakeSourcePath.of("package.conf.d");
     PrebuiltHaskellLibraryBuilder builder =
         new PrebuiltHaskellLibraryBuilder(target).setVersion("1.0.0").setDb(db);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     PrebuiltHaskellLibrary library = builder.build(resolver, filesystem, targetGraph);
     HaskellCompileInput input =
         library.getCompileInput(
@@ -147,7 +138,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
   }
 
   @Test
-  public void packageInfo() throws Exception {
+  public void packageInfo() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     PrebuiltHaskellLibraryBuilder builder =
         new PrebuiltHaskellLibraryBuilder(target)
@@ -156,9 +147,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
             .setId("id");
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     PrebuiltHaskellLibrary library = builder.build(resolver, filesystem, targetGraph);
     HaskellCompileInput input =
         library.getCompileInput(
@@ -169,7 +158,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
   }
 
   @Test
-  public void exportedLinkerFlags() throws Exception {
+  public void exportedLinkerFlags() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     String flag = "-exported-linker-flags";
     PrebuiltHaskellLibraryBuilder builder =
@@ -179,9 +168,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
             .setExportedLinkerFlags(ImmutableList.of(flag));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     PrebuiltHaskellLibrary library = builder.build(resolver, filesystem, targetGraph);
@@ -196,7 +183,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
   }
 
   @Test
-  public void exportedCompilerFlags() throws Exception {
+  public void exportedCompilerFlags() {
     String flag = "-exported-compiler-flags";
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     PrebuiltHaskellLibraryBuilder builder =
@@ -206,9 +193,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
             .setExportedCompilerFlags(ImmutableList.of(flag));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     PrebuiltHaskellLibrary library = builder.build(resolver, filesystem, targetGraph);
     HaskellCompileInput staticInput =
         library.getCompileInput(
@@ -221,7 +206,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
   }
 
   @Test
-  public void cxxHeaderDirs() throws Exception {
+  public void cxxHeaderDirs() {
     PathSourcePath interfaces = FakeSourcePath.of("interfaces");
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     PathSourcePath path = FakeSourcePath.of("include_dir");
@@ -233,9 +218,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
             .setCxxHeaderDirs(ImmutableSortedSet.of(path));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     PrebuiltHaskellLibrary library = builder.build(resolver, filesystem, targetGraph);
     assertThat(
         library.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM),

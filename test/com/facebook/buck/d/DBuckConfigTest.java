@@ -23,13 +23,11 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
@@ -53,7 +51,7 @@ public class DBuckConfigTest {
   private Path makeFakeExecutable(Path directory, String baseName) throws IOException {
     Path dmd = directory.resolve(baseName + (Platform.detect() == Platform.WINDOWS ? ".exe" : ""));
     Files.createFile(dmd);
-    MoreFiles.makeExecutable(dmd);
+    MostFiles.makeExecutable(dmd);
     return dmd;
   }
 
@@ -116,7 +114,7 @@ public class DBuckConfigTest {
   }
 
   @Test
-  public void testDCompilerFlagsOverridden() throws IOException {
+  public void testDCompilerFlagsOverridden() {
     BuckConfig delegate =
         FakeBuckConfig.builder().setSections("[d]", "base_compiler_flags=-g -O3").build();
     DBuckConfig dBuckConfig = new DBuckConfig(delegate);
@@ -162,18 +160,16 @@ public class DBuckConfigTest {
   }
 
   private static <T> void assertContains(Collection<T> haystack, T needle) {
-    assertTrue(needle.toString() + " is in " + haystack.toString(), haystack.contains(needle));
+    assertTrue(needle + " is in " + haystack, haystack.contains(needle));
   }
 
   private static <T> void assertDoesNotContain(Collection<T> haystack, T needle) {
-    assertFalse(needle.toString() + " is not in " + haystack.toString(), haystack.contains(needle));
+    assertFalse(needle + " is not in " + haystack, haystack.contains(needle));
   }
 
   /** Returns the path of a Tool. */
   private String toolPath(Tool tool) {
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
     return tool.getCommandPrefix(DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)))
         .get(0);
   }
