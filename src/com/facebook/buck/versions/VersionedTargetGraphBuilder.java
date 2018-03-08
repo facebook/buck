@@ -49,6 +49,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
@@ -74,7 +75,7 @@ public class VersionedTargetGraphBuilder {
   private final ConcurrentHashMap<BuildTarget, TargetNode<?, ?>> index;
 
   /** Fork-join actions for each root node. */
-  private final ConcurrentHashMap<BuildTarget, RootAction> rootActions;
+  private final ConcurrentHashMap<BuildTarget, ForkJoinTask<?>> rootActions;
 
   /** Intermediate version info for each node. */
   private final ConcurrentHashMap<BuildTarget, VersionInfo> versionInfo;
@@ -318,8 +319,7 @@ public class VersionedTargetGraphBuilder {
     private Iterable<TargetNode<?, ?>> process(Iterable<BuildTarget> targets)
         throws VersionException {
       int size = Iterables.size(targets);
-      List<RootAction> newActions = new ArrayList<>(size);
-      List<RootAction> oldActions = new ArrayList<>(size);
+      List<ForkJoinTask<?>> rootNodes = new ArrayList<>(size);
       List<TargetNode<?, ?>> nonRootNodes = new ArrayList<>(size);
       for (BuildTarget target : targets) {
         TargetNode<?, ?> node = getNode(target);
@@ -327,26 +327,12 @@ public class VersionedTargetGraphBuilder {
         // If we see a root node, create an action to process it using the pool, since it's
         // potentially heavy-weight.
         if (TargetGraphVersionTransformations.isVersionRoot(node)) {
-          RootAction oldAction = rootActions.get(target);
-          if (oldAction != null) {
-            oldActions.add(oldAction);
-          } else {
-            RootAction newAction = new RootAction(getNode(target));
-            oldAction = rootActions.putIfAbsent(target, newAction);
-            if (oldAction == null) {
-              newActions.add(newAction);
-            } else {
-              oldActions.add(oldAction);
-            }
-          }
+          rootNodes.add(rootActions.computeIfAbsent(target, t -> new RootAction(node).fork()));
 
         } else {
           nonRootNodes.add(node);
         }
       }
-
-      // Kick off all new rootActions in parallel.
-      invokeAll(newActions);
 
       // For non-root nodes, just process them in-place, as they are inexpensive.
       for (TargetNode<?, ?> node : nonRootNodes) {
@@ -354,7 +340,7 @@ public class VersionedTargetGraphBuilder {
       }
 
       // Wait for any existing rootActions to finish.
-      for (RootAction action : oldActions) {
+      for (ForkJoinTask<?> action : rootNodes) {
         action.join();
       }
 
