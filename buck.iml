@@ -25,7 +25,6 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/apple/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/apple/xcode/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/apple/xcode/xcspec/testdata" />
-      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/autodeps/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/cli/bootstrapper/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/cli/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/crosscell/testdata" />
