@@ -48,7 +48,7 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
     return new DistBuildStarted();
   }
 
-  public static DistBuildFinished distBuildFinished(DistBuildStarted started, ExitCode exitCode) {
+  public static DistBuildFinished distBuildFinished(DistBuildStarted started, int exitCode) {
     return new DistBuildFinished(started, exitCode);
   }
 
@@ -166,14 +166,14 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
 
   public static class DistBuildFinished extends BuildEvent {
 
-    private final ExitCode exitCode;
+    private final int exitCode;
 
-    protected DistBuildFinished(DistBuildStarted started, ExitCode exitCode) {
+    protected DistBuildFinished(DistBuildStarted started, int exitCode) {
       super(started.getEventKey());
       this.exitCode = exitCode;
     }
 
-    public ExitCode getExitCode() {
+    public int getExitCode() {
       return exitCode;
     }
 
@@ -184,7 +184,7 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
 
     @Override
     protected String getValueString() {
-      return String.format("exit code: %d", exitCode.getCode());
+      return String.format("exit code: %d", exitCode);
     }
 
     @Override

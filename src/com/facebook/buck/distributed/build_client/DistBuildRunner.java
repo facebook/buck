@@ -136,8 +136,7 @@ public class DistBuildRunner {
       // Local build should not be blocked, even if one of the distributed stages failed.
       remoteBuildSynchronizer.signalCompletionOfRemoteBuild();
       BuildEvent.DistBuildFinished finished =
-          BuildEvent.distBuildFinished(
-              Preconditions.checkNotNull(started), com.facebook.buck.util.ExitCode.map(exitCode));
+          BuildEvent.distBuildFinished(Preconditions.checkNotNull(started), exitCode);
       eventBus.post(finished);
 
       // Whichever build phase is executing should now move to the final stage.

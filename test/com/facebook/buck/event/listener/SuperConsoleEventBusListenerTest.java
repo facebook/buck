@@ -1137,7 +1137,8 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildEvent.distBuildFinished(distBuildStartedEvent, ExitCode.SUCCESS),
+            BuildEvent.distBuildFinished(
+                distBuildStartedEvent, com.facebook.buck.distributed.ExitCode.SUCCESSFUL.getCode()),
             timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
