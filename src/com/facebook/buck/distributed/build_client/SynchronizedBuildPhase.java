@@ -59,6 +59,7 @@ public class SynchronizedBuildPhase {
       LOG.info("Distributed build failed before local build.");
       if (localBuildFallbackEnabled) {
         LOG.info("Falling back to local synchronized build. Waiting for it to finish..");
+        eventBus.post(new StampedeLocalBuildStatusEvent("fallback", "Local Build"));
         synchronizedBuildRunner.waitUntilFinished();
       } else {
         LOG.info("Killing local synchronized build as local fallback not enabled.");

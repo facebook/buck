@@ -22,14 +22,24 @@ import com.facebook.buck.event.LeafEvent;
 /** Used to update the value attached to "local status" column in SuperConsole. */
 public class StampedeLocalBuildStatusEvent extends AbstractBuckEvent implements LeafEvent {
   private final String status;
+  private final String localBuildLinePrefix;
 
   public StampedeLocalBuildStatusEvent(String status) {
+    this(status, "Local Steps");
+  }
+
+  public StampedeLocalBuildStatusEvent(String status, String localBuildLinePrefix) {
     super(EventKey.unique());
     this.status = status;
+    this.localBuildLinePrefix = localBuildLinePrefix;
   }
 
   public String getStatus() {
     return status;
+  }
+
+  public String getLocalBuildLinePrefix() {
+    return localBuildLinePrefix;
   }
 
   @Override

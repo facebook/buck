@@ -850,9 +850,9 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 0.3 sec (0%) local status: init; remote status: init",
+            "Distributed Build... 0.3 sec (0%) remote status: init; local status: init",
             "Downloading... 0 artifacts, 0.00 bytes",
-            "Local Build... 0.2 sec"));
+            "Local Steps... 0.2 sec"));
 
     timeMillis += 250;
     eventBus.postWithoutConfiguring(
@@ -880,16 +880,15 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 0.7 sec (0%) local status: init (0% done); remote status: queued",
+            "Distributed Build... 0.7 sec (0%) remote status: queued; local status: init",
             "Downloading... 0 artifacts, 0.00 bytes",
-            "Local Build... 0.6 sec (0%) 0/10 jobs, 0 updated, 0.0% cache miss",
+            "Local Steps... 0.6 sec (0%) 0/10 jobs, 0 updated, 0.0% cache miss",
             " - //banana:stand... 0.1 sec (preparing)"));
 
     timeMillis += 100;
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            new DistBuildStatusEvent(
-                DistBuildStatus.builder().setStatus(BuildStatus.BUILDING.toString()).build()),
+            new DistBuildStatusEvent(DistBuildStatus.builder().build()),
             timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -919,9 +918,9 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 0.9 sec (0%) local status: init (10% done); remote status: building",
+            "Distributed Build... 0.9 sec (0%) local status: init",
             "Downloading... 0 artifacts, 0.00 bytes",
-            "Local Build... 0.8 sec (10%) 1/10 jobs, 1 updated, 10.0% cache miss",
+            "Local Steps... 0.8 sec (10%) 1/10 jobs, 1 updated, 10.0% cache miss",
             " - IDLE"));
 
     BuildSlaveRunId buildSlaveRunId1 = new BuildSlaveRunId();
@@ -960,11 +959,11 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 1.1 sec (0%) local status: init (10% done); remote status: building",
+            "Distributed Build... 1.1 sec (0%) remote status: building; local status: init",
             " - Preparing: creating action graph, materializing source files [128] ...",
             " - Preparing: creating action graph ...",
             "Downloading... 0 artifacts, 0.00 bytes",
-            "Local Build... 1.0 sec (10%) 1/10 jobs, 1 updated, 10.0% cache miss",
+            "Local Steps... 1.0 sec (10%) 1/10 jobs, 1 updated, 10.0% cache miss",
             " - //chicken:dance... 0.1 sec (preparing)"));
 
     timeMillis += 100;
@@ -1020,12 +1019,12 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 1.3 sec (12%) local status: init (0% done); "
-                + "remote status: building, 10/80 jobs, 3.3% cache miss",
+            "Distributed Build... 1.3 sec (12%) "
+                + "remote status: building, 10/80 jobs, 3.3% cache miss; local status: init",
             " - Building 5 jobs... built 5/20 jobs, 1 jobs failed, 0.0% cache miss",
             " - Building 1 jobs... built 5/10 jobs, 10.0% cache miss",
             "Downloading... 0 artifacts, 0.00 bytes",
-            "Local Build... 1.2 sec (0%) 0/5 jobs, 1 updated, 20.0% cache miss"));
+            "Local Steps... 1.2 sec (0%) 0/5 jobs, 1 updated, 20.0% cache miss"));
 
     timeMillis += 100;
     slave1.setRulesBuildingCount(1);
@@ -1099,14 +1098,14 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 1.5 sec (62%) local status: building (20% done);"
-                + " remote status: custom, 50/80 jobs,"
-                + " 3.3% cache miss, 1 [3.6%] cache errors, 1 upload errors",
+            "Distributed Build... 1.5 sec (62%) remote status: custom, 50/80 jobs,"
+                + " 3.3% cache miss, 1 [3.6%] cache errors, 1 upload errors"
+                + "; local status: building",
             " - Building 1 jobs... built 19/20 jobs, 1 jobs failed, 0.0% cache miss, "
                 + "1 [5.3%] cache errors, 1/3 uploaded, 1 upload errors",
             " - Building 1 jobs... built 9/10 jobs, 10.0% cache miss",
             "Downloading... 0 artifacts, 0.00 bytes",
-            "Local Build... 1.4 sec (20%) 1/5 jobs, 1 updated, 20.0% cache miss",
+            "Local Steps... 1.4 sec (20%) 1/5 jobs, 1 updated, 20.0% cache miss",
             " - IDLE"));
 
     slave2.setRulesBuildingCount(0);
@@ -1129,12 +1128,12 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 1.5 sec (62%) local status: building (20% done);"
-                + " remote status: custom, 50/80 jobs,"
-                + " 3.3% cache miss, 1 [3.4%] cache errors, 1 upload errors",
+            "Distributed Build... 1.5 sec (62%) remote status: custom, 50/80 jobs,"
+                + " 3.3% cache miss, 1 [3.4%] cache errors, 1 upload errors"
+                + "; local status: building",
             " - Building 1 jobs... built 9/10 jobs, 10.0% cache miss",
             "Downloading... 0 artifacts, 0.00 bytes",
-            "Local Build... 1.4 sec (20%) 1/5 jobs, 1 updated, 20.0% cache miss",
+            "Local Steps... 1.4 sec (20%) 1/5 jobs, 1 updated, 20.0% cache miss",
             " - IDLE"));
 
     timeMillis += 100;
@@ -1171,6 +1170,12 @@ public class SuperConsoleEventBusListenerTest {
             timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            new StampedeLocalBuildStatusEvent("downloading", "Sync Build"),
+            timeMillis,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
 
     timeMillis += 100;
     validateConsole(
@@ -1179,11 +1184,11 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build: finished in 1.6 sec (100%) local status: building (20% done);"
-                + " remote status: finished_successfully, 80/80 jobs,"
-                + " 3.3% cache miss, 1 [3.3%] cache errors, 1 upload errors",
+            "Distributed Build: finished in 1.6 sec (100%) remote status: finished_successfully, "
+                + "80/80 jobs, 3.3% cache miss, 1 [3.3%] cache errors, 1 upload errors"
+                + "; local status: downloading",
             NO_DOWNLOAD_STRING,
-            "Local Build... 1.6 sec (20%) 1/5 jobs, 1 updated, 20.0% cache miss",
+            "Sync Build... 1.6 sec (20%) 1/5 jobs, 1 updated, 20.0% cache miss",
             " - IDLE"));
 
     eventBus.postWithoutConfiguring(
@@ -1194,11 +1199,11 @@ public class SuperConsoleEventBusListenerTest {
             /* threadId */ 0L));
 
     String distbuildLine =
-        "Distributed Build: finished in 1.6 sec (100%) local status: building (100% done);"
-            + " remote status: finished_successfully, 80/80 jobs,"
-            + " 3.3% cache miss, 1 [3.3%] cache errors, 1 upload errors";
+        "Distributed Build: finished in 1.6 sec (100%) remote status: finished_successfully, "
+            + "80/80 jobs, 3.3% cache miss, 1 [3.3%] cache errors, 1 upload errors"
+            + "; local status: downloading";
     String buildingLine =
-        "Local Build: finished in 1.6 sec (100%) 1/5 jobs, 1 updated, 20.0% cache miss";
+        "Sync Build: finished in 1.6 sec (100%) 1/5 jobs, 1 updated, 20.0% cache miss";
     String totalLine = "  Total time: 1.8 sec. Build successful.";
     timeMillis += 100;
     validateConsole(
@@ -1313,9 +1318,9 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 0.3 sec (0%) local status: init; remote status: init",
+            "Distributed Build... 0.3 sec (0%) remote status: init; local status: init",
             "Downloading... 0 artifacts, 0.00 bytes",
-            "Local Build... 0.4 sec"));
+            "Local Steps... 0.4 sec"));
 
     String stickyMessage = "Hello world from Stampede.";
     eventBus.postWithoutConfiguring(
@@ -1331,9 +1336,9 @@ public class SuperConsoleEventBusListenerTest {
             parsingLine,
             actionGraphLine,
             stickyMessage,
-            "Distributed Build... 0.3 sec (0%) local status: init; remote status: init",
+            "Distributed Build... 0.3 sec (0%) remote status: init; local status: init",
             "Downloading... 0 artifacts, 0.00 bytes",
-            "Local Build... 0.4 sec"));
+            "Local Steps... 0.4 sec"));
   }
 
   @Test

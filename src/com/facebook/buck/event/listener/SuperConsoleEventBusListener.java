@@ -156,9 +156,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @GuardedBy("distBuildSlaveTrackerLock")
   private final Map<BuildSlaveRunId, BuildSlaveStatus> distBuildSlaveTracker;
 
-  @GuardedBy("distBuildStatusLock")
-  private String stampedeLocalBuildStatus = "init";
-
+  private volatile StampedeLocalBuildStatusEvent stampedeLocalBuildStatus =
+      new StampedeLocalBuildStatusEvent("init");
   private volatile Optional<DistBuildSuperConsoleEvent> stampedeSuperConsoleEvent =
       Optional.empty();
   private Optional<String> stampedeIdLogLine = Optional.empty();
@@ -454,7 +453,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     String localBuildLinePrefix = "Building";
 
     if (stampedeSuperConsoleEvent.isPresent()) {
-      localBuildLinePrefix = "Local Build";
+      localBuildLinePrefix = stampedeLocalBuildStatus.getLocalBuildLinePrefix();
 
       stampedeIdLogLine.ifPresent(lines::add);
       stampedeSuperConsoleEvent
@@ -615,14 +614,16 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   }
 
   private Optional<String> getOptionalDistBuildLineSuffix() {
-    String parseLine;
     List<String> columns = new ArrayList<>();
 
     synchronized (distBuildStatusLock) {
       if (!distBuildStatus.isPresent()) {
         columns.add("remote status: init");
       } else {
-        columns.add("remote status: " + distBuildStatus.get().getStatus().toLowerCase());
+        distBuildStatus
+            .get()
+            .getStatus()
+            .ifPresent(status -> columns.add("remote status: " + status.toLowerCase()));
 
         int totalUploadErrorsCount = 0;
         ImmutableList.Builder<CacheRateStatsKeeper.CacheRateStatsUpdateEvent> slaveCacheStats =
@@ -664,22 +665,15 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       }
     }
 
-    String localStatus = createLocalStatus();
-    parseLine = localStatus + "; " + Joiner.on(", ").join(columns);
-    return Strings.isNullOrEmpty(parseLine) ? Optional.empty() : Optional.of(parseLine);
-  }
+    String localStatus = String.format("local status: %s", stampedeLocalBuildStatus.getStatus());
+    String remoteStatusAndSummary = Joiner.on(", ").join(columns);
+    if (remoteStatusAndSummary.length() == 0) {
+      return Optional.of(localStatus);
+    }
 
-  private String createLocalStatus() {
-    Optional<Double> localBuildProgress = getApproximateLocalBuildProgress();
-    String localBuildProgressString = "";
-    if (localBuildProgress.isPresent()) {
-      localBuildProgressString =
-          String.format(" (%d%% done)", Math.round(localBuildProgress.get() * 100));
-    }
-    synchronized (distBuildStatusLock) {
-      return String.format(
-          "local status: %s%s", stampedeLocalBuildStatus, localBuildProgressString);
-    }
+    String parseLine;
+    parseLine = remoteStatusAndSummary + "; " + localStatus;
+    return Strings.isNullOrEmpty(parseLine) ? Optional.empty() : Optional.of(parseLine);
   }
 
   /** Adds log messages for rendering. */
@@ -814,9 +808,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   @Subscribe
   public void onStampedeLocalBuildStatusEvent(StampedeLocalBuildStatusEvent event) {
-    synchronized (distBuildStatusLock) {
-      this.stampedeLocalBuildStatus = event.getStatus();
-    }
+    this.stampedeLocalBuildStatus = event;
   }
 
   @Subscribe

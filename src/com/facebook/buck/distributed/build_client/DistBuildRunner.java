@@ -156,7 +156,7 @@ public class DistBuildRunner {
 
     String statusString =
         localBuildSucceeded
-            ? "succeeded"
+            ? "finished"
             : String.format("failed [exitCode=%d]", localBuildExitCode);
     eventBus.post(new StampedeLocalBuildStatusEvent(statusString));
 

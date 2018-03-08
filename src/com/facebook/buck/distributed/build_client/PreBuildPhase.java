@@ -121,7 +121,7 @@ public class PreBuildPhase {
     StampedeId stampedeId = job.getStampedeId();
     eventBus.post(new DistBuildCreatedEvent(stampedeId));
 
-    LOG.info("Created job. Build id = " + stampedeId.getId());
+    LOG.info("Created job. StampedeId = " + stampedeId.getId());
 
     consoleEventsDispatcher.postDistBuildStatusEvent(
         job, ImmutableList.of(), "SERIALIZING AND UPLOADING DATA");

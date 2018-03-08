@@ -77,7 +77,7 @@ public class StampedeBuildClientTest {
   private static final boolean NO_FALLBACK = false;
   private static final boolean FALLBACK_ENABLED = true;
   private static final String SUCCESS_STATUS_MSG =
-      "The build succeeded locally before distributed build finished.";
+      "The build finished locally before distributed build finished.";
 
   private BuckEventBus mockEventBus;
   private RemoteBuildRuleSynchronizer remoteBuildRuleSynchronizer;

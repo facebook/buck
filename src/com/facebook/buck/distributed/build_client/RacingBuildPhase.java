@@ -69,6 +69,7 @@ public class RacingBuildPhase {
     } else if (distBuildRunner.failed()) {
       LOG.info("Distributed build failed before local racing build.");
       if (localBuildFallbackEnabled) {
+        eventBus.post(new StampedeLocalBuildStatusEvent("fallback", "Local Build"));
         LOG.info("Falling back to local racing build. Waiting for it to finish..");
         racingBuildRunner.waitUntilFinished();
       } else {
