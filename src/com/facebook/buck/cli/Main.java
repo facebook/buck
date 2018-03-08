@@ -612,7 +612,8 @@ public final class Main {
     // Automatically use distributed build for supported repositories and users.
     if (command.subcommand != null && command.subcommand instanceof BuildCommand) {
       BuildCommand subcommand = (BuildCommand) command.subcommand;
-      if (!subcommand.isUseDistributedBuild() && distBuildConfig.shouldUseDistributedBuild()) {
+      isUsingDistributedBuild = subcommand.isUseDistributedBuild();
+      if (!isUsingDistributedBuild && distBuildConfig.shouldUseDistributedBuild()) {
         isUsingDistributedBuild = true;
         subcommand.setUseDistributedBuild(true);
         subcommand.shouldPrintAutoDistributedBuildMessage(distBuildConfig);
