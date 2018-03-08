@@ -17,7 +17,7 @@ package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.ArtifactCacheByBuildRule;
 import com.facebook.buck.distributed.ClientStatsTracker;
-import com.facebook.buck.distributed.build_slave.BuildTargetsQueue.EnqueuedTarget;
+import com.facebook.buck.distributed.build_slave.DistributableBuildGraph.DistributableNode;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -26,6 +26,7 @@ import com.facebook.buck.rules.RuleDepsCache;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -35,7 +36,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -62,7 +62,6 @@ public class CacheOptimizedBuildTargetsQueueFactory {
     Set<BuildRule> visitedRules = new HashSet<>();
     Set<BuildRule> prunedRules = new HashSet<>();
     Set<String> uncachableTargets = new HashSet<>();
-    Set<EnqueuedTarget> unachableZeroDependencyTargets = new HashSet<>();
   }
 
   public CacheOptimizedBuildTargetsQueueFactory(
@@ -315,8 +314,8 @@ public class CacheOptimizedBuildTargetsQueueFactory {
     coordinatorBuildRuleEventsPublisher.createBuildRuleCompletionEvents(prunedTargets);
 
     // Do the reference counting and create the EnqueuedTargets.
-    List<EnqueuedTarget> zeroDependencyTargets = new ArrayList<>();
-    Map<String, EnqueuedTarget> allEnqueuedTargets = new HashMap<>();
+    ImmutableSet.Builder<DistributableNode> zeroDependencyNodes = ImmutableSet.builder();
+    ImmutableMap.Builder<String, DistributableNode> allNodes = ImmutableMap.builder();
     for (BuildRule buildRule : results.visitedRules) {
       String target = buildRule.getFullyQualifiedName();
       Iterable<String> currentRevDeps;
@@ -326,20 +325,17 @@ public class CacheOptimizedBuildTargetsQueueFactory {
         currentRevDeps = new ArrayList<>();
       }
 
-      EnqueuedTarget enqueuedTarget =
-          new EnqueuedTarget(
+      DistributableNode distributableNode =
+          new DistributableNode(
               target,
               ImmutableList.copyOf(currentRevDeps),
               Preconditions.checkNotNull(results.allForwardDeps.get(target)).size(),
               ImmutableSet.copyOf(results.allForwardDeps.get(target)),
               results.uncachableTargets.contains(target));
-      allEnqueuedTargets.put(target, enqueuedTarget);
+      allNodes.put(target, distributableNode);
 
-      if (enqueuedTarget.areAllDependenciesResolved()) {
-        zeroDependencyTargets.add(enqueuedTarget);
-        if (enqueuedTarget.isUncachable()) {
-          results.unachableZeroDependencyTargets.add(enqueuedTarget);
-        }
+      if (distributableNode.areAllDependenciesResolved()) {
+        zeroDependencyNodes.add(distributableNode);
       }
     }
 
@@ -352,9 +348,7 @@ public class CacheOptimizedBuildTargetsQueueFactory {
     }
 
     return new BuildTargetsQueue(
-        zeroDependencyTargets,
-        allEnqueuedTargets,
-        results.unachableZeroDependencyTargets,
+        new DistributableBuildGraph(allNodes.build(), zeroDependencyNodes.build()),
         mostBuildRulesFinishedPercentageThreshold);
   }
 
