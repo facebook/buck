@@ -49,6 +49,8 @@ import com.facebook.buck.rules.LocalCellProviderFactory;
 import com.facebook.buck.testutil.AbstractWorkspace;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.toolchain.ToolchainProviderFactory;
+import com.facebook.buck.toolchain.impl.DefaultToolchainProviderFactory;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -91,6 +93,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 import javax.tools.ToolProvider;
 import org.hamcrest.Matchers;
+import org.pf4j.PluginManager;
 
 /**
  * {@link ProjectWorkspace} is a directory that contains a Buck project, complete with build files.
@@ -535,6 +538,12 @@ public class ProjectWorkspace extends AbstractWorkspace {
             env,
             DefaultCellPathResolver.of(filesystem.getRootPath(), config));
 
+    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
+    ExecutableFinder executableFinder = new ExecutableFinder();
+
+    ToolchainProviderFactory toolchainProviderFactory =
+        new DefaultToolchainProviderFactory(pluginManager, env, processExecutor, executableFinder);
+
     return LocalCellProviderFactory.create(
             filesystem,
             WatchmanFactory.NULL_WATCHMAN,
@@ -543,7 +552,8 @@ public class ProjectWorkspace extends AbstractWorkspace {
             BuckPluginManagerFactory.createPluginManager(),
             env,
             processExecutor,
-            new ExecutableFinder(),
+            executableFinder,
+            toolchainProviderFactory,
             new DefaultProjectFilesystemFactory())
         .getCellByPath(filesystem.getRootPath());
   }

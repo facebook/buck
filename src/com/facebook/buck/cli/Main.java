@@ -103,6 +103,8 @@ import com.facebook.buck.sandbox.impl.PlatformSandboxExecutionStrategyFactory;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.test.TestConfig;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
+import com.facebook.buck.toolchain.ToolchainProviderFactory;
+import com.facebook.buck.toolchain.impl.DefaultToolchainProviderFactory;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.BgProcessKiller;
@@ -701,6 +703,10 @@ public final class Main {
 
       ExecutableFinder executableFinder = new ExecutableFinder();
 
+      ToolchainProviderFactory toolchainProviderFactory =
+          new DefaultToolchainProviderFactory(
+              pluginManager, clientEnvironment, processExecutor, executableFinder);
+
       Cell rootCell =
           LocalCellProviderFactory.create(
                   filesystem,
@@ -711,6 +717,7 @@ public final class Main {
                   clientEnvironment,
                   processExecutor,
                   executableFinder,
+                  toolchainProviderFactory,
                   projectFilesystemFactory)
               .getCellByPath(filesystem.getRootPath());
 

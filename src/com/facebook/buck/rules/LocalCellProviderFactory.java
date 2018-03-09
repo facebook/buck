@@ -25,7 +25,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.toolchain.impl.DefaultToolchainProvider;
+import com.facebook.buck.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.config.Config;
@@ -53,6 +53,7 @@ public class LocalCellProviderFactory {
       ImmutableMap<String, String> environment,
       ProcessExecutor processExecutor,
       ExecutableFinder executableFinder,
+      ToolchainProviderFactory toolchainProviderFactory,
       ProjectFilesystemFactory projectFilesystemFactory) {
 
     DefaultCellPathResolver rootCellCellPathResolver =
@@ -145,14 +146,8 @@ public class LocalCellProviderFactory {
                     ConfigRuleKeyConfigurationFactory.create(buckConfig, pluginManager);
 
                 ToolchainProvider toolchainProvider =
-                    new DefaultToolchainProvider(
-                        pluginManager,
-                        environment,
-                        buckConfig,
-                        cellFilesystem,
-                        processExecutor,
-                        executableFinder,
-                        ruleKeyConfiguration);
+                    toolchainProviderFactory.create(
+                        buckConfig, cellFilesystem, ruleKeyConfiguration);
 
                 // TODO(13777679): cells in other watchman roots do not work correctly.
 

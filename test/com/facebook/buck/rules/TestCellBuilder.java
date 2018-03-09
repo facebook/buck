@@ -27,11 +27,15 @@ import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.toolchain.ToolchainProviderFactory;
+import com.facebook.buck.toolchain.impl.DefaultToolchainProviderFactory;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
+import org.pf4j.PluginManager;
 
 public class TestCellBuilder {
 
@@ -77,15 +81,26 @@ public class TestCellBuilder {
             ? FakeBuckConfig.builder().setFilesystem(filesystem).build()
             : buckConfig;
 
+    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
+    ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
+    ExecutableFinder executableFinder = new ExecutableFinder();
+
+    ImmutableMap<String, String> environmentCopy = ImmutableMap.copyOf(environment);
+
+    ToolchainProviderFactory toolchainProviderFactory =
+        new DefaultToolchainProviderFactory(
+            pluginManager, environmentCopy, processExecutor, executableFinder);
+
     return LocalCellProviderFactory.create(
             filesystem,
             watchman,
             config,
             cellConfig,
-            BuckPluginManagerFactory.createPluginManager(),
-            ImmutableMap.copyOf(environment),
-            new DefaultProcessExecutor(new TestConsole()),
-            new ExecutableFinder(),
+            pluginManager,
+            environmentCopy,
+            processExecutor,
+            executableFinder,
+            toolchainProviderFactory,
             new DefaultProjectFilesystemFactory())
         .getCellByPath(filesystem.getRootPath());
   }
