@@ -18,8 +18,6 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.util.function.ThrowingConsumer;
 import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Convenience wrapper class to attach closeable functionality to suppliers of resources to be
@@ -46,15 +44,10 @@ import java.util.concurrent.atomic.AtomicReference;
  * resource appropriately.
  */
 public class CloseableMemoizedSupplier<T, E extends Exception>
-    implements AutoCloseable, Supplier<T> {
-
-  private AtomicReference<State> state = new AtomicReference<>(State.UNINITIALIZED);
-  private final ThrowingConsumer<T, E> closer;
-  private final Supplier<T> supplier;
+    extends AbstractCloseableMemoizedSupplier<T, E> {
 
   private CloseableMemoizedSupplier(Supplier<T> supplier, ThrowingConsumer<T, E> closer) {
-    this.supplier = Suppliers.memoize(supplier);
-    this.closer = closer;
+    super(supplier, closer);
   }
 
   /**
@@ -67,31 +60,5 @@ public class CloseableMemoizedSupplier<T, E extends Exception>
   public static <T, E extends Exception> CloseableMemoizedSupplier<T, E> of(
       Supplier<T> supplier, ThrowingConsumer<T, E> closer) {
     return new CloseableMemoizedSupplier<>(supplier, closer);
-  }
-
-  /** @return the resource from the supplier */
-  @Override
-  public T get() {
-    if (state.compareAndSet(State.UNINITIALIZED, State.INITIALIZED)
-        || state.get() == State.INITIALIZED) {
-      return supplier.get();
-    }
-    throw new IllegalStateException("Cannot call get() after close()");
-  }
-
-  @Override
-  public void close() throws E {
-    if (state.compareAndSet(State.UNINITIALIZED, State.CLOSED)) {
-      return;
-    }
-    if (state.compareAndSet(State.INITIALIZED, State.CLOSED)) {
-      closer.accept(supplier.get());
-    }
-  }
-
-  private enum State {
-    UNINITIALIZED,
-    INITIALIZED,
-    CLOSED,
   }
 }
