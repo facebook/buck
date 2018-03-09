@@ -242,6 +242,41 @@ public class ActionGraphNodeCacheTest {
   }
 
   @Test
+  public void allTargetGraphDepTypesAddedToIndexForCachedNode() {
+    TargetNode<?, ?> declaredChildNode = createTargetNodeBuilder("declared").build();
+    TargetNode<?, ?> extraChildNode = createTargetNodeBuilder("extra").build();
+    TargetNode<?, ?> targetGraphOnlyChildNode =
+        createTargetNodeBuilder("target_graph_only").build();
+    TargetNode<?, ?> parentNode =
+        createTargetNodeBuilder("parent")
+            .setDeps(declaredChildNode)
+            .setExtraDeps(extraChildNode)
+            .setTargetGraphOnlyDeps(targetGraphOnlyChildNode)
+            .build();
+    setUpTargetGraphAndResolver(
+        parentNode, declaredChildNode, extraChildNode, targetGraphOnlyChildNode);
+
+    cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
+    cache.requireRule(declaredChildNode);
+    cache.requireRule(extraChildNode);
+    cache.requireRule(targetGraphOnlyChildNode);
+    cache.requireRule(parentNode);
+    cache.finishTargetGraphWalk();
+
+    assertTrue(cache.containsKey(parentNode));
+    setUpTargetGraphAndResolver(
+        parentNode, declaredChildNode, extraChildNode, targetGraphOnlyChildNode);
+
+    cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
+    cache.requireRule(parentNode);
+    cache.finishTargetGraphWalk();
+
+    assertTrue(ruleResolver.getRuleOptional(declaredChildNode.getBuildTarget()).isPresent());
+    assertTrue(ruleResolver.getRuleOptional(extraChildNode.getBuildTarget()).isPresent());
+    assertTrue(ruleResolver.getRuleOptional(targetGraphOnlyChildNode.getBuildTarget()).isPresent());
+  }
+
+  @Test
   public void cachedNodeUsesLastRuleResolverForRuntimeDeps() {
     FakeCacheableBuildRule childBuildRule = new FakeCacheableBuildRule("test#child");
     SortedSet<BuildTarget> runtimeDeps = ImmutableSortedSet.of(childBuildRule.getBuildTarget());
@@ -346,6 +381,22 @@ public class ActionGraphNodeCacheTest {
     assertSame(childBuildRule, ruleResolver.getRuleOptional(childBuildRule.getBuildTarget()).get());
   }
 
+  private FakeTargetNodeBuilder createTargetNodeBuilder(String name) {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//test:" + name);
+    return FakeTargetNodeBuilder.newBuilder(
+        new FakeDescription() {
+          @Override
+          public BuildRule createBuildRule(
+              BuildRuleCreationContext context,
+              BuildTarget buildTarget,
+              BuildRuleParams params,
+              FakeTargetNodeArg args) {
+            return new FakeCacheableBuildRule(buildTarget, context.getProjectFilesystem(), params);
+          }
+        },
+        buildTarget);
+  }
+
   private TargetNode<?, ?> createTargetNode(String name, TargetNode<?, ?>... deps) {
     return createTargetNode(name, null, deps);
   }
@@ -371,7 +422,7 @@ public class ActionGraphNodeCacheTest {
       String name, String label, FakeDescription description, TargetNode<?, ?>... deps) {
     FakeTargetNodeBuilder targetNodeBuilder =
         FakeTargetNodeBuilder.newBuilder(
-            description, BuildTargetFactory.newInstance("//foo:" + name));
+            description, BuildTargetFactory.newInstance("//test:" + name));
 
     for (TargetNode<?, ?> dep : deps) {
       targetNodeBuilder.getArgForPopulating().addDeps(dep.getBuildTarget());

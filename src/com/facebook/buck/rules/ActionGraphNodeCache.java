@@ -192,6 +192,13 @@ public class ActionGraphNodeCache {
         SortedSets.union(
             buildRule.getBuildDeps(), ((CacheableBuildRule) buildRule).getImplicitDepsForCaching());
 
+    // Include target graph "only" deps too. There are cases where an uncached build rule may depend
+    // on a cached build rule's target graph only deps existing in the {@see BuildRuleResolver}
+    // during construction.
+    if (buildRule instanceof HasDeclaredAndExtraDeps) {
+      deps = SortedSets.union(deps, ((HasDeclaredAndExtraDeps) buildRule).getTargetGraphOnlyDeps());
+    }
+
     // We need to use the rule resolver from the last action graph construction to find runtime
     // deps. These deps won't necessarily exist in the new rule resolver yet.
     if (buildRule instanceof HasRuntimeDeps) {
