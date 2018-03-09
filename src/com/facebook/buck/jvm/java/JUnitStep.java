@@ -98,6 +98,7 @@ public class JUnitStep extends ShellStep {
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
     env.putAll(this.env);
     env.putAll(nativeLibsEnvironment);
+    env.putAll(junitJvmArgs.getEnvironment());
     return env.build();
   }
 

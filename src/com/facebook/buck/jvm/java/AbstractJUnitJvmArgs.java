@@ -21,10 +21,13 @@ import com.facebook.buck.jvm.java.runner.FileClassPathRunner;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.env.BuckClasspath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
 import org.immutables.value.Value;
@@ -226,5 +229,9 @@ abstract class AbstractJUnitJvmArgs {
     for (String testClassName : getTestClasses()) {
       args.add(testClassName);
     }
+  }
+
+  public Map<String, String> getEnvironment() {
+    return ImmutableMap.of(BuckClasspath.TEST_ENV_VAR_NAME, getClasspathFile().toString());
   }
 }

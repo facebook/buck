@@ -1,0 +1,11 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "env",
+    deps = [
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/env:env",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)
