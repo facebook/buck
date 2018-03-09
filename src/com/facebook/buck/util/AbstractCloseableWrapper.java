@@ -22,10 +22,10 @@ import com.google.common.base.Suppliers;
 /** Base class for {@code ThrowingCloseableWrapper} and {@code CloseableWrapper} */
 public abstract class AbstractCloseableWrapper<T, E extends Exception> implements AutoCloseable {
 
-  private final CloseableMemoizedSupplier<T, E> closeable;
+  private final ThrowingCloseableMemoizedSupplier<T, E> closeable;
 
   protected AbstractCloseableWrapper(T obj, ThrowingConsumer<T, E> closer) {
-    closeable = CloseableMemoizedSupplier.of(Suppliers.ofInstance(obj), closer);
+    closeable = ThrowingCloseableMemoizedSupplier.of(Suppliers.ofInstance(obj), closer);
     // ensure obj is closed, since {@link CloseableMemoizedSupplier} doesn't call close
     // unless the supplier has been used at least once.
     closeable.get();

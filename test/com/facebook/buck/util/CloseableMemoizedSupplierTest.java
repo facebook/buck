@@ -19,7 +19,10 @@ package com.facebook.buck.util;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import com.google.common.base.Supplier;
+import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -27,10 +30,49 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Assume;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
-public class CloseableMemoizedSupplierTest {
+@RunWith(Parameterized.class)
+public class CloseableMemoizedSupplierTest<T extends AbstractCloseableMemoizedSupplier> {
 
-  private class ObjectFactory {
+  public abstract static class CloseableFactory<T> {
+    public abstract T makeCloseable(
+        Supplier<Object> supplier, ThrowingConsumer<Object, Exception> closer);
+  }
+
+  private CloseableFactory<T> closeableFactory;
+
+  public CloseableMemoizedSupplierTest(CloseableFactory<T> closeableFactory) {
+    this.closeableFactory = closeableFactory;
+  }
+
+  @Parameterized.Parameters
+  public static Iterable<Object[]> params() {
+    return Arrays.asList(
+        new Object[][] {
+          {
+            new CloseableFactory<CloseableMemoizedSupplier<Object, Exception>>() {
+              @Override
+              public CloseableMemoizedSupplier<Object, Exception> makeCloseable(
+                  Supplier<Object> supplier, ThrowingConsumer<Object, Exception> closer) {
+                return CloseableMemoizedSupplier.of(supplier, closer);
+              }
+            }
+          },
+          {
+            new CloseableFactory<ThrowingCloseableMemoizedSupplier<Object, Exception>>() {
+              @Override
+              public ThrowingCloseableMemoizedSupplier<Object, Exception> makeCloseable(
+                  Supplier<Object> supplier, ThrowingConsumer<Object, Exception> closer) {
+                return ThrowingCloseableMemoizedSupplier.of(supplier, closer);
+              }
+            }
+          }
+        });
+  }
+
+  private static class ObjectFactory {
     private AtomicInteger creationCount = new AtomicInteger(0);
 
     public int getCreationCount() {
@@ -49,8 +91,7 @@ public class CloseableMemoizedSupplierTest {
 
     ObjectFactory factory = new ObjectFactory();
 
-    try (CloseableMemoizedSupplier<Object, Exception> wrapper =
-        CloseableMemoizedSupplier.of(factory::make, toClose -> closed.set(true))) {
+    try (T wrapper = closeableFactory.makeCloseable(factory::make, toClose -> closed.set(true))) {
       // do not get from supplier
     }
 
@@ -65,8 +106,7 @@ public class CloseableMemoizedSupplierTest {
 
     ObjectFactory factory = new ObjectFactory();
 
-    try (CloseableMemoizedSupplier<Object, Exception> wrapper =
-        CloseableMemoizedSupplier.of(factory::make, toClose -> closed.set(true))) {
+    try (T wrapper = closeableFactory.makeCloseable(factory::make, toClose -> closed.set(true))) {
       wrapper.get();
       wrapper.get(); // multiple gets should still only trigger one object creation
     }
@@ -81,8 +121,7 @@ public class CloseableMemoizedSupplierTest {
 
     ObjectFactory factory = new ObjectFactory();
 
-    try (CloseableMemoizedSupplier<Object, Exception> wrapper =
-        CloseableMemoizedSupplier.of(factory::make, toClose -> closed.set(true))) {
+    try (T wrapper = closeableFactory.makeCloseable(factory::make, toClose -> closed.set(true))) {
       wrapper.get();
       throw new Exception();
     } finally {
@@ -98,8 +137,7 @@ public class CloseableMemoizedSupplierTest {
 
     ObjectFactory factory = new ObjectFactory();
 
-    try (CloseableMemoizedSupplier<Object, Exception> wrapper =
-        CloseableMemoizedSupplier.of(factory::make, toClose -> closed.set(true))) {
+    try (T wrapper = closeableFactory.makeCloseable(factory::make, toClose -> closed.set(true))) {
       wrapper.get();
       wrapper.close();
       wrapper.get();
@@ -111,7 +149,7 @@ public class CloseableMemoizedSupplierTest {
   }
 
   @Test(timeout = 5000)
-  public void testThreadSafe() {
+  public void testThreadSafe() throws Exception {
     final int numCalls = 50;
 
     ExecutorService executor = Executors.newFixedThreadPool(10);
@@ -124,8 +162,8 @@ public class CloseableMemoizedSupplierTest {
     AtomicInteger getSuccessCount = new AtomicInteger(0);
     AtomicInteger getFailCount = new AtomicInteger(0);
 
-    try (CloseableMemoizedSupplier<Object, RuntimeException> closeableMemoizedSupplier =
-        CloseableMemoizedSupplier.of(
+    try (T closeableMemoizedSupplier =
+        closeableFactory.makeCloseable(
             () -> {
               creationCount.incrementAndGet();
               return new Object();
@@ -149,7 +187,11 @@ public class CloseableMemoizedSupplierTest {
               } catch (InterruptedException e) {
                 Assume.assumeTrue("Test Interrupted", false);
               }
-              closeableMemoizedSupplier.close();
+              try {
+                closeableMemoizedSupplier.close();
+              } catch (Exception e) {
+                fail("Unexpected Exception");
+              }
               closeLatch.countDown();
             });
       }

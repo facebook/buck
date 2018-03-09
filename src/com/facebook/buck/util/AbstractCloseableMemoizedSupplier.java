@@ -20,7 +20,9 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import java.util.concurrent.atomic.AtomicReference;
 
-/** Base class for {@link CloseableMemoizedSupplier} */
+/**
+ * Base class for {@link CloseableMemoizedSupplier} and {@link ThrowingCloseableMemoizedSupplier}
+ */
 public class AbstractCloseableMemoizedSupplier<T, E extends Exception>
     implements AutoCloseable, Supplier<T> {
 
