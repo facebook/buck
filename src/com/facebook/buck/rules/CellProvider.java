@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.rules;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -68,5 +69,9 @@ public final class CellProvider {
 
   public ImmutableMap<Path, Cell> getLoadedCells() {
     return ImmutableMap.copyOf(cells.asMap());
+  }
+
+  public Cell getBuildTargetCell(BuildTarget buildTarget) {
+    return getCellByPath(buildTarget.getCellPath());
   }
 }

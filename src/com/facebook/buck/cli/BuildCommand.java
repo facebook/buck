@@ -1285,7 +1285,7 @@ public class BuildCommand extends AbstractCommand {
             .getActionGraph(
                 params.getBuckEventBus(),
                 targetGraphAndBuildTargets.getTargetGraph(),
-                params.getCell().getToolchainProvider(),
+                params.getCell().getCellProvider(),
                 params.getBuckConfig(),
                 params.getRuleKeyConfiguration(),
                 ruleKeyLogger,

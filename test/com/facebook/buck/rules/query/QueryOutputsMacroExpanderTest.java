@@ -98,7 +98,7 @@ public class QueryOutputsMacroExpanderTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(depNode, ruleNode, noopNode2, noopNode1);
 
-    ruleResolver = new TestBuildRuleResolver(targetGraph);
+    ruleResolver = new TestBuildRuleResolver(targetGraph, filesystem);
 
     dep = ruleResolver.requireRule(depNode.getBuildTarget());
     rule = ruleResolver.requireRule(ruleNode.getBuildTarget());

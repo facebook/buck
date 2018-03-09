@@ -43,7 +43,6 @@ import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -135,7 +134,7 @@ public class ActionGraphCacheTest {
             CHECK_GRAPHS, /* skipActionGraphCache */
             false,
             targetGraph1,
-            new ToolchainProviderBuilder().build(),
+            new TestCellBuilder().build().getCellProvider(),
             TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
             ActionGraphParallelizationMode.DISABLED,
             false,
@@ -151,7 +150,7 @@ public class ActionGraphCacheTest {
             CHECK_GRAPHS, /* skipActionGraphCache */
             false,
             targetGraph1,
-            new ToolchainProviderBuilder().build(),
+            new TestCellBuilder().build().getCellProvider(),
             TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
             ActionGraphParallelizationMode.DISABLED,
             false,
@@ -222,7 +221,7 @@ public class ActionGraphCacheTest {
           CHECK_GRAPHS, /* skipActionGraphCache */
           false,
           run.getFirst(),
-          new ToolchainProviderBuilder().build(),
+          new TestCellBuilder().build().getCellProvider(),
           TestRuleKeyConfigurationFactory.create(),
           ActionGraphParallelizationMode.DISABLED,
           false,
@@ -245,7 +244,7 @@ public class ActionGraphCacheTest {
             CHECK_GRAPHS, /* skipActionGraphCache */
             false,
             targetGraph1,
-            new ToolchainProviderBuilder().build(),
+            new TestCellBuilder().build().getCellProvider(),
             TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
             ActionGraphParallelizationMode.DISABLED,
             false,
@@ -262,7 +261,7 @@ public class ActionGraphCacheTest {
             CHECK_GRAPHS,
             /* skipActionGraphCache */ false,
             targetGraph1.getSubgraph(ImmutableSet.of(nodeB)),
-            new ToolchainProviderBuilder().build(),
+            new TestCellBuilder().build().getCellProvider(),
             TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
             ActionGraphParallelizationMode.DISABLED,
             false,
@@ -279,7 +278,7 @@ public class ActionGraphCacheTest {
             CHECK_GRAPHS, /* skipActionGraphCache */
             false,
             targetGraph1,
-            new ToolchainProviderBuilder().build(),
+            new TestCellBuilder().build().getCellProvider(),
             TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
             ActionGraphParallelizationMode.DISABLED,
             false,
@@ -311,7 +310,7 @@ public class ActionGraphCacheTest {
             eventBus,
             new DefaultTargetNodeToBuildRuleTransformer(),
             targetGraph1,
-            new ToolchainProviderBuilder().build(),
+            new TestCellBuilder().build().getCellProvider(),
             ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.DISABLED,
@@ -322,7 +321,7 @@ public class ActionGraphCacheTest {
             eventBus,
             new DefaultTargetNodeToBuildRuleTransformer(),
             targetGraph1,
-            new ToolchainProviderBuilder().build(),
+            new TestCellBuilder().build().getCellProvider(),
             ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.DISABLED,
@@ -352,7 +351,7 @@ public class ActionGraphCacheTest {
                 NOT_CHECK_GRAPHS, /* skipActionGraphCache */
                 false,
                 targetGraph1,
-                new ToolchainProviderBuilder().build(),
+                new TestCellBuilder().build().getCellProvider(),
                 TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
                 mode,
                 false,
@@ -373,7 +372,7 @@ public class ActionGraphCacheTest {
               NOT_CHECK_GRAPHS, /* skipActionGraphCache */
               false,
               targetGraph1,
-              new ToolchainProviderBuilder().build(),
+              new TestCellBuilder().build().getCellProvider(),
               TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
               ActionGraphParallelizationMode.EXPERIMENT,
               false,
@@ -398,7 +397,7 @@ public class ActionGraphCacheTest {
               NOT_CHECK_GRAPHS, /* skipActionGraphCache */
               false,
               targetGraph1,
-              new ToolchainProviderBuilder().build(),
+              new TestCellBuilder().build().getCellProvider(),
               TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
               ActionGraphParallelizationMode.EXPERIMENT_UNSTABLE,
               false,
@@ -429,7 +428,7 @@ public class ActionGraphCacheTest {
               NOT_CHECK_GRAPHS, /* skipActionGraphCache */
               false,
               targetGraph1,
-              new ToolchainProviderBuilder().build(),
+              new TestCellBuilder().build().getCellProvider(),
               TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
               ActionGraphParallelizationMode.DISABLED,
               false,
@@ -450,7 +449,7 @@ public class ActionGraphCacheTest {
             NOT_CHECK_GRAPHS, /* skipActionGraphCache */
             false,
             targetGraph1,
-            new ToolchainProviderBuilder().build(),
+            new TestCellBuilder().build().getCellProvider(),
             TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
             ActionGraphParallelizationMode.DISABLED,
             false,
@@ -503,7 +502,7 @@ public class ActionGraphCacheTest {
             NOT_CHECK_GRAPHS, /* skipActionGraphCache */
             true,
             targetGraph1,
-            new ToolchainProviderBuilder().build(),
+            new TestCellBuilder().build().getCellProvider(),
             TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
             parallelizationMode,
             false,
@@ -522,7 +521,7 @@ public class ActionGraphCacheTest {
             NOT_CHECK_GRAPHS, /* skipActionGraphCache */
             true,
             targetGraph2,
-            new ToolchainProviderBuilder().build(),
+            new TestCellBuilder().build().getCellProvider(),
             TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
             parallelizationMode,
             false,

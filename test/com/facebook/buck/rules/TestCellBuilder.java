@@ -27,6 +27,7 @@ import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.toolchain.impl.DefaultToolchainProviderFactory;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -44,6 +45,7 @@ public class TestCellBuilder {
   private Watchman watchman = NULL_WATCHMAN;
   private CellConfig cellConfig;
   private Map<String, String> environment = new HashMap<>();
+  @Nullable private ToolchainProvider toolchainProvider = null;
 
   public TestCellBuilder() {
     filesystem = new FakeProjectFilesystem();
@@ -75,6 +77,11 @@ public class TestCellBuilder {
     return this;
   }
 
+  public TestCellBuilder setToolchainProvider(ToolchainProvider toolchainProvider) {
+    this.toolchainProvider = toolchainProvider;
+    return this;
+  }
+
   public Cell build() {
     BuckConfig config =
         buckConfig == null
@@ -88,8 +95,10 @@ public class TestCellBuilder {
     ImmutableMap<String, String> environmentCopy = ImmutableMap.copyOf(environment);
 
     ToolchainProviderFactory toolchainProviderFactory =
-        new DefaultToolchainProviderFactory(
-            pluginManager, environmentCopy, processExecutor, executableFinder);
+        toolchainProvider == null
+            ? new DefaultToolchainProviderFactory(
+                pluginManager, environmentCopy, processExecutor, executableFinder)
+            : (buckConfig, filesystem, ruleKeyConfiguration) -> toolchainProvider;
 
     return LocalCellProviderFactory.create(
             filesystem,

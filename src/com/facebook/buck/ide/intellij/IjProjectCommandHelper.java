@@ -230,7 +230,7 @@ public class IjProjectCommandHelper {
       return actionGraphCache.getActionGraph(
           buckEventBus,
           targetGraph,
-          cell.getToolchainProvider(),
+          cell.getCellProvider(),
           buckConfig,
           ruleKeyConfiguration,
           forkJoinPoolSupplier);

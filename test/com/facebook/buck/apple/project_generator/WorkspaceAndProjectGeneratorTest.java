@@ -67,7 +67,6 @@ import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.facebook.buck.util.types.Either;
@@ -971,7 +970,7 @@ public class WorkspaceAndProjectGeneratorTest {
             .getFreshActionGraph(
                 BuckEventBusForTests.newInstance(),
                 targetGraph.getSubgraph(ImmutableSet.of(input)),
-                new ToolchainProviderBuilder().build(),
+                new TestCellBuilder().build().getCellProvider(),
                 ActionGraphParallelizationMode.DISABLED,
                 false,
                 IncrementalActionGraphMode.DISABLED,

@@ -105,7 +105,7 @@ public class FetchCommand extends BuildCommand {
                         params.getBuckEventBus(),
                         ruleGenerator,
                         result.getTargetGraph(),
-                        params.getCell().getToolchainProvider(),
+                        params.getCell().getCellProvider(),
                         params.getBuckConfig().getActionGraphParallelizationMode(),
                         params.getBuckConfig().getShouldInstrumentActionGraph(),
                         params.getBuckConfig().getIncrementalActionGraphMode(),

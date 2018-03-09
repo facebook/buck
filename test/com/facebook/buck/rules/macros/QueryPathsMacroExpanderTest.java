@@ -81,7 +81,7 @@ public class QueryPathsMacroExpanderTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, targetNode);
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph, filesystem);
 
     // Ensure that the root rule is in the resolver
     resolver.requireRule(targetNode.getBuildTarget());
@@ -123,7 +123,7 @@ public class QueryPathsMacroExpanderTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(node);
 
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph, filesystem);
     BuildRule rule = resolver.requireRule(node.getBuildTarget());
 
     ImmutableSet<Path> inputs = node.getInputs();
@@ -159,7 +159,7 @@ public class QueryPathsMacroExpanderTest {
 
     TargetGraph graph = TargetGraphFactory.newInstance(dep, target);
 
-    BuildRuleResolver resolver = new TestBuildRuleResolver(graph);
+    BuildRuleResolver resolver = new TestBuildRuleResolver(graph, filesystem);
     BuildRule depRule = resolver.requireRule(dep.getBuildTarget());
     BuildRule rule = resolver.requireRule(target.getBuildTarget());
 

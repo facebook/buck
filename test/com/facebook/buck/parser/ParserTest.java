@@ -346,7 +346,7 @@ public class ParserTest {
 
     TargetGraph targetGraph =
         parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
-    BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph);
+    BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph, cell);
     BuildRule fooRule = resolver.requireRule(fooTarget);
     assertNotNull(fooRule);
     BuildRule barRule = resolver.requireRule(barTarget);
@@ -1883,7 +1883,7 @@ public class ParserTest {
     {
       TargetGraph targetGraph =
           parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
-      BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph);
+      BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph, cell);
 
       JavaLibrary libRule = (JavaLibrary) resolver.requireRule(libTarget);
       assertEquals(
@@ -1900,7 +1900,7 @@ public class ParserTest {
     {
       TargetGraph targetGraph =
           parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
-      BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph);
+      BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph, cell);
 
       JavaLibrary libRule = (JavaLibrary) resolver.requireRule(libTarget);
       assertEquals(
@@ -1935,7 +1935,7 @@ public class ParserTest {
     {
       TargetGraph targetGraph =
           parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
-      BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph);
+      BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph, cell);
 
       JavaLibrary libRule = (JavaLibrary) resolver.requireRule(libTarget);
 
@@ -1955,7 +1955,7 @@ public class ParserTest {
     {
       TargetGraph targetGraph =
           parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
-      BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph);
+      BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph, cell);
 
       JavaLibrary libRule = (JavaLibrary) resolver.requireRule(libTarget);
       assertEquals(
@@ -2685,13 +2685,14 @@ public class ParserTest {
     parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
   }
 
-  private BuildRuleResolver buildActionGraph(BuckEventBus eventBus, TargetGraph targetGraph) {
+  private BuildRuleResolver buildActionGraph(
+      BuckEventBus eventBus, TargetGraph targetGraph, Cell cell) {
     return Preconditions.checkNotNull(
             new ActionGraphCache(1, 1)
                 .getFreshActionGraph(
                     eventBus,
                     targetGraph,
-                    new ToolchainProviderBuilder().build(),
+                    cell.getCellProvider(),
                     ActionGraphParallelizationMode.DISABLED,
                     false,
                     IncrementalActionGraphMode.DISABLED,

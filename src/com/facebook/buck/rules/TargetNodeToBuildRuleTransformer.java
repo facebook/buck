@@ -16,13 +16,11 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.toolchain.ToolchainProvider;
-
 public interface TargetNodeToBuildRuleTransformer {
 
   <T, U extends Description<T>> BuildRule transform(
+      CellProvider cellProvider,
       TargetGraph targetGraph,
-      ToolchainProvider toolchainProvider,
       BuildRuleResolver ruleResolver,
       TargetNode<T, U> targetNode);
 }

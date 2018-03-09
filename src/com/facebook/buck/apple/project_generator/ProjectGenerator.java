@@ -352,7 +352,7 @@ public class ProjectGenerator {
                 new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY,
                     new DefaultTargetNodeToBuildRuleTransformer(),
-                    cell.getToolchainProvider(),
+                    cell.getCellProvider(),
                     buckEventBus)));
     this.buckEventBus = buckEventBus;
 
@@ -952,7 +952,7 @@ public class ProjectGenerator {
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY,
             new DefaultTargetNodeToBuildRuleTransformer(),
-            projectCell.getToolchainProvider(),
+            projectCell.getCellProvider(),
             buckEventBus);
     ImmutableList.Builder<String> result = new ImmutableList.Builder<>();
     StringWithMacrosConverter macrosConverter =

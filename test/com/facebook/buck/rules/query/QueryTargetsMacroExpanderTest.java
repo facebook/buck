@@ -89,7 +89,7 @@ public class QueryTargetsMacroExpanderTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, ruleNode);
-    ruleResolver = new TestBuildRuleResolver(targetGraph);
+    ruleResolver = new TestBuildRuleResolver(targetGraph, filesystem);
 
     dep = ruleResolver.requireRule(depNode.getBuildTarget());
     rule = ruleResolver.requireRule(ruleNode.getBuildTarget());

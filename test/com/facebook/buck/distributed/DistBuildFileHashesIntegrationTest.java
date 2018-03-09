@@ -57,7 +57,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.cache.FileHashCacheMode;
@@ -243,7 +242,7 @@ public class DistBuildFileHashesIntegrationTest {
             true,
             false,
             targetGraph,
-            new ToolchainProviderBuilder().build(),
+            rootCell.getCellProvider(),
             TestRuleKeyConfigurationFactory.create(),
             ActionGraphParallelizationMode.DISABLED,
             Optional.empty(),

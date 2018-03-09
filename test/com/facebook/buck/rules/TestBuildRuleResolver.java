@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 
 public class TestBuildRuleResolver extends SingleThreadedBuildRuleResolver {
 
@@ -25,12 +25,23 @@ public class TestBuildRuleResolver extends SingleThreadedBuildRuleResolver {
       TargetGraph targetGraph,
       TargetNodeToBuildRuleTransformer buildRuleGenerator,
       ToolchainProvider toolchainProvider) {
-    super(targetGraph, buildRuleGenerator, toolchainProvider, null);
+    super(
+        targetGraph,
+        buildRuleGenerator,
+        new TestCellBuilder().setToolchainProvider(toolchainProvider).build().getCellProvider(),
+        null);
+  }
+
+  public TestBuildRuleResolver(
+      TargetGraph targetGraph,
+      TargetNodeToBuildRuleTransformer buildRuleGenerator,
+      CellProvider cellProvider) {
+    super(targetGraph, buildRuleGenerator, cellProvider, null);
   }
 
   public TestBuildRuleResolver(
       TargetGraph targetGraph, TargetNodeToBuildRuleTransformer buildRuleGenerator) {
-    super(targetGraph, buildRuleGenerator, new ToolchainProviderBuilder().build(), null);
+    super(targetGraph, buildRuleGenerator, new TestCellBuilder().build().getCellProvider(), null);
   }
 
   public TestBuildRuleResolver(TargetNodeToBuildRuleTransformer buildRuleGenerator) {
@@ -39,6 +50,13 @@ public class TestBuildRuleResolver extends SingleThreadedBuildRuleResolver {
 
   public TestBuildRuleResolver(TargetGraph targetGraph) {
     this(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+  }
+
+  public TestBuildRuleResolver(TargetGraph targetGraph, ProjectFilesystem filesystem) {
+    this(
+        targetGraph,
+        new DefaultTargetNodeToBuildRuleTransformer(),
+        new TestCellBuilder().setFilesystem(filesystem).build().getCellProvider());
   }
 
   public TestBuildRuleResolver(TargetGraph targetGraph, ToolchainProvider toolchainProvider) {

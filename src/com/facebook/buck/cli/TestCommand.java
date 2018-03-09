@@ -554,7 +554,7 @@ public class TestCommand extends BuildCommand {
               .getActionGraph(
                   params.getBuckEventBus(),
                   targetGraphAndBuildTargets.getTargetGraph(),
-                  params.getCell().getToolchainProvider(),
+                  params.getCell().getCellProvider(),
                   params.getBuckConfig(),
                   params.getRuleKeyConfiguration(),
                   poolSupplier);

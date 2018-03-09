@@ -25,10 +25,10 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraphCache;
+import com.facebook.buck.rules.CellProvider;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.step.ExecutorPool;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
@@ -74,5 +74,5 @@ abstract class AbstractDelegateAndGraphsInitializerArgs {
 
   public abstract ActionGraphParallelizationMode getActionGraphParallelizationMode();
 
-  public abstract ToolchainProvider getToolchainProvider();
+  public abstract CellProvider getCellProvider();
 }

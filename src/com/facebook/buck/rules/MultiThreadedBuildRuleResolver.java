@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.concurrent.Parallelizer;
 import com.facebook.buck.util.concurrent.WorkThreadTrackingFuture;
@@ -50,8 +49,8 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
 
   private final TargetGraph targetGraph;
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
-  private final ToolchainProvider toolchainProvider;
   @Nullable private final BuckEventBus eventBus;
+  private final CellProvider cellProvider;
 
   private final BuildRuleResolverMetadataCache metadataCache;
   private final ConcurrentHashMap<BuildTarget, Task<BuildRule>> buildRuleIndex;
@@ -60,13 +59,13 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
       ForkJoinPool forkJoinPool,
       TargetGraph targetGraph,
       TargetNodeToBuildRuleTransformer buildRuleGenerator,
-      ToolchainProvider toolchainProvider,
+      CellProvider cellProvider,
       BuckEventBus eventBus) {
     this.forkJoinPool = forkJoinPool;
     this.targetGraph = targetGraph;
     this.buildRuleGenerator = buildRuleGenerator;
-    this.toolchainProvider = toolchainProvider;
     this.eventBus = eventBus;
+    this.cellProvider = cellProvider;
 
     int initialCapacity = (int) (targetGraph.getNodes().size() * 5 * 1.1);
     this.buildRuleIndex = new ConcurrentHashMap<>(initialCapacity);
@@ -113,7 +112,7 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
             wrap(
                 key ->
                     buildRuleGenerator.transform(
-                        targetGraph, toolchainProvider, this, targetGraph.get(target)))));
+                        cellProvider, targetGraph, this, targetGraph.get(target)))));
   }
 
   /** Please use {@code computeIfAbsent} instead */

@@ -88,7 +88,7 @@ public class ClasspathAbiMacroExpanderTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, ruleNode);
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph, filesystem);
 
     BuildRule rule = ruleResolver.requireRule(ruleNode.getBuildTarget());
 
@@ -132,7 +132,7 @@ public class ClasspathAbiMacroExpanderTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, ruleNode);
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph, filesystem);
 
     BuildRule rule = ruleResolver.requireRule(ruleNode.getBuildTarget());
 

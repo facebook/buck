@@ -44,10 +44,10 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
@@ -274,7 +274,7 @@ public class RuleKeyBuilderTest {
       super(
           TargetGraph.EMPTY,
           new DefaultTargetNodeToBuildRuleTransformer(),
-          new ToolchainProviderBuilder().build(),
+          new TestCellBuilder().build().getCellProvider(),
           null);
       this.ruleMap = ruleMap;
     }

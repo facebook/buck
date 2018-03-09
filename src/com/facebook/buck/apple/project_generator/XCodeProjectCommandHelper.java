@@ -46,6 +46,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.CellProvider;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
@@ -55,7 +56,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.swift.SwiftBuckConfig;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
@@ -403,7 +403,7 @@ public class XCodeProjectCommandHelper {
 
     LazyActionGraph lazyActionGraph =
         new LazyActionGraph(
-            targetGraphAndTargets.getTargetGraph(), cell.getToolchainProvider(), buckEventBus);
+            targetGraphAndTargets.getTargetGraph(), cell.getCellProvider(), buckEventBus);
 
     LOG.debug("Generating workspace for config targets %s", targets);
     ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
@@ -837,13 +837,13 @@ public class XCodeProjectCommandHelper {
     private final BuildRuleResolver resolver;
 
     public LazyActionGraph(
-        TargetGraph targetGraph, ToolchainProvider toolchainProvider, BuckEventBus buckEventBus) {
+        TargetGraph targetGraph, CellProvider cellProvider, BuckEventBus buckEventBus) {
       this.targetGraph = targetGraph;
       this.resolver =
           new SingleThreadedBuildRuleResolver(
               targetGraph,
               new DefaultTargetNodeToBuildRuleTransformer(),
-              toolchainProvider,
+              cellProvider,
               buckEventBus);
     }
 
