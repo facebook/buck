@@ -41,9 +41,13 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.types.Either;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -270,16 +274,33 @@ public abstract class ModernBuildRule<T extends Buildable> extends AbstractBuild
     return stepBuilder.build();
   }
 
-  /** Records the outputs of this buildrule. */
+  /**
+   * Records the outputs of this buildrule. An output will only be recorded once (i.e. no duplicates
+   * and if a directory is recorded, none of its contents will be).
+   */
   public void recordOutputs(BuildableContext buildableContext) {
-    buildableContext.recordArtifact(outputPathResolver.getRootPath());
-    // All the outputs are already forced to be within getGenDirectory(), and so this recording
-    // isn't actually necessary.
-    classInfo.getOutputs(buildable, output -> recordOutput(buildableContext, output));
+    Stream.Builder<Path> collector = Stream.builder();
+    collector.add(outputPathResolver.getRootPath());
+    classInfo.getOutputs(buildable, path -> collector.add(outputPathResolver.resolvePath(path)));
+    // ImmutableSet guarantees that iteration order is unchanged.
+    Set<Path> outputs = collector.build().collect(ImmutableSet.toImmutableSet());
+    for (Path path : outputs) {
+      Preconditions.checkState(!path.isAbsolute());
+      if (shouldRecord(outputs, path)) {
+        buildableContext.recordArtifact(path);
+      }
+    }
   }
 
-  private void recordOutput(BuildableContext buildableContext, OutputPath output) {
-    buildableContext.recordArtifact(outputPathResolver.resolvePath(output));
+  private boolean shouldRecord(Set<Path> outputs, Path path) {
+    Path parent = path.getParent();
+    while (parent != null) {
+      if (outputs.contains(parent)) {
+        return false;
+      }
+      parent = parent.getParent();
+    }
+    return true;
   }
 
   @Override
