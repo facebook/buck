@@ -23,10 +23,12 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
@@ -34,6 +36,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.TouchStep;
+import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -41,7 +44,10 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Objects;
+import java.util.Optional;
 import org.immutables.value.Value;
 import org.junit.Before;
 import org.junit.Rule;
@@ -52,6 +58,8 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class ModernBuildRuleStrategyIntegrationTest {
   private String simpleTarget = "//:simple";
+  private String largeDynamicTarget = "//:large_dynamic";
+  private String hugeDynamicTarget = "//:huge_dynamic";
 
   @Parameterized.Parameters(name = "{0}")
   public static Collection<Object[]> data() {
@@ -94,6 +102,44 @@ public class ModernBuildRuleStrategyIntegrationTest {
     }
   }
 
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractLargeDynamicsArg extends HasDeclaredDeps {
+    Optional<BuildTarget> getFirstRef();
+
+    Optional<BuildTarget> getSecondRef();
+
+    String getValue();
+  }
+
+  private static class LargeDynamicsDescription implements Description<LargeDynamicsArg> {
+    @Override
+    public Class<LargeDynamicsArg> getConstructorArgType() {
+      return LargeDynamicsArg.class;
+    }
+
+    @Override
+    public BuildRule createBuildRule(
+        BuildRuleCreationContext context,
+        BuildTarget buildTarget,
+        BuildRuleParams params,
+        LargeDynamicsArg args) {
+      BuildRuleResolver resolver = context.getBuildRuleResolver();
+      Optional<LargeDynamics> firstRef =
+          args.getFirstRef().map(resolver::requireRule).map(LargeDynamics.class::cast);
+      Optional<LargeDynamics> secondRef =
+          args.getSecondRef().map(resolver::requireRule).map(LargeDynamics.class::cast);
+
+      return new LargeDynamics(
+          buildTarget,
+          context.getProjectFilesystem(),
+          new SourcePathRuleFinder(resolver),
+          firstRef,
+          secondRef,
+          args.getValue().charAt(0));
+    }
+  }
+
   @Before
   public void setUp() throws InterruptedException, IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "strategies", tmpFolder);
@@ -101,7 +147,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
         (processExecutor, pluginManager, sandboxExecutionStrategyFactory) ->
             cell ->
                 KnownBuildRuleTypes.builder()
-                    .addDescriptions(new TouchOutputDescription())
+                    .addDescriptions(new TouchOutputDescription(), new LargeDynamicsDescription())
                     .build());
     workspace.setUp();
     workspace.addBuckConfigLocalOption("modern_build_rule", "strategy", strategy.toString());
@@ -141,6 +187,32 @@ public class ModernBuildRuleStrategyIntegrationTest {
                 .resolvePath(new OutputPath("some.path"))));
   }
 
+  @Test
+  public void testRuleReferencingLargeDynamics() throws Exception {
+    ProcessResult result = workspace.runBuckBuild(largeDynamicTarget);
+    result.assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally(largeDynamicTarget);
+    assertEquals(
+        "a2\n",
+        workspace.getFileContents(
+            new DefaultOutputPathResolver(
+                    filesystem, BuildTargetFactory.newInstance(largeDynamicTarget))
+                .resolvePath(new OutputPath("some.path"))));
+  }
+
+  @Test
+  public void testRuleReferencingHugeDynamics() throws Exception {
+    ProcessResult result = workspace.runBuckBuild(hugeDynamicTarget);
+    result.assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally(hugeDynamicTarget);
+    assertEquals(
+        "a28b2a26b2c2a28b2a26b2c2d2a26b2a26b2c2a28b2a26b2c2a28b2a26b2c2d2a26b2a26b2c2e2\n",
+        workspace.getFileContents(
+            new DefaultOutputPathResolver(
+                    filesystem, BuildTargetFactory.newInstance(hugeDynamicTarget))
+                .resolvePath(new OutputPath("some.path"))));
+  }
+
   private static class TouchOutput extends ModernBuildRule<TouchOutput> implements Buildable {
     @AddToRuleKey private final OutputPath output;
 
@@ -160,6 +232,120 @@ public class ModernBuildRuleStrategyIntegrationTest {
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
       return ImmutableList.of(new TouchStep(filesystem, outputPathResolver.resolvePath(output)));
+    }
+  }
+
+  private static class AppendableString implements AddsToRuleKey {
+    @AddToRuleKey private final String value;
+
+    private AppendableString(String value) {
+      this.value = value;
+    }
+  }
+
+  /**
+   * This is just a silly class that creates a graph of references to other LargeDynamic and large
+   * AppendableString. Serialization/deserialization handles large objects differently than small
+   * objects so this is constructed to exercise those paths.
+   */
+  private static class LargeDynamic implements AddsToRuleKey {
+    @AddToRuleKey private final Optional<LargeDynamic> firstRef;
+    @AddToRuleKey private final Optional<LargeDynamic> secondRef;
+    @AddToRuleKey private final ImmutableList<AddsToRuleKey> allRefs;
+
+    private LargeDynamic(
+        Optional<LargeDynamic> firstRef, Optional<LargeDynamic> secondRef, Character val) {
+      this.firstRef = firstRef;
+      this.secondRef = secondRef;
+      ImmutableList.Builder<AddsToRuleKey> builder = ImmutableList.builder();
+      firstRef.ifPresent(builder::add);
+      secondRef.ifPresent(builder::add);
+      builder.add(bigArg(val), bigArg(val));
+      this.allRefs = builder.build();
+    }
+
+    private void append(FunnyStringBuilder builder) {
+      firstRef.ifPresent(ref -> ref.append(builder));
+      secondRef.ifPresent(ref -> ref.append(builder));
+      allRefs.forEach(
+          ref -> {
+            if (ref instanceof LargeDynamic) {
+              ((LargeDynamic) ref).append(builder);
+            } else if (ref instanceof AppendableString) {
+              builder.append(((AppendableString) ref).value.charAt(0));
+            }
+          });
+    }
+
+    private AppendableString bigArg(Character val) {
+      char[] buf = new char[1000];
+      Arrays.fill(buf, val);
+      return new AppendableString(new String(buf));
+    }
+  }
+
+  private static class LargeDynamics extends ModernBuildRule<LargeDynamics> implements Buildable {
+    @AddToRuleKey private final OutputPath output;
+
+    @AddToRuleKey private final LargeDynamic dynamic;
+
+    protected LargeDynamics(
+        BuildTarget buildTarget,
+        ProjectFilesystem filesystem,
+        SourcePathRuleFinder finder,
+        Optional<LargeDynamics> firstRef,
+        Optional<LargeDynamics> secondRef,
+        Character val) {
+      super(buildTarget, filesystem, finder, LargeDynamics.class);
+      this.output = new OutputPath("some.path");
+      this.dynamic =
+          new LargeDynamic(
+              firstRef.map(ref -> ref.dynamic), secondRef.map(ref -> ref.dynamic), val);
+    }
+
+    @Override
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext buildContext,
+        ProjectFilesystem filesystem,
+        OutputPathResolver outputPathResolver,
+        BuildCellRelativePathFactory buildCellPathFactory) {
+      FunnyStringBuilder builder = new FunnyStringBuilder();
+      dynamic.append(builder);
+      return ImmutableList.of(
+          new WriteFileStep(
+              filesystem, builder.build(), outputPathResolver.resolvePath(output), false));
+    }
+  }
+
+  private static class FunnyStringBuilder {
+    private Character curr = null;
+    private int count = 0;
+    private StringBuilder builder = new StringBuilder();
+
+    public void append(char c) {
+      if (Objects.equals(curr, c)) {
+        count++;
+      } else {
+        apply();
+        curr = c;
+        count = 1;
+      }
+    }
+
+    public void apply() {
+      if (curr != null) {
+        builder.append(curr);
+        if (count > 1) {
+          builder.append(count);
+        }
+      }
+      curr = null;
+      count = 0;
+    }
+
+    public String build() {
+      apply();
+      return builder.toString();
     }
   }
 }
