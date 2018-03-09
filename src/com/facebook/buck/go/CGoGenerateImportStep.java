@@ -53,7 +53,7 @@ public class CGoGenerateImportStep extends ShellStep {
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     return ImmutableList.<String>builder()
         .addAll(cgoCommandPrefix)
-        .add("-dynpackage", packageName.toString())
+        .add("-dynpackage", packageName.getFileName().toString())
         .add("-dynimport", bin.toString())
         .add("-dynout", outputFile.toString())
         .build();

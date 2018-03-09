@@ -421,7 +421,10 @@ public class GoTestDescription
                   .stream()
                   .map(BuildRule::getBuildTarget)
                   .collect(ImmutableList.toImmutableList()),
-              args.getCgoDeps());
+              ImmutableSortedSet.<BuildTarget>naturalOrder()
+                  .addAll(libraryArg.getCgoDeps())
+                  .addAll(args.getCgoDeps())
+                  .build());
     } else {
       testLibrary =
           GoDescriptors.createGoCompileRule(
