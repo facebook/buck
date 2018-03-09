@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,29 +16,26 @@
 
 package com.facebook.buck.util;
 
-import java.io.Closeable;
+import com.facebook.buck.io.file.MostFiles;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
-import java.util.function.Supplier;
 
-/** Creates a temporary file that is deleted when this object is closed. */
-public class NamedTemporaryFile implements Closeable, Supplier<Path> {
-  private final Path tempPath;
+/** Creates a temporary directory that is (recursively) deleted when this object is closed. */
+public class NamedTemporaryDirectory implements AutoCloseable {
+  private final Path path;
 
-  public NamedTemporaryFile(String prefix, String suffix, FileAttribute<?>... attrs)
-      throws IOException {
-    tempPath = Files.createTempFile(prefix, suffix, attrs);
-  }
-
-  @Override
-  public Path get() {
-    return tempPath;
+  public NamedTemporaryDirectory(String prefix, FileAttribute<?>... attrs) throws IOException {
+    this.path = Files.createTempDirectory(prefix, attrs);
   }
 
   @Override
   public void close() throws IOException {
-    Files.delete(tempPath);
+    MostFiles.deleteRecursively(path);
+  }
+
+  public Path getPath() {
+    return path;
   }
 }
