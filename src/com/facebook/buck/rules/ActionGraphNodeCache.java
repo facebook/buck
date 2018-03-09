@@ -163,7 +163,11 @@ public class ActionGraphNodeCache {
       return;
     }
 
-    resolver.addToIndex(buildRule);
+    // Use {@see BuildRuleResolver#computeIfAbsent} here instead of {@see
+    // BuildRuleResolver#addToIndex}
+    // to avoid a race where we might add a duplicate build rule during parallel action graph
+    // construction.
+    resolver.computeIfAbsent(buildRule.getBuildTarget(), buildTarget -> buildRule);
 
     for (BuildRule dep : getDeps(buildRule)) {
       addBuildRuleSubgraphToIndex(dep, resolver);
