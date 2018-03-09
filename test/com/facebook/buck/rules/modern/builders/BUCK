@@ -1,0 +1,31 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "builders",
+    srcs = glob([
+        "*.java",
+    ]),
+    has_immutable_types = True,
+    deps = [
+        "//src-gen:thrift",
+        "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/rules/modern:modern",
+        "//src/com/facebook/buck/rules/modern/builders:builders",
+        "//src/com/facebook/buck/rules/modern/config:config",
+        "//src/com/facebook/buck/slb:slb",
+        "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/step/fs:fs",
+        "//src/com/facebook/buck/util/function:function",
+        "//src/com/facebook/buck/util/immutables:immutables",
+        "//test/com/facebook/buck/io/file:testutil",
+        "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/junit:junit",
+    ],
+)
