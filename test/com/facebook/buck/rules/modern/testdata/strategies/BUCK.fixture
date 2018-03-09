@@ -1,0 +1,4 @@
+touch_output(
+    name = "simple",
+    out = "some.path",
+)

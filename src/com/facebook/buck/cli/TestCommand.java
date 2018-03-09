@@ -51,6 +51,8 @@ import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
+import com.facebook.buck.rules.modern.builders.ModernBuildRuleBuilderFactory;
+import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
@@ -585,6 +587,10 @@ public class TestCommand extends BuildCommand {
         try (CachingBuildEngine cachingBuildEngine =
                 new CachingBuildEngine(
                     localCachingBuildEngineDelegate,
+                    ModernBuildRuleBuilderFactory.getBuildStrategy(
+                        params.getBuckConfig().getView(ModernBuildRuleConfig.class),
+                        actionGraphAndResolver.getResolver(),
+                        params.getCell()),
                     pool.getWeightedListeningExecutorService(),
                     new DefaultStepRunner(),
                     getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),

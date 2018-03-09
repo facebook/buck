@@ -66,7 +66,7 @@ public class ErrorLogger {
   }
 
   /** Prints the stacktrace as formatted by an ErrorLogger. */
-  public static String getUserFriendlyMessage(Exception e) {
+  public static String getUserFriendlyMessage(Throwable e) {
     StringBuilder builder = new StringBuilder();
     new ErrorLogger(
             new LogImpl() {

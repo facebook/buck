@@ -87,6 +87,7 @@ import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
@@ -110,6 +111,7 @@ import com.facebook.buck.util.zip.ZipConstants;
 import com.facebook.buck.util.zip.ZipOutputStreams;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -151,6 +153,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -1843,6 +1846,123 @@ public class CachingBuildEngineTest {
         new ZipInspector(fetchedArtifact)
             .assertFileContents(
                 pathResolver.getRelativePath(rule.getSourcePathToOutput()), "stuff");
+      }
+    }
+
+    public static class CustomStrategyTests extends CommonFixture {
+      private BuildTarget target;
+      private Supplier<StepExecutionResult> resultSupplier;
+      private BuildRule rule;
+      private FakeStrategy strategy;
+
+      public CustomStrategyTests(CachingBuildEngine.MetadataStorage metadataStorage)
+          throws IOException {
+        super(metadataStorage);
+      }
+
+      interface Builder {
+        void build(
+            ListeningExecutorService service, BuildRule rule, BuildExecutorRunner executorRunner);
+      }
+
+      private static class FakeStrategy implements BuildRuleStrategy {
+        boolean closed = false;
+        boolean canBuild = false;
+        Optional<Builder> builder = Optional.empty();
+
+        @Override
+        public void build(
+            ListeningExecutorService service, BuildRule rule, BuildExecutorRunner executorRunner) {
+          Preconditions.checkState(builder.isPresent());
+          builder.get().build(service, rule, executorRunner);
+        }
+
+        @Override
+        public boolean canBuild(BuildRule instance) {
+          return canBuild;
+        }
+
+        @Override
+        public void close() throws IOException {
+          Preconditions.checkState(!closed);
+          closed = true;
+        }
+
+        void assertClosed() {
+          assertTrue(closed);
+        }
+      }
+
+      @Before
+      public void setUp() throws Exception {
+        super.setUp();
+        target = BuildTargetFactory.newInstance("//:rule");
+        resultSupplier = Suppliers.ofInstance(StepExecutionResults.ERROR);
+        Step step =
+            new AbstractExecutionStep("step") {
+              @Override
+              public StepExecutionResult execute(ExecutionContext context) {
+                return resultSupplier.get();
+              }
+            };
+        rule =
+            new EmptyBuildRule(target, filesystem) {
+              @Override
+              public ImmutableList<Step> getBuildSteps(
+                  BuildContext context, BuildableContext buildableContext) {
+                return ImmutableList.of(step);
+              }
+            };
+        strategy = new FakeStrategy();
+      }
+
+      public void runVerifiedBuild(BuildRule rule) throws InterruptedException, ExecutionException {
+        try (CachingBuildEngine cachingBuildEngine =
+            cachingBuildEngineFactory().setCustomBuildRuleStrategy(strategy).build()) {
+          BuildResult buildResult =
+              cachingBuildEngine
+                  .build(buildContext, TestExecutionContext.newInstance(), rule)
+                  .getResult()
+                  .get();
+          assertTrue(
+              buildResult.getFailureOptional().map(ErrorLogger::getUserFriendlyMessage).toString(),
+              buildResult.isSuccess());
+        }
+        strategy.assertClosed();
+      }
+
+      @Test
+      public void testCustomBuildRuleStrategyCanRejectRules() throws Exception {
+        resultSupplier = Suppliers.ofInstance(StepExecutionResults.SUCCESS);
+        runVerifiedBuild(rule);
+      }
+
+      @Test
+      public void testCustomBuildRuleStrategyCanRunRulesWithDefaultBehavior() throws Exception {
+        resultSupplier = Suppliers.ofInstance(StepExecutionResults.SUCCESS);
+        strategy.canBuild = true;
+        strategy.builder =
+            Optional.of((service, rule, executorRunner) -> executorRunner.runWithDefaultExecutor());
+        runVerifiedBuild(rule);
+      }
+
+      @Test
+      public void testCustomBuildRuleStrategyCanRunRulesWithCustomBehavior() throws Exception {
+        resultSupplier =
+            () -> {
+              fail();
+              return null;
+            };
+        strategy.canBuild = true;
+        strategy.builder =
+            Optional.of(
+                (service, rule, executorRunner) ->
+                    executorRunner.runWithExecutor(
+                        (executionContext,
+                            buildRuleBuildContext,
+                            buildableContext,
+                            stepRunner) -> {}));
+        runVerifiedBuild(rule);
       }
     }
 

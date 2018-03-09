@@ -41,6 +41,8 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
+import com.facebook.buck.rules.modern.builders.ModernBuildRuleBuilderFactory;
+import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
@@ -202,6 +204,10 @@ public class LocalBuildExecutor implements BuildExecutor {
 
     return new CachingBuildEngine(
         cachingBuildEngineDelegate,
+        ModernBuildRuleBuilderFactory.getBuildStrategy(
+            args.getBuckConfig().getView(ModernBuildRuleConfig.class),
+            actionGraphAndResolver.getResolver(),
+            args.getRootCell()),
         executorService,
         new DefaultStepRunner(),
         buildEngineMode.orElse(engineConfig.getBuildEngineMode()),

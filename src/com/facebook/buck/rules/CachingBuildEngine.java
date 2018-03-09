@@ -148,8 +148,11 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   private final RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter;
 
+  private final Optional<BuildRuleStrategy> customBuildRuleStrategy;
+
   public CachingBuildEngine(
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
+      Optional<BuildRuleStrategy> customBuildRuleStrategy,
       WeightedListeningExecutorService service,
       StepRunner stepRunner,
       BuildMode buildMode,
@@ -167,6 +170,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
     this(
         cachingBuildEngineDelegate,
+        customBuildRuleStrategy,
         service,
         stepRunner,
         buildMode,
@@ -197,6 +201,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   @VisibleForTesting
   CachingBuildEngine(
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
+      Optional<BuildRuleStrategy> customBuildRuleStrategy,
       WeightedListeningExecutorService service,
       StepRunner stepRunner,
       BuildMode buildMode,
@@ -214,6 +219,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics,
       boolean consoleLogBuildFailuresInline) {
     this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
+    this.customBuildRuleStrategy = customBuildRuleStrategy;
 
     this.service = service;
     this.stepRunner = stepRunner;
@@ -253,10 +259,13 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   @Override
   public void close() {
     try {
+      if (customBuildRuleStrategy.isPresent()) {
+        customBuildRuleStrategy.get().close();
+      }
       Futures.allAsList(asyncCallbacks).get();
     } catch (InterruptedException e) {
       e.printStackTrace();
-    } catch (ExecutionException e) {
+    } catch (IOException | ExecutionException e) {
       throw new RuntimeException(e);
     }
   }
@@ -524,7 +533,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             buildInfoRecorder,
             buildableContext,
             pipelinesRunner,
-            remoteBuildRuleCompletionWaiter)
+            remoteBuildRuleCompletionWaiter,
+            customBuildRuleStrategy)
         .build();
   }
 

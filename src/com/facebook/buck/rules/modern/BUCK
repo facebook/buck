@@ -23,7 +23,10 @@ java_library(
     name = "modern",
     srcs = glob(
         ["**/*.java"],
-        exclude = TYPES,
+        exclude = TYPES + [
+            "config/*",
+            "builders/*",
+        ],
     ),
     exported_deps = [
         ":types",

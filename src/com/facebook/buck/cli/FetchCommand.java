@@ -52,6 +52,7 @@ import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.ForkJoinPool;
 
 public class FetchCommand extends BuildCommand {
@@ -134,6 +135,7 @@ public class FetchCommand extends BuildCommand {
           CachingBuildEngine buildEngine =
               new CachingBuildEngine(
                   localCachingBuildEngineDelegate,
+                  Optional.empty(),
                   pool.getWeightedListeningExecutorService(),
                   new DefaultStepRunner(),
                   getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),

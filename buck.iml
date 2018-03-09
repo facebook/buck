@@ -58,6 +58,7 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/parser/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/python/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/rage/testdata" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/rules/modern/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/rules/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/rust/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/shell/testdata" />

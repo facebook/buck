@@ -54,6 +54,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 /**
  * Utility that aids in creating the objects necessary to traverse the target graph with special
@@ -138,6 +139,7 @@ final class JavaBuildGraphProcessor {
           CachingBuildEngine buildEngine =
               new CachingBuildEngine(
                   cachingBuildEngineDelegate,
+                  Optional.empty(),
                   pool.getWeightedListeningExecutorService(),
                   new DefaultStepRunner(),
                   CachingBuildEngine.BuildMode.SHALLOW,

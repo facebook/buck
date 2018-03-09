@@ -49,6 +49,7 @@ public class CachingBuildEngineFactory {
   private boolean logBuildRuleFailuresInline = true;
   private BuildInfoStoreManager buildInfoStoreManager;
   private final RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter;
+  private Optional<BuildRuleStrategy> customBuildRuleStrategy = Optional.empty();
 
   public CachingBuildEngineFactory(
       BuildRuleResolver buildRuleResolver,
@@ -110,12 +111,24 @@ public class CachingBuildEngineFactory {
     return this;
   }
 
+  public CachingBuildEngineFactory setCustomBuildRuleStrategy(BuildRuleStrategy strategy) {
+    this.customBuildRuleStrategy = Optional.of(strategy);
+    return this;
+  }
+
+  public CachingBuildEngineFactory setCustomBuildRuleStrategy(
+      Optional<BuildRuleStrategy> strategy) {
+    this.customBuildRuleStrategy = strategy;
+    return this;
+  }
+
   public CachingBuildEngine build() {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     if (ruleKeyFactories.isPresent()) {
       return new CachingBuildEngine(
           cachingBuildEngineDelegate,
+          customBuildRuleStrategy,
           executorService,
           new DefaultStepRunner(),
           buildMode,
@@ -136,6 +149,7 @@ public class CachingBuildEngineFactory {
 
     return new CachingBuildEngine(
         cachingBuildEngineDelegate,
+        customBuildRuleStrategy,
         executorService,
         new DefaultStepRunner(),
         buildMode,
