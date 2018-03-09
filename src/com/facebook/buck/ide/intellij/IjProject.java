@@ -45,6 +45,7 @@ public class IjProject {
   private final SourcePathRuleFinder ruleFinder;
   private final ProjectFilesystem projectFilesystem;
   private final IjProjectConfig projectConfig;
+  private final IJProjectCleaner cleaner;
 
   public IjProject(
       TargetGraphAndTargets targetGraphAndTargets,
@@ -61,6 +62,7 @@ public class IjProject {
     this.sourcePathResolver = DefaultSourcePathResolver.from(this.ruleFinder);
     this.projectFilesystem = projectFilesystem;
     this.projectConfig = projectConfig;
+    cleaner = new IJProjectCleaner(projectFilesystem);
   }
 
   /**
@@ -71,7 +73,33 @@ public class IjProject {
    * @throws IOException
    */
   public ImmutableSet<BuildTarget> write() throws IOException {
-    ImmutableSet.Builder<BuildTarget> requiredBuildTargets = ImmutableSet.builder();
+    final ImmutableSet<BuildTarget> buildTargets = performWriteOrUpdate(false);
+    clean();
+    return buildTargets;
+  }
+
+  /**
+   * Write a subset of the project to disk, specified by the targets passed on the command line.
+   * Does not perform a clean of the project space after updating.
+   *
+   * @return set of {@link BuildTarget}s which should be built in to allow indexing
+   * @throws IOException
+   */
+  public ImmutableSet<BuildTarget> update() throws IOException {
+    return performWriteOrUpdate(true);
+  }
+
+  /**
+   * Perform the write to disk.
+   *
+   * @param updateOnly whether to write all modules in the graph to disk, or only the ones which
+   *     correspond to the listed targets
+   * @return set of {@link BuildTarget}s which should be built in order for the project to index
+   *     correctly.
+   * @throws IOException
+   */
+  private ImmutableSet<BuildTarget> performWriteOrUpdate(boolean updateOnly) throws IOException {
+    final ImmutableSet.Builder<BuildTarget> requiredBuildTargets = ImmutableSet.builder();
     IjLibraryFactory libraryFactory =
         new DefaultIjLibraryFactory(
             new DefaultIjLibraryFactoryResolver(
@@ -112,28 +140,36 @@ public class IjProject {
             projectFilesystem,
             projectConfig,
             androidManifestParser);
+    IntellijModulesListParser modulesParser = new IntellijModulesListParser();
     IjProjectWriter writer =
-        new IjProjectWriter(templateDataPreparer, projectConfig, projectFilesystem);
+        new IjProjectWriter(templateDataPreparer, projectConfig, projectFilesystem, modulesParser);
 
-    IJProjectCleaner cleaner = new IJProjectCleaner(projectFilesystem);
-
-    writer.write(cleaner);
-
+    if (updateOnly) {
+      writer.update(cleaner, targetGraphAndTargets);
+    } else {
+      writer.write(cleaner);
+    }
     PregeneratedCodeWriter pregeneratedCodeWriter =
         new PregeneratedCodeWriter(
             templateDataPreparer, projectConfig, projectFilesystem, androidManifestParser);
     pregeneratedCodeWriter.write(cleaner);
-
-    cleaner.clean(
-        projectConfig.getBuckConfig(),
-        projectConfig.getProjectPaths().getLibrariesDir(),
-        projectConfig.isCleanerEnabled(),
-        projectConfig.isRemovingUnusedLibrariesEnabled());
 
     if (projectConfig.getGeneratedFilesListFilename().isPresent()) {
       cleaner.writeFilesToKeepToFile(projectConfig.getGeneratedFilesListFilename().get());
     }
 
     return requiredBuildTargets.build();
+  }
+
+  /**
+   * Run the cleaner after a successful call to write(). This removes stale project files from
+   * previous runs.
+   */
+  private void clean() throws IOException {
+    cleaner.clean(
+        projectConfig.getBuckConfig(),
+        projectConfig.getProjectPaths().getLibrariesDir(),
+        projectConfig.isCleanerEnabled(),
+        projectConfig.isRemovingUnusedLibrariesEnabled());
   }
 }

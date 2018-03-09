@@ -23,6 +23,7 @@ import com.facebook.buck.config.ProjectTestsMode;
 import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.ide.intellij.aggregation.AggregationMode;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.ide.intellij.projectview.ProjectView;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
@@ -131,6 +132,13 @@ public class IjProjectCommandHelper {
 
     if (projectViewParameters.hasViewPath()) {
       console.printErrorText("`--view` option is deprecated and will be removed soon.");
+    }
+
+    if (projectGeneratorParameters.isUpdateOnly()
+        && projectConfig.getAggregationMode() != AggregationMode.NONE) {
+      throw new CommandLineException(
+          "`--regenerate` option is incompatible with IntelliJ"
+              + " module aggregation. In order to use `--regenerate` set `--intellij-aggregation-mode=none`");
     }
 
     List<String> targets = arguments;
@@ -290,7 +298,13 @@ public class IjProjectCommandHelper {
             cell.getFilesystem(),
             projectConfig);
 
-    return project.write();
+    final ImmutableSet<BuildTarget> buildTargets;
+    if (projectGeneratorParameters.isUpdateOnly()) {
+      buildTargets = project.update();
+    } else {
+      buildTargets = project.write();
+    }
+    return buildTargets;
   }
 
   private ExitCode buildRequiredTargetsWithoutUsingCacheForAnnotatedTargets(

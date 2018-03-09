@@ -227,6 +227,14 @@ public class ProjectCommand extends BuildCommand {
   private String generatedFilesListFilename = null;
 
   @Option(
+    name = "--update",
+    usage =
+        "Instead of generating a whole project, only regenerate the module files for the "
+            + "given targets, possibly updating the top-level modules list."
+  )
+  private boolean updateOnly = false;
+
+  @Option(
     name = "--view",
     usage =
         "Deprecated: this feature will be removed in future versions, see "
@@ -509,6 +517,11 @@ public class ProjectCommand extends BuildCommand {
     @Override
     public boolean isProcessAnnotations() {
       return processAnnotations;
+    }
+
+    @Override
+    public boolean isUpdateOnly() {
+      return updateOnly;
     }
 
     @Override

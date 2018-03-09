@@ -19,17 +19,22 @@ package com.facebook.buck.ide.intellij;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.xml.XmlDomParser;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import java.io.File;
 import java.io.IOException;
 import org.hamcrest.Matchers;
+import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.w3c.dom.Node;
@@ -37,6 +42,12 @@ import org.w3c.dom.Node;
 public class ProjectIntegrationTest {
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
+
+  @Before
+  public void setUp() throws Exception {
+    // These tests consistently fail on Windows due to path separator issues.
+    Assume.assumeFalse(Platform.detect() == Platform.WINDOWS);
+  }
 
   @Test
   public void testAndroidLibraryProject() throws InterruptedException, IOException {
@@ -332,6 +343,59 @@ public class ProjectIntegrationTest {
   @Test
   public void testIgnoredPathAddedToExcludedFolders() throws InterruptedException, IOException {
     runBuckProjectAndVerify("ignored_excluded");
+  }
+
+  @Test
+  public void testBuckModuleRegenerateSubproject() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+                this, "incrementalProject", temporaryFolder.newFolder())
+            .setUp();
+    final String extraModuleFilePath = "modules/extra/modules_extra.iml";
+    final File extraModuleFile = workspace.getPath(extraModuleFilePath).toFile();
+    workspace
+        .runBuckCommand("project", "--intellij-aggregation-mode=none", "//modules/tip:tip")
+        .assertSuccess();
+    assertFalse(extraModuleFile.exists());
+    final String modulesBefore = workspace.getFileContents(".idea/modules.xml");
+    final String fileXPath =
+        String.format(
+            "/project/component/modules/module[contains(@filepath,'%s')]", extraModuleFilePath);
+    assertThat(XmlDomParser.parse(modulesBefore), Matchers.not(Matchers.hasXPath(fileXPath)));
+
+    // Run regenerate on the new modules
+    workspace
+        .runBuckCommand(
+            "project", "--intellij-aggregation-mode=none", "--update", "//modules/extra:extra")
+        .assertSuccess();
+    assertTrue(extraModuleFile.exists());
+    final String modulesAfter = workspace.getFileContents(".idea/modules.xml");
+    assertThat(XmlDomParser.parse(modulesAfter), Matchers.hasXPath(fileXPath));
+    workspace.verify();
+  }
+
+  @Test
+  public void testBuckModuleRegenerateSubprojectNoOp() throws InterruptedException, IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+                this, "incrementalProject", temporaryFolder.newFolder())
+            .setUp();
+    workspace
+        .runBuckCommand(
+            "project",
+            "--intellij-aggregation-mode=none",
+            "//modules/tip:tip",
+            "//modules/extra:extra")
+        .assertSuccess();
+    workspace.verify();
+    // Run regenerate, should be a no-op relative to previous
+    workspace
+        .runBuckCommand(
+            "project", "--intellij-aggregation-mode=none", "--update", "//modules/extra:extra")
+        .assertSuccess();
+    workspace.verify();
   }
 
   @Test
