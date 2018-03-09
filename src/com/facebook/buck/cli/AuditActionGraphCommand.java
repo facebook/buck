@@ -56,7 +56,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
       throws IOException, InterruptedException {
     try (CommandThreadManager pool =
             new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig()));
-        CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier =
+        CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
             getForkJoinPoolSupplier(params.getBuckConfig())) {
       // Create the target graph.
       TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets =

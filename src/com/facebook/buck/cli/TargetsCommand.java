@@ -314,7 +314,7 @@ public class TargetsCommand extends AbstractCommand {
       throws IOException, InterruptedException {
     try (CommandThreadManager pool =
             new CommandThreadManager("Targets", getConcurrencyLimit(params.getBuckConfig()));
-        CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier =
+        CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
             getForkJoinPoolSupplier(params.getBuckConfig())) {
       ListeningExecutorService executor = pool.getListeningExecutorService();
 
@@ -337,7 +337,7 @@ public class TargetsCommand extends AbstractCommand {
   private ExitCode runWithExecutor(
       CommandRunnerParams params,
       ListeningExecutorService executor,
-      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier)
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier)
       throws IOException, InterruptedException, BuildFileParseException, CycleException,
           VersionException {
     Optional<ImmutableSet<Class<? extends Description<?>>>> descriptionClasses =
@@ -410,7 +410,7 @@ public class TargetsCommand extends AbstractCommand {
   private void printDotFormat(
       CommandRunnerParams params,
       ListeningExecutorService executor,
-      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier)
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier)
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
     TargetGraphAndBuildTargets targetGraphAndTargets = buildTargetGraphAndTargets(params, executor);
     ActionGraphAndResolver result =
@@ -858,7 +858,7 @@ public class TargetsCommand extends AbstractCommand {
       CommandRunnerParams params,
       ListeningExecutorService executor,
       Pair<TargetGraph, Iterable<TargetNode<?, ?>>> targetGraphAndTargetNodes,
-      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier)
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier)
       throws IOException, InterruptedException, BuildFileParseException, CycleException {
 
     TargetResultBuilders targetResultBuilders = new TargetResultBuilders();

@@ -28,6 +28,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,11 +53,19 @@ public class CloseableMemoizedSupplierTest<T extends AbstractCloseableMemoizedSu
     return Arrays.asList(
         new Object[][] {
           {
-            new CloseableFactory<CloseableMemoizedSupplier<Object, Exception>>() {
+            new CloseableFactory<CloseableMemoizedSupplier<Object>>() {
               @Override
-              public CloseableMemoizedSupplier<Object, Exception> makeCloseable(
+              public CloseableMemoizedSupplier<Object> makeCloseable(
                   Supplier<Object> supplier, ThrowingConsumer<Object, Exception> closer) {
-                return CloseableMemoizedSupplier.of(supplier, closer);
+                Consumer<Object> nonThrowingCloser =
+                    toClose -> {
+                      try {
+                        closer.accept(toClose);
+                      } catch (Exception e) {
+                        fail("Unexpected Exception");
+                      }
+                    };
+                return CloseableMemoizedSupplier.of(supplier, nonThrowingCloser);
               }
             }
           },

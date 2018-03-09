@@ -77,7 +77,7 @@ public class ActionGraphCache {
       CellProvider cellProvider,
       BuckConfig buckConfig,
       RuleKeyConfiguration ruleKeyConfiguration,
-      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier) {
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
     return getActionGraph(
         eventBus,
         buckConfig.isActionGraphCheckingEnabled(),
@@ -100,7 +100,7 @@ public class ActionGraphCache {
       BuckConfig buckConfig,
       RuleKeyConfiguration ruleKeyConfiguration,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
-      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier) {
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
     return getActionGraph(
         eventBus,
         buckConfig.isActionGraphCheckingEnabled(),
@@ -125,7 +125,7 @@ public class ActionGraphCache {
       ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
-      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier) {
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
     return getActionGraph(
         eventBus,
         checkActionGraphs,
@@ -164,7 +164,7 @@ public class ActionGraphCache {
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
-      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier) {
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
     ActionGraphAndResolver out;
@@ -242,7 +242,7 @@ public class ActionGraphCache {
       ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
-      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier) {
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
     TargetNodeToBuildRuleTransformer transformer = new DefaultTargetNodeToBuildRuleTransformer();
     return getFreshActionGraph(
         eventBus,
@@ -274,7 +274,7 @@ public class ActionGraphCache {
       ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
-      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier) {
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
 
@@ -301,7 +301,7 @@ public class ActionGraphCache {
       ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
-      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier) {
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
 
     if (incrementalActionGraphMode == IncrementalActionGraphMode.EXPERIMENT) {
       incrementalActionGraphMode =
@@ -547,7 +547,7 @@ public class ActionGraphCache {
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
-      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier) {
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(eventBus, PerfEventId.of("ActionGraphCacheCheck"))) {
       // We check that the lastActionGraph is not null because it's possible we had a

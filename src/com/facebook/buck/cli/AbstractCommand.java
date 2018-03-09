@@ -363,8 +363,7 @@ public abstract class AbstractCommand implements Command {
    * @param buckConfig the configuration for resources
    * @return a memoized supplier for a ForkJoinPool that will be closed properly if initialized
    */
-  protected CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> getForkJoinPoolSupplier(
-      BuckConfig buckConfig) {
+  protected CloseableMemoizedSupplier<ForkJoinPool> getForkJoinPoolSupplier(BuckConfig buckConfig) {
     ResourcesConfig resource = buckConfig.getView(ResourcesConfig.class);
     return CloseableMemoizedSupplier.of(
         () ->

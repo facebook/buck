@@ -384,7 +384,7 @@ public class BuildCommand extends AbstractCommand {
       List<String> buildTargets,
       CommandRunnerParams params,
       WeightedListeningExecutorService executor,
-      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier)
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier)
       throws InterruptedException, IOException {
     BuildCommand buildCommand = new BuildCommand(buildTargets);
     buildCommand.assertArguments(params);
@@ -448,7 +448,7 @@ public class BuildCommand extends AbstractCommand {
     }
     BuildEvent.Started started = postBuildStartedEvent(params);
     ExitCode exitCode = ExitCode.SUCCESS;
-    try (CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier =
+    try (CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
         getForkJoinPoolSupplier(params.getBuckConfig())) {
       exitCode = executeBuildAndProcessResult(params, commandThreadManager, poolSupplier);
     } catch (ActionGraphCreationException e) {
@@ -476,7 +476,7 @@ public class BuildCommand extends AbstractCommand {
       CommandRunnerParams params,
       ListeningExecutorService executorService,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
-      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier)
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier)
       throws ActionGraphCreationException, IOException, InterruptedException {
     TargetGraphAndBuildTargets unversionedTargetGraph =
         createUnversionedTargetGraph(params, executorService);
@@ -521,7 +521,7 @@ public class BuildCommand extends AbstractCommand {
   private ExitCode executeBuildAndProcessResult(
       CommandRunnerParams params,
       CommandThreadManager commandThreadManager,
-      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier)
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier)
       throws IOException, InterruptedException, ActionGraphCreationException {
     ExitCode exitCode = ExitCode.SUCCESS;
     ActionAndTargetGraphs graphs;
@@ -1275,7 +1275,7 @@ public class BuildCommand extends AbstractCommand {
       CommandRunnerParams params,
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
-      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier)
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier)
       throws ActionGraphCreationException {
     buildTargets = targetGraphAndBuildTargets.getBuildTargets();
     buildTargetsHaveBeenCalculated = true;

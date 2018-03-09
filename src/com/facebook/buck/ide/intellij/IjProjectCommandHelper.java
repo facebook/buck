@@ -220,7 +220,7 @@ public class IjProjectCommandHelper {
   }
 
   private ActionGraphAndResolver getActionGraph(TargetGraph targetGraph) {
-    try (CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> forkJoinPoolSupplier =
+    try (CloseableMemoizedSupplier<ForkJoinPool> forkJoinPoolSupplier =
         CloseableMemoizedSupplier.of(
             () ->
                 MostExecutors.forkJoinPoolWithThreadLimit(

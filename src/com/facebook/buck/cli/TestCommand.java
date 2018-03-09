@@ -456,7 +456,7 @@ public class TestCommand extends BuildCommand {
 
     try (CommandThreadManager pool =
             new CommandThreadManager("Test", getConcurrencyLimit(params.getBuckConfig()));
-        CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier =
+        CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
             getForkJoinPoolSupplier(params.getBuckConfig())) {
       // Post the build started event, setting it to the Parser recorded start time if appropriate.
       BuildEvent.Started started = BuildEvent.started(getArguments());

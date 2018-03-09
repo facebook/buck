@@ -76,7 +76,7 @@ public class ActionGraphCacheTest {
   private TargetGraph targetGraph1;
   private TargetGraph targetGraph2;
 
-  CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> fakePoolSupplier;
+  CloseableMemoizedSupplier<ForkJoinPool> fakePoolSupplier;
 
   private BuckEventBus eventBus;
   private BlockingQueue<BuckEvent> trackedEvents = new LinkedBlockingQueue<>();
@@ -339,7 +339,7 @@ public class ActionGraphCacheTest {
   @Test
   public void actionGraphParallelizationStateIsLogged() {
     List<ExperimentEvent> experimentEvents;
-    try (CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier =
+    try (CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
         CloseableMemoizedSupplier.of(
             () -> MostExecutors.forkJoinPoolWithThreadLimit(1, 1), ForkJoinPool::shutdownNow)) {
       for (ActionGraphParallelizationMode mode :
@@ -478,7 +478,7 @@ public class ActionGraphCacheTest {
 
   @Test
   public void cachedSubgraphReturnedFromNodeCacheParallel() {
-    try (CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier =
+    try (CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
         CloseableMemoizedSupplier.of(
             () -> MostExecutors.forkJoinPoolWithThreadLimit(1, 1), ForkJoinPool::shutdownNow)) {
       runCachedSubgraphReturnedFromNodeCacheTest(
@@ -488,7 +488,7 @@ public class ActionGraphCacheTest {
 
   private void runCachedSubgraphReturnedFromNodeCacheTest(
       ActionGraphParallelizationMode parallelizationMode,
-      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier) {
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
     ActionGraphCache cache = new ActionGraphCache(1, 100);
 
     TargetNode<?, ?> originalNode3 = createCacheableTargetNode("C");

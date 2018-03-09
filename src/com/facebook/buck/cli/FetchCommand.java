@@ -78,7 +78,7 @@ public class FetchCommand extends BuildCommand {
 
     try (CommandThreadManager pool =
             new CommandThreadManager("Fetch", getConcurrencyLimit(params.getBuckConfig()));
-        CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier =
+        CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
             getForkJoinPoolSupplier(params.getBuckConfig())) {
       ActionGraphAndResolver actionGraphAndResolver;
       ImmutableSet<BuildTarget> buildTargets;

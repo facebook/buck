@@ -57,7 +57,7 @@ public class AuditClasspathCommandTest {
   private TestConsole console;
   private AuditClasspathCommand auditClasspathCommand;
   private CommandRunnerParams params;
-  private CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier;
+  private CloseableMemoizedSupplier<ForkJoinPool> poolSupplier;
 
   @Before
   public void setUp() throws IOException, InterruptedException {

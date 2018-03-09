@@ -130,7 +130,7 @@ public class AuditClasspathCommand extends AbstractCommand {
       return ExitCode.PARSE_ERROR;
     }
 
-    try (CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier =
+    try (CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
         getForkJoinPoolSupplier(params.getBuckConfig())) {
       if (shouldGenerateDotOutput()) {
         return printDotOutput(params, targetGraph);
@@ -170,7 +170,7 @@ public class AuditClasspathCommand extends AbstractCommand {
       CommandRunnerParams params,
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> targets,
-      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier)
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier)
       throws InterruptedException, VersionException {
 
     if (params.getBuckConfig().getBuildVersions()) {
@@ -221,7 +221,7 @@ public class AuditClasspathCommand extends AbstractCommand {
       CommandRunnerParams params,
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> targets,
-      CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier)
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier)
       throws IOException, InterruptedException, VersionException {
 
     if (params.getBuckConfig().getBuildVersions()) {

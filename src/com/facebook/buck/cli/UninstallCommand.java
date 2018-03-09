@@ -101,7 +101,7 @@ public class UninstallCommand extends AbstractCommand {
 
     try (CommandThreadManager pool =
             new CommandThreadManager("Uninstall", getConcurrencyLimit(params.getBuckConfig()));
-        CloseableMemoizedSupplier<ForkJoinPool, RuntimeException> poolSupplier =
+        CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
             getForkJoinPoolSupplier(params.getBuckConfig())) {
       TargetGraphAndBuildTargets result =
           params
