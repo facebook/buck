@@ -288,9 +288,9 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(APPLE_SECTION, FORCE_LOAD_LINK_WHOLE_LIBRARY_ENABLED, false);
   }
 
-  public String getForceLoadLibraryPath() {
+  public String getForceLoadLibraryPath(boolean isFocusedTarget) {
     Optional<String> path = delegate.getValue(APPLE_SECTION, FORCE_LOAD_LIBRARY_PATH);
-    if (path.isPresent()) {
+    if (!isFocusedTarget && path.isPresent()) {
       return path.get();
     }
     return "$BUILT_PRODUCTS_DIR";

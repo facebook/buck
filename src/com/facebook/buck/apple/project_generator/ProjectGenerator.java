@@ -3120,11 +3120,13 @@ public class ProjectGenerator {
 
   private Optional<String> getForceLoadLinkerFlag(
       TargetNode<? extends CxxLibraryDescription.CommonArg, ?> targetNode) {
+    BuildTarget buildTarget = targetNode.getBuildTarget();
+    boolean isFocusedOnTarget = focusModules.isFocusedOn(buildTarget);
     CxxLibraryDescription.CommonArg arg = targetNode.getConstructorArg();
     if (arg.getLinkWhole().orElse(false)) {
       String flag =
           "-Wl,-force_load,"
-              + appleConfig.getForceLoadLibraryPath()
+              + appleConfig.getForceLoadLibraryPath(isFocusedOnTarget)
               + "/lib"
               + getProductNameForBuildTargetNode(targetNode)
               + ".a";
