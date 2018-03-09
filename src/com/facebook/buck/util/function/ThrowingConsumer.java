@@ -14,12 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.util.function;
 
-/**
- * The version of {@code Consumer<T>} that can throw an exception. It only exists because {@code
- * AutoCloseable} interface defines its {@code close} function to throw {@code Exception}
- */
+/** The version of {@code Consumer<T>} that can throw an exception. */
 @FunctionalInterface
 public interface ThrowingConsumer<T, E extends Exception> {
   void accept(T t) throws E;

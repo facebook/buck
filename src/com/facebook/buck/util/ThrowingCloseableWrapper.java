@@ -16,6 +16,8 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.util.function.ThrowingConsumer;
+
 /**
  * Convenience wrapper class to attach closeable functionality to non-closeable class so it can be
  * used with try-with-resources to make sure resources are always released and proper exception

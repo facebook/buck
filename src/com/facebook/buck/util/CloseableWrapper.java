@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.util.function.ThrowingConsumer;
 import java.util.function.Consumer;
 
 /**

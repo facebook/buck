@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.util.function.ThrowingConsumer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -41,11 +42,6 @@ import java.util.stream.StreamSupport;
  * @param <T> the type of the stream elements.
  */
 public interface RichStream<T> extends Stream<T> {
-  @FunctionalInterface
-  interface ThrowingConsumer<T, E extends Exception> {
-    void accept(T t) throws E;
-  }
-
   // Static methods
 
   static <T> RichStream<T> empty() {
