@@ -36,7 +36,7 @@ public class RustLinkerIntegrationTest {
 
   @Before
   public void ensureRustIsAvailable() throws IOException, InterruptedException {
-    RustAssumptions.assumeRustCompilerAvailable();
+    RustAssumptions.assumeRustIsConfigured();
   }
 
   @Test

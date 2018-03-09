@@ -16,13 +16,16 @@
 
 package com.facebook.buck.rust;
 
+import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeNoException;
 
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.environment.Platform;
 
 abstract class RustAssumptions {
-  public static void assumeRustCompilerAvailable() {
+  public static void assumeRustIsConfigured() {
+    assumeFalse(Platform.detect() == Platform.WINDOWS);
     Throwable exception = null;
     try {
       new RustBuckConfig(FakeBuckConfig.builder().build()).getRustCompiler();

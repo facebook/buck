@@ -38,7 +38,7 @@ public class RustBinaryIntegrationTest {
 
   @Before
   public void ensureRustIsAvailable() throws IOException, InterruptedException {
-    RustAssumptions.assumeRustCompilerAvailable();
+    RustAssumptions.assumeRustIsConfigured();
   }
 
   @Test
