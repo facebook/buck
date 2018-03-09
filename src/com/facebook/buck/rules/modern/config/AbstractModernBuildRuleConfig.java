@@ -40,6 +40,9 @@ abstract class AbstractModernBuildRuleConfig implements ConfigView<BuckConfig> {
   public enum Strategy {
     NONE,
 
+    // Creates a strategy that serializes and deserializes ModernBuildRules in memory and then
+    // builds the deserialized version.
+    DEBUG_RECONSTRUCT,
     // Creates a strategy that just forwards to the default behavior.
     DEBUG_PASSTHROUGH;
 

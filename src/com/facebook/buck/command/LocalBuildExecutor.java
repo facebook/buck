@@ -207,7 +207,8 @@ public class LocalBuildExecutor implements BuildExecutor {
         ModernBuildRuleBuilderFactory.getBuildStrategy(
             args.getBuckConfig().getView(ModernBuildRuleConfig.class),
             actionGraphAndResolver.getResolver(),
-            args.getRootCell()),
+            args.getRootCell(),
+            args.getBuckConfig().getCellPathResolver()),
         executorService,
         new DefaultStepRunner(),
         buildEngineMode.orElse(engineConfig.getBuildEngineMode()),

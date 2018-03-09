@@ -167,7 +167,7 @@ public abstract class ModernBuildRule<T extends Buildable> extends AbstractBuild
     return depsBuilder.build();
   }
 
-  protected final T getBuildable() {
+  public final T getBuildable() {
     return buildable;
   }
 
@@ -230,30 +230,35 @@ public abstract class ModernBuildRule<T extends Buildable> extends AbstractBuild
   @Override
   public final ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
+    recordOutputs(buildableContext);
+    return stepsForBuildable(context, buildable, getProjectFilesystem(), getBuildTarget());
+  }
+
+  /**
+   * Returns the build steps for the Buildable. Unlike getBuildSteps(), this does not record outputs
+   * (callers should call recordOutputs() themselves).
+   */
+  public static <T extends Buildable> ImmutableList<Step> stepsForBuildable(
+      BuildContext context, T buildable, ProjectFilesystem filesystem, BuildTarget buildTarget) {
     ImmutableList.Builder<Step> stepBuilder = ImmutableList.builder();
+    OutputPathResolver outputPathResolver = new DefaultOutputPathResolver(filesystem, buildTarget);
     stepBuilder.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                outputPathResolver.getRootPath())));
+                context.getBuildCellRootPath(), filesystem, outputPathResolver.getRootPath())));
 
     stepBuilder.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                outputPathResolver.getTempPath())));
+                context.getBuildCellRootPath(), filesystem, outputPathResolver.getTempPath())));
 
     stepBuilder.addAll(
         buildable.getBuildSteps(
             context,
-            getProjectFilesystem(),
+            filesystem,
             outputPathResolver,
             new DefaultBuildCellRelativePathFactory(
-                context.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                Optional.of(outputPathResolver))));
+                context.getBuildCellRootPath(), filesystem, Optional.of(outputPathResolver))));
 
     // TODO(cjhopman): Should this delete the scratch directory? Maybe delete by default but
     // preserve it based on verbosity. Currently, since CachingBuildEngine doesn't know what files
@@ -261,11 +266,16 @@ public abstract class ModernBuildRule<T extends Buildable> extends AbstractBuild
     // rule. With ModernBuildRule, all outputs are limited to the gen/scratch roots which are unique
     // to the rule and so the engine could reliably clean old state and then leaving the scratch
     // directory would be fine.
+
+    return stepBuilder.build();
+  }
+
+  /** Records the outputs of this buildrule. */
+  public void recordOutputs(BuildableContext buildableContext) {
     buildableContext.recordArtifact(outputPathResolver.getRootPath());
     // All the outputs are already forced to be within getGenDirectory(), and so this recording
     // isn't actually necessary.
     classInfo.getOutputs(buildable, output -> recordOutput(buildableContext, output));
-    return stepBuilder.build();
   }
 
   private void recordOutput(BuildableContext buildableContext, OutputPath output) {

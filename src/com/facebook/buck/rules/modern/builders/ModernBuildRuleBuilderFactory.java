@@ -21,7 +21,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStrategy;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.modern.ModernBuildRule;
+import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Optional;
@@ -33,7 +34,10 @@ import java.util.Optional;
 public class ModernBuildRuleBuilderFactory {
   /** Creates a BuildRuleStrategy for ModernBuildRules based on the buck configuration. */
   public static Optional<BuildRuleStrategy> getBuildStrategy(
-      ModernBuildRuleConfig config, BuildRuleResolver resolver, Cell rootCell) {
+      ModernBuildRuleConfig config,
+      BuildRuleResolver resolver,
+      Cell rootCell,
+      CellPathResolver cellResolver) {
     // Mark these as used. We'll use them as we add new strategies.
     resolver.getClass();
     rootCell.getClass();
@@ -41,29 +45,34 @@ public class ModernBuildRuleBuilderFactory {
     switch (config.getBuildStrategy()) {
       case NONE:
         return Optional.empty();
+      case DEBUG_RECONSTRUCT:
+        return Optional.of(
+            ModernBuildRuleBuilderFactory.createReconstructing(
+                new SourcePathRuleFinder(resolver), cellResolver, rootCell));
       case DEBUG_PASSTHROUGH:
-        return Optional.of(createPassthrough());
+        return Optional.of(ModernBuildRuleBuilderFactory.createPassthrough());
     }
     throw new IllegalStateException(
         "Unrecognized build strategy " + config.getBuildStrategy() + ".");
   }
 
   /** The passthrough strategy just forwards to executorRunner.runWithDefaultExecutor. */
-  private static BuildRuleStrategy createPassthrough() {
-    return new BuildRuleStrategy() {
-      @Override
-      public void close() {}
-
+  public static BuildRuleStrategy createPassthrough() {
+    return new AbstractModernBuildRuleStrategy() {
       @Override
       public void build(
           ListeningExecutorService service, BuildRule rule, BuildExecutorRunner executorRunner) {
         service.execute(executorRunner::runWithDefaultExecutor);
       }
-
-      @Override
-      public boolean canBuild(BuildRule rule) {
-        return rule instanceof ModernBuildRule;
-      }
     };
+  }
+
+  /**
+   * The reconstructing strategy serializes and deserializes the build rule in memory and builds the
+   * deserialized version.
+   */
+  public static BuildRuleStrategy createReconstructing(
+      SourcePathRuleFinder ruleFinder, CellPathResolver cellResolver, Cell rootCell) {
+    return new ReconstructingStrategy(ruleFinder, cellResolver, rootCell);
   }
 }

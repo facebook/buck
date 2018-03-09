@@ -590,7 +590,8 @@ public class TestCommand extends BuildCommand {
                     ModernBuildRuleBuilderFactory.getBuildStrategy(
                         params.getBuckConfig().getView(ModernBuildRuleConfig.class),
                         actionGraphAndResolver.getResolver(),
-                        params.getCell()),
+                        params.getCell(),
+                        params.getBuckConfig().getCellPathResolver()),
                     pool.getWeightedListeningExecutorService(),
                     new DefaultStepRunner(),
                     getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),

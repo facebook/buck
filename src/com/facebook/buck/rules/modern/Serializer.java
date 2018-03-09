@@ -25,6 +25,7 @@ import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfo;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
 import com.facebook.buck.rules.modern.impl.ValueVisitor;
@@ -43,6 +44,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 /**
  * Implementation of Serialization of Buildables.
@@ -91,6 +93,14 @@ public class Serializer {
    * byte[]. For larger objects, the representation will be recorded with the delegate and the hash
    * will be returned.
    */
+  public <T extends AddsToRuleKey> HashCode serialize(T instance) throws IOException {
+    Either<HashCode, byte[]> serialize =
+        serialize(instance, DefaultClassInfoFactory.forInstance(instance));
+    return serialize.transform(
+        left -> left, right -> delegate.registerNewValue(instance, right, ImmutableList.of()));
+  }
+
+  /** See Serialize(T instance) above. */
   public <T extends AddsToRuleKey> Either<HashCode, byte[]> serialize(
       T instance, ClassInfo<T> classInfo) throws IOException {
     if (cache.contains(instance)) {
@@ -104,7 +114,8 @@ public class Serializer {
             instance,
             ignored -> {
               byte[] data = visitor.byteStream.toByteArray();
-              ImmutableList<HashCode> children = visitor.children.build();
+              ImmutableList<HashCode> children =
+                  visitor.children.build().distinct().collect(ImmutableList.toImmutableList());
               return data.length < MAX_INLINE_LENGTH && children.isEmpty()
                   ? Either.ofRight(data)
                   : Either.ofLeft(registerNewValue(instance, data, children));
@@ -119,7 +130,7 @@ public class Serializer {
   private class Visitor implements ValueVisitor<IOException> {
     ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
     DataOutputStream stream = new DataOutputStream(byteStream);
-    ImmutableList.Builder<HashCode> children = ImmutableList.builder();
+    Stream.Builder<HashCode> children = Stream.builder();
 
     public Visitor(Class<? extends AddsToRuleKey> clazz) throws IOException {
       writeString(clazz.getName());
