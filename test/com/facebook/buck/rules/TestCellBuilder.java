@@ -97,9 +97,6 @@ public class TestCellBuilder {
             config,
             cellConfig,
             pluginManager,
-            environmentCopy,
-            processExecutor,
-            executableFinder,
             toolchainProviderFactory,
             new DefaultProjectFilesystemFactory())
         .getCellByPath(filesystem.getRootPath());

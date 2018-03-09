@@ -23,6 +23,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.toolchain.impl.DefaultToolchainProvider;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Preconditions;
@@ -63,6 +64,32 @@ class RootCellFactory {
             processExecutor,
             executableFinder,
             ruleKeyConfiguration);
+    return Cell.of(
+        rootCellCellPathResolver.getKnownRoots(),
+        Optional.empty(),
+        rootFilesystem,
+        watchman,
+        rootConfig,
+        cellProvider,
+        toolchainProvider,
+        ruleKeyConfiguration);
+  }
+
+  static Cell create(
+      CellProvider cellProvider,
+      CellPathResolver rootCellCellPathResolver,
+      ToolchainProviderFactory toolchainProviderFactory,
+      ProjectFilesystem rootFilesystem,
+      PluginManager pluginManager,
+      BuckConfig rootConfig,
+      Watchman watchman) {
+    Preconditions.checkState(
+        !rootCellCellPathResolver.getCanonicalCellName(rootFilesystem.getRootPath()).isPresent(),
+        "Root cell should be nameless");
+    RuleKeyConfiguration ruleKeyConfiguration =
+        ConfigRuleKeyConfigurationFactory.create(rootConfig, pluginManager);
+    ToolchainProvider toolchainProvider =
+        toolchainProviderFactory.create(rootConfig, rootFilesystem, ruleKeyConfiguration);
     return Cell.of(
         rootCellCellPathResolver.getKnownRoots(),
         Optional.empty(),

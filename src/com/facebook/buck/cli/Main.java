@@ -714,9 +714,6 @@ public final class Main {
                   buckConfig,
                   command.getConfigOverrides(),
                   pluginManager,
-                  clientEnvironment,
-                  processExecutor,
-                  executableFinder,
                   toolchainProviderFactory,
                   projectFilesystemFactory)
               .getCellByPath(filesystem.getRootPath());

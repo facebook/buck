@@ -17,7 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -27,7 +26,6 @@ import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactor
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.config.RawConfig;
@@ -50,9 +48,6 @@ public class LocalCellProviderFactory {
       BuckConfig rootConfig,
       CellConfig rootCellConfigOverrides,
       PluginManager pluginManager,
-      ImmutableMap<String, String> environment,
-      ProcessExecutor processExecutor,
-      ExecutableFinder executableFinder,
       ToolchainProviderFactory toolchainProviderFactory,
       ProjectFilesystemFactory projectFilesystemFactory) {
 
@@ -166,12 +161,10 @@ public class LocalCellProviderFactory {
             RootCellFactory.create(
                 cellProvider,
                 rootCellCellPathResolver,
+                toolchainProviderFactory,
                 rootFilesystem,
                 pluginManager,
                 rootConfig,
-                environment,
-                processExecutor,
-                executableFinder,
                 watchman));
   }
 }

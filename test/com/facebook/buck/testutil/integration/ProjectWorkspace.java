@@ -549,10 +549,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
             WatchmanFactory.NULL_WATCHMAN,
             buckConfig,
             CellConfig.of(),
-            BuckPluginManagerFactory.createPluginManager(),
-            env,
-            processExecutor,
-            executableFinder,
+            pluginManager,
             toolchainProviderFactory,
             new DefaultProjectFilesystemFactory())
         .getCellByPath(filesystem.getRootPath());
