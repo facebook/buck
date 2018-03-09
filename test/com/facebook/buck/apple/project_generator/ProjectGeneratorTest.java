@@ -2254,7 +2254,7 @@ public class ProjectGeneratorTest {
             + "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone",
         settings.get("OTHER_CPLUSPLUSFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(
-        "-ObjC -lbaz-iphone -ObjC -lbaz-iphone",
+        "-lbaz-iphone -lbaz-iphone",
         settings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
   }
 
