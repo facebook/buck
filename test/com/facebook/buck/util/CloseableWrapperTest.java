@@ -17,22 +17,71 @@
 package com.facebook.buck.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
-public class CloseableWrapperTest {
+@RunWith(Parameterized.class)
+public class CloseableWrapperTest<T extends AbstractCloseableWrapper> {
+
+  public abstract static class CloseableFactory<T> {
+    public abstract T makeCloseable(
+        AtomicInteger obj, ThrowingConsumer<AtomicInteger, Exception> closer);
+  }
+
+  private CloseableFactory<T> closeableFactory;
+
+  public CloseableWrapperTest(CloseableFactory<T> closeableFactory) {
+    this.closeableFactory = closeableFactory;
+  }
+
+  @Parameterized.Parameters
+  public static Iterable<Object[]> params() {
+    return Arrays.asList(
+        new Object[][] {
+          {
+            new CloseableFactory<CloseableWrapper<AtomicInteger>>() {
+              @Override
+              public CloseableWrapper<AtomicInteger> makeCloseable(
+                  AtomicInteger obj, ThrowingConsumer<AtomicInteger, Exception> closer) {
+                Consumer<AtomicInteger> nonThrowingCloser =
+                    toClose -> {
+                      try {
+                        closer.accept(toClose);
+                      } catch (Exception e) {
+                        fail("Unexpected Exception");
+                      }
+                    };
+                return CloseableWrapper.of(obj, nonThrowingCloser);
+              }
+            }
+          },
+          {
+            new CloseableFactory<ThrowingCloseableWrapper<AtomicInteger, Exception>>() {
+              @Override
+              public ThrowingCloseableWrapper<AtomicInteger, Exception> makeCloseable(
+                  AtomicInteger obj, ThrowingConsumer<AtomicInteger, Exception> closer) {
+                return ThrowingCloseableWrapper.of(obj, closer);
+              }
+            }
+          }
+        });
+  }
 
   private static void closer(AtomicInteger obj) {
     obj.incrementAndGet();
   }
 
   @Test
-  public void testMain() {
+  public void testMain() throws Exception {
     AtomicInteger obj = new AtomicInteger(0);
-    try (CloseableWrapper<AtomicInteger> wrapper =
-        CloseableWrapper.of(obj, CloseableWrapperTest::closer)) {
-      assertEquals(0, wrapper.get().get());
+    try (T wrapper = closeableFactory.makeCloseable(obj, CloseableWrapperTest::closer)) {
+      assertEquals(obj, wrapper.get());
     } finally {
       // assert that close was called exactly once with this object
       assertEquals(1, obj.get());
@@ -42,8 +91,7 @@ public class CloseableWrapperTest {
   @Test(expected = Exception.class)
   public void testException() throws Exception {
     AtomicInteger obj = new AtomicInteger(0);
-    try (CloseableWrapper<AtomicInteger> wrapper =
-        CloseableWrapper.of(obj, CloseableWrapperTest::closer)) {
+    try (T wrapper = closeableFactory.makeCloseable(obj, CloseableWrapperTest::closer)) {
       throw new Exception("exception");
     } finally {
       // close was still called despite the exception thrown
@@ -52,11 +100,10 @@ public class CloseableWrapperTest {
   }
 
   @Test
-  public void duplicateCloseOnlyClosesOnce() {
+  public void duplicateCloseOnlyClosesOnce() throws Exception {
     AtomicInteger obj = new AtomicInteger(0);
-    try (CloseableWrapper<AtomicInteger> wrapper =
-        CloseableWrapper.of(obj, CloseableWrapperTest::closer)) {
-      assertEquals(0, wrapper.get().get());
+    try (T wrapper = closeableFactory.makeCloseable(obj, CloseableWrapperTest::closer)) {
+      assertEquals(obj, wrapper.get());
       wrapper.close();
     } finally {
       // assert that close was called exactly once with this object
@@ -65,10 +112,9 @@ public class CloseableWrapperTest {
   }
 
   @Test
-  public void closesWithoutGet() {
+  public void closesWithoutGet() throws Exception {
     AtomicInteger obj = new AtomicInteger(0);
-    try (CloseableWrapper<AtomicInteger> wrapper =
-        CloseableWrapper.of(obj, CloseableWrapperTest::closer)) {
+    try (T wrapper = closeableFactory.makeCloseable(obj, CloseableWrapperTest::closer)) {
     } finally {
       // assert that close was called exactly once with this object
       assertEquals(1, obj.get());
