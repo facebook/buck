@@ -85,11 +85,11 @@ import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.CellProviderFactory;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
+import com.facebook.buck.rules.LocalCellProviderFactory;
 import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
@@ -702,7 +702,7 @@ public final class Main {
       ExecutableFinder executableFinder = new ExecutableFinder();
 
       Cell rootCell =
-          CellProviderFactory.createForLocalBuild(
+          LocalCellProviderFactory.create(
                   filesystem,
                   watchman,
                   buckConfig,

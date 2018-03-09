@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.Watchman;
-import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
@@ -38,15 +37,14 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.pf4j.PluginManager;
 
-public class CellProviderFactory {
+/** Creates a {@link CellProvider} to be used in a local (non-distributed) build. */
+public class LocalCellProviderFactory {
 
   /** Create a cell provider at a given root. */
-  public static CellProvider createForLocalBuild(
+  public static CellProvider create(
       ProjectFilesystem rootFilesystem,
       Watchman watchman,
       BuckConfig rootConfig,
@@ -170,7 +168,7 @@ public class CellProviderFactory {
               }
             },
         cellProvider ->
-            createRootCell(
+            RootCellFactory.create(
                 cellProvider,
                 rootCellCellPathResolver,
                 rootFilesystem,
@@ -180,114 +178,5 @@ public class CellProviderFactory {
                 processExecutor,
                 executableFinder,
                 watchman));
-  }
-
-  public static CellProvider createForDistributedBuild(
-      DistBuildCellParams rootCell, ImmutableMap<Path, DistBuildCellParams> cellParams) {
-    Map<String, Path> cellPaths =
-        cellParams
-            .values()
-            .stream()
-            .filter(p -> p.getCanonicalName().isPresent())
-            .collect(
-                Collectors.toMap(
-                    p -> p.getCanonicalName().get(), p -> p.getFilesystem().getRootPath()));
-    ImmutableSet<String> declaredCellNames = ImmutableSet.copyOf(cellPaths.keySet());
-    Path rootCellPath = rootCell.getFilesystem().getRootPath();
-    DefaultCellPathResolver rootCellResolver = DefaultCellPathResolver.of(rootCellPath, cellPaths);
-
-    return new CellProvider(
-        cellProvider ->
-            CacheLoader.from(
-                cellPath -> {
-                  DistBuildCellParams cellParam =
-                      Preconditions.checkNotNull(
-                          cellParams.get(cellPath),
-                          "This should only be called for secondary cells.");
-                  Path currentCellRoot = cellParam.getFilesystem().getRootPath();
-                  Preconditions.checkState(!currentCellRoot.equals(rootCellPath));
-                  CellPathResolver currentCellResolver = rootCellResolver;
-                  // The CellPathResolverView is required because it makes the
-                  // [RootPath<->CanonicalName] resolver methods non-symmetrical to handle the
-                  // fact
-                  // that relative main cell from inside a secondary cell resolves actually to
-                  // secondary cell. If the DefaultCellPathResolver is used, then it would return
-                  // a BuildTarget as if it belonged to the main cell.
-                  currentCellResolver =
-                      new CellPathResolverView(
-                          rootCellResolver, declaredCellNames, currentCellRoot);
-                  BuckConfig configWithResolver =
-                      cellParam.getConfig().withCellPathResolver(currentCellResolver);
-                  RuleKeyConfiguration ruleKeyConfiguration =
-                      ConfigRuleKeyConfigurationFactory.create(
-                          configWithResolver, cellParam.getPluginManager());
-                  ToolchainProvider toolchainProvider =
-                      new DefaultToolchainProvider(
-                          cellParam.getPluginManager(),
-                          cellParam.getEnvironment(),
-                          configWithResolver,
-                          cellParam.getFilesystem(),
-                          cellParam.getProcessExecutor(),
-                          cellParam.getExecutableFinder(),
-                          ruleKeyConfiguration);
-
-                  return Cell.of(
-                      cellParams.keySet(),
-                      // Distributed builds don't care about cell names, use a sentinel value that
-                      // will show up if it actually does care about them.
-                      cellParam.getCanonicalName(),
-                      cellParam.getFilesystem(),
-                      WatchmanFactory.NULL_WATCHMAN,
-                      configWithResolver,
-                      cellProvider,
-                      toolchainProvider,
-                      ruleKeyConfiguration);
-                }),
-        cellProvider ->
-            createRootCell(
-                cellProvider,
-                rootCellResolver,
-                rootCell.getFilesystem(),
-                rootCell.getPluginManager(),
-                rootCell.getConfig(),
-                rootCell.getEnvironment(),
-                rootCell.getProcessExecutor(),
-                rootCell.getExecutableFinder(),
-                WatchmanFactory.NULL_WATCHMAN));
-  }
-
-  private static Cell createRootCell(
-      CellProvider cellProvider,
-      CellPathResolver rootCellCellPathResolver,
-      ProjectFilesystem rootFilesystem,
-      PluginManager pluginManager,
-      BuckConfig rootConfig,
-      ImmutableMap<String, String> environment,
-      ProcessExecutor processExecutor,
-      ExecutableFinder executableFinder,
-      Watchman watchman) {
-    Preconditions.checkState(
-        !rootCellCellPathResolver.getCanonicalCellName(rootFilesystem.getRootPath()).isPresent(),
-        "Root cell should be nameless");
-    RuleKeyConfiguration ruleKeyConfiguration =
-        ConfigRuleKeyConfigurationFactory.create(rootConfig, pluginManager);
-    ToolchainProvider toolchainProvider =
-        new DefaultToolchainProvider(
-            pluginManager,
-            environment,
-            rootConfig,
-            rootFilesystem,
-            processExecutor,
-            executableFinder,
-            ruleKeyConfiguration);
-    return Cell.of(
-        rootCellCellPathResolver.getKnownRoots(),
-        Optional.empty(),
-        rootFilesystem,
-        watchman,
-        rootConfig,
-        cellProvider,
-        toolchainProvider,
-        ruleKeyConfiguration);
   }
 }

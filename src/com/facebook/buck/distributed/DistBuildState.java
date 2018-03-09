@@ -31,9 +31,9 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellProvider;
-import com.facebook.buck.rules.CellProviderFactory;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DistBuildCellParams;
+import com.facebook.buck.rules.DistributedCellProviderFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
@@ -192,7 +192,7 @@ public class DistBuildState {
     }
 
     CellProvider cellProvider =
-        CellProviderFactory.createForDistributedBuild(
+        DistributedCellProviderFactory.create(
             Preconditions.checkNotNull(rootCellParams), cellParams.build());
 
     ImmutableBiMap<Integer, Cell> cells =

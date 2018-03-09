@@ -54,8 +54,10 @@ java_immutables_library(
         "AbstractKnownBuildRuleTypesProvider.java",
         "CellPathResolverView.java",
         "CellProvider.java",
-        "CellProviderFactory.java",
+        "DistributedCellProviderFactory.java",
         "KnownBuildRuleTypesFactory.java",
+        "LocalCellProviderFactory.java",
+        "RootCellFactory.java",
     ],
     exported_deps = [
         ":build_rule",

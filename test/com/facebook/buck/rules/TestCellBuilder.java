@@ -77,7 +77,7 @@ public class TestCellBuilder {
             ? FakeBuckConfig.builder().setFilesystem(filesystem).build()
             : buckConfig;
 
-    return CellProviderFactory.createForLocalBuild(
+    return LocalCellProviderFactory.create(
             filesystem,
             watchman,
             config,

@@ -44,8 +44,8 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellConfig;
-import com.facebook.buck.rules.CellProviderFactory;
 import com.facebook.buck.rules.DefaultCellPathResolver;
+import com.facebook.buck.rules.LocalCellProviderFactory;
 import com.facebook.buck.testutil.AbstractWorkspace;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TestConsole;
@@ -535,7 +535,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
             env,
             DefaultCellPathResolver.of(filesystem.getRootPath(), config));
 
-    return CellProviderFactory.createForLocalBuild(
+    return LocalCellProviderFactory.create(
             filesystem,
             WatchmanFactory.NULL_WATCHMAN,
             buckConfig,
