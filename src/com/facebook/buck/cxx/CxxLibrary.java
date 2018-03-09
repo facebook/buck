@@ -50,8 +50,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import java.nio.file.Path;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
@@ -73,7 +73,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   private BuildRuleResolver ruleResolver;
   private SourcePathRuleFinder ruleFinder;
-  private Set<BuildRule> implicitDepsForCaching = new HashSet<>();
+  private Set<BuildRule> implicitDepsForCaching = Sets.newConcurrentHashSet();
 
   private final CxxDeps deps;
   private final CxxDeps exportedDeps;
