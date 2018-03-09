@@ -20,6 +20,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Before;
@@ -76,6 +77,18 @@ public class CellPathResolverViewTest {
         "current cell resolves to current cell's prefix.",
         Optional.of("c"),
         view.getCanonicalCellName(filesystem.getPath("foo/c")));
+  }
+
+  @Test
+  public void testGetKnownRootsReturnDeclaredCellsOnly() {
+    CellPathResolverView view =
+        new CellPathResolverView(
+            getTestDelegate(), ImmutableSet.of("b"), filesystem.getPath("foo/c"));
+
+    ImmutableSet<Path> knownRoots = view.getKnownRoots();
+
+    Assert.assertEquals(
+        knownRoots, ImmutableSet.of(filesystem.getPath("foo/b"), filesystem.getPath("foo/c")));
   }
 
   private CellPathResolver getTestDelegate() {

@@ -23,6 +23,7 @@ import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import java.nio.charset.StandardCharsets;
@@ -202,5 +203,21 @@ public class DefaultCellPathResolverTest {
         "After flipping insertion order, still smallest.",
         Optional.of("a"),
         cellPathResolver.getCanonicalCellName(vfs.getPath("/foo/cell")));
+  }
+
+  @Test
+  public void testGetKnownRootsReturnsAllRoots() {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    DefaultCellPathResolver cellPathResolver =
+        DefaultCellPathResolver.of(
+            vfs.getPath("/foo/root"),
+            ImmutableMap.of(
+                "root", vfs.getPath("/foo/root"),
+                "a", vfs.getPath("/foo/cell"),
+                "b", vfs.getPath("/foo/cell")));
+
+    assertEquals(
+        cellPathResolver.getKnownRoots(),
+        ImmutableSet.of(vfs.getPath("/foo/root"), vfs.getPath("/foo/cell")));
   }
 }

@@ -23,6 +23,7 @@ import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import java.io.IOException;
@@ -141,5 +142,16 @@ abstract class AbstractDefaultCellPathResolver implements CellPathResolver {
       }
       return Optional.of(name);
     }
+  }
+
+  @Value.Lazy
+  @Override
+  public ImmutableSet<Path> getKnownRoots() {
+    return ImmutableSet.<Path>builder()
+        .addAll(getCellPaths().values())
+        .add(
+            getCellPath(Optional.empty())
+                .orElseThrow(() -> new AssertionError("Root cell path should always be known.")))
+        .build();
   }
 }

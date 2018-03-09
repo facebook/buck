@@ -72,4 +72,9 @@ public final class CellPathResolverView implements CellPathResolver {
     // TODO(cjhopman): This should verify that this path is visible in this view.
     return delegate.getCanonicalCellName(cellPath);
   }
+
+  @Override
+  public ImmutableSet<Path> getKnownRoots() {
+    return ImmutableSet.<Path>builder().addAll(getCellPaths().values()).add(cellPath).build();
+  }
 }

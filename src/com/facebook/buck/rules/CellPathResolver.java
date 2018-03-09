@@ -16,6 +16,7 @@
 package com.facebook.buck.rules;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -42,4 +43,7 @@ public interface CellPathResolver {
    * @throws IllegalArgumentException if cell path is not known to the cell path resolver.
    */
   Optional<String> getCanonicalCellName(Path cellPath);
+
+  /** @return paths to roots of all cells known to this resolver. */
+  ImmutableSet<Path> getKnownRoots();
 }

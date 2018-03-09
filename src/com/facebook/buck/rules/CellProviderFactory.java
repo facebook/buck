@@ -159,7 +159,7 @@ public class CellProviderFactory {
                 // TODO(13777679): cells in other watchman roots do not work correctly.
 
                 return Cell.of(
-                    getKnownRoots(cellPathResolver),
+                    cellPathResolver.getKnownRoots(),
                     canonicalCellName,
                     cellFilesystem,
                     watchman,
@@ -256,16 +256,6 @@ public class CellProviderFactory {
                 WatchmanFactory.NULL_WATCHMAN));
   }
 
-  private static ImmutableSet<Path> getKnownRoots(CellPathResolver resolver) {
-    return ImmutableSet.<Path>builder()
-        .addAll(resolver.getCellPaths().values())
-        .add(
-            resolver
-                .getCellPath(Optional.empty())
-                .orElseThrow(() -> new AssertionError("Root cell path should always be known.")))
-        .build();
-  }
-
   private static Cell createRootCell(
       CellProvider cellProvider,
       CellPathResolver rootCellCellPathResolver,
@@ -291,7 +281,7 @@ public class CellProviderFactory {
             executableFinder,
             ruleKeyConfiguration);
     return Cell.of(
-        getKnownRoots(rootCellCellPathResolver),
+        rootCellCellPathResolver.getKnownRoots(),
         Optional.empty(),
         rootFilesystem,
         watchman,
