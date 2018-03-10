@@ -49,6 +49,7 @@ import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -854,18 +855,21 @@ public class PrebuiltCxxLibraryDescription
 
     Optional<SourcePath> getSharedLib();
 
+    @Hint(isTargetGraphOnlyDep = true)
     Optional<PatternMatchedCollection<SourcePath>> getPlatformSharedLib();
 
     Optional<VersionMatchedCollection<SourcePath>> getVersionedSharedLib();
 
     Optional<SourcePath> getStaticLib();
 
+    @Hint(isTargetGraphOnlyDep = true)
     Optional<PatternMatchedCollection<SourcePath>> getPlatformStaticLib();
 
     Optional<VersionMatchedCollection<SourcePath>> getVersionedStaticLib();
 
     Optional<SourcePath> getStaticPicLib();
 
+    @Hint(isTargetGraphOnlyDep = true)
     Optional<PatternMatchedCollection<SourcePath>> getPlatformStaticPicLib();
 
     Optional<VersionMatchedCollection<SourcePath>> getVersionedStaticPicLib();

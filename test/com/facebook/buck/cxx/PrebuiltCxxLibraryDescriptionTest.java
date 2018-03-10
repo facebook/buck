@@ -340,7 +340,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void findDepsFromParamsWithPlatform() throws NoSuchBuildTargetException {
+  public void findTargetOnlyDepsFromParamsWithPlatform() {
     BuildTarget platform1Dep = BuildTargetFactory.newInstance("//platform1:dep");
     BuildTarget platform2Dep = BuildTargetFactory.newInstance("//platform2:dep");
     PrebuiltCxxLibraryBuilder builder = new PrebuiltCxxLibraryBuilder(TARGET);
@@ -354,7 +354,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
                 Pattern.compile("platform 2", Pattern.LITERAL),
                 DefaultBuildTargetSourcePath.of(platform2Dep))
             .build());
-    assertThat(builder.build().getExtraDeps(), contains(platform1Dep, platform2Dep));
+    assertThat(builder.build().getTargetGraphOnlyDeps(), contains(platform1Dep, platform2Dep));
   }
 
   @Test
