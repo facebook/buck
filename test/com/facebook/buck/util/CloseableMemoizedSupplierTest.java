@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.util.function.ThrowingConsumer;
 import com.google.common.base.Supplier;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
