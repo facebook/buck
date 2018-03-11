@@ -19,36 +19,49 @@ package com.facebook.buck.worker;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.util.Threads;
+import com.facebook.buck.util.function.ThrowingSupplier;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import org.hamcrest.Matchers;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 public class WorkerProcessPoolTest {
-  @Test
+
+  private TestThreads testThreads;
+
+  @Before
+  public void setUp() {
+    testThreads = new TestThreads();
+  }
+
+  @After
+  public void tearDown() {
+    testThreads.close();
+  }
+
+  @Test(timeout = 1000)
   public void testProvidesWorkersAccordingToCapacityThenBlocks() throws InterruptedException {
     int maxWorkers = 3;
     WorkerProcessPool pool = createPool(maxWorkers);
     Set<WorkerProcess> createdWorkers = concurrentSet();
 
-    Thread[] tasks = new Thread[maxWorkers + 1];
-    for (int i = 0; i < tasks.length; i++) {
-      tasks[i] = new Thread(new BorrowWorkerProcessWithoutReturning(pool, createdWorkers));
+    for (int i = 0; i < maxWorkers; i++) {
+      testThreads.startThread(borrowWorkerProcessWithoutReturning(pool, createdWorkers));
     }
 
-    for (Thread thread : tasks) {
-      thread.start();
-    }
-
-    for (Thread thread : tasks) {
-      thread.join(100);
-    }
+    testThreads.join();
 
     assertThat(createdWorkers.size(), Matchers.is(maxWorkers));
   }
@@ -57,28 +70,20 @@ public class WorkerProcessPoolTest {
   public void testReusesWorkerProcesses() throws InterruptedException {
     int maxWorkers = 3;
     WorkerProcessPool pool = createPool(maxWorkers);
-    ConcurrentHashMap<Runnable, WorkerProcess> usedWorkers = new ConcurrentHashMap<>();
+    ConcurrentHashMap<Thread, WorkerProcess> usedWorkers = new ConcurrentHashMap<>();
 
-    Thread[] threads = {
-      new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
-      new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
-      new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
-      new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
-      new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers)),
-    };
-
-    for (Thread thread : threads) {
-      thread.start();
+    int numThreads = 5;
+    for (int i = 0; i < numThreads; i++) {
+      testThreads.startThread(borrowAndReturnWorkerProcess(pool, usedWorkers));
     }
 
-    for (Thread thread : threads) {
-      thread.join();
-    }
+    testThreads.join();
 
-    assertThat(usedWorkers.keySet().size(), Matchers.is(threads.length));
+    assertThat(usedWorkers.keySet(), Matchers.equalTo(testThreads.threads()));
     assertThat(
-        new HashSet<>(usedWorkers.values()).size(),
-        Matchers.allOf(Matchers.greaterThan(0), Matchers.lessThanOrEqualTo(maxWorkers)));
+        countDistinct(usedWorkers),
+        Matchers.is(
+            Matchers.both(Matchers.greaterThan(0)).and(Matchers.lessThanOrEqualTo(maxWorkers))));
   }
 
   @Test
@@ -87,15 +92,11 @@ public class WorkerProcessPoolTest {
     WorkerProcessPool pool = createPool(Integer.MAX_VALUE);
     Set<WorkerProcess> createdWorkers = concurrentSet();
 
-    Thread[] threads = new Thread[numThreads];
     for (int i = 0; i < numThreads; i++) {
-      threads[i] = new Thread(new BorrowWorkerProcessWithoutReturning(pool, createdWorkers));
-      threads[i].start();
+      testThreads.startThread(borrowWorkerProcessWithoutReturning(pool, createdWorkers));
     }
 
-    for (Thread thread : threads) {
-      thread.join();
-    }
+    testThreads.join();
 
     assertThat(createdWorkers.size(), Matchers.is(numThreads));
   }
@@ -104,51 +105,38 @@ public class WorkerProcessPoolTest {
   public void testReusesWorkerProcessesInUnlimitedPools() throws InterruptedException {
     int numThreads = 3;
     WorkerProcessPool pool = createPool(Integer.MAX_VALUE);
-    ConcurrentHashMap<Runnable, WorkerProcess> usedWorkers = new ConcurrentHashMap<>();
-
-    Thread[] threads = new Thread[numThreads];
-    for (int i = 0; i < numThreads; i++) {
-      threads[i] = new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers));
-      threads[i].start();
-    }
-
-    for (Thread thread : threads) {
-      thread.join();
-    }
+    ConcurrentHashMap<Thread, WorkerProcess> usedWorkers = new ConcurrentHashMap<>();
 
     for (int i = 0; i < numThreads; i++) {
-      threads[i] = new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers));
-      threads[i].start();
+      testThreads.startThread(borrowAndReturnWorkerProcess(pool, usedWorkers));
     }
 
-    for (Thread thread : threads) {
-      thread.join();
+    testThreads.join();
+
+    for (int i = 0; i < numThreads; i++) {
+      testThreads.startThread(borrowAndReturnWorkerProcess(pool, usedWorkers));
     }
+
+    testThreads.join();
 
     assertThat(
-        new HashSet<>(usedWorkers.values()).size(),
+        countDistinct(usedWorkers),
         Matchers.allOf(Matchers.greaterThan(0), Matchers.lessThanOrEqualTo(numThreads)));
   }
 
   @Test
   public void destroysProcessOnFailure() throws InterruptedException {
     WorkerProcessPool pool = createPool(1);
-    ConcurrentHashMap<Runnable, WorkerProcess> usedWorkers = new ConcurrentHashMap<>();
-    Thread t = new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers));
-    t.start();
-    t.join();
+    ConcurrentHashMap<Thread, WorkerProcess> usedWorkers = new ConcurrentHashMap<>();
+
+    testThreads.startThread(borrowAndReturnWorkerProcess(pool, usedWorkers)).join();
     assertThat(usedWorkers.size(), Matchers.is(1));
 
-    t = new Thread(new BorrowAndKillWorkerProcess(pool, usedWorkers));
-    t.start();
-    t.join();
-
-    t = new Thread(new BorrowAndReturnWorkerProcess(pool, usedWorkers));
-    t.start();
-    t.join();
+    testThreads.startThread(borrowAndKillWorkerProcess(pool, usedWorkers)).join();
+    testThreads.startThread(borrowAndReturnWorkerProcess(pool, usedWorkers)).join();
 
     assertThat(usedWorkers.size(), Matchers.is(3));
-    assertThat(new HashSet<>(usedWorkers.values()).size(), Matchers.is(2));
+    assertThat(countDistinct(usedWorkers), Matchers.is(2));
   }
 
   @Test
@@ -180,89 +168,118 @@ public class WorkerProcessPoolTest {
 
     WorkerProcess process2 = pool.borrowWorkerProcess();
     process2.ensureLaunchAndHandshake();
-    assertThat(process2, Matchers.not(process));
+    assertThat(process2, Matchers.is(Matchers.not(process)));
     pool.returnWorkerProcess(process2);
   }
 
-  private static WorkerProcessPool createPool(int maxWorkers) {
+  private static WorkerProcessPool createPool(
+      int maxWorkers, ThrowingSupplier<WorkerProcess, IOException> startWorkerProcess) {
     return new WorkerProcessPool(maxWorkers, Hashing.sha1().hashLong(0)) {
       @Override
       protected WorkerProcess startWorkerProcess() throws IOException {
-        return new FakeWorkerProcess(ImmutableMap.of());
+        WorkerProcess workerProcess = startWorkerProcess.get();
+        workerProcess.ensureLaunchAndHandshake();
+        return workerProcess;
       }
     };
+  }
+
+  private static WorkerProcessPool createPool(int maxWorkers) {
+    return createPool(maxWorkers, () -> new FakeWorkerProcess(ImmutableMap.of()));
+  }
+
+  private static WorkerProcessPool createPool(
+      int maxWorkers, BlockingQueue<Future<WorkerProcess>> workers) {
+    return createPool(
+        maxWorkers,
+        () -> {
+          try {
+            return workers.take().get();
+          } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+          }
+        });
   }
 
   private static <T> Set<T> concurrentSet() {
     return Collections.newSetFromMap(new ConcurrentHashMap<T, Boolean>());
   }
 
-  private abstract static class Runnable implements java.lang.Runnable {
-    public abstract void runUnsafe() throws Exception;
-
-    @Override
-    public final void run() {
-      try {
-        runUnsafe();
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    }
+  private static int countDistinct(ConcurrentHashMap<Thread, WorkerProcess> usedWorkers) {
+    return new HashSet<>(usedWorkers.values()).size();
   }
 
-  class BorrowWorkerProcessWithoutReturning extends Runnable {
-    private final WorkerProcessPool pool;
-    private final Set<WorkerProcess> createdWorkers;
-
-    public BorrowWorkerProcessWithoutReturning(
-        WorkerProcessPool pool, Set<WorkerProcess> createdWorkers) {
-      this.pool = pool;
-      this.createdWorkers = createdWorkers;
-    }
-
-    @Override
-    public void runUnsafe() throws Exception {
+  private static UnsafeRunnable borrowWorkerProcessWithoutReturning(
+      WorkerProcessPool pool, Set<WorkerProcess> createdWorkers) {
+    return () -> {
       WorkerProcess process = pool.borrowWorkerProcess();
       process.ensureLaunchAndHandshake();
       createdWorkers.add(process);
-    }
+    };
   }
 
-  class BorrowAndReturnWorkerProcess extends Runnable {
-    private final WorkerProcessPool pool;
-    private final Map<Runnable, WorkerProcess> usedWorkers;
-
-    public BorrowAndReturnWorkerProcess(
-        WorkerProcessPool pool, Map<Runnable, WorkerProcess> usedWorkers) {
-      this.pool = pool;
-      this.usedWorkers = usedWorkers;
-    }
-
-    @Override
-    public void runUnsafe() throws Exception {
+  private static UnsafeRunnable borrowAndReturnWorkerProcess(
+      WorkerProcessPool pool, ConcurrentHashMap<Thread, WorkerProcess> usedWorkers) {
+    return () -> {
       WorkerProcess workerProcess = pool.borrowWorkerProcess();
-      usedWorkers.put(this, workerProcess);
+      usedWorkers.put(Thread.currentThread(), workerProcess);
       workerProcess.ensureLaunchAndHandshake();
       pool.returnWorkerProcess(workerProcess);
-    }
+    };
   }
 
-  class BorrowAndKillWorkerProcess extends Runnable {
-    private final WorkerProcessPool pool;
-    private final Map<Runnable, WorkerProcess> usedWorkers;
+  private static UnsafeRunnable borrowAndKillWorkerProcess(
+      WorkerProcessPool pool, ConcurrentMap<Thread, WorkerProcess> usedWorkers) {
+    return () -> {
+      WorkerProcess workerProcess = pool.borrowWorkerProcess();
+      usedWorkers.put(Thread.currentThread(), workerProcess);
+      workerProcess.ensureLaunchAndHandshake();
+      pool.destroyWorkerProcess(workerProcess);
+    };
+  }
 
-    public BorrowAndKillWorkerProcess(
-        WorkerProcessPool pool, Map<Runnable, WorkerProcess> usedWorkers) {
-      this.pool = pool;
-      this.usedWorkers = usedWorkers;
+  @FunctionalInterface
+  interface UnsafeRunnable {
+    void run() throws Exception;
+  }
+
+  private static class TestThreads implements AutoCloseable {
+
+    private boolean isClosed = false;
+    private final Set<Thread> threads = new HashSet<>();
+
+    Thread startThread(UnsafeRunnable target) {
+      Preconditions.checkState(!isClosed);
+      Thread thread =
+          new Thread(
+              () -> {
+                try {
+                  target.run();
+                } catch (Exception e) {
+                  throw new RuntimeException(e);
+                }
+              });
+      threads.add(thread);
+      thread.start();
+      return thread;
+    }
+
+    void join() throws InterruptedException {
+      for (Thread thread : threads) {
+        thread.join();
+      }
+    }
+
+    Set<Thread> threads() {
+      return Collections.unmodifiableSet(threads);
     }
 
     @Override
-    public void runUnsafe() throws Exception {
-      WorkerProcess workerProcess = pool.borrowWorkerProcess();
-      usedWorkers.put(this, workerProcess);
-      workerProcess.ensureLaunchAndHandshake();
-      pool.destroyWorkerProcess(workerProcess);
+    public void close() {
+      isClosed = true;
+      for (Thread thread : threads) {
+        thread.interrupt();
+      }
     }
   }
 }
