@@ -59,6 +59,7 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -297,7 +298,7 @@ public class SmartDexingStep implements Step {
 
     ImmutableMap<Path, Sha1HashCode> dexInputHashes = dexInputHashesProvider.getDexInputHashes();
 
-    for (Path outputFile : outputToInputs.keySet()) {
+    for (Entry<Path, Collection<Path>> outputInputsPair : outputToInputs.asMap().entrySet()) {
       pseudoRules.add(
           new DxPseudoRule(
               target,
@@ -305,9 +306,9 @@ public class SmartDexingStep implements Step {
               buildContext,
               filesystem,
               dexInputHashes,
-              ImmutableSet.copyOf(outputToInputs.get(outputFile)),
-              outputFile,
-              successDir.resolve(outputFile.getFileName()),
+              ImmutableSet.copyOf(outputInputsPair.getValue()),
+              outputInputsPair.getKey(),
+              successDir.resolve(outputInputsPair.getKey().getFileName()),
               dxOptions,
               xzCompressionLevel,
               dxMaxHeapSize,
