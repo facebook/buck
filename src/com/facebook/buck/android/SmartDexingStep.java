@@ -294,12 +294,12 @@ public class SmartDexingStep implements Step {
    */
   private ImmutableList<ImmutableList<Step>> generateDxCommands(
       ProjectFilesystem filesystem, Multimap<Path, Path> outputToInputs) {
-    ImmutableList.Builder<DxPseudoRule> pseudoRules = ImmutableList.builder();
 
     ImmutableMap<Path, Sha1HashCode> dexInputHashes = dexInputHashesProvider.getDexInputHashes();
+    ImmutableList.Builder<ImmutableList<Step>> stepGroups = new ImmutableList.Builder<>();
 
     for (Entry<Path, Collection<Path>> outputInputsPair : outputToInputs.asMap().entrySet()) {
-      pseudoRules.add(
+      DxPseudoRule dxPseudoRule =
           new DxPseudoRule(
               target,
               androidPlatformTarget,
@@ -312,14 +312,11 @@ public class SmartDexingStep implements Step {
               dxOptions,
               xzCompressionLevel,
               dxMaxHeapSize,
-              dexTool));
-    }
+              dexTool);
 
-    ImmutableList.Builder<ImmutableList<Step>> stepGroups = new ImmutableList.Builder<>();
-    for (DxPseudoRule pseudoRule : pseudoRules.build()) {
-      if (!pseudoRule.checkIsCached()) {
+      if (!dxPseudoRule.checkIsCached()) {
         ImmutableList.Builder<Step> steps = ImmutableList.builder();
-        pseudoRule.buildInternal(steps);
+        dxPseudoRule.buildInternal(steps);
         stepGroups.add(steps.build());
       }
     }
