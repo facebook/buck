@@ -47,7 +47,6 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableMultimap.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -57,14 +56,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -221,19 +219,20 @@ public class SmartDexingStep implements Step {
     DefaultStepRunner stepRunner = new DefaultStepRunner();
     // Invoke dx commands in parallel for maximum thread utilization.  In testing, dx revealed
     // itself to be CPU (and not I/O) bound making it a good candidate for parallelization.
-    ImmutableList<ImmutableList<Step>> dxSteps = generateDxCommands(filesystem, outputToInputs);
+    Stream<ImmutableList<Step>> dxSteps = generateDxCommands(filesystem, outputToInputs);
 
-    List<Callable<Void>> callables =
-        Lists.transform(
-            dxSteps,
-            steps ->
-                (Callable<Void>)
-                    () -> {
-                      for (Step step : steps) {
-                        stepRunner.runStepForBuildTarget(context, step, Optional.empty());
-                      }
-                      return null;
-                    });
+    ImmutableList<Callable<Void>> callables =
+        dxSteps
+            .map(
+                steps ->
+                    (Callable<Void>)
+                        () -> {
+                          for (Step step : steps) {
+                            stepRunner.runStepForBuildTarget(context, step, Optional.empty());
+                          }
+                          return null;
+                        })
+            .collect(ImmutableList.toImmutableList());
 
     try {
       MoreFutures.getAll(executorService, callables);
@@ -292,36 +291,37 @@ public class SmartDexingStep implements Step {
    * Once the {@code .class} files have been split into separate zip files, each must be converted
    * to a {@code .dex} file.
    */
-  private ImmutableList<ImmutableList<Step>> generateDxCommands(
+  private Stream<ImmutableList<Step>> generateDxCommands(
       ProjectFilesystem filesystem, Multimap<Path, Path> outputToInputs) {
 
     ImmutableMap<Path, Sha1HashCode> dexInputHashes = dexInputHashesProvider.getDexInputHashes();
-    ImmutableList.Builder<ImmutableList<Step>> stepGroups = new ImmutableList.Builder<>();
 
-    for (Entry<Path, Collection<Path>> outputInputsPair : outputToInputs.asMap().entrySet()) {
-      DxPseudoRule dxPseudoRule =
-          new DxPseudoRule(
-              target,
-              androidPlatformTarget,
-              buildContext,
-              filesystem,
-              dexInputHashes,
-              ImmutableSet.copyOf(outputInputsPair.getValue()),
-              outputInputsPair.getKey(),
-              successDir.resolve(outputInputsPair.getKey().getFileName()),
-              dxOptions,
-              xzCompressionLevel,
-              dxMaxHeapSize,
-              dexTool);
-
-      if (!dxPseudoRule.checkIsCached()) {
-        ImmutableList.Builder<Step> steps = ImmutableList.builder();
-        dxPseudoRule.buildInternal(steps);
-        stepGroups.add(steps.build());
-      }
-    }
-
-    return stepGroups.build();
+    return outputToInputs
+        .asMap()
+        .entrySet()
+        .stream()
+        .map(
+            outputInputsPair ->
+                new DxPseudoRule(
+                    target,
+                    androidPlatformTarget,
+                    buildContext,
+                    filesystem,
+                    dexInputHashes,
+                    ImmutableSet.copyOf(outputInputsPair.getValue()),
+                    outputInputsPair.getKey(),
+                    successDir.resolve(outputInputsPair.getKey().getFileName()),
+                    dxOptions,
+                    xzCompressionLevel,
+                    dxMaxHeapSize,
+                    dexTool))
+        .filter(dxPseudoRule -> !dxPseudoRule.checkIsCached())
+        .map(
+            dxPseudoRule -> {
+              ImmutableList.Builder<Step> steps = ImmutableList.builder();
+              dxPseudoRule.buildInternal(steps);
+              return steps.build();
+            });
   }
 
   /**
