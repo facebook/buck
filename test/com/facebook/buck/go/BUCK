@@ -3,9 +3,6 @@ load("//tools/build_rules:java_rules.bzl", "java_test")
 java_test(
     name = "integration",
     srcs = glob(["*IntegrationTest.java"]),
-    env = {
-        "GOROOT": read_config("go", "root", "/usr/local/go"),
-    },
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",
