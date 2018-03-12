@@ -25,7 +25,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
-import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
@@ -40,6 +39,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -48,22 +48,24 @@ import org.junit.Test;
 public class TargetGraphHashingTest {
 
   @Test
-  public void emptyTargetGraphHasEmptyHashes()
-      throws InterruptedException, AcyclicDepthFirstPostOrderTraversal.CycleException {
+  public void emptyTargetGraphHasEmptyHashes() throws InterruptedException {
     BuckEventBus eventBus = new DefaultBuckEventBus(new IncrementingFakeClock(), new BuildId());
     TargetGraph targetGraph = TargetGraphFactory.newInstance();
 
     assertThat(
         new TargetGraphHashing(
-                eventBus, targetGraph, new DummyFileHashCache(), 1, ImmutableList.of())
+                eventBus,
+                targetGraph,
+                new DummyFileHashCache(),
+                ImmutableList.of(),
+                MoreExecutors.newDirectExecutorService())
             .hashTargetGraph()
             .entrySet(),
         empty());
   }
 
   @Test
-  public void hashChangesWhenSrcContentChanges()
-      throws InterruptedException, AcyclicDepthFirstPostOrderTraversal.CycleException {
+  public void hashChangesWhenSrcContentChanges() throws InterruptedException {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus eventBus = new DefaultBuckEventBus(new IncrementingFakeClock(), new BuildId());
 
@@ -85,11 +87,21 @@ public class TargetGraphHashingTest {
                 projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abc1ef")));
 
     Map<BuildTarget, HashCode> baseResult =
-        new TargetGraphHashing(eventBus, targetGraph, baseCache, 1, ImmutableList.of(node))
+        new TargetGraphHashing(
+                eventBus,
+                targetGraph,
+                baseCache,
+                ImmutableList.of(node),
+                MoreExecutors.newDirectExecutorService())
             .hashTargetGraph();
 
     Map<BuildTarget, HashCode> modifiedResult =
-        new TargetGraphHashing(eventBus, targetGraph, modifiedCache, 1, ImmutableList.of(node))
+        new TargetGraphHashing(
+                eventBus,
+                targetGraph,
+                modifiedCache,
+                ImmutableList.of(node),
+                MoreExecutors.newDirectExecutorService())
             .hashTargetGraph();
 
     assertThat(baseResult, aMapWithSize(1));
@@ -102,8 +114,7 @@ public class TargetGraphHashingTest {
   }
 
   @Test
-  public void twoNodeIndependentRootsTargetGraphHasExpectedHashes()
-      throws InterruptedException, AcyclicDepthFirstPostOrderTraversal.CycleException {
+  public void twoNodeIndependentRootsTargetGraphHasExpectedHashes() throws InterruptedException {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus eventBus = new DefaultBuckEventBus(new IncrementingFakeClock(), new BuildId());
 
@@ -128,16 +139,30 @@ public class TargetGraphHashingTest {
                 projectFilesystem.resolve("bar/BarLib.java"), HashCode.fromString("123456")));
 
     Map<BuildTarget, HashCode> resultsA =
-        new TargetGraphHashing(eventBus, targetGraphA, fileHashCache, 1, ImmutableList.of(nodeA))
+        new TargetGraphHashing(
+                eventBus,
+                targetGraphA,
+                fileHashCache,
+                ImmutableList.of(nodeA),
+                MoreExecutors.newDirectExecutorService())
             .hashTargetGraph();
 
     Map<BuildTarget, HashCode> resultsB =
-        new TargetGraphHashing(eventBus, targetGraphB, fileHashCache, 1, ImmutableList.of(nodeB))
+        new TargetGraphHashing(
+                eventBus,
+                targetGraphB,
+                fileHashCache,
+                ImmutableList.of(nodeB),
+                MoreExecutors.newDirectExecutorService())
             .hashTargetGraph();
 
     Map<BuildTarget, HashCode> commonResults =
         new TargetGraphHashing(
-                eventBus, commonTargetGraph, fileHashCache, 1, ImmutableList.of(nodeA, nodeB))
+                eventBus,
+                commonTargetGraph,
+                fileHashCache,
+                ImmutableList.of(nodeA, nodeB),
+                MoreExecutors.newDirectExecutorService())
             .hashTargetGraph();
 
     assertThat(resultsA, aMapWithSize(1));
@@ -165,8 +190,7 @@ public class TargetGraphHashingTest {
   }
 
   @Test
-  public void hashChangesForDependentNodeWhenDepsChange()
-      throws InterruptedException, AcyclicDepthFirstPostOrderTraversal.CycleException {
+  public void hashChangesForDependentNodeWhenDepsChange() throws InterruptedException {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus eventBus = new DefaultBuckEventBus(new IncrementingFakeClock(), new BuildId());
 
@@ -192,8 +216,8 @@ public class TargetGraphHashingTest {
                 eventBus,
                 targetGraphA,
                 fileHashCache,
-                1,
-                ImmutableList.of(targetGraphA.get(nodeTarget)))
+                ImmutableList.of(targetGraphA.get(nodeTarget)),
+                MoreExecutors.newDirectExecutorService())
             .hashTargetGraph();
 
     Map<BuildTarget, HashCode> resultB =
@@ -201,8 +225,8 @@ public class TargetGraphHashingTest {
                 eventBus,
                 targetGraphB,
                 fileHashCache,
-                1,
-                ImmutableList.of(targetGraphB.get(nodeTarget)))
+                ImmutableList.of(targetGraphB.get(nodeTarget)),
+                MoreExecutors.newDirectExecutorService())
             .hashTargetGraph();
 
     assertThat(resultA, aMapWithSize(2));
@@ -213,6 +237,28 @@ public class TargetGraphHashingTest {
     assertThat(resultB, hasKey(depTarget));
     assertThat(resultA.get(nodeTarget), not(equalTo(resultB.get(nodeTarget))));
     assertThat(resultA.get(depTarget), not(equalTo(resultB.get(depTarget))));
+  }
+
+  @Test(expected = Throwable.class)
+  public void hashingSourceThrowsError() throws Exception {
+    BuckEventBus eventBus = new DefaultBuckEventBus(new IncrementingFakeClock(), new BuildId());
+
+    TargetNode<?, ?> node =
+        createJavaLibraryTargetNodeWithSrcs(
+            BuildTargetFactory.newInstance("//foo:lib"),
+            HashCode.fromLong(64738),
+            ImmutableSet.of(Paths.get("foo/FooLib.java")));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(node);
+
+    FileHashCache cache = new FakeFileHashCache(ImmutableMap.of());
+
+    new TargetGraphHashing(
+            eventBus,
+            targetGraph,
+            cache,
+            ImmutableList.of(node),
+            MoreExecutors.newDirectExecutorService())
+        .hashTargetGraph();
   }
 
   private static TargetNode<?, ?> createJavaLibraryTargetNodeWithSrcs(

@@ -1136,8 +1136,8 @@ public class TargetsCommand extends AbstractCommand {
                 params.getBuckEventBus(),
                 targetGraphWithTests,
                 fileHashLoader,
-                params.getBuckConfig().getNumThreads(),
-                targetGraphAndNodesWithTests.getSecond())
+                targetGraphAndNodesWithTests.getSecond(),
+                executor)
             .hashTargetGraph();
 
     ImmutableMap<BuildTarget, HashCode> finalHashes =
