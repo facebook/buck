@@ -358,6 +358,22 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
     assertThat(unstrippedSyms.all, hasItem("supply_value"));
   }
 
+  @Test
+  public void testMergeAndSupportedPlatforms() throws IOException, InterruptedException {
+    Path output =
+        workspace.buildAndReturnOutput("//apps/sample:app_with_merge_and_supported_platforms");
+
+    SymbolGetter symGetter = getSymbolGetter();
+    Symbols syms;
+
+    syms = symGetter.getDynamicSymbols(output, "lib/x86/liball.so");
+    assertThat(syms.global, hasItem("_Z3foov"));
+    assertThat(syms.global, hasItem("x86_only_function"));
+    syms = symGetter.getDynamicSymbols(output, "lib/armeabi-v7a/liball.so");
+    assertThat(syms.global, hasItem("_Z3foov"));
+    assertThat(syms.global, not(hasItem("x86_only_function")));
+  }
+
   private SymbolGetter getSymbolGetter() throws IOException, InterruptedException {
     NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(filesystem);
     SourcePathResolver pathResolver =
