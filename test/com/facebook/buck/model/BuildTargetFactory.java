@@ -18,6 +18,7 @@ package com.facebook.buck.model;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.BuckCellArg;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -46,17 +47,9 @@ public class BuildTargetFactory {
   public static BuildTarget newInstance(@Nullable Path root, String fullyQualifiedName) {
     root = root == null ? new FakeProjectFilesystem().getRootPath() : root;
 
-    int buildTarget = fullyQualifiedName.indexOf("//");
-    Optional<String> cellName = Optional.empty();
-    if (buildTarget > 0) {
-      cellName = Optional.of(fullyQualifiedName.substring(0, buildTarget));
-    } else if (buildTarget < 0) {
-      throw new IllegalArgumentException(
-          String.format(
-              "Fully qualified target %s did not start with // or a cell name then //",
-              fullyQualifiedName));
-    }
-    String[] parts = fullyQualifiedName.substring(buildTarget).split(":");
+    BuckCellArg arg = BuckCellArg.of(fullyQualifiedName);
+    Optional<String> cellName = arg.getCellName();
+    String[] parts = arg.getBasePath().split(":");
     Preconditions.checkArgument(parts.length == 2);
     String[] nameAndFlavor = parts[1].split("#");
     if (nameAndFlavor.length != 2) {
@@ -69,14 +62,16 @@ public class BuildTargetFactory {
   }
 
   public static BuildTarget newInstance(Path cellPath, String baseName, String shortName) {
+    BuckCellArg arg = BuckCellArg.of(baseName);
     return BuildTarget.of(
-        UnflavoredBuildTarget.of(cellPath, Optional.empty(), baseName, shortName));
+        UnflavoredBuildTarget.of(cellPath, arg.getCellName(), arg.getBasePath(), shortName));
   }
 
   public static BuildTarget newInstance(
       Path cellPath, String baseName, String shortName, Flavor... flavors) {
+    BuckCellArg arg = BuckCellArg.of(baseName);
     return BuildTarget.of(
-        UnflavoredBuildTarget.of(cellPath, Optional.empty(), baseName, shortName),
+        UnflavoredBuildTarget.of(cellPath, arg.getCellName(), arg.getBasePath(), shortName),
         ImmutableSet.copyOf(flavors));
   }
 }

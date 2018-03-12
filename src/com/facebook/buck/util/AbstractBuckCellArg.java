@@ -29,6 +29,11 @@ abstract class AbstractBuckCellArg {
 
   public abstract String getArg();
 
+  @Value.Derived
+  public String getBasePath() {
+    return "//" + getArg();
+  }
+
   /** Convenience constructor for an {@link AbstractBuckCellArg} */
   public static BuckCellArg of(String input) {
     int index = input.indexOf("//");
