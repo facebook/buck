@@ -302,20 +302,19 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
       EndToEndEnvironment testEnvironment = getEnvironmentForMethod(testMethod);
       for (String[] templateSet : testEnvironment.getTemplates()) {
         for (Map<String, String> variableMap : testEnvironment.getVariableMaps()) {
-          ToggleState toggleState = testEnvironment.getBuckdToggled();
-          String command = testEnvironment.getCommand();
-          String[] buildTargets = testEnvironment.getBuildTargets();
-          String[] arguments = testEnvironment.getArguments();
-          if (toggleState == ToggleState.ON_OFF || toggleState == ToggleState.ON) {
+          for (boolean buckdEnabled : testEnvironment.getBuckdToggled().getStates()) {
+            String command = testEnvironment.getCommand();
+            String[] buildTargets = testEnvironment.getBuildTargets();
+            String[] arguments = testEnvironment.getArguments();
             EndToEndTestDescriptor testDescriptor =
                 new EndToEndTestDescriptor(
-                    testMethod, templateSet, command, buildTargets, arguments, true, variableMap);
-            output.add(testDescriptor);
-          }
-          if (toggleState == ToggleState.ON_OFF || toggleState == ToggleState.OFF) {
-            EndToEndTestDescriptor testDescriptor =
-                new EndToEndTestDescriptor(
-                    testMethod, templateSet, command, buildTargets, arguments, false, variableMap);
+                    testMethod,
+                    templateSet,
+                    command,
+                    buildTargets,
+                    arguments,
+                    buckdEnabled,
+                    variableMap);
             output.add(testDescriptor);
           }
         }

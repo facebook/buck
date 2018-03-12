@@ -18,7 +18,18 @@ package com.facebook.buck.testutil.endtoend;
 
 /** ToggleState describes state of a setting within EndToEndTest configurations */
 public enum ToggleState {
-  OFF, // run tests with setting off
-  ON, // run tests with setting on
-  ON_OFF // run two tests, one with setting off and one with setting off
+  OFF(new boolean[] {false}), // run tests with setting off
+  ON(new boolean[] {true}), // run tests with setting on
+  ON_OFF(new boolean[] {true, false}); // run two tests, one with setting off and one on
+
+  private final boolean[] states;
+
+  ToggleState(boolean[] states) {
+    this.states = states;
+  }
+
+  /** @return value of the toggle state */
+  public boolean[] getStates() {
+    return states;
+  }
 }
