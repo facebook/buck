@@ -25,12 +25,10 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -45,7 +43,6 @@ import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.sha1.Sha1HashCode;
@@ -54,7 +51,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -73,9 +69,9 @@ public class RuleKeyBuilderTest {
       BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one");
   private static final BuildTarget TARGET_2 =
       BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one#flavor");
-  private static final BuildRule IGNORED_RULE = new EmptyRule(TARGET_1);
-  private static final BuildRule RULE_1 = new EmptyRule(TARGET_1);
-  private static final BuildRule RULE_2 = new EmptyRule(TARGET_2);
+  private static final BuildRule IGNORED_RULE = new EmptyFakeBuildRule(TARGET_1);
+  private static final BuildRule RULE_1 = new EmptyFakeBuildRule(TARGET_1);
+  private static final BuildRule RULE_2 = new EmptyFakeBuildRule(TARGET_2);
   private static final RuleKey RULE_KEY_1 = new RuleKey("a002b39af204cdfaa5fdb67816b13867c32ac52c");
   private static final RuleKey RULE_KEY_2 = new RuleKey("b67816b13867c32ac52ca002b39af204cdfaa5fd");
 
@@ -291,52 +287,6 @@ public class RuleKeyBuilderTest {
 
     public FakeRuleKeyAppendable(String field) {
       this.field = field;
-    }
-  }
-
-  private static class EmptyRule implements BuildRule {
-
-    private final BuildTarget target;
-
-    public EmptyRule(BuildTarget target) {
-      this.target = target;
-    }
-
-    @Override
-    public BuildTarget getBuildTarget() {
-      return target;
-    }
-
-    @Override
-    public String getType() {
-      return "empty";
-    }
-
-    @Override
-    public ImmutableSortedSet<BuildRule> getBuildDeps() {
-      return ImmutableSortedSet.of();
-    }
-
-    @Override
-    public ProjectFilesystem getProjectFilesystem() {
-      return new FakeProjectFilesystem();
-    }
-
-    @Override
-    public ImmutableList<Step> getBuildSteps(
-        BuildContext context, BuildableContext buildableContext) {
-      throw new UnsupportedOperationException("getBuildSteps");
-    }
-
-    @Nullable
-    @Override
-    public SourcePath getSourcePathToOutput() {
-      return null;
-    }
-
-    @Override
-    public boolean isCacheable() {
-      return true;
     }
   }
 
