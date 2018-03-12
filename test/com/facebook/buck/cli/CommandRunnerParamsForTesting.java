@@ -46,6 +46,7 @@ import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -64,6 +65,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 public class CommandRunnerParamsForTesting {
 
@@ -159,11 +161,17 @@ public class CommandRunnerParamsForTesting {
     private ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
     private JavaPackageFinder javaPackageFinder = new FakeJavaPackageFinder();
     private Optional<WebServer> webServer = Optional.empty();
+    @Nullable private ToolchainProvider toolchainProvider = null;
 
     public CommandRunnerParams build() throws IOException, InterruptedException {
+      TestCellBuilder cellBuilder = new TestCellBuilder();
+      if (toolchainProvider != null) {
+        cellBuilder.setToolchainProvider(toolchainProvider);
+      }
+
       return createCommandRunnerParamsForTesting(
           console,
-          new TestCellBuilder().build(),
+          cellBuilder.build(),
           artifactCache,
           eventBus,
           config,
@@ -185,6 +193,11 @@ public class CommandRunnerParamsForTesting {
 
     public Builder setArtifactCache(ArtifactCache cache) {
       this.artifactCache = cache;
+      return this;
+    }
+
+    public Builder setToolchainProvider(ToolchainProvider toolchainProvider) {
+      this.toolchainProvider = toolchainProvider;
       return this;
     }
   }

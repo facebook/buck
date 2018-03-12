@@ -45,6 +45,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
@@ -60,9 +61,12 @@ import java.util.concurrent.TimeUnit;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class DuplicateResourcesTest {
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
+
   private BuildTarget mainResTarget;
   private BuildTarget directDepResTarget;
   private BuildTarget transitiveDepResTarget;
@@ -97,16 +101,16 @@ public class DuplicateResourcesTest {
    */
   @Before
   public void makeRules() {
-    mainResTarget = BuildTargetFactory.newInstance("//main_app:res");
-    directDepResTarget = BuildTargetFactory.newInstance("//direct_dep:res");
-    transitiveDepResTarget = BuildTargetFactory.newInstance("//transitive_dep:res");
-    transitiveDepLibTarget = BuildTargetFactory.newInstance("//transitive_dep:library");
-    bottomDepResTarget = BuildTargetFactory.newInstance("//bottom_dep:res");
-    androidLibraryTarget = BuildTargetFactory.newInstance("//direct_dep:library");
-    androidBinaryTarget = BuildTargetFactory.newInstance("//main_app:binary");
-    keystoreTarget = BuildTargetFactory.newInstance("//main_app:keystore");
+    filesystem = new FakeProjectFilesystem(tmp.getRoot());
 
-    filesystem = new FakeProjectFilesystem();
+    mainResTarget = BuildTargetFactory.newInstance(filesystem, "//main_app:res");
+    directDepResTarget = BuildTargetFactory.newInstance(filesystem, "//direct_dep:res");
+    transitiveDepResTarget = BuildTargetFactory.newInstance(filesystem, "//transitive_dep:res");
+    transitiveDepLibTarget = BuildTargetFactory.newInstance(filesystem, "//transitive_dep:library");
+    bottomDepResTarget = BuildTargetFactory.newInstance(filesystem, "//bottom_dep:res");
+    androidLibraryTarget = BuildTargetFactory.newInstance(filesystem, "//direct_dep:library");
+    androidBinaryTarget = BuildTargetFactory.newInstance(filesystem, "//main_app:binary");
+    keystoreTarget = BuildTargetFactory.newInstance(filesystem, "//main_app:keystore");
 
     mainRes =
         AndroidResourceBuilder.createBuilder(mainResTarget)
@@ -252,7 +256,12 @@ public class DuplicateResourcesTest {
                     new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1))),
                 new DefaultTargetNodeToBuildRuleTransformer(),
                 targetGraph,
-                new TestCellBuilder().build().getCellProvider(),
+                new TestCellBuilder()
+                    .setToolchainProvider(
+                        AndroidBinaryBuilder.createToolchainProviderForAndroidBinary())
+                    .setFilesystem(filesystem)
+                    .build()
+                    .getCellProvider(),
                 ActionGraphParallelizationMode.DISABLED,
                 false,
                 IncrementalActionGraphMode.DISABLED,

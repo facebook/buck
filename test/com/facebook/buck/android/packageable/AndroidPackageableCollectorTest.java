@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android.packageable;
 
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -30,10 +32,19 @@ import com.facebook.buck.android.NativeLibraryBuildRule;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.android.NdkLibraryBuilder;
 import com.facebook.buck.android.PrebuiltNativeLibraryBuilder;
+import com.facebook.buck.android.TestAndroidPlatformTargetFactory;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.android.toolchain.DxToolchain;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
+import com.facebook.buck.android.toolchain.ndk.impl.TestNdkCxxPlatformsProviderFactory;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
+import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -51,9 +62,12 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
@@ -150,9 +164,26 @@ public class AndroidPackageableCollectorTest {
             prebuiltNativeLibraryBuild,
             guava,
             jsr);
-    BuildRuleResolver ruleResolver =
-        new TestBuildRuleResolver(
-            targetGraph, NdkLibraryBuilder.createToolchainProviderForNdkLibrary());
+    ToolchainProvider toolchainProvider =
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                NdkCxxPlatformsProvider.DEFAULT_NAME,
+                NdkCxxPlatformsProvider.of(NdkLibraryBuilder.NDK_PLATFORMS))
+            .withToolchain(
+                AndroidNdk.DEFAULT_NAME,
+                AndroidNdk.of("12b", Paths.get("/android/ndk"), new ExecutableFinder()))
+            .withToolchain(
+                AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
+            .withToolchain(TestNdkCxxPlatformsProviderFactory.createDefaultNdkPlatformsProvider())
+            .withToolchain(
+                DxToolchain.DEFAULT_NAME, DxToolchain.of(MoreExecutors.newDirectExecutorService()))
+            .withToolchain(
+                JavaOptionsProvider.DEFAULT_NAME,
+                JavaOptionsProvider.of(DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS))
+            .withToolchain(
+                JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
+            .build();
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph, toolchainProvider);
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 

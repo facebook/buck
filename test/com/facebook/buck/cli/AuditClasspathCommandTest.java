@@ -63,7 +63,11 @@ public class AuditClasspathCommandTest {
   public void setUp() throws IOException, InterruptedException {
     console = new TestConsole();
     auditClasspathCommand = new AuditClasspathCommand();
-    params = CommandRunnerParamsForTesting.builder().setConsole(console).build();
+    params =
+        CommandRunnerParamsForTesting.builder()
+            .setConsole(console)
+            .setToolchainProvider(AndroidBinaryBuilder.createToolchainProviderForAndroidBinary())
+            .build();
     poolSupplier =
         CloseableMemoizedSupplier.of(
             () -> {

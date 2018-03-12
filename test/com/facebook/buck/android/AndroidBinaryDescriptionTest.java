@@ -73,7 +73,9 @@ public class AndroidBinaryDescriptionTest {
             .build();
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(transitiveDepNode, depNode, keystoreNode, androidBinaryNode);
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
+    BuildRuleResolver ruleResolver =
+        new TestBuildRuleResolver(
+            targetGraph, AndroidBinaryBuilder.createToolchainProviderForAndroidBinary());
 
     BuildRule transitiveDep = ruleResolver.requireRule(transitiveDepNode.getBuildTarget());
     ruleResolver.requireRule(target);

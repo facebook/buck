@@ -35,6 +35,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
@@ -52,17 +53,19 @@ public class AndroidBinaryBuilder
   private AndroidBinaryBuilder(BuildTarget target) {
     super(
         new AndroidBinaryDescription(
-            createToolchainProvider(),
             DEFAULT_JAVA_CONFIG,
             new ProGuardConfig(FakeBuckConfig.builder().build()),
             FakeBuckConfig.builder().build(),
             CxxPlatformUtils.DEFAULT_CONFIG,
             new DxConfig(FakeBuckConfig.builder().build()),
             new ApkConfig(FakeBuckConfig.builder().build())),
-        target);
+        target,
+        new FakeProjectFilesystem(),
+        createToolchainProviderForAndroidBinary(),
+        null);
   }
 
-  private static ToolchainProvider createToolchainProvider() {
+  public static ToolchainProvider createToolchainProviderForAndroidBinary() {
     return new ToolchainProviderBuilder()
         .withToolchain(
             AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())

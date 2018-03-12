@@ -16,6 +16,7 @@
 
 package com.facebook.buck.model;
 
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
@@ -33,8 +34,13 @@ public class BuildTargetFactory {
     // Utility class
   }
 
+  public static BuildTarget newInstance(
+      ProjectFilesystem projectFilesystem, String fullyQualifiedName) {
+    return newInstance(projectFilesystem.getRootPath(), fullyQualifiedName);
+  }
+
   public static BuildTarget newInstance(String fullyQualifiedName) {
-    return newInstance(null, fullyQualifiedName);
+    return newInstance((Path) null, fullyQualifiedName);
   }
 
   public static BuildTarget newInstance(@Nullable Path root, String fullyQualifiedName) {

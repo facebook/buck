@@ -50,7 +50,7 @@ public class NdkLibraryBuilder
           .setObjdump(new CommandTool.Builder().addArg("objdump").build())
           .build();
 
-  private static final ImmutableMap<TargetCpuType, NdkCxxPlatform> NDK_PLATFORMS =
+  public static final ImmutableMap<TargetCpuType, NdkCxxPlatform> NDK_PLATFORMS =
       ImmutableMap.<TargetCpuType, NdkCxxPlatform>builder()
           .put(TargetCpuType.ARM, DEFAULT_NDK_PLATFORM)
           .put(TargetCpuType.ARMV7, DEFAULT_NDK_PLATFORM)

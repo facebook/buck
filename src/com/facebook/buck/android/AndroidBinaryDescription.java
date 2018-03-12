@@ -125,7 +125,6 @@ public class AndroidBinaryDescription
           AndroidBinaryGraphEnhancer.PROGUARD_TEXT_OUTPUT_FLAVOR,
           AndroidBinaryResourcesGraphEnhancer.GENERATE_STRING_RESOURCES_FLAVOR);
 
-  private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
   private final ProGuardConfig proGuardConfig;
   private final BuckConfig buckConfig;
@@ -135,14 +134,12 @@ public class AndroidBinaryDescription
   private final ApkConfig apkConfig;
 
   public AndroidBinaryDescription(
-      ToolchainProvider toolchainProvider,
       JavaBuckConfig javaBuckConfig,
       ProGuardConfig proGuardConfig,
       BuckConfig buckConfig,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig,
       ApkConfig apkConfig) {
-    this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
     this.proGuardConfig = proGuardConfig;
     this.buckConfig = buckConfig;
@@ -254,6 +251,7 @@ public class AndroidBinaryDescription
               .filter(JavaLibrary.class)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
 
+      ToolchainProvider toolchainProvider = context.getToolchainProvider();
       ListeningExecutorService dxExecutorService =
           toolchainProvider
               .getByName(DxToolchain.DEFAULT_NAME, DxToolchain.class)
