@@ -707,12 +707,17 @@ public final class Main {
           new DefaultToolchainProviderFactory(
               pluginManager, clientEnvironment, processExecutor, executableFinder);
 
+      DefaultCellPathResolver rootCellCellPathResolver =
+          DefaultCellPathResolver.of(filesystem.getRootPath(), buckConfig.getConfig());
+
       Cell rootCell =
           LocalCellProviderFactory.create(
                   filesystem,
                   watchman,
                   buckConfig,
                   command.getConfigOverrides(),
+                  rootCellCellPathResolver.getPathMapping(),
+                  rootCellCellPathResolver,
                   pluginManager,
                   toolchainProviderFactory,
                   projectFilesystemFactory)

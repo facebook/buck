@@ -100,12 +100,17 @@ public class TestCellBuilder {
                 pluginManager, environmentCopy, processExecutor, executableFinder)
             : (buckConfig, filesystem, ruleKeyConfiguration) -> toolchainProvider;
 
+    DefaultCellPathResolver rootCellCellPathResolver =
+        DefaultCellPathResolver.of(filesystem.getRootPath(), config.getConfig());
+
     return LocalCellProviderFactory.create(
             filesystem,
             watchman,
             config,
             cellConfig,
-            pluginManager,
+            rootCellCellPathResolver.getPathMapping(),
+            rootCellCellPathResolver,
+            BuckPluginManagerFactory.createPluginManager(),
             toolchainProviderFactory,
             new DefaultProjectFilesystemFactory())
         .getCellByPath(filesystem.getRootPath());

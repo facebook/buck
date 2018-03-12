@@ -47,15 +47,11 @@ public class LocalCellProviderFactory {
       Watchman watchman,
       BuckConfig rootConfig,
       CellConfig rootCellConfigOverrides,
+      ImmutableMap<RelativeCellName, Path> cellPathMapping,
+      CellPathResolver rootCellCellPathResolver,
       PluginManager pluginManager,
       ToolchainProviderFactory toolchainProviderFactory,
       ProjectFilesystemFactory projectFilesystemFactory) {
-
-    DefaultCellPathResolver rootCellCellPathResolver =
-        DefaultCellPathResolver.of(rootFilesystem.getRootPath(), rootConfig.getConfig());
-
-    ImmutableMap<RelativeCellName, Path> cellPathMapping =
-        rootCellCellPathResolver.getPathMapping();
 
     ImmutableMap<Path, RawConfig> pathToConfigOverrides;
     try {

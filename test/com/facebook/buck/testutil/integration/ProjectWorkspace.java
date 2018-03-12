@@ -528,6 +528,9 @@ public class ProjectWorkspace extends AbstractWorkspace {
     ProjectFilesystem filesystem = filesystemAndConfig.projectFilesystem;
     Config config = filesystemAndConfig.config;
 
+    DefaultCellPathResolver rootCellCellPathResolver =
+        DefaultCellPathResolver.of(filesystem.getRootPath(), config);
+
     ImmutableMap<String, String> env = ImmutableMap.copyOf(System.getenv());
     BuckConfig buckConfig =
         new BuckConfig(
@@ -536,7 +539,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
             Architecture.detect(),
             Platform.detect(),
             env,
-            DefaultCellPathResolver.of(filesystem.getRootPath(), config));
+            rootCellCellPathResolver);
 
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     ExecutableFinder executableFinder = new ExecutableFinder();
@@ -549,6 +552,8 @@ public class ProjectWorkspace extends AbstractWorkspace {
             WatchmanFactory.NULL_WATCHMAN,
             buckConfig,
             CellConfig.of(),
+            rootCellCellPathResolver.getPathMapping(),
+            rootCellCellPathResolver,
             pluginManager,
             toolchainProviderFactory,
             new DefaultProjectFilesystemFactory())
