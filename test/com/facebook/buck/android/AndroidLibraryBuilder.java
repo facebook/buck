@@ -29,6 +29,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -44,17 +45,11 @@ public class AndroidLibraryBuilder
 
   private AndroidLibraryBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
     super(
-        new AndroidLibraryDescription(
-            new ToolchainProviderBuilder()
-                .withToolchain(
-                    JavacOptionsProvider.DEFAULT_NAME,
-                    JavacOptionsProvider.of(ANDROID_JAVAC_OPTIONS))
-                .withToolchain(
-                    AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
-                .build(),
-            javaBuckConfig,
-            JAVA_ONLY_COMPILER_FACTORY),
-        target);
+        new AndroidLibraryDescription(javaBuckConfig, JAVA_ONLY_COMPILER_FACTORY),
+        target,
+        new FakeProjectFilesystem(),
+        createToolchainProviderForAndroidLibrary(),
+        null);
   }
 
   public static AndroidLibraryBuilder createBuilder(BuildTarget target) {
@@ -64,6 +59,15 @@ public class AndroidLibraryBuilder
   public static AndroidLibraryBuilder createBuilder(
       BuildTarget target, JavaBuckConfig javaBuckConfig) {
     return new AndroidLibraryBuilder(target, javaBuckConfig);
+  }
+
+  public static ToolchainProvider createToolchainProviderForAndroidLibrary() {
+    return new ToolchainProviderBuilder()
+        .withToolchain(
+            JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.of(ANDROID_JAVAC_OPTIONS))
+        .withToolchain(
+            AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
+        .build();
   }
 
   public AndroidLibraryBuilder addProcessor(String processor) {

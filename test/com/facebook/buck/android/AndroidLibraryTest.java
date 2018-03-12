@@ -47,7 +47,9 @@ public class AndroidLibraryTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(processorNode, libraryNode);
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
+    BuildRuleResolver ruleResolver =
+        new TestBuildRuleResolver(
+            targetGraph, AndroidLibraryBuilder.createToolchainProviderForAndroidLibrary());
 
     AndroidLibrary library = (AndroidLibrary) ruleResolver.requireRule(libTarget);
 

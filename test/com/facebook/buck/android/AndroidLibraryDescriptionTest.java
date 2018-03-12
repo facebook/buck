@@ -86,7 +86,9 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
         TargetGraphFactory.newInstance(
             transitiveExportedNode, exportedNode, exportingNode, androidLibNode);
 
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    BuildRuleResolver resolver =
+        new TestBuildRuleResolver(
+            targetGraph, AndroidLibraryBuilder.createToolchainProviderForAndroidLibrary());
 
     BuildRule androidLibRule = resolver.requireRule(androidLibNode.getBuildTarget());
     BuildRule exportedRule = resolver.requireRule(exportedNode.getBuildTarget());
@@ -175,7 +177,9 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
         TargetGraphFactory.newInstance(
             transitiveExportedNode, exportedNode, exportingNode, androidLibNode);
 
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    BuildRuleResolver resolver =
+        new TestBuildRuleResolver(
+            targetGraph, AndroidLibraryBuilder.createToolchainProviderForAndroidLibrary());
 
     BuildRule androidLibRule = resolver.requireRule(androidLibNode.getBuildTarget());
     BuildRule exportedRule = resolver.requireRule(exportedNode.getBuildTarget());

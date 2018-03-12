@@ -62,15 +62,11 @@ public class AndroidLibraryDescription
     SCALA,
   }
 
-  private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
   private final AndroidLibraryCompilerFactory compilerFactory;
 
   public AndroidLibraryDescription(
-      ToolchainProvider toolchainProvider,
-      JavaBuckConfig javaBuckConfig,
-      AndroidLibraryCompilerFactory compilerFactory) {
-    this.toolchainProvider = toolchainProvider;
+      JavaBuckConfig javaBuckConfig, AndroidLibraryCompilerFactory compilerFactory) {
     this.javaBuckConfig = javaBuckConfig;
     this.compilerFactory = compilerFactory;
   }
@@ -98,6 +94,7 @@ public class AndroidLibraryDescription
           "union_package should be specified if skip_non_union_r_dot_java is set");
     }
 
+    ToolchainProvider toolchainProvider = context.getToolchainProvider();
     boolean hasDummyRDotJavaFlavor = buildTarget.getFlavors().contains(DUMMY_R_DOT_JAVA_FLAVOR);
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
