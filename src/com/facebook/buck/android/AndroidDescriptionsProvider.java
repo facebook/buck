@@ -59,7 +59,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
         new AndroidAppModularityDescription(),
         new AndroidBinaryDescription(
             javaConfig, proGuardConfig, config, cxxBuckConfig, dxConfig, apkConfig),
-        new AndroidBuildConfigDescription(toolchainProvider, javaConfig),
+        new AndroidBuildConfigDescription(javaConfig),
         new AndroidInstrumentationApkDescription(
             javaConfig, proGuardConfig, cxxBuckConfig, dxConfig, apkConfig),
         new AndroidInstrumentationTestDescription(config, toolchainProvider),

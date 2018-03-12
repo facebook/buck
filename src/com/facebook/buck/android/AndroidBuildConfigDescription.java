@@ -39,7 +39,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
@@ -51,12 +50,9 @@ public class AndroidBuildConfigDescription
 
   private static final Flavor GEN_JAVA_FLAVOR = InternalFlavor.of("gen_java_android_build_config");
 
-  private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
 
-  public AndroidBuildConfigDescription(
-      ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
-    this.toolchainProvider = toolchainProvider;
+  public AndroidBuildConfigDescription(JavaBuckConfig javaBuckConfig) {
     this.javaBuckConfig = javaBuckConfig;
   }
 
@@ -93,7 +89,8 @@ public class AndroidBuildConfigDescription
         args.getValuesFile(),
         /* useConstantExpressions */ false,
         JavacFactory.create(ruleFinder, javaBuckConfig, null),
-        toolchainProvider
+        context
+            .getToolchainProvider()
             .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
             .getJavacOptions(),
         resolver);
