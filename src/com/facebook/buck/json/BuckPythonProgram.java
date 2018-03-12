@@ -141,23 +141,24 @@ class BuckPythonProgram implements AutoCloseable {
               .join(
                   "from __future__ import absolute_import",
                   "import sys",
-                  "sys.path.insert(0, \""
-                      + Escaper.escapeAsBashString(MorePaths.pathWithUnixSeparators(pathlibDir))
-                      + "\")",
-                  "sys.path.insert(0, \""
-                      + Escaper.escapeAsBashString(MorePaths.pathWithUnixSeparators(watchmanDir))
-                      + "\")",
-                  "sys.path.insert(0, \""
-                      + Escaper.escapeAsBashString(MorePaths.pathWithUnixSeparators(typingDir))
-                      + "\")",
+                  "sys.path.insert(0, "
+                      + Escaper.escapeAsPythonString(MorePaths.pathWithUnixSeparators(pathlibDir))
+                      + ")",
+                  "sys.path.insert(0, "
+                      + Escaper.escapeAsPythonString(MorePaths.pathWithUnixSeparators(watchmanDir))
+                      + ")",
+                  "sys.path.insert(0, "
+                      + Escaper.escapeAsPythonString(MorePaths.pathWithUnixSeparators(typingDir))
+                      + ")",
                   // Path to the bundled python code.
-                  "sys.path.insert(0, \""
-                      + Escaper.escapeAsBashString(MorePaths.pathWithUnixSeparators(pythonPath))
-                      + "\")",
+                  "sys.path.insert(0, "
+                      + Escaper.escapeAsPythonString(MorePaths.pathWithUnixSeparators(pythonPath))
+                      + ")",
                   // Path to the generated rules stub.
-                  "sys.path.insert(0, \""
-                      + Escaper.escapeAsBashString(MorePaths.pathWithUnixSeparators(generatedRoot))
-                      + "\")",
+                  "sys.path.insert(0, "
+                      + Escaper.escapeAsPythonString(
+                          MorePaths.pathWithUnixSeparators(generatedRoot))
+                      + ")",
                   "if __name__ == '__main__':",
                   "    try:",
                   "        from buck_parser import buck",
