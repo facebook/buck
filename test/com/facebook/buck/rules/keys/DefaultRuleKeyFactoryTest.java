@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -648,17 +649,10 @@ public class DefaultRuleKeyFactoryTest {
   }
 
   /** A hollow shell of a build rule containing absolutely no marked up fields. */
-  private static class EmptyRule implements BuildRule {
-
-    private final BuildTarget target;
+  private static class EmptyRule extends AbstractBuildRule {
 
     public EmptyRule(BuildTarget target) {
-      this.target = target;
-    }
-
-    @Override
-    public BuildTarget getBuildTarget() {
-      return target;
+      super(target, new FakeProjectFilesystem());
     }
 
     @Override
@@ -669,11 +663,6 @@ public class DefaultRuleKeyFactoryTest {
     @Override
     public ImmutableSortedSet<BuildRule> getBuildDeps() {
       return ImmutableSortedSet.of();
-    }
-
-    @Override
-    public ProjectFilesystem getProjectFilesystem() {
-      return new FakeProjectFilesystem();
     }
 
     @Override
