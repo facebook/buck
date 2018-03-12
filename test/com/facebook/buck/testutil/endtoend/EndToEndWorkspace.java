@@ -295,7 +295,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
   public void addPremadeTemplate(String templateName) throws Exception {
     URL testDataResource = getClass().getResource(TESTDATA_DIRECTORY);
     // If we're running this test in IJ, then this path doesn't exist. Fall back to one that does
-    if (testDataResource != null) {
+    if (testDataResource != null && testDataResource.getPath().contains(".jar")) {
       this.addTemplateToWorkspace(testDataResource, templateName);
     } else {
       Path templatePath =
