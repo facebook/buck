@@ -39,6 +39,7 @@ public class EndToEndEnvironment {
   private String[] arguments = new String[] {};
   private ToggleState buckdToggled = ToggleState.OFF;
   private List<Map<String, String>> variableMaps = new ArrayList<>();
+  private List<Map<String, Map<String, String>>> localConfigSets = new ArrayList<>();
 
   public EndToEndEnvironment() {}
 
@@ -87,13 +88,29 @@ public class EndToEndEnvironment {
     return emptyMapList;
   }
 
+  /** Gets sets of local buckconfig options for each test */
+  public List<Map<String, Map<String, String>>> getLocalConfigSets() {
+    if (!localConfigSets.isEmpty()) {
+      return localConfigSets;
+    }
+    List<Map<String, Map<String, String>>> emptyMapList = new ArrayList<>();
+    emptyMapList.add(Collections.emptyMap());
+    return emptyMapList;
+  }
+
+  /** Adds a new set of local buckconfig options for a separate test */
+  public EndToEndEnvironment addLocalConfigSet(Map<String, Map<String, String>> localConfigSet) {
+    localConfigSets.add(localConfigSet);
+    return this;
+  }
+
   /**
    * Adds a new set of pre-made templates to the test configurations
    *
    * <p>The templates can be found in test/com/facebook/buck/testutil/endtoend/testdata
    */
   public EndToEndEnvironment addTemplates(String... templateSet) {
-    this.templates.add(templateSet);
+    templates.add(templateSet);
     return this;
   }
 

@@ -39,6 +39,7 @@ public class BuckInvoker extends Statement {
     workspace.attachTestSpecificFixtureSuffixes(
         testDescriptor.getMethod().getDeclaringClass().getSimpleName(),
         testDescriptor.getMethod().getName());
+    workspace.addBuckConfigLocalOptions(testDescriptor.getLocalConfigs());
     try {
       ProcessResult result = workspace.runBuckCommand(testDescriptor);
       testDescriptor.getMethod().invokeExplosively(target, testDescriptor, workspace, result);

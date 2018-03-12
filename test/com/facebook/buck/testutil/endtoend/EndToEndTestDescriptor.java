@@ -16,7 +16,6 @@
 
 package com.facebook.buck.testutil.endtoend;
 
-import com.facebook.buck.testutil.PlatformUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -33,13 +32,13 @@ public class EndToEndTestDescriptor {
   private final String[] arguments;
   private final Boolean buckdEnabled;
   private final Map<String, String> variableMap;
+  private final Map<String, Map<String, String>> localConfigs;
   private String name;
   private boolean nameIsCached = false;
-  private PlatformUtils platformUtils = PlatformUtils.getForPlatform();
 
   public static EndToEndTestDescriptor failedSetup(String testClassName) {
     EndToEndTestDescriptor failedDescriptor =
-        new EndToEndTestDescriptor(null, null, null, null, null, false, null);
+        new EndToEndTestDescriptor(null, null, null, null, null, false, null, null);
     failedDescriptor.name = testClassName + "SetupFailed";
     failedDescriptor.nameIsCached = true;
     return failedDescriptor;
@@ -52,7 +51,8 @@ public class EndToEndTestDescriptor {
       String[] buildTargets,
       String[] arguments,
       Boolean buckdEnabled,
-      Map<String, String> variableMap) {
+      Map<String, String> variableMap,
+      Map<String, Map<String, String>> localConfigs) {
     this.method = method;
     this.templateSet = templateSet;
     this.command = command;
@@ -60,6 +60,7 @@ public class EndToEndTestDescriptor {
     this.arguments = arguments;
     this.buckdEnabled = buckdEnabled;
     this.variableMap = variableMap;
+    this.localConfigs = localConfigs;
   }
 
   private String capitalizeAndJoin(String... input) {
@@ -68,6 +69,23 @@ public class EndToEndTestDescriptor {
       if (s.length() > 0) {
         stringBuilder.append(s.substring(0, 1).toUpperCase() + s.substring(1));
       }
+    }
+    return stringBuilder.toString();
+  }
+
+  private String capitalizeAndJoinMap(Map<String, String> inputMap) {
+    StringBuilder stringBuilder = new StringBuilder();
+    for (Map.Entry<String, String> entry : inputMap.entrySet()) {
+      String s = entry.getValue();
+      stringBuilder.append(s.substring(0, 1).toUpperCase() + s.substring(1));
+    }
+    return stringBuilder.toString();
+  }
+
+  private String capitalizeAndJoinLocalConfigs(Map<String, Map<String, String>> localConfigs) {
+    StringBuilder stringBuilder = new StringBuilder();
+    for (Map.Entry<String, Map<String, String>> section : localConfigs.entrySet()) {
+      stringBuilder.append(capitalizeAndJoinMap(section.getValue()));
     }
     return stringBuilder.toString();
   }
@@ -85,7 +103,8 @@ public class EndToEndTestDescriptor {
     stringBuilder.append(capitalizeAndJoin(command));
     stringBuilder.append(capitalizeAndJoin(arguments));
     stringBuilder.append(buckdEnabled ? "BuckdOn" : "BuckdOff");
-    // TODO: Should handle only variable map being different, but not too verbose
+    stringBuilder.append(capitalizeAndJoinMap(variableMap));
+    stringBuilder.append(capitalizeAndJoinLocalConfigs(localConfigs));
     stringBuilder.append(method.getName());
     name = stringBuilder.toString();
     nameIsCached = true;
@@ -123,6 +142,11 @@ public class EndToEndTestDescriptor {
   /** Gets an environment variable override map to be used during the test */
   public Map<String, String> getVariableMap() {
     return variableMap;
+  }
+
+  /** Gets a set of local buckconfig options to set during the test */
+  public Map<String, Map<String, String>> getLocalConfigs() {
+    return localConfigs;
   }
 
   /**

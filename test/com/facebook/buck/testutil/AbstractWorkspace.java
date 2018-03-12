@@ -160,6 +160,25 @@ public abstract class AbstractWorkspace {
   }
 
   /**
+   * Overrides buckconfig options with the given values in a map of {section: {key: value}}
+   *
+   * @throws IOException when saving the new BuckConfigLocal has an issue
+   */
+  public void addBuckConfigLocalOptions(Map<String, Map<String, String>> localConfigs)
+      throws IOException {
+    if (localConfigs.isEmpty()) {
+      // avoid saving if there's nothing in the map
+      return;
+    }
+    for (Map.Entry<String, Map<String, String>> section : localConfigs.entrySet()) {
+      for (Map.Entry<String, String> option : section.getValue().entrySet()) {
+        getBuckConfigLocalSection(section.getKey()).put(option.getKey(), option.getValue());
+      }
+    }
+    saveBuckConfigLocal();
+  }
+
+  /**
    * Removes overriding buckconfig options at the given section's option. If the option is not being
    * overridden, then nothing happens.
    *

@@ -303,19 +303,22 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
       for (String[] templateSet : testEnvironment.getTemplates()) {
         for (Map<String, String> variableMap : testEnvironment.getVariableMaps()) {
           for (boolean buckdEnabled : testEnvironment.getBuckdToggled().getStates()) {
-            String command = testEnvironment.getCommand();
-            String[] buildTargets = testEnvironment.getBuildTargets();
-            String[] arguments = testEnvironment.getArguments();
-            EndToEndTestDescriptor testDescriptor =
-                new EndToEndTestDescriptor(
-                    testMethod,
-                    templateSet,
-                    command,
-                    buildTargets,
-                    arguments,
-                    buckdEnabled,
-                    variableMap);
-            output.add(testDescriptor);
+            for (Map<String, Map<String, String>> configs : testEnvironment.getLocalConfigSets()) {
+              String command = testEnvironment.getCommand();
+              String[] buildTargets = testEnvironment.getBuildTargets();
+              String[] arguments = testEnvironment.getArguments();
+              EndToEndTestDescriptor testDescriptor =
+                  new EndToEndTestDescriptor(
+                      testMethod,
+                      templateSet,
+                      command,
+                      buildTargets,
+                      arguments,
+                      buckdEnabled,
+                      variableMap,
+                      configs);
+              output.add(testDescriptor);
+            }
           }
         }
       }
