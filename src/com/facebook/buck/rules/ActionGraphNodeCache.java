@@ -94,6 +94,8 @@ public class ActionGraphNodeCache {
   /**
    * Adds the build rule for the given target node to the rule resolver. Fetches from cache if
    * available, and caches after creation if supported by the build rule.
+   *
+   * <p>Assumes we get called for a node's children before we get called for the node itself.
    */
   public BuildRule requireRule(TargetNode<?, ?> targetNode) {
     Preconditions.checkState(isTargetGraphWalkInProgress);
@@ -133,10 +135,11 @@ public class ActionGraphNodeCache {
   }
 
   private void offerForCaching(TargetNode<?, ?> targetNode, BuildRule buildRule) {
-    if (!(buildRule instanceof CacheableBuildRule)) {
-      // Incremental caching is only supported for build rules known to be safe. This is because we
-      // cannot generally guarantee that build rules won't do crazy things that violate our
-      // assumptions during their construction.
+    // Incremental caching is only supported for build rules known to be safe. This is because we
+    // cannot generally guarantee that build rules won't do crazy things that violate our
+    // assumptions during their construction. We further require that our children are also
+    // cached to disallow caching nodes with uncacheable descendants.
+    if (!(buildRule instanceof CacheableBuildRule) || !areDirectTargetGraphDepsCached(targetNode)) {
       if (LOG.isVerboseEnabled()) {
         LOG.verbose(
             "not caching target %s of type %s",
@@ -144,7 +147,8 @@ public class ActionGraphNodeCache {
       }
 
       // Note that we don't need to invalidate parent chains if we attempt to insert a non-allowed
-      // build rule here, as this is handled when the next action graph construction begins.
+      // build rule here, as a node will never get added to the cache if its children aren't also
+      // cached.
       return;
     }
 
@@ -156,6 +160,15 @@ public class ActionGraphNodeCache {
     buildRuleSubgraphCache.put(targetNode.getBuildTarget(), new CacheEntry(targetNode, buildRule));
   }
 
+  private boolean areDirectTargetGraphDepsCached(TargetNode<?, ?> targetNode) {
+    for (BuildTarget dep : targetNode.getParseDeps()) {
+      if (buildRuleSubgraphCache.getIfPresent(dep) == null) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   private void addBuildRuleSubgraphToIndex(BuildRule buildRule, BuildRuleResolver resolver) {
     if (resolver.getRuleOptional(buildRule.getBuildTarget()).isPresent()) {
       // If a rule has already been added, then its entire subgraph has also been added, whether
@@ -163,10 +176,14 @@ public class ActionGraphNodeCache {
       return;
     }
 
+    if (LOG.isVerboseEnabled()) {
+      LOG.verbose(
+          "adding %s of type %s to index", buildRule.getFullyQualifiedName(), buildRule.getType());
+    }
+
     // Use {@see BuildRuleResolver#computeIfAbsent} here instead of {@see
-    // BuildRuleResolver#addToIndex}
-    // to avoid a race where we might add a duplicate build rule during parallel action graph
-    // construction.
+    // BuildRuleResolver#addToIndex} to avoid a race where we might add a duplicate build rule
+    // during parallel action graph construction.
     resolver.computeIfAbsent(buildRule.getBuildTarget(), buildTarget -> buildRule);
 
     for (BuildRule dep : getDeps(buildRule)) {
@@ -192,6 +209,7 @@ public class ActionGraphNodeCache {
       return deps;
     }
 
+    Preconditions.checkState(buildRule instanceof CacheableBuildRule);
     deps =
         SortedSets.union(
             buildRule.getBuildDeps(), ((CacheableBuildRule) buildRule).getImplicitDepsForCaching());
@@ -289,9 +307,10 @@ public class ActionGraphNodeCache {
   private boolean shouldInvalidateParentChain(TargetNode<?, ?> targetNode) {
     CacheEntry cacheEntry = buildRuleSubgraphCache.getIfPresent(targetNode.getBuildTarget());
     if (cacheEntry == null) {
-      // If the node isn't cached, the associated build rule is not marked as cacheable. We
-      // aggressively invalidate the parent chains, as we have no idea how such build rules may
-      // modify the action graph during their construction.
+      // If the node isn't cached, we need to invalidate the parent chain. There is an edge case
+      // where we run out of room in the cache, and potentially push out a child of a cached node.
+      // This child node may have changed, and we may otherwise miss a required invalidation of the
+      // cached parent.
       if (LOG.isVerboseEnabled()) {
         LOG.verbose(
             "target %s caused invalidation due to not being cached",
