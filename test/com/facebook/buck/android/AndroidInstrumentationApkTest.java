@@ -16,18 +16,14 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.android.toolchain.DxToolchain;
-import com.facebook.buck.android.toolchain.ndk.impl.TestNdkCxxPlatformsProviderFactory;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
-import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -44,10 +40,8 @@ import com.facebook.buck.rules.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.util.concurrent.MoreExecutors;
 import org.junit.Test;
 
 public class AndroidInstrumentationApkTest {
@@ -128,23 +122,17 @@ public class AndroidInstrumentationApkTest {
     AndroidInstrumentationApk androidInstrumentationApk =
         (AndroidInstrumentationApk)
             new AndroidInstrumentationApkDescription(
-                    new ToolchainProviderBuilder()
-                        .withToolchain(
-                            TestNdkCxxPlatformsProviderFactory.createDefaultNdkPlatformsProvider())
-                        .withToolchain(
-                            DxToolchain.DEFAULT_NAME,
-                            DxToolchain.of(MoreExecutors.newDirectExecutorService()))
-                        .withToolchain(
-                            JavacOptionsProvider.DEFAULT_NAME,
-                            JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
-                        .build(),
                     DEFAULT_JAVA_CONFIG,
                     new ProGuardConfig(FakeBuckConfig.builder().build()),
                     CxxPlatformUtils.DEFAULT_CONFIG,
                     new DxConfig(FakeBuckConfig.builder().build()),
                     new ApkConfig(FakeBuckConfig.builder().build()))
                 .createBuildRule(
-                    TestBuildRuleCreationContextFactory.create(ruleResolver, projectFilesystem),
+                    TestBuildRuleCreationContextFactory.create(
+                        ruleResolver,
+                        projectFilesystem,
+                        AndroidInstrumentationApkBuilder
+                            .createToolchainProviderForAndroidInstrumentationApk()),
                     buildTarget,
                     params,
                     arg);

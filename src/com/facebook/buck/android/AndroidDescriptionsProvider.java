@@ -61,7 +61,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             javaConfig, proGuardConfig, config, cxxBuckConfig, dxConfig, apkConfig),
         new AndroidBuildConfigDescription(toolchainProvider, javaConfig),
         new AndroidInstrumentationApkDescription(
-            toolchainProvider, javaConfig, proGuardConfig, cxxBuckConfig, dxConfig, apkConfig),
+            javaConfig, proGuardConfig, cxxBuckConfig, dxConfig, apkConfig),
         new AndroidInstrumentationTestDescription(config, toolchainProvider),
         new AndroidLibraryDescription(javaConfig, defaultAndroidCompilerFactory),
         new AndroidPrebuiltAarDescription(javaConfig),

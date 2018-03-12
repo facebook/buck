@@ -27,6 +27,8 @@ import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -38,22 +40,25 @@ public class AndroidInstrumentationApkBuilder
   private AndroidInstrumentationApkBuilder(BuildTarget target) {
     super(
         new AndroidInstrumentationApkDescription(
-            new ToolchainProviderBuilder()
-                .withToolchain(
-                    TestNdkCxxPlatformsProviderFactory.createDefaultNdkPlatformsProvider())
-                .withToolchain(
-                    DxToolchain.DEFAULT_NAME,
-                    DxToolchain.of(MoreExecutors.newDirectExecutorService()))
-                .withToolchain(
-                    JavacOptionsProvider.DEFAULT_NAME,
-                    JavacOptionsProvider.of(ANDROID_JAVAC_OPTIONS))
-                .build(),
             DEFAULT_JAVA_CONFIG,
             new ProGuardConfig(FakeBuckConfig.builder().build()),
             new CxxBuckConfig(new FakeBuckConfig.Builder().build()),
             new DxConfig(FakeBuckConfig.builder().build()),
             new ApkConfig(FakeBuckConfig.builder().build())),
-        target);
+        target,
+        new FakeProjectFilesystem(),
+        createToolchainProviderForAndroidInstrumentationApk(),
+        null);
+  }
+
+  public static ToolchainProvider createToolchainProviderForAndroidInstrumentationApk() {
+    return new ToolchainProviderBuilder()
+        .withToolchain(TestNdkCxxPlatformsProviderFactory.createDefaultNdkPlatformsProvider())
+        .withToolchain(
+            DxToolchain.DEFAULT_NAME, DxToolchain.of(MoreExecutors.newDirectExecutorService()))
+        .withToolchain(
+            JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.of(ANDROID_JAVAC_OPTIONS))
+        .build();
   }
 
   public static AndroidInstrumentationApkBuilder createBuilder(BuildTarget buildTarget) {

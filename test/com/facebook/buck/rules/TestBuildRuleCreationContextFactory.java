@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 
 public class TestBuildRuleCreationContextFactory {
@@ -30,11 +31,27 @@ public class TestBuildRuleCreationContextFactory {
       TargetGraph targetGraph,
       BuildRuleResolver buildRuleResolver,
       ProjectFilesystem projectFilesystem) {
+    return create(
+        targetGraph, buildRuleResolver, projectFilesystem, new ToolchainProviderBuilder().build());
+  }
+
+  public static BuildRuleCreationContext create(
+      BuildRuleResolver buildRuleResolver,
+      ProjectFilesystem projectFilesystem,
+      ToolchainProvider toolchainProvider) {
+    return create(TargetGraph.EMPTY, buildRuleResolver, projectFilesystem, toolchainProvider);
+  }
+
+  public static BuildRuleCreationContext create(
+      TargetGraph targetGraph,
+      BuildRuleResolver buildRuleResolver,
+      ProjectFilesystem projectFilesystem,
+      ToolchainProvider toolchainProvider) {
     return ImmutableBuildRuleCreationContext.of(
         targetGraph,
         buildRuleResolver,
         projectFilesystem,
         TestCellBuilder.createCellRoots(projectFilesystem),
-        new ToolchainProviderBuilder().build());
+        toolchainProvider);
   }
 }

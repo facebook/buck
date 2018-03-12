@@ -59,7 +59,6 @@ import org.immutables.value.Value;
 public class AndroidInstrumentationApkDescription
     implements Description<AndroidInstrumentationApkDescriptionArg> {
 
-  private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
   private final ProGuardConfig proGuardConfig;
   private final CxxBuckConfig cxxBuckConfig;
@@ -67,13 +66,11 @@ public class AndroidInstrumentationApkDescription
   private final ApkConfig apkConfig;
 
   public AndroidInstrumentationApkDescription(
-      ToolchainProvider toolchainProvider,
       JavaBuckConfig javaBuckConfig,
       ProGuardConfig proGuardConfig,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig,
       ApkConfig apkConfig) {
-    this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
     this.proGuardConfig = proGuardConfig;
     this.cxxBuckConfig = cxxBuckConfig;
@@ -119,6 +116,7 @@ public class AndroidInstrumentationApkDescription
                 resourceDetails.getResourcesWithNonEmptyResDir(),
                 resourceDetails.getResourcesWithEmptyResButNonEmptyAssetsDir()));
 
+    ToolchainProvider toolchainProvider = context.getToolchainProvider();
     ListeningExecutorService dxExecutorService =
         toolchainProvider
             .getByName(DxToolchain.DEFAULT_NAME, DxToolchain.class)
