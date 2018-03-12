@@ -204,7 +204,8 @@ public class DelegatingClassLoader extends ClassLoader {
     mManagedClassesToDexFile.clear();
     for (File dexJar : dexJars) {
       try {
-        DexFile dexFile = new DexFile(dexJar);
+        final File optFile = new File(mDexOptDir, dexJar.getName());
+        DexFile dexFile = DexFile.loadDex(dexJar.getCanonicalPath(), optFile.getCanonicalPath(), 0);
         final Enumeration<String> entries = dexFile.entries();
         while (entries.hasMoreElements()) {
           mManagedClassesToDexFile.put(entries.nextElement(), dexFile);
