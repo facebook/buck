@@ -334,7 +334,7 @@ public final class JUnitRunner extends BaseRunner {
             && "initializationError".equals(methodName)) {
           return; // don't record errors from failed class initialization during dry run
         }
-        failure = null;
+        failure = numFailures == 0 ? null : result.getFailures().get(0);
         type = ResultType.DRY_RUN;
       } else if (numFailures == 0) {
         failure = null;
