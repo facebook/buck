@@ -116,8 +116,7 @@ public class RustLinkerIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
 
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(Matchers.containsString("Overridden cxx:ld path not found: bad-linker"));
+    thrown.expectMessage(Matchers.containsString("bad-linker"));
 
     workspace.runBuckCommand("run", "--config", "cxx.ld=bad-linker", "//:xyzzy").assertFailure();
   }
