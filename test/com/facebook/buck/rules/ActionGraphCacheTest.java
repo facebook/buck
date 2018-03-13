@@ -509,6 +509,13 @@ public class ActionGraphCacheTest {
             IncrementalActionGraphMode.ENABLED,
             poolSupplier);
 
+    BuildRule originalBuildRule1 =
+        originalResult.getResolver().getRule(originalNode1.getBuildTarget());
+    BuildRule originalBuildRule2 =
+        originalResult.getResolver().getRule(originalNode2.getBuildTarget());
+    BuildRule originalBuildRule3 =
+        originalResult.getResolver().getRule(originalNode3.getBuildTarget());
+
     TargetNode<?, ?> newNode4 = createCacheableTargetNode("D");
     TargetNode<?, ?> newNode3 = createCacheableTargetNode("C");
     TargetNode<?, ?> newNode2 = createCacheableTargetNode("B", newNode3);
@@ -528,18 +535,9 @@ public class ActionGraphCacheTest {
             IncrementalActionGraphMode.ENABLED,
             poolSupplier);
 
-    BuildRuleResolver originalResolver = originalResult.getResolver();
-    BuildRuleResolver newResolver = newResult.getResolver();
-
-    assertNotSame(
-        originalResolver.getRule(originalNode1.getBuildTarget()),
-        newResolver.getRule(newNode1.getBuildTarget()));
-    assertSame(
-        originalResolver.getRule(originalNode2.getBuildTarget()),
-        newResolver.getRule(newNode2.getBuildTarget()));
-    assertSame(
-        originalResolver.getRule(originalNode3.getBuildTarget()),
-        newResolver.getRule(newNode3.getBuildTarget()));
+    assertNotSame(originalBuildRule1, newResult.getResolver().getRule(newNode1.getBuildTarget()));
+    assertSame(originalBuildRule2, newResult.getResolver().getRule(newNode2.getBuildTarget()));
+    assertSame(originalBuildRule3, newResult.getResolver().getRule(newNode3.getBuildTarget()));
   }
 
   private TargetNode<?, ?> createCacheableTargetNode(String name, TargetNode<?, ?>... deps) {

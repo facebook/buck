@@ -81,6 +81,9 @@ public interface BuildRuleResolver {
    */
   Parallelizer getParallelizer();
 
+  /** Invalidates this object. All future calls will throw InvalidStateException. */
+  void invalidate();
+
   // Convenience methods offering alternate access patterns.
 
   /**

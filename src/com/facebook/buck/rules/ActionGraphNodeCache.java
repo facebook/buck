@@ -383,6 +383,12 @@ public class ActionGraphNodeCache {
     Preconditions.checkState(isTargetGraphWalkInProgress);
     isTargetGraphWalkInProgress = false;
 
+    // Invalidate the previous {@see BuildRuleResolver}, which we no longer need, to make sure
+    // nobody unexpectedly accesses after this point.
+    if (lastRuleResolver != null) {
+      lastRuleResolver.invalidate();
+      lastRuleResolver = null;
+    }
     // TODO(jtorkkola): It'd be better to check that all deps of cacheable rules are themselves
     //                  cacheable here during the first action graph construction, so we could error
     //                  out as early as possible if a developer makes a build rule change without

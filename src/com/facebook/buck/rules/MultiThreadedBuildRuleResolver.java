@@ -45,6 +45,7 @@ import javax.annotation.Nullable;
  * </ul>
  */
 public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
+  private boolean isValid = true;
   private final ForkJoinPool forkJoinPool;
 
   private final TargetGraph targetGraph;
@@ -75,6 +76,7 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
 
   @Override
   public Iterable<BuildRule> getBuildRules() {
+    Preconditions.checkState(isValid);
     return buildRuleIndex
         .values()
         .stream()
@@ -84,6 +86,7 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
 
   @Override
   public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
+    Preconditions.checkState(isValid);
     return Optional.ofNullable(buildRuleIndex.get(buildTarget))
         .flatMap(
             future ->
@@ -95,6 +98,7 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
   @Override
   public BuildRule computeIfAbsent(
       BuildTarget target, Function<BuildTarget, BuildRule> mappingFunction) {
+    Preconditions.checkState(isValid);
     Preconditions.checkState(
         isInForkJoinPool(), "Should only be called while executing in the pool");
 
@@ -106,6 +110,7 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
 
   @Override
   public BuildRule requireRule(BuildTarget target) {
+    Preconditions.checkState(isValid);
     return Futures.getUnchecked(
         buildRuleIndex.computeIfAbsent(
             target,
@@ -119,6 +124,7 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
   @Deprecated
   @Override
   public <T extends BuildRule> T addToIndex(T buildRule) {
+    Preconditions.checkState(isValid);
     buildRuleIndex.compute(
         buildRule.getBuildTarget(),
         (key, existing) -> {
@@ -147,18 +153,27 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
 
   @Override
   public <T> Optional<T> requireMetadata(BuildTarget target, Class<T> metadataClass) {
+    Preconditions.checkState(isValid);
     return metadataCache.requireMetadata(target, metadataClass);
   }
 
   @Nullable
   @Override
   public BuckEventBus getEventBus() {
+    Preconditions.checkState(isValid);
     return eventBus;
   }
 
   @Override
   public Parallelizer getParallelizer() {
+    Preconditions.checkState(isValid);
     return Parallelizer.PARALLEL;
+  }
+
+  @Override
+  public void invalidate() {
+    isValid = false;
+    buildRuleIndex.clear();
   }
 
   private boolean isInForkJoinPool() {

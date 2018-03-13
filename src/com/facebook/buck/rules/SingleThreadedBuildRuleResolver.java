@@ -33,6 +33,7 @@ import javax.annotation.Nullable;
  */
 public class SingleThreadedBuildRuleResolver implements BuildRuleResolver {
 
+  private boolean isValid = true;
   private final TargetGraph targetGraph;
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
   private final CellProvider cellProvider;
@@ -63,17 +64,20 @@ public class SingleThreadedBuildRuleResolver implements BuildRuleResolver {
 
   @Override
   public Iterable<BuildRule> getBuildRules() {
+    Preconditions.checkState(isValid);
     return Iterables.unmodifiableIterable(buildRuleIndex.values());
   }
 
   @Override
   public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
+    Preconditions.checkState(isValid);
     return Optional.ofNullable(buildRuleIndex.get(buildTarget));
   }
 
   @Override
   public BuildRule computeIfAbsent(
       BuildTarget target, Function<BuildTarget, BuildRule> mappingFunction) {
+    Preconditions.checkState(isValid);
     BuildRule rule = buildRuleIndex.get(target);
     if (rule != null) {
       return rule;
@@ -101,6 +105,7 @@ public class SingleThreadedBuildRuleResolver implements BuildRuleResolver {
 
   @Override
   public BuildRule requireRule(BuildTarget target) {
+    Preconditions.checkState(isValid);
     return computeIfAbsent(
         target,
         (ignored) -> {
@@ -120,6 +125,7 @@ public class SingleThreadedBuildRuleResolver implements BuildRuleResolver {
 
   @Override
   public <T> Optional<T> requireMetadata(BuildTarget target, Class<T> metadataClass) {
+    Preconditions.checkState(isValid);
     return metadataCache.requireMetadata(target, metadataClass);
   }
 
@@ -128,6 +134,7 @@ public class SingleThreadedBuildRuleResolver implements BuildRuleResolver {
   @Override
   @VisibleForTesting
   public <T extends BuildRule> T addToIndex(T buildRule) {
+    Preconditions.checkState(isValid);
     BuildRule oldValue = buildRuleIndex.put(buildRule.getBuildTarget(), buildRule);
     // Yuck! This is here to make it possible for a rule to depend on a flavor of itself but it
     // would be much much better if we just got rid of the BuildRuleResolver entirely.
@@ -141,11 +148,19 @@ public class SingleThreadedBuildRuleResolver implements BuildRuleResolver {
   @Override
   @Nullable
   public BuckEventBus getEventBus() {
+    Preconditions.checkState(isValid);
     return eventBus;
   }
 
   @Override
   public Parallelizer getParallelizer() {
+    Preconditions.checkState(isValid);
     return Parallelizer.SERIAL;
+  }
+
+  @Override
+  public void invalidate() {
+    isValid = false;
+    buildRuleIndex.clear();
   }
 }
