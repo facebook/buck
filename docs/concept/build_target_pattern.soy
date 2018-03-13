@@ -10,12 +10,17 @@
     {/param}
     {param content}
 
-A <em>build target pattern</em> is a string that describes a set of one or
-more build targets to match. These are used in the list of strings passed
-to the <code>visibility</code> argument of a build rule.
 <p>
-A build target is also a valid build target pattern that matches the
-build target of same name:
+A <em>build target pattern</em> is a string that describes a set of one or
+more {call buck.build_target /}s. Build target patterns are used as command-line arguments 
+to {call buck.cmd_build /}, and in the lists of values provided to the
+<code>deps</code> and <code>visibility</code> arguments of your build
+rules.
+</p>
+
+<p>
+The most simple build target pattern matches the build target of same name:
+</p>
 
 {literal}<pre>
 # Matches '//apps/myapp:app'.
@@ -23,8 +28,9 @@ build target of same name:
 {/literal}</pre>
 
 <p>
-A build target pattern that ends with a colon matches build targets that
-identify other rules in the same directory:
+A build target pattern that ends with a colon matches any build
+targets that identify rules in the same build file:
+</p>
 
 {literal}<pre>
 # Matches '//apps/myapp:app_debug' and '//apps/myapp:app_release'.
@@ -32,8 +38,10 @@ identify other rules in the same directory:
 {/literal}</pre>
 
 <p>
-A build target pattern that ends with <code>/...</code> matches any build target
-that identifies a rule in a build file in or under that directory:
+A build target pattern that ends with <code>/...</code> matches any
+build target in the build file in the current directory and any build
+targets in build files in subdirectories: 
+</p>
 
 {literal}<pre>
 # Matches '//apps:common' and '//apps/myapp:app'.

@@ -14,19 +14,30 @@
 
 {call buck.command}
 {param overview}
+
 <p>
-Builds one or more specified targets.
+Builds one or more rules specified by a set of {call buck.build_target_pattern /}s. 
+This is the most commonly used command in Buck. 
+</p>
+
 <p>
-As Buck is a build system, this is the most commonly used command in
-Buck. To build a rule, pass its target to buck build:
+Syntax:
+</p>
+
+<pre>buck build &lt;build target pattern&gt; . . .</pre>
+
+<p>
+Example:
+</p>
 
 <pre>buck build /&#x2F;java/com/example/app:amazing</pre>
 
 <p>
   Note that any {call buck.remote_file /} rules referenced by your build rules must be downloaded
-  with {call buck.cmd_fetch /} prior to calling this command if you don't set <code>in_build = true
+  with {call buck.cmd_fetch /} prior to calling this command unless you set <code>in_build = true
   </code> in the <code>[download]</code> section of your <code>.buckconfig</code>.
 </p>
+
 
 {/param}
 {param params}

@@ -10,39 +10,37 @@
     {/param}
     {param content}
 
-A <strong>build rule</strong> is a procedure for producing an output file from
+A <em>build rule</em> is a procedure for producing an output file from
 a set of input files.
 
 <p>
 
 Buck comes with a number of built-in build rules, as there are many common
-procedures when building Android code. For example, compiling Java code against
-the Android SDK is one of the most common operations, so the build rule
-{sp}{call buck.android_library /} exists to
-facilitate that. Similarly, the primary objective of most Android developers
-is to create an APK, so the build rule
-{sp}{call buck.android_binary /} can be used
+procedures when building software. For example, compiling Java code against
+the Android SDK is a common operation, so the build rule
+{sp}{call buck.android_library /} exists to facilitate that. 
+Similarly, the primary objective of most Android developers
+is to create an APK, so the build rule {sp}{call buck.android_binary /} can be used
 to do that.
 
 <p>
 
-Build rules are defined using built-in Python functions in a
-{sp}<a href="build_file.html">build file</a>. (Both the Python function to define
+Build rules are defined using built-in Python functions in 
+a {call buck.build_file /}. (Both the Python function to define
 the rule and the corresponding Java object that is ultimately created to
-carry out the procedure are referred to as "the build rule,"
-even though they are technically different things.) Every build rule takes at
-least the following three arguments:
+carry out the procedure are commonly referred to as "the build rule,"
+even though they are technically different things.) 
+Every build rule takes at least the following three arguments:
 
 <ul>
   <li><code>name</code> The name of the build rule,
       which must be unique within a build file.
   <li><code>deps</code> The build rule's dependencies,
-      expressed as a list of build targets.
+      expressed as a list of {call buck.build_target_pattern /}s.  
   <li><code>visibility</code> The set of build rules that are allowed to
-      claim this rule as a dependency, expressed as a list of
-      {sp}<a href="build_target_pattern.html">build target patterns</a>.
-</ul>
-
+      claim this rule as a dependency, expressed as a list 
+      of {call buck.build_target_pattern /}s. 
+</ul>                       
 <p>
 
 In Buck, every build rule can produce zero or one output files.

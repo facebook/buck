@@ -11,7 +11,7 @@
     {/param}
     {param content}
 
-A <strong>build target</strong> is a string that is used to
+A <em>build target</em> is a string that is used to
 identify a build rule in your project.
 
 <p>
@@ -26,17 +26,17 @@ A fully-qualified build target has three components:
       relative to the root of your project.
   <li>The <code>java/com/facebook/share</code> component between
       the <code>&#x2F/</code> prefix and the colon (<code>:</code>) indicates
-      that the build file can be found in the{sp}
-      <code>java/com/facebook/share</code> directory.
+      that the {call buck.build_file /} (named <code>BUCK</code>) is located 
+      in the directory{sp} <code>java/com/facebook/share</code>.
   <li>The <code>ui</code> after the colon (<code>:</code>) indicates the name
-      of the build rule within the build file in which it is defines.
+      of the build rule within the build file.
       Build rule names must be unique within a build file.
 </ol>
 
 A relative build target can be used to reference another build target within
 the same <a href="build_file.html">build file</a>. A relative build target
 starts with a colon (<code>:</code>) and is followed by only the third
-component (or "short name") of the fully-qualified build target. For example,
+component (or <em>short name</em>) of the fully-qualified build target. For example,
 within <code>java/com/facebook/share/BUCK</code>, <code>:ui</code> can be
 used to reference <code>&#x2F/java/com/facebook/share:ui</code>:
 
@@ -55,38 +55,60 @@ java_binary(
 Build targets are frequently used as arguments to build rules and to
 the command-line interface for Buck.
 
-<h2>Command-line Protip</h2>
+<h2>Command-line Pro Tips</h2>
 
-When specifying a build target on the command-line, it can be tedious to type:
+<p>
+Here are some ways that you can reduce your typing 
+when you specify build targets as command-line arguments to the {call buck.cmd_build /} command. 
+
+</p>
+
+<p>
+Consider the following example of a fully-qualified build target used
+with the <code>buck build</code> command:
+</p>
 
 <pre>buck build &#x2F;/java/com/facebook/share:share</pre>
 
-Fortunately, Buck is loose with its parsing of build targets on the command-line (but is always
-strict when parsing them in build files). Specifically, the leading <code>//</code> is optional on
-the command line, so the above could be:
+<p>
+Although Buck is always strict when parsing build targets in build
+files, Buck is flexible when parsing build targets on the command-line. 
+Specifically, the leading <code>//</code> is optional on the command line, so the above could be:
+</p>
 
 <pre>buck build java/com/facebook/share:share</pre>
 
+<p>
 Also, if there is a forward slash before the colon, it is ignored, so this could also be written as:
+</p>
 
 <pre>buck build java/com/facebook/share/:share</pre>
 
-This looks odd until you realize that the red text can be produced by tab-completing the path to the
-directory, which dramatically reduces how much you need to type:
+<p>
+which enables you to produce the red text shown below using
+tab-completion, which dramatically reduces how much you need to type:
+</p>
 
 <pre>buck build <span class="com">java/com/facebook/share/</span>:share</pre>
 
-Finally, if the final path element matches the value specified after the colon, it can be omitted
-from the command line:
+<p>
+Finally, if the final path element matches the value specified after the colon, it can be omitted:
+</p>
 
 <pre>
 <span class="com"># This is treated as &#x2F;/java/com/facebook/share:share.</span><br>
 buck build java/com/facebook/share/
 </pre>
 
-Note that this is even easier to tab-complete! For this reason, the name of the build rule for the
-primary deliverable in a build file is often named the same thing as the parent directory so it
-can be built from the command-line with less typing.
+<p>
+which makes the build target even easier to tab-complete! For this reason, the name of the build rule for the
+primary deliverable in a build file is often named the same as the parent directory. 
+That way, it can be built from the command-line with less typing.
+</p>
+
+<h2>See also</h2>
+
+{call buck.build_target_pattern /} 
 
     {/param}
   {/call}
