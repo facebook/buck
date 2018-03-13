@@ -25,6 +25,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -52,7 +53,6 @@ import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.VersionPropagator;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -318,7 +318,25 @@ public class RustLibraryDescription
 
       @Override
       public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
-        return FluentIterable.from(getBuildDeps()).filter(NativeLinkable.class);
+        // We want to skip over all the transitive Rust deps, and only return non-Rust
+        // deps at the edge of the graph
+        ImmutableList.Builder<NativeLinkable> nativedeps = ImmutableList.builder();
+
+        new AbstractBreadthFirstTraversal<BuildRule>(getBuildDeps()) {
+          @Override
+          public Iterable<BuildRule> visit(BuildRule rule) {
+            if (rule instanceof RustLinkable) {
+              // Rust rule - we just want to visit the children
+              return rule.getBuildDeps();
+            }
+            if (rule instanceof NativeLinkable) {
+              nativedeps.add((NativeLinkable) rule);
+            }
+            return ImmutableList.of();
+          }
+        }.start();
+
+        return nativedeps.build();
       }
 
       @Override
