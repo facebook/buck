@@ -41,14 +41,11 @@ public class AndroidInstrumentationTestDescription
     implements Description<AndroidInstrumentationTestDescriptionArg> {
 
   private final BuckConfig buckConfig;
-  private final ToolchainProvider toolchainProvider;
   private final ConcurrentHashMap<ProjectFilesystem, ConcurrentHashMap<String, PackagedResource>>
       resourceSupplierCache;
 
-  public AndroidInstrumentationTestDescription(
-      BuckConfig buckConfig, ToolchainProvider toolchainProvider) {
+  public AndroidInstrumentationTestDescription(BuckConfig buckConfig) {
     this.buckConfig = buckConfig;
-    this.toolchainProvider = toolchainProvider;
     this.resourceSupplierCache = new ConcurrentHashMap<>();
   }
 
@@ -72,6 +69,7 @@ public class AndroidInstrumentationTestDescription
     }
 
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    ToolchainProvider toolchainProvider = context.getToolchainProvider();
     return new AndroidInstrumentationTest(
         buildTarget,
         projectFilesystem,
