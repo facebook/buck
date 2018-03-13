@@ -102,7 +102,7 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
           return HashCodeAndFileType.ofFile(loadedValue);
         case FILE_TYPE_DIRECTORY:
           HashCodeAndFileType loadedDirValue = dirHashLoader.load(asPath);
-          Preconditions.checkState(loadedDirValue.getType() == HashCodeAndFileType.Type.DIRECTORY);
+          Preconditions.checkState(loadedDirValue.getType() == HashCodeAndFileType.TYPE_DIRECTORY);
           return loadedDirValue;
       }
       throw new RuntimeException();

@@ -30,7 +30,8 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractHashCodeAndFileType {
 
-  public abstract Type getType();
+  /** @return type of the file as a constant; can be TYPE_DIRECTORY, TYPE_FILE or TYPE_ARCHIVE */
+  public abstract byte getType();
 
   public abstract HashCode getHashCode();
 
@@ -49,29 +50,28 @@ abstract class AbstractHashCodeAndFileType {
 
   @Value.Check
   void check() {
-    Preconditions.checkState(getType() == Type.ARCHIVE || !getJarContentHasher().isPresent());
+    Preconditions.checkState(getType() == TYPE_ARCHIVE || !getJarContentHasher().isPresent());
   }
 
   public static HashCodeAndFileType ofArchive(
       HashCode hashCode, JarContentHasher jarContentHasher) {
     return HashCodeAndFileType.builder()
-        .setType(Type.ARCHIVE)
+        .setType(TYPE_ARCHIVE)
         .setGetHashCode(hashCode)
         .setJarContentHasher(jarContentHasher)
         .build();
   }
 
   public static HashCodeAndFileType ofDirectory(HashCode hashCode) {
-    return HashCodeAndFileType.builder().setType(Type.DIRECTORY).setGetHashCode(hashCode).build();
+    return HashCodeAndFileType.builder().setType(TYPE_DIRECTORY).setGetHashCode(hashCode).build();
   }
 
   public static HashCodeAndFileType ofFile(HashCode hashCode) {
-    return HashCodeAndFileType.builder().setType(Type.FILE).setGetHashCode(hashCode).build();
+    return HashCodeAndFileType.builder().setType(TYPE_FILE).setGetHashCode(hashCode).build();
   }
 
-  public enum Type {
-    ARCHIVE,
-    FILE,
-    DIRECTORY
-  }
+  // Using byte consts instead of enums to optimize memory footprint
+  public static final byte TYPE_DIRECTORY = 0;
+  public static final byte TYPE_FILE = 1;
+  public static final byte TYPE_ARCHIVE = 2;
 }
