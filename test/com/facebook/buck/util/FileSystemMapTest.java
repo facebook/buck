@@ -126,7 +126,7 @@ public class FileSystemMapTest {
 
     // Remove the item and check intermediate nodes are deleted.
     fsMap.remove(path);
-    assertFalse(fsMap.root.subLevels.containsKey("usr"));
+    assertFalse(fsMap.root.subLevels != null && fsMap.root.subLevels.containsKey("usr"));
     assertEquals(fsMap.map.size(), 0);
   }
 
@@ -152,7 +152,7 @@ public class FileSystemMapTest {
     FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
     fsMap.put(Paths.get("usr"), true);
     fsMap.remove(path);
-    assertFalse(fsMap.root.subLevels.containsKey("usr"));
+    assertFalse(fsMap.root.subLevels != null && fsMap.root.subLevels.containsKey("usr"));
     assertEquals(0, fsMap.map.size());
     assertFalse(fsMap.map.containsKey(PathFragments.pathToFragment(path)));
   }
@@ -167,7 +167,7 @@ public class FileSystemMapTest {
     assertEquals(3, fsMap.map.size());
 
     fsMap.remove(path);
-    assertFalse(fsMap.root.subLevels.containsKey("usr"));
+    assertFalse(fsMap.root.subLevels != null && fsMap.root.subLevels.containsKey("usr"));
     assertFalse(fsMap.map.containsKey(PathFragments.pathToFragment(path)));
     assertFalse(fsMap.map.containsKey(PathFragment.create("usr/HelloWorld.java")));
     assertFalse(fsMap.map.containsKey(PathFragment.create("usr/Yo.java")));

@@ -66,7 +66,9 @@ public class FileSystemMap<T> {
    */
   @VisibleForTesting
   static class Entry<T> {
-    Map<String, Entry<T>> subLevels = new HashMap<>();
+    // Stores all child nodes (i.e. files and subfolders) of the current node
+    // Nullable to conserve memory
+    @Nullable Map<String, Entry<T>> subLevels = null;
 
     // The value of the Entry is the actual value the node is associated with:
     //   - If this is a leaf node, value is never null.
@@ -114,7 +116,7 @@ public class FileSystemMap<T> {
 
     @VisibleForTesting
     int size() {
-      return subLevels.size();
+      return subLevels == null ? 0 : subLevels.size();
     }
   }
 
@@ -159,11 +161,11 @@ public class FileSystemMap<T> {
       for (String p : path.getSegments()) {
         relPath = relPath.getRelative(p);
         // Create the intermediate node only if it's missing.
-        if (!parent.subLevels.containsKey(p)) {
-          Entry<T> newEntry = new Entry<>(relPath);
-          parent.subLevels.put(p, newEntry);
+        if (parent.subLevels == null) {
+          parent.subLevels = new HashMap<>(4);
         }
-        parent = parent.subLevels.get(p);
+        PathFragment curPath = relPath; // cheat Java compiler to make it think curPath is final
+        parent = parent.subLevels.computeIfAbsent(p, key -> new Entry<>(curPath));
         // parent should never be null.
         Preconditions.checkNotNull(parent);
       }
@@ -193,6 +195,10 @@ public class FileSystemMap<T> {
       // Walk the tree to fetch the node requested by the path, or the closest intermediate node.
       boolean partial = false;
       for (Path p : path) {
+        if (entry.subLevels == null) {
+          partial = true;
+          break;
+        }
         entry = entry.subLevels.get(p.toString());
         // We're trying to remove a path that doesn't exist, no point in going deeper.
         // Break and proceed to remove whatever path we found so far.
@@ -218,13 +224,13 @@ public class FileSystemMap<T> {
         if (partial) {
           map.remove(leaf.key);
           if (leaf.size() == 0 && path != null && !stack.empty()) {
-            stack.peek().subLevels.remove(path.getFileName().toString());
+            removeChild(stack.peek(), path.getFileName().toString());
           } else {
             leaf.set(null);
           }
         } else {
           removeSubtreeFromMap(leaf);
-          stack.peek().subLevels.remove(path.getFileName().toString());
+          removeChild(stack.peek(), path.getFileName().toString());
         }
 
         // Plus, check everything above in order to remove unused stumps.
@@ -238,7 +244,7 @@ public class FileSystemMap<T> {
           map.remove(current.key);
 
           if (current.size() == 0 && path != null && !stack.empty()) {
-            stack.peek().subLevels.remove(path.getFileName().toString());
+            removeChild(stack.peek(), path.getFileName().toString());
           } else {
             current.set(null);
           }
@@ -251,14 +257,26 @@ public class FileSystemMap<T> {
   // Must be called while owning a write lock.
   private void removeSubtreeFromMap(Entry<T> leaf) {
     map.remove(leaf.key);
-    leaf.subLevels.values().forEach(this::removeSubtreeFromMap);
+    if (leaf.subLevels != null) {
+      leaf.subLevels.values().forEach(this::removeSubtreeFromMap);
+    }
+  }
+
+  private void removeChild(Entry<T> parent, String childPathString) {
+    if (parent.subLevels == null) {
+      return;
+    }
+    parent.subLevels.remove(childPathString);
+    if (parent.subLevels.size() == 0) {
+      parent.subLevels = null;
+    }
   }
 
   /** Empties the trie leaving only the root node available. */
   public void removeAll() {
     synchronized (root) {
       map.clear();
-      root.subLevels = new HashMap<>();
+      root.subLevels = null;
     }
   }
 
