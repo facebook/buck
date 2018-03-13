@@ -202,13 +202,13 @@ public class GoTestDescription
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     GoTestCoverStep.Mode coverageMode;
-    ImmutableSortedSet.Builder<BuildRule> extraDeps = ImmutableSortedSet.<BuildRule>naturalOrder();
+    ImmutableSortedSet.Builder<BuildRule> extraDeps = ImmutableSortedSet.naturalOrder();
     ImmutableSet.Builder<SourcePath> srcs = ImmutableSet.builder();
     ImmutableMap<String, Path> coverVariables;
 
     if (args.getCoverageMode().isPresent()) {
       coverageMode = args.getCoverageMode().get();
-      final GoTestCoverStep.Mode coverage = coverageMode;
+      GoTestCoverStep.Mode coverage = coverageMode;
 
       GoTestCoverSource coverSource =
           (GoTestCoverSource)
@@ -278,7 +278,7 @@ public class GoTestDescription
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      final BuildRuleResolver resolver,
+      BuildRuleResolver resolver,
       GoToolchain goToolchain,
       ImmutableSet<SourcePath> srcs,
       ImmutableMap<String, Path> coverVariables,
@@ -332,7 +332,7 @@ public class GoTestDescription
     target = target.withFlavors(); // remove flavors.
 
     if (args.getLibrary().isPresent()) {
-      final Optional<GoLibraryDescriptionArg> libraryArg =
+      Optional<GoLibraryDescriptionArg> libraryArg =
           resolver.requireMetadata(args.getLibrary().get(), GoLibraryDescriptionArg.class);
       if (!libraryArg.isPresent()) {
         throw new HumanReadableException(
@@ -369,7 +369,7 @@ public class GoTestDescription
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      final BuildRuleResolver resolver,
+      BuildRuleResolver resolver,
       ImmutableSet<SourcePath> srcs,
       GoTestDescriptionArg args,
       GoPlatform platform) {
@@ -378,7 +378,7 @@ public class GoTestDescription
     GoToolchain goToolchain = getGoToolchain();
     if (args.getLibrary().isPresent()) {
       // We should have already type-checked the arguments in the base rule.
-      final GoLibraryDescriptionArg libraryArg =
+      GoLibraryDescriptionArg libraryArg =
           resolver.requireMetadata(args.getLibrary().get(), GoLibraryDescriptionArg.class).get();
 
       BuildRuleParams testTargetParams =
