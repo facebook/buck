@@ -19,6 +19,8 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.provider.BuildRuleInfoProvider;
+import com.facebook.buck.rules.provider.MissingProviderException;
 import com.facebook.buck.step.Step;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -108,4 +110,23 @@ public interface BuildRule extends Comparable<BuildRule> {
 
     return this.getBuildTarget().compareTo(that.getBuildTarget());
   }
+
+  /**
+   * Whether the BuildRule is implemented with {@link BuildRuleInfoProvider}. This will be removed
+   * once all {@link BuildRule} have been converted to using providers
+   */
+  boolean hasProviders();
+
+  /**
+   * Exposes information about the BuildRule to BuildRules that depend on this BuildRule during
+   * action graph construction. If {@link #hasProviders()} is {@code false},
+   * UnsupportedOperationException will be thrown.
+   *
+   * @param providerKey the key to the provider desired
+   * @param <T> the type of the provider
+   * @return the provider of the type desired from this BuildRule
+   * @throws MissingProviderException if the required provider is not present
+   */
+  <T extends BuildRuleInfoProvider> T getProvider(T.ProviderKey providerKey)
+      throws MissingProviderException;
 }

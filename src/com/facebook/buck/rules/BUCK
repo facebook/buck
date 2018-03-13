@@ -164,6 +164,7 @@ java_immutables_library(
     srcs = [
         "AbstractBuildRule.java",
         "AbstractBuildRuleType.java",
+        "AbstractBuildRuleWithProviders.java",
         "AbstractDescriptionCreationContext.java",
         "AbstractSourcePathResolver.java",
         "AbstractTargetGraphAndBuildTargets.java",
@@ -196,6 +197,7 @@ java_immutables_library(
         ":rule_key",
         ":source_path",
         "//src/com/facebook/buck/graph:graph",
+        "//src/com/facebook/buck/rules/provider:provider",
         "//src/com/facebook/buck/rules/visibility:visibility",
         "//src/com/facebook/buck/sandbox:sandbox",
         "//src/com/facebook/buck/toolchain:toolchain",
@@ -305,6 +307,7 @@ java_immutables_library(
         "AbstractBuildRule.java",
         "AbstractBuildRuleKeys.java",
         "AbstractBuildRuleWithDeclaredAndExtraDeps.java",
+        "AbstractBuildRuleWithProviders.java",
         "AbstractBuildRuleWithResolver.java",
         "AbstractCachingBuildEngineBuckConfig.java",
         "AbstractExternalTestRunnerTestSpec.java",

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -19,7 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.provider.BuildRuleInfoProvider;
-import com.facebook.buck.rules.provider.BuildRuleInfoProvider.ProviderKey;
+import com.facebook.buck.rules.provider.BuildRuleInfoProviderCollection;
 import com.facebook.buck.rules.provider.MissingProviderException;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.CaseFormat;
@@ -27,18 +27,28 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
- * Abstract implementation of a {@link BuildRule} that can be cached. If its current {@link RuleKey}
- * matches the one on disk, then it has no work to do. It should also try to fetch its output from
- * an {@link com.facebook.buck.artifact_cache.ArtifactCache} to avoid doing any computation.
+ * Abstract implementation of a {@link BuildRule} that can be cached and is implemented using {@link
+ * BuildRuleInfoProvider}. If its current {@link RuleKey} matches the one on disk, then it has no
+ * work to do. It should also try to fetch its output from an {@link
+ * com.facebook.buck.artifact_cache.ArtifactCache} to avoid doing any computation.
+ *
+ * <p>TODO collapse {@link AbstractBuildRule} and this class into one once all BuildRules are
+ * migrated to using BuildRuleInfoProvider
  */
-public abstract class AbstractBuildRule implements BuildRule {
+public abstract class AbstractBuildRuleWithProviders implements BuildRule {
   private final BuildTarget buildTarget;
   private final ProjectFilesystem projectFilesystem;
   private final Supplier<String> typeSupplier = MoreSuppliers.memoize(this::getTypeForClass);
 
-  protected AbstractBuildRule(BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
+  private final BuildRuleInfoProviderCollection providers;
+
+  protected AbstractBuildRuleWithProviders(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleInfoProviderCollection providers) {
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
+    this.providers = providers;
   }
 
   @Override
@@ -76,27 +86,37 @@ public abstract class AbstractBuildRule implements BuildRule {
 
   @Override
   public final boolean equals(Object obj) {
-    if (!(obj instanceof AbstractBuildRule)) {
+    if (!(obj instanceof AbstractBuildRuleWithProviders)) {
       return false;
     }
-    AbstractBuildRule that = (AbstractBuildRule) obj;
+    AbstractBuildRuleWithProviders that = (AbstractBuildRuleWithProviders) obj;
     return Objects.equals(this.buildTarget, that.buildTarget)
+        && Objects.equals(this.providers, that.providers)
         && Objects.equals(this.getType(), that.getType());
   }
 
   @Override
   public final int hashCode() {
-    return this.buildTarget.hashCode();
+    return Objects.hash(buildTarget, providers);
   }
 
   @Override
   public final boolean hasProviders() {
-    return false;
+    return true;
   }
 
+  /**
+   * During ActionGraph creation, any data exposed to dependent BuildRule will be exposed via the
+   * {@link BuildRuleInfoProvider}s obtained from this method.
+   *
+   * @param providerKey the key to the provider desired
+   * @param <T> The type of the provider
+   * @return The provider of type T based on the given key
+   * @throws MissingProviderException
+   */
   @Override
-  public <T extends BuildRuleInfoProvider> T getProvider(ProviderKey providerKey)
+  public final <T extends BuildRuleInfoProvider> T getProvider(T.ProviderKey providerKey)
       throws MissingProviderException {
-    throw new UnsupportedOperationException("Not yet implemented");
+    return providers.get(providerKey);
   }
 }
