@@ -114,6 +114,34 @@ public class MoreThrowablesTest {
     assertTrue(getThrowableOrigin(exception).startsWith(expectedPrefix));
   }
 
+  @Test
+  public void testThrowIfAnyCauseInstanceOf() throws Exception {
+    Exception first = new Exception("first");
+    IOException second = new IOException("second", first);
+    Exception third = new Exception("third", second);
+
+    // should not throw
+    MoreThrowables.throwIfAnyCauseInstanceOf(third, InterruptedException.class);
+
+    // should throw IOException
+    expected.expect(IOException.class);
+    MoreThrowables.throwIfAnyCauseInstanceOf(third, IOException.class);
+  }
+
+  @Test
+  public void testThrowIfInitialCauseInstanceOf() throws Exception {
+    Exception first = new InterruptedException("first");
+    IOException second = new IOException("second", first);
+    Exception third = new IOException("third", second);
+
+    // should not throw
+    MoreThrowables.throwIfInitialCauseInstanceOf(third, IOException.class);
+
+    // should throw InterruptedException
+    expected.expect(InterruptedException.class);
+    MoreThrowables.throwIfInitialCauseInstanceOf(third, InterruptedException.class);
+  }
+
   public static class CausedBy extends TypeSafeMatcher<Throwable> {
 
     private Throwable cause;

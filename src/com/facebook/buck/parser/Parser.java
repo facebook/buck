@@ -46,6 +46,7 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreMaps;
+import com.facebook.buck.util.MoreThrowables;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -545,11 +546,12 @@ public class Parser {
         targetsMap.putAll(result.getKey(), result.getValue());
       }
     } catch (ExecutionException e) {
-      Throwables.throwIfInstanceOf(e.getCause(), BuildFileParseException.class);
-      Throwables.throwIfInstanceOf(e.getCause(), BuildTargetException.class);
-      Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
+      MoreThrowables.throwIfAnyCauseInstanceOf(e, BuildFileParseException.class);
+      MoreThrowables.throwIfAnyCauseInstanceOf(e, BuildTargetException.class);
+      MoreThrowables.throwIfAnyCauseInstanceOf(e, HumanReadableException.class);
+      MoreThrowables.throwIfAnyCauseInstanceOf(e, InterruptedException.class);
       Throwables.throwIfUnchecked(e.getCause());
-      throw new RuntimeException(e.getCause());
+      throw new RuntimeException(e);
     }
 
     // Finally, pull out the final build target results in input target spec order, and place them
