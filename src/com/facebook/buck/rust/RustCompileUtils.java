@@ -20,6 +20,7 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.linker.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
@@ -136,6 +137,14 @@ public class RustCompileUtils {
         .map(StringArg::of)
         .forEach(args::add);
 
+    LinkableDepType rustDepType;
+    // If we're building a CDYLIB then our Rust dependencies need to be static
+    if (crateType == CrateType.CDYLIB && depType == LinkableDepType.SHARED) {
+      rustDepType = LinkableDepType.STATIC_PIC;
+    } else {
+      rustDepType = depType;
+    }
+
     // Find direct and transitive Rust deps. We do this in two passes, since a dependency that's
     // both direct and transitive needs to be listed on the command line in each form.
     //
@@ -148,7 +157,8 @@ public class RustCompileUtils {
         .filter(RustLinkable.class::isInstance)
         .map(
             rule ->
-                ((RustLinkable) rule).getLinkerArg(true, crateType.isCheck(), cxxPlatform, depType))
+                ((RustLinkable) rule)
+                    .getLinkerArg(true, crateType.isCheck(), cxxPlatform, rustDepType))
         .forEach(depArgs::add);
 
     // Second pass - indirect deps
@@ -164,7 +174,8 @@ public class RustCompileUtils {
           deps = rule.getBuildDeps();
 
           Arg arg =
-              ((RustLinkable) rule).getLinkerArg(false, crateType.isCheck(), cxxPlatform, depType);
+              ((RustLinkable) rule)
+                  .getLinkerArg(false, crateType.isCheck(), cxxPlatform, rustDepType);
 
           depArgs.add(arg);
         }

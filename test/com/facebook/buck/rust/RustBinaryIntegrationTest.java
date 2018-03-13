@@ -508,13 +508,27 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
-  public void cxxWithRustDependency() throws IOException {
+  public void cxxWithRustDependencyStatic() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_with_rust_dep", tmp);
     workspace.setUp();
 
     assertThat(
         workspace.runBuckCommand("run", "//:hello").assertSuccess().getStdout(),
+        Matchers.allOf(
+            Matchers.containsString("Calling helloer"),
+            Matchers.containsString("I'm printing hello!"),
+            Matchers.containsString("Helloer called")));
+  }
+
+  @Test
+  public void cxxWithRustDependencyShared() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_with_rust_dep", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:hello-shared").assertSuccess().getStdout(),
         Matchers.allOf(
             Matchers.containsString("Calling helloer"),
             Matchers.containsString("I'm printing hello!"),

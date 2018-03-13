@@ -3,11 +3,25 @@ cxx_binary(
     #link_style = "shared",
     srcs = ["main.c"],
     link_style = "static",
-    linker_flags = ["-lresolv"],
+    linker_flags = ["-lresolv"],  # MacOS build fix
+    deps = [":helloer"],
+)
+
+cxx_binary(
+    name = "hello-shared",
+    srcs = ["main.c"],
+    link_style = "shared",
+    linker_flags = ["-lresolv"],  # MacOS build fix
     deps = [":helloer"],
 )
 
 rust_library(
     name = "helloer",
     srcs = ["helloer.rs"],
+    deps = [":morehello"],
+)
+
+rust_library(
+    name = "morehello",
+    srcs = ["morehello.rs"],
 )
