@@ -26,12 +26,16 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 
@@ -39,6 +43,7 @@ class LoadingCacheFileHashCache implements FileHashCacheEngine {
 
   private final LoadingCache<Path, HashCodeAndFileType> loadingCache;
   private final LoadingCache<Path, Long> sizeCache;
+  private final Map<Path, Set<Path>> parentToChildCache = new ConcurrentHashMap<>();
 
   private LoadingCacheFileHashCache(
       ValueLoader<HashCodeAndFileType> hashLoader, ValueLoader<Long> sizeLoader) {
@@ -48,7 +53,9 @@ class LoadingCacheFileHashCache implements FileHashCacheEngine {
                 new CacheLoader<Path, HashCodeAndFileType>() {
                   @Override
                   public HashCodeAndFileType load(Path path) {
-                    return hashLoader.load(path);
+                    HashCodeAndFileType hashCodeAndFileType = hashLoader.load(path);
+                    updateParent(path);
+                    return hashCodeAndFileType;
                   }
                 });
     sizeCache =
@@ -57,9 +64,20 @@ class LoadingCacheFileHashCache implements FileHashCacheEngine {
                 new CacheLoader<Path, Long>() {
                   @Override
                   public Long load(Path path) {
-                    return sizeLoader.load(path);
+                    long size = sizeLoader.load(path);
+                    updateParent(path);
+                    return size;
                   }
                 });
+  }
+
+  private void updateParent(Path path) {
+    Path parent = path.getParent();
+    if (parent != null) {
+      Set<Path> children =
+          parentToChildCache.computeIfAbsent(parent, key -> Sets.newConcurrentHashSet());
+      children.add(path);
+    }
   }
 
   public static FileHashCacheEngine createWithStats(
@@ -71,11 +89,13 @@ class LoadingCacheFileHashCache implements FileHashCacheEngine {
   @Override
   public void put(Path path, HashCodeAndFileType value) {
     loadingCache.put(path, value);
+    updateParent(path);
   }
 
   @Override
   public void putSize(Path path, long value) {
     sizeCache.put(path, value);
+    updateParent(path);
   }
 
   @Override
@@ -111,18 +131,22 @@ class LoadingCacheFileHashCache implements FileHashCacheEngine {
 
   @Override
   public void invalidate(Path path) {
-    HashCodeAndFileType cached = loadingCache.getIfPresent(path);
-    invalidateImmediate(path);
-    if (cached != null) {
-      for (Path child : cached.getChildrenPaths()) {
-        invalidateImmediate(path.resolve(child));
-      }
-    }
-  }
-
-  private void invalidateImmediate(Path path) {
     loadingCache.invalidate(path);
     sizeCache.invalidate(path);
+    Set<Path> children = parentToChildCache.remove(path);
+
+    // recursively invalidate all recorded children (underlying files and subfolders)
+    if (children != null) {
+      children.forEach(this::invalidate);
+    }
+
+    Path parent = path.getParent();
+    if (parent != null) {
+      Set<Path> siblings = parentToChildCache.get(parent);
+      if (siblings != null) {
+        siblings.remove(path);
+      }
+    }
   }
 
   @Override
@@ -171,6 +195,7 @@ class LoadingCacheFileHashCache implements FileHashCacheEngine {
   public void invalidateAll() {
     loadingCache.invalidateAll();
     sizeCache.invalidateAll();
+    parentToChildCache.clear();
   }
 
   @Override

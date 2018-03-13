@@ -30,7 +30,6 @@ import com.facebook.buck.util.hashing.PathHashing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -219,8 +218,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
 
   private HashCodeAndFileType getDirHashCode(Path path) throws IOException {
     Hasher hasher = Hashing.sha1().newHasher();
-    ImmutableSet<Path> children = PathHashing.hashPath(hasher, this, projectFilesystem, path);
-    return HashCodeAndFileType.ofDirectory(hasher.hash(), children);
+    PathHashing.hashPath(hasher, this, projectFilesystem, path);
+    return HashCodeAndFileType.ofDirectory(hasher.hash());
   }
 
   @Override
@@ -296,14 +295,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     HashCodeAndFileType value;
 
     if (projectFilesystem.isDirectory(relativePath)) {
-      value =
-          HashCodeAndFileType.ofDirectory(
-              hashCode,
-              projectFilesystem
-                  .getFilesUnderPath(relativePath)
-                  .stream()
-                  .map(relativePath::relativize)
-                  .collect(ImmutableSet.toImmutableSet()));
+      value = HashCodeAndFileType.ofDirectory(hashCode);
     } else if (relativePath.toString().endsWith(".jar")) {
       value =
           HashCodeAndFileType.ofArchive(
