@@ -25,6 +25,7 @@ import com.facebook.buck.util.cache.FileHashCacheEngine;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
 import com.facebook.buck.util.cache.HashCodeAndFileType;
+import com.facebook.buck.util.cache.JarHashCodeAndFileType;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.hashing.PathHashing;
 import com.google.common.annotations.VisibleForTesting;
@@ -196,7 +197,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     if (projectFilesystem.isDirectory(path)) {
       return getDirHashCode(path);
     } else if (path.toString().endsWith(".jar")) {
-      return HashCodeAndFileType.ofArchive(
+      return JarHashCodeAndFileType.ofArchive(
           getFileHashCode(path),
           new DefaultJarContentHasher(projectFilesystem, PathFragments.pathToFragment(path)));
     }
@@ -298,7 +299,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
       value = HashCodeAndFileType.ofDirectory(hashCode);
     } else if (relativePath.toString().endsWith(".jar")) {
       value =
-          HashCodeAndFileType.ofArchive(
+          JarHashCodeAndFileType.ofArchive(
               hashCode,
               new DefaultJarContentHasher(
                   projectFilesystem,

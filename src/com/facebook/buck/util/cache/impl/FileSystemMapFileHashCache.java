@@ -22,6 +22,7 @@ import com.facebook.buck.util.FileSystemMap;
 import com.facebook.buck.util.PathFragments;
 import com.facebook.buck.util.cache.FileHashCacheEngine;
 import com.facebook.buck.util.cache.HashCodeAndFileType;
+import com.facebook.buck.util.cache.JarHashCodeAndFileType;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
@@ -79,7 +80,8 @@ class FileSystemMapFileHashCache implements FileHashCacheEngine {
   @Override
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
     Path relativeFilePath = archiveMemberPath.getArchivePath().normalize();
-    HashCodeAndFileType fileHashCodeAndFileType = loadingCache.get(relativeFilePath);
+    JarHashCodeAndFileType fileHashCodeAndFileType =
+        (JarHashCodeAndFileType) loadingCache.get(relativeFilePath);
     Path memberPath = archiveMemberPath.getMemberPath();
     HashCodeAndFileType memberHashCodeAndFileType =
         fileHashCodeAndFileType.getContents().get(memberPath);

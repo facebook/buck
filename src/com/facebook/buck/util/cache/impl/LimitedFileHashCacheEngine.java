@@ -22,6 +22,7 @@ import com.facebook.buck.util.FileSystemMap;
 import com.facebook.buck.util.PathFragments;
 import com.facebook.buck.util.cache.FileHashCacheEngine;
 import com.facebook.buck.util.cache.HashCodeAndFileType;
+import com.facebook.buck.util.cache.JarHashCodeAndFileType;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -96,7 +97,7 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
         case FILE_TYPE_SYMLINK:
           HashCode loadedValue = fileHashLoader.load(asPath);
           if (isArchive(asPath)) {
-            return HashCodeAndFileType.ofArchive(
+            return JarHashCodeAndFileType.ofArchive(
                 loadedValue, new DefaultJarContentHasher(filesystem, path));
           }
           return HashCodeAndFileType.ofFile(loadedValue);

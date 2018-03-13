@@ -20,6 +20,7 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.util.cache.FileHashCacheEngine;
 import com.facebook.buck.util.cache.HashCodeAndFileType;
+import com.facebook.buck.util.cache.JarHashCodeAndFileType;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -166,7 +167,8 @@ class LoadingCacheFileHashCache implements FileHashCacheEngine {
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
     Path relativeFilePath = archiveMemberPath.getArchivePath().normalize();
     try {
-      HashCodeAndFileType fileHashCodeAndFileType = loadingCache.get(relativeFilePath);
+      JarHashCodeAndFileType fileHashCodeAndFileType =
+          (JarHashCodeAndFileType) loadingCache.get(relativeFilePath);
       Path memberPath = archiveMemberPath.getMemberPath();
       HashCodeAndFileType memberHashCodeAndFileType =
           fileHashCodeAndFileType.getContents().get(memberPath);
