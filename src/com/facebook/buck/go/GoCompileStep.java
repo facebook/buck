@@ -16,6 +16,7 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -39,6 +40,7 @@ public class GoCompileStep extends ShellStep {
   private final boolean allowExternalReferences;
   private final GoPlatform platform;
   private final Path output;
+  private static final Logger LOG = Logger.get(GoCompileStep.class);
 
   public GoCompileStep(
       BuildTarget buildTarget,
@@ -107,7 +109,8 @@ public class GoCompileStep extends ShellStep {
 
       return commandBuilder.build();
     } else {
-      return ImmutableList.of("echo", "No source files found in " + workingDirectory);
+      LOG.warn("No source files found in " + workingDirectory);
+      return ImmutableList.of();
     }
   }
 

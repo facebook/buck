@@ -427,7 +427,7 @@ public class GoTestDescription
                   .addAll(libraryArg.getCgoDeps())
                   .addAll(args.getCgoDeps())
                   .build(),
-                  Arrays.asList(FileType.GoFiles, FileType.TestGoFiles));
+              Arrays.asList(FileType.GoFiles, FileType.TestGoFiles));
     } else {
       testLibrary =
           GoDescriptors.createGoCompileRule(

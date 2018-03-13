@@ -276,7 +276,8 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     return steps.build();
   }
 
-  private static List<Path> getSourceFiles(ImmutableSet<SourcePath> srcPaths, BuildContext context) {
+  private static List<Path> getSourceFiles(
+      ImmutableSet<SourcePath> srcPaths, BuildContext context) {
     List<Path> srcFiles = new ArrayList<>();
     for (SourcePath path : srcPaths) {
       Path srcPath = context.getSourcePathResolver().getAbsolutePath(path);
