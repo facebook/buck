@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rust;
 
+import static com.facebook.buck.cxx.CxxDescriptionEnhancer.createSharedLibrarySymlinkTreeTarget;
+
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -354,17 +356,20 @@ public class RustCompileUtils {
       // Create a symlink tree with for all native shared (NativeLinkable) libraries
       // needed by this binary.
       SymlinkTree sharedLibraries =
-          resolver.addToIndex(
-              CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
-                  buildTarget,
-                  projectFilesystem,
-                  ruleFinder,
-                  cxxPlatform,
-                  params.getBuildDeps(),
-                  r ->
-                      r instanceof RustLinkable
-                          ? Optional.of(r.getBuildDeps())
-                          : Optional.empty()));
+          (SymlinkTree)
+              resolver.computeIfAbsent(
+                  createSharedLibrarySymlinkTreeTarget(buildTarget, cxxPlatform.getFlavor()),
+                  target ->
+                      CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
+                          target,
+                          projectFilesystem,
+                          ruleFinder,
+                          cxxPlatform,
+                          params.getBuildDeps(),
+                          r ->
+                              r instanceof RustLinkable
+                                  ? Optional.of(r.getBuildDeps())
+                                  : Optional.empty()));
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
@@ -397,9 +402,9 @@ public class RustCompileUtils {
         (RustCompileRule)
             resolver.computeIfAbsent(
                 binaryTarget,
-                binaryTarget1 ->
+                target ->
                     createBuild(
-                        binaryTarget1,
+                        target,
                         crate,
                         projectFilesystem,
                         params,

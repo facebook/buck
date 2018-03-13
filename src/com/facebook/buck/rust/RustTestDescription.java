@@ -90,30 +90,33 @@ public class RustTestDescription
     BuildRuleResolver resolver = context.getBuildRuleResolver();
 
     BinaryWrapperRule testExeBuild =
-        resolver.addToIndex(
-            RustCompileUtils.createBinaryBuildRule(
+        (BinaryWrapperRule)
+            resolver.computeIfAbsent(
                 exeTarget,
-                projectFilesystem,
-                params,
-                resolver,
-                rustBuckConfig,
-                cxxPlatformsProvider.getCxxPlatforms(),
-                cxxPlatformsProvider.getDefaultCxxPlatform(),
-                args.getCrate(),
-                args.getFeatures(),
-                Stream.of(
-                        args.isFramework() ? Stream.of("--test") : Stream.<String>empty(),
-                        rustBuckConfig.getRustTestFlags().stream(),
-                        args.getRustcFlags().stream())
-                    .flatMap(x -> x)
-                    .iterator(),
-                args.getLinkerFlags().iterator(),
-                RustCompileUtils.getLinkStyle(buildTarget, args.getLinkStyle()),
-                args.isRpath(),
-                args.getSrcs(),
-                args.getCrateRoot(),
-                ImmutableSet.of("lib.rs", "main.rs"),
-                isCheck));
+                target ->
+                    RustCompileUtils.createBinaryBuildRule(
+                        target,
+                        projectFilesystem,
+                        params,
+                        resolver,
+                        rustBuckConfig,
+                        cxxPlatformsProvider.getCxxPlatforms(),
+                        cxxPlatformsProvider.getDefaultCxxPlatform(),
+                        args.getCrate(),
+                        args.getFeatures(),
+                        Stream.of(
+                                args.isFramework() ? Stream.of("--test") : Stream.<String>empty(),
+                                rustBuckConfig.getRustTestFlags().stream(),
+                                args.getRustcFlags().stream())
+                            .flatMap(x -> x)
+                            .iterator(),
+                        args.getLinkerFlags().iterator(),
+                        RustCompileUtils.getLinkStyle(buildTarget, args.getLinkStyle()),
+                        args.isRpath(),
+                        args.getSrcs(),
+                        args.getCrateRoot(),
+                        ImmutableSet.of("lib.rs", "main.rs"),
+                        isCheck));
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
