@@ -17,11 +17,13 @@
 package com.facebook.buck.util.cache;
 
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.PathFragments;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
+import com.google.devtools.build.lib.vfs.PathFragment;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -35,7 +37,14 @@ abstract class AbstractHashCodeAndFileType {
 
   public abstract HashCode getHashCode();
 
-  public abstract ImmutableSet<Path> getChildren();
+  public abstract ImmutableSet<PathFragment> getChildren();
+
+  public ImmutableSet<Path> getChildrenPaths() {
+    return getChildren()
+        .stream()
+        .map(pf -> PathFragments.fragmentToPath(pf))
+        .collect(ImmutableSet.toImmutableSet());
+  }
 
   @Value.Auxiliary
   abstract Optional<JarContentHasher> getJarContentHasher();
@@ -69,7 +78,11 @@ abstract class AbstractHashCodeAndFileType {
     return HashCodeAndFileType.builder()
         .setType(Type.DIRECTORY)
         .setGetHashCode(hashCode)
-        .setChildren(children)
+        .setChildren(
+            children
+                .stream()
+                .map(path -> PathFragments.pathToFragment(path))
+                .collect(ImmutableSet.toImmutableSet()))
         .build();
   }
 

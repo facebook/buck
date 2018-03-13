@@ -114,7 +114,7 @@ class LoadingCacheFileHashCache implements FileHashCacheEngine {
     HashCodeAndFileType cached = loadingCache.getIfPresent(path);
     invalidateImmediate(path);
     if (cached != null) {
-      for (Path child : cached.getChildren()) {
+      for (Path child : cached.getChildrenPaths()) {
         invalidateImmediate(path.resolve(child));
       }
     }
