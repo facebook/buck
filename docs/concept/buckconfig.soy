@@ -3463,7 +3463,20 @@ your <code>.buckjavaargs</code> file</a>:
     to <code>rustc</code> are not the original source paths. This option will remap those paths
     in compiler output, debug info, <code>file!()</code> and elsewhere to match the original
     source names. The options are "no" (don't remap), "unstable" (remap using the experimental
-    version of these options) and "yes" (remap using the stable versions, probably 1.22 onwards).
+    version of these options) and "yes" (remap using the stable versions, probably 1.25 onwards).
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'rust' /}
+  {param name: 'force_rlib' /}
+  {param example_value: 'false' /}
+  {param description}
+    When <code>force_rlib</code> is true, then buck will always compile static (rlib) libraries
+    even when the final target (binary or unittest) is being linked with a shared link style.
+    Rust code is typically always statically linked, and a lot of surrounding tooling doesn't
+    cope well with dynamically linked Rust crates. Linking with a shared link style will still
+    dynamically link with C/C++ shared objects.
   {/param}
 {/call}
 

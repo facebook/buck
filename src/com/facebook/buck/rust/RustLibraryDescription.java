@@ -127,7 +127,8 @@ public class RustLibraryDescription
         crateType,
         depType,
         rootModuleAndSources.getSecond(),
-        rootModuleAndSources.getFirst());
+        rootModuleAndSources.getFirst(),
+        rustBuckConfig.getForceRlib());
   }
 
   @Override

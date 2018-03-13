@@ -96,10 +96,11 @@ public class RustCompileUtils {
       ImmutableList<String> extraLinkerFlags,
       Iterable<Arg> linkerInputs,
       CrateType crateType,
-      Linker.LinkableDepType depType,
+      LinkableDepType depType,
       boolean rpath,
       ImmutableSortedSet<SourcePath> sources,
-      SourcePath rootModule) {
+      SourcePath rootModule,
+      boolean forceRlib) {
     SortedSet<BuildRule> ruledeps = params.getBuildDeps();
     ImmutableList.Builder<Arg> linkerArgs = ImmutableList.builder();
 
@@ -141,7 +142,8 @@ public class RustCompileUtils {
 
     LinkableDepType rustDepType;
     // If we're building a CDYLIB then our Rust dependencies need to be static
-    if (crateType == CrateType.CDYLIB && depType == LinkableDepType.SHARED) {
+    // Alternatively, if we're using forceRlib then anything else needs rlib deps.
+    if (depType == LinkableDepType.SHARED && (forceRlib || crateType == CrateType.CDYLIB)) {
       rustDepType = LinkableDepType.STATIC_PIC;
     } else {
       rustDepType = depType;
@@ -243,9 +245,10 @@ public class RustCompileUtils {
       Iterable<Arg> linkerInputs,
       String crateName,
       CrateType crateType,
-      Linker.LinkableDepType depType,
+      LinkableDepType depType,
       ImmutableSortedSet<SourcePath> sources,
-      SourcePath rootModule) {
+      SourcePath rootModule,
+      boolean forceRlib) {
     return (RustCompileRule)
         resolver.computeIfAbsent(
             getCompileBuildTarget(buildTarget, cxxPlatform, crateType),
@@ -266,7 +269,8 @@ public class RustCompileUtils {
                     depType,
                     true,
                     sources,
-                    rootModule));
+                    rootModule,
+                    forceRlib));
   }
 
   public static Linker.LinkableDepType getLinkStyle(
@@ -348,6 +352,8 @@ public class RustCompileUtils {
       binaryTarget = binaryTarget.withAppendedFlavors(cxxPlatform.getFlavor());
     }
 
+    boolean forceRlib = rustBuckConfig.getForceRlib();
+
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
 
     // Special handling for dynamically linked binaries.
@@ -392,9 +398,10 @@ public class RustCompileUtils {
       executableBuilder.addInputs(sharedLibraries.getLinks().values());
 
       // Also add Rust shared libraries as runtime deps. We don't need these in the symlink tree
-      // because rustc will include their dirs in rpath by default.
+      // because rustc will include their dirs in rpath by default. We won't have any if we're
+      // forcing the use of rlibs.
       Map<String, SourcePath> rustSharedLibraries =
-          getTransitiveRustSharedLibraries(cxxPlatform, params.getBuildDeps());
+          getTransitiveRustSharedLibraries(cxxPlatform, params.getBuildDeps(), forceRlib);
       executableBuilder.addInputs(rustSharedLibraries.values());
     }
 
@@ -419,7 +426,8 @@ public class RustCompileUtils {
                         linkStyle,
                         rpath,
                         rootModuleAndSources.getSecond(),
-                        rootModuleAndSources.getFirst()));
+                        rootModuleAndSources.getFirst(),
+                        forceRlib));
 
     // Add the binary as the first argument.
     executableBuilder.addArg(SourcePathArg.of(buildRule.getSourcePathToOutput()));
@@ -498,7 +506,7 @@ public class RustCompileUtils {
    * @return a mapping of library name to the library {@link SourcePath}.
    */
   public static Map<String, SourcePath> getTransitiveRustSharedLibraries(
-      CxxPlatform cxxPlatform, Iterable<? extends BuildRule> inputs) {
+      CxxPlatform cxxPlatform, Iterable<? extends BuildRule> inputs, boolean forceRlib) {
     ImmutableSortedMap.Builder<String, SourcePath> libs = ImmutableSortedMap.naturalOrder();
 
     new AbstractBreadthFirstTraversal<BuildRule>(inputs) {
@@ -511,7 +519,7 @@ public class RustCompileUtils {
           if (!rustLinkable.isProcMacro()) {
             deps = rule.getBuildDeps();
 
-            if (rustLinkable.getPreferredLinkage() != NativeLinkable.Linkage.STATIC) {
+            if (!forceRlib && rustLinkable.getPreferredLinkage() != NativeLinkable.Linkage.STATIC) {
               libs.putAll(rustLinkable.getRustSharedLibraries(cxxPlatform));
             }
           }

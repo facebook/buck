@@ -41,6 +41,7 @@ public class RustBuckConfig {
   private static final String RUSTC_TEST_FLAGS = "rustc_test_flags";
   private static final String UNFLAVORED_BINARIES = "unflavored_binaries";
   private static final String REMAP_SRC_PATHS = "remap_src_paths";
+  private static final String FORCE_RLIB = "force_rlib";
 
   enum RemapSrcPaths {
     NO, // no path remapping
@@ -200,5 +201,15 @@ public class RustBuckConfig {
    */
   RemapSrcPaths getRemapSrcPaths() {
     return delegate.getEnum(SECTION, REMAP_SRC_PATHS, RemapSrcPaths.class).orElse(RemapSrcPaths.NO);
+  }
+
+  /**
+   * Get "force_rlib" config. When set, always use rlib (static) libraries, even for otherwise
+   * shared targets.
+   *
+   * @return force_rlib flag
+   */
+  boolean getForceRlib() {
+    return delegate.getBooleanValue(SECTION, FORCE_RLIB, false);
   }
 }

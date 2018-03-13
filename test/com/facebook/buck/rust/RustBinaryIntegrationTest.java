@@ -319,6 +319,22 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void binaryWithSharedLibraryForceRlib() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace
+            .runBuckCommand("run", "-c", "rust.force_rlib=true", "//:hello-shared")
+            .assertSuccess()
+            .getStdout(),
+        Matchers.allOf(
+            Matchers.containsString("Hello, world!"),
+            Matchers.containsString("I have a message to deliver to you")));
+  }
+
+  @Test
   public void binaryWithHyphenatedLibrary() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
@@ -536,6 +552,23 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void cxxWithRustDependencySharedForceRlib() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_with_rust_dep", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace
+            .runBuckCommand("run", "-c", "rust.force_rlib=true", "//:hello-shared")
+            .assertSuccess()
+            .getStdout(),
+        Matchers.allOf(
+            Matchers.containsString("Calling helloer"),
+            Matchers.containsString("I'm printing hello!"),
+            Matchers.containsString("Helloer called")));
+  }
+
+  @Test
   public void duplicateCrateName() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "duplicate_crate", tmp);
@@ -613,6 +646,22 @@ public class RustBinaryIntegrationTest {
         // Check that we can build a procmacro crate
         workspace
             .runBuckCommand("run", "//:test_shared")
+            .assertSuccess("link with procmacro")
+            .getStdout(),
+        // Make sure we get a working executable
+        Matchers.containsString("Hello"));
+  }
+
+  @Test
+  public void procmacroCompileSharedForceRlib() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "procmacro", tmp);
+    workspace.setUp();
+
+    assertThat(
+        // Check that we can build a procmacro crate
+        workspace
+            .runBuckCommand("run", "-c", "rust.force_rlib=true", "//:test_shared")
             .assertSuccess("link with procmacro")
             .getStdout(),
         // Make sure we get a working executable

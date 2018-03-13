@@ -142,6 +142,11 @@ public enum CrateType {
         || this == PROC_MACRO;
   }
 
+  /** Create generates an executable */
+  public boolean isExecutable() {
+    return this == BIN;
+  }
+
   /**
    * We're just checking the code, and generating metadata to allow dependents to check. For
    * libraries this means we emit a metadata file, and binaries produce no output (they just consume
