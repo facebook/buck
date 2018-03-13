@@ -18,7 +18,6 @@ package com.facebook.buck.rust;
 
 import static com.facebook.buck.rust.RustCompileUtils.ruleToCrateName;
 
-import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -395,8 +394,7 @@ public class RustLibraryDescription
       public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
         String sharedLibrarySoname =
-            CxxDescriptionEnhancer.getSharedLibrarySoname(
-                Optional.empty(), getBuildTarget(), cxxPlatform);
+            CrateType.DYLIB.filenameFor(getBuildTarget(), crate, cxxPlatform);
         BuildRule sharedLibraryBuildRule =
             requireBuild(
                 buildTarget,
