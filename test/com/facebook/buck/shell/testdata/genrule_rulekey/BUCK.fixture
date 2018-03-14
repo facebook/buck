@@ -1,0 +1,9 @@
+java_library(
+    name = "foo",
+)
+
+genrule(
+    name = "bar",
+    out = "bar_out",
+    bash = "echo $(@classpath_abi :foo); mkdir -p $OUT",
+)

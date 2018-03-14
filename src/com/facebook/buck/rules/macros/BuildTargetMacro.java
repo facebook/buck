@@ -21,7 +21,9 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.versions.TargetNodeTranslator;
+import java.util.Objects;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /** Base class for macros wrapping a single {@link BuildTarget}. */
 public abstract class BuildTargetMacro implements Macro {
@@ -37,5 +39,21 @@ public abstract class BuildTargetMacro implements Macro {
       BuildTargetPatternParser<BuildTargetPattern> pattern,
       TargetNodeTranslator translator) {
     return translator.translate(cellPathResolver, pattern, getTarget()).map(this::withTarget);
+  }
+
+  // TODO: remove this logic when cell path is removed from BuildTarget
+  @Override
+  public int hashCode() {
+    return Objects.hash(getTarget().getFullyQualifiedName());
+  }
+
+  // TODO: remove this logic when cell path is removed from BuildTarget
+  @Override
+  public boolean equals(@Nullable Object another) {
+    if (this == another) return true;
+    return another instanceof BuildTargetMacro
+        && getTarget()
+            .getFullyQualifiedName()
+            .equals(((BuildTargetMacro) another).getTarget().getFullyQualifiedName());
   }
 }

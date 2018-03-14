@@ -68,6 +68,8 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
         getShortName());
   }
 
+  // TODO: remove cell root path from this object. Don't forget to remove TODOs from
+  // BuildTargetMacro after that
   public abstract Path getCellPath();
 
   public abstract Optional<String> getCell();
