@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -38,5 +40,15 @@ public abstract class AbstractCellPathResolver implements CellPathResolver {
             () ->
                 new AssertionError(
                     String.format("Unknown cell: %s", cellName.orElse("<root cell>"))));
+  }
+
+  @Override
+  public Path getCellPathOrThrow(BuildTarget buildTarget) {
+    return getCellPathOrThrow(buildTarget.getCell());
+  }
+
+  @Override
+  public Path getCellPathOrThrow(UnflavoredBuildTarget buildTarget) {
+    return getCellPathOrThrow(buildTarget.getCell());
   }
 }

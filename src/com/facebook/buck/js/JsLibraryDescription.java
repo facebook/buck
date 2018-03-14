@@ -367,6 +367,7 @@ public class JsLibraryDescription
                             basePath,
                             projectFilesystem,
                             sourcePathResolver,
+                            cellRoots,
                             buildTarget.getUnflavoredBuildTarget())
                         .resolve(subPath.orElse("")));
 
@@ -408,8 +409,10 @@ public class JsLibraryDescription
       String basePath,
       ProjectFilesystem projectFilesystem,
       SourcePathResolver sourcePathResolver,
+      CellPathResolver cellPathResolver,
       UnflavoredBuildTarget target) {
-    Path directoryOfBuildFile = target.getCellPath().resolve(target.getBasePath());
+    Path cellPath = cellPathResolver.getCellPathOrThrow(target);
+    Path directoryOfBuildFile = cellPath.resolve(target.getBasePath());
     Path transplantTo = MorePaths.normalize(directoryOfBuildFile.resolve(basePath));
     Path absolutePath =
         sourcePathResolver

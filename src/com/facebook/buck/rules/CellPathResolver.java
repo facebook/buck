@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.rules;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -34,6 +36,18 @@ public interface CellPathResolver {
    * @throws AssertionError if cell is not known
    */
   Path getCellPathOrThrow(Optional<String> cellName);
+
+  /**
+   * @return Absolute path to the physical location of the cell that contains the provided target
+   * @throws AssertionError if cell is not known
+   */
+  Path getCellPathOrThrow(BuildTarget buildTarget);
+
+  /**
+   * @return Absolute path to the physical location of the cell that contains the provided target
+   * @throws AssertionError if cell is not known
+   */
+  Path getCellPathOrThrow(UnflavoredBuildTarget buildTarget);
 
   /** @return absolute paths to all cells this resolver knows about. */
   ImmutableMap<String, Path> getCellPaths();
