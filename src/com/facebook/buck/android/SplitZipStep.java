@@ -182,7 +182,9 @@ public class SplitZipStep implements Step {
     ImmutableSet<String> secondaryTailSet = getSecondaryTailSet(translatorFactory);
     ImmutableMultimap<APKModule, String> additionalDexStoreClasses =
         APKModuleGraph.getAPKModuleToClassesMap(
-            apkModuleToJarPathMap, translatorFactory.createObfuscationFunction(), filesystem);
+            apkModuleToJarPathMap,
+            translatorFactory.createNullableObfuscationFunction(),
+            filesystem);
 
     ZipSplitterFactory zipSplitterFactory;
     zipSplitterFactory =

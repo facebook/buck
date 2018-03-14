@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -55,6 +56,8 @@ public class ProguardTranslatorFactoryTest {
     checkMapping(translatorFactory, "foo/bar/UnmappedPrimary", "foo/bar/UnmappedPrimary");
     checkMapping(translatorFactory, "foo/primary/MappedPackage", "x/a");
 
+    assertNull(translatorFactory.createNullableObfuscationFunction().apply("foo/bar/NotInMapping"));
+
     EasyMock.verify(projectFilesystem);
   }
 
@@ -83,5 +86,6 @@ public class ProguardTranslatorFactoryTest {
       ProguardTranslatorFactory translatorFactory, String original, String obfuscated) {
     assertEquals(original, translatorFactory.createDeobfuscationFunction().apply(obfuscated));
     assertEquals(obfuscated, translatorFactory.createObfuscationFunction().apply(original));
+    assertEquals(obfuscated, translatorFactory.createNullableObfuscationFunction().apply(original));
   }
 }

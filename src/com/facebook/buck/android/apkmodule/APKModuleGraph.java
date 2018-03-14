@@ -214,7 +214,7 @@ public class APKModuleGraph implements AddsToRuleKey {
    * Group the classes in the input jars into a multimap based on the APKModule they belong to
    *
    * @param apkModuleToJarPathMap the mapping of APKModules to the path for the jar files
-   * @param translatorFunction function used to translate obfuscated names
+   * @param translatorFunction function used to translate the class names to obfuscated names
    * @param filesystem filesystem representation for resolving paths
    * @return The mapping of APKModules to the class names they contain
    * @throws IOException
@@ -240,7 +240,9 @@ public class APKModuleGraph implements AddsToRuleKey {
 
                   String classpath = entry.getRelativePath().replaceAll("\\.class$", "");
 
-                  builder.put(dexStore, translatorFunction.apply(classpath));
+                  if (translatorFunction.apply(classpath) != null) {
+                    builder.put(dexStore, translatorFunction.apply(classpath));
+                  }
                 }
               });
         }
