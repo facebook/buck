@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableCollection;
 
@@ -37,19 +36,4 @@ public interface ImplicitDepsInferringDescription<T> {
       T constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder);
-
-  /**
-   * Infers any dependencies which can only be detected with access to the whole {@link TargetGraph}
-   */
-  @SuppressWarnings("unused")
-  default void findDepsForTargetFromConstructorArgs(
-      BuildTarget buildTarget,
-      CellPathResolver cellRoots,
-      TargetGraph targetGraph,
-      BuildRuleResolver resolver,
-      SourcePathRuleFinder ruleFinder,
-      ProjectFilesystem projectFilesystem,
-      T constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
-      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {}
 }
