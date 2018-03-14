@@ -24,6 +24,7 @@ java_library(
     ],
     visibility = [
         "//src/com/facebook/buck/rules:build_context",
+        "//src/com/facebook/buck/rules/modern/builders/...",
         "//src/com/facebook/buck/step:step",
     ],
     deps = ["//src/com/facebook/buck/model:model"],

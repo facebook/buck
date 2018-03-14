@@ -38,7 +38,8 @@ public class StepFailedException extends Exception implements WrapsException, Ex
     return getCause().getMessage() + "\n  " + getContext().get();
   }
 
-  static StepFailedException createForFailingStepWithExitCode(
+  /** Creates a StepFailedException based on a StepExecutionResult. */
+  public static StepFailedException createForFailingStepWithExitCode(
       Step step,
       ExecutionContext context,
       StepExecutionResult executionResult,

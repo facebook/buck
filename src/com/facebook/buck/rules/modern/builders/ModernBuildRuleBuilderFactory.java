@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern.builders;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.BuildExecutorRunner;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -24,11 +25,18 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.util.function.ThrowingFunction;
+import com.facebook.buck.util.hashing.FileHashLoader;
+import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 
 /**
- * Constructs various CustomBuildRuleStrategies for ModernBuildRules based on the
+ * Constructs various BuildRuleStrategies for ModernBuildRules based on the
  * modern_build_rule.strategy config option.
  */
 public class ModernBuildRuleBuilderFactory {
@@ -37,20 +45,31 @@ public class ModernBuildRuleBuilderFactory {
       ModernBuildRuleConfig config,
       BuildRuleResolver resolver,
       Cell rootCell,
-      CellPathResolver cellResolver) {
-    // Mark these as used. We'll use them as we add new strategies.
-    resolver.getClass();
-    rootCell.getClass();
-
-    switch (config.getBuildStrategy()) {
-      case NONE:
-        return Optional.empty();
-      case DEBUG_RECONSTRUCT:
-        return Optional.of(
-            ModernBuildRuleBuilderFactory.createReconstructing(
-                new SourcePathRuleFinder(resolver), cellResolver, rootCell));
-      case DEBUG_PASSTHROUGH:
-        return Optional.of(ModernBuildRuleBuilderFactory.createPassthrough());
+      CellPathResolver cellResolver,
+      FileHashLoader hashLoader,
+      BuckEventBus eventBus,
+      Console console) {
+    try {
+      switch (config.getBuildStrategy()) {
+        case NONE:
+          return Optional.empty();
+        case DEBUG_RECONSTRUCT:
+          return Optional.of(
+              createReconstructing(new SourcePathRuleFinder(resolver), cellResolver, rootCell));
+        case DEBUG_PASSTHROUGH:
+          return Optional.of(createPassthrough());
+        case DEBUG_ISOLATED_IN_PROCESS:
+          return Optional.of(
+              createIsolatedInProcess(
+                  new SourcePathRuleFinder(resolver),
+                  cellResolver,
+                  rootCell,
+                  hashLoader::get,
+                  eventBus,
+                  console));
+      }
+    } catch (IOException e) {
+      throw new BuckUncheckedExecutionException(e, "When creating MBR build strategy.");
     }
     throw new IllegalStateException(
         "Unrecognized build strategy " + config.getBuildStrategy() + ".");
@@ -74,5 +93,27 @@ public class ModernBuildRuleBuilderFactory {
   public static BuildRuleStrategy createReconstructing(
       SourcePathRuleFinder ruleFinder, CellPathResolver cellResolver, Cell rootCell) {
     return new ReconstructingStrategy(ruleFinder, cellResolver, rootCell);
+  }
+
+  /**
+   * This strategy will construct a separate isolated build directory for each rule. The rule will
+   * be serialized to data files in that directory, and all inputs required (including buck configs)
+   * will be materialized there and then the rule will be deserialized within this process and run
+   * within that directory. The outputs will be copied back to the real build directory.
+   */
+  public static BuildRuleStrategy createIsolatedInProcess(
+      SourcePathRuleFinder ruleFinder,
+      CellPathResolver cellResolver,
+      Cell rootCell,
+      ThrowingFunction<Path, HashCode, IOException> fileHasher,
+      BuckEventBus eventBus,
+      Console console)
+      throws IOException {
+    return IsolatedExecution.createIsolatedExecutionStrategy(
+        new InProcessIsolatedExecution(eventBus, console),
+        ruleFinder,
+        cellResolver,
+        rootCell,
+        fileHasher);
   }
 }
