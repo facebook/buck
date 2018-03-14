@@ -28,6 +28,13 @@ public interface CellPathResolver {
    */
   Optional<Path> getCellPath(Optional<String> cellName);
 
+  /**
+   * @param cellName name of cell, Optional.empty() for root cell.
+   * @return Absolute path to the physical location of the cell
+   * @throws AssertionError if cell is not known
+   */
+  Path getCellPathOrThrow(Optional<String> cellName);
+
   /** @return absolute paths to all cells this resolver knows about. */
   ImmutableMap<String, Path> getCellPaths();
 

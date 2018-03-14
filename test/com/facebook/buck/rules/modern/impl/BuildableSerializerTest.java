@@ -69,6 +69,9 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
     expect(cellResolver.getCellPath(Optional.empty()))
         .andReturn(Optional.of(rootFilesystem.getRootPath()))
         .anyTimes();
+    expect(cellResolver.getCellPathOrThrow(Optional.empty()))
+        .andReturn(rootFilesystem.getRootPath())
+        .anyTimes();
   }
 
   static DataProvider getDataProvider(

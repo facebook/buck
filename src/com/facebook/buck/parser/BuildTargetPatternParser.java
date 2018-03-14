@@ -85,19 +85,10 @@ public abstract class BuildTargetPatternParser<T> {
     int index = buildTargetPatternWithCell.indexOf(BUILD_RULE_PREFIX);
     if (index > 0) {
       cellPath =
-          cellNames
-              .getCellPath(Optional.of(buildTargetPatternWithCell.substring(0, index)))
-              .orElseThrow(
-                  () ->
-                      new BuildTargetParseException(
-                          String.format(
-                              "'%s' references an unknown cell", buildTargetPatternWithCell)));
+          cellNames.getCellPathOrThrow(Optional.of(buildTargetPatternWithCell.substring(0, index)));
       buildTargetPattern = buildTargetPatternWithCell.substring(index);
     } else {
-      cellPath =
-          cellNames
-              .getCellPath(Optional.empty())
-              .orElseThrow(() -> new AssertionError("Root cell path should always be known"));
+      cellPath = cellNames.getCellPathOrThrow(Optional.empty());
       buildTargetPattern = buildTargetPatternWithCell;
     }
 

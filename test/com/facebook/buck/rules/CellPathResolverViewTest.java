@@ -61,7 +61,7 @@ public class CellPathResolverViewTest {
     CellPathResolverView view =
         new CellPathResolverView(
             getTestDelegate(), ImmutableSet.of("b", "c"), filesystem.getPath("foo/c"));
-    Assert.assertEquals(filesystem.getPath("foo/c"), view.getCellPath(Optional.empty()).get());
+    Assert.assertEquals(filesystem.getPath("foo/c"), view.getCellPathOrThrow(Optional.empty()));
   }
 
   @Test

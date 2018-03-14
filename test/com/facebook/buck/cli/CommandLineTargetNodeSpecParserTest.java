@@ -74,7 +74,7 @@ public class CommandLineTargetNodeSpecParserTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CellPathResolver cellRoots = createCellRoots(filesystem);
     Files.createDirectories(
-        cellRoots.getCellPath(Optional.empty()).get().resolve("some").resolve("other"));
+        cellRoots.getCellPathOrThrow(Optional.empty()).resolve("some").resolve("other"));
     assertEquals(
         ImmutableSet.of(BuildTargetSpec.from(BuildTargetFactory.newInstance("//some:thing"))),
         PARSER.parse(cellRoots, "foo"));
@@ -122,7 +122,7 @@ public class CommandLineTargetNodeSpecParserTest {
   @Test
   public void cannotReferenceNonExistentDirectoryInARecursivelyWildcard() {
     CellPathResolver cellRoots = createCellRoots(null);
-    Path cellPath = cellRoots.getCellPath(Optional.empty()).get();
+    Path cellPath = cellRoots.getCellPathOrThrow(Optional.empty());
     exception.expectMessage(
         "does_not_exist/... references non-existent directory "
             + cellPath.resolve("does_not_exist"));
@@ -133,7 +133,7 @@ public class CommandLineTargetNodeSpecParserTest {
   @Test
   public void cannotReferenceNonExistentDirectoryWithPackageTargetNames() {
     CellPathResolver cellRoots = createCellRoots(null);
-    Path cellPath = cellRoots.getCellPath(Optional.empty()).get();
+    Path cellPath = cellRoots.getCellPathOrThrow(Optional.empty());
     exception.expectMessage(
         "does_not_exist: references non-existent directory " + cellPath.resolve("does_not_exist"));
     exception.expect(HumanReadableException.class);

@@ -83,9 +83,9 @@ public class Serializer {
     this.delegate = delegate;
     ImmutableMap.Builder<Path, Optional<String>> builder = ImmutableMap.builder();
     cellResolver.getCellPaths().forEach((name, path) -> builder.put(path, Optional.of(name)));
-    builder.put(cellResolver.getCellPath(Optional.empty()).get(), Optional.empty());
+    builder.put(cellResolver.getCellPathOrThrow(Optional.empty()), Optional.empty());
     this.cellMap = builder.build();
-    this.rootCellPath = cellResolver.getCellPath(Optional.empty()).get();
+    this.rootCellPath = cellResolver.getCellPathOrThrow(Optional.empty());
   }
 
   /**

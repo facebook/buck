@@ -128,8 +128,7 @@ class DefaultClassUsageFileReader {
       relativeToCellRoot = relativeToCellRoot.resolve(pathIterator.next());
     }
     return cellPathResolver
-        .getCellPath(Optional.of(cellName.toString()))
-        .orElseThrow(() -> new AssertionError("Cell name does not exist: " + cellName))
+        .getCellPathOrThrow(Optional.of(cellName.toString()))
         .resolve(relativeToCellRoot);
   }
 }

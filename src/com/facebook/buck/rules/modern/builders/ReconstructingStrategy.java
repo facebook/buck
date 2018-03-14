@@ -65,7 +65,7 @@ class ReconstructingStrategy extends AbstractModernBuildRuleStrategy {
             name ->
                 rootCell
                     .getCellProvider()
-                    .getCellByPath(cellResolver.getCellPath(name).get())
+                    .getCellByPath(cellResolver.getCellPathOrThrow(name))
                     .getFilesystem(),
             Class::forName);
   }

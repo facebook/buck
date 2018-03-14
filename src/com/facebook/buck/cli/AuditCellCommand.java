@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.HumanReadableException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -55,12 +54,8 @@ public class AuditCellCommand extends AbstractCommand {
       CellPathResolver cellPathResolver = params.getBuckConfig().getCellPathResolver();
       Stream.Builder<String> outputBuilder = Stream.builder();
       for (String arg : getArguments()) {
-        Optional<Path> cellPath = cellPathResolver.getCellPath(Optional.of(arg));
-        if (cellPath.isPresent()) {
-          outputBuilder.add(String.format("%s: %s", arg, cellPath.get()));
-        } else {
-          throw new HumanReadableException("Requested cell name cannot be resolved: %s", arg);
-        }
+        Path cellPath = cellPathResolver.getCellPathOrThrow(Optional.of(arg));
+        outputBuilder.add(String.format("%s: %s", arg, cellPath));
       }
       cellList = outputBuilder.build();
     }

@@ -27,9 +27,16 @@ public abstract class AbstractCellPathResolver implements CellPathResolver {
   public ImmutableSet<Path> getKnownRoots() {
     return ImmutableSet.<Path>builder()
         .addAll(getCellPaths().values())
-        .add(
-            getCellPath(Optional.empty())
-                .orElseThrow(() -> new AssertionError("Root cell path should always be known.")))
+        .add(getCellPathOrThrow(Optional.empty()))
         .build();
+  }
+
+  @Override
+  public Path getCellPathOrThrow(Optional<String> cellName) {
+    return getCellPath(cellName)
+        .orElseThrow(
+            () ->
+                new AssertionError(
+                    String.format("Unknown cell: %s", cellName.orElse("<root cell>"))));
   }
 }

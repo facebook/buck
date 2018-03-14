@@ -119,7 +119,7 @@ public class CellTest {
             .build();
 
     Cell cell1 = new TestCellBuilder().setBuckConfig(config).setFilesystem(filesystem1).build();
-    Path path = cell1.getCellPathResolver().getCellPath(Optional.of("example")).get();
+    Path path = cell1.getCellPathResolver().getCellPathOrThrow(Optional.of("example"));
 
     assertEquals(path, cell2Root);
   }

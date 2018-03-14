@@ -121,7 +121,7 @@ public class CxxLink extends AbstractBuildRule
   private static ImmutableSortedSet<Path> computeCellRoots(
       CellPathResolver cellResolver, Optional<String> cell) {
     ImmutableSortedSet.Builder<Path> builder = ImmutableSortedSet.naturalOrder();
-    Path cellPath = cellResolver.getCellPath(cell).get();
+    Path cellPath = cellResolver.getCellPathOrThrow(cell);
     builder.add(cellPath.relativize(cellPath));
     cellResolver.getCellPaths().forEach((name, path) -> builder.add(cellPath.relativize(path)));
     return builder.build();

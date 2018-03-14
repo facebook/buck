@@ -111,13 +111,7 @@ public class BuildTargetParser {
     baseName = baseName.replace('\\', '/');
     checkBaseName(baseName, buildTargetName);
 
-    Path cellPath =
-        cellNames
-            .getCellPath(givenCellName)
-            .orElseThrow(
-                () ->
-                    new BuildTargetParseException(
-                        String.format("'%s' references an unknown cell.", buildTargetName)));
+    Path cellPath = cellNames.getCellPathOrThrow(givenCellName);
 
     UnflavoredBuildTarget.Builder unflavoredBuilder =
         UnflavoredBuildTarget.builder()

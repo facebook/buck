@@ -97,10 +97,8 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     ImmutableList.Builder<String> cellsNamesBuilder = new ImmutableList.Builder<String>();
 
     // Create symlink to the root cell.
-    Optional<Path> rootPath = cellRoots.getCellPath(Optional.empty());
-    Preconditions.checkState(rootPath.isPresent(), "The root cell should have a path");
-    Path relativePath =
-        getProjectFilesystem().resolve(output.getParent()).relativize(rootPath.get());
+    Path rootPath = cellRoots.getCellPathOrThrow(Optional.empty());
+    Path relativePath = getProjectFilesystem().resolve(output.getParent()).relativize(rootPath);
     cellsPathsStringsBuilder.add(Escaper.BASH_ESCAPER.apply(relativePath.toString()));
     cellsNamesBuilder.add(Escaper.BASH_ESCAPER.apply(ROOT_CELL_LINK_NAME));
 
@@ -126,11 +124,9 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<String> resourceCellName = getCellNameForPath(resourcePath);
       // If resourceCellName is Optional.empty(), the call below will
       // return the path of the root cell.
-      Optional<Path> resourceCellPath = cellRoots.getCellPath(resourceCellName);
-      Preconditions.checkState(
-          resourceCellPath.isPresent(), "cell %s doesn't have a path", resourceCellName);
+      Path resourceCellPath = cellRoots.getCellPathOrThrow(resourceCellName);
       // Get the path relative to its cell.
-      Path relativeResourcePath = resourceCellPath.get().relativize(resourcePath);
+      Path relativeResourcePath = resourceCellPath.relativize(resourcePath);
       // Get the path when referenced in the symlink created for the cell in the output folder.
       Path linkedResourcePath =
           Paths.get(resourceCellName.orElse(ROOT_CELL_LINK_NAME)).resolve(relativeResourcePath);
@@ -164,11 +160,10 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     // Match root path.
     Optional<Optional<String>> rootCellName = Optional.of(Optional.empty());
-    Optional<Path> rootPath = cellRoots.getCellPath(Optional.empty());
-    Preconditions.checkState(rootPath.isPresent(), "The root cell should have a path");
-    if (path.startsWith(rootPath.get())) {
+    Path rootPath = cellRoots.getCellPathOrThrow(Optional.empty());
+    if (path.startsWith(rootPath)) {
       result = rootCellName;
-      matchedPath = rootPath.get();
+      matchedPath = rootPath;
     }
 
     // Match other cells.
