@@ -43,7 +43,9 @@ class InProcessIsolatedExecution implements IsolatedExecution {
     this.eventBus = eventBus;
     this.console = console;
     this.workDir = new NamedTemporaryDirectory("__work__");
-    this.storage = new LocalContentAddressedStorage(workDir.getPath().resolve("__cache__"));
+    this.storage =
+        new LocalContentAddressedStorage(
+            workDir.getPath().resolve("__cache__"), InputsDigestBuilder::defaultDigestForStruct);
   }
 
   @Override

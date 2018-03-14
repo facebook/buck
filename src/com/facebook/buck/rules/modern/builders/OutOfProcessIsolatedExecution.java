@@ -17,184 +17,158 @@
 package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.io.file.MostFiles;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.step.AbstractExecutionStep;
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.StepFailedException;
-import com.facebook.buck.util.MoreMaps;
+import com.facebook.buck.rules.modern.builders.thrift.ActionResult;
+import com.facebook.buck.rules.modern.builders.thrift.Digest;
+import com.facebook.buck.rules.modern.builders.thrift.OutputDirectory;
+import com.facebook.buck.rules.modern.builders.thrift.OutputFile;
+import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.NamedTemporaryDirectory;
 import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.ProcessExecutorParams.Builder;
-import com.facebook.buck.util.env.BuckClasspath;
-import com.facebook.infer.annotation.Assertions;
-import com.google.common.base.Joiner;
+import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.function.ThrowingSupplier;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 import com.google.common.io.MoreFiles;
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /** IsolatedExecution implementation that will run buildrules in a subprocess. */
-public class OutOfProcessIsolatedExecution implements IsolatedExecution {
+public class OutOfProcessIsolatedExecution extends RemoteExecution {
+  private static final long MAX_INLINED_SIZE_BYTES = 1000;
   private final NamedTemporaryDirectory workDir;
-  private final LocalContentAddressedStorage storage;
-  private final byte[] trampoline;
 
-  private static final Path TRAMPOLINE =
-      Paths.get(
-          System.getProperty(
-              "buck.path_to_isolated_trampoline",
-              "src/com/facebook/buck/rules/modern/builders/trampoline.sh"));
+  /**
+   * Returns a RemoteExecution implementation that uses a local CAS and a separate local temporary
+   * directory for execution.
+   */
+  public static OutOfProcessIsolatedExecution create() throws IOException {
+    NamedTemporaryDirectory workDir = new NamedTemporaryDirectory("__work__");
+    LocalContentAddressedStorage storage =
+        new LocalContentAddressedStorage(
+            workDir.getPath().resolve("__cache__"), InputsDigestBuilder::defaultDigestForStruct);
+    return new OutOfProcessIsolatedExecution(workDir, storage);
+  }
 
-  OutOfProcessIsolatedExecution() throws IOException {
-    this.workDir = new NamedTemporaryDirectory("__work__");
-    this.storage = new LocalContentAddressedStorage(workDir.getPath().resolve("__cache__"));
-    this.trampoline = Files.readAllBytes(TRAMPOLINE);
+  private OutOfProcessIsolatedExecution(
+      NamedTemporaryDirectory workDir, LocalContentAddressedStorage storage) throws IOException {
+    super(
+        storage,
+        new RemoteExecutionService() {
+          @Override
+          public ActionResult execute(
+              ImmutableList<String> command,
+              ImmutableSortedMap<String, String> commandEnvironment,
+              Digest inputsRootDigest,
+              Set<Path> outputs)
+              throws IOException, InterruptedException {
+            Path buildDir = workDir.getPath().resolve(inputsRootDigest.hash);
+            try (Closeable ignored = () -> MostFiles.deleteRecursively(buildDir)) {
+              storage.materializeInputs(buildDir, inputsRootDigest);
+
+              Builder paramsBuilder = ProcessExecutorParams.builder();
+              paramsBuilder.setCommand(command);
+              paramsBuilder.setEnvironment(commandEnvironment);
+              paramsBuilder.setDirectory(buildDir);
+              CapturingPrintStream stdOut = new CapturingPrintStream();
+              CapturingPrintStream stdErr = new CapturingPrintStream();
+              Console console =
+                  new Console(Verbosity.STANDARD_INFORMATION, stdOut, stdErr, Ansi.withoutTty());
+              Result result =
+                  new DefaultProcessExecutor(console).launchAndExecute(paramsBuilder.build());
+
+              // TODO(cjhopman): Should outputs be returned on failure?
+              ImmutableList.Builder<OutputFile> outputFilesBuilder = ImmutableList.builder();
+              ImmutableList.Builder<OutputDirectory> outputDirsBuilder = ImmutableList.builder();
+              if (result.getExitCode() == 0) {
+                ImmutableMap.Builder<Digest, ThrowingSupplier<InputStream, IOException>>
+                    requiredDataBuilder = ImmutableMap.builder();
+
+                collectOutputs(
+                    outputs, buildDir, outputFilesBuilder, outputDirsBuilder, requiredDataBuilder);
+                storage.addMissing(requiredDataBuilder.build());
+              }
+
+              return new ActionResult(
+                  outputFilesBuilder.build(),
+                  outputDirsBuilder.build(),
+                  result.getExitCode(),
+                  null,
+                  null,
+                  ByteBuffer.wrap(result.getStderr().get().getBytes(Charsets.UTF_8)),
+                  null);
+            }
+          }
+
+          public void collectOutputs(
+              Set<Path> outputs,
+              Path buildDir,
+              ImmutableList.Builder<OutputFile> outputFilesBuilder,
+              ImmutableList.Builder<OutputDirectory> outputDirsBuilder,
+              ImmutableMap.Builder<Digest, ThrowingSupplier<InputStream, IOException>>
+                  requiredDataBuilder)
+              throws IOException {
+            for (Path output : outputs) {
+              Path path = buildDir.resolve(output);
+              Preconditions.checkState(Files.exists(path));
+              if (Files.isDirectory(path)) {
+                InputsDigestBuilder builder =
+                    InputsDigestBuilder.createDefault(path, this::hashFile);
+
+                try (Stream<Path> contents = Files.walk(path)) {
+                  RichStream.from(contents)
+                      .forEachThrowing(
+                          entry -> {
+                            if (Files.isRegularFile(entry)) {
+                              builder.addFile(path.relativize(entry), Files.isExecutable(entry));
+                            }
+                          });
+                }
+
+                Inputs inputs = builder.build();
+                outputDirsBuilder.add(
+                    new OutputDirectory(output.toString(), inputs.getTreeDigest()));
+                requiredDataBuilder.putAll(inputs.getRequiredData());
+              } else {
+                long size = Files.size(path);
+                Digest digest = new Digest(hashFile(path).toString(), size);
+                boolean isExecutable = Files.isExecutable(path);
+                ByteBuffer content =
+                    size < MAX_INLINED_SIZE_BYTES
+                        ? ByteBuffer.wrap(Files.readAllBytes(path))
+                        : null;
+                outputFilesBuilder.add(
+                    new OutputFile(output.toString(), digest, content, isExecutable));
+                requiredDataBuilder.put(digest, () -> Files.newInputStream(path));
+              }
+            }
+          }
+
+          public HashCode hashFile(Path file) throws IOException {
+            return MoreFiles.asByteSource(file).hash(Hashing.sha1());
+          }
+        });
+    this.workDir = workDir;
   }
 
   @Override
   public void close() throws IOException {
     workDir.close();
-  }
-
-  @Override
-  public void build(
-      ExecutionContext executionContext,
-      InputsDigestBuilder inputsBuilder,
-      Set<Path> outputs,
-      Path projectRoot,
-      HashCode hash,
-      BuildTarget buildTarget,
-      Path cellPrefixRoot)
-      throws IOException, StepFailedException, InterruptedException {
-    String dirName =
-        String.format(
-            "%.40s-%d",
-            buildTarget.getShortNameAndFlavorPostfix(),
-            buildTarget.getFullyQualifiedName().hashCode());
-    Path buildDir = workDir.getPath().resolve(dirName);
-
-    try (Closeable ignored = () -> MostFiles.deleteRecursively(buildDir)) {
-      ImmutableList<Path> classpath = BuckClasspath.getClasspath();
-      ImmutableList<Path> bootstrapClasspath = BuckClasspath.getBootstrapClasspath();
-
-      ImmutableList<Path> isolatedClasspath =
-          processClasspath(inputsBuilder, cellPrefixRoot, classpath);
-      ImmutableList<Path> isolatedBootstrapClasspath =
-          processClasspath(inputsBuilder, cellPrefixRoot, bootstrapClasspath);
-
-      Path trampolinePath = Paths.get("./__trampoline__.sh");
-
-      inputsBuilder.addFile(trampolinePath, () -> trampoline, true);
-
-      Inputs inputs = inputsBuilder.build();
-      storage.addMissing(inputs.getRequiredData());
-      storage.materializeInputs(buildDir, inputs.getRootDigest());
-
-      runOutOfProcessBuilder(
-          executionContext,
-          buildDir,
-          projectRoot,
-          trampolinePath,
-          hash.toString(),
-          isolatedBootstrapClasspath,
-          isolatedClasspath);
-
-      materializeOutputs(outputs, buildDir, cellPrefixRoot);
-    }
-  }
-
-  private void runOutOfProcessBuilder(
-      ExecutionContext context,
-      Path buildDir,
-      Path projectRoot,
-      Path trampolinePath,
-      String hash,
-      ImmutableList<Path> isolatedBootstrapClasspath,
-      ImmutableList<Path> isolatedClasspath)
-      throws StepFailedException, IOException, InterruptedException {
-    Builder paramsBuilder = ProcessExecutorParams.builder();
-    paramsBuilder.setCommand(getBuilderCommand(trampolinePath, projectRoot, hash));
-    paramsBuilder.setEnvironment(
-        MoreMaps.merge(
-            context.getEnvironment(),
-            getBuilderEnvironmentOverrides(isolatedBootstrapClasspath, isolatedClasspath)));
-    paramsBuilder.setDirectory(buildDir);
-    Result result = context.getProcessExecutor().launchAndExecute(paramsBuilder.build());
-    if (result.getExitCode() != 0) {
-      throw StepFailedException.createForFailingStepWithExitCode(
-          new AbstractExecutionStep("") {
-            @Override
-            public StepExecutionResult execute(ExecutionContext context) {
-              throw Assertions.assertUnreachable();
-            }
-          },
-          context,
-          StepExecutionResult.of(result.getExitCode(), result.getStderr()),
-          Optional.empty());
-    }
-  }
-
-  private Map<String, String> getBuilderEnvironmentOverrides(
-      ImmutableList<Path> bootstrapClasspath, Iterable<Path> classpath) {
-    return ImmutableMap.of(
-        "CLASSPATH", classpathArg(bootstrapClasspath), "BUCK_CLASSPATH", classpathArg(classpath));
-  }
-
-  private Iterable<String> getBuilderCommand(Path trampolinePath, Path projectRoot, String hash) {
-    String rootString = projectRoot.toString();
-    if (rootString.isEmpty()) {
-      rootString = "./";
-    }
-    return ImmutableList.of(trampolinePath.toString(), rootString, hash);
-  }
-
-  private String classpathArg(Iterable<Path> classpath) {
-    return Joiner.on(File.pathSeparator).join(classpath);
-  }
-
-  private ImmutableList<Path> processClasspath(
-      InputsDigestBuilder inputsBuilder, Path cellPrefix, Iterable<Path> classPath) {
-    ImmutableList.Builder<Path> resolvedBuilder = ImmutableList.builder();
-    for (Path path : classPath) {
-      Preconditions.checkState(path.isAbsolute());
-      if (!path.startsWith(cellPrefix)) {
-        resolvedBuilder.add(path);
-      } else {
-        Path relative = cellPrefix.relativize(path);
-        inputsBuilder.addFile(relative, false);
-        resolvedBuilder.add(relative);
-      }
-    }
-    return resolvedBuilder.build();
-  }
-
-  private void materializeOutputs(Iterable<Path> outputs, Path buildDir, Path materializeDir) {
-    for (Path path : outputs) {
-      Preconditions.checkState(!path.isAbsolute());
-      try {
-        Path dest = materializeDir.resolve(path);
-        Path source = buildDir.resolve(path);
-        MoreFiles.createParentDirectories(dest);
-        if (Files.isDirectory(source)) {
-          MostFiles.copyRecursively(source, dest);
-        } else {
-          Files.copy(source, dest);
-        }
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    }
   }
 }

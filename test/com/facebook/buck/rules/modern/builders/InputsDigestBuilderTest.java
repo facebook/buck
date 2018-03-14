@@ -147,7 +147,6 @@ public class InputsDigestBuilderTest {
     SortedMap<String, String> debugMap = new TreeMap<>();
     Directory directory = toDir(getBytes(inputs, inputs.getRootDigest()));
     addDebugData(inputs, "", directory, debugMap);
-    assertEquals(debugMap.size(), inputs.getRequiredData().size());
     return debugMap;
   }
 

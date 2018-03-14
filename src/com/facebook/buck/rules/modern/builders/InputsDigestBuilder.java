@@ -20,10 +20,11 @@ import com.facebook.buck.rules.modern.builders.thrift.Digest;
 import com.facebook.buck.rules.modern.builders.thrift.Directory;
 import com.facebook.buck.rules.modern.builders.thrift.DirectoryNode;
 import com.facebook.buck.rules.modern.builders.thrift.FileNode;
+import com.facebook.buck.rules.modern.builders.thrift.Tree;
+import com.facebook.buck.slb.ThriftException;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
 import com.facebook.buck.util.PathFragments;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.function.ThrowingFunction;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
@@ -41,12 +42,16 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
+import org.apache.thrift.TBase;
 import org.immutables.value.Value;
 
 /** Helper for constructing an input Digest for remote execution. */
 class InputsDigestBuilder {
+  public static final HashFunction DEFAULT_HASHER = Hashing.sipHash24();
+
   private final Map<String, FileNode> files = new HashMap<>();
   // The subdirectory builders will all share the root dataMap.
   private final Map<String, InputsDigestBuilder> directories = new HashMap<>();
@@ -64,13 +69,22 @@ class InputsDigestBuilder {
     this.dataMap = dataMap;
   }
 
+  public static InputsDigestBuilder createDefault(
+      Path rootPath, ThrowingFunction<Path, HashCode, IOException> fileHasher) {
+    return new InputsDigestBuilder(new DefaultDelegate(rootPath, fileHasher));
+  }
+
+  public static Digest defaultDigestForStruct(TBase<?, ?> struct) throws ThriftException {
+    return digestForStruct(struct, DEFAULT_HASHER).digest;
+  }
+
   /**
    * Holder for a digest and a supplier for the data. In some cases, the data itself will never be
    * needed.
    */
   static class DigestAndData {
-    private final Digest digest;
-    private final ThrowingSupplier<InputStream, IOException> dataSupplier;
+    final Digest digest;
+    final ThrowingSupplier<InputStream, IOException> dataSupplier;
 
     DigestAndData(Digest digest, ThrowingSupplier<InputStream, IOException> dataSupplier) {
       this.digest = digest;
@@ -84,7 +98,7 @@ class InputsDigestBuilder {
 
     DigestAndData digest(Path path) throws IOException;
 
-    DigestAndData digest(Directory directory) throws IOException;
+    DigestAndData digest(TBase<?, ?> struct) throws IOException;
   }
 
   /**
@@ -100,7 +114,7 @@ class InputsDigestBuilder {
         Path rootPath, ThrowingFunction<Path, HashCode, IOException> fileHasher) {
       this.rootPath = rootPath;
       this.fileHasher = fileHasher;
-      this.hashFunction = Hashing.sipHash24();
+      this.hashFunction = DEFAULT_HASHER;
     }
 
     @Override
@@ -118,11 +132,16 @@ class InputsDigestBuilder {
     }
 
     @Override
-    public DigestAndData digest(Directory directory) throws IOException {
-      byte[] data = ThriftUtil.serialize(ThriftProtocol.COMPACT, directory);
-      Digest digest = new Digest(hashFunction.hashBytes(data).toString(), data.length);
-      return new DigestAndData(digest, () -> new ByteArrayInputStream(data));
+    public DigestAndData digest(TBase<?, ?> struct) throws IOException {
+      return digestForStruct(struct, hashFunction);
     }
+  }
+
+  public static DigestAndData digestForStruct(TBase<?, ?> struct, HashFunction hashFunction)
+      throws ThriftException {
+    byte[] data = ThriftUtil.serialize(ThriftProtocol.COMPACT, struct);
+    Digest digest = new Digest(hashFunction.hashBytes(data).toString(), data.length);
+    return new DigestAndData(digest, () -> new ByteArrayInputStream(data));
   }
 
   /** The computed inputs digest along with a map of all the data referenced from the root. */
@@ -130,6 +149,8 @@ class InputsDigestBuilder {
   @BuckStyleTuple
   interface AbstractInputs {
     Digest getRootDigest();
+
+    Digest getTreeDigest();
 
     Map<Digest, ThrowingSupplier<InputStream, IOException>> getRequiredData();
   }
@@ -153,22 +174,30 @@ class InputsDigestBuilder {
 
   /** Returns the constructed digest and required inputs. */
   public Inputs build() throws IOException {
-    return Inputs.of(buildDigest(), dataMap);
+    Tree tree = buildTree();
+    return Inputs.of(
+        register(delegate.digest(tree.root)), register(delegate.digest(tree)), dataMap);
   }
 
-  private Digest buildDigest() throws IOException {
+  private Tree buildTree() throws IOException {
+    ImmutableList.Builder<Directory> children = ImmutableList.builder();
+    Directory root = buildDigest(children::add);
+    return new Tree(root, children.build());
+  }
+
+  private Directory buildDigest(Consumer<Directory> child) throws IOException {
     List<FileNode> fileNodes =
         files.values().stream().sorted().collect(ImmutableList.toImmutableList());
 
-    List<DirectoryNode> directoryNodes =
-        RichStream.from(directories.entrySet())
-            .map(
-                ThrowingFunction.asFunction(
-                    entry -> new DirectoryNode(entry.getKey(), entry.getValue().buildDigest())))
-            .sorted()
-            .collect(Collectors.toList());
+    ImmutableList.Builder<DirectoryNode> childrenBuilder = ImmutableList.builder();
+    for (Entry<String, InputsDigestBuilder> entry : directories.entrySet()) {
+      Directory childDirectory = entry.getValue().buildDigest(child);
+      child.accept(childDirectory);
+      childrenBuilder.add(
+          new DirectoryNode(entry.getKey(), register(delegate.digest(childDirectory))));
+    }
 
-    return register(delegate.digest(new Directory(fileNodes, directoryNodes)));
+    return new Directory(fileNodes, childrenBuilder.build());
   }
 
   private Digest register(DigestAndData data) {

@@ -40,7 +40,8 @@ public class LocalContentAddressedStorageTest {
   @Before
   public void setUp() {
     storageDir = tmp.getRoot().resolve("__storage__");
-    storage = new LocalContentAddressedStorage(storageDir);
+    storage =
+        new LocalContentAddressedStorage(storageDir, InputsDigestBuilder::defaultDigestForStruct);
   }
 
   @Test

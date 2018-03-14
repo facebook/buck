@@ -69,7 +69,7 @@ public class ModernBuildRuleBuilderFactory {
                   console));
         case DEBUG_ISOLATED_OUT_OF_PROCESS:
           return Optional.of(
-              ModernBuildRuleBuilderFactory.createIsolatedOutOfProcess(
+              createIsolatedOutOfProcess(
                   new SourcePathRuleFinder(resolver), cellResolver, rootCell, hashLoader::get));
       }
     } catch (IOException e) {
@@ -113,7 +113,7 @@ public class ModernBuildRuleBuilderFactory {
       ThrowingFunction<Path, HashCode, IOException> fileHasher)
       throws IOException {
     return IsolatedExecution.createIsolatedExecutionStrategy(
-        new OutOfProcessIsolatedExecution(), ruleFinder, cellResolver, rootCell, fileHasher);
+        OutOfProcessIsolatedExecution.create(), ruleFinder, cellResolver, rootCell, fileHasher);
   }
 
   /**
