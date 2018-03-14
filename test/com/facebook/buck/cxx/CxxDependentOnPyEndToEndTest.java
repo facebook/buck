@@ -22,31 +22,57 @@ import com.facebook.buck.testutil.endtoend.EndToEndRunner;
 import com.facebook.buck.testutil.endtoend.EndToEndTestDescriptor;
 import com.facebook.buck.testutil.endtoend.EndToEndWorkspace;
 import com.facebook.buck.testutil.endtoend.Environment;
-import com.facebook.buck.testutil.endtoend.ToggleState;
-import com.facebook.buck.util.ExitCode;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+/**
+ * E2E tests for buck's building process on an environment constructed like:
+ *
+ * <pre>
+ *          cxx_binary
+ *              |
+ *     +--------+--------+
+ *     v                 v
+ *     cxx_library       cxx_library
+ *     |
+ *     v
+ *     output_src
+ *     ^
+ *     |
+ *     genrule
+ *     |
+ *     v
+ *     py_binary
+ *     |
+ *     v
+ *     py_library
+ * </pre>
+ */
 @RunWith(EndToEndRunner.class)
 public class CxxDependentOnPyEndToEndTest {
   private static final String mainTarget = "//main_bin:main_bin";
 
   @Environment
-  public static EndToEndEnvironment setEnvironment() {
+  public static EndToEndEnvironment baseEnvironment() {
     return new EndToEndEnvironment()
-        .withBuckdToggled(ToggleState.ON_OFF)
         .addTemplates("cxx_dependent_on_py")
         .withCommand("build")
         .withTargets(mainTarget);
   }
 
+  private ProcessResult checkSuccessfulBuildAndRun(
+      String message, ProcessResult result, EndToEndWorkspace workspace) throws Exception {
+    result.assertSuccess(String.format(message, "build"));
+    ProcessResult targetResult = workspace.runBuiltResult(mainTarget);
+    targetResult.assertSuccess(String.format(message, "run"));
+    return targetResult;
+  }
+
+  /** Determines that buck successfully outputs proper programs */
   @Test
-  public void shouldBuildAndRunSuccessfully(
+  public void shouldBuildAndRun(
       EndToEndTestDescriptor test, EndToEndWorkspace workspace, ProcessResult result)
       throws Exception {
-    result.assertExitCode(
-        String.format("%s did not successfully build", test.getName()), ExitCode.map(0));
-    ProcessResult targetResult = workspace.runBuiltResult(mainTarget);
-    targetResult.assertSuccess();
+    checkSuccessfulBuildAndRun("Did not successfully %s.", result, workspace);
   }
 }
