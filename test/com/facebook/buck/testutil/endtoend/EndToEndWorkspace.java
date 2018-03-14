@@ -32,9 +32,11 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -57,6 +59,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
 
   private static final String TESTDATA_DIRECTORY = "testdata";
   private static final Long buildResultTimeoutMS = TimeUnit.SECONDS.toMillis(5);
+  private Set<String> addedTemplates = new HashSet<>();
 
   private PlatformUtils platformUtils = PlatformUtils.getForPlatform();
 
@@ -293,6 +296,10 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
    * the suffix from files with suffix .fixture, and not copying files with suffix .expected
    */
   public void addPremadeTemplate(String templateName) throws Exception {
+    if (addedTemplates.contains(templateName)) {
+      return; // already added template
+    }
+    addedTemplates.add(templateName);
     URL testDataResource = getClass().getResource(TESTDATA_DIRECTORY);
     // If we're running this test in IJ, then this path doesn't exist. Fall back to one that does
     if (testDataResource != null && testDataResource.getPath().contains(".jar")) {

@@ -207,12 +207,11 @@ public abstract class AbstractWorkspace {
     }
   }
 
-  private void ensureNoLocalBuckConfig() {
-    if (Files.exists(getPath(".buckconfig.local"))) {
+  private void ensureNoLocalBuckConfig(Path templatePath) throws IOException {
+    if (Files.exists(templatePath.resolve(".buckconfig.local"))) {
       throw new IllegalStateException(
           "Found a .buckconfig.local in the Workspace template, which is illegal."
-              + "  Use addBuckConfigLocalOption instead."
-              + "  This can also happen if workspace.setUp() is called twice.");
+              + "  Use addBuckConfigLocalOption instead.");
     }
   }
 
@@ -302,11 +301,14 @@ public abstract class AbstractWorkspace {
     }
   }
 
+  private void preAddTemplateActions(Path templatePath) throws IOException {
+    ensureNoLocalBuckConfig(templatePath);
+  }
+
   private void postAddTemplateActions() throws IOException {
     if (!firstTemplateAdded) {
       firstTemplateAdded = true;
       stampBuckVersion();
-      ensureNoLocalBuckConfig();
       addDefaultLocalBuckConfigs();
       ensureWatchmanConfig();
     }
@@ -317,6 +319,7 @@ public abstract class AbstractWorkspace {
    * in the process. Files whose names end in {@code .expected} will not be copied.
    */
   public void addTemplateToWorkspace(Path templatePath) throws IOException {
+    preAddTemplateActions(templatePath);
     // renames those with FIXTURE_SUFFIX, removes those with EXPECTED_SUFFIX
     MostFiles.copyRecursively(
         templatePath, destPath, (Path path) -> copyFilePath(path).orElse(null));
@@ -395,6 +398,7 @@ public abstract class AbstractWorkspace {
     FileSystem testDataFS = getOrCreateJarFileSystem(jarURI);
     FileSystemProvider provider = testDataFS.provider();
     Path templatePath = testDataFS.getPath(jarSplit[1], templateName);
+    preAddTemplateActions(templatePath);
 
     copyTemplateToWorkspace(provider, templatePath);
     postAddTemplateActions();
