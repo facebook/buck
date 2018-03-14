@@ -22,3 +22,13 @@ large_dynamics(
     second_ref = ":large_2",
     value = "e",
 )
+
+failing_rule(
+    name = "failing",
+    step_failure = False,
+)
+
+failing_rule(
+    name = "failing_step",
+    step_failure = True,
+)

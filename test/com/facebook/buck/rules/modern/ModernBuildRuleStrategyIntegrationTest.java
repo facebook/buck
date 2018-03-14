@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules.modern;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -29,12 +31,16 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
+import com.facebook.buck.step.AbstractExecutionStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.testutil.ProcessResult;
@@ -58,6 +64,8 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class ModernBuildRuleStrategyIntegrationTest {
   private String simpleTarget = "//:simple";
+  private String failingTarget = "//:failing";
+  private String failingStepTarget = "//:failing_step";
   private String largeDynamicTarget = "//:large_dynamic";
   private String hugeDynamicTarget = "//:huge_dynamic";
 
@@ -140,6 +148,68 @@ public class ModernBuildRuleStrategyIntegrationTest {
     }
   }
 
+  @Value.Immutable
+  @BuckStyleImmutable
+  interface AbstractFailingRuleArg extends CommonDescriptionArg {
+    boolean getStepFailure();
+  }
+
+  private static class FailingRuleDescription implements Description<FailingRuleArg> {
+    @Override
+    public Class<FailingRuleArg> getConstructorArgType() {
+      return FailingRuleArg.class;
+    }
+
+    @Override
+    public BuildRule createBuildRule(
+        BuildRuleCreationContext context,
+        BuildTarget buildTarget,
+        BuildRuleParams params,
+        FailingRuleArg args) {
+      return new FailingRule(
+          buildTarget,
+          context.getProjectFilesystem(),
+          new SourcePathRuleFinder(context.getBuildRuleResolver()),
+          args.getStepFailure());
+    }
+  }
+
+  private static class FailingRule extends ModernBuildRule<FailingRule> implements Buildable {
+    private static final String FAILING_STEP_MESSAGE = "FailingStep";
+    private static final String FAILING_RULE_MESSAGE = "FailingRule";
+
+    @AddToRuleKey private final OutputPath output = new OutputPath("some.file");
+    @AddToRuleKey private final boolean stepFailure;
+
+    FailingRule(
+        BuildTarget buildTarget,
+        ProjectFilesystem filesystem,
+        SourcePathRuleFinder finder,
+        boolean stepFailure) {
+      super(buildTarget, filesystem, finder, FailingRule.class);
+      this.stepFailure = stepFailure;
+    }
+
+    @Override
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext buildContext,
+        ProjectFilesystem filesystem,
+        OutputPathResolver outputPathResolver,
+        BuildCellRelativePathFactory buildCellPathFactory) {
+      if (stepFailure) {
+        return ImmutableList.of(
+            new AbstractExecutionStep("throwing_step") {
+              @Override
+              public StepExecutionResult execute(ExecutionContext context)
+                  throws IOException, InterruptedException {
+                throw new RuntimeException(FAILING_STEP_MESSAGE);
+              }
+            });
+      }
+      throw new RuntimeException(FAILING_RULE_MESSAGE);
+    }
+  }
+
   @Before
   public void setUp() throws InterruptedException, IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "strategies", tmpFolder);
@@ -147,7 +217,10 @@ public class ModernBuildRuleStrategyIntegrationTest {
         (processExecutor, pluginManager, sandboxExecutionStrategyFactory) ->
             cell ->
                 KnownBuildRuleTypes.builder()
-                    .addDescriptions(new TouchOutputDescription(), new LargeDynamicsDescription())
+                    .addDescriptions(
+                        new TouchOutputDescription(),
+                        new LargeDynamicsDescription(),
+                        new FailingRuleDescription())
                     .build());
     workspace.setUp();
     workspace.addBuckConfigLocalOption("modern_build_rule", "strategy", strategy.toString());
@@ -168,6 +241,22 @@ public class ModernBuildRuleStrategyIntegrationTest {
         workspace.getFileContents(
             new DefaultOutputPathResolver(filesystem, BuildTargetFactory.newInstance(simpleTarget))
                 .resolvePath(new OutputPath("some.path"))));
+  }
+
+  @Test
+  public void testBuildFailingRule() throws Exception {
+    ProcessResult result = workspace.runBuckBuild(failingTarget);
+    result.assertFailure();
+    workspace.getBuildLog().assertTargetFailed(failingTarget);
+    assertThat(result.getStderr(), containsString(FailingRule.FAILING_RULE_MESSAGE));
+  }
+
+  @Test
+  public void testBuildRuleWithFailingStep() throws Exception {
+    ProcessResult result = workspace.runBuckBuild(failingStepTarget);
+    result.assertFailure();
+    workspace.getBuildLog().assertTargetFailed(failingStepTarget);
+    assertThat(result.getStderr(), containsString(FailingRule.FAILING_STEP_MESSAGE));
   }
 
   @Test
