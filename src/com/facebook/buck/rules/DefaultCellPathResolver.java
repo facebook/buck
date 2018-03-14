@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
 @Value.Immutable(builder = false, copy = false)
-public abstract class DefaultCellPathResolver implements CellPathResolver {
+public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
 
   private static final Logger LOG = Logger.get(DefaultCellPathResolver.class);
 
@@ -71,12 +71,7 @@ public abstract class DefaultCellPathResolver implements CellPathResolver {
   @Value.Lazy
   @Override
   public ImmutableSet<Path> getKnownRoots() {
-    return ImmutableSet.<Path>builder()
-        .addAll(getCellPaths().values())
-        .add(
-            getCellPath(Optional.empty())
-                .orElseThrow(() -> new AssertionError("Root cell path should always be known.")))
-        .build();
+    return super.getKnownRoots();
   }
 
   public static DefaultCellPathResolver of(Path root, Map<String, ? extends Path> cellPaths) {

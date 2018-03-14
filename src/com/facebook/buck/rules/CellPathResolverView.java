@@ -29,7 +29,7 @@ import java.util.Optional;
  * <p>Views are used for non-root cells, to ensure that only the subset of cell names that the cell
  * declares are visible within that cell.
  */
-public final class CellPathResolverView implements CellPathResolver {
+public final class CellPathResolverView extends AbstractCellPathResolver {
   private final CellPathResolver delegate;
   private final ImmutableSet<String> declaredCellNames;
   private final Path cellPath;
@@ -71,10 +71,5 @@ public final class CellPathResolverView implements CellPathResolver {
   public Optional<String> getCanonicalCellName(Path cellPath) {
     // TODO(cjhopman): This should verify that this path is visible in this view.
     return delegate.getCanonicalCellName(cellPath);
-  }
-
-  @Override
-  public ImmutableSet<Path> getKnownRoots() {
-    return ImmutableSet.<Path>builder().addAll(getCellPaths().values()).add(cellPath).build();
   }
 }
