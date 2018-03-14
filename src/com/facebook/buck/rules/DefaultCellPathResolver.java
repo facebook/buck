@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.config.Config;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -36,17 +35,18 @@ import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractDefaultCellPathResolver implements CellPathResolver {
+@Value.Immutable(builder = false, copy = false)
+public abstract class DefaultCellPathResolver implements CellPathResolver {
 
-  private static final Logger LOG = Logger.get(AbstractDefaultCellPathResolver.class);
+  private static final Logger LOG = Logger.get(DefaultCellPathResolver.class);
 
   static final String REPOSITORIES_SECTION = "repositories";
 
+  @Value.Parameter
   public abstract Path getRoot();
 
   @Override
+  @Value.Parameter
   public abstract ImmutableMap<String, Path> getCellPaths();
 
   @Value.Lazy
@@ -68,8 +68,23 @@ abstract class AbstractDefaultCellPathResolver implements CellPathResolver {
     return bootstrapPathMapping(getRoot(), getCellPaths());
   }
 
+  @Value.Lazy
+  @Override
+  public ImmutableSet<Path> getKnownRoots() {
+    return ImmutableSet.<Path>builder()
+        .addAll(getCellPaths().values())
+        .add(
+            getCellPath(Optional.empty())
+                .orElseThrow(() -> new AssertionError("Root cell path should always be known.")))
+        .build();
+  }
+
+  public static DefaultCellPathResolver of(Path root, Map<String, ? extends Path> cellPaths) {
+    return ImmutableDefaultCellPathResolver.of(root, cellPaths);
+  }
+
   public static DefaultCellPathResolver of(Path root, Config config) {
-    return DefaultCellPathResolver.of(
+    return ImmutableDefaultCellPathResolver.of(
         root, getCellPathsFromConfigRepositoriesSection(root, config.get(REPOSITORIES_SECTION)));
   }
 
@@ -142,16 +157,5 @@ abstract class AbstractDefaultCellPathResolver implements CellPathResolver {
       }
       return Optional.of(name);
     }
-  }
-
-  @Value.Lazy
-  @Override
-  public ImmutableSet<Path> getKnownRoots() {
-    return ImmutableSet.<Path>builder()
-        .addAll(getCellPaths().values())
-        .add(
-            getCellPath(Optional.empty())
-                .orElseThrow(() -> new AssertionError("Root cell path should always be known.")))
-        .build();
   }
 }
