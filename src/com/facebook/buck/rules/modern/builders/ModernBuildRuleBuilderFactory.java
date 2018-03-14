@@ -67,6 +67,10 @@ public class ModernBuildRuleBuilderFactory {
                   hashLoader::get,
                   eventBus,
                   console));
+        case DEBUG_ISOLATED_OUT_OF_PROCESS:
+          return Optional.of(
+              ModernBuildRuleBuilderFactory.createIsolatedOutOfProcess(
+                  new SourcePathRuleFinder(resolver), cellResolver, rootCell, hashLoader::get));
       }
     } catch (IOException e) {
       throw new BuckUncheckedExecutionException(e, "When creating MBR build strategy.");
@@ -93,6 +97,23 @@ public class ModernBuildRuleBuilderFactory {
   public static BuildRuleStrategy createReconstructing(
       SourcePathRuleFinder ruleFinder, CellPathResolver cellResolver, Cell rootCell) {
     return new ReconstructingStrategy(ruleFinder, cellResolver, rootCell);
+  }
+
+  /**
+   * This strategy will construct a separate isolated build directory for each rule. The rule will
+   * be serialized to data files in that directory, and all inputs required (including buck configs)
+   * will be materialized there. Buck's own classpath will also be materialized there and then a
+   * separate subprocess will be created to deserialize and run the rule. Outputs will then be
+   * copied back to the real build directory.
+   */
+  public static BuildRuleStrategy createIsolatedOutOfProcess(
+      SourcePathRuleFinder ruleFinder,
+      CellPathResolver cellResolver,
+      Cell rootCell,
+      ThrowingFunction<Path, HashCode, IOException> fileHasher)
+      throws IOException {
+    return IsolatedExecution.createIsolatedExecutionStrategy(
+        new OutOfProcessIsolatedExecution(), ruleFinder, cellResolver, rootCell, fileHasher);
   }
 
   /**

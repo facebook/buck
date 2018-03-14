@@ -33,6 +33,7 @@
   <property name="javac-plugin.location.dir.name" value="com/facebook/buck/jvm/java/plugin" />
   <property name="javac-plugin.location.dir" value="${classes.dir}/${javac-plugin.location.dir.name}" />
   <property name="buck.path_to_sh_binary_template" value="${basedir}/src/com/facebook/buck/shell/sh_binary_template" />
+  <property name="buck.path_to_isolated_trampoline" value="${basedir}/src/com/facebook/buck/rules/modern/builders/trampoline.sh" />
   <property name="buck.logging_config_file" value="${basedir}/config/logging.properties.st" />
   <property name="javadoc.dir" value="${build.dir}/javadoc" />
   <property name="javadoc-with-android.dir" value="${build.dir}/javadoc-with-android" />
