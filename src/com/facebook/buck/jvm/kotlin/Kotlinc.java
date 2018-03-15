@@ -16,12 +16,21 @@
 
 package com.facebook.buck.jvm.kotlin;
 
+import static com.facebook.buck.jvm.java.Javac.SRC_JAR;
+import static com.facebook.buck.jvm.java.Javac.SRC_ZIP;
+
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.unarchive.ArchiveFormat;
+import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -50,4 +59,41 @@ public interface Kotlinc extends Tool {
   Path getAnnotationProcessorPath();
 
   Path getStdlibPath();
+
+  default ImmutableList<Path> getExpandedSourcePaths(
+      ProjectFilesystem projectFilesystem,
+      ProjectFilesystemFactory projectFilesystemFactory,
+      ImmutableSet<Path> kotlinSourceFilePaths,
+      Optional<Path> workingDirectory)
+      throws InterruptedException, IOException {
+
+    // Add sources file or sources list to command
+    ImmutableList.Builder<Path> sources = ImmutableList.builder();
+    for (Path path : kotlinSourceFilePaths) {
+      String pathString = path.toString();
+      if (pathString.endsWith(".kt")) {
+        sources.add(path);
+      } else if (pathString.endsWith(SRC_ZIP) || pathString.endsWith(SRC_JAR)) {
+        try {
+          // For a Zip of .java files, create a JavaFileObject for each .java entry.
+          ImmutableList<Path> zipPaths =
+              ArchiveFormat.ZIP
+                  .getUnarchiver()
+                  .extractArchive(
+                      projectFilesystemFactory,
+                      projectFilesystem.resolve(path),
+                      projectFilesystem.resolve(workingDirectory.orElse(path)),
+                      ExistingFileMode.OVERWRITE);
+          sources.addAll(
+              zipPaths.stream().filter(input ->
+                  input.toString().endsWith(".kt") ||
+                      input.toString().endsWith(".java")
+              ).iterator());
+        } catch (FileNotFoundException ex) {
+          // Do nothing, it's probably that kapt didn't generate anything
+        }
+      }
+    }
+    return sources.build();
+  }
 }

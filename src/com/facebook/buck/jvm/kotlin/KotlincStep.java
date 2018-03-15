@@ -17,7 +17,6 @@ package com.facebook.buck.jvm.kotlin;
 
 import static com.google.common.collect.Iterables.transform;
 
-import com.facebook.buck.io.filesystem.PathHelper;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.ExecutionContext;
@@ -28,14 +27,12 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class KotlincStep implements Step {
 
@@ -53,6 +50,7 @@ public class KotlincStep implements Step {
   private final ProjectFilesystem filesystem;
   private final Path pathToSrcsList;
   private final BuildTarget invokingRule;
+  private final Optional<Path> workingDirectory;
 
   KotlincStep(
       BuildTarget invokingRule,
@@ -62,7 +60,8 @@ public class KotlincStep implements Step {
       ImmutableSortedSet<Path> combinedClassPathEntries,
       Kotlinc kotlinc,
       ImmutableList<String> extraArguments,
-      ProjectFilesystem filesystem) {
+      ProjectFilesystem filesystem,
+      Optional<Path> workingDirectory) {
     this.invokingRule = invokingRule;
     this.outputDirectory = outputDirectory;
     this.sourceFilePaths = sourceFilePaths;
@@ -71,6 +70,7 @@ public class KotlincStep implements Step {
     this.combinedClassPathEntries = combinedClassPathEntries;
     this.extraArguments = extraArguments;
     this.filesystem = filesystem;
+    this.workingDirectory = workingDirectory;
   }
 
   @Override
@@ -89,23 +89,14 @@ public class KotlincStep implements Step {
         ExecutionContext firstOrderContext =
             context.createSubContext(stdout, stderr, Optional.of(verbosity))) {
 
-      /* Flatmaps directories into list of files, and filter for known file types */
-      ImmutableSortedSet<Path> allSourcePaths = ImmutableSortedSet.copyOf(
-          PathHelper.flatmapDirectories(filesystem, sourceFilePaths)
-              .stream()
-              .filter((Predicate<Path>) input ->
-                  PathMatchers.JAVA_PATH_MATCHER.matches(input) || PathMatchers.KOTLIN_PATH_MATCHER
-                      .matches(input))
-              .collect(Collectors.toSet()));
-
       int declaredDepsBuildResult =
           kotlinc.buildWithClasspath(
               firstOrderContext,
               invokingRule,
               getOptions(context, combinedClassPathEntries),
-              allSourcePaths,
+              sourceFilePaths,
               pathToSrcsList,
-              Optional.empty(),
+              workingDirectory,
               filesystem);
 
       String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
