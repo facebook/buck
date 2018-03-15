@@ -114,6 +114,8 @@ public class BuckConfig implements ConfigPathGetter {
             "max_traces",
             "public_announcements"));
     ignoreFieldsForDaemonRestartBuilder.put("project", ImmutableSet.of("ide_prompt"));
+    ignoreFieldsForDaemonRestartBuilder.put("ui", ImmutableSet.of("superconsole"));
+    ignoreFieldsForDaemonRestartBuilder.put("color", ImmutableSet.of("ui"));
     IGNORE_FIELDS_FOR_DAEMON_RESTART = ignoreFieldsForDaemonRestartBuilder.build();
   }
 

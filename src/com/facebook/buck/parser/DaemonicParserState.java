@@ -607,7 +607,10 @@ public class DaemonicParserState {
       boolean hasInvalidated = false;
 
       // Currently, if `.buckconfig` settings change, we restart the entire daemon, meaning checking
-      // for `.buckconfig`-based invalidations is redundant.
+      // for `.buckconfig`-based invalidations is redundant. (see
+      // {@link com.facebook.buck.cli.DaemonLifecycleManager#getDaemon} for where we restart the
+      // daemon and {@link com.facebook.buck.config.BuckConfig's static initializer for the
+      // whitelist of fields.
 
       // Invalidate based on env vars.
       Optional<MapDifference<String, String>> envDiff =
