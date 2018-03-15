@@ -123,6 +123,11 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       Builder<Step> steps,
       BuildableContext buildableContext) {
 
+    ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();
+    ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
+    Path outputDirectory = parameters.getOutputDirectory();
+    Path pathToSrcsList = parameters.getPathToSourcesList();
+
     Path stubsOutput = BuildTargets
         .getAnnotationPath(projectFilesystem, invokingRule, "__%s_stubs__");
     Path sourcesOutput = BuildTargets
@@ -139,11 +144,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
         BuildTargets.getGenPath(projectFilesystem, invokingRule, "__%s_gen_sources__");
     Path genOutput =
         BuildTargets.getGenPath(projectFilesystem, invokingRule, "__%s_gen_sources__/generated" + SRC_ZIP);
-
-    ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();
-    ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
-    Path outputDirectory = parameters.getOutputDirectory();
-    Path pathToSrcsList = parameters.getPathToSourcesList();
 
     // Only invoke kotlinc if we have kotlin files.
     if (sourceFilePaths.stream().anyMatch(PathMatchers.KOTLIN_PATH_MATCHER::matches)) {
@@ -172,12 +172,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
       boolean generatingCode = !javacOptions.getAnnotationProcessingParams().isEmpty();
       if (generatingCode) {
-        ImmutableSortedSet<Path> kaptSourcePaths =
-            ImmutableSortedSet.<Path>naturalOrder()
-                .addAll(sourcePaths)
-                .add(stubsOutput)
-                .add(incrementalDataOutput)
-                .build();
 
         addAnnotationGenFolderStep(
             invokingRule,
@@ -186,7 +180,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             projectFilesystem,
             sourceFilePaths,
             pathToSrcsList,
-            kaptSourcePaths,
             allClasspaths,
             extraArguments,
             kaptGeneratedOutput,
@@ -265,7 +258,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       ProjectFilesystem filesystem,
       ImmutableSortedSet<Path> sourceFilePaths,
       Path pathToSrcsList,
-      ImmutableSortedSet<Path> sourcePaths,
       Iterable<? extends Path> declaredClasspathEntries,
       ImmutableList<String> extraArguments,
       Path kaptGenerated,
@@ -343,7 +335,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
         new KotlincStep(
             invokingRule,
             outputDirectory,
-            sourcePaths,
+            sourceFilePaths,
             pathToSrcsList,
             ImmutableSortedSet.<Path>naturalOrder()
                 .add(kotlinc.getStdlibPath())
