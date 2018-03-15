@@ -60,7 +60,7 @@ public class HostInfo {
             .put("is_unknown", hostArchitecture == Architecture.UNKNOWN)
             .put("is_x86_64", hostArchitecture == Architecture.X86_64)
             .build();
-    return NativeProvider.StructConstructor.STRUCT.create(
+    return NativeProvider.STRUCT.create(
         ImmutableMap.of(
             "os",
             NativeProvider.STRUCT.create(os, "no such property on os struct: '%s'"),

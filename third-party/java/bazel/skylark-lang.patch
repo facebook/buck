@@ -1,8 +1,8 @@
 diff --git i/src/main/java/com/google/devtools/build/lib/BUILD w/src/main/java/com/google/devtools/build/lib/BUILD
-index c6e5649a9..b51b0e38e 100644
+index 5dcca6bb65..56a2b01420 100644
 --- i/src/main/java/com/google/devtools/build/lib/BUILD
 +++ w/src/main/java/com/google/devtools/build/lib/BUILD
-@@ -238,15 +238,45 @@ java_library(
+@@ -276,15 +276,46 @@ java_library(
  #
  # IMPORTANT:  NOT A PUBLIC INTERFACE. TARGETS SHOULDN'T DEPEND ON THIS.
  #
@@ -51,14 +51,15 @@ index c6e5649a9..b51b0e38e 100644
 +        ":util",
 +        "//src/main/java/com/google/devtools/build/lib/profiler",
 +        "//src/main/java/com/google/devtools/build/lib/collect/nestedset",
++        "//src/main/java/com/google/devtools/build/lib/skyframe/serialization/autocodec:autocodec-annotation",
      ],
  )
  
 diff --git i/src/main/java/com/google/devtools/build/lib/packages/Attribute.java w/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
-index dcd7fb34d..c087cb1ce 100644
+index 5623847960..c087cb1ceb 100644
 --- i/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
 +++ w/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
-@@ -14,47 +14,6 @@
+@@ -14,51 +14,6 @@
  
  package com.google.devtools.build.lib.packages;
  
@@ -77,10 +78,14 @@ index dcd7fb34d..c087cb1ce 100644
 -import com.google.common.collect.Ordering;
 -import com.google.common.collect.Sets;
 -import com.google.devtools.build.lib.analysis.TransitiveInfoProvider;
--import com.google.devtools.build.lib.concurrent.ThreadSafety;
+-import com.google.devtools.build.lib.analysis.config.transitions.ConfigurationTransition;
+-import com.google.devtools.build.lib.analysis.config.transitions.NoTransition;
+-import com.google.devtools.build.lib.analysis.config.transitions.SplitTransition;
+-import com.google.devtools.build.lib.cmdline.Label;
 -import com.google.devtools.build.lib.events.EventHandler;
 -import com.google.devtools.build.lib.events.Location;
 -import com.google.devtools.build.lib.packages.RuleClass.Builder.RuleClassNamePredicate;
+-import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec;
 -import com.google.devtools.build.lib.syntax.ClassObject;
 -import com.google.devtools.build.lib.syntax.EvalException;
 -import com.google.devtools.build.lib.syntax.EvalUtils;
@@ -106,16 +111,16 @@ index dcd7fb34d..c087cb1ce 100644
  import javax.annotation.concurrent.Immutable;
  
  /**
-@@ -65,2108 +24,8 @@ import javax.annotation.concurrent.Immutable;
+@@ -69,2127 +24,8 @@ import javax.annotation.concurrent.Immutable;
   * attributes in common).
   */
  @Immutable
 -public final class Attribute implements Comparable<Attribute> {
 +public final class Attribute {
  
--  public static final Predicate<RuleClass> ANY_RULE = Predicates.alwaysTrue();
+-  public static final RuleClassNamePredicate ANY_RULE = RuleClassNamePredicate.unspecified();
 -
--  public static final Predicate<RuleClass> NO_RULE = Predicates.alwaysFalse();
+-  public static final RuleClassNamePredicate NO_RULE = RuleClassNamePredicate.only();
 -
 -  /**
 -   * Wraps the information necessary to construct an Aspect.
@@ -158,9 +163,9 @@ index dcd7fb34d..c087cb1ce 100644
 -  }
 -
 -  private static class SkylarkRuleAspect extends RuleAspect<SkylarkAspectClass> {
--    private final SkylarkAspect aspect;
+-    private final SkylarkDefinedAspect aspect;
 -
--    public SkylarkRuleAspect(SkylarkAspect aspect) {
+-    public SkylarkRuleAspect(SkylarkDefinedAspect aspect) {
 -      super(aspect.getAspectClass(), aspect.getDefaultParametersExtractor());
 -      this.aspect = aspect;
 -    }
@@ -190,54 +195,6 @@ index dcd7fb34d..c087cb1ce 100644
 -    public Aspect getAspect(Rule rule) {
 -      return aspect;
 -    }
--  }
--
--  /**
--   * A configuration transition.
--   */
--  public interface Transition {
--  }
--
--  /**
--   * A configuration split transition; this should be used to transition to multiple configurations
--   * simultaneously. Note that the corresponding rule implementations must have special support to
--   * handle this.
--   *
--   * <p>{@code T} must always be {@code BuildOptions}, but it can't be defined that way because
--   * the symbol isn't available here.
--   */
--  // TODO(bazel-team): Serializability constraints?
--  @ThreadSafety.Immutable
--  public interface SplitTransition<T> extends Transition {
--    /**
--     * Return the list of {@code BuildOptions} after splitting; empty if not applicable.
--     */
--    List<T> split(T buildOptions);
--  }
--
--  /**
--   * Declaration how the configuration should change when following a label or label list attribute.
--   */
--  public enum ConfigurationTransition implements Transition {
--    /** No transition, i.e., the same configuration as the current. */
--    NONE,
--
--    /** Transition to the host configuration. */
--    HOST,
--
--    /** Transition to a null configuration (applies to, e.g., input files). */
--    NULL,
--
--    /** Transition from the target configuration to the data configuration. */
--    // TODO(bazel-team): Move this elsewhere.
--    DATA,
--
--    /**
--     * Transition to one or more configurations. To obtain the actual child configurations,
--     * invoke {@link Attribute#getSplitTransition(AttributeMap)}.
--     * See {@link SplitTransition}.
--     **/
--    SPLIT
 -  }
 -
 -  private enum PropertyFlag {
@@ -366,7 +323,7 @@ index dcd7fb34d..c087cb1ce 100644
 -    /**
 -     * Returns the {@link SplitTransition} given the attribute mapper of the originating rule.
 -     */
--    SplitTransition<?> apply(AttributeMap attributeMap);
+-    SplitTransition apply(AttributeMap attributeMap);
 -  }
 -
 -  /**
@@ -375,14 +332,14 @@ index dcd7fb34d..c087cb1ce 100644
 -   */
 -  private static class BasicSplitTransitionProvider implements SplitTransitionProvider {
 -
--    private final SplitTransition<?> splitTransition;
+-    private final SplitTransition splitTransition;
 -
--    BasicSplitTransitionProvider(SplitTransition<?> splitTransition) {
+-    BasicSplitTransitionProvider(SplitTransition splitTransition) {
 -      this.splitTransition = splitTransition;
 -    }
 -
 -    @Override
--    public SplitTransition<?> apply(AttributeMap attributeMap) {
+-    public SplitTransition apply(AttributeMap attributeMap) {
 -      return splitTransition;
 -    }
 -  }
@@ -451,9 +408,9 @@ index dcd7fb34d..c087cb1ce 100644
 -  public static class Builder <TYPE> {
 -    private final String name;
 -    private final Type<TYPE> type;
--    private Transition configTransition = ConfigurationTransition.NONE;
--    private Predicate<RuleClass> allowedRuleClassesForLabels = Predicates.alwaysTrue();
--    private Predicate<RuleClass> allowedRuleClassesForLabelsWarning = Predicates.alwaysFalse();
+-    private ConfigurationTransition configTransition = NoTransition.INSTANCE;
+-    private RuleClassNamePredicate allowedRuleClassesForLabels = ANY_RULE;
+-    private RuleClassNamePredicate allowedRuleClassesForLabelsWarning = NO_RULE;
 -    private SplitTransitionProvider splitTransitionProvider;
 -    private FileTypeSet allowedFileTypesForLabels;
 -    private ValidityPredicate validityPredicate = ANY_EDGE;
@@ -571,11 +528,10 @@ index dcd7fb34d..c087cb1ce 100644
 -     * Defines the configuration transition for this attribute.
 -     */
 -    public Builder<TYPE> cfg(SplitTransitionProvider splitTransitionProvider) {
--      Preconditions.checkState(this.configTransition == ConfigurationTransition.NONE,
+-      Preconditions.checkState(this.configTransition == NoTransition.INSTANCE,
 -          "the configuration transition is already set");
 -
 -      this.splitTransitionProvider = Preconditions.checkNotNull(splitTransitionProvider);
--      this.configTransition = ConfigurationTransition.SPLIT;
 -      return this;
 -    }
 -
@@ -583,7 +539,7 @@ index dcd7fb34d..c087cb1ce 100644
 -     * Defines the configuration transition for this attribute. Defaults to
 -     * {@code NONE}.
 -     */
--    public Builder<TYPE> cfg(SplitTransition<?> configTransition) {
+-    public Builder<TYPE> cfg(SplitTransition configTransition) {
 -      return cfg(new BasicSplitTransitionProvider(Preconditions.checkNotNull(configTransition)));
 -    }
 -
@@ -591,13 +547,11 @@ index dcd7fb34d..c087cb1ce 100644
 -     * Defines the configuration transition for this attribute. Defaults to
 -     * {@code NONE}.
 -     */
--    public Builder<TYPE> cfg(Transition configTransition) {
--      Preconditions.checkState(this.configTransition == ConfigurationTransition.NONE,
+-    public Builder<TYPE> cfg(ConfigurationTransition configTransition) {
+-      Preconditions.checkState(this.configTransition == NoTransition.INSTANCE,
 -          "the configuration transition is already set");
--      Preconditions.checkArgument(configTransition != ConfigurationTransition.SPLIT,
--          "split transitions must be defined using the SplitTransition object");
 -      if (configTransition instanceof SplitTransition) {
--        return cfg((SplitTransition<?>) configTransition);
+-        return cfg((SplitTransition) configTransition);
 -      } else {
 -        this.configTransition = configTransition;
 -        return this;
@@ -815,7 +769,7 @@ index dcd7fb34d..c087cb1ce 100644
 -     */
 -    public Builder<TYPE> allowedRuleClasses(Iterable<String> allowedRuleClasses) {
 -      return allowedRuleClasses(
--          new RuleClassNamePredicate(allowedRuleClasses));
+-          RuleClassNamePredicate.only(allowedRuleClasses));
 -    }
 -
 -    /**
@@ -833,7 +787,7 @@ index dcd7fb34d..c087cb1ce 100644
 -     * <p>This only works on a per-target basis, not on a per-file basis; with other words, it
 -     * works for 'deps' attributes, but not 'srcs' attributes.
 -     */
--    public Builder<TYPE> allowedRuleClasses(Predicate<RuleClass> allowedRuleClasses) {
+-    public Builder<TYPE> allowedRuleClasses(RuleClassNamePredicate allowedRuleClasses) {
 -      Preconditions.checkState(type.getLabelClass() == LabelClass.DEPENDENCY,
 -          "must be a label-valued type");
 -      propertyFlags.add(PropertyFlag.STRICT_LABEL_CHECKING);
@@ -916,7 +870,7 @@ index dcd7fb34d..c087cb1ce 100644
 -     */
 -    public Builder<TYPE> allowedRuleClassesWithWarning(Collection<String> allowedRuleClasses) {
 -      return allowedRuleClassesWithWarning(
--          new RuleClassNamePredicate(allowedRuleClasses));
+-          RuleClassNamePredicate.only(allowedRuleClasses));
 -    }
 -
 -    /**
@@ -934,7 +888,7 @@ index dcd7fb34d..c087cb1ce 100644
 -     * <p>This only works on a per-target basis, not on a per-file basis; with other words, it
 -     * works for 'deps' attributes, but not 'srcs' attributes.
 -     */
--    public Builder<TYPE> allowedRuleClassesWithWarning(Predicate<RuleClass> allowedRuleClasses) {
+-    public Builder<TYPE> allowedRuleClassesWithWarning(RuleClassNamePredicate allowedRuleClasses) {
 -      Preconditions.checkState(type.getLabelClass() == LabelClass.DEPENDENCY,
 -          "must be a label-valued type");
 -      propertyFlags.add(PropertyFlag.STRICT_LABEL_CHECKING);
@@ -1049,8 +1003,8 @@ index dcd7fb34d..c087cb1ce 100644
 -      return this.aspect(aspect, input -> AspectParameters.EMPTY);
 -    }
 -
--    public Builder<TYPE> aspect(
--        SkylarkAspect skylarkAspect, Location location) throws EvalException {
+-    public Builder<TYPE> aspect(SkylarkDefinedAspect skylarkAspect, Location location)
+-        throws EvalException {
 -      SkylarkRuleAspect skylarkRuleAspect = new SkylarkRuleAspect(skylarkAspect);
 -      RuleAspect<?> oldAspect = this.aspects.put(skylarkAspect.getName(), skylarkRuleAspect);
 -      if (oldAspect != null) {
@@ -1148,14 +1102,12 @@ index dcd7fb34d..c087cb1ce 100644
 -        }
 -      }
 -
--      if (allowedRuleClassesForLabels instanceof RuleClassNamePredicate
--          && allowedRuleClassesForLabelsWarning instanceof RuleClassNamePredicate) {
--        Preconditions.checkState(
--            !((RuleClassNamePredicate) allowedRuleClassesForLabels)
--                .intersects((RuleClassNamePredicate) allowedRuleClassesForLabelsWarning),
--            "allowedRuleClasses and allowedRuleClassesWithWarning may not contain "
--                + "the same rule classes");
--      }
+-      Preconditions.checkState(
+-          !allowedRuleClassesForLabels.consideredOverlapping(allowedRuleClassesForLabelsWarning),
+-          "allowedRuleClasses %s and allowedRuleClassesWithWarning %s "
+-              + "may not contain the same rule classes",
+-          allowedRuleClassesForLabels,
+-          allowedRuleClassesForLabelsWarning);
 -
 -      return new Attribute(
 -          name,
@@ -1458,7 +1410,7 @@ index dcd7fb34d..c087cb1ce 100644
 -            @Override
 -            public Object compute(AttributeMap map) throws InterruptedException {
 -              try {
--                return owner.computeValue(map);
+-                return owner.computeValue(eventHandler, map);
 -              } catch (EvalException ex) {
 -                caughtEvalExceptionIfAny.compareAndSet(null, ex);
 -                return null;
@@ -1493,7 +1445,8 @@ index dcd7fb34d..c087cb1ce 100644
 -      return new SkylarkComputedDefault(dependencies, dependencyTypesBuilder.build(), lookupTable);
 -    }
 -
--    private Object computeValue(AttributeMap rule) throws EvalException, InterruptedException {
+-    private Object computeValue(EventHandler eventHandler, AttributeMap rule)
+-        throws EvalException, InterruptedException {
 -      Map<String, Object> attrValues = new HashMap<>();
 -      for (String attrName : rule.getAttributeNames()) {
 -        Attribute attr = rule.getAttributeDefinition(attrName);
@@ -1504,15 +1457,15 @@ index dcd7fb34d..c087cb1ce 100644
 -          }
 -        }
 -      }
--      return invokeCallback(attrValues);
+-      return invokeCallback(eventHandler, attrValues);
 -    }
 -
--    private Object invokeCallback(Map<String, Object> attrValues)
+-    private Object invokeCallback(EventHandler eventHandler, Map<String, Object> attrValues)
 -        throws EvalException, InterruptedException {
 -      ClassObject attrs =
 -          NativeProvider.STRUCT.create(
 -              attrValues, "No such regular (non computed) attribute '%s'.");
--      Object result = callback.call(attrs);
+-      Object result = callback.call(eventHandler, attrs);
 -      try {
 -        return type.cast((result == Runtime.NONE) ? type.getDefaultValue() : result);
 -      } catch (ClassCastException ex) {
@@ -1544,6 +1497,7 @@ index dcd7fb34d..c087cb1ce 100644
 -   * {@link #getPossibleValues(Type, Rule)} and {@link #getDefault(AttributeMap)} do lookups in that
 -   * table.
 -   */
+-  @AutoCodec
 -  static final class SkylarkComputedDefault extends ComputedDefault {
 -
 -    private final List<Type<?>> dependencyTypes;
@@ -1552,17 +1506,17 @@ index dcd7fb34d..c087cb1ce 100644
 -    /**
 -     * Creates a new SkylarkComputedDefault containing a lookup table.
 -     *
--     * @param requiredAttributes A list of all names of other attributes that are accessed by this
+-     * @param dependencies A list of all names of other attributes that are accessed by this
 -     *     attribute.
 -     * @param dependencyTypes A list of requiredAttributes' types.
 -     * @param lookupTable An exhaustive mapping from requiredAttributes assignments to values this
 -     *     computed default evaluates to.
 -     */
 -    SkylarkComputedDefault(
--        ImmutableList<String> requiredAttributes,
+-        ImmutableList<String> dependencies,
 -        ImmutableList<Type<?>> dependencyTypes,
 -        Map<List<Object>, Object> lookupTable) {
--      super(Preconditions.checkNotNull(requiredAttributes));
+-      super(Preconditions.checkNotNull(dependencies));
 -      this.dependencyTypes = Preconditions.checkNotNull(dependencyTypes);
 -      this.lookupTable = Preconditions.checkNotNull(lookupTable);
 -    }
@@ -1597,7 +1551,7 @@ index dcd7fb34d..c087cb1ce 100644
 -    }
 -  }
 -
--  private static final class SimpleLateBoundDefault<FragmentT, ValueT>
+-  private static class SimpleLateBoundDefault<FragmentT, ValueT>
 -      extends LateBoundDefault<FragmentT, ValueT> {
 -
 -    private final Resolver<FragmentT, ValueT> resolver;
@@ -1619,8 +1573,8 @@ index dcd7fb34d..c087cb1ce 100644
 -  // TODO(b/65746853): Remove documentation about accepting BuildConfiguration when uses are cleaned
 -  // up.
 -  /**
--   * Provider of values for late-bound attributes. See
--   * {@link Attribute#value(LateBoundDefault<?, ? extends TYPE> value)}.
+-   * Provider of values for late-bound attributes. See {@link Attribute#value(LateBoundDefault<?, ?
+-   * extends TYPE> value)}.
 -   *
 -   * <p>Use sparingly - having different values for attributes during loading and analysis can
 -   * confuse users.
@@ -1628,7 +1582,8 @@ index dcd7fb34d..c087cb1ce 100644
 -   * @param <FragmentT> The type of value that is used to compute this value. This is usually a
 -   *     subclass of BuildConfiguration.Fragment. It may also be Void to receive null, or
 -   *     BuildConfiguration itself to receive the entire configuration.
--   * @param <ValueT> The type of value returned by this class.
+-   * @param <ValueT> The type of value returned by this class. Must be either {@link Void}, a {@link
+-   *     Label}, or a {@link List} of {@link Label} objects.
 -   */
 -  @Immutable
 -  public abstract static class LateBoundDefault<FragmentT, ValueT> {
@@ -1647,106 +1602,18 @@ index dcd7fb34d..c087cb1ce 100644
 -    private final Class<FragmentT> fragmentClass;
 -
 -    /**
--     * Creates a new LateBoundDefault which uses the rule, its configured attributes, and a fragment
--     * of the target configuration.
--     *
--     * <p>Note that the configuration fragment here does not take into account any transitions that
--     * are on the attribute with this LateBoundDefault as its value. The configuration will be the
--     * same as the configuration given to the target bearing the attribute.
--     *
--     * <p>Nearly all LateBoundDefaults should use this constructor. There are few situations where
--     * it isn't the appropriate option.
--     *
--     * <p>If you want a late-bound dependency which is configured in the host configuration, just
--     * use this method with {@link ConfigurationTransition#HOST}. If you also need to decide the
--     * label of the dependency with information gained from the host configuration - and it's very
--     * unlikely that you do - you can use {@link #fromHostConfiguration} as well.
--     *
--     * <p>If you want to decide an attribute's value based on the value of its other attributes,
--     * use a subclass of {@link ComputedDefault}. The only time you should need
--     * {@link #fromRuleAndAttributes} is if you need access to three or more configurable
--     * attributes, or if you need to match names with a late-bound attribute on another rule.
--     *
--     * <p>If you have a constant-valued attribute, but you need it to have the same name as an
--     * attribute on another rule which is late-bound, use {@link #fromConstant} or
--     * {@link #alwaysNull}.
--     *
--     * @param fragmentClass The fragment to receive from the target configuration. May also be
--     *     BuildConfiguration.class to receive the entire configuration (deprecated) - in this case,
--     *     you must only use methods of BuildConfiguration itself, and not use any fragments.
--     * @param defaultValue The default value to return at loading time, when the configuration is
--     *     not available.
--     * @param resolver A function which will compute the actual value with the configuration.
--     */
--    public static <FragmentT, ValueT> LateBoundDefault<FragmentT, ValueT> fromTargetConfiguration(
--        Class<FragmentT> fragmentClass, ValueT defaultValue, Resolver<FragmentT, ValueT> resolver) {
--      Preconditions.checkArgument(
--          !fragmentClass.equals(Void.class),
--          "Use fromRuleAndAttributesOnly to specify a LateBoundDefault which does not use "
--              + "configuration.");
--      return new SimpleLateBoundDefault<>(false, fragmentClass, defaultValue, resolver);
--    }
--
--    /**
--     * Creates a new LateBoundDefault which uses the rule, its configured attributes, and a fragment
--     * of the host configuration.
--     *
--     * <p>This should only be necessary in very specialized cases. In almost all cases, you don't
--     * need this method, just {@link #fromTargetConfiguration} and
--     * {@link ConfigurationTransition#HOST}.
--     *
--     * <p>This method only affects the configuration fragment passed to {@link #resolve}. You must
--     * also use {@link ConfigurationTransition#HOST}, so that the dependency will be analyzed in the
--     * host configuration.
--     *
--     * @param fragmentClass The fragment to receive from the host configuration. May also be
--     *     BuildConfiguration.class to receive the entire configuration (deprecated) - in this case,
--     *     you must only use methods of BuildConfiguration itself, and not use any fragments.
--     *     It is very rare that a LateBoundDefault should need a host configuration fragment; use
--     *     {@link #fromTargetConfiguration} in most cases.
--     * @param defaultValue The default value to return at loading time, when the configuration is
--     *     not available.
--     * @param resolver A function which will compute the actual value with the configuration.
--     */
--    public static <FragmentT, ValueT> LateBoundDefault<FragmentT, ValueT> fromHostConfiguration(
--        Class<FragmentT> fragmentClass, ValueT defaultValue, Resolver<FragmentT, ValueT> resolver) {
--      Preconditions.checkArgument(
--          !fragmentClass.equals(Void.class),
--          "Use fromRuleAndAttributesOnly to specify a LateBoundDefault which does not use "
--              + "configuration.");
--      return new SimpleLateBoundDefault<>(true, fragmentClass, defaultValue, resolver);
--    }
--
--    /**
--     * Creates a new LateBoundDefault which uses only the rule and its configured attributes.
--     *
--     * <p>This should only be necessary in very specialized cases. In almost all cases, you don't
--     * need this method, just use {@link ComputedDefault}.
--     *
--     * <p>This is used primarily for computing values based on three or more configurable
--     * attributes and/or matching names with late-bound attributes on other rules.
--     *
--     * @param defaultValue The default value to return when the configuration is not available at
--     *     loading time.
--     * @param resolver A function which will compute the actual value with the configuration.
--     */
--    public static <ValueT> LateBoundDefault<Void, ValueT> fromRuleAndAttributesOnly(
--        ValueT defaultValue, Resolver<Void, ValueT> resolver) {
--      return new SimpleLateBoundDefault<>(false, Void.class, defaultValue, resolver);
--    }
--
--    /**
 -     * Creates a new LateBoundDefault which always returns the given value.
 -     *
 -     * <p>This is used primarily for matching names with late-bound attributes on other rules and
 -     * for testing. Use normal default values if the name does not matter.
 -     */
--    public static <ValueT> LateBoundDefault<Void, ValueT> fromConstant(final ValueT defaultValue) {
--      if (defaultValue == null) {
--        return alwaysNull();
--      }
--      return new SimpleLateBoundDefault<>(
--          false, Void.class, defaultValue, (rule, attributes, unused) -> defaultValue);
+-    @VisibleForTesting
+-    public static LabelLateBoundDefault<Void> fromConstantForTesting(Label defaultValue) {
+-      return new LabelLateBoundDefault<Void>(
+-          false,
+-          Void.class,
+-          Preconditions.checkNotNull(defaultValue),
+-          (rule, attributes, unused) -> defaultValue) {};
 -    }
 -
 -    /**
@@ -1757,11 +1624,8 @@ index dcd7fb34d..c087cb1ce 100644
 -     */
 -    @SuppressWarnings("unchecked") // bivariant implementation
 -    public static <ValueT> LateBoundDefault<Void, ValueT> alwaysNull() {
--      return (LateBoundDefault<Void, ValueT>) ALWAYS_NULL;
+-      return (LateBoundDefault<Void, ValueT>) AlwaysNullLateBoundDefault.INSTANCE;
 -    }
--
--    private static final LateBoundDefault<Void, Void> ALWAYS_NULL =
--        new SimpleLateBoundDefault<>(false, Void.class, null, (rule, attributes, unused) -> null);
 -
 -    protected LateBoundDefault(
 -        boolean useHostConfiguration,
@@ -1811,6 +1675,149 @@ index dcd7fb34d..c087cb1ce 100644
 -    public abstract ValueT resolve(Rule rule, AttributeMap attributes, FragmentT input);
 -  }
 -
+-  /**
+-   * An abstract {@link LateBoundDefault} class so that {@code SkylarkLateBoundDefault} can derive
+-   * from {@link LateBoundDefault} without compromising the type-safety of the second generic
+-   * parameter to {@link LateBoundDefault}.
+-   */
+-  public abstract static class AbstractLabelLateBoundDefault<FragmentT>
+-      extends LateBoundDefault<FragmentT, Label> {
+-    protected AbstractLabelLateBoundDefault(
+-        boolean useHostConfiguration, Class<FragmentT> fragmentClass, Label defaultValue) {
+-      super(useHostConfiguration, fragmentClass, defaultValue);
+-    }
+-  }
+-
+-  private static class AlwaysNullLateBoundDefault extends SimpleLateBoundDefault<Void, Void> {
+-    static final AlwaysNullLateBoundDefault INSTANCE = new AlwaysNullLateBoundDefault();
+-
+-    private AlwaysNullLateBoundDefault() {
+-      super(false, Void.class, null, (rule, attributes, unused) -> null);
+-    }
+-  }
+-
+-  /** A {@link LateBoundDefault} for a {@link Label}. */
+-  public static class LabelLateBoundDefault<FragmentT>
+-      extends SimpleLateBoundDefault<FragmentT, Label> {
+-    private LabelLateBoundDefault(
+-        boolean useHostConfiguration,
+-        Class<FragmentT> fragmentClass,
+-        Label defaultValue,
+-        Resolver<FragmentT, Label> resolver) {
+-      super(useHostConfiguration, fragmentClass, defaultValue, resolver);
+-    }
+-
+-    /**
+-     * Creates a new LabelLateBoundDefault which uses the rule, its configured attributes, and a
+-     * fragment of the target configuration.
+-     *
+-     * <p>Note that the configuration fragment here does not take into account any transitions that
+-     * are on the attribute with this LabelLateBoundDefault as its value. The configuration will be
+-     * the same as the configuration given to the target bearing the attribute.
+-     *
+-     * <p>Nearly all LateBoundDefaults should use this constructor or {@link
+-     * LabelListLateBoundDefault#fromTargetConfiguration}. There are few situations where it isn't
+-     * the appropriate option.
+-     *
+-     * <p>If you want a late-bound dependency which is configured in the host configuration, just
+-     * use this method with {@link com.google.devtools.build.lib.analysis.config.HostTransition}. If
+-     * you also need to decide the label of the dependency with information gained from the host
+-     * configuration - and it's very unlikely that you do - you can use {@link
+-     * LabelLateBoundDefault#fromHostConfiguration} as well.
+-     *
+-     * <p>If you want to decide an attribute's value based on the value of its other attributes, use
+-     * a subclass of {@link ComputedDefault}. The only time you should need {@link
+-     * LabelListLateBoundDefault#fromRuleAndAttributesOnly} is if you need access to three or more
+-     * configurable attributes, or if you need to match names with a late-bound attribute on another
+-     * rule.
+-     *
+-     * <p>If you have a constant-valued attribute, but you need it to have the same name as an
+-     * attribute on another rule which is late-bound, use {@link #alwaysNull}.
+-     *
+-     * @param fragmentClass The fragment to receive from the target configuration. May also be
+-     *     BuildConfiguration.class to receive the entire configuration (deprecated) - in this case,
+-     *     you must only use methods of BuildConfiguration itself, and not use any fragments.
+-     * @param defaultValue The default {@link Label} to return at loading time, when the
+-     *     configuration is not available.
+-     * @param resolver A function which will compute the actual value with the configuration.
+-     */
+-    public static <FragmentT> LabelLateBoundDefault<FragmentT> fromTargetConfiguration(
+-        Class<FragmentT> fragmentClass, Label defaultValue, Resolver<FragmentT, Label> resolver) {
+-      Preconditions.checkArgument(
+-          !fragmentClass.equals(Void.class),
+-          "Use fromRuleAndAttributesOnly to specify a LateBoundDefault which does not use "
+-              + "configuration.");
+-      return new LabelLateBoundDefault<>(false, fragmentClass, defaultValue, resolver);
+-    }
+-
+-    /**
+-     * Creates a new LateBoundDefault which uses the rule, its configured attributes, and a fragment
+-     * of the host configuration.
+-     *
+-     * <p>This should only be necessary in very specialized cases. In almost all cases, you don't
+-     * need this method, just {@link #fromTargetConfiguration} and {@link
+-     * com.google.devtools.build.lib.analysis.config.HostTransition}.
+-     *
+-     * <p>This method only affects the configuration fragment passed to {@link #resolve}. You must
+-     * also use {@link com.google.devtools.build.lib.analysis.config.HostTransition}, so that the
+-     * dependency will be analyzed in the host configuration.
+-     *
+-     * @param fragmentClass The fragment to receive from the host configuration. May also be
+-     *     BuildConfiguration.class to receive the entire configuration (deprecated) - in this case,
+-     *     you must only use methods of BuildConfiguration itself, and not use any fragments. It is
+-     *     very rare that a LateBoundDefault should need a host configuration fragment; use {@link
+-     *     #fromTargetConfiguration} in most cases.
+-     * @param defaultValue The default {@link Label} to return at loading time, when the
+-     *     configuration is not available.
+-     * @param resolver A function which will compute the actual value with the configuration.
+-     */
+-    public static <FragmentT> LabelLateBoundDefault<FragmentT> fromHostConfiguration(
+-        Class<FragmentT> fragmentClass, Label defaultValue, Resolver<FragmentT, Label> resolver) {
+-      Preconditions.checkArgument(
+-          !fragmentClass.equals(Void.class),
+-          "Use fromRuleAndAttributesOnly to specify a LateBoundDefault which does not use "
+-              + "configuration.");
+-      return new LabelLateBoundDefault<>(true, fragmentClass, defaultValue, resolver);
+-    }
+-  }
+-
+-  /** A {@link LateBoundDefault} for a {@link List} of {@link Label} objects. */
+-  public static class LabelListLateBoundDefault<FragmentT>
+-      extends SimpleLateBoundDefault<FragmentT, List<Label>> {
+-    private LabelListLateBoundDefault(
+-        boolean useHostConfiguration,
+-        Class<FragmentT> fragmentClass,
+-        Resolver<FragmentT, List<Label>> resolver) {
+-      super(useHostConfiguration, fragmentClass, ImmutableList.of(), resolver);
+-    }
+-
+-    public static <FragmentT> LabelListLateBoundDefault<FragmentT> fromTargetConfiguration(
+-        Class<FragmentT> fragmentClass, Resolver<FragmentT, List<Label>> resolver) {
+-      Preconditions.checkArgument(
+-          !fragmentClass.equals(Void.class),
+-          "Use fromRuleAndAttributesOnly to specify a LateBoundDefault which does not use "
+-              + "configuration.");
+-      return new LabelListLateBoundDefault<>(false, fragmentClass, resolver);
+-    }
+-
+-    /**
+-     * Creates a new LabelListLateBoundDefault which uses only the rule and its configured
+-     * attributes.
+-     *
+-     * <p>This should only be necessary in very specialized cases. In almost all cases, you don't
+-     * need this method, just use {@link ComputedDefault}.
+-     *
+-     * <p>This is used primarily for computing values based on three or more configurable attributes
+-     * and/or matching names with late-bound attributes on other rules.
+-     *
+-     * @param resolver A function which will compute the actual value with the configuration.
+-     */
+-    public static LabelListLateBoundDefault<Void> fromRuleAndAttributesOnly(
+-        Resolver<Void, List<Label>> resolver) {
+-      return new LabelListLateBoundDefault<>(false, Void.class, resolver);
+-    }
+-  }
+-
 -  private final String name;
 -
 -  private final Type<?> type;
@@ -1829,7 +1836,7 @@ index dcd7fb34d..c087cb1ce 100644
 -  // (We assume a hypothetical Type.isValid(Object) predicate.)
 -  private final Object defaultValue;
 -
--  private final Transition configTransition;
+-  private final ConfigurationTransition configTransition;
 -
 -  private final SplitTransitionProvider splitTransitionProvider;
 -
@@ -1837,13 +1844,13 @@ index dcd7fb34d..c087cb1ce 100644
 -   * For label or label-list attributes, this predicate returns which rule
 -   * classes are allowed for the targets in the attribute.
 -   */
--  private final Predicate<RuleClass> allowedRuleClassesForLabels;
+-  private final RuleClassNamePredicate allowedRuleClassesForLabels;
 -
 -  /**
 -   * For label or label-list attributes, this predicate returns which rule
 -   * classes are allowed for the targets in the attribute with warning.
 -   */
--  private final Predicate<RuleClass> allowedRuleClassesForLabelsWarning;
+-  private final RuleClassNamePredicate allowedRuleClassesForLabelsWarning;
 -
 -  /**
 -   * For label or label-list attributes, this predicate returns which file
@@ -1884,10 +1891,10 @@ index dcd7fb34d..c087cb1ce 100644
 -      Type<?> type,
 -      Set<PropertyFlag> propertyFlags,
 -      Object defaultValue,
--      Transition configTransition,
+-      ConfigurationTransition configTransition,
 -      SplitTransitionProvider splitTransitionProvider,
--      Predicate<RuleClass> allowedRuleClassesForLabels,
--      Predicate<RuleClass> allowedRuleClassesForLabelsWarning,
+-      RuleClassNamePredicate allowedRuleClassesForLabels,
+-      RuleClassNamePredicate allowedRuleClassesForLabelsWarning,
 -      FileTypeSet allowedFileTypesForLabels,
 -      ValidityPredicate validityPredicate,
 -      Predicate<AttributeMap> condition,
@@ -1896,7 +1903,7 @@ index dcd7fb34d..c087cb1ce 100644
 -      ImmutableList<RuleAspect<?>> aspects) {
 -    Preconditions.checkNotNull(configTransition);
 -    Preconditions.checkArgument(
--        (configTransition == ConfigurationTransition.NONE)
+-        (configTransition == NoTransition.INSTANCE)
 -        || type.getLabelClass() == LabelClass.DEPENDENCY
 -        || type.getLabelClass() == LabelClass.NONDEP_REFERENCE,
 -        "Configuration transitions can only be specified for label or label list attributes");
@@ -1907,7 +1914,7 @@ index dcd7fb34d..c087cb1ce 100644
 -    if (isLateBound(name)) {
 -      LateBoundDefault<?, ?> lateBoundDefault = (LateBoundDefault<?, ?>) defaultValue;
 -      Preconditions.checkArgument(!lateBoundDefault.useHostConfiguration()
--          || (configTransition == ConfigurationTransition.HOST),
+-          || (configTransition.isHostTransition()),
 -          "a late bound default value using the host configuration must use the host transition");
 -    }
 -
@@ -2010,7 +2017,7 @@ index dcd7fb34d..c087cb1ce 100644
 -   * Returns the configuration transition for this attribute for label or label
 -   * list attributes. For other attributes it will always return {@code NONE}.
 -   */
--  public Transition getConfigurationTransition() {
+-  public ConfigurationTransition getConfigurationTransition() {
 -    return configTransition;
 -  }
 -
@@ -2021,7 +2028,7 @@ index dcd7fb34d..c087cb1ce 100644
 -   * @return a SplitTransition<BuildOptions> object
 -   * @throws IllegalStateException if {@link #hasSplitConfigurationTransition} is not true
 -   */
--  public SplitTransition<?> getSplitTransition(AttributeMap attributeMapper) {
+-  public SplitTransition getSplitTransition(AttributeMap attributeMapper) {
 -    Preconditions.checkState(hasSplitConfigurationTransition());
 -    return splitTransitionProvider.apply(attributeMapper);
 -  }
@@ -2097,12 +2104,26 @@ index dcd7fb34d..c087cb1ce 100644
 -  }
 -
 -  /**
+-   * Returns a predicate that evaluates to true for rule classes that are allowed labels in this
+-   * attribute. If this is not a label or label-list attribute, the returned predicate always
+-   * evaluates to true.
+-   *
+-   * <p>NOTE: This may return Predicates.<RuleClass>alwaysTrue() as a sentinel meaning "do the right
+-   * thing", rather than actually allowing all rule classes in that attribute. Others parts of bazel
+-   * code check for that specific instance.
+-   */
+-  public Predicate<RuleClass> getAllowedRuleClassesPredicate() {
+-    return allowedRuleClassesForLabels.asPredicateOfRuleClass();
+-  }
+-
+-  /**
 -   * Returns a predicate that evaluates to true for rule classes that are
 -   * allowed labels in this attribute. If this is not a label or label-list
 -   * attribute, the returned predicate always evaluates to true.
 -   */
--  public Predicate<RuleClass> getAllowedRuleClassesPredicate() {
--    return allowedRuleClassesForLabels;
+-  // TODO(b/69917891) Remove these methods once checkbuilddeps no longer depends on them.
+-  public Predicate<String> getAllowedRuleClassNamesPredicate() {
+-    return allowedRuleClassesForLabels.asPredicateOfRuleClassName();
 -  }
 -
 -  /**
@@ -2111,7 +2132,7 @@ index dcd7fb34d..c087cb1ce 100644
 -   * attribute, the returned predicate always evaluates to true.
 -   */
 -  public Predicate<RuleClass> getAllowedRuleClassesWarningPredicate() {
--    return allowedRuleClassesForLabelsWarning;
+-    return allowedRuleClassesForLabelsWarning.asPredicateOfRuleClass();
 -  }
 -
 -  public RequiredProviders getRequiredProviders() {
@@ -2138,14 +2159,17 @@ index dcd7fb34d..c087cb1ce 100644
 -   * Returns the list of aspects required for dependencies through this attribute.
 -   */
 -  public ImmutableList<Aspect> getAspects(Rule rule) {
--    ImmutableList.Builder<Aspect> builder = ImmutableList.builder();
+-    ImmutableList.Builder<Aspect> builder = null;
 -    for (RuleAspect aspect : aspects) {
 -      Aspect a = aspect.getAspect(rule);
 -      if (a != null) {
+-        if (builder == null) {
+-          builder = ImmutableList.builder();
+-        }
 -        builder.add(a);
 -      }
 -    }
--    return builder.build();
+-    return builder == null ? ImmutableList.of() : builder.build();
 -  }
 -
 -  public ImmutableList<AspectClass> getAspectClasses() {
@@ -2216,7 +2240,7 @@ index dcd7fb34d..c087cb1ce 100644
  
    /**
     * Returns if an attribute with the given name is an implicit dependency according to the
-@@ -2176,14 +35,6 @@ public final class Attribute implements Comparable<Attribute> {
+@@ -2199,14 +35,6 @@ public final class Attribute implements Comparable<Attribute> {
      return name.startsWith("$");
    }
  
@@ -2231,7 +2255,7 @@ index dcd7fb34d..c087cb1ce 100644
    /**
     * Returns if an attribute with the given name is late-bound according to the naming policy
     * that designates late-bound attributes.
-@@ -2208,44 +59,4 @@ public final class Attribute implements Comparable<Attribute> {
+@@ -2231,44 +59,4 @@ public final class Attribute implements Comparable<Attribute> {
      }
      return nativeAttrName;
    }

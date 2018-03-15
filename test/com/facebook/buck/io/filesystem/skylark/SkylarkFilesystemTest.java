@@ -47,6 +47,6 @@ public class SkylarkFilesystemTest {
   public void fileCreatedUsingProjectFileSystemIsVisibleToSkylark() throws Exception {
     java.nio.file.Path file = projectFilesystem.getPathForRelativePath("file");
     projectFilesystem.createNewFile(file);
-    assertTrue(toSkylarkPath(file).exists(skylarkFilesystem));
+    assertTrue(toSkylarkPath(file).exists());
   }
 }

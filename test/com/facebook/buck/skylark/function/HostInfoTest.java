@@ -64,7 +64,7 @@ public class HostInfoTest {
     // Assert that all keys are false except the one specified by {@code trueKey}
 
     Info topLevelStruct = struct.getValue(topLevel, Info.class);
-    for (String key : topLevelStruct.getKeys()) {
+    for (String key : topLevelStruct.getFieldNames()) {
       if (key.equals(trueKey)) {
         continue;
       }
@@ -202,7 +202,7 @@ public class HostInfoTest {
     Info realHostArch = realHostInfo.getValue("arch", Info.class);
     String trueOsKey =
         realHostOs
-            .getKeys()
+            .getFieldNames()
             .stream()
             .filter(
                 k -> {
@@ -217,7 +217,7 @@ public class HostInfoTest {
 
     String trueArchKey =
         realHostArch
-            .getKeys()
+            .getFieldNames()
             .stream()
             .filter(
                 k -> {

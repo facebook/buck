@@ -4,4 +4,9 @@ prebuilt_jar(
     licenses = ["LICENSE"],
     source_jar = "skylark-lang_deploy-src.jar",
     visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/objenesis:objenesis",
+        "//third-party/java/errorprone:error-prone-annotations",
+        "//third-party/java/guava:guava",
+    ]
 )

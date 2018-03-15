@@ -108,8 +108,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private final EventHandler eventHandler;
   private final Supplier<ImmutableList<BuiltinFunction>> buckRuleFunctionsSupplier;
   private final Supplier<ClassObject> nativeModuleSupplier;
-  private final Supplier<Environment.Frame> buckLoadContextGlobalsSupplier;
-  private final Supplier<Environment.Frame> buckBuildFileContextGlobalsSupplier;
+  private final Supplier<Environment.GlobalFrame> buckLoadContextGlobalsSupplier;
+  private final Supplier<Environment.GlobalFrame> buckBuildFileContextGlobalsSupplier;
   private final LoadingCache<LoadImport, ExtensionData> extensionDataCache;
 
   private SkylarkProjectBuildFileParser(
@@ -143,12 +143,12 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   /** Always disable implicit native imports in skylark rules, they should utilize native.foo */
-  private Environment.Frame getBuckLoadContextGlobals() {
+  private Environment.GlobalFrame getBuckLoadContextGlobals() {
     return getBuckGlobals(true);
   }
 
   /** Disable implicit native rules depending on configuration */
-  private Environment.Frame getBuckBuildFileContextGlobals() {
+  private Environment.GlobalFrame getBuckBuildFileContextGlobals() {
     return getBuckGlobals(options.getDisableImplicitNativeRules());
   }
 
@@ -255,7 +255,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private ParserInputSource createInputSource(com.google.devtools.build.lib.vfs.Path buildFilePath)
       throws IOException {
     return ParserInputSource.create(
-        FileSystemUtils.readWithKnownFileSize(buildFilePath, buildFilePath.getFileSize(fileSystem)),
+        FileSystemUtils.readWithKnownFileSize(buildFilePath, buildFilePath.getFileSize()),
         buildFilePath.asFragment());
   }
 
@@ -392,7 +392,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       }
       Environment extensionEnv = envBuilder.useDefaultSemantics().build();
       extensionEnv.setup("native", nativeModuleSupplier.get());
-      Runtime.registerModuleGlobals(extensionEnv, SkylarkExtensionFunctions.class);
+      Runtime.setupModuleGlobals(extensionEnv, SkylarkExtensionFunctions.class);
       boolean success = extensionAst.exec(extensionEnv, eventHandler);
       if (!success) {
         throw BuildFileParseException.createForUnknownParseError(
@@ -413,8 +413,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    *     {@code java_library}.
    * @param disableImplicitNativeRules If true, do not export native rules into the provided context
    */
-  private Environment.Frame getBuckGlobals(boolean disableImplicitNativeRules) {
-    Environment.Frame buckGlobals;
+  private Environment.GlobalFrame getBuckGlobals(boolean disableImplicitNativeRules) {
+    Environment.GlobalFrame buckGlobals;
     try (Mutability mutability = Mutability.create("global")) {
       Environment globalEnv =
           Environment.builder(mutability)

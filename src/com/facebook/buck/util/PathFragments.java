@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.collect.Streams;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -32,31 +31,7 @@ public final class PathFragments {
 
   /** Convert a Skylark PathFragment to a Java Path. */
   public static PathFragment pathToFragment(Path path) {
-    Path root = path.getRoot();
-    char driveLetter;
-    if (root == null) {
-      driveLetter = '\0';
-    } else {
-      String rootString = root.toString();
-      if (rootString.equals("/")) {
-        driveLetter = '\0';
-      } else if (rootString.charAt(1) == ':') {
-        driveLetter = Character.toUpperCase(rootString.charAt(0));
-      } else {
-        throw new AssertionError("Path.getRoot() returned an unexpected value: " + rootString);
-      }
-    }
-    // Note: Path normally elide all empty components, since path components cannot be empty.
-    // However, fileSystem.getPath("") will return a relative path with a single empty component.
-    // PathFragment can represent this path by simply having no segments, hence the code below
-    // filters out empty components.
-    return PathFragment.create(
-        driveLetter,
-        path.isAbsolute(),
-        Streams.stream(path)
-            .map(Object::toString)
-            .filter(s -> !s.isEmpty())
-            .toArray(String[]::new));
+    return PathFragment.create(path.toString());
   }
 
   /** Convert a skylark PathFragment to a Path using the default filesystem. */
@@ -66,17 +41,6 @@ public final class PathFragments {
 
   /** Convert a skylark PathFragment to a Path. */
   public static Path fragmentToPath(FileSystem fileSystem, PathFragment fragment) {
-    char driveLetter = fragment.getDriveLetter();
-    String rootComponent;
-    if (driveLetter != '\0') {
-      // Note: Bazel leaves behavior of volume prefixed relative paths undetermined.
-      rootComponent =
-          fragment.isAbsolute()
-              ? new String(new char[] {driveLetter, ':', '/'})
-              : new String(new char[] {driveLetter, ':'});
-    } else {
-      rootComponent = fragment.isAbsolute() ? "/" : "";
-    }
-    return fileSystem.getPath(rootComponent, fragment.getSegments().toArray(new String[0]));
+    return fileSystem.getPath(fragment.toString());
   }
 }

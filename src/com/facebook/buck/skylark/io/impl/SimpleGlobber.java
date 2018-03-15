@@ -107,16 +107,16 @@ public class SimpleGlobber implements Globber {
   private static class StrictExistenceFileSystemCalls implements FilesystemCalls {
     @Override
     public Collection<Dirent> readdir(Path path, Symlinks symlinks) throws IOException {
-      return path.readdir(path.getFileSystem(), symlinks);
+      return path.readdir(symlinks);
     }
 
     @Override
     public FileStatus statIfFound(Path path, Symlinks symlinks) throws IOException {
-      if (!path.exists(path.getFileSystem(), symlinks)) {
+      if (!path.exists(symlinks)) {
         throw new FileNotFoundException(path.getPathString());
       }
 
-      return path.statIfFound(path.getFileSystem(), symlinks);
+      return path.statIfFound(symlinks);
     }
   }
 }
