@@ -25,12 +25,10 @@ import java.nio.file.Path;
 public final class PathFragments {
   private PathFragments() {} // Utility class, do not instantiate.
 
-  // NB: This code avoids invoking toString() on either Path or PathFragment instances which
-  // may be long lived. For both classes, toString() results are cached in the object instance,
-  // leading to excessive memory usage.
-
   /** Convert a Skylark PathFragment to a Java Path. */
   public static PathFragment pathToFragment(Path path) {
+    // TODO(buckteam): Avoid invoking toString() on Path instances which may be long lived.
+    // toString() results are cached in the object instance, leading to excessive memory usage.
     return PathFragment.create(path.toString());
   }
 
