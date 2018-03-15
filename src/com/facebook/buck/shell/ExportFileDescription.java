@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
@@ -43,6 +44,12 @@ public class ExportFileDescription
   @Override
   public Class<ExportFileDescriptionArg> getConstructorArgType() {
     return ExportFileDescriptionArg.class;
+  }
+
+  private final ExportFileDirectoryAction directoryAction;
+
+  public ExportFileDescription(BuckConfig buckConfig) {
+    this.directoryAction = getDirectoryActionFromConfig(buckConfig);
   }
 
   @Override
@@ -83,7 +90,14 @@ public class ExportFileDescription
               buildTarget.getBasePath().resolve(buildTarget.getShortNameAndFlavorPostfix()));
     }
 
-    return new ExportFile(buildTarget, projectFilesystem, ruleFinder, name, mode, src);
+    return new ExportFile(
+        buildTarget, projectFilesystem, ruleFinder, name, mode, src, directoryAction);
+  }
+
+  private static ExportFileDirectoryAction getDirectoryActionFromConfig(BuckConfig buckConfig) {
+    return buckConfig
+        .getEnum("export_file", "input_directory_action", ExportFileDirectoryAction.class)
+        .orElse(ExportFileDirectoryAction.ALLOW);
   }
 
   /** If the src field is absent, add the name field to the list of inputs. */

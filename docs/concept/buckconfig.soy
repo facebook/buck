@@ -123,6 +123,7 @@ The following sections are recognized by Buck:
     'd',
     'doctor',
     'download',
+    'export_file',
     'go',
     'groovy',
     'halide',
@@ -1469,6 +1470,31 @@ $ buck build //big:expensive-rule            # Action Graph is reused.</pre>
     will require the user to run 'buck fetch' first. This generally should not be changed, to
     avoid surprising users with unexpected build times, when the cause is mostly download times.
     By default this set to false.
+  {/param}
+{/call}
+
+{call buckconfig.section}
+  {param name: 'export_file' /}
+  {param description}
+    This section configures behavior of <code>export_file</code> build rule.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'export_file' /}
+  {param name: 'input_directory_action' /}
+  {param example_value: 'fail' /}
+  {param description}
+    <p>Defines the behavior of <code>export_file</code> when input of a build rule is a directory.
+    Support for directories will be removed soon and this option provides a way to migrate a project
+    to a state when none of the <code>export_file</code> rules use directories as inputs.</p>
+    <p>The valid values are:
+      <ul>
+        <li><code>allow</code> (default): directories are allowed and no action is taken,</li>
+        <li><code>warn</code>: emit a warning to the console,</li>
+        <li><code>fail</code>: fail the build.</li>
+      </ul>
+    </p>
   {/param}
 {/call}
 

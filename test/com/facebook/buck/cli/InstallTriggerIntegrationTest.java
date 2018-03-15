@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -68,7 +69,7 @@ public class InstallTriggerIntegrationTest {
             cell ->
                 KnownBuildRuleTypes.builder()
                     .addDescriptions(new InstallTriggerDescription())
-                    .addDescriptions(new ExportFileDescription())
+                    .addDescriptions(new ExportFileDescription(FakeBuckConfig.builder().build()))
                     .build());
     workspace.setUp();
   }

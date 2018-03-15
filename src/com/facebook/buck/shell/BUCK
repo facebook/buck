@@ -8,6 +8,7 @@ java_library_with_plugins(
         "CommandAliasDescription.java",
         "ExportFile.java",
         "ExportFileDescription.java",
+        "ExportFileDirectoryAction.java",
         "Genrule.java",
         "GenruleBinary.java",
         "GenruleDescription.java",

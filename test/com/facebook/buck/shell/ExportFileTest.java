@@ -21,6 +21,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListener;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -56,6 +60,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
+import org.hamcrest.text.MatchesPattern;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -318,5 +323,88 @@ public class ExportFileTest {
     assertEquals(
         ImmutableList.of(genrule.getBuildTarget()),
         exportFile.getRuntimeDeps(ruleFinder).collect(Collectors.toList()));
+  }
+
+  @Test
+  public void testDirectoryActionFailOnDirectory() throws Exception {
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage(
+        MatchesPattern.matchesPattern("Trying to export a directory .* but it is not allowed."));
+
+    Path sourceDir = Paths.get("dir");
+    projectFilesystem.mkdirs(sourceDir);
+    ExportFile exportFile =
+        new ExportFileBuilder(
+                FakeBuckConfig.builder()
+                    .setSections("[export_file]", "input_directory_action = fail")
+                    .build(),
+                target)
+            .setOut("out")
+            .setSrc(FakeSourcePath.of(projectFilesystem, sourceDir))
+            .build(resolver, projectFilesystem);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+
+    exportFile.getBuildSteps(
+        FakeBuildContext.withSourcePathResolver(pathResolver)
+            .withBuildCellRootPath(projectFilesystem.getRootPath()),
+        new FakeBuildableContext());
+  }
+
+  @Test
+  public void testDirectoryActionWarnOnDirectory() throws Exception {
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
+
+    Path sourceDir = Paths.get("dir");
+    projectFilesystem.mkdirs(sourceDir);
+    ExportFile exportFile =
+        new ExportFileBuilder(
+                FakeBuckConfig.builder()
+                    .setSections("[export_file]", "input_directory_action = warn")
+                    .build(),
+                target)
+            .setOut("out")
+            .setSrc(FakeSourcePath.of(projectFilesystem, sourceDir))
+            .build(resolver, projectFilesystem);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
+    CapturingConsoleEventListener listener = new CapturingConsoleEventListener();
+    buckEventBus.register(listener);
+
+    exportFile.getBuildSteps(
+        FakeBuildContext.create(pathResolver, buckEventBus)
+            .withBuildCellRootPath(projectFilesystem.getRootPath()),
+        new FakeBuildableContext());
+
+    assertThat(
+        listener.getLogMessages().get(0),
+        MatchesPattern.matchesPattern("Trying to export a directory .* but it is not allowed."));
+  }
+
+  @Test
+  public void testDirectoryActionSkipOnDirectory() throws Exception {
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
+
+    Path sourceDir = Paths.get("dir");
+    projectFilesystem.mkdirs(sourceDir);
+    ExportFile exportFile =
+        new ExportFileBuilder(FakeBuckConfig.builder().build(), target)
+            .setOut("out")
+            .setSrc(FakeSourcePath.of(projectFilesystem, sourceDir))
+            .build(resolver, projectFilesystem);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
+    CapturingConsoleEventListener listener = new CapturingConsoleEventListener();
+    buckEventBus.register(listener);
+
+    exportFile.getBuildSteps(
+        FakeBuildContext.create(pathResolver, buckEventBus)
+            .withBuildCellRootPath(projectFilesystem.getRootPath()),
+        new FakeBuildableContext());
   }
 }

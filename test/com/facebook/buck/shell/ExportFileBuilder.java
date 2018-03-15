@@ -16,6 +16,8 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
@@ -27,7 +29,11 @@ public class ExportFileBuilder
         ExportFileDescriptionArg.Builder, ExportFileDescriptionArg, ExportFileDescription,
         ExportFile> {
   public ExportFileBuilder(BuildTarget target) {
-    super(new ExportFileDescription(), target);
+    super(new ExportFileDescription(FakeBuckConfig.builder().build()), target);
+  }
+
+  public ExportFileBuilder(BuckConfig buckConfig, BuildTarget target) {
+    super(new ExportFileDescription(buckConfig), target);
   }
 
   public ExportFileBuilder setSrc(@Nullable SourcePath path) {

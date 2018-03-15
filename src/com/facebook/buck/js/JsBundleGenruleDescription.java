@@ -38,6 +38,7 @@ import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.ExportFile;
 import com.facebook.buck.shell.ExportFileDescription;
+import com.facebook.buck.shell.ExportFileDirectoryAction;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreSuppliers;
@@ -117,7 +118,8 @@ public class JsBundleGenruleDescription
           new SourcePathRuleFinder(resolver),
           fileName.toString(),
           ExportFileDescription.Mode.REFERENCE,
-          output);
+          output,
+          ExportFileDirectoryAction.FAIL);
     }
 
     if (!(jsBundle instanceof JsBundleOutputs)) {

@@ -43,6 +43,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.ExportFile;
 import com.facebook.buck.shell.ExportFileDescription;
+import com.facebook.buck.shell.ExportFileDirectoryAction;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
@@ -119,7 +120,8 @@ public class JsBundleDescription
           new SourcePathRuleFinder(resolver),
           bundleOutputs.getBundleName() + ".map",
           ExportFileDescription.Mode.REFERENCE,
-          bundleOutputs.getSourcePathToSourceMap());
+          bundleOutputs.getSourcePathToSourceMap(),
+          ExportFileDirectoryAction.FAIL);
     }
 
     if (flavors.contains(JsFlavors.MISC)) {
@@ -133,7 +135,8 @@ public class JsBundleDescription
           new SourcePathRuleFinder(resolver),
           bundleOutputs.getBundleName() + "-misc",
           ExportFileDescription.Mode.REFERENCE,
-          bundleOutputs.getSourcePathToMisc());
+          bundleOutputs.getSourcePathToMisc(),
+          ExportFileDirectoryAction.FAIL);
     }
 
     // For Android, we bundle JS output as assets, and images etc. as resources.

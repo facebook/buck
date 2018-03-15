@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import static org.easymock.EasyMock.createMock;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -37,6 +38,15 @@ public class FakeBuildContext {
         .setSourcePathResolver(pathResolver)
         .setJavaPackageFinder(new FakeJavaPackageFinder())
         .setEventBus(BuckEventBusForTests.newInstance())
+        .setBuildCellRootPath(new FakeProjectFilesystem().getRootPath())
+        .build();
+  }
+
+  public static BuildContext create(SourcePathResolver pathResolver, BuckEventBus buckEventBus) {
+    return BuildContext.builder()
+        .setSourcePathResolver(pathResolver)
+        .setJavaPackageFinder(new FakeJavaPackageFinder())
+        .setEventBus(buckEventBus)
         .setBuildCellRootPath(new FakeProjectFilesystem().getRootPath())
         .build();
   }

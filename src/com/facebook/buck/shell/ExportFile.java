@@ -16,6 +16,8 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -34,9 +36,11 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
+import com.facebook.buck.shell.ExportFileDescription.Mode;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -101,6 +105,7 @@ public class ExportFile extends AbstractBuildRule
   @AddToRuleKey private final String name;
   @AddToRuleKey private final ExportFileDescription.Mode mode;
   @AddToRuleKey private final SourcePath src;
+  @AddToRuleKey private final ExportFileDirectoryAction directoryAction;
 
   private final ImmutableSortedSet<BuildRule> buildDeps;
 
@@ -109,12 +114,14 @@ public class ExportFile extends AbstractBuildRule
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
       String name,
-      ExportFileDescription.Mode mode,
-      SourcePath src) {
+      Mode mode,
+      SourcePath src,
+      ExportFileDirectoryAction directoryAction) {
     super(buildTarget, projectFilesystem);
     this.name = name;
     this.mode = mode;
     this.src = src;
+    this.directoryAction = directoryAction;
     this.buildDeps =
         ruleFinder.getRule(src).map(ImmutableSortedSet::of).orElse(ImmutableSortedSet.of());
   }
@@ -139,6 +146,10 @@ public class ExportFile extends AbstractBuildRule
       BuildContext context, BuildableContext buildableContext) {
     SourcePathResolver resolver = context.getSourcePathResolver();
 
+    if (resolver.getFilesystem(src).isDirectory(resolver.getRelativePath(src))) {
+      handleDirectory(context.getEventBus());
+    }
+
     // This file is copied rather than symlinked so that when it is included in an archive zip and
     // unpacked on another machine, it is an ordinary file in both scenarios.
     ImmutableList.Builder<Step> builder = ImmutableList.builder();
@@ -162,6 +173,24 @@ public class ExportFile extends AbstractBuildRule
     }
 
     return builder.build();
+  }
+
+  private void handleDirectory(BuckEventBus eventBus) {
+    switch (directoryAction) {
+      case FAIL:
+        throw new HumanReadableException(getDirectoryViolationMessage(src));
+      case WARN:
+        eventBus.post(ConsoleEvent.warning(getDirectoryViolationMessage(src)));
+        break;
+      case ALLOW:
+        break;
+      default:
+        throw new IllegalStateException();
+    }
+  }
+
+  private static String getDirectoryViolationMessage(SourcePath src) {
+    return String.format("Trying to export a directory '%s' but it is not allowed.", src);
   }
 
   @Override

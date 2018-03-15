@@ -34,6 +34,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.shell.ExportFile;
 import com.facebook.buck.shell.ExportFileDescription;
+import com.facebook.buck.shell.ExportFileDirectoryAction;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
@@ -328,7 +329,8 @@ class AndroidBinaryResourcesGraphEnhancer {
             ruleFinder,
             "AndroidManifest.xml",
             ExportFileDescription.Mode.COPY,
-            aaptOutputInfo.getAndroidManifestXml());
+            aaptOutputInfo.getAndroidManifestXml(),
+            ExportFileDirectoryAction.FAIL);
     ruleResolver.addToIndex(manifestCopyRule);
 
     return resultBuilder

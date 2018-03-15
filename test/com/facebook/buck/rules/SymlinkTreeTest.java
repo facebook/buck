@@ -31,8 +31,6 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
-import com.facebook.buck.shell.ExportFile;
-import com.facebook.buck.shell.ExportFileDescription.Mode;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
@@ -202,22 +200,12 @@ public class SymlinkTreeTest {
 
     BuildTarget exportFileTarget1 = BuildTargetFactory.newInstance("//test:dir1");
     BuildTarget exportFileTarget2 = BuildTargetFactory.newInstance("//test:dir2");
-    ExportFile exportFile1 =
-        new ExportFile(
-            exportFileTarget1,
-            projectFilesystem,
-            ruleFinder,
-            "dir1",
-            Mode.COPY,
-            FakeSourcePath.of(projectFilesystem, Paths.get("test", "dir1")));
-    ExportFile exportFile2 =
-        new ExportFile(
-            exportFileTarget2,
-            projectFilesystem,
-            ruleFinder,
-            "dir2",
-            Mode.COPY,
-            FakeSourcePath.of(projectFilesystem, Paths.get("test", "dir2")));
+
+    Genrule exportFile1 =
+        GenruleBuilder.newGenruleBuilder(exportFileTarget1).setOut("dir1").build(ruleResolver);
+    Genrule exportFile2 =
+        GenruleBuilder.newGenruleBuilder(exportFileTarget2).setOut("dir1").build(ruleResolver);
+
     projectFilesystem.mkdirs(Paths.get("test", "dir1"));
     projectFilesystem.writeContentsToPath("file", Paths.get("test", "dir1", "file1"));
     projectFilesystem.mkdirs(Paths.get("test", "dir2"));
@@ -299,22 +287,12 @@ public class SymlinkTreeTest {
 
     BuildTarget exportFileTarget1 = BuildTargetFactory.newInstance("//test:dir1");
     BuildTarget exportFileTarget2 = BuildTargetFactory.newInstance("//test:dir2");
-    ExportFile exportFile1 =
-        new ExportFile(
-            exportFileTarget1,
-            projectFilesystem,
-            ruleFinder,
-            "dir1",
-            Mode.COPY,
-            FakeSourcePath.of(projectFilesystem, Paths.get("test", "dir1")));
-    ExportFile exportFile2 =
-        new ExportFile(
-            exportFileTarget2,
-            projectFilesystem,
-            ruleFinder,
-            "dir2",
-            Mode.COPY,
-            FakeSourcePath.of(projectFilesystem, Paths.get("test", "dir2")));
+
+    Genrule exportFile1 =
+        GenruleBuilder.newGenruleBuilder(exportFileTarget1).setOut("dir1").build(ruleResolver);
+    Genrule exportFile2 =
+        GenruleBuilder.newGenruleBuilder(exportFileTarget2).setOut("dir1").build(ruleResolver);
+
     projectFilesystem.mkdirs(Paths.get("test", "dir1"));
     projectFilesystem.writeContentsToPath("file", Paths.get("test", "dir1", "file1"));
     projectFilesystem.mkdirs(Paths.get("test", "dir2"));
@@ -584,27 +562,32 @@ public class SymlinkTreeTest {
   @Test
   public void mergesDirectoryContentsIntoMainSymlinkTree() throws IOException {
     BuildTarget exportFileTarget1 = BuildTargetFactory.newInstance("//test:dir1");
+    Path dir1 = Paths.get("test", "dir1");
+    Path dir1file = dir1.resolve("file1");
     BuildTarget exportFileTarget2 = BuildTargetFactory.newInstance("//test:dir2");
-    ExportFile exportFile1 =
-        new ExportFile(
-            exportFileTarget1,
-            projectFilesystem,
-            ruleFinder,
-            "dir1",
-            Mode.COPY,
-            FakeSourcePath.of(projectFilesystem, Paths.get("test", "dir1")));
-    ExportFile exportFile2 =
-        new ExportFile(
-            exportFileTarget2,
-            projectFilesystem,
-            ruleFinder,
-            "dir2",
-            Mode.COPY,
-            FakeSourcePath.of(projectFilesystem, Paths.get("test", "dir2")));
-    projectFilesystem.mkdirs(Paths.get("test", "dir1"));
-    projectFilesystem.writeContentsToPath("file", Paths.get("test", "dir1", "file1"));
-    projectFilesystem.mkdirs(Paths.get("test", "dir2"));
-    projectFilesystem.writeContentsToPath("file", Paths.get("test", "dir2", "file2"));
+    Path dir2 = Paths.get("test", "dir2");
+    Path dir2file = dir1.resolve("file2");
+
+    projectFilesystem.mkdirs(dir1);
+    projectFilesystem.writeContentsToPath("file", dir1file);
+    projectFilesystem.mkdirs(dir2);
+    projectFilesystem.writeContentsToPath("file", dir2file);
+
+    Genrule exportFile1 =
+        GenruleBuilder.newGenruleBuilder(exportFileTarget1, projectFilesystem)
+            .setOut("dir1")
+            .setSrcs(ImmutableList.of(FakeSourcePath.of(projectFilesystem, dir1file)))
+            .setCmd("mkdir -p $OUT && cp $SRCS $OUT")
+            .setCmdExe("mkdir $OUT && copy $SRCS $OUT")
+            .build(ruleResolver);
+    Genrule exportFile2 =
+        GenruleBuilder.newGenruleBuilder(exportFileTarget2, projectFilesystem)
+            .setOut("dir2")
+            .setSrcs(ImmutableList.of(FakeSourcePath.of(projectFilesystem, dir2file)))
+            .setCmd("mkdir -p $OUT && cp $SRCS $OUT")
+            .setCmdExe("mkdir $OUT && copy $SRCS $OUT")
+            .build(ruleResolver);
+
     ruleResolver.computeIfAbsent(exportFileTarget1, target -> exportFile1);
     ruleResolver.computeIfAbsent(exportFileTarget2, target -> exportFile2);
 
@@ -632,7 +615,7 @@ public class SymlinkTreeTest {
         .forEach(
             step -> {
               try {
-                step.execute(TestExecutionContext.newInstance());
+                step.execute(TestExecutionContext.newInstanceWithRealProcessExecutor());
               } catch (IOException | InterruptedException e) {
                 throw new RuntimeException(e);
               }
@@ -665,27 +648,32 @@ public class SymlinkTreeTest {
     }
 
     BuildTarget exportFileTarget1 = BuildTargetFactory.newInstance("//test:dir1");
+    Path dir1 = Paths.get("test", "dir1");
+    Path dir1file = dir1.resolve("file1");
     BuildTarget exportFileTarget2 = BuildTargetFactory.newInstance("//test:dir2");
-    ExportFile exportFile1 =
-        new ExportFile(
-            exportFileTarget1,
-            projectFilesystem,
-            ruleFinder,
-            "dir1",
-            Mode.COPY,
-            FakeSourcePath.of(projectFilesystem, Paths.get("test", "dir1")));
-    ExportFile exportFile2 =
-        new ExportFile(
-            exportFileTarget2,
-            projectFilesystem,
-            ruleFinder,
-            "dir2",
-            Mode.COPY,
-            FakeSourcePath.of(projectFilesystem, Paths.get("test", "dir2")));
-    projectFilesystem.mkdirs(Paths.get("test", "dir1"));
-    projectFilesystem.writeContentsToPath("file", Paths.get("test", "dir1", "file1"));
-    projectFilesystem.mkdirs(Paths.get("test", "dir2"));
-    projectFilesystem.writeContentsToPath("file", Paths.get("test", "dir2", "file1"));
+    Path dir2 = Paths.get("test", "dir2");
+    Path dir2file = dir1.resolve("file1");
+
+    projectFilesystem.mkdirs(dir1);
+    projectFilesystem.writeContentsToPath("file", dir1file);
+    projectFilesystem.mkdirs(dir2);
+    projectFilesystem.writeContentsToPath("file", dir2file);
+
+    Genrule exportFile1 =
+        GenruleBuilder.newGenruleBuilder(exportFileTarget1, projectFilesystem)
+            .setOut("dir1")
+            .setSrcs(ImmutableList.of(FakeSourcePath.of(projectFilesystem, dir1file)))
+            .setCmd("mkdir -p $OUT && cp $SRCS $OUT")
+            .setCmdExe("mkdir $OUT && copy $SRCS $OUT")
+            .build(ruleResolver);
+    Genrule exportFile2 =
+        GenruleBuilder.newGenruleBuilder(exportFileTarget2, projectFilesystem)
+            .setOut("dir2")
+            .setSrcs(ImmutableList.of(FakeSourcePath.of(projectFilesystem, dir2file)))
+            .setCmd("mkdir -p $OUT && cp $SRCS $OUT")
+            .setCmdExe("mkdir $OUT && copy $SRCS $OUT")
+            .build(ruleResolver);
+
     ruleResolver.computeIfAbsent(exportFileTarget1, target -> exportFile1);
     ruleResolver.computeIfAbsent(exportFileTarget2, target -> exportFile2);
 
@@ -713,7 +701,7 @@ public class SymlinkTreeTest {
         .forEach(
             step -> {
               try {
-                step.execute(TestExecutionContext.newInstance());
+                step.execute(TestExecutionContext.newInstanceWithRealProcessExecutor());
               } catch (IOException | InterruptedException e) {
                 throw new RuntimeException(e);
               }
@@ -731,16 +719,19 @@ public class SymlinkTreeTest {
     }
 
     BuildTarget exportFileTarget1 = BuildTargetFactory.newInstance("//test:dir1");
-    ExportFile exportFile1 =
-        new ExportFile(
-            exportFileTarget1,
-            projectFilesystem,
-            ruleFinder,
-            "dir1",
-            Mode.COPY,
-            FakeSourcePath.of(projectFilesystem, Paths.get("test", "dir1")));
-    projectFilesystem.mkdirs(Paths.get("test", "dir1"));
-    projectFilesystem.writeContentsToPath("file", Paths.get("test", "dir1", "file"));
+    Path dir1 = Paths.get("test", "dir1");
+    Path dir1file = dir1.resolve("file");
+
+    Genrule exportFile1 =
+        GenruleBuilder.newGenruleBuilder(exportFileTarget1, projectFilesystem)
+            .setOut("dir1")
+            .setSrcs(ImmutableList.of(FakeSourcePath.of(projectFilesystem, dir1file)))
+            .setCmd("mkdir $OUT && cp $SRCS $OUT")
+            .setCmdExe("mkdir $OUT && copy $SRCS $OUT")
+            .build(ruleResolver);
+
+    projectFilesystem.mkdirs(dir1);
+    projectFilesystem.writeContentsToPath("file", dir1file);
     ruleResolver.computeIfAbsent(exportFileTarget1, target -> exportFile1);
 
     symlinkTreeBuildRule =
@@ -761,7 +752,7 @@ public class SymlinkTreeTest {
         .forEach(
             step -> {
               try {
-                step.execute(TestExecutionContext.newInstance());
+                step.execute(TestExecutionContext.newInstanceWithRealProcessExecutor());
               } catch (IOException | InterruptedException e) {
                 throw new RuntimeException(e);
               }
@@ -771,14 +762,8 @@ public class SymlinkTreeTest {
   @Test
   public void getsCorrectCompileTimeDeps() {
     BuildTarget exportFileTarget = BuildTargetFactory.newInstance("//test:dir");
-    ExportFile exportFile =
-        new ExportFile(
-            exportFileTarget,
-            projectFilesystem,
-            ruleFinder,
-            "dir",
-            Mode.COPY,
-            FakeSourcePath.of(projectFilesystem, Paths.get("test", "dir")));
+    Genrule exportFile =
+        GenruleBuilder.newGenruleBuilder(exportFileTarget).setOut("dir1").build(ruleResolver);
     ruleResolver.computeIfAbsent(exportFileTarget, target -> exportFile);
 
     symlinkTreeBuildRule =
