@@ -20,6 +20,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.provider.BuildRuleInfoProvider;
 import com.facebook.buck.rules.provider.BuildRuleInfoProvider.ProviderKey;
+import com.facebook.buck.rules.provider.BuildRuleInfoProviderCollection;
 import com.facebook.buck.rules.provider.MissingProviderException;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.CaseFormat;
@@ -97,6 +98,11 @@ public abstract class AbstractBuildRule implements BuildRule {
   @Override
   public <T extends BuildRuleInfoProvider> T getProvider(ProviderKey providerKey)
       throws MissingProviderException {
+    throw new UnsupportedOperationException("Not yet implemented");
+  }
+
+  @Override
+  public BuildRuleInfoProviderCollection getProviderCollection() {
     throw new UnsupportedOperationException("Not yet implemented");
   }
 }

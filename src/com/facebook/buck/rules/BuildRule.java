@@ -20,6 +20,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.provider.BuildRuleInfoProvider;
+import com.facebook.buck.rules.provider.BuildRuleInfoProviderCollection;
 import com.facebook.buck.rules.provider.MissingProviderException;
 import com.facebook.buck.step.Step;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -129,4 +130,14 @@ public interface BuildRule extends Comparable<BuildRule> {
    */
   <T extends BuildRuleInfoProvider> T getProvider(T.ProviderKey providerKey)
       throws MissingProviderException;
+
+  /**
+   * Exposes all the providers about this BuildRule to BuildRules that depend on this BuildRule
+   * during action graph construction. If {@link #hasProviders()} is {@code false}, {@link
+   * UnsupportedOperationException} will be thrown.
+   *
+   * @return an immutable BuildRuleInfoProviderCollection containing all providers for this
+   *     BuildRule
+   */
+  BuildRuleInfoProviderCollection getProviderCollection();
 }

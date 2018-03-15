@@ -78,6 +78,18 @@ public abstract class AbstractBuildRuleWithProviders implements BuildRule {
     return providers.get(providerKey);
   }
 
+  /**
+   * During ActionGraph creation, any data exposed to dependent BuildRule will be exposed via the
+   * collection of providers obtained from this method.
+   *
+   * @return an immutable BuildRuleInfoProviderCollection containing all the Providers of this
+   *     BuildRule
+   */
+  @Override
+  public final BuildRuleInfoProviderCollection getProviderCollection() {
+    return providers;
+  }
+
   // The following methods provide quick access to common BuildRule data directly for use without
   // needing providers, for outside of ActionGraph construction
   @Override

@@ -91,5 +91,14 @@ public class BuildRuleInfoProviderCollectionTest {
     assertEquals(1, fakeProvider1.getValue());
     assertEquals(anotherFakeProvider, buildRule.getProvider(AnotherFakeBuildRuleInfoProvider.KEY));
     assertEquals(defaultProvider, buildRule.getProvider(DefaultBuildRuleInfoProvider.KEY));
+
+    BuildRuleInfoProviderCollection providerCollection = buildRule.getProviderCollection();
+    assertEquals(
+        buildRule.getProvider(FakeBuildRuleInfoProvider.KEY),
+        providerCollection.get(FakeBuildRuleInfoProvider.KEY));
+    assertEquals(
+        buildRule.getProvider(AnotherFakeBuildRuleInfoProvider.KEY),
+        providerCollection.get(AnotherFakeBuildRuleInfoProvider.KEY));
+    assertEquals(defaultProvider, providerCollection.get(DefaultBuildRuleInfoProvider.KEY));
   }
 }
