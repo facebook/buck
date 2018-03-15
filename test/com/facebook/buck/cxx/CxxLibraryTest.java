@@ -42,7 +42,6 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.types.Either;
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -189,8 +188,8 @@ public class CxxLibraryTest {
             CxxDeps.of(),
             CxxDeps.of(),
             /* headerOnly */ x -> true,
-            Functions.constant(StringArg.from("-ldl")),
-            /* linkTargetInput */ Functions.constant(NativeLinkableInput.of()),
+            (unused1, unused2) -> StringArg.from("-ldl"),
+            /* linkTargetInput */ (unused1, unused2, unused3, unused4) -> NativeLinkableInput.of(),
             /* supportedPlatformsRegex */ Optional.empty(),
             ImmutableSet.of(frameworkPath),
             ImmutableSet.of(),

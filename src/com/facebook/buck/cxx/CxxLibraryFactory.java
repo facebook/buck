@@ -265,8 +265,6 @@ public class CxxLibraryFactory {
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return new CxxLibrary(
         buildTarget,
         projectFilesystem,
@@ -275,10 +273,12 @@ public class CxxLibraryFactory {
         args.getPrivateCxxDeps(),
         args.getExportedCxxDeps(),
         hasObjects.negate(),
-        input -> {
+        (input, ruleResolverInner) -> {
           ImmutableList<Arg> delegateExportedLinkerFlags =
               delegate
-                  .map(d -> d.getAdditionalExportedLinkerFlags(buildTarget, resolver, input))
+                  .map(
+                      d ->
+                          d.getAdditionalExportedLinkerFlags(buildTarget, ruleResolverInner, input))
                   .orElse(ImmutableList.of());
 
           ImmutableList<StringWithMacros> flags =
@@ -288,17 +288,17 @@ public class CxxLibraryFactory {
               .map(
                   f ->
                       CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                          buildTarget, cellRoots, resolver, input, f))
+                          buildTarget, cellRoots, ruleResolverInner, input, f))
               .concat(RichStream.from(delegateExportedLinkerFlags))
               .toImmutableList();
         },
-        cxxPlatform -> {
+        (cxxPlatform, ruleResolverInner, pathResolverInner, ruleFinderInner) -> {
           return getSharedLibraryNativeLinkTargetInput(
               buildTarget,
               projectFilesystem,
-              resolver,
-              pathResolver,
-              ruleFinder,
+              ruleResolverInner,
+              pathResolverInner,
+              ruleFinderInner,
               cellRoots,
               cxxBuckConfig,
               cxxPlatform,

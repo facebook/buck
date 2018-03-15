@@ -43,6 +43,7 @@ import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.function.QuadFunction;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
@@ -55,7 +56,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -78,8 +79,12 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final CxxDeps deps;
   private final CxxDeps exportedDeps;
   private final Predicate<CxxPlatform> headerOnly;
-  private final Function<? super CxxPlatform, Iterable<? extends Arg>> exportedLinkerFlags;
-  private final Function<? super CxxPlatform, NativeLinkableInput> linkTargetInput;
+  private final BiFunction<? super CxxPlatform, BuildRuleResolver, Iterable<? extends Arg>>
+      exportedLinkerFlags;
+  private final QuadFunction<
+          ? super CxxPlatform, BuildRuleResolver, SourcePathResolver, SourcePathRuleFinder,
+          NativeLinkableInput>
+      linkTargetInput;
   private final Optional<Pattern> supportedPlatformsRegex;
   private final ImmutableSet<FrameworkPath> frameworks;
   private final ImmutableSet<FrameworkPath> libraries;
@@ -111,8 +116,12 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxDeps deps,
       CxxDeps exportedDeps,
       Predicate<CxxPlatform> headerOnly,
-      Function<? super CxxPlatform, Iterable<? extends Arg>> exportedLinkerFlags,
-      Function<? super CxxPlatform, NativeLinkableInput> linkTargetInput,
+      BiFunction<? super CxxPlatform, BuildRuleResolver, Iterable<? extends Arg>>
+          exportedLinkerFlags,
+      QuadFunction<
+              ? super CxxPlatform, BuildRuleResolver, SourcePathResolver, SourcePathRuleFinder,
+              NativeLinkableInput>
+          linkTargetInput,
       Optional<Pattern> supportedPlatformsRegex,
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
@@ -295,7 +304,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     // Build up the arguments used to link this library.  If we're linking the
     // whole archive, wrap the library argument in the necessary "ld" flags.
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
-    linkerArgsBuilder.addAll(Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform)));
+    linkerArgsBuilder.addAll(
+        Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform, ruleResolver)));
 
     boolean delegateWantsArtifact =
         delegate
@@ -460,7 +470,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     if (!isPlatformSupported(cxxPlatform)) {
       return NativeLinkableInput.of();
     }
-    return linkTargetInput.apply(cxxPlatform);
+    return linkTargetInput.apply(cxxPlatform, ruleResolver, pathResolver, ruleFinder);
   }
 
   @Override
@@ -484,7 +494,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   public Iterable<? extends Arg> getExportedLinkerFlags(CxxPlatform cxxPlatform) {
-    return exportedLinkerFlags.apply(cxxPlatform);
+    return exportedLinkerFlags.apply(cxxPlatform, ruleResolver);
   }
 
   @Override
