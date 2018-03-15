@@ -18,6 +18,7 @@ package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.NoopArtifactCacheByBuildRule;
 import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
+import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.event.listener.NoOpCoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.model.BuildTarget;
@@ -35,15 +36,15 @@ public class MinionWorkloadAllocatorTest {
 
   private static final String MINION_ONE = "Super minion 1";
   private static final int MAX_WORK_UNITS = 10;
-  public static final int MOST_BUILD_RULES_FINISHED_PERCENTAGE = 100;
+  private static final int MOST_BUILD_RULES_FINISHED_PERCENTAGE = 100;
+  private static final StampedeId STAMPEDE_ID = new StampedeId().setId("DUMMY_ID");
 
   private BuildTargetsQueue queue;
-  private BuildTarget target;
 
   @Before
   public void setUp() throws NoSuchBuildTargetException {
     BuildRuleResolver resolver = CustomBuildRuleResolverFactory.createDiamondDependencyResolver();
-    target = BuildTargetFactory.newInstance(CustomBuildRuleResolverFactory.ROOT_TARGET);
+    BuildTarget target = BuildTargetFactory.newInstance(CustomBuildRuleResolverFactory.ROOT_TARGET);
     queue =
         new CacheOptimizedBuildTargetsQueueFactory(
                 resolver, new NoopArtifactCacheByBuildRule(), false, new RuleDepsCache(resolver))
@@ -55,7 +56,8 @@ public class MinionWorkloadAllocatorTest {
 
   @Test
   public void testNormalBuildFlow() {
-    MinionWorkloadAllocator allocator = new MinionWorkloadAllocator(queue);
+    MinionWorkloadAllocator allocator =
+        new MinionWorkloadAllocator(queue, new DistBuildTraceTracker(STAMPEDE_ID));
     Assert.assertFalse(allocator.isBuildFinished());
 
     List<WorkUnit> firstTargets =

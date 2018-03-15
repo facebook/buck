@@ -21,7 +21,6 @@ import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.log.TimedLogger;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -178,7 +177,7 @@ public class BuildTargetsQueue {
     seenFinishedNodes.add(target.getTargetName());
     finishedCacheableNodes += (target.isUncachable() ? 0 : 1);
 
-    ImmutableList<String> dependents = target.dependentTargets;
+    ImmutableSet<String> dependents = target.dependentTargets;
     LOG.debug(
         String.format(
             "Complete node [%s] has [%s] dependents", target.getTargetName(), dependents.size()));
@@ -266,7 +265,7 @@ public class BuildTargetsQueue {
       // are not finished yet, stop at the current node.
       DistributableNode parent =
           Preconditions.checkNotNull(
-              distributableBuildGraph.getNode(currentNode.dependentTargets.get(0)));
+              distributableBuildGraph.getNode(currentNode.dependentTargets.asList().get(0)));
       if (parent.getNumUnsatisfiedDependencies() != 1
           || seenWorkingNodes.contains(parent.getTargetName())) {
         break;

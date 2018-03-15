@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * This class tracks start and stop timestamp for build rules processed by stamepede minions.
@@ -37,9 +38,9 @@ public class DistBuildTraceTracker {
   private Map<String, ArrayList<RuleTrace>> rulesByMinionId = new HashMap<>();
   private Map<String, Long> jobStartedEpochMillisByJobId = new HashMap<>();
   private Map<String, String> nextBuildRuleInWorkUnitByRule = new HashMap<>();
+  private Optional<DistributableBuildGraph> buildGraph = Optional.empty();
 
   private final Clock clock;
-
   private final StampedeId stampedeId;
 
   public DistBuildTraceTracker(StampedeId stampedeId) {
@@ -49,6 +50,10 @@ public class DistBuildTraceTracker {
   public DistBuildTraceTracker(StampedeId stampedeId, Clock clock) {
     this.stampedeId = stampedeId;
     this.clock = clock;
+  }
+
+  public void setBuildGraph(DistributableBuildGraph graph) {
+    this.buildGraph = Optional.of(graph);
   }
 
   private void minionGotWork(List<WorkUnit> workUnits, long now) {
@@ -97,6 +102,6 @@ public class DistBuildTraceTracker {
   }
 
   public DistBuildTrace generateTrace() {
-    return new DistBuildTrace(stampedeId, new HashMap<>(rulesByMinionId));
+    return new DistBuildTrace(stampedeId, new HashMap<>(rulesByMinionId), buildGraph);
   }
 }

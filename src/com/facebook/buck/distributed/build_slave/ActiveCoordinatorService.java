@@ -36,19 +36,16 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
 
   private final MinionWorkloadAllocator allocator;
   private final CompletableFuture<ExitState> exitCodeFuture;
-  private final DistBuildTraceTracker chromeTraceTracker;
   private final CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher;
   private final MinionHealthTracker minionHealthTracker;
 
   public ActiveCoordinatorService(
       MinionWorkloadAllocator allocator,
       CompletableFuture<ExitState> exitCodeFuture,
-      DistBuildTraceTracker chromeTraceTracker,
       CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher,
       MinionHealthTracker minionHealthTracker) {
     this.allocator = allocator;
     this.exitCodeFuture = exitCodeFuture;
-    this.chromeTraceTracker = chromeTraceTracker;
     this.coordinatorBuildRuleEventsPublisher = coordinatorBuildRuleEventsPublisher;
     this.minionHealthTracker = minionHealthTracker;
   }
@@ -98,9 +95,6 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
     if (allocator.haveMostBuildRulesCompleted()) {
       coordinatorBuildRuleEventsPublisher.createMostBuildRulesCompletedEvent();
     }
-
-    chromeTraceTracker.updateWork(
-        request.getMinionId(), request.getFinishedTargets(), newWorkUnitsForMinion);
 
     // If the build is already finished (or just finished with this update, then signal this to
     // the minion.

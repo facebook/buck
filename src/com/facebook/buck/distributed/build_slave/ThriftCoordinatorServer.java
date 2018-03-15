@@ -266,18 +266,16 @@ public class ThriftCoordinatorServer implements Closeable {
     }
   }
 
-  private void switchToActiveModeOrFail(Future<BuildTargetsQueue> queue) {
-    Preconditions.checkState(queue.isDone());
+  private void switchToActiveModeOrFail(Future<BuildTargetsQueue> queueFuture) {
+    Preconditions.checkState(queueFuture.isDone());
     try {
       LOG.info("Switching Coordinator to Active mode now.");
-      MinionWorkloadAllocator allocator = new MinionWorkloadAllocator(queue.get());
+      BuildTargetsQueue queue = queueFuture.get();
+      chromeTraceTracker.setBuildGraph(queue.getDistributableBuildGraph());
+      MinionWorkloadAllocator allocator = new MinionWorkloadAllocator(queue, chromeTraceTracker);
       this.handler =
           new ActiveCoordinatorService(
-              allocator,
-              exitCodeFuture,
-              chromeTraceTracker,
-              coordinatorBuildRuleEventsPublisher,
-              minionHealthTracker);
+              allocator, exitCodeFuture, coordinatorBuildRuleEventsPublisher, minionHealthTracker);
     } catch (InterruptedException | ExecutionException e) {
       String msg = "Failed to create the BuildTargetsQueue.";
       LOG.error(msg);

@@ -30,10 +30,13 @@ public class MinionWorkloadAllocator {
   private static final Logger LOG = Logger.get(MinionWorkloadAllocator.class);
 
   private final BuildTargetsQueue queue;
+  private final DistBuildTraceTracker chromeTraceTracker;
   private final List<String> nodesAssignedToMinions = new ArrayList<>();
 
-  public MinionWorkloadAllocator(BuildTargetsQueue queue) {
+  public MinionWorkloadAllocator(
+      BuildTargetsQueue queue, DistBuildTraceTracker chromeTraceTracker) {
     this.queue = queue;
+    this.chromeTraceTracker = chromeTraceTracker;
   }
 
   public boolean isBuildFinished() {
@@ -63,6 +66,7 @@ public class MinionWorkloadAllocator {
             nodesAssignedToMinions.size(),
             queue.hasReadyZeroDependencyNodes()));
 
+    chromeTraceTracker.updateWork(minionId, finishedNodes, workUnits);
     return workUnits;
   }
 

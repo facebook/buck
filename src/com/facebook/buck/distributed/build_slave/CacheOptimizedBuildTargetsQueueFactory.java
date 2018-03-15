@@ -328,9 +328,8 @@ public class CacheOptimizedBuildTargetsQueueFactory {
       DistributableNode distributableNode =
           new DistributableNode(
               target,
-              ImmutableList.copyOf(currentRevDeps),
-              Preconditions.checkNotNull(results.allForwardDeps.get(target)).size(),
-              ImmutableSet.copyOf(results.allForwardDeps.get(target)),
+              ImmutableSet.copyOf(currentRevDeps),
+              ImmutableSet.copyOf(Preconditions.checkNotNull(results.allForwardDeps.get(target))),
               results.uncachableTargets.contains(target));
       allNodes.put(target, distributableNode);
 

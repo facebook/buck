@@ -191,6 +191,7 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
     public void close() throws IOException {
       closer.close();
 
+      // TODO(shivanker): This should be async, but blocking the process from shutting down.
       dumpAndUploadChromeTrace();
     }
 
@@ -215,8 +216,8 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
         Path uploadLogFile = logDirectoryPath.resolve("upload-dist-build-build-trace.log");
         UploaderLauncher.uploadInBackground(
             buildId, traceFilePath, "dist_build", uploadUri, uploadLogFile, CompressionType.GZIP);
-      } catch (Exception e) {
-        LOG.warn("Failed to write or upload distbuild chrome trace", e);
+      } catch (IOException e) {
+        LOG.warn(e, "Failed to write or upload distbuild chrome trace.");
       }
     }
   }

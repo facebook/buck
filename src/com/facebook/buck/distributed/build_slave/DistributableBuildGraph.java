@@ -18,11 +18,11 @@ package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -60,24 +60,25 @@ public class DistributableBuildGraph {
   static class DistributableNode {
     private final String targetName;
     private final boolean uncachable;
-    public final ImmutableList<String> dependentTargets;
+    public final ImmutableSet<String> dependentTargets;
     public final ImmutableSet<String> allDependencies;
 
     private final Set<String> dependenciesRemaining;
     private int unsatisfiedDependencies;
+    private Optional<ImmutableSet<String>> transitiveCachableDependents = Optional.empty();
 
     public DistributableNode(
         String targetName,
-        ImmutableList<String> dependentTargets,
-        int numberOfDependencies,
-        ImmutableSet<String> dependenciesRemaining,
+        ImmutableSet<String> dependentTargets,
+        ImmutableSet<String> dependencyTargets,
         boolean uncachable) {
       this.targetName = targetName;
       this.dependentTargets = dependentTargets;
-      this.unsatisfiedDependencies = numberOfDependencies;
-      this.dependenciesRemaining = new HashSet<>(dependenciesRemaining);
-      this.allDependencies = dependenciesRemaining;
+      this.allDependencies = dependencyTargets;
       this.uncachable = uncachable;
+
+      this.dependenciesRemaining = new HashSet<>(dependencyTargets);
+      this.unsatisfiedDependencies = this.dependenciesRemaining.size();
     }
 
     public boolean isUncachable() {
@@ -98,6 +99,25 @@ public class DistributableBuildGraph {
 
     public boolean isDependencyRemaining(String targetName) {
       return dependenciesRemaining.contains(targetName);
+    }
+
+    public ImmutableSet<String> getTransitiveCachableDependents(DistributableBuildGraph graph) {
+      if (transitiveCachableDependents.isPresent()) {
+        return transitiveCachableDependents.get();
+      }
+
+      ImmutableSet.Builder<String> cachableDependents = ImmutableSet.builder();
+      for (String parent : dependentTargets) {
+        DistributableNode parentNode = graph.getNode(parent);
+        if (parentNode.isUncachable()) {
+          cachableDependents.addAll(parentNode.getTransitiveCachableDependents(graph));
+        } else {
+          cachableDependents.add(parent);
+        }
+      }
+
+      transitiveCachableDependents = Optional.of(cachableDependents.build());
+      return transitiveCachableDependents.get();
     }
 
     public void finishDependency(String dependency) {
