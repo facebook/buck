@@ -127,7 +127,6 @@ public class CxxCompilationDatabaseTest {
                 filesystem,
                 ImmutableSortedSet.of(privateSymlinkTree, exportedSymlinkTree),
                 new PreprocessorDelegate(
-                    testSourcePathResolver,
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                     CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
                     filesystem.getRootPath(),

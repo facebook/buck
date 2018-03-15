@@ -81,7 +81,8 @@ public class CxxPrecompiledHeaderTemplate extends PreInclude {
     // and nothing related to the deps of this particular rule (hence 'getNonIncludePathFlags').
     CxxToolFlags compilerFlags =
         CxxToolFlags.concat(
-            preprocessorDelegateForCxxRule.getNonIncludePathFlags(/* no pch */ Optional.empty()),
+            preprocessorDelegateForCxxRule.getNonIncludePathFlags(
+                /* no pch */ Optional.empty(), pathResolver),
             computedCompilerFlags);
 
     // Now build a new pp-delegate specially for this PCH rule.

@@ -196,13 +196,13 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
     // If we're compiling, this will just be empty.
     HeaderPathNormalizer headerPathNormalizer =
         preprocessDelegate
-            .map(PreprocessorDelegate::getHeaderPathNormalizer)
+            .map(x -> x.getHeaderPathNormalizer(resolver))
             .orElseGet(() -> HeaderPathNormalizer.empty(resolver));
 
     ImmutableList<Arg> arguments =
         compilerDelegate.getArguments(
             preprocessDelegate
-                .map(delegate -> delegate.getFlagsWithSearchPaths(precompiledHeaderRule))
+                .map(delegate -> delegate.getFlagsWithSearchPaths(precompiledHeaderRule, resolver))
                 .orElseGet(CxxToolFlags::of),
             getBuildTarget().getCellPath());
 
@@ -349,7 +349,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
     if (preprocessDelegate.isPresent()) {
       Path absPath = sourcePathResolver.getAbsolutePath(input);
       HeaderPathNormalizer headerPathNormalizer =
-          preprocessDelegate.get().getHeaderPathNormalizer();
+          preprocessDelegate.get().getHeaderPathNormalizer(sourcePathResolver);
       Optional<Path> original = headerPathNormalizer.getAbsolutePathForUnnormalizedPath(absPath);
       if (original.isPresent()) {
         return headerPathNormalizer.getSourcePathForAbsolutePath(original.get());
@@ -371,7 +371,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
             Depfiles.parseAndVerifyDependencies(
                 context.getEventBus(),
                 getProjectFilesystem(),
-                preprocessDelegate.get().getHeaderPathNormalizer(),
+                preprocessDelegate.get().getHeaderPathNormalizer(context.getSourcePathResolver()),
                 preprocessDelegate.get().getHeaderVerification(),
                 getDepFilePath(),
                 getRelativeInputPath(context.getSourcePathResolver()),
@@ -381,7 +381,10 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
         throw new HumanReadableException(e);
       }
 
-      inputs.addAll(preprocessDelegate.get().getInputsAfterBuildingLocally(dependencies));
+      inputs.addAll(
+          preprocessDelegate
+              .get()
+              .getInputsAfterBuildingLocally(dependencies, context.getSourcePathResolver()));
     }
 
     // If present, include all inputs coming from the compiler tool.

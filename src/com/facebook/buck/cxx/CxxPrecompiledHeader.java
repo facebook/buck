@@ -235,7 +235,9 @@ class CxxPrecompiledHeader extends AbstractBuildRule
       BuildContext context, CellPathResolver cellPathResolver) throws IOException {
     try {
       return ImmutableList.<SourcePath>builder()
-          .addAll(preprocessorDelegate.getInputsAfterBuildingLocally(getDependencies(context)))
+          .addAll(
+              preprocessorDelegate.getInputsAfterBuildingLocally(
+                  getDependencies(context), context.getSourcePathResolver()))
           .add(input)
           .build();
     } catch (Depfiles.HeaderVerificationException e) {
@@ -261,7 +263,7 @@ class CxxPrecompiledHeader extends AbstractBuildRule
               Depfiles.parseAndVerifyDependencies(
                   context.getEventBus(),
                   getProjectFilesystem(),
-                  preprocessorDelegate.getHeaderPathNormalizer(),
+                  preprocessorDelegate.getHeaderPathNormalizer(context.getSourcePathResolver()),
                   preprocessorDelegate.getHeaderVerification(),
                   getDepFilePath(context.getSourcePathResolver()),
                   // TODO(10194465): This uses relative path so as to get relative paths in the dep
@@ -296,7 +298,7 @@ class CxxPrecompiledHeader extends AbstractBuildRule
         getRelativeInputPath(resolver),
         inputType,
         new CxxPreprocessAndCompileStep.ToolCommand(
-            preprocessorDelegate.getCommandPrefix(),
+            preprocessorDelegate.getCommandPrefix(resolver),
             Arg.stringify(
                 ImmutableList.copyOf(
                     CxxToolFlags.explicitBuilder()
@@ -306,12 +308,12 @@ class CxxPrecompiledHeader extends AbstractBuildRule
                                     .getFlags(resolver, preprocessorDelegate.getPreprocessor())))
                         .addAllRuleFlags(
                             preprocessorDelegate.getArguments(
-                                compilerFlags, /* no pch */ Optional.empty()))
+                                compilerFlags, /* no pch */ Optional.empty(), resolver))
                         .build()
                         .getAllFlags()),
                 resolver),
-            preprocessorDelegate.getEnvironment()),
-        preprocessorDelegate.getHeaderPathNormalizer(),
+            preprocessorDelegate.getEnvironment(resolver)),
+        preprocessorDelegate.getHeaderPathNormalizer(resolver),
         compilerSanitizer,
         scratchDir,
         /* useArgFile*/ true,

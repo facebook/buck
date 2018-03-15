@@ -224,7 +224,6 @@ abstract class AbstractCxxSourceRuleFactory {
                         .resolve(getResolver());
                 PreprocessorDelegate delegate =
                     new PreprocessorDelegate(
-                        getPathResolver(),
                         getCxxPlatform().getCompilerDebugPathSanitizer(),
                         getCxxPlatform().getHeaderVerification(),
                         getProjectFilesystem().getRootPath(),
@@ -736,11 +735,14 @@ abstract class AbstractCxxSourceRuleFactory {
 
                         @AddToRuleKey
                         CxxToolFlags nonIncludePathFlags =
-                            preprocessorDelegate.getNonIncludePathFlags(Optional.empty());
+                            preprocessorDelegate.getNonIncludePathFlags(
+                                Optional.empty(), getPathResolver());
                       }));
       this.preprocessorFullHash =
           MoreSuppliers.memoize(
-              () -> computeHash(preprocessorDelegate.getSanitizedIncludePathFlags()));
+              () ->
+                  computeHash(
+                      preprocessorDelegate.getSanitizedIncludePathFlags(getPathResolver())));
     }
 
     PreprocessorDelegate getPreprocessorDelegate() {

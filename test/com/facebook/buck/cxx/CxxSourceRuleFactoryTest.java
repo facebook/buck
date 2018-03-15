@@ -186,7 +186,7 @@ public class CxxSourceRuleFactoryTest {
                   cxxPreprocess
                       .getPreprocessorDelegate()
                       .get()
-                      .getCommand(CxxToolFlags.of(), Optional.empty()),
+                      .getCommand(CxxToolFlags.of(), Optional.empty(), pathResolver),
                   pathResolver),
               platformFlags));
       CxxPreprocessAndCompile cxxPreprocessAndCompile =
@@ -198,7 +198,7 @@ public class CxxSourceRuleFactoryTest {
                   cxxPreprocessAndCompile
                       .getPreprocessorDelegate()
                       .get()
-                      .getCommand(CxxToolFlags.of(), Optional.empty()),
+                      .getCommand(CxxToolFlags.of(), Optional.empty(), pathResolver),
                   pathResolver),
               platformFlags));
     }
@@ -658,7 +658,7 @@ public class CxxSourceRuleFactoryTest {
               cPreprocess
                   .getPreprocessorDelegate()
                   .get()
-                  .getCommand(CxxToolFlags.of(), Optional.empty()),
+                  .getCommand(CxxToolFlags.of(), Optional.empty(), sourcePathResolver),
               sourcePathResolver);
       assertContains(cPreprocessCommand, expectedTypeSpecificPreprocessorFlags);
       assertContains(cPreprocessCommand, expectedPreprocessorFlags);

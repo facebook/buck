@@ -102,8 +102,9 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
     return buildDeps;
   }
 
-  private CxxToolFlags getSearchPathFlags() {
-    return preprocessorDelegate.getFlagsWithSearchPaths(/* no pch */ Optional.empty());
+  private CxxToolFlags getSearchPathFlags(SourcePathResolver pathResolver) {
+    return preprocessorDelegate.getFlagsWithSearchPaths(
+        /* no pch */ Optional.empty(), pathResolver);
   }
 
   private ImmutableList<String> getFrontendCommand() {
@@ -187,7 +188,7 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
           Depfiles.parseAndVerifyDependencies(
               context.getEventBus(),
               getProjectFilesystem(),
-              preprocessorDelegate.getHeaderPathNormalizer(),
+              preprocessorDelegate.getHeaderPathNormalizer(context.getSourcePathResolver()),
               preprocessorDelegate.getHeaderVerification(),
               getDepFilePath(),
               context.getSourcePathResolver().getRelativePath(input),
@@ -200,7 +201,9 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
     ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
 
     // include all inputs coming from the preprocessor tool.
-    inputs.addAll(preprocessorDelegate.getInputsAfterBuildingLocally(dependencies));
+    inputs.addAll(
+        preprocessorDelegate.getInputsAfterBuildingLocally(
+            dependencies, context.getSourcePathResolver()));
 
     // Add the input.
     inputs.add(input);
@@ -264,7 +267,8 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
           .addAll(getPreIncludeArgs())
           .addAll(
               Arg.stringify(
-                  CxxToolFlags.concat(preprocessorFlags, getSearchPathFlags(), compilerFlags)
+                  CxxToolFlags.concat(
+                          preprocessorFlags, getSearchPathFlags(pathResolver), compilerFlags)
                       .getAllFlags(),
                   pathResolver))
           .add("-x", inputType.getLanguage())
