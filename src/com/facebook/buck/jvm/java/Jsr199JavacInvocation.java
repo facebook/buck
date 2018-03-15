@@ -241,22 +241,26 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       javacTask.addPostEnterCallback(
           topLevelTypes -> {
             try {
-              JarBuilder jarBuilder = newJarBuilder(jarParameters).setShouldHashEntries(true);
-              StubGenerator stubGenerator =
-                  new StubGenerator(
-                      getTargetVersion(options),
-                      javacTask.getElements(),
-                      javacTask.getTypes(),
-                      javacTask.getMessager(),
-                      jarBuilder,
-                      context.getEventSink(),
-                      abiCompatibilityMode,
-                      options.contains("-parameters"));
-              stubGenerator.generate(topLevelTypes);
-              jarBuilder.createJarFile(
-                  context
-                      .getProjectFilesystem()
-                      .getPathForRelativePath(jarParameters.getJarPath()));
+              if (buildSuccessful()) {
+                // Only attempt to build stubs if the build is successful so far; errors can
+                // put javac into an unknown state.
+                JarBuilder jarBuilder = newJarBuilder(jarParameters).setShouldHashEntries(true);
+                StubGenerator stubGenerator =
+                    new StubGenerator(
+                        getTargetVersion(options),
+                        javacTask.getElements(),
+                        javacTask.getTypes(),
+                        javacTask.getMessager(),
+                        jarBuilder,
+                        context.getEventSink(),
+                        abiCompatibilityMode,
+                        options.contains("-parameters"));
+                stubGenerator.generate(topLevelTypes);
+                jarBuilder.createJarFile(
+                    context
+                        .getProjectFilesystem()
+                        .getPathForRelativePath(jarParameters.getJarPath()));
+              }
 
               debugLogDiagnostics();
               if (buildSuccessful()) {
