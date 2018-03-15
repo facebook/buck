@@ -1,0 +1,15 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
+
+java_test(
+    name = "filesystem",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/filesystem:filesystem",
+        "//third-party/java/guava:guava",
+        "//third-party/java/hamcrest:hamcrest-junit",
+        "//third-party/java/hamcrest:java-hamcrest",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/junit:junit",
+    ],
+)

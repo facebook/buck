@@ -30,6 +30,7 @@ java_immutables_library(
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/config:config",
         "//src/com/facebook/buck/util/env:env",
+        "//src/com/facebook/buck/util/filesystem:filesystem",
         "//src/com/facebook/buck/util/function:function",
         "//src/com/facebook/buck/util/hashing:hashing",
         "//src/com/facebook/buck/util/timing:timing",

@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.util;
+package com.facebook.buck.util.filesystem;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -77,6 +77,7 @@ public class FileSystemMap<T> {
     //       Otherwise, the node exists only as a mean to reach its children/leaves and will have
     //       a `null` value.
     private volatile @Nullable T value;
+
     private final PathFragment key;
 
     private Entry(PathFragment path) {

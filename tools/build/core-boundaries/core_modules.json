@@ -73,6 +73,7 @@
   "//src/com/facebook/buck/util/concurrent:concurrent",
   "//src/com/facebook/buck/util/config:config",
   "//src/com/facebook/buck/util/environment:platform",
+  "//src/com/facebook/buck/util/filesystem:filesystem",
   "//src/com/facebook/buck/util/function:function",
   "//src/com/facebook/buck/util/hashing:hashing",
   "//src/com/facebook/buck/util/immutables:immutables",

@@ -1,0 +1,21 @@
+java_library(
+    name = "filesystem",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/util/function:function",
+        "//src/com/facebook/buck/util/types:types",
+        "//third-party/java/bazel:skylark-lang",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jackson:jackson-databind",
+    ],
+    tests = [
+        "//test/com/facebook/buck/util/filesystem:filesystem",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)

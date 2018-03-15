@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.util.filesystem;
 
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.nio.file.FileSystem;

@@ -18,11 +18,11 @@ package com.facebook.buck.util.cache.impl;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.io.ArchiveMemberPath;
-import com.facebook.buck.util.FileSystemMap;
-import com.facebook.buck.util.PathFragments;
 import com.facebook.buck.util.cache.FileHashCacheEngine;
 import com.facebook.buck.util.cache.HashCodeAndFileType;
 import com.facebook.buck.util.cache.JarHashCodeAndFileType;
+import com.facebook.buck.util.filesystem.FileSystemMap;
+import com.facebook.buck.util.filesystem.PathFragments;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;

@@ -24,7 +24,7 @@ import com.facebook.buck.rules.modern.builders.thrift.Tree;
 import com.facebook.buck.slb.ThriftException;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
-import com.facebook.buck.util.PathFragments;
+import com.facebook.buck.util.filesystem.PathFragments;
 import com.facebook.buck.util.function.ThrowingFunction;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.facebook.buck.util.immutables.BuckStyleTuple;

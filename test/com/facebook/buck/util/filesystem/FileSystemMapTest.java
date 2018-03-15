@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.util.filesystem;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -23,7 +23,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.util.FileSystemMap.Entry;
+import com.facebook.buck.util.filesystem.FileSystemMap.Entry;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.nio.file.Path;
 import java.nio.file.Paths;

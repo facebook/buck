@@ -16,9 +16,9 @@
 package com.facebook.buck.util.cache.impl;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.PathFragments;
 import com.facebook.buck.util.cache.HashCodeAndFileType;
 import com.facebook.buck.util.cache.JarContentHasher;
+import com.facebook.buck.util.filesystem.PathFragments;
 import com.facebook.buck.util.zip.CustomJarOutputStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
