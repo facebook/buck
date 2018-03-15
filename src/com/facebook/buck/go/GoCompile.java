@@ -265,9 +265,8 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     for (SourcePath path : srcs) {
       Path srcPath = context.getSourcePathResolver().getAbsolutePath(path);
       if (Files.isDirectory(srcPath)) {
-        try {
-          srcFiles.addAll(
-              Files.list(srcPath).filter(Files::isRegularFile).collect(Collectors.toList()));
+        try (Stream<Path> sourcePaths = Files.list(srcPath)) {
+          srcFiles.addAll(sourcePaths.filter(Files::isRegularFile).collect(Collectors.toList()));
         } catch (IOException e) {
           throw new RuntimeException("An error occur when listing the files under " + srcPath, e);
         }
