@@ -764,7 +764,9 @@ public class PrebuiltCxxLibraryDescriptionTest {
         (PrebuiltCxxLibrary) ruleBuilder.build(resolver, filesystem, targetGraph);
     assertThat(
         ImmutableList.copyOf(
-            rule.getNativeLinkTarget(CXX_PLATFORM).get().getNativeLinkTargetDeps(CXX_PLATFORM)),
+            rule.getNativeLinkTarget(CXX_PLATFORM)
+                .get()
+                .getNativeLinkTargetDeps(CXX_PLATFORM, resolver)),
         Matchers.hasItems(dep, exportedDep));
   }
 
@@ -777,14 +779,15 @@ public class PrebuiltCxxLibraryDescriptionTest {
             .setExportedLinkerFlags(ImmutableList.of("--exported-flag"));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(ruleBuilder.build());
     BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     PrebuiltCxxLibrary rule =
         (PrebuiltCxxLibrary) ruleBuilder.build(resolver, filesystem, targetGraph);
     NativeLinkableInput input =
         rule.getNativeLinkTarget(CXX_PLATFORM)
             .get()
-            .getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM);
+            .getNativeLinkTargetInput(
+                CxxPlatformUtils.DEFAULT_PLATFORM, resolver, pathResolver, ruleFinder);
     assertThat(Arg.stringify(input.getArgs(), pathResolver), Matchers.hasItems("--exported-flag"));
   }
 

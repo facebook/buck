@@ -444,14 +444,19 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(CxxPlatform cxxPlatform) {
+  public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return Iterables.concat(
         getNativeLinkableDepsForPlatform(cxxPlatform),
         getNativeLinkableExportedDepsForPlatform(cxxPlatform));
   }
 
   @Override
-  public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform) {
+  public NativeLinkableInput getNativeLinkTargetInput(
+      CxxPlatform cxxPlatform,
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder) {
     if (!isPlatformSupported(cxxPlatform)) {
       return NativeLinkableInput.of();
     }

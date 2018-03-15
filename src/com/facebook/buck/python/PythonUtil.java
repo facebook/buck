@@ -246,7 +246,7 @@ public class PythonUtil {
     // For the merged strategy, build up the lists of included native linkable roots, and the
     // excluded native linkable roots.
     if (nativeLinkStrategy == NativeLinkStrategy.MERGED) {
-      OmnibusRoots roots = omnibusRoots.build();
+      OmnibusRoots roots = omnibusRoots.build(ruleResolver);
       OmnibusLibraries libraries =
           Omnibus.getSharedLibraries(
               buildTarget,
@@ -304,7 +304,7 @@ public class PythonUtil {
                 entry
                     .getValue()
                     .getNativeLinkTarget(pythonPlatform)
-                    .getNativeLinkTargetDeps(cxxPlatform),
+                    .getNativeLinkTargetDeps(cxxPlatform, ruleResolver),
                 NativeLinkable::getBuildTarget));
       }
 

@@ -892,7 +892,8 @@ public class CxxLibraryFactory {
     argsBuilder.addAll(StringArg.from(linker.soname(soname)));
 
     // Add the args for the root link target first.
-    NativeLinkableInput input = linkTarget.getNativeLinkTargetInput(cxxPlatform);
+    NativeLinkableInput input =
+        linkTarget.getNativeLinkTargetInput(cxxPlatform, resolver, pathResolver, ruleFinder);
     argsBuilder.addAll(input.getArgs());
 
     // Since we're linking against a dummy libomnibus, ignore undefined symbols.  Put this at the

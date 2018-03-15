@@ -1096,7 +1096,8 @@ public class CxxLibraryDescriptionTest {
                     ImmutableSortedSet.of(dep.getBuildTarget(), exportedDep.getBuildTarget()))
                 .build(resolver);
     assertThat(
-        ImmutableList.copyOf(rule.getNativeLinkTargetDeps(CxxPlatformUtils.DEFAULT_PLATFORM)),
+        ImmutableList.copyOf(
+            rule.getNativeLinkTargetDeps(CxxPlatformUtils.DEFAULT_PLATFORM, resolver)),
         hasItems(dep, exportedDep));
   }
 
@@ -1109,10 +1110,12 @@ public class CxxLibraryDescriptionTest {
                 ImmutableList.of(StringWithMacrosUtils.format("--exported-flag")));
     BuildRuleResolver resolver =
         new TestBuildRuleResolver(TargetGraphFactory.newInstance(ruleBuilder.build()));
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     CxxLibrary rule = (CxxLibrary) ruleBuilder.build(resolver);
-    NativeLinkableInput input = rule.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM);
+    NativeLinkableInput input =
+        rule.getNativeLinkTargetInput(
+            CxxPlatformUtils.DEFAULT_PLATFORM, resolver, pathResolver, ruleFinder);
     assertThat(Arg.stringify(input.getArgs(), pathResolver), hasItems("--flag", "--exported-flag"));
   }
 
@@ -1183,8 +1186,14 @@ public class CxxLibraryDescriptionTest {
         .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.c"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libraryBuilder.build());
     BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     CxxLibrary library = (CxxLibrary) libraryBuilder.build(resolver, filesystem, targetGraph);
-    assertThat(library.getNativeLinkTargetInput(platform).getLibraries(), equalTo(libraries));
+    assertThat(
+        library
+            .getNativeLinkTargetInput(platform, resolver, pathResolver, ruleFinder)
+            .getLibraries(),
+        equalTo(libraries));
   }
 
   @Test

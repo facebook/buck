@@ -396,7 +396,7 @@ public class LuaBinaryDescription
       }
 
       // Build the omnibus libraries.
-      OmnibusRoots roots = omnibusRoots.build();
+      OmnibusRoots roots = omnibusRoots.build(ruleResolver);
       OmnibusLibraries libraries =
           Omnibus.getSharedLibraries(
               buildTarget,
@@ -466,7 +466,8 @@ public class LuaBinaryDescription
         builder.putModules(extension.getModule(cxxPlatform), extension.getExtension(cxxPlatform));
         nativeLinkableRoots.putAll(
             Maps.uniqueIndex(
-                extension.getNativeLinkTargetDeps(cxxPlatform), NativeLinkable::getBuildTarget));
+                extension.getNativeLinkTargetDeps(cxxPlatform, ruleResolver),
+                NativeLinkable::getBuildTarget));
       }
 
       // Add in native executable deps.
@@ -491,7 +492,7 @@ public class LuaBinaryDescription
                 entry
                     .getValue()
                     .getNativeLinkTarget(pythonPlatform)
-                    .getNativeLinkTargetDeps(cxxPlatform),
+                    .getNativeLinkTargetDeps(cxxPlatform, ruleResolver),
                 NativeLinkable::getBuildTarget));
       }
 

@@ -299,8 +299,6 @@ public class CxxLuaExtensionDescription
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return new CxxLuaExtension(buildTarget, projectFilesystem, params) {
 
       @Override
@@ -323,14 +321,19 @@ public class CxxLuaExtensionDescription
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(CxxPlatform cxxPlatform) {
+      public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         return RichStream.from(args.getCxxDeps().get(resolver, cxxPlatform))
             .filter(NativeLinkable.class)
             .toImmutableList();
       }
 
       @Override
-      public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform) {
+      public NativeLinkableInput getNativeLinkTargetInput(
+          CxxPlatform cxxPlatform,
+          BuildRuleResolver ruleResolver,
+          SourcePathResolver pathResolver,
+          SourcePathRuleFinder ruleFinder) {
         return NativeLinkableInput.builder()
             .addAllArgs(
                 getExtensionArgs(

@@ -22,6 +22,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import org.hamcrest.Matchers;
@@ -41,7 +42,7 @@ public class OmnibusRootsTest {
         OmnibusRoots.builder(CxxPlatformUtils.DEFAULT_PLATFORM, ImmutableSet.of());
     builder.addIncludedRoot(root);
     builder.addIncludedRoot(transitiveRoot);
-    OmnibusRoots roots = builder.build();
+    OmnibusRoots roots = builder.build(new TestBuildRuleResolver());
 
     assertThat(roots.getIncludedRoots().keySet(), Matchers.contains(root.getBuildTarget()));
     assertThat(
@@ -61,7 +62,7 @@ public class OmnibusRootsTest {
     OmnibusRoots.Builder builder =
         OmnibusRoots.builder(CxxPlatformUtils.DEFAULT_PLATFORM, ImmutableSet.of());
     builder.addPotentialRoot(root);
-    OmnibusRoots roots = builder.build();
+    OmnibusRoots roots = builder.build(new TestBuildRuleResolver());
 
     assertThat(roots.getExcludedRoots().keySet(), Matchers.contains(root.getBuildTarget()));
   }

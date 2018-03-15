@@ -529,14 +529,18 @@ public class CxxPythonExtensionDescription
 
           @Override
           public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
-              CxxPlatform cxxPlatform) {
+              CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
             return RichStream.from(getPlatformDeps(ruleResolver, pythonPlatform, cxxPlatform, args))
                 .filter(NativeLinkable.class)
                 .toImmutableList();
           }
 
           @Override
-          public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform) {
+          public NativeLinkableInput getNativeLinkTargetInput(
+              CxxPlatform cxxPlatform,
+              BuildRuleResolver ruleResolver,
+              SourcePathResolver pathResolver,
+              SourcePathRuleFinder ruleFinder) {
             return NativeLinkableInput.builder()
                 .addAllArgs(
                     getExtensionArgs(

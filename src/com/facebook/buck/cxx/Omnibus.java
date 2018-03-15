@@ -37,6 +37,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
@@ -99,13 +100,14 @@ public class Omnibus {
       BuildTarget target,
       Map<BuildTarget, ? extends NativeLinkTarget> nativeLinkTargets,
       Map<BuildTarget, ? extends NativeLinkable> nativeLinkables,
-      CxxPlatform cxxPlatform) {
+      CxxPlatform cxxPlatform,
+      BuildRuleResolver ruleResolver) {
     if (nativeLinkables.containsKey(target)) {
       NativeLinkable nativeLinkable = Preconditions.checkNotNull(nativeLinkables.get(target));
       return getDeps(nativeLinkable, cxxPlatform);
     } else {
       NativeLinkTarget nativeLinkTarget = Preconditions.checkNotNull(nativeLinkTargets.get(target));
-      return nativeLinkTarget.getNativeLinkTargetDeps(cxxPlatform);
+      return nativeLinkTarget.getNativeLinkTargetDeps(cxxPlatform, ruleResolver);
     }
   }
 
@@ -114,7 +116,8 @@ public class Omnibus {
   static OmnibusSpec buildSpec(
       CxxPlatform cxxPlatform,
       Iterable<? extends NativeLinkTarget> includedRoots,
-      Iterable<? extends NativeLinkable> excludedRoots) {
+      Iterable<? extends NativeLinkable> excludedRoots,
+      BuildRuleResolver ruleResolver) {
 
     // A map of targets to native linkable objects.  We maintain this, so that we index our
     // bookkeeping around `BuildTarget` and avoid having to guarantee that all other types are
@@ -132,7 +135,7 @@ public class Omnibus {
       for (NativeLinkable dep :
           NativeLinkables.getNativeLinkables(
                   cxxPlatform,
-                  root.getNativeLinkTargetDeps(cxxPlatform),
+                  root.getNativeLinkTargetDeps(cxxPlatform, ruleResolver),
                   Linker.LinkableDepType.SHARED)
               .values()) {
         Linker.LinkableDepType linkStyle =
@@ -197,7 +200,7 @@ public class Omnibus {
         Set<BuildTarget> keep = new LinkedHashSet<>();
         for (BuildTarget dep :
             Iterables.transform(
-                getDeps(target, roots, nativeLinkables, cxxPlatform),
+                getDeps(target, roots, nativeLinkables, cxxPlatform, ruleResolver),
                 NativeLinkable::getBuildTarget)) {
           if (excluded.contains(dep)) {
             deps.add(dep);
@@ -296,13 +299,17 @@ public class Omnibus {
         StringArg.from(cxxPlatform.getLd().resolve(ruleResolver).getIgnoreUndefinedSymbolsFlags()));
 
     // Add the args for the root link target first.
-    NativeLinkableInput input = root.getNativeLinkTargetInput(cxxPlatform);
+    NativeLinkableInput input =
+        root.getNativeLinkTargetInput(
+            cxxPlatform, ruleResolver, DefaultSourcePathResolver.from(ruleFinder), ruleFinder);
     argsBuilder.addAll(input.getArgs());
 
     // Grab a topologically sorted mapping of all the root's deps.
     ImmutableMap<BuildTarget, NativeLinkable> deps =
         NativeLinkables.getNativeLinkables(
-            cxxPlatform, root.getNativeLinkTargetDeps(cxxPlatform), Linker.LinkableDepType.SHARED);
+            cxxPlatform,
+            root.getNativeLinkTargetDeps(cxxPlatform, ruleResolver),
+            Linker.LinkableDepType.SHARED);
 
     // Now process the dependencies in topological order, to assemble the link line.
     boolean alreadyAddedOmnibusToArgs = false;
@@ -631,7 +638,8 @@ public class Omnibus {
 
     OmnibusLibraries.Builder libs = OmnibusLibraries.builder();
 
-    OmnibusSpec spec = buildSpec(cxxPlatform, nativeLinkTargetRoots, nativeLinkableRoots);
+    OmnibusSpec spec =
+        buildSpec(cxxPlatform, nativeLinkTargetRoots, nativeLinkableRoots, ruleResolver);
 
     // Create an empty dummy omnibus library, to give the roots something to link against before
     // we have the actual omnibus library available.  Note that this requires that the linker

@@ -20,6 +20,9 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
@@ -41,14 +44,19 @@ class OmnibusRootNode extends OmnibusNode implements NativeLinkTarget, NativeLin
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(CxxPlatform cxxPlatform) {
+  public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return Iterables.concat(
         getNativeLinkableDepsForPlatform(cxxPlatform),
         getNativeLinkableExportedDepsForPlatform(cxxPlatform));
   }
 
   @Override
-  public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform) {
+  public NativeLinkableInput getNativeLinkTargetInput(
+      CxxPlatform cxxPlatform,
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder) {
     return NativeLinkableInput.builder().addArgs(StringArg.of(getBuildTarget().toString())).build();
   }
 

@@ -22,6 +22,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
@@ -90,14 +91,15 @@ abstract class AbstractOmnibusRoots {
       }
     }
 
-    private ImmutableMap<BuildTarget, NativeLinkable> buildExcluded() {
+    private ImmutableMap<BuildTarget, NativeLinkable> buildExcluded(
+        BuildRuleResolver ruleResolver) {
       Map<BuildTarget, NativeLinkable> excluded = new LinkedHashMap<>();
       excluded.putAll(excludedRoots);
 
       // Find all excluded nodes reachable from the included roots.
       Map<BuildTarget, NativeLinkable> includedRootDeps = new LinkedHashMap<>();
       for (NativeLinkTarget target : includedRoots.values()) {
-        for (NativeLinkable linkable : target.getNativeLinkTargetDeps(cxxPlatform)) {
+        for (NativeLinkable linkable : target.getNativeLinkTargetDeps(cxxPlatform, ruleResolver)) {
           includedRootDeps.put(linkable.getBuildTarget(), linkable);
         }
       }
@@ -145,8 +147,8 @@ abstract class AbstractOmnibusRoots {
       return includedRoots.isEmpty() && excludedRoots.isEmpty();
     }
 
-    public OmnibusRoots build() {
-      ImmutableMap<BuildTarget, NativeLinkable> excluded = buildExcluded();
+    public OmnibusRoots build(BuildRuleResolver ruleResolver) {
+      ImmutableMap<BuildTarget, NativeLinkable> excluded = buildExcluded(ruleResolver);
       ImmutableMap<BuildTarget, NativeLinkTarget> included = buildIncluded(excluded.keySet());
       return OmnibusRoots.of(included, excluded);
     }

@@ -55,7 +55,10 @@ public class OmnibusTest {
     // Verify the spec.
     Omnibus.OmnibusSpec spec =
         Omnibus.buildSpec(
-            CxxPlatformUtils.DEFAULT_PLATFORM, ImmutableList.of(root), ImmutableList.of());
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            ImmutableList.of(root),
+            ImmutableList.of(),
+            new TestBuildRuleResolver());
     assertThat(
         spec.getGraph().getNodes(),
         Matchers.containsInAnyOrder(a.getBuildTarget(), b.getBuildTarget()));
@@ -92,7 +95,8 @@ public class OmnibusTest {
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(ruleFinder, libs.get(root.getBuildTarget().toString())),
         pathResolver,
-        root.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM));
+        root.getNativeLinkTargetInput(
+            CxxPlatformUtils.DEFAULT_PLATFORM, resolver, pathResolver, ruleFinder));
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(ruleFinder, libs.get("libomnibus.so")),
         pathResolver,
@@ -111,7 +115,10 @@ public class OmnibusTest {
     // Verify the spec.
     Omnibus.OmnibusSpec spec =
         Omnibus.buildSpec(
-            CxxPlatformUtils.DEFAULT_PLATFORM, ImmutableList.of(root), ImmutableList.of());
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            ImmutableList.of(root),
+            ImmutableList.of(),
+            new TestBuildRuleResolver());
     assertThat(spec.getGraph().getNodes(), Matchers.containsInAnyOrder(a.getBuildTarget()));
     assertThat(spec.getBody().keySet(), Matchers.containsInAnyOrder(a.getBuildTarget()));
     assertThat(spec.getRoots().keySet(), Matchers.containsInAnyOrder(root.getBuildTarget()));
@@ -145,7 +152,8 @@ public class OmnibusTest {
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(ruleFinder, libs.get(root.getBuildTarget().toString())),
         pathResolver,
-        root.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM),
+        root.getNativeLinkTargetInput(
+            CxxPlatformUtils.DEFAULT_PLATFORM, resolver, pathResolver, ruleFinder),
         b.getNativeLinkableInput(CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED));
     assertThat(
         libs.get(b.getBuildTarget().toString()),
@@ -167,7 +175,10 @@ public class OmnibusTest {
     // Verify the spec.
     Omnibus.OmnibusSpec spec =
         Omnibus.buildSpec(
-            CxxPlatformUtils.DEFAULT_PLATFORM, ImmutableList.of(root), ImmutableList.of());
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            ImmutableList.of(root),
+            ImmutableList.of(),
+            new TestBuildRuleResolver());
     assertThat(spec.getGraph().getNodes(), Matchers.containsInAnyOrder(a.getBuildTarget()));
     assertThat(spec.getBody().keySet(), Matchers.containsInAnyOrder(a.getBuildTarget()));
     assertThat(spec.getRoots().keySet(), Matchers.containsInAnyOrder(root.getBuildTarget()));
@@ -206,7 +217,8 @@ public class OmnibusTest {
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(ruleFinder, libs.get(root.getBuildTarget().toString())),
         pathResolver,
-        root.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM),
+        root.getNativeLinkTargetInput(
+            CxxPlatformUtils.DEFAULT_PLATFORM, resolver, pathResolver, ruleFinder),
         c.getNativeLinkableInput(CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED));
     assertThat(
         libs.get(b.getBuildTarget().toString()),
@@ -233,7 +245,8 @@ public class OmnibusTest {
         Omnibus.buildSpec(
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(root),
-            ImmutableList.of(excludedRoot));
+            ImmutableList.of(excludedRoot),
+            new TestBuildRuleResolver());
     assertThat(spec.getGraph().getNodes(), Matchers.containsInAnyOrder(a.getBuildTarget()));
     assertThat(spec.getBody().keySet(), Matchers.containsInAnyOrder(a.getBuildTarget()));
     assertThat(spec.getRoots().keySet(), Matchers.containsInAnyOrder(root.getBuildTarget()));
@@ -272,7 +285,8 @@ public class OmnibusTest {
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(ruleFinder, libs.get(root.getBuildTarget().toString())),
         pathResolver,
-        root.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM));
+        root.getNativeLinkTargetInput(
+            CxxPlatformUtils.DEFAULT_PLATFORM, resolver, pathResolver, ruleFinder));
     assertThat(
         libs.get(excludedRoot.getBuildTarget().toString()),
         Matchers.not(Matchers.instanceOf(ExplicitBuildTargetSourcePath.class)));
@@ -297,7 +311,8 @@ public class OmnibusTest {
         Omnibus.buildSpec(
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(root),
-            ImmutableList.of(excludedRoot));
+            ImmutableList.of(excludedRoot),
+            new TestBuildRuleResolver());
     assertThat(spec.getGraph().getNodes(), Matchers.empty());
     assertThat(spec.getBody().keySet(), Matchers.empty());
     assertThat(spec.getRoots().keySet(), Matchers.containsInAnyOrder(root.getBuildTarget()));
@@ -335,7 +350,8 @@ public class OmnibusTest {
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(ruleFinder, libs.get(root.getBuildTarget().toString())),
         pathResolver,
-        root.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM));
+        root.getNativeLinkTargetInput(
+            CxxPlatformUtils.DEFAULT_PLATFORM, resolver, pathResolver, ruleFinder));
     assertThat(
         libs.get(excludedRoot.getBuildTarget().toString()),
         Matchers.not(Matchers.instanceOf(ExplicitBuildTargetSourcePath.class)));
@@ -355,7 +371,10 @@ public class OmnibusTest {
     // Verify the spec.
     Omnibus.OmnibusSpec spec =
         Omnibus.buildSpec(
-            CxxPlatformUtils.DEFAULT_PLATFORM, ImmutableList.of(root), ImmutableList.of());
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            ImmutableList.of(root),
+            ImmutableList.of(),
+            new TestBuildRuleResolver());
     assertThat(spec.getGraph().getNodes(), Matchers.containsInAnyOrder(b.getBuildTarget()));
     assertThat(spec.getBody().keySet(), Matchers.containsInAnyOrder(b.getBuildTarget()));
     assertThat(spec.getRoots().keySet(), Matchers.containsInAnyOrder(root.getBuildTarget()));
@@ -388,7 +407,8 @@ public class OmnibusTest {
     assertCxxLinkContainsNativeLinkableInput(
         getCxxLinkRule(ruleFinder, libs.get(root.getBuildTarget().toString())),
         pathResolver,
-        root.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM),
+        root.getNativeLinkTargetInput(
+            CxxPlatformUtils.DEFAULT_PLATFORM, resolver, pathResolver, ruleFinder),
         a.getNativeLinkableInput(
             CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC_PIC));
     assertCxxLinkContainsNativeLinkableInput(
@@ -410,7 +430,8 @@ public class OmnibusTest {
         Omnibus.buildSpec(
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(includedRoot),
-            ImmutableList.of(excludedRoot));
+            ImmutableList.of(excludedRoot),
+            new TestBuildRuleResolver());
     assertThat(spec.getExcludedRoots(), Matchers.containsInAnyOrder(excludedRoot.getBuildTarget()));
     assertThat(
         spec.getExcluded().keySet(), Matchers.containsInAnyOrder(excludedRoot.getBuildTarget()));

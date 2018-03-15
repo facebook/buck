@@ -829,7 +829,11 @@ class NativeLibraryMergeEnhancer {
       return NativeLinkableInput.of(argsBuilder.build(), ImmutableList.of(), ImmutableList.of());
     }
 
-    private NativeLinkableInput getImmediateNativeLinkableInput(CxxPlatform cxxPlatform) {
+    private NativeLinkableInput getImmediateNativeLinkableInput(
+        CxxPlatform cxxPlatform,
+        BuildRuleResolver ruleResolver,
+        SourcePathResolver pathResolver,
+        SourcePathRuleFinder ruleFinder) {
       Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
       ImmutableList.Builder<NativeLinkableInput> builder = ImmutableList.builder();
       ImmutableList<NativeLinkable> usingGlue = ImmutableList.of();
@@ -841,7 +845,9 @@ class NativeLibraryMergeEnhancer {
         if (linkable instanceof NativeLinkTarget) {
           // If this constituent is a NativeLinkTarget, use its input to get raw objects and
           // linker flags.
-          builder.add(((NativeLinkTarget) linkable).getNativeLinkTargetInput(cxxPlatform));
+          builder.add(
+              ((NativeLinkTarget) linkable)
+                  .getNativeLinkTargetInput(cxxPlatform, ruleResolver, pathResolver, ruleFinder));
         } else {
           // Otherwise, just get the static pic output.
           NativeLinkableInput staticPic =
@@ -912,7 +918,8 @@ class NativeLibraryMergeEnhancer {
                       Optional.empty(),
                       ImmutableSet.of(),
                       ImmutableSet.of(),
-                      getImmediateNativeLinkableInput(cxxPlatform),
+                      getImmediateNativeLinkableInput(
+                          cxxPlatform, ruleResolver, pathResolver, ruleFinder),
                       constituents.isActuallyMerged()
                           ? symbolsToLocalize.map(SymbolLocalizingPostprocessor::new)
                           : Optional.empty(),

@@ -287,12 +287,17 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(CxxPlatform cxxPlatform) {
+  public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return getNativeStarterDeps();
   }
 
   @Override
-  public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform) {
+  public NativeLinkableInput getNativeLinkTargetInput(
+      CxxPlatform cxxPlatform,
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder) {
     return getNativeLinkableInput();
   }
 

@@ -335,7 +335,7 @@ public class CxxPythonExtensionDescriptionTest {
     NativeLinkTarget nativeLinkTarget = rule.getNativeLinkTarget(PY2);
     assertThat(
         ImmutableList.copyOf(
-            nativeLinkTarget.getNativeLinkTargetDeps(CxxPlatformUtils.DEFAULT_PLATFORM)),
+            nativeLinkTarget.getNativeLinkTargetDeps(CxxPlatformUtils.DEFAULT_PLATFORM, resolver)),
         Matchers.<NativeLinkable>hasItem(dep));
   }
 
@@ -358,7 +358,7 @@ public class CxxPythonExtensionDescriptionTest {
     NativeLinkTarget nativeLinkTarget = rule.getNativeLinkTarget(platform);
     assertThat(
         ImmutableList.copyOf(
-            nativeLinkTarget.getNativeLinkTargetDeps(CxxPlatformUtils.DEFAULT_PLATFORM)),
+            nativeLinkTarget.getNativeLinkTargetDeps(CxxPlatformUtils.DEFAULT_PLATFORM, resolver)),
         Matchers.hasItem((NativeLinkable) resolver.getRule(PYTHON2_DEP_TARGET)));
   }
 
@@ -373,12 +373,13 @@ public class CxxPythonExtensionDescriptionTest {
     builder.setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("--flag")));
     BuildRuleResolver resolver =
         new TestBuildRuleResolver(TargetGraphFactory.newInstance(builder.build()));
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     CxxPythonExtension rule = builder.build(resolver);
     NativeLinkTarget nativeLinkTarget = rule.getNativeLinkTarget(PY2);
     NativeLinkableInput input =
-        nativeLinkTarget.getNativeLinkTargetInput(CxxPlatformUtils.DEFAULT_PLATFORM);
+        nativeLinkTarget.getNativeLinkTargetInput(
+            CxxPlatformUtils.DEFAULT_PLATFORM, resolver, pathResolver, ruleFinder);
     assertThat(Arg.stringify(input.getArgs(), pathResolver), Matchers.hasItems("--flag"));
   }
 
@@ -406,12 +407,14 @@ public class CxxPythonExtensionDescriptionTest {
     NativeLinkTarget py2NativeLinkTarget = rule.getNativeLinkTarget(PY2);
     assertThat(
         ImmutableList.copyOf(
-            py2NativeLinkTarget.getNativeLinkTargetDeps(CxxPlatformUtils.DEFAULT_PLATFORM)),
+            py2NativeLinkTarget.getNativeLinkTargetDeps(
+                CxxPlatformUtils.DEFAULT_PLATFORM, resolver)),
         Matchers.<NativeLinkable>hasItem(dep));
     NativeLinkTarget py3NativeLinkTarget = rule.getNativeLinkTarget(PY3);
     assertThat(
         ImmutableList.copyOf(
-            py3NativeLinkTarget.getNativeLinkTargetDeps(CxxPlatformUtils.DEFAULT_PLATFORM)),
+            py3NativeLinkTarget.getNativeLinkTargetDeps(
+                CxxPlatformUtils.DEFAULT_PLATFORM, resolver)),
         Matchers.not(Matchers.<NativeLinkable>hasItem(dep)));
   }
 

@@ -804,14 +804,18 @@ public class PrebuiltCxxLibraryDescription
 
               @Override
               public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
-                  CxxPlatform cxxPlatform) {
+                  CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
                 return Iterables.concat(
                     getNativeLinkableDepsForPlatform(cxxPlatform),
                     getNativeLinkableExportedDepsForPlatform(cxxPlatform));
               }
 
               @Override
-              public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform) {
+              public NativeLinkableInput getNativeLinkTargetInput(
+                  CxxPlatform cxxPlatform,
+                  BuildRuleResolver ruleResolver,
+                  SourcePathResolver pathResolver,
+                  SourcePathRuleFinder ruleFinder) {
                 return NativeLinkableInput.builder()
                     .addAllArgs(StringArg.from(getExportedLinkerFlags(cxxPlatform)))
                     .addAllArgs(
