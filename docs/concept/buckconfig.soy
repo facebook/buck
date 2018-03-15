@@ -759,7 +759,12 @@ $ buck targets --resolve-alias app#src_jar
   {param name: 'name' /}
   {param example_value: 'TARGETS' /}
   {param description}
-    The name of {call buck.build_file /}s within a project. This defaults to <code>BUCK</code>.
+    The name of {call buck.build_file /}s within a project. 
+    This defaults to <code>BUCK</code>.
+    We recommend that you use the default name. However, you could
+    specify a different name&mdash;such as <code>TARGETS</code> shown
+    below&mdash;in order to support, for example, a legacy
+    project that used different buildfile naming conventions.
   {/param}
 {/call}
 

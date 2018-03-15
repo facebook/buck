@@ -14,12 +14,11 @@
 A <em>build target pattern</em> is a string that describes a set of one or
 more {call buck.build_target /}s. Build target patterns are used as command-line arguments 
 to {call buck.cmd_build /}, and in the lists of values provided to the
-<code>deps</code> and <code>visibility</code> arguments of your build
-rules.
+{sp}<code>visibility</code> argument of your build rules.
 </p>
 
 <p>
-The most simple build target pattern matches the build target of same name:
+The simplest build target pattern matches the build target of same name:
 </p>
 
 {literal}<pre>
@@ -47,6 +46,16 @@ targets in build files in subdirectories:
 # Matches '//apps:common' and '//apps/myapp:app'.
 '//apps/...'
 {/literal}</pre>
+
+<p>
+Note that build target patterns cannot be used with 
+the <code>deps</code> argument to a build rule. Buck requires that you 
+specify all dependencies explicitly as either fully-qualified or relative
+build targets. By making dependencies explicit, Buck prevents a build
+rule from inadvertently acquiring new dependencies; dependencies entail
+processing cost, so you should avoid including extraneous dependencies
+in your build rules.  
+</p>
 
     {/param}
   {/call}

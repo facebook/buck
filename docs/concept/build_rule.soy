@@ -36,7 +36,7 @@ Every build rule takes at least the following three arguments:
   <li><code>name</code> The name of the build rule,
       which must be unique within a build file.
   <li><code>deps</code> The build rule's dependencies,
-      expressed as a list of {call buck.build_target_pattern /}s.  
+      expressed as a list of {call buck.build_target /}s.  
   <li><code>visibility</code> The set of build rules that are allowed to
       claim this rule as a dependency, expressed as a list 
       of {call buck.build_target_pattern /}s. 
@@ -66,11 +66,11 @@ build independent subgraphs in parallel.
 
 <p>
 
-Although Buck tries to provide a rich set of built-in build rules for Android
-developers, it will not be able to address all possible needs. As an "escape hatch," Buck
+Although Buck tries to provide a rich set of built-in build rules for 
+developers, it is not able to address all possible needs. As an "escape hatch," Buck
 also provides a vanilla build rule called a
 {sp}{call buck.genrule /},
-which can be used to build an arbitrary file using a Bash script.
+which you can use to build an arbitrary rule using a Bash script.
 <p>
 
 Finally, note that build files are evaluated as Python files.

@@ -7,20 +7,27 @@
     {param navid: 'concept_build_file' /}
     {param prettify: true /}
     {param description}
-      Any file named BUCK that defines one or more build rules.
+      Any file, typically named BUCK, that defines one or more build rules.
     {/param}
     {param content}
 
-A <em>build file</em> is a file named <code>BUCK</code> that defines
-one or more <a href="build_rule.html">build rules</a>.
+<p>
+A <em>build file</em> is a file, typically named <code>BUCK</code>, that
+defines one or more {call buck.build_rule /}s. 
+</p>
 
 <p>
+Note that you can change the name that Buck uses for the build file in
+the <code>buildfile</code> section of {call buck.concept_buckconfig /}.
+</p>
 
+<p>
 A source file in your project can only be referenced by rules in its "nearest"
 build file, where "nearest" means its closest direct ancestor in your
 project's file tree. (If a source file has a build file as a sibling, then that
 is its nearest ancestor.)
 For example, if your project had the following <code>BUCK</code> files:
+</p>
 
 {literal}<pre>
 java/com/facebook/base/BUCK
@@ -28,7 +35,9 @@ java/com/facebook/common/BUCK
 java/com/facebook/common/collect/BUCK
 </pre>{/literal}
 
+<p>
 Then your build rules would have the following constraints:
+</p>
 
 <ul>
   <li>Rules in <code>java/com/facebook/base/BUCK</code> can
@@ -41,16 +50,18 @@ Then your build rules would have the following constraints:
       {sp}<code>collect</code> directory.
 </ul>
 
+<p>
 The set of source files accessible to a build file is also known as
 its <em>build package</em>.
+</p>
 
 <p>
-
 The way to refer to code across build packages is to create build rules
 and use <code>deps</code> to refer to that code. Going back to the previous
 example, suppose code in <code>java/com/facebook/common/concurrent/</code> wants
 to depend on code in <code>java/com/facebook/common/collect/</code>. Presumably
 {sp}<code>java/com/facebook/common/collect/BUCK</code> has a build rule like:
+</p>
 
 {literal}<pre class="prettyprint lang-py">
 java_library(
@@ -62,7 +73,9 @@ java_library(
 )
 </pre>{/literal}
 
+<p>
 Then <code>java/com/facebook/common/BUCK</code> could have a rule like:
+</p>
 
 {literal}<pre class="prettyprint lang-py">
 java_library(
