@@ -44,6 +44,10 @@ public class TimedLogger {
     timedLogCalled(message -> delegate.info(message), rawMessage);
   }
 
+  public void warn(String rawMessage) {
+    timedLogCalled(message -> delegate.warn(message), rawMessage);
+  }
+
   public void debug(String rawMessage) {
     timedLogCalled(message -> delegate.debug(message), rawMessage);
   }

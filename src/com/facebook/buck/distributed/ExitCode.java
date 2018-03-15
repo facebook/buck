@@ -44,8 +44,8 @@ public enum ExitCode {
   /** ReportMinionAliveRequest failed internally */
   I_AM_ALIVE_FAILED_EXIT_CODE(45),
 
-  /** Coordinator found dead minion and failed the build */
-  DEAD_MINION_FOUND_EXIT_CODE(46),
+  /** All minions in build are dead * */
+  ALL_MINIONS_DEAD_EXIT_CODE(46),
 
   /** Coordinator detected that build had been externally set to terminal failed state */
   BUILD_FAILED_EXTERNALLY_EXIT_CODE(47),

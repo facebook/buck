@@ -159,7 +159,8 @@ public class ThriftCoordinatorServerIntegrationTest {
         eventListener,
         new NoOpCoordinatorBuildRuleEventsPublisher(),
         EasyMock.createNiceMock(MinionHealthTracker.class),
-        EasyMock.createNiceMock(DistBuildService.class));
+        EasyMock.createNiceMock(DistBuildService.class),
+        EasyMock.createNiceMock(MinionCountProvider.class));
   }
 
   @Test
@@ -200,7 +201,8 @@ public class ThriftCoordinatorServerIntegrationTest {
                 eventListener,
                 new NoOpCoordinatorBuildRuleEventsPublisher(),
                 EasyMock.createNiceMock(MinionHealthTracker.class),
-                EasyMock.createNiceMock(DistBuildService.class));
+                EasyMock.createNiceMock(DistBuildService.class),
+                EasyMock.createNiceMock(MinionCountProvider.class));
         ThriftCoordinatorClient client =
             new ThriftCoordinatorClient("localhost", STAMPEDE_ID, CONNECTION_TIMEOUT_MILLIS)) {
       server.start();
@@ -245,7 +247,8 @@ public class ThriftCoordinatorServerIntegrationTest {
                 eventListener,
                 new NoOpCoordinatorBuildRuleEventsPublisher(),
                 EasyMock.createNiceMock(MinionHealthTracker.class),
-                distBuildService);
+                distBuildService,
+                EasyMock.createNiceMock(MinionCountProvider.class));
         ThriftCoordinatorClient client =
             new ThriftCoordinatorClient("localhost", STAMPEDE_ID, CONNECTION_TIMEOUT_MILLIS)) {
       server.start();
@@ -283,7 +286,8 @@ public class ThriftCoordinatorServerIntegrationTest {
                 eventListener,
                 new NoOpCoordinatorBuildRuleEventsPublisher(),
                 EasyMock.createNiceMock(MinionHealthTracker.class),
-                distBuildService);
+                distBuildService,
+                EasyMock.createNiceMock(MinionCountProvider.class));
         ThriftCoordinatorClient client =
             new ThriftCoordinatorClient("localhost", STAMPEDE_ID, CONNECTION_TIMEOUT_MILLIS)) {
       server.start();

@@ -27,14 +27,17 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
+import java.util.Optional;
 
 /** Listener to events from the Coordinator. */
-public class CoordinatorEventListener implements ThriftCoordinatorServer.EventListener {
+public class CoordinatorEventListener
+    implements ThriftCoordinatorServer.EventListener, MinionCountProvider {
   private static final Logger LOG = Logger.get(CoordinatorEventListener.class);
   private final DistBuildService service;
   private final StampedeId stampedeId;
   private final String minionQueue;
   private boolean islocalMinionAlsoRunning;
+  private volatile Optional<Integer> totalMinionCount = Optional.empty();
 
   public CoordinatorEventListener(
       DistBuildService service,
@@ -56,6 +59,8 @@ public class CoordinatorEventListener implements ThriftCoordinatorServer.EventLi
     if (!buildModeInfo.isSetNumberOfMinions()) {
       return;
     }
+
+    totalMinionCount = Optional.of(buildModeInfo.getNumberOfMinions());
 
     int requiredNumberOfMinions =
         islocalMinionAlsoRunning
@@ -84,5 +89,10 @@ public class CoordinatorEventListener implements ThriftCoordinatorServer.EventLi
             exitState.getExitMessage(),
             BuildStatusUtil.exitCodeToBuildStatus(buildExitCode).toString());
     service.setFinalBuildStatus(stampedeId, status, message);
+  }
+
+  @Override
+  public Optional<Integer> getTotalMinionCount() {
+    return totalMinionCount;
   }
 }

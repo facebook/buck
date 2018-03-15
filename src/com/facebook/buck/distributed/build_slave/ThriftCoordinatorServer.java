@@ -19,6 +19,7 @@ package com.facebook.buck.distributed.build_slave;
 import com.facebook.buck.distributed.BuildStatusUtil;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.ExitCode;
+import com.facebook.buck.distributed.build_slave.MinionHealthTracker.MinionHealthStatus;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.CoordinatorService;
@@ -31,14 +32,13 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.log.TimedLogger;
 import com.facebook.buck.slb.ThriftException;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.List;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -52,7 +52,6 @@ import org.apache.thrift.transport.TNonblockingServerSocket;
 import org.apache.thrift.transport.TTransportException;
 
 public class ThriftCoordinatorServer implements Closeable {
-
   /** Information about the exit state of the Coordinator. */
   public static class ExitState {
 
@@ -122,11 +121,13 @@ public class ThriftCoordinatorServer implements Closeable {
   private final CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher;
   private final MinionHealthTracker minionHealthTracker;
   private final DistBuildService distBuildService;
+  private final MinionCountProvider minionCountProvider;
 
   private volatile OptionalInt port;
 
   private volatile CoordinatorService.Iface handler;
 
+  @Nullable private volatile MinionWorkloadAllocator allocator;
   @Nullable private volatile TThreadedSelectorServer server;
   @Nullable private Thread serverThread;
 
@@ -137,12 +138,14 @@ public class ThriftCoordinatorServer implements Closeable {
       EventListener eventListener,
       CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher,
       MinionHealthTracker minionHealthTracker,
-      DistBuildService distBuildService) {
+      DistBuildService distBuildService,
+      MinionCountProvider minionCountProvider) {
     this.eventListener = eventListener;
     this.stampedeId = stampedeId;
     this.coordinatorBuildRuleEventsPublisher = coordinatorBuildRuleEventsPublisher;
     this.minionHealthTracker = minionHealthTracker;
     this.distBuildService = distBuildService;
+    this.minionCountProvider = minionCountProvider;
     this.lock = new Object();
     this.exitCodeFuture = new CompletableFuture<>();
     this.chromeTraceTracker = new DistBuildTraceTracker(stampedeId);
@@ -172,21 +175,33 @@ public class ThriftCoordinatorServer implements Closeable {
       serverThread.start();
     }
 
+    // Note: this call will initialize MinionCountProvider (same Object as eventListener)
     eventListener.onThriftServerStarted(InetAddress.getLocalHost().getHostName(), port.getAsInt());
     return this;
   }
 
   /** Checks if all minions are alive. Fails the distributed build if they are not. */
   public void checkAllMinionsAreAlive() {
-    List<String> deadMinions = minionHealthTracker.getDeadMinions();
-    if (!deadMinions.isEmpty()) {
-      String msg =
-          String.format(
-              "Failing the build due to dead minions: [%s].", Joiner.on(", ").join(deadMinions));
-      LOG.error(msg);
-      exitCodeFuture.complete(
-          ExitState.setLocally(ExitCode.DEAD_MINION_FOUND_EXIT_CODE.getCode(), msg));
+    MinionHealthStatus minionHealthStatus = minionHealthTracker.checkMinionHealth();
+
+    if (allocator != null) {
+      for (String deadMinion : minionHealthStatus.getDeadMinions()) {
+        allocator.handleMinionFailure(deadMinion);
+      }
     }
+
+    Optional<Integer> totalMinionCount = minionCountProvider.getTotalMinionCount();
+    totalMinionCount.ifPresent(
+        count -> {
+          int deadMinionCount = minionHealthStatus.getDeadMinions().size();
+          if (deadMinionCount >= count && !minionHealthStatus.hasAliveMinions()) {
+            String errorMessage =
+                String.format("Failing build as all [%d] minions are dead", deadMinionCount);
+            LOG.error(errorMessage);
+            exitCodeFuture.complete(
+                ExitState.setLocally(ExitCode.ALL_MINIONS_DEAD_EXIT_CODE.getCode(), errorMessage));
+          }
+        });
   }
 
   /** Checks whether the BuildStatus has not been set to terminated remotely. */

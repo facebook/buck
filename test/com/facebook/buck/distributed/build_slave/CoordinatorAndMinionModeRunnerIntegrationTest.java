@@ -80,7 +80,8 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
             MOCK_SERVICE,
             Optional.of(new BuildId("10-20")),
             Optional.empty(),
-            EasyMock.createNiceMock(MinionHealthTracker.class));
+            EasyMock.createNiceMock(MinionHealthTracker.class),
+            EasyMock.createNiceMock(MinionCountProvider.class));
     FakeBuildExecutorImpl localBuilder = new FakeBuildExecutorImpl();
     MinionModeRunner minion =
         new MinionModeRunner(

@@ -117,7 +117,7 @@ public class MultiSlaveBuildModeRunnerFactory {
     Preconditions.checkArgument(
         minionQueue.isPresent(),
         "Minion queue name is missing to be able to run in Coordinator mode.");
-    ThriftCoordinatorServer.EventListener listener =
+    CoordinatorEventListener listenerAndMinionCountProvider =
         new CoordinatorEventListener(
             distBuildService, stampedeId, minionQueue.get(), isLocalMinionAlsoRunning);
     MinionHealthTracker minionHealthTracker =
@@ -136,13 +136,14 @@ public class MultiSlaveBuildModeRunnerFactory {
     return new CoordinatorModeRunner(
         queueFuture,
         stampedeId,
-        listener,
+        listenerAndMinionCountProvider,
         logDirectoryPath,
         coordinatorBuildRuleEventsPublisher,
         distBuildService,
         clientBuildId,
         traceUploadUri,
-        minionHealthTracker);
+        minionHealthTracker,
+        listenerAndMinionCountProvider);
   }
 
   /**

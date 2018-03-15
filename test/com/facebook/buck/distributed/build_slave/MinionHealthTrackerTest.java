@@ -52,7 +52,7 @@ public class MinionHealthTrackerTest {
 
   @Test
   public void testDeadMinionsCheckWithNoMinions() {
-    List<String> deadMinions = tracker.getDeadMinions();
+    List<String> deadMinions = tracker.checkMinionHealth().getDeadMinions();
     Assert.assertNotNull(deadMinions);
     Assert.assertTrue(deadMinions.isEmpty());
   }
@@ -60,8 +60,8 @@ public class MinionHealthTrackerTest {
   @Test
   public void testSlowHeartbeatRecordedInStats() {
     clock.setCurrentMillis(1);
-    tracker.getDeadMinions();
-    tracker.getDeadMinions();
+    tracker.checkMinionHealth();
+    tracker.checkMinionHealth();
     tracker.reportMinionAlive(MINION_ONE); // Doesn't count, just initializes
     tracker.reportMinionAlive(MINION_ONE);
     clock.setCurrentMillis(SLOW_HEARTBEAT_WARNING_THRESHOlD_MILLIS + 1);
@@ -83,7 +83,7 @@ public class MinionHealthTrackerTest {
     clock.setCurrentMillis(clock.currentMillis + EXPECTED_HEARTBEAT_INTERVAL_MILLIS);
     tracker.reportMinionAlive(MINION_ONE);
     tracker.reportMinionAlive(MINION_TWO);
-    tracker.getDeadMinions();
+    tracker.checkMinionHealth();
 
     // Check updated health stats
     healthCheckStats = healthCheckStatsTracker.getHealthCheckStats();
@@ -104,7 +104,7 @@ public class MinionHealthTrackerTest {
     tracker.reportMinionAlive(MINION_TWO);
     clock.setCurrentMillis(MAX_SILENCE_MILLIS + 1);
     tracker.reportMinionAlive(MINION_THREE);
-    List<String> deadMinions = tracker.getDeadMinions();
+    List<String> deadMinions = tracker.checkMinionHealth().getDeadMinions();
     Assert.assertEquals(2, deadMinions.size());
     Assert.assertTrue(deadMinions.contains(MINION_ONE));
     Assert.assertTrue(deadMinions.contains(MINION_TWO));
@@ -116,40 +116,40 @@ public class MinionHealthTrackerTest {
     tracker.reportMinionAlive(MINION_TWO);
     clock.setCurrentMillis(MAX_SILENCE_MILLIS);
     tracker.reportMinionAlive(MINION_THREE);
-    List<String> deadMinions = tracker.getDeadMinions();
+    List<String> deadMinions = tracker.checkMinionHealth().getDeadMinions();
     Assert.assertTrue(deadMinions.isEmpty());
   }
 
   @Test
   public void testReportingAndRemovingMinion() {
     tracker.reportMinionAlive(MINION_ONE);
-    List<String> deadMinions = tracker.getDeadMinions();
+    List<String> deadMinions = tracker.checkMinionHealth().getDeadMinions();
     Assert.assertTrue(deadMinions.isEmpty());
 
     clock.setCurrentMillis(MAX_SILENCE_MILLIS + 1);
-    deadMinions = tracker.getDeadMinions();
+    deadMinions = tracker.checkMinionHealth().getDeadMinions();
     Assert.assertEquals(1, deadMinions.size());
     Assert.assertEquals(MINION_ONE, deadMinions.get(0));
 
     tracker.stopTrackingForever(MINION_ONE);
-    Assert.assertTrue(tracker.getDeadMinions().isEmpty());
+    Assert.assertTrue(tracker.checkMinionHealth().getDeadMinions().isEmpty());
   }
 
   @Test
   public void testStopTrackingUnexistentMinionIsFine() {
     // Should not throw.
     tracker.stopTrackingForever(MINION_ONE);
-    Assert.assertNotNull(tracker.getDeadMinions());
+    Assert.assertNotNull(tracker.checkMinionHealth());
   }
 
   @Test
   public void testMultipleReportsOverwritePrevioustate() {
     tracker.reportMinionAlive(MINION_ONE);
     clock.setCurrentMillis(MAX_SILENCE_MILLIS + 1);
-    Assert.assertEquals(1, tracker.getDeadMinions().size());
+    Assert.assertEquals(1, tracker.checkMinionHealth().getDeadMinions().size());
 
     tracker.reportMinionAlive(MINION_ONE);
-    Assert.assertEquals(0, tracker.getDeadMinions().size());
+    Assert.assertEquals(0, tracker.checkMinionHealth().getDeadMinions().size());
   }
 
   @Test
@@ -157,11 +157,11 @@ public class MinionHealthTrackerTest {
     tracker.reportMinionAlive(MINION_ONE);
     tracker.stopTrackingForever(MINION_ONE);
     clock.setCurrentMillis(MAX_SILENCE_MILLIS + 1);
-    Assert.assertTrue(tracker.getDeadMinions().isEmpty());
+    Assert.assertTrue(tracker.checkMinionHealth().getDeadMinions().isEmpty());
 
     tracker.reportMinionAlive(MINION_ONE);
     clock.setCurrentMillis(clock.currentMillis + MAX_SILENCE_MILLIS + 1);
-    Assert.assertTrue(tracker.getDeadMinions().isEmpty());
+    Assert.assertTrue(tracker.checkMinionHealth().getDeadMinions().isEmpty());
   }
 
   private static class SettableClock implements Clock {

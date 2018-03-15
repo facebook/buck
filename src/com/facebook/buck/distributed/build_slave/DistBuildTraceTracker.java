@@ -59,15 +59,13 @@ public class DistBuildTraceTracker {
   private void minionGotWork(List<WorkUnit> workUnits, long now) {
     for (WorkUnit workUnit : workUnits) {
       for (String buildTarget : workUnit.buildTargets) {
-        Long prev = jobStartedEpochMillisByJobId.put(buildTarget, now);
-        Preconditions.checkState(prev == null, "must not override previous entries");
+        jobStartedEpochMillisByJobId.put(buildTarget, now);
       }
 
       for (int i = 1; i < workUnit.buildTargets.size(); i++) {
         String buildTarget = workUnit.buildTargets.get(i);
         String prevBuildTarget = workUnit.buildTargets.get(i - 1);
-        String prev = nextBuildRuleInWorkUnitByRule.put(prevBuildTarget, buildTarget);
-        Preconditions.checkState(prev == null, "must not override previous entries");
+        nextBuildRuleInWorkUnitByRule.put(prevBuildTarget, buildTarget);
       }
     }
   }

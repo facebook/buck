@@ -60,6 +60,19 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
     coordinatorBuildRuleEventsPublisher.createBuildRuleCompletionEvents(
         ImmutableList.copyOf(request.getFinishedTargets()));
 
+    String minionId = request.getMinionId();
+    if (allocator.hasMinionFailed(minionId)) {
+      // Minion has failed health checks and its work has already been re-assigned.
+      // In the unlikely case it comes back from the dead, tell it to shut down.
+      // TODO(alisdair): consider implementing logic to allow minions to re-join build
+      LOG.warn(
+          String.format(
+              "GetWorkResponse request received from minion [%s] previously marked as dead. Removing it from build.",
+              minionId));
+      response.setContinueBuilding(false);
+      return response;
+    }
+
     if (exitCodeFuture.isDone()) {
       // Tell any remaining minions that the build is finished and that they should shutdown.
       // Note: we cannot assume that when exitCodeFuture was set the first time the
@@ -68,12 +81,12 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
       return response;
     }
 
-    // If the minion died, then kill the whole build.
+    // If the minion died (with a compilation error), then kill the whole build.
     if (request.getLastExitCode() != 0) {
       String msg =
           String.format(
               "Got non zero exit code in GetWorkRequest from minion [%s]. Exit code [%s]",
-              request.getMinionId(), request.getLastExitCode());
+              minionId, request.getLastExitCode());
       LOG.error(msg);
       exitCodeFuture.complete(ExitState.setLocally(request.getLastExitCode(), msg));
       response.setContinueBuilding(false);
@@ -82,7 +95,7 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
 
     List<WorkUnit> newWorkUnitsForMinion =
         allocator.dequeueZeroDependencyNodes(
-            request.getMinionId(), request.getFinishedTargets(), request.getMaxWorkUnitsToFetch());
+            minionId, request.getFinishedTargets(), request.getMaxWorkUnitsToFetch());
 
     // TODO(alisdair): experiment with only sending started event for first node in chain,
     // and then send events for later nodes in the chain as their children finish.

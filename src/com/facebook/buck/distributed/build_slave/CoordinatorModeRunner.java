@@ -57,6 +57,7 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
   private final DistBuildService distBuildService;
   private final MinionHealthTracker minionHealthTracker;
   private final Optional<URI> traceUploadUri;
+  private final MinionCountProvider minionCountProvider;
 
   /** Constructor. */
   public CoordinatorModeRunner(
@@ -69,7 +70,8 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
       Optional<URI> traceUploadUri,
       CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher,
       DistBuildService distBuildService,
-      MinionHealthTracker minionHealthTracker) {
+      MinionHealthTracker minionHealthTracker,
+      MinionCountProvider minionCountProvider) {
     this.stampedeId = stampedeId;
     this.clientBuildId = clientBuildId;
     this.traceUploadUri = traceUploadUri;
@@ -81,6 +83,7 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
     this.eventListener = eventListener;
     this.coordinatorBuildRuleEventsPublisher = coordinatorBuildRuleEventsPublisher;
     this.distBuildService = distBuildService;
+    this.minionCountProvider = minionCountProvider;
   }
 
   public CoordinatorModeRunner(
@@ -92,7 +95,8 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
       DistBuildService distBuildService,
       Optional<BuildId> clientBuildId,
       Optional<URI> traceUploadUri,
-      MinionHealthTracker minionHealthTracker) {
+      MinionHealthTracker minionHealthTracker,
+      MinionCountProvider minionCountProvider) {
     this(
         OptionalInt.empty(),
         queue,
@@ -103,7 +107,8 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
         traceUploadUri,
         coordinatorBuildRuleEventsPublisher,
         distBuildService,
-        minionHealthTracker);
+        minionHealthTracker,
+        minionCountProvider);
   }
 
   @Override
@@ -169,7 +174,8 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
                   eventListener,
                   coordinatorBuildRuleEventsPublisher,
                   minionHealthTracker,
-                  distBuildService));
+                  distBuildService,
+                  minionCountProvider));
       this.server.start();
       this.closer.register(
           service.addCallback("ReportCoordinatorAlive", createHeartbeatCallback()));
