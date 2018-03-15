@@ -26,6 +26,9 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.command.BuildExecutor;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.DefaultBuckEventBus;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildEngineResult;
 import com.facebook.buck.rules.BuildResult;
@@ -36,6 +39,7 @@ import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.slb.ThriftException;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
@@ -60,6 +64,8 @@ public class MinionModeRunnerIntegrationTest {
   private static final int MAX_PARALLEL_WORK_UNITS = 10;
   private static final long POLL_LOOP_INTERVAL_MILLIS = 9;
   private static final int CONNECTION_TIMEOUT_MILLIS = 1000;
+  private static final BuckEventBus BUCK_EVENT_BUS =
+      new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId());
 
   @Rule public TemporaryFolder tempDir = new TemporaryFolder();
 
@@ -79,7 +85,8 @@ public class MinionModeRunnerIntegrationTest {
             checker,
             POLL_LOOP_INTERVAL_MILLIS,
             new NoOpMinionBuildProgressTracker(),
-            CONNECTION_TIMEOUT_MILLIS);
+            CONNECTION_TIMEOUT_MILLIS,
+            BUCK_EVENT_BUS);
 
     minion.runAndReturnExitCode(createFakeHeartbeatService());
     Assert.fail("The previous line should've thrown an exception.");
@@ -115,7 +122,8 @@ public class MinionModeRunnerIntegrationTest {
             checker,
             POLL_LOOP_INTERVAL_MILLIS,
             new NoOpMinionBuildProgressTracker(),
-            CONNECTION_TIMEOUT_MILLIS);
+            CONNECTION_TIMEOUT_MILLIS,
+            BUCK_EVENT_BUS);
 
     ExitCode exitCode = minion.runAndReturnExitCode(createFakeHeartbeatService());
     // Server does not exit because the build has already been marked as finished.
@@ -260,7 +268,8 @@ public class MinionModeRunnerIntegrationTest {
               checker,
               POLL_LOOP_INTERVAL_MILLIS,
               unexpectedCacheMissTracker,
-              CONNECTION_TIMEOUT_MILLIS);
+              CONNECTION_TIMEOUT_MILLIS,
+              BUCK_EVENT_BUS);
       ExitCode exitCode = minion.runAndReturnExitCode(service);
       Assert.assertEquals(ExitCode.SUCCESS, exitCode);
     }

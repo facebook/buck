@@ -160,7 +160,8 @@ public class MultiSlaveBuildModeRunnerFactory {
       OptionalInt coordinatorPort,
       DistBuildConfig distBuildConfig,
       MinionBuildProgressTracker minionBuildProgressTracker,
-      double availableBuildCapacityRatio) {
+      double availableBuildCapacityRatio,
+      BuckEventBus eventBus) {
     Preconditions.checkArgument(
         availableBuildCapacityRatio > 0, availableBuildCapacityRatio + " is not > 0");
     Preconditions.checkArgument(
@@ -201,7 +202,8 @@ public class MultiSlaveBuildModeRunnerFactory {
         checker,
         distBuildConfig.getMinionPollLoopIntervalMillis(),
         minionBuildProgressTracker,
-        distBuildConfig.getCoordinatorConnectionTimeoutMillis());
+        distBuildConfig.getCoordinatorConnectionTimeoutMillis(),
+        eventBus);
   }
 
   /**
@@ -257,6 +259,7 @@ public class MultiSlaveBuildModeRunnerFactory {
             OptionalInt.empty(),
             distBuildConfig,
             minionBuildProgressTracker,
-            coordinatorBuildCapacityRatio));
+            coordinatorBuildCapacityRatio,
+            eventBus));
   }
 }

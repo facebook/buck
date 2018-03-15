@@ -21,10 +21,13 @@ import com.facebook.buck.distributed.build_slave.HeartbeatService.HeartbeatCallb
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuildEngineResult;
 import com.facebook.buck.rules.BuildResult;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.ThriftException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -55,6 +58,7 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
   private static final Logger LOG = Logger.get(MinionModeRunner.class);
 
   private final String coordinatorAddress;
+
   private volatile OptionalInt coordinatorPort;
   private final int coordinatorConnectionTimeoutMillis;
   private final ListenableFuture<BuildExecutor> buildExecutorFuture;
@@ -64,6 +68,8 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
 
   private final BuildCompletionChecker buildCompletionChecker;
   private final ExecutorService buildExecutorService;
+
+  private final BuckEventBus eventBus;
 
   private final MinionLocalBuildStateTracker buildTracker;
 
@@ -98,7 +104,8 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
       BuildCompletionChecker buildCompletionChecker,
       long minionPollLoopIntervalMillis,
       MinionBuildProgressTracker minionBuildProgressTracker,
-      int coordinatorConnectionTimeoutMillis) {
+      int coordinatorConnectionTimeoutMillis,
+      BuckEventBus eventBus) {
     this(
         coordinatorAddress,
         coordinatorPort,
@@ -111,7 +118,8 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
         minionPollLoopIntervalMillis,
         minionBuildProgressTracker,
         MostExecutors.newMultiThreadExecutor(
-            new CommandThreadFactory("MinionBuilderThread"), availableWorkUnitBuildCapacity));
+            new CommandThreadFactory("MinionBuilderThread"), availableWorkUnitBuildCapacity),
+        eventBus);
   }
 
   @VisibleForTesting
@@ -126,7 +134,8 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
       BuildCompletionChecker buildCompletionChecker,
       long minionPollLoopIntervalMillis,
       MinionBuildProgressTracker minionBuildProgressTracker,
-      ExecutorService buildExecutorService) {
+      ExecutorService buildExecutorService,
+      BuckEventBus eventBus) {
     this.coordinatorConnectionTimeoutMillis = coordinatorConnectionTimeoutMillis;
     this.minionPollLoopIntervalMillis = minionPollLoopIntervalMillis;
     this.buildExecutorFuture = buildExecutorFuture;
@@ -135,9 +144,9 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
     this.coordinatorAddress = coordinatorAddress;
     coordinatorPort.ifPresent(CoordinatorModeRunner::validatePort);
     this.coordinatorPort = coordinatorPort;
-
     this.buildCompletionChecker = buildCompletionChecker;
     this.buildExecutorService = buildExecutorService;
+    this.eventBus = eventBus;
     this.buildTracker =
         new MinionLocalBuildStateTracker(maxWorkUnitBuildCapacity, minionBuildProgressTracker);
 
@@ -338,12 +347,44 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
 
           @Override
           public void onFailure(Throwable t) {
-            // TODO(alisdair,ruibm): re-try this, maybe on a different minion.
-            LOG.error(t, String.format("Cache upload failed for target %s", fullyQualifiedName));
-            // Fail the Stampede build, and ensure it doesn't deadlock.
-            exitCode.set(ExitCode.BUILD_ERROR);
+            // TODO(alisdair,ruibm,msienkiewicz): We used to have async upload confirmations from
+            // cache which made this codepath (almost) never get triggered - we would crash the
+            // build if it happened. We need to now look at error rate and decide on a retry/crash
+            // policy. Until then, log and progress as if upload was successful.
+            registerFailedUploadHandler(t, buildResult.getRule(), fullyQualifiedName);
+            buildTracker.recordUploadedTarget(fullyQualifiedName);
           }
         },
+        MoreExecutors.directExecutor());
+  }
+
+  private void registerFailedUploadHandler(
+      Throwable uploadThrowable, BuildRule buildRule, String fullyQualifiedName) {
+    Futures.addCallback(
+        Preconditions.checkNotNull(buildExecutor)
+            .getCachingBuildEngine()
+            .getRuleKeyCalculator()
+            .calculate(eventBus, buildRule),
+        new FutureCallback<RuleKey>() {
+          @Override
+          public void onSuccess(RuleKey ruleKey) {
+            LOG.error(
+                uploadThrowable,
+                String.format(
+                    "Cache upload failed for target [%s] with rulekey [%s].",
+                    fullyQualifiedName, ruleKey));
+          }
+
+          @Override
+          public void onFailure(Throwable t) {
+            LOG.error(
+                t,
+                String.format(
+                    "Cache upload failed for target [%s] with unknown rulekey (calculation failed).",
+                    fullyQualifiedName));
+          }
+        },
+        // Rulekey should have already been computed so direct executor is fine.
         MoreExecutors.directExecutor());
   }
 

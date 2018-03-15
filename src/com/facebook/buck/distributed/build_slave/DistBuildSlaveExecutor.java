@@ -153,7 +153,8 @@ public class DistBuildSlaveExecutor {
                   OptionalInt.of(args.getRemoteCoordinatorPort()),
                   args.getDistBuildConfig(),
                   args.getMinionBuildProgressTracker(),
-                  args.getDistBuildConfig().getMinionBuildCapacityRatio());
+                  args.getDistBuildConfig().getMinionBuildCapacityRatio(),
+                  args.getBuckEventBus());
           break;
 
         case COORDINATOR_AND_MINION:

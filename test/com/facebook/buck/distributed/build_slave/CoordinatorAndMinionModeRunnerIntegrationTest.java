@@ -21,11 +21,13 @@ import com.facebook.buck.distributed.build_slave.MinionModeRunnerIntegrationTest
 import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.event.listener.NoOpCoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
@@ -91,7 +93,8 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
             EasyMock.createNiceMock(MinionModeRunner.BuildCompletionChecker.class),
             POLL_LOOP_INTERVAL_MILLIS,
             new NoOpMinionBuildProgressTracker(),
-            CONNECTION_TIMEOUT_MILLIS);
+            CONNECTION_TIMEOUT_MILLIS,
+            new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId()));
     CoordinatorAndMinionModeRunner jointRunner =
         new CoordinatorAndMinionModeRunner(coordinator, minion);
     ExitCode exitCode = jointRunner.runAndReturnExitCode(heartbeatService);
