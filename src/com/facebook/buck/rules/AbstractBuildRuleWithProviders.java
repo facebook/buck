@@ -21,10 +21,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.provider.BuildRuleInfoProvider;
 import com.facebook.buck.rules.provider.BuildRuleInfoProviderCollection;
 import com.facebook.buck.rules.provider.MissingProviderException;
-import com.facebook.buck.util.MoreSuppliers;
-import com.google.common.base.CaseFormat;
+import com.google.common.base.Preconditions;
 import java.util.Objects;
-import java.util.function.Supplier;
 
 /**
  * Abstract implementation of a {@link BuildRule} that can be cached and is implemented using {@link
@@ -36,52 +34,14 @@ import java.util.function.Supplier;
  * migrated to using BuildRuleInfoProvider
  */
 public abstract class AbstractBuildRuleWithProviders implements BuildRule {
-  private final BuildTarget buildTarget;
-  private final ProjectFilesystem projectFilesystem;
-  private final Supplier<String> typeSupplier = MoreSuppliers.memoize(this::getTypeForClass);
 
   private final BuildRuleInfoProviderCollection providers;
 
-  protected AbstractBuildRuleWithProviders(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleInfoProviderCollection providers) {
-    this.buildTarget = buildTarget;
-    this.projectFilesystem = projectFilesystem;
+  protected AbstractBuildRuleWithProviders(BuildRuleInfoProviderCollection providers) {
     this.providers = providers;
-  }
-
-  @Override
-  public final BuildTarget getBuildTarget() {
-    return buildTarget;
-  }
-
-  @Override
-  public final ProjectFilesystem getProjectFilesystem() {
-    return projectFilesystem;
-  }
-
-  @Override
-  public String getType() {
-    return typeSupplier.get();
-  }
-
-  private String getTypeForClass() {
-    Class<?> clazz = getClass();
-    if (clazz.isAnonymousClass()) {
-      clazz = clazz.getSuperclass();
-    }
-    return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, clazz.getSimpleName()).intern();
-  }
-
-  @Override
-  public boolean isCacheable() {
-    return true;
-  }
-
-  @Override
-  public final String toString() {
-    return getFullyQualifiedName();
+    Preconditions.checkState(
+        providers.getDefaultProvider().getTypeClass().equals(getClass()),
+        "DefaultBuildRuleInfoProvider should have getTypeClass() equal to type of the BuildRule");
   }
 
   @Override
@@ -90,14 +50,12 @@ public abstract class AbstractBuildRuleWithProviders implements BuildRule {
       return false;
     }
     AbstractBuildRuleWithProviders that = (AbstractBuildRuleWithProviders) obj;
-    return Objects.equals(this.buildTarget, that.buildTarget)
-        && Objects.equals(this.providers, that.providers)
-        && Objects.equals(this.getType(), that.getType());
+    return Objects.equals(this.providers, that.providers);
   }
 
   @Override
   public final int hashCode() {
-    return Objects.hash(buildTarget, providers);
+    return providers.hashCode();
   }
 
   @Override
@@ -118,5 +76,32 @@ public abstract class AbstractBuildRuleWithProviders implements BuildRule {
   public final <T extends BuildRuleInfoProvider> T getProvider(T.ProviderKey providerKey)
       throws MissingProviderException {
     return providers.get(providerKey);
+  }
+
+  // The following methods provide quick access to common BuildRule data directly for use without
+  // needing providers, for outside of ActionGraph construction
+  @Override
+  public final BuildTarget getBuildTarget() {
+    return providers.getDefaultProvider().getBuildTarget();
+  }
+
+  @Override
+  public final ProjectFilesystem getProjectFilesystem() {
+    return providers.getDefaultProvider().getProjectFilesystem();
+  }
+
+  @Override
+  public String getType() {
+    return providers.getDefaultProvider().getType();
+  }
+
+  @Override
+  public boolean isCacheable() {
+    return providers.getDefaultProvider().isCacheable();
+  }
+
+  @Override
+  public final String toString() {
+    return getFullyQualifiedName();
   }
 }

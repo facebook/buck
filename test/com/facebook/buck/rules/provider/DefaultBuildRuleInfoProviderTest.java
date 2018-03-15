@@ -17,21 +17,21 @@
 package com.facebook.buck.rules.provider;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.AbstractBuildRuleWithProviders;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-/** Sample of BuildRules and Providers demonstrating the provider interface */
-public class BuildRuleInfoProviderCollectionTest {
+/** Sample usage of {@link DefaultBuildRuleInfoProvider} along with testing */
+public class DefaultBuildRuleInfoProviderTest {
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
@@ -50,46 +50,28 @@ public class BuildRuleInfoProviderCollectionTest {
   }
 
   @Test
-  public void missingProviderThrows() {
-    expectedException.expect(MissingProviderException.class);
-
+  public void defaultProviderReturnsCorrectData() {
     BuildRule buildRule =
         new FakeBuildRuleWithProviders(
             BuildRuleInfoProviderCollection.builder().put(defaultProvider).build());
-    buildRule.getProvider(FakeBuildRuleInfoProvider.KEY);
+
+    assertEquals(buildTarget, buildRule.getBuildTarget());
+    assertEquals(null, buildRule.getSourcePathToOutput());
+    assertEquals(projectFilesystem, buildRule.getProjectFilesystem());
+    assertEquals(buildTarget.toString(), buildRule.getFullyQualifiedName());
+    assertEquals("fake_build_rule_with_providers", buildRule.getType());
+    assertTrue(buildRule.isCacheable());
   }
 
   @Test
-  public void missingDefaultProviderThrows() {
-    expectedException.expect(MissingProviderException.class);
+  public void mismatchProviderTypeThrows() {
+    expectedException.expect(IllegalStateException.class);
 
-    new FakeBuildRuleWithProviders(BuildRuleInfoProviderCollection.builder().build());
-  }
-
-  @Test
-  public void unprovidableBuildRuleThrows() {
-    expectedException.expect(UnsupportedOperationException.class);
-
-    BuildRule buildRule = new FakeBuildRule(buildTarget, ImmutableSortedSet.of());
-    buildRule.getProvider(AnotherFakeBuildRuleInfoProvider.KEY);
-  }
-
-  @Test
-  public void findsCorrectProviders() {
-    FakeBuildRuleInfoProvider fakeProvider = new FakeBuildRuleInfoProvider(1);
-    AnotherFakeBuildRuleInfoProvider anotherFakeProvider = new AnotherFakeBuildRuleInfoProvider();
-
-    BuildRuleInfoProviderCollection.Builder providers =
+    new FakeBuildRuleWithProviders(
         BuildRuleInfoProviderCollection.builder()
-            .put(fakeProvider)
-            .put(anotherFakeProvider)
-            .put(defaultProvider);
-    BuildRule buildRule = new FakeBuildRuleWithProviders(providers.build());
-
-    FakeBuildRuleInfoProvider fakeProvider1 = buildRule.getProvider(FakeBuildRuleInfoProvider.KEY);
-    assertEquals(fakeProvider, fakeProvider1);
-    assertEquals(1, fakeProvider1.getValue());
-    assertEquals(anotherFakeProvider, buildRule.getProvider(AnotherFakeBuildRuleInfoProvider.KEY));
-    assertEquals(defaultProvider, buildRule.getProvider(DefaultBuildRuleInfoProvider.KEY));
+            .put(
+                ImmutableDefaultBuildRuleInfoProvider.of(
+                    AbstractBuildRuleWithProviders.class, buildTarget, null, projectFilesystem))
+            .build());
   }
 }

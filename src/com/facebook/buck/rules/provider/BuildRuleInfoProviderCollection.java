@@ -23,14 +23,22 @@ import com.google.common.collect.ImmutableMap;
  * A container for storing a collection of {@link BuildRuleInfoProvider} for {@link
  * com.facebook.buck.rules.BuildRule}. This is basically a wrapper around an ImmutableMap that
  * provides more convenient provider access and building.
+ *
+ * <p>The supplied {@link BuildRuleProviderCollection} must contain {@link
+ * DefaultBuildRuleInfoProvider} or {@link MissingProviderException} will be thrown
  */
 public final class BuildRuleInfoProviderCollection {
 
   private final ImmutableMap<BuildRuleInfoProvider.ProviderKey, BuildRuleInfoProvider> providerMap;
 
+  // provides quick access to default provider, which is commonly accessed so we don't need frequent
+  // map lookup
+  private final DefaultBuildRuleInfoProvider defaultProvider;
+
   private BuildRuleInfoProviderCollection(
       ImmutableMap<BuildRuleInfoProvider.ProviderKey, BuildRuleInfoProvider> providerMap) {
     this.providerMap = providerMap;
+    this.defaultProvider = get(DefaultBuildRuleInfoProvider.KEY);
   }
 
   /**
@@ -51,6 +59,11 @@ public final class BuildRuleInfoProviderCollection {
     return provider;
   }
 
+  /** Provides a quick access to the default provider without needing map lookup */
+  public DefaultBuildRuleInfoProvider getDefaultProvider() {
+    return defaultProvider;
+  }
+
   @Override
   public final boolean equals(Object obj) {
     if (!(obj instanceof BuildRuleInfoProviderCollection)) {
@@ -63,10 +76,6 @@ public final class BuildRuleInfoProviderCollection {
   @Override
   public final int hashCode() {
     return this.providerMap.hashCode();
-  }
-
-  public static BuildRuleInfoProviderCollection of() {
-    return new BuildRuleInfoProviderCollection(ImmutableMap.of());
   }
 
   public static Builder builder() {

@@ -16,8 +16,6 @@
 
 package com.facebook.buck.rules.provider;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleWithProviders;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -32,11 +30,8 @@ import javax.annotation.Nullable;
 /** Fake BuildRule that uses the provider interface */
 public class FakeBuildRuleWithProviders extends AbstractBuildRuleWithProviders {
 
-  protected FakeBuildRuleWithProviders(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleInfoProviderCollection providers) {
-    super(buildTarget, projectFilesystem, providers);
+  protected FakeBuildRuleWithProviders(BuildRuleInfoProviderCollection providers) {
+    super(providers);
   }
 
   @Override
