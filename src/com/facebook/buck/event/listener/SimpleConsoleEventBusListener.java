@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.BuildRuleSuccessType.BUILT_LOCALLY;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.distributed.DistBuildCreatedEvent;
 import com.facebook.buck.distributed.DistBuildRunEvent;
+import com.facebook.buck.distributed.build_client.StampedeConsoleEvent;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
@@ -220,6 +221,11 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     ImmutableList.Builder<String> lines = ImmutableList.builder();
     formatConsoleEvent(event, lines);
     printLines(lines);
+  }
+
+  @Subscribe
+  public void logStampedeConsoleEvent(StampedeConsoleEvent event) {
+    logEvent(event.getConsoleEvent());
   }
 
   @Override

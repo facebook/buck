@@ -137,8 +137,9 @@ public class DistBuildController {
                   ruleKeyCalculatorFuture));
     } catch (DistBuildService.DistBuildRejectedException ex) {
       eventBus.post(
-          ConsoleEvent.createForMessageWithAnsiEscapeCodes(
-              Level.WARNING, console.getAnsi().asWarningText(ex.getMessage())));
+          new StampedeConsoleEvent(
+              ConsoleEvent.createForMessageWithAnsiEscapeCodes(
+                  Level.WARNING, console.getAnsi().asWarningText(ex.getMessage()))));
       return createFailedExecutionResult(
           Preconditions.checkNotNull(stampedeIdReference.get()), ExitCode.PREPARATION_STEP_FAILED);
     } catch (IOException | RuntimeException ex) {

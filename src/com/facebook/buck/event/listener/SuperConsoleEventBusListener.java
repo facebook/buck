@@ -21,6 +21,7 @@ import com.facebook.buck.distributed.DistBuildCreatedEvent;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
 import com.facebook.buck.distributed.StampedeLocalBuildStatusEvent;
 import com.facebook.buck.distributed.build_client.DistBuildSuperConsoleEvent;
+import com.facebook.buck.distributed.build_client.StampedeConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.event.ActionGraphEvent;
@@ -954,6 +955,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       return;
     }
     logEvents.add(event);
+  }
+
+  @Subscribe
+  public void logStampedeConsoleEvent(StampedeConsoleEvent event) {
+    if (stampedeSuperConsoleEvent.isPresent()) {
+      logEvent(event.getConsoleEvent());
+    }
   }
 
   @Subscribe

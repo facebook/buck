@@ -34,6 +34,7 @@ import com.facebook.buck.distributed.DistBuildStatusEvent;
 import com.facebook.buck.distributed.StampedeLocalBuildStatusEvent;
 import com.facebook.buck.distributed.build_client.DistBuildRemoteProgressEvent;
 import com.facebook.buck.distributed.build_client.DistBuildSuperConsoleEvent;
+import com.facebook.buck.distributed.build_client.StampedeConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatus;
@@ -1296,15 +1297,23 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             distBuildStartedEvent, timeMillis, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            new StampedeConsoleEvent(
+                ConsoleEvent.warning("Message before activating stampede console.")),
+            timeMillis,
+            TimeUnit.MILLISECONDS, /* threadId */
+            0L));
     timeMillis += 100;
-    validateConsole(
+    validateConsoleWithLogLines(
         listener,
         timeMillis,
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
             "Downloading... 0 artifacts, 0.00 bytes",
-            "Building... 0.2 sec"));
+            "Building... 0.2 sec"),
+        ImmutableList.of());
 
     // Now enable the stampede superconsole.
     timeMillis += 100;
@@ -1312,15 +1321,24 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             new DistBuildSuperConsoleEvent(), timeMillis, TimeUnit.MILLISECONDS, 0L));
     timeMillis += 100;
-    validateConsole(
+    String consoleMessage = "Message after activating stampede console.";
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            new StampedeConsoleEvent(ConsoleEvent.warning(consoleMessage)),
+            timeMillis,
+            TimeUnit.MILLISECONDS, /* threadId */
+            0L));
+    timeMillis += 100;
+    validateConsoleWithLogLines(
         listener,
         timeMillis,
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed Build... 0.3 sec (0%) remote status: init; local status: init",
+            "Distributed Build... 0.4 sec (0%) remote status: init; local status: init",
             "Downloading... 0 artifacts, 0.00 bytes",
-            "Local Steps... 0.4 sec"));
+            "Local Steps... 0.5 sec"),
+        ImmutableList.of(consoleMessage));
 
     String stickyMessage = "Hello world from Stampede.";
     eventBus.postWithoutConfiguring(
@@ -1336,9 +1354,9 @@ public class SuperConsoleEventBusListenerTest {
             parsingLine,
             actionGraphLine,
             stickyMessage,
-            "Distributed Build... 0.3 sec (0%) remote status: init; local status: init",
+            "Distributed Build... 0.4 sec (0%) remote status: init; local status: init",
             "Downloading... 0 artifacts, 0.00 bytes",
-            "Local Steps... 0.4 sec"));
+            "Local Steps... 0.5 sec"));
   }
 
   @Test
