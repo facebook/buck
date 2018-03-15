@@ -72,6 +72,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -146,9 +147,11 @@ public class DefaultProjectFilesystemTest {
 
     filesystem.createSymLink(symlinkDir, realFileDir, true);
 
-    List<Path> filesFound = Files.list(symlinkDir).collect(Collectors.toList());
-    assertThat(
-        filesFound, containsInAnyOrder(symlinkDir.resolve("file"), symlinkDir.resolve("file2")));
+    try (Stream<Path> paths = Files.list(symlinkDir)) {
+      List<Path> filesFound = paths.collect(Collectors.toList());
+      assertThat(
+          filesFound, containsInAnyOrder(symlinkDir.resolve("file"), symlinkDir.resolve("file2")));
+    }
   }
 
   @Test
