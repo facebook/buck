@@ -1217,8 +1217,8 @@ public class ProjectView {
   }
 
   private boolean hasSymbolicLink(Path path) {
-    try {
-      return Files.list(path).anyMatch(p -> Files.isSymbolicLink(p));
+    try (Stream<Path> paths = Files.list(path)) {
+      return paths.anyMatch(Files::isSymbolicLink);
     } catch (IOException e) {
       stderr("'%s' enumerating %s", e.getMessage(), path);
       return true;
