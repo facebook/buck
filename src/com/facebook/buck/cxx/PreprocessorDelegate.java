@@ -216,6 +216,19 @@ final class PreprocessorDelegate implements AddsToRuleKey {
         resolver, minLengthPathRepresentation, frameworkPathSearchPathFunction, preprocessor);
   }
 
+  /**
+   * Build a {@link CxxToolFlags} representing our sanitized include paths (local, system, iquote,
+   * framework). Does not include {@link #leadingIncludePaths}.
+   */
+  public CxxToolFlags getSanitizedIncludePathFlags() {
+    return preprocessorFlags.getSanitizedIncludePathFlags(
+        sanitizer,
+        resolver,
+        minLengthPathRepresentation,
+        frameworkPathSearchPathFunction,
+        preprocessor);
+  }
+
   /** @see com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey */
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(Iterable<Path> dependencies) {
     Stream.Builder<SourcePath> inputsBuilder = Stream.builder();

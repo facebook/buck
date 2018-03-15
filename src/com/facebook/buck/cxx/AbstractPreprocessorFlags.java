@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -97,6 +98,22 @@ abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
             StringArg.from(
                 getCxxIncludePaths()
                     .getFlags(resolver, pathShortener, frameworkPathTransformer, preprocessor)))
+        .build();
+  }
+
+  public CxxToolFlags getSanitizedIncludePathFlags(
+      DebugPathSanitizer sanitizer,
+      SourcePathResolver resolver,
+      PathShortener pathShortener,
+      Function<FrameworkPath, Path> frameworkPathTransformer,
+      Preprocessor preprocessor) {
+    return CxxToolFlags.explicitBuilder()
+        .addAllRuleFlags(
+            StringArg.from(
+                sanitizer.sanitizeFlags(
+                    getCxxIncludePaths()
+                        .getFlags(
+                            resolver, pathShortener, frameworkPathTransformer, preprocessor))))
         .build();
   }
 

@@ -739,7 +739,8 @@ abstract class AbstractCxxSourceRuleFactory {
                             preprocessorDelegate.getNonIncludePathFlags(Optional.empty());
                       }));
       this.preprocessorFullHash =
-          MoreSuppliers.memoize(() -> computeHash(preprocessorDelegate.getIncludePathFlags()));
+          MoreSuppliers.memoize(
+              () -> computeHash(preprocessorDelegate.getSanitizedIncludePathFlags()));
     }
 
     PreprocessorDelegate getPreprocessorDelegate() {
