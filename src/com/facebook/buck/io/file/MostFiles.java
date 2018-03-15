@@ -50,6 +50,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class MostFiles {
 
@@ -196,12 +197,13 @@ public final class MostFiles {
                   try {
                     Files.delete(dir);
                   } catch (DirectoryNotEmptyException notEmpty) {
-                    throw new IOException(
-                        String.format(
-                            "Could not delete non-empty directory %s. Contents:\n%s",
-                            dir,
-                            Files.list(dir).map(Path::toString).collect(Collectors.joining("\n"))),
-                        notEmpty);
+                    try (Stream<Path> paths = Files.list(dir)) {
+                      throw new IOException(
+                          String.format(
+                              "Could not delete non-empty directory %s. Contents:\n%s",
+                              dir, paths.map(Path::toString).collect(Collectors.joining("\n"))),
+                          notEmpty);
+                    }
                   }
                 }
                 return FileVisitResult.CONTINUE;
