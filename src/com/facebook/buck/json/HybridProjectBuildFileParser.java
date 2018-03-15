@@ -91,7 +91,8 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
    */
   private ProjectBuildFileParser getParserForBuildFile(Path buildFile)
       throws IOException, BuildFileParseException {
-    @Nullable String firstLine = Files.readFirstLine(buildFile.toFile(), Charsets.UTF_8);
+    @Nullable
+    String firstLine = Files.asCharSource(buildFile.toFile(), Charsets.UTF_8).readFirstLine();
 
     Syntax syntax = defaultSyntax;
     if (firstLine != null && firstLine.startsWith(SYNTAX_MARKER_START)) {
