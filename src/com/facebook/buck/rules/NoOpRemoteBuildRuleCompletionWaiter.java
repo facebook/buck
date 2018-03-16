@@ -32,7 +32,7 @@ public class NoOpRemoteBuildRuleCompletionWaiter implements RemoteBuildRuleCompl
   }
 
   @Override
-  public ListenableFuture<Void> waitForMostBuildRulesToFinishRemotely() {
-    return Futures.immediateFuture(null);
+  public ListenableFuture<Boolean> waitForMostBuildRulesToFinishRemotely() {
+    return Futures.immediateFuture(true);
   }
 }

@@ -85,7 +85,7 @@ public class BuildRuleEventManager {
 
   public synchronized void mostBuildRulesFinishedEventReceived() {
     LOG.info("Received MOST_BUILD_RULES_FINISHED_EVENT");
-    remoteBuildRuleCompletionNotifier.signalMostBuildRulesFinished();
+    remoteBuildRuleCompletionNotifier.signalMostBuildRulesFinished(/*success*/ true);
   }
 
   /**

@@ -40,7 +40,7 @@ public class RemoteBuildRuleSynchronizer
   private final Set<String> completedRules = new HashSet<>();
   private final Set<String> startedRules = new HashSet<>();
   private boolean remoteBuildFinished = false;
-  private final SettableFuture<Void> mostBuildRulesFinished = SettableFuture.create();
+  private final SettableFuture<Boolean> mostBuildRulesFinished = SettableFuture.create();
 
   @GuardedBy("this")
   private boolean alwaysWaitForRemoteBuildBeforeProceedingLocally = false;
@@ -62,7 +62,7 @@ public class RemoteBuildRuleSynchronizer
   }
 
   @Override
-  public ListenableFuture<Void> waitForMostBuildRulesToFinishRemotely() {
+  public ListenableFuture<Boolean> waitForMostBuildRulesToFinishRemotely() {
     return mostBuildRulesFinished;
   }
 
@@ -100,7 +100,7 @@ public class RemoteBuildRuleSynchronizer
 
   /** When the remote build has finished (or failed), all rules should be unlocked. */
   @Override
-  public synchronized void signalCompletionOfRemoteBuild() {
+  public synchronized void signalCompletionOfRemoteBuild(boolean success) {
     LOG.info("Remote build is finished. Unlocking all rules");
 
     // Unlock all existing rules
@@ -110,20 +110,20 @@ public class RemoteBuildRuleSynchronizer
 
     // If for whatever reason the 'most build rules finished' event wasn't received, we can
     // be sure that at this point most build rules are finished, so unlock this Future too.
-    signalMostBuildRulesFinished();
+    signalMostBuildRulesFinished(success);
 
     // Set flag so that all future waitForBuildRuleToFinishRemotely calls return immediately.
     remoteBuildFinished = true;
   }
 
   @Override
-  public void signalMostBuildRulesFinished() {
+  public void signalMostBuildRulesFinished(boolean success) {
     if (mostBuildRulesFinished.isDone()) {
       return;
     }
 
     LOG.info("Most build rules finished.");
-    mostBuildRulesFinished.set(null);
+    mostBuildRulesFinished.set(success);
   }
 
   @VisibleForTesting

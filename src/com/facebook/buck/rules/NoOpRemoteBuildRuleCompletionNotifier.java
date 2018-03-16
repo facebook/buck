@@ -25,8 +25,8 @@ public class NoOpRemoteBuildRuleCompletionNotifier implements RemoteBuildRuleCom
   public void signalCompletionOfBuildRule(String buildTarget) {}
 
   @Override
-  public void signalCompletionOfRemoteBuild() {}
+  public void signalCompletionOfRemoteBuild(boolean success) {}
 
   @Override
-  public void signalMostBuildRulesFinished() {}
+  public void signalMostBuildRulesFinished(boolean success) {}
 }

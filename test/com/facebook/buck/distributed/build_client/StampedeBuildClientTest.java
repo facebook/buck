@@ -276,7 +276,7 @@ public class StampedeBuildClientTest {
         buildClientExecutor.submit(() -> buildClient.build(TWO_STAGE, FALLBACK_ENABLED));
 
     // Simulate most build rules finished event being received.
-    remoteBuildRuleSynchronizer.signalMostBuildRulesFinished();
+    remoteBuildRuleSynchronizer.signalMostBuildRulesFinished(true);
     waitForRacingBuildCalledLatch.await(); // waitUntilFinished(..) called on racing build
     distBuildControllerInvokerLatch.countDown(); // distributed build fails
     waitForSynchronizedBuildCalledLatch.await(); // waitUntilFinished(..) called on sync build
@@ -320,7 +320,7 @@ public class StampedeBuildClientTest {
         buildClientExecutor.submit(() -> buildClient.build(TWO_STAGE, NO_FALLBACK));
 
     // Simulate most build rules finished event being received.
-    remoteBuildRuleSynchronizer.signalMostBuildRulesFinished();
+    remoteBuildRuleSynchronizer.signalMostBuildRulesFinished(true);
     waitForRacingBuildCalledLatch.await(); // waitUntilFinished(..) called on racing build
     distBuildControllerInvokerLatch.countDown(); // distributed build fails
     waitForSynchronizedBuildCalledLatch.await(); // waitUntilFinished(..) called on sync build
@@ -363,7 +363,7 @@ public class StampedeBuildClientTest {
         buildClientExecutor.submit(() -> buildClient.build(TWO_STAGE, NO_FALLBACK));
 
     // Simulate most build rules finished event being received.
-    remoteBuildRuleSynchronizer.signalMostBuildRulesFinished();
+    remoteBuildRuleSynchronizer.signalMostBuildRulesFinished(true);
     waitForRacingBuildCalledLatch.await(); // waitUntilFinished(..) called on racing build
     localBuildExecutorInvokerPhaseTwoLatch.countDown(); // Local synchronized build completes
 
@@ -400,7 +400,7 @@ public class StampedeBuildClientTest {
         buildClientExecutor.submit(() -> buildClient.build(TWO_STAGE, NO_FALLBACK));
 
     // Simulate most build rules finished event being received.
-    remoteBuildRuleSynchronizer.signalMostBuildRulesFinished();
+    remoteBuildRuleSynchronizer.signalMostBuildRulesFinished(true);
 
     waitForRacingBuildCalledLatch.await(); // waitUntilFinished(..) called on racing build
     distBuildControllerInvokerLatch.countDown(); // Distributed build completes

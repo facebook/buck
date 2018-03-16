@@ -38,6 +38,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveEventsQuery;
 import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
+import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.facebook.buck.distributed.thrift.LogLineBatchRequest;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveRealTimeLogsResponse;
@@ -294,7 +295,7 @@ public class BuildPhase {
       runLocalCoordinatorAsync(executorService, stampedeId, invocationInfo, localRuleKeyCalculator);
     }
 
-    BuildJob finalJob;
+    BuildJob finalJob = null;
     List<BuildSlaveStatus> buildSlaveStatusList = null;
     try {
       distBuildStatusUpdatingFuture.get();
@@ -319,7 +320,8 @@ public class BuildPhase {
       distBuildClientStats.stopTimer(PERFORM_DISTRIBUTED_BUILD);
 
       // Remote build is now done, so ensure local build is unlocked for all build rules.
-      remoteBuildRuleCompletionNotifier.signalCompletionOfRemoteBuild();
+      remoteBuildRuleCompletionNotifier.signalCompletionOfRemoteBuild(
+          finalJob != null && finalJob.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY));
     }
 
     return new BuildResult(finalJob, buildSlaveStatusList);

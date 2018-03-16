@@ -99,9 +99,9 @@ public class RacingBuildPhase {
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
     Futures.addCallback(
         remoteBuildRuleCompletionWaiter.waitForMostBuildRulesToFinishRemotely(),
-        new FutureCallback<Void>() {
+        new FutureCallback<Boolean>() {
           @Override
-          public void onSuccess(@Nullable Void result) {
+          public void onSuccess(@Nullable Boolean result) {
             racingBuildExecutor.getBuildPhaseLatch().countDown();
           }
 

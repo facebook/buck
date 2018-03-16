@@ -41,6 +41,9 @@ public interface RemoteBuildRuleCompletionWaiter {
    */
   ListenableFuture<Void> waitForBuildRuleToFinishRemotely(BuildRule buildRule);
 
-  /** @return Future that will complete when most build rules have finished remotely. */
-  ListenableFuture<Void> waitForMostBuildRulesToFinishRemotely();
+  /**
+   * @return Future that will complete when most build rules have finished remotely. Value indicates
+   *     whether most rules finished successfully or in a failure.
+   */
+  ListenableFuture<Boolean> waitForMostBuildRulesToFinishRemotely();
 }
