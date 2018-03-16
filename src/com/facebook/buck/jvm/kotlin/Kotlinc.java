@@ -70,7 +70,9 @@ public interface Kotlinc extends Tool {
     ImmutableList.Builder<Path> sources = ImmutableList.builder();
     for (Path path : kotlinSourceFilePaths) {
       String pathString = path.toString();
-      if (pathString.endsWith(".kt") || pathString.endsWith(".java")) {
+      if (pathString.endsWith(".kt")
+          || pathString.endsWith(".kts")
+          || pathString.endsWith(".java")) {
         sources.add(path);
       } else if (pathString.endsWith(SRC_ZIP) || pathString.endsWith(SRC_JAR)) {
         // For a Zip of .java files, create a JavaFileObject for each .java entry.
@@ -84,8 +86,9 @@ public interface Kotlinc extends Tool {
                     ExistingFileMode.OVERWRITE);
         sources.addAll(
             zipPaths.stream().filter(input ->
-                input.toString().endsWith(".kt") ||
-                    input.toString().endsWith(".java")
+                input.toString().endsWith(".kt")
+                    || input.toString().endsWith(".kts")
+                    || input.toString().endsWith(".java")
             ).iterator());
       }
     }
