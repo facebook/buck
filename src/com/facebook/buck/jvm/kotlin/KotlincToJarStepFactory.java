@@ -188,10 +188,21 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             classesOutput,
             sourcesOutput,
             parameters.getWorkingDirectory(),
-            tmpFolder,
-            genOutput,
             resolver);
       }
+
+      steps.add(CopyStep.forDirectory(projectFilesystem, sourcesOutput, tmpFolder, DirectoryMode.CONTENTS_ONLY));
+      steps.add(CopyStep.forDirectory(projectFilesystem, classesOutput, tmpFolder, DirectoryMode.CONTENTS_ONLY));
+      steps.add(CopyStep.forDirectory(projectFilesystem, kaptGeneratedOutput, tmpFolder, DirectoryMode.CONTENTS_ONLY));
+
+      steps.add(
+          new ZipStep(
+              projectFilesystem,
+              genOutput,
+              ImmutableSet.of(),
+              false,
+              ZipCompressionLevel.DEFAULT,
+              tmpFolder));
 
       steps.add(
           new KotlincStep(
@@ -266,8 +277,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       Path classesOutput,
       Path sourcesOutput,
       Path workingDirectory,
-      Path tmpFolder,
-      Path genOutput,
       SourcePathResolver resolver) {
 
     ImmutableList<String> pluginFields =
@@ -357,19 +366,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 .build(),
             filesystem,
             Optional.of(workingDirectory)));
-
-    steps.add(CopyStep.forDirectory(filesystem, sourcesOutput, tmpFolder, DirectoryMode.CONTENTS_ONLY));
-    steps.add(CopyStep.forDirectory(filesystem, classesOutput, tmpFolder, DirectoryMode.CONTENTS_ONLY));
-    steps.add(CopyStep.forDirectory(filesystem, kaptGenerated, tmpFolder, DirectoryMode.CONTENTS_ONLY));
-
-    steps.add(
-        new ZipStep(
-            filesystem,
-            genOutput,
-            ImmutableSet.of(),
-            false,
-            ZipCompressionLevel.DEFAULT,
-            tmpFolder));
   }
 
   @Override

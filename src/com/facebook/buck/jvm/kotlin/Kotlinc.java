@@ -29,7 +29,6 @@ import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -71,27 +70,23 @@ public interface Kotlinc extends Tool {
     ImmutableList.Builder<Path> sources = ImmutableList.builder();
     for (Path path : kotlinSourceFilePaths) {
       String pathString = path.toString();
-      if (pathString.endsWith(".kt")) {
+      if (pathString.endsWith(".kt") || pathString.endsWith(".java")) {
         sources.add(path);
       } else if (pathString.endsWith(SRC_ZIP) || pathString.endsWith(SRC_JAR)) {
-        try {
-          // For a Zip of .java files, create a JavaFileObject for each .java entry.
-          ImmutableList<Path> zipPaths =
-              ArchiveFormat.ZIP
-                  .getUnarchiver()
-                  .extractArchive(
-                      projectFilesystemFactory,
-                      projectFilesystem.resolve(path),
-                      projectFilesystem.resolve(workingDirectory.orElse(path)),
-                      ExistingFileMode.OVERWRITE);
-          sources.addAll(
-              zipPaths.stream().filter(input ->
-                  input.toString().endsWith(".kt") ||
-                      input.toString().endsWith(".java")
-              ).iterator());
-        } catch (FileNotFoundException ex) {
-          // Do nothing, it's probably that kapt didn't generate anything
-        }
+        // For a Zip of .java files, create a JavaFileObject for each .java entry.
+        ImmutableList<Path> zipPaths =
+            ArchiveFormat.ZIP
+                .getUnarchiver()
+                .extractArchive(
+                    projectFilesystemFactory,
+                    projectFilesystem.resolve(path),
+                    projectFilesystem.resolve(workingDirectory.orElse(path)),
+                    ExistingFileMode.OVERWRITE);
+        sources.addAll(
+            zipPaths.stream().filter(input ->
+                input.toString().endsWith(".kt") ||
+                    input.toString().endsWith(".java")
+            ).iterator());
       }
     }
     return sources.build();
