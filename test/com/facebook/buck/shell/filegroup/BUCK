@@ -1,0 +1,13 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "filegroup",
+    with_test_data = True,
+    deps = [
+        "//src/com/facebook/buck/shell/filegroup:filegroup",
+        "//src/com/facebook/buck/zip/bundler:bundler",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/junit:junit",
+    ],
+)

@@ -1,0 +1,17 @@
+load("//tools/build_rules:module_rules.bzl", "buck_module")
+
+buck_module(
+    name = "filegroup",
+    srcs = glob(["*.java"]),
+    provided_deps = [
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/rules/modern:modern",
+        "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/zip/bundler:bundler",
+    ],
+    tests = [
+        #"//test/com/facebook/buck/shell:shell",
+    ],
+    visibility = ["PUBLIC"],
+)

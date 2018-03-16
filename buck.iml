@@ -61,6 +61,7 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/rules/modern/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/rules/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/rust/testdata" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/shell/filegroup/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/shell/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/step/fs/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/swift/testdata" />

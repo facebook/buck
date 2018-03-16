@@ -1,0 +1,57 @@
+{namespace filegroup}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'filegroup()' /}
+    {param navid: 'rule_filegroup' /}
+    {param prettify: true /}
+    {param description}
+      A rule that is used to create a zip file as its output.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'FROZEN' /}
+{param overview}
+  This rule provides access to a set of files.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'srcs' /}
+  {param desc}
+  The set of files to include in this rule.
+  {/param}
+{/call}
+
+{/param}
+
+{param examples}
+<p>
+  In this example a target exports <code>.xml</code> files from all subdirectories
+  in <code>resources</code>.
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+filegroup(
+  name = 'example',
+  srcs = glob(['resources/**/*.xml']),
+)
+</pre>{/literal}
+
+{/param}
+
+{/call}
+
+    {/param}
+  {/call}
+{/template}

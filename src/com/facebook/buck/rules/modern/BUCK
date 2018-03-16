@@ -30,6 +30,7 @@ java_library(
     ),
     exported_deps = [
         ":types",
+        "//src/com/facebook/buck/rules/keys:keys",
     ],
     tests = ["//test/com/facebook/buck/rules/modern/impl:impl"],
     visibility = ["PUBLIC"],
@@ -46,7 +47,6 @@ java_library(
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules/coercer:interface",
-        "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/util:util",

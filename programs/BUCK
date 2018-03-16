@@ -87,6 +87,7 @@ RESOURCES_AFFECTING_BUILD_ARTIFACTS = {
 BUCK_MODULES = {
     "d": "//src/com/facebook/buck/d:d",
     "dotnet": "//src/com/facebook/buck/dotnet:dotnet",
+    "filegroup": "//src/com/facebook/buck/shell/filegroup:filegroup",
     "go": "//src/com/facebook/buck/go:go",
     "haskell": "//src/com/facebook/buck/haskell:haskell",
     "lua": "//src/com/facebook/buck/lua:lua",
