@@ -291,7 +291,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 .map(url -> AP_CLASSPATH_ARG + url.getFile())
                 .collect(Collectors.toList()));
 
-    ImmutableList<String> apClassPaths =
+    ImmutableList<String> kaptPluginOptions =
         ImmutableList.<String>builder()
             .add(AP_CLASSPATH_ARG + kotlinc.getAnnotationProcessorPath())
             .add(AP_CLASSPATH_ARG + kotlinc.getStdlibPath())
@@ -309,7 +309,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             .add(CORRECT_ERROR_TYPES + "false") // TODO: Provide value as argument
             .add(VERBOSE_ARG + "true") // TODO: Provide value as argument
             .build();
-    String join = Joiner.on(",").join(apClassPaths);
+    String join = Joiner.on(",").join(kaptPluginOptions);
 
     // First generate java stubs
     steps.add(
