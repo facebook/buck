@@ -60,6 +60,9 @@
 # vim swp files
 .*.sw[a-p]
 
+# Vim editing-state session files
+Session.vim
+
 # Emacs backup files
 *~
 \#*
