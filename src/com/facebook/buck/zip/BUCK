@@ -11,6 +11,7 @@ java_immutables_library(
         "//src/com/facebook/buck/apple:apple",
         "//src/com/facebook/buck/file:file",
         "//src/com/facebook/buck/jvm/java:rules",
+        "//src/com/facebook/buck/jvm/kotlin:kotlin",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/zip/bundler:bundler",
