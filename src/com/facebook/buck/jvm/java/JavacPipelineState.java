@@ -16,8 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.io.filesystem.PathHelper;
-import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -126,44 +124,25 @@ public class JavacPipelineState implements RulePipelineState {
                   .map(ResolvedJavacPluginProperties::getJavacPluginJsr199Fields)
                   .collect(Collectors.toList()));
 
-      /* When compiling a kotlin project, we can't know if there will or not have annotation
-         processors that generates java source files to compile. So we pass the directories
-         where potencially generated files will be, and here, which runs after all kotlin steps
-         we filter for only java files, or don't invoke the compiler, if there aren't any */
+      invocation =
+          getJavac()
+              .newBuildInvocation(
+                  javacExecutionContext,
+                  resolver,
+                  invokingRule,
+                  getOptions(context, compilerParameters.getClasspathEntries()),
+                  pluginFields,
+                  compilerParameters.getSourceFilePaths(),
+                  compilerParameters.getPathToSourcesList(),
+                  compilerParameters.getWorkingDirectory(),
+                  compilerParameters.shouldTrackClassUsage(),
+                  abiJarParameters,
+                  libraryJarParameters,
+                  compilerParameters.getAbiGenerationMode(),
+                  compilerParameters.getAbiCompatibilityMode(),
+                  compilerParameters.getSourceOnlyAbiRuleInfo());
 
-      ImmutableSortedSet<Path> sources = compilerParameters.getSourceFilePaths();
-      System.out.println(sources.stream()
-          .map(path -> path.toString())
-          .reduce("", (s, s2) -> s + ", " + s2));
-
-      ImmutableSortedSet<Path> sourcePaths = ImmutableSortedSet.copyOf(
-          PathHelper.flatmapDirectories(filesystem, sources)
-          .stream()
-          .filter(input -> new PathOrGlobMatcher("**.java").matches(input) ||
-              new PathOrGlobMatcher("**.zip").matches(input))
-          .collect(Collectors.toSet()));
-
-      if (!sourcePaths.isEmpty()) {
-        invocation =
-            getJavac()
-                .newBuildInvocation(
-                    javacExecutionContext,
-                    resolver,
-                    invokingRule,
-                    getOptions(context, compilerParameters.getClasspathEntries()),
-                    pluginFields,
-                    sourcePaths,
-                    compilerParameters.getPathToSourcesList(),
-                    compilerParameters.getWorkingDirectory(),
-                    compilerParameters.shouldTrackClassUsage(),
-                    abiJarParameters,
-                    libraryJarParameters,
-                    compilerParameters.getAbiGenerationMode(),
-                    compilerParameters.getAbiCompatibilityMode(),
-                    compilerParameters.getSourceOnlyAbiRuleInfo());
-
-        closeables.add(invocation);
-      }
+      closeables.add(invocation);
     }
 
     return invocation;

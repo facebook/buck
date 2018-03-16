@@ -27,6 +27,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ClassLoaderCache;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -125,12 +126,25 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
       Optional<Path> workingDirectory,
       ProjectFilesystem projectFilesystem) {
 
+    ImmutableList<Path> expandedSources;
+    try {
+      expandedSources = getExpandedSourcePaths(
+          projectFilesystem,
+          context.getProjectFilesystemFactory(),
+          kotlinSourceFilePaths,
+          workingDirectory);
+    } catch (Throwable throwable) {
+      throwable.printStackTrace();
+      throw new HumanReadableException(
+          "Unable to expand sources for %s into %s", invokingRule, workingDirectory);
+    }
+
     ImmutableList<String> args =
         ImmutableList.<String>builder()
             .addAll(options)
             .addAll(
                 transform(
-                    kotlinSourceFilePaths,
+                    expandedSources,
                     path -> projectFilesystem.resolve(path).toAbsolutePath().toString()))
             .build();
 

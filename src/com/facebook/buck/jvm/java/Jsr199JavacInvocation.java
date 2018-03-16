@@ -183,6 +183,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   }
 
   private class CompilerWorker implements AutoCloseable {
+
     private final ListeningExecutorService executor;
 
     private final SettableFuture<Integer> compilerResult = SettableFuture.create();
@@ -364,10 +365,10 @@ class Jsr199JavacInvocation implements Javac.Invocation {
 
     private boolean buildSuccessful() {
       return diagnostics
-              .getDiagnostics()
-              .stream()
-              .filter(diag -> diag.getKind() == Diagnostic.Kind.ERROR)
-              .count()
+          .getDiagnostics()
+          .stream()
+          .filter(diag -> diag.getKind() == Diagnostic.Kind.ERROR)
+          .count()
           == 0;
     }
 
@@ -409,7 +410,14 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                       new JavacEventSinkScopedSimplePerfEvent(
                           context.getEventSink(), invokingRule.toString());
                   try {
-                    boolean success = javacTask.call();
+                    boolean success = false;
+                    try {
+                      success = javacTask.call();
+                    } catch (IllegalStateException ex) {
+                      if (ex.getLocalizedMessage().equals("no source files")) {
+                        success = true;
+                      }
+                    }
                     if (javacTask instanceof FrontendOnlyJavacTaskProxy) {
                       if (success) {
                         return 0;
@@ -559,10 +567,10 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                     ruleInfo,
                     () ->
                         diagnostics
-                                .getDiagnostics()
-                                .stream()
-                                .filter(diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR)
-                                .count()
+                            .getDiagnostics()
+                            .stream()
+                            .filter(diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR)
+                            .count()
                             > 0,
                     abiGenerationMode.getDiagnosticKindForSourceOnlyAbiCompatibility());
           }

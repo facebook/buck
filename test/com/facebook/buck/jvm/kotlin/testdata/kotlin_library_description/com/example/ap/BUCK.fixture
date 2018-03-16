@@ -14,7 +14,7 @@ java_annotation_processor(
     deps = [
         ":ap-lib",
     ],
-    processor_class = "com.example.ap.AnnotationProcessor",
+    processor_class = "",
 )
 
 java_library(
