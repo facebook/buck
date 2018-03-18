@@ -19,7 +19,7 @@ package com.facebook.buck.cli;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Splitter;
 import java.io.IOException;

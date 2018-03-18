@@ -30,7 +30,7 @@ import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.LoadBalancedService;
 import com.facebook.buck.slb.RetryingHttpService;
 import com.facebook.buck.slb.SlbBuckConfig;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.zip.CustomZipEntry;
 import com.facebook.buck.util.zip.CustomZipOutputStream;

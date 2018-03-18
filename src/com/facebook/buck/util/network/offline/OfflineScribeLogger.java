@@ -22,7 +22,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.network.ScribeLogger;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.google.common.base.Charsets;

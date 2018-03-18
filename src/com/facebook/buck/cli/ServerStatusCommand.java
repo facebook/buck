@@ -19,7 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;

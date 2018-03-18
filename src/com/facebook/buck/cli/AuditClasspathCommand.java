@@ -38,7 +38,7 @@ import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;

@@ -207,6 +207,7 @@ standard_java_test(
         "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/immutables:immutables",
+        "//src/com/facebook/buck/util/json:json",
         "//src/com/facebook/buck/util/network/hostname:hostname",
         "//src/com/facebook/buck/util/sha1:sha1",
         "//src/com/facebook/buck/util/trace:trace",

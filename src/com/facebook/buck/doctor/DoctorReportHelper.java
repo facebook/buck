@@ -27,7 +27,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.fasterxml.jackson.core.JsonProcessingException;

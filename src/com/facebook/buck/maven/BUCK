@@ -31,6 +31,7 @@ java_library(
         "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//src/com/facebook/buck/util/json:json",
         "//third-party/java/args4j:args4j",
         "//third-party/java/maven:maven-aether-provider",
         "//third-party/java/stringtemplate:stringtemplate",
@@ -43,6 +44,7 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/json:json",
         "//third-party/java/aether:aether-connector-basic",
         "//third-party/java/aether:aether-transport-file",
         "//third-party/java/aether:aether-transport-http",

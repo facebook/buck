@@ -23,7 +23,7 @@ import com.facebook.buck.python.toolchain.PythonVersion;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.annotations.VisibleForTesting;

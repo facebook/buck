@@ -26,7 +26,7 @@ import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;

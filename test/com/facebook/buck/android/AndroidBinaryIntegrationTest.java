@@ -39,7 +39,7 @@ import com.facebook.buck.testutil.integration.DexInspector;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

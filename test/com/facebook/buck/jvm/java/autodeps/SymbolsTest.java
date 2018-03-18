@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java.autodeps;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;

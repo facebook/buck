@@ -34,6 +34,7 @@ buck_module(
         "//src/com/facebook/buck/toolchain:toolchain",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/json:json",
         "//src/com/facebook/buck/versions:translator",
         "//src/com/facebook/buck/versions:versions",
         "//third-party/java/infer-annotations:infer-annotations",

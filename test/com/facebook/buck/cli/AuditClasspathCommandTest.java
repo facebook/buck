@@ -35,7 +35,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.versions.VersionedAliasBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;

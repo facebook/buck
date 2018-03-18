@@ -19,7 +19,7 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import org.hamcrest.Matchers;

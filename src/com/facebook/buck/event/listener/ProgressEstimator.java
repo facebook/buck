@@ -19,7 +19,7 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ProgressEvent;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;

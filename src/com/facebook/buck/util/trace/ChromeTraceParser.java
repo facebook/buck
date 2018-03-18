@@ -17,7 +17,7 @@
 package com.facebook.buck.util.trace;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.google.common.base.Preconditions;
@@ -114,8 +114,7 @@ public class ChromeTraceParser {
 
         // Prefer Iterator to Iterable+foreach so we can use remove().
         for (Iterator<ChromeTraceEventMatcher<?>> iter = unmatchedMatchers.iterator();
-            iter.hasNext();
-            ) {
+            iter.hasNext(); ) {
           ChromeTraceEventMatcher<?> chromeTraceEventMatcher = iter.next();
           Optional<?> result = chromeTraceEventMatcher.test(event, name);
           if (result.isPresent()) {

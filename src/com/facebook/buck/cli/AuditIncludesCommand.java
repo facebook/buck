@@ -21,7 +21,7 @@ import com.facebook.buck.parser.ProjectBuildFileParserFactory;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Preconditions;
 import java.io.IOException;

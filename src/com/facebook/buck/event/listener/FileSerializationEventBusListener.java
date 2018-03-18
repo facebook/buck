@@ -20,7 +20,7 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.IndividualTestEvent;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.eventbus.Subscribe;
 import java.io.BufferedWriter;
 import java.io.Closeable;

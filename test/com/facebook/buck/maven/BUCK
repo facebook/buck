@@ -145,6 +145,7 @@ java_test(
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:split_dex",
+        "//src/com/facebook/buck/util/json:json",
         "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/apple/project_generator:project_generator",

@@ -39,7 +39,7 @@ import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.testutil.JsonMatcher;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.collect.ImmutableList;

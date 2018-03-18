@@ -14,9 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.util.json;
 
 import com.facebook.buck.skylark.json.SkylarkModule;
+import com.facebook.buck.util.HumanReadableException;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;

@@ -42,7 +42,7 @@ import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsEvent;
 import com.fasterxml.jackson.core.JsonGenerator.Feature;
 import com.fasterxml.jackson.core.JsonProcessingException;

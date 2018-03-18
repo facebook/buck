@@ -17,7 +17,7 @@
 package com.facebook.buck.httpserver;
 
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.util.Collections;

@@ -19,7 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.thrift.RemoteDaemonicParserState;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
 import java.io.FileInputStream;

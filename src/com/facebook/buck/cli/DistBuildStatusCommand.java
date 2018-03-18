@@ -21,7 +21,7 @@ import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;

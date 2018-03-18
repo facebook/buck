@@ -1,0 +1,21 @@
+java_library(
+    name = "json",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//third-party/java/jackson:jackson-databind",
+    ],
+    tests = [
+        "//test/com/facebook/buck/util/json:json",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/skylark/json:json",
+        "//src/com/facebook/buck/util:exceptions",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jackson:jackson-datatype-guava",
+        "//third-party/java/jackson:jackson-datatype-jdk8",
+    ],
+)

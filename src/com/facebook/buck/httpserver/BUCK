@@ -62,6 +62,7 @@ java_library(
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/json:json",
         "//src/com/facebook/buck/util/trace:trace",
         "//third-party/java/jackson:jackson-databind",
         "//third-party/java/jetty:jetty",

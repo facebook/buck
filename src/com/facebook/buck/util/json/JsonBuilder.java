@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.util.json;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import java.io.ByteArrayOutputStream;

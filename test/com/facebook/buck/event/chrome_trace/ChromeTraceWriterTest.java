@@ -17,7 +17,7 @@
 package com.facebook.buck.event.chrome_trace;
 
 import com.facebook.buck.event.chrome_trace.ChromeTraceEvent.Phase;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;

@@ -34,7 +34,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.network.FakeFailingScribeLogger;
 import com.facebook.buck.util.network.ScribeLogger;
 import com.facebook.buck.util.types.Pair;

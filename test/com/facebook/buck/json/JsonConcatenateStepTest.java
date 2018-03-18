@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;

@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import static java.nio.charset.Charset.defaultCharset;
 
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.io.IOException;
 import java.io.Reader;

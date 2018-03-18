@@ -17,7 +17,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;

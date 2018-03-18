@@ -53,6 +53,7 @@ java_library(
         "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/immutables:immutables",
+        "//src/com/facebook/buck/util/json:json",
         "//src/com/facebook/buck/util/sha1:sha1",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
         "//src/com/facebook/buck/versions:types",

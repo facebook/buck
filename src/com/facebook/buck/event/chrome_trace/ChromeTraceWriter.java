@@ -16,7 +16,7 @@
 
 package com.facebook.buck.event.chrome_trace;
 
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import java.io.IOException;
 import java.io.OutputStream;

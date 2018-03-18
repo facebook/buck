@@ -18,7 +18,7 @@ package com.facebook.buck.maven;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import org.junit.Test;

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.json;
 
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import org.hamcrest.BaseMatcher;

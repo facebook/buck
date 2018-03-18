@@ -8,6 +8,7 @@ java_library(
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/json:json",
         "//third-party/java/guava:guava",
         "//third-party/java/jackson:jackson-core",
         "//third-party/java/jackson:jackson-databind",

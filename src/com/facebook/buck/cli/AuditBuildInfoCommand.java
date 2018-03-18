@@ -20,7 +20,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.rules.keys.config.impl.BuckBinaryHashProvider;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
