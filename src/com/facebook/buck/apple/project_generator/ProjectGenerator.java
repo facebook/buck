@@ -552,7 +552,7 @@ public class ProjectGenerator {
                   project,
                   bundleTargetNode,
                   (TargetNode<AppleNativeTargetDescriptionArg, ?>)
-                      targetGraph.get(bundleTargetNode.getConstructorArg().getBinary()),
+                      targetGraph.get(getBundleBinaryTarget(bundleTargetNode)),
                   Optional.empty()));
     } else if (targetNode.getDescription() instanceof AppleTestDescription) {
       result =
@@ -786,7 +786,15 @@ public class ProjectGenerator {
     GraphTraversable<TargetNode<?, ?>> graphTraversable =
         node -> {
           if (!(node.getDescription() instanceof AppleResourceDescription)) {
-            return targetGraph.getAll(node.getBuildDeps()).iterator();
+            Set<BuildTarget> buildDeps = node.getBuildDeps();
+            if (node.getDescription() instanceof AppleBundleDescription) {
+              AppleBundleDescriptionArg arg = (AppleBundleDescriptionArg) node.getConstructorArg();
+              // TODO: handle platform binaries in addition to regular binaries
+              if (arg.getBinary().isPresent()) {
+                buildDeps = Sets.union(buildDeps, ImmutableSet.of(arg.getBinary().get()));
+              }
+            }
+            return targetGraph.getAll(buildDeps).iterator();
           } else {
             return Collections.emptyIterator();
           }
@@ -2831,10 +2839,21 @@ public class ProjectGenerator {
         nativeNode =
             Optional.of(
                 (TargetNode<CxxLibraryDescription.CommonArg, ?>)
-                    targetGraph.get(bundle.getConstructorArg().getBinary()));
+                    targetGraph.get(getBundleBinaryTarget(bundle)));
       }
     }
     return nativeNode;
+  }
+
+  private static BuildTarget getBundleBinaryTarget(
+      TargetNode<AppleBundleDescriptionArg, ?> bundle) {
+    return bundle
+        .getConstructorArg()
+        .getBinary()
+        .orElseThrow(
+            () ->
+                new HumanReadableException(
+                    "apple_bundle rules without binary attribute are not supported."));
   }
 
   private static Optional<TargetNode<CxxLibraryDescription.CommonArg, ?>> getAppleNativeNode(

@@ -1,0 +1,41 @@
+apple_bundle(
+    name = "bundle",
+    binary = ":binary",
+    extension = "app",
+    info_plist = "Info.plist",
+    platform_binary = [("iphonesimulator-x86_64", ":binary")],
+)
+
+apple_bundle(
+    name = "bundle_with_broken_default_binary",
+    binary = ":broken_binary",
+    extension = "app",
+    info_plist = "Info.plist",
+    platform_binary = [("iphonesimulator-x86_64", ":binary")],
+)
+
+apple_binary(
+    name = "binary",
+    srcs = ["main.m"],
+)
+
+apple_binary(
+    name = "broken_binary",
+    srcs = ["broken_main.m"],
+)
+
+apple_bundle(
+    name = "bundle_without_binary",
+    extension = "app",
+    info_plist = "Info.plist",
+)
+
+apple_bundle(
+    name = "bundle_with_multiple_matching_binaries",
+    extension = "app",
+    info_plist = "Info.plist",
+    platform_binary = [
+        ("iphonesimulator-x86_64", ":binary"),
+        ("iphonesimulator-x86_64", ":binary"),
+    ],
+)

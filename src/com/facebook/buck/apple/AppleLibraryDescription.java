@@ -404,7 +404,8 @@ public class AppleLibraryDescription
             CodeSignIdentityStore.DEFAULT_NAME, CodeSignIdentityStore.class),
         toolchainProvider.getByName(
             ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.class),
-        buildTarget,
+        Optional.of(buildTarget),
+        Optional.empty(),
         Either.ofLeft(AppleBundleExtension.FRAMEWORK),
         Optional.empty(),
         args.getInfoPlist().get(),

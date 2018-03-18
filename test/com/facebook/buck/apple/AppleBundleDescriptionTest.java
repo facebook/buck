@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -29,15 +30,24 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleResolver;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.regex.Pattern;
+import org.junit.Before;
 import org.junit.Test;
 
 public class AppleBundleDescriptionTest {
 
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+  @Before
+  public void setUp() {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+  }
 
   @Test
   public void depsHaveFlavorsPropagated() {
@@ -125,6 +135,74 @@ public class AppleBundleDescriptionTest {
             .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
             .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .setBinary(binary)
+            .setDeps(
+                ImmutableSortedSet.<BuildTarget>naturalOrder()
+                    .add(binary)
+                    .add(unflavoredDep)
+                    .add(flavoredDep)
+                    .add(flavoredDepNotInDomain)
+                    .add(stripFlavorOnly)
+                    .add(debugFlavorOnly)
+                    .build())
+            .build();
+
+    // Now call the find deps methods and verify it returns the targets with flavors.
+    ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
+    desc.findDepsForTargetFromConstructorArgs(
+        bundleTargetWithStripFlavor,
+        createCellRoots(filesystem),
+        constructorArg,
+        implicitDeps,
+        ImmutableSortedSet.naturalOrder());
+
+    assertEquals(
+        ImmutableSortedSet.<BuildTarget>naturalOrder()
+            .add(unflavoredDepAfterPropagation)
+            .add(flavoredDep)
+            .add(flavoredDepNotInDomainAfterPropagation)
+            .add(stripFlavorOnlyAfterPropagation)
+            .add(debugFlavorOnlyAfterPropagation)
+            .build(),
+        implicitDeps.build());
+  }
+
+  @Test
+  public void depsHaveStripAndDebugFlavorsPropagatedForPlatformDeps() {
+    BuildTarget bundleTargetWithStripFlavor =
+        BuildTargetFactory.newInstance("//bar:bundle#iphoneos-x86_64,strip-all,dwarf-and-dsym");
+
+    BuildTarget unflavoredDep = BuildTargetFactory.newInstance("//bar:dep1");
+    BuildTarget unflavoredDepAfterPropagation =
+        BuildTargetFactory.newInstance("//bar:dep1#iphoneos-x86_64,strip-all,dwarf-and-dsym");
+
+    BuildTarget flavoredDep =
+        BuildTargetFactory.newInstance("//bar:dep2#iphoneos-i386,strip-debug,dwarf");
+
+    BuildTarget flavoredDepNotInDomain = BuildTargetFactory.newInstance("//bar:dep3#otherflavor");
+    BuildTarget flavoredDepNotInDomainAfterPropagation =
+        BuildTargetFactory.newInstance(
+            "//bar:dep3#iphoneos-x86_64,strip-all,dwarf-and-dsym,otherflavor");
+
+    BuildTarget stripFlavorOnly = BuildTargetFactory.newInstance("//bar:dep4#strip-debug");
+    BuildTarget stripFlavorOnlyAfterPropagation =
+        BuildTargetFactory.newInstance("//bar:dep4#iphoneos-x86_64,strip-debug,dwarf-and-dsym");
+
+    BuildTarget debugFlavorOnly = BuildTargetFactory.newInstance("//bar:dep5#dwarf");
+    BuildTarget debugFlavorOnlyAfterPropagation =
+        BuildTargetFactory.newInstance("//bar:dep5#iphoneos-x86_64,strip-all,dwarf");
+
+    BuildTarget binary = BuildTargetFactory.newInstance("//bar:binary");
+
+    AppleBundleDescription desc = FakeAppleRuleDescriptions.BUNDLE_DESCRIPTION;
+    AppleBundleDescriptionArg constructorArg =
+        AppleBundleDescriptionArg.builder()
+            .setName("bundle")
+            .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setPlatformBinary(
+                PatternMatchedCollection.<BuildTarget>builder()
+                    .add(Pattern.compile("iphoneos-x86_64"), binary)
+                    .build())
             .setDeps(
                 ImmutableSortedSet.<BuildTarget>naturalOrder()
                     .add(binary)

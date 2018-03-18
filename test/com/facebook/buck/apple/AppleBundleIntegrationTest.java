@@ -657,6 +657,24 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void appBundleWithPlatformBinaryWithResources() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "app_bundle_with_resources", tmp);
+    workspace.setUp();
+
+    BuildTarget target =
+        workspace.newBuildTarget("//:DemoAppWithPlatformBinary#iphonesimulator-x86_64,no-debug");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    workspace.verify(
+        Paths.get("DemoAppWithPlatformBinary_output.expected"),
+        BuildTargets.getGenPath(
+            filesystem,
+            target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+            "%s"));
+  }
+
+  @Test
   public void appBundleWithConflictingFileAndFolderResources() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -1319,5 +1337,61 @@ public class AppleBundleIntegrationTest {
     assertTrue(
         "Resource file should exist.",
         Files.isRegularFile(outputPath.resolve("other_resource.txt")));
+  }
+
+  @Test
+  public void defaultBinaryIsUsedWhenOnTargetPlatformMismatch() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_platform_binary", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:bundle#iphoneos-armv7").assertFailure();
+  }
+
+  @Test
+  public void binaryMatchingTargetPlatformIsUsed() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_platform_binary", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:bundle#iphonesimulator-x86_64").assertSuccess();
+  }
+
+  @Test
+  public void defaultBinaryIsNotUsedWhenPlatformSpecificBinaryIsSpecified() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_platform_binary", tmp);
+    workspace.setUp();
+    workspace
+        .runBuckBuild("//:bundle_with_broken_default_binary#iphonesimulator-x86_64")
+        .assertSuccess();
+  }
+
+  @Test
+  public void errorMessageForBundleWithoutBinaryIsDisplayed() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_platform_binary", tmp);
+    workspace.setUp();
+    thrown.expectMessage(
+        "Binary matching target platform iphonesimulator-x86_64 cannot be found"
+            + " and binary default is not specified.");
+    workspace.runBuckBuild("//:bundle_without_binary#iphonesimulator-x86_64").assertFailure();
+  }
+
+  @Test
+  public void errorMessageForBundleWithMultipleMatchingBinariesIsDisplayed() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_platform_binary", tmp);
+    workspace.setUp();
+    thrown.expectMessage(
+        "There must be at most one binary matching the target platform "
+            + "iphonesimulator-x86_64 but all of [//:binary, //:binary] matched. "
+            + "Please make your pattern more precise and remove any duplicates.");
+    workspace
+        .runBuckBuild("//:bundle_with_multiple_matching_binaries#iphonesimulator-x86_64")
+        .assertFailure();
   }
 }

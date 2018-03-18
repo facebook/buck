@@ -19,6 +19,13 @@ apple_bundle(
     info_plist = "Info.plist",
 )
 
+apple_bundle(
+    name = "DemoAppWithPlatformBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+    platform_binary = [("iphonesimulator-x86_64", ":DemoAppBinary")],
+)
+
 apple_binary(
     name = "DemoAppBinary",
     srcs = glob([

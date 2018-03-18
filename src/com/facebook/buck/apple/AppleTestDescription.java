@@ -298,7 +298,8 @@ public class AppleTestDescription
                 CodeSignIdentityStore.DEFAULT_NAME, CodeSignIdentityStore.class),
             toolchainProvider.getByName(
                 ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.class),
-            library.getBuildTarget(),
+            Optional.of(library.getBuildTarget()),
+            Optional.empty(),
             args.getExtension(),
             Optional.empty(),
             args.getInfoPlist(),

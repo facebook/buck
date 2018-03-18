@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import static com.facebook.buck.apple.AppleAssetCatalog.validateAssetCatalogs;
 import static com.facebook.buck.swift.SwiftDescriptions.SWIFT_EXTENSION;
 
+import com.facebook.buck.apple.AppleAssetCatalog.ValidationType;
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
@@ -56,6 +57,7 @@ import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.util.HumanReadableException;
@@ -547,7 +549,8 @@ public class AppleDescriptions {
       BuildRuleResolver resolver,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
-      BuildTarget binary,
+      Optional<BuildTarget> binary,
+      Optional<PatternMatchedCollection<BuildTarget>> platformBinary,
       Either<AppleBundleExtension, String> extension,
       Optional<String> productName,
       SourcePath infoPlist,
@@ -558,7 +561,7 @@ public class AppleDescriptions {
       boolean dryRunCodeSigning,
       boolean cacheable,
       boolean verifyResources,
-      AppleAssetCatalog.ValidationType assetCatalogValidation,
+      ValidationType assetCatalogValidation,
       AppleAssetCatalogsCompilationOptions appleAssetCatalogsCompilationOptions,
       ImmutableList<String> codesignFlags,
       Optional<String> codesignAdhocIdentity,
@@ -570,6 +573,8 @@ public class AppleDescriptions {
             appleCxxPlatforms,
             buildTarget,
             MultiarchFileInfos.create(appleCxxPlatforms, buildTarget));
+    BuildTarget binaryTarget =
+        getTargetPlatformBinary(binary, platformBinary, appleCxxPlatform.getFlavor());
 
     AppleBundleDestinations destinations;
 
@@ -669,7 +674,7 @@ public class AppleDescriptions {
             targetGraph,
             flavoredBinaryRuleFlavors,
             resolver,
-            binary);
+            binaryTarget);
 
     if (!AppleDebuggableBinary.isBuildRuleDebuggable(flavoredBinaryRule)) {
       debugFormat = AppleDebugFormat.NONE;
@@ -720,7 +725,7 @@ public class AppleDescriptions {
         collectFirstLevelExtraBinariesFromDeps(
             appleCxxPlatform.getAppleSdk().getApplePlatform().getType(),
             deps,
-            binary,
+            binaryTarget,
             cxxPlatformFlavorDomain,
             defaultCxxFlavor,
             targetGraph,
@@ -730,7 +735,7 @@ public class AppleDescriptions {
     BuildRuleParams bundleParamsWithFlavoredBinaryDep =
         getBundleParamsWithUpdatedDeps(
             params,
-            binary,
+            binaryTarget,
             ImmutableSet.<BuildRule>builder()
                 .add(targetDebuggableBinaryRule)
                 .addAll(Optionals.toStream(assetCatalog).iterator())
@@ -781,6 +786,47 @@ public class AppleDescriptions {
         codesignFlags,
         codesignAdhocIdentity,
         ibtoolModuleFlag);
+  }
+
+  /**
+   * Returns a build target of the apple binary for the requested target platform.
+   *
+   * <p>By default it's the binary that was provided using {@code binary} attribute, but in case
+   * {@code platform_binary} is specified and one of its patterns matches the target platform, it
+   * will be returned instead.
+   */
+  public static BuildTarget getTargetPlatformBinary(
+      Optional<BuildTarget> binary,
+      Optional<PatternMatchedCollection<BuildTarget>> platformBinary,
+      Flavor cxxPlatformFlavor) {
+    String targetPlatform = cxxPlatformFlavor.toString();
+    return platformBinary
+        .flatMap(pb -> getPlatformMatchingBinary(targetPlatform, pb))
+        .orElseGet(
+            () ->
+                binary.orElseThrow(
+                    () ->
+                        new HumanReadableException(
+                            "Binary matching target platform "
+                                + targetPlatform
+                                + " cannot be found and binary default is not specified.\n"
+                                + "Please refer to https://buckbuild.com/rule/apple_bundle.html#binary for "
+                                + "more details.")));
+  }
+
+  /** Returns an optional binary target that matches the target platform. */
+  private static Optional<BuildTarget> getPlatformMatchingBinary(
+      String targetPlatform, PatternMatchedCollection<BuildTarget> platformBinary) {
+    ImmutableList<BuildTarget> matchingBinaries = platformBinary.getMatchingValues(targetPlatform);
+    if (matchingBinaries.size() > 1) {
+      throw new HumanReadableException(
+          "There must be at most one binary matching the target platform "
+              + targetPlatform
+              + " but all of "
+              + matchingBinaries
+              + " matched. Please make your pattern more precise and remove any duplicates.");
+    }
+    return matchingBinaries.isEmpty() ? Optional.empty() : Optional.of(matchingBinaries.get(0));
   }
 
   private static void addToIndex(BuildRuleResolver resolver, Optional<? extends BuildRule> rule) {

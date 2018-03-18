@@ -693,16 +693,20 @@ public class WorkspaceAndProjectGenerator {
             (AppleBundleDescriptionArg) projectTargetNode.getConstructorArg();
         // We don't support apple_bundle rules referring to apple_binary rules
         // outside their current directory.
-        Preconditions.checkState(
+        BuildTarget binaryTarget =
             appleBundleDescriptionArg
                 .getBinary()
-                .getBasePath()
-                .equals(projectTargetNode.getBuildTarget().getBasePath()),
+                .orElseThrow(
+                    () ->
+                        new HumanReadableException(
+                            "apple_bundle rules without binary attribute are not supported."));
+        Preconditions.checkState(
+            binaryTarget.getBasePath().equals(projectTargetNode.getBuildTarget().getBasePath()),
             "apple_bundle target %s contains reference to binary %s outside base path %s",
             projectTargetNode.getBuildTarget(),
             appleBundleDescriptionArg.getBinary(),
             projectTargetNode.getBuildTarget().getBasePath());
-        binaryTargetsInsideBundlesBuilder.add(appleBundleDescriptionArg.getBinary());
+        binaryTargetsInsideBundlesBuilder.add(binaryTarget);
       }
     }
     ImmutableSet<BuildTarget> binaryTargetsInsideBundles =

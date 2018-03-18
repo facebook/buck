@@ -21,6 +21,7 @@ import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.GraphTraversable;
 import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
@@ -189,12 +190,16 @@ public final class AppleBuildRules {
                 ImmutableSortedSet.naturalOrder();
             ImmutableSortedSet.Builder<TargetNode<?, ?>> editedExportedDeps =
                 ImmutableSortedSet.naturalOrder();
+            ImmutableSortedSet<BuildTarget> binaryTargets = arg.getBinaryTargets();
             for (TargetNode<?, ?> rule : defaultDeps) {
-              if (!rule.getBuildTarget().equals(arg.getBinary())) {
-                editedDeps.add(rule);
-              } else {
+              if (binaryTargets.contains(rule.getBuildTarget())) {
                 addDirectAndExportedDeps(
-                    targetGraph, targetGraph.get(arg.getBinary()), editedDeps, editedExportedDeps);
+                    targetGraph,
+                    targetGraph.get(rule.getBuildTarget()),
+                    editedDeps,
+                    editedExportedDeps);
+              } else {
+                editedDeps.add(rule);
               }
             }
 
@@ -288,6 +293,13 @@ public final class AppleBuildRules {
       Iterable<TargetNode<?, ?>> exportedNodes = targetGraph.getAll(arg.getExportedDeps());
       directDepsBuilder.addAll(exportedNodes);
       exportedDepsBuilder.addAll(exportedNodes);
+    }
+    // apple bundle targets have target only dependencies on binary/platform_binary one of which
+    // will end up being a build time dependency. Since at target graph construction time it's not
+    // clear which one will end up being a build dependency, include both.
+    if (targetNode.getDescription() instanceof AppleBundleDescription) {
+      AppleBundleDescriptionArg arg = (AppleBundleDescriptionArg) targetNode.getConstructorArg();
+      directDepsBuilder.addAll(targetGraph.getAll(arg.getBinaryTargets()));
     }
   }
 

@@ -736,15 +736,16 @@ public class WorkspaceAndProjectGeneratorTest {
         withNameAndBuildingFor("FooBin", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
     assertThat(
         fooSchemeBuildAction.getBuildActionEntries().get(3),
-        withNameAndBuildingFor("BazLib", equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY)));
+        withNameAndBuildingFor(
+            "FooBinTest", equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY)));
     assertThat(
         fooSchemeBuildAction.getBuildActionEntries().get(4),
-        withNameAndBuildingFor(
-            "FooLibTest", equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY)));
+        withNameAndBuildingFor("BazLib", equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY)));
+
     assertThat(
         fooSchemeBuildAction.getBuildActionEntries().get(5),
         withNameAndBuildingFor(
-            "FooBinTest", equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY)));
+            "FooLibTest", equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY)));
   }
 
   @Test

@@ -367,7 +367,8 @@ public class AppleBinaryDescription
             CodeSignIdentityStore.DEFAULT_NAME, CodeSignIdentityStore.class),
         toolchainProvider.getByName(
             ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.class),
-        binaryTarget,
+        Optional.of(binaryTarget),
+        Optional.empty(),
         Either.ofLeft(AppleBundleExtension.APP),
         Optional.empty(),
         args.getInfoPlist().get(),

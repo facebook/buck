@@ -45,10 +45,10 @@ import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
@@ -160,6 +160,7 @@ public class AppleBundleDescription
         toolchainProvider.getByName(
             ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.class),
         args.getBinary(),
+        args.getPlatformBinary(),
         args.getExtension(),
         args.getProductName(),
         args.getInfoPlist(),
@@ -221,9 +222,9 @@ public class AppleBundleDescription
       actualWatchFlavor = InternalFlavor.of(platformName);
     }
 
+    ImmutableSortedSet<BuildTarget> binaryTargets = constructorArg.getBinaryTargets();
     FluentIterable<BuildTarget> depsExcludingBinary =
-        FluentIterable.from(constructorArg.getDeps())
-            .filter(Predicates.not(constructorArg.getBinary()::equals));
+        FluentIterable.from(constructorArg.getDeps()).filter(dep -> !binaryTargets.contains(dep));
 
     // Propagate platform flavors.  Need special handling for watch to map the pseudo-flavor
     // watch to the actual watch platform (simulator or device) so can't use
@@ -300,7 +301,19 @@ public class AppleBundleDescription
       // Bundles should be opaque to framework dependencies.
       return Optional.empty();
     }
-    return resolver.requireMetadata(args.getBinary(), metadataClass);
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    FlavorDomain<AppleCxxPlatform> appleCxxPlatforms = getAppleCxxPlatformFlavorDomain();
+    AppleCxxPlatform appleCxxPlatform =
+        ApplePlatforms.getAppleCxxPlatformForBuildTarget(
+            cxxPlatformsProvider.getCxxPlatforms(),
+            cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor(),
+            appleCxxPlatforms,
+            buildTarget,
+            MultiarchFileInfos.create(appleCxxPlatforms, buildTarget));
+    BuildTarget binaryTarget =
+        AppleDescriptions.getTargetPlatformBinary(
+            args.getBinary(), args.getPlatformBinary(), appleCxxPlatform.getFlavor());
+    return resolver.requireMetadata(binaryTarget, metadataClass);
   }
 
   private FlavorDomain<AppleCxxPlatform> getAppleCxxPlatformFlavorDomain() {
@@ -324,7 +337,29 @@ public class AppleBundleDescription
           HasDefaultPlatform,
           HasDeclaredDeps,
           HasTests {
-    BuildTarget getBinary();
+    // binary should not be immediately added as a dependency, since in case there is platform
+    // binary matching target platform exists, it will be used as an actual dependency.
+    @Hint(isTargetGraphOnlyDep = true)
+    Optional<BuildTarget> getBinary();
+
+    // similar to binary attribute but provides a way to select a platform-specific binary
+    @Hint(isTargetGraphOnlyDep = true)
+    Optional<PatternMatchedCollection<BuildTarget>> getPlatformBinary();
+
+    /**
+     * Returns all binary targets of this bundle, which includes default and platform-specific ones.
+     */
+    default ImmutableSortedSet<BuildTarget> getBinaryTargets() {
+      ImmutableSortedSet.Builder<BuildTarget> binaryTargetsBuilder =
+          ImmutableSortedSet.naturalOrder();
+      if (getBinary().isPresent()) {
+        binaryTargetsBuilder.add(getBinary().get());
+      }
+      if (getPlatformBinary().isPresent()) {
+        binaryTargetsBuilder.addAll(getPlatformBinary().get().getValues());
+      }
+      return binaryTargetsBuilder.build();
+    }
 
     // ibtool take --module <PRODUCT_MODULE_NAME> arguments to override
     // customModule field set on its elements. (only when customModuleProvider="target")
