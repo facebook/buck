@@ -119,7 +119,8 @@ public class JsBundleGenruleDescription
           fileName.toString(),
           ExportFileDescription.Mode.REFERENCE,
           output,
-          ExportFileDirectoryAction.FAIL);
+          // TODO(27131551): temporary allow directory export until a proper fix is implemented
+          ExportFileDirectoryAction.ALLOW);
     }
 
     if (!(jsBundle instanceof JsBundleOutputs)) {

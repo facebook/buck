@@ -136,7 +136,8 @@ public class JsBundleDescription
           bundleOutputs.getBundleName() + "-misc",
           ExportFileDescription.Mode.REFERENCE,
           bundleOutputs.getSourcePathToMisc(),
-          ExportFileDirectoryAction.FAIL);
+          // TODO(27131551): temporary allow directory export until a proper fix is implemented
+          ExportFileDirectoryAction.ALLOW);
     }
 
     // For Android, we bundle JS output as assets, and images etc. as resources.
