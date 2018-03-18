@@ -615,7 +615,7 @@ public final class Main {
     if (command.subcommand != null && command.subcommand instanceof BuildCommand) {
       BuildCommand subcommand = (BuildCommand) command.subcommand;
       isUsingDistributedBuild = subcommand.isUseDistributedBuild();
-      if (!isUsingDistributedBuild && distBuildConfig.shouldUseDistributedBuild()) {
+      if (!isUsingDistributedBuild && distBuildConfig.shouldUseDistributedBuild(buildId)) {
         isUsingDistributedBuild = true;
         subcommand.autoConversionToStampede(distBuildConfig);
       }

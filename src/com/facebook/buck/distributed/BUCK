@@ -4,6 +4,7 @@ COMMON_FILES = (
     "AbstractDistBuildClientCacheResult.java",
     "AbstractDistBuildClientStats.java",
     "ArtifactCacheByBuildRule.java",
+    "AutoStampedeMode.java",
     "BuildJobStateSerializer.java",
     "BuildSlaveEventWrapper.java",
     "BuildStatusUtil.java",

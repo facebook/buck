@@ -19,6 +19,7 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
@@ -151,11 +152,12 @@ public class DistBuildConfig {
   private static final String MINION_BUILD_CAPACITY_RATIO = "minion_build_capacity_ratio";
   private static final Double DEFAULT_MINION_BUILD_CAPACITY_RATIO = 0.9;
 
-  // This flag needs to be set to 'true' if automated stampede build is to be attempted. It
-  // allows for a global on/off switch per repository (while the experiments.stampede_beta_test
-  // flag can then be used for a e.g. per user switch).
+  /**
+   * While the experiments.stampede_beta_test flag is set to true, this flag can be used to
+   * configure whether we want auto-stampede conversion for all builds, no builds, or some builds.
+   * See {@link AutoStampedeMode}.
+   */
   private static final String AUTO_STAMPEDE_BUILD_ENABLED = "auto_stampede_build_enabled";
-  private static final boolean DEFAULT_AUTO_STAMPEDE_BUILD_ENABLED = false;
 
   private static final String EXPERIMENTS_SECTION = "experiments";
   private static final String STAMPEDE_BETA_TEST = "stampede_beta_test";
@@ -408,11 +410,22 @@ public class DistBuildConfig {
   }
 
   /** Whether a non-distributed build should be automatically turned into a distributed one. */
-  public boolean shouldUseDistributedBuild() {
-    return buckConfig.getBooleanValue(
-            STAMPEDE_SECTION, AUTO_STAMPEDE_BUILD_ENABLED, DEFAULT_AUTO_STAMPEDE_BUILD_ENABLED)
-        && buckConfig.getBooleanValue(
+  public boolean shouldUseDistributedBuild(BuildId buildId) {
+    boolean userInAutoStampedeControlGroup =
+        buckConfig.getBooleanValue(
             EXPERIMENTS_SECTION, STAMPEDE_BETA_TEST, DEFAULT_STAMPEDE_BETA_TEST);
+    if (!userInAutoStampedeControlGroup) {
+      return false;
+    }
+
+    AutoStampedeMode enabled =
+        buckConfig
+            .getEnum(STAMPEDE_SECTION, AUTO_STAMPEDE_BUILD_ENABLED, AutoStampedeMode.class)
+            .orElse(AutoStampedeMode.DEFAULT)
+            .resolveExperiment(buildId);
+
+    LOG.info("Should use distributed build: %s", enabled);
+    return enabled.equals(AutoStampedeMode.TRUE);
   }
 
   public Optional<String> getAutoDistributedBuildMessage() {
