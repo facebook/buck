@@ -377,13 +377,9 @@ public final class AppleBuildRules {
 
   public static ImmutableSet<AppleAssetCatalogDescriptionArg> collectDirectAssetCatalogs(
       TargetGraph targetGraph, TargetNode<?, ?> targetNode) {
-    ImmutableSet.Builder<AppleAssetCatalogDescriptionArg> builder = ImmutableSet.builder();
-    Iterable<TargetNode<?, ?>> deps = targetGraph.getAll(targetNode.getBuildDeps());
-    for (TargetNode<?, ?> node : deps) {
-      if (node.getDescription() instanceof AppleAssetCatalogDescription) {
-        builder.add((AppleAssetCatalogDescriptionArg) node.getConstructorArg());
-      }
-    }
-    return builder.build();
+    return RichStream.from(targetGraph.getAll(targetNode.getBuildDeps()))
+        .filter(node -> node.getDescription() instanceof AppleAssetCatalogDescription)
+        .map(node -> (AppleAssetCatalogDescriptionArg) node.getConstructorArg())
+        .toImmutableSet();
   }
 }
