@@ -75,7 +75,6 @@ public class CxxBinaryTest {
                 target,
                 projectFilesystem,
                 params.copyAppendingExtraDeps(ImmutableSortedSet.<BuildRule>of(cxxLink)),
-                ruleResolver,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 cxxLink,
                 new CommandTool.Builder()

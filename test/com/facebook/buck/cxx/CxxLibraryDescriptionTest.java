@@ -259,7 +259,7 @@ public class CxxLibraryDescriptionTest {
         equalTo(getHeaderMaps(filesystem, target, resolver, cxxPlatform, HeaderVisibility.PUBLIC)));
 
     // Verify private preprocessor input.
-    CxxPreprocessorInput privateInput = rule.getPrivateCxxPreprocessorInput(cxxPlatform);
+    CxxPreprocessorInput privateInput = rule.getPrivateCxxPreprocessorInput(cxxPlatform, resolver);
     assertThat(
         privateInput.getFrameworks(),
         containsInAnyOrder(

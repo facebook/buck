@@ -130,7 +130,7 @@ public class CxxLibraryTest {
             .build();
     assertEquals(
         expectedPrivateCxxPreprocessorInput,
-        cxxLibrary.getPrivateCxxPreprocessorInput(cxxPlatform));
+        cxxLibrary.getPrivateCxxPreprocessorInput(cxxPlatform, new TestBuildRuleResolver()));
 
     // Verify that we get the static archive and its build target via the NativeLinkable
     // interface.

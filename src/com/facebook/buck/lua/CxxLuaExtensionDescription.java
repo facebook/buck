@@ -153,6 +153,7 @@ public class CxxLuaExtensionDescription
                 CxxDescriptionEnhancer.collectCxxPreprocessorInput(
                     buildTarget,
                     cxxPlatform,
+                    ruleResolver,
                     deps,
                     ImmutableListMultimap.copyOf(
                         Multimaps.transformValues(

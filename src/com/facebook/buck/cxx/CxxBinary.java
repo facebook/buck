@@ -33,7 +33,6 @@ import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.HasSupplementaryOutputs;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -55,7 +54,6 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         HasSupplementaryOutputs,
         CacheableBuildRule {
 
-  private BuildRuleResolver ruleResolver;
   private final CxxPlatform cxxPlatform;
   private final BuildRule linkRule;
   private final Tool executable;
@@ -67,7 +65,6 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
       CxxPlatform cxxPlatform,
       BuildRule linkRule,
       Tool executable,
@@ -75,7 +72,6 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Iterable<BuildTarget> tests,
       BuildTarget platformlessTarget) {
     super(buildTarget, projectFilesystem, params);
-    this.ruleResolver = ruleResolver;
     this.cxxPlatform = cxxPlatform;
     this.linkRule = linkRule;
     this.executable = executable;
@@ -137,7 +133,8 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public CxxPreprocessorInput getPrivateCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+  public CxxPreprocessorInput getPrivateCxxPreprocessorInput(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return CxxPreprocessables.getCxxPreprocessorInput(
         platformlessTarget,
         ruleResolver,
@@ -188,13 +185,5 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       }
     }
     return null;
-  }
-
-  @Override
-  public void updateBuildRuleResolver(
-      BuildRuleResolver ruleResolver,
-      SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver) {
-    this.ruleResolver = ruleResolver;
   }
 }

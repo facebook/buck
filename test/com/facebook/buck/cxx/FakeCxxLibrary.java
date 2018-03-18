@@ -26,6 +26,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.PathSourcePath;
@@ -108,7 +109,8 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public CxxPreprocessorInput getPrivateCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+  public CxxPreprocessorInput getPrivateCxxPreprocessorInput(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return CxxPreprocessorInput.builder()
         .addIncludes(
             CxxSymlinkTreeHeaders.builder()

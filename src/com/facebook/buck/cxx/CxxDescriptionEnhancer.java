@@ -514,6 +514,7 @@ public class CxxDescriptionEnhancer {
   public static ImmutableList<CxxPreprocessorInput> collectCxxPreprocessorInput(
       BuildTarget target,
       CxxPlatform cxxPlatform,
+      BuildRuleResolver ruleResolver,
       Iterable<BuildRule> deps,
       ImmutableMultimap<CxxSource.Type, ? extends Arg> preprocessorFlags,
       ImmutableList<HeaderSymlinkTree> headerSymlinkTrees,
@@ -536,7 +537,7 @@ public class CxxDescriptionEnhancer {
               "Adding private includes of tested rule %s to testing rule %s",
               rule.getBuildTarget(), target);
           cxxPreprocessorInputFromTestedRulesBuilder.add(
-              testable.getPrivateCxxPreprocessorInput(cxxPlatform));
+              testable.getPrivateCxxPreprocessorInput(cxxPlatform, ruleResolver));
 
           // Add any dependent headers
           cxxPreprocessorInputFromTestedRulesBuilder.addAll(
@@ -910,6 +911,7 @@ public class CxxDescriptionEnhancer {
         collectCxxPreprocessorInput(
             target,
             cxxPlatform,
+            resolver,
             deps,
             ImmutableListMultimap.copyOf(
                 Multimaps.transformValues(

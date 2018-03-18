@@ -173,7 +173,6 @@ public class CxxBinaryFactory {
                     BuildableSupport.getDepsCollection(
                         cxxLinkAndCompileRules.executable, ruleFinder)),
             ImmutableSortedSet.of()),
-        resolver,
         cxxPlatform,
         cxxLinkAndCompileRules.getBinaryRule(),
         cxxLinkAndCompileRules.executable,

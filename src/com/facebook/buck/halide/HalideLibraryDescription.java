@@ -192,7 +192,6 @@ public class HalideLibraryDescription
         projectFilesystem,
         params.copyAppendingExtraDeps(
             BuildableSupport.getDepsCollection(cxxLinkAndCompileRules.executable, ruleFinder)),
-        ruleResolver,
         cxxPlatform,
         cxxLinkAndCompileRules.getBinaryRule(),
         cxxLinkAndCompileRules.executable,

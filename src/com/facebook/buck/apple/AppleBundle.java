@@ -1105,11 +1105,13 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public CxxPreprocessorInput getPrivateCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+  public CxxPreprocessorInput getPrivateCxxPreprocessorInput(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     if (binary.isPresent()) {
       BuildRule binaryRule = binary.get();
       if (binaryRule instanceof NativeTestable) {
-        return ((NativeTestable) binaryRule).getPrivateCxxPreprocessorInput(cxxPlatform);
+        return ((NativeTestable) binaryRule)
+            .getPrivateCxxPreprocessorInput(cxxPlatform, ruleResolver);
       }
     }
     return CxxPreprocessorInput.of();

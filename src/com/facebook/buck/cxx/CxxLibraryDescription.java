@@ -173,6 +173,7 @@ public class CxxLibraryDescription
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
         target,
         cxxPlatform,
+        ruleResolver,
         deps,
         ImmutableListMultimap.copyOf(
             Multimaps.transformValues(

@@ -287,6 +287,7 @@ public final class CxxInferEnhancer {
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
         target,
         cxxPlatform,
+        ruleResolver,
         deps,
         ImmutableListMultimap.copyOf(
             Multimaps.transformValues(

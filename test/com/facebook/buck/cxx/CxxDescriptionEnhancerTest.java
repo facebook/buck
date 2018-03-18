@@ -31,6 +31,7 @@ import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
@@ -74,6 +75,7 @@ public class CxxDescriptionEnhancerTest {
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             testTarget,
             CxxPlatformUtils.DEFAULT_PLATFORM,
+            new TestBuildRuleResolver(),
             deps,
             ImmutableMultimap.of(),
             ImmutableList.of(),
@@ -143,6 +145,7 @@ public class CxxDescriptionEnhancerTest {
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             testTarget,
             CxxPlatformUtils.DEFAULT_PLATFORM,
+            new TestBuildRuleResolver(),
             deps,
             ImmutableMultimap.of(),
             ImmutableList.of(),
@@ -198,6 +201,7 @@ public class CxxDescriptionEnhancerTest {
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             otherLibDepTarget,
             CxxPlatformUtils.DEFAULT_PLATFORM,
+            new TestBuildRuleResolver(),
             deps,
             ImmutableMultimap.of(),
             ImmutableList.of(),

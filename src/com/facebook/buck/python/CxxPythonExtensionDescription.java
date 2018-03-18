@@ -198,6 +198,7 @@ public class CxxPythonExtensionDescription
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             target,
             cxxPlatform,
+            ruleResolver,
             deps,
             ImmutableListMultimap.copyOf(
                 Multimaps.transformValues(

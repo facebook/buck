@@ -216,7 +216,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public CxxPreprocessorInput getPrivateCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+  public CxxPreprocessorInput getPrivateCxxPreprocessorInput(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     CxxPreprocessorInput privateInput =
         getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PRIVATE);
     Optional<CxxPreprocessorInput> delegateInput =
