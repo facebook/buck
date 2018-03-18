@@ -170,7 +170,7 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Iterable<AndroidPackageable> getRequiredPackageables() {
+  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
     return ImmutableList.of();
   }
 

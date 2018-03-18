@@ -24,6 +24,7 @@ import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -93,7 +94,7 @@ public class PrebuiltNativeLibrary extends AbstractBuildRuleWithDeclaredAndExtra
   }
 
   @Override
-  public Iterable<AndroidPackageable> getRequiredPackageables() {
+  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
     return AndroidPackageableCollector.getPackageableRules(getDeclaredDeps());
   }
 

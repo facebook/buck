@@ -23,6 +23,7 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
@@ -139,7 +140,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
-  public Iterable<AndroidPackageable> getRequiredPackageables() {
+  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
     return AndroidPackageableCollector.getPackageableRules(getBuildDeps());
   }
 

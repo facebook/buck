@@ -47,7 +47,7 @@ public class SystemLuaCxxLibrary implements AbstractCxxLibrary {
   }
 
   @Override
-  public Iterable<AndroidPackageable> getRequiredPackageables() {
+  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
     return ImmutableList.of();
   }
 

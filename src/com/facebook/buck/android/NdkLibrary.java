@@ -27,6 +27,7 @@ import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
@@ -215,7 +216,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Iterable<AndroidPackageable> getRequiredPackageables() {
+  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
     return AndroidPackageableCollector.getPackageableRules(getBuildDeps());
   }
 

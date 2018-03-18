@@ -270,7 +270,8 @@ public class AndroidBinaryGraphEnhancer {
     AndroidPackageableCollector collector =
         new AndroidPackageableCollector(
             originalBuildTarget, buildTargetsToExcludeFromDex, resourcesToExclude, apkModuleGraph);
-    collector.addPackageables(AndroidPackageableCollector.getPackageableRules(originalDeps));
+    collector.addPackageables(
+        AndroidPackageableCollector.getPackageableRules(originalDeps), ruleResolver);
     AndroidPackageableCollection packageableCollection = collector.build();
 
     ImmutableList.Builder<SourcePath> proguardConfigsBuilder = ImmutableList.builder();

@@ -386,7 +386,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   }
 
   @Override
-  public Iterable<AndroidPackageable> getRequiredPackageables() {
+  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
     // TODO(jkeljo): Subtracting out provided deps is probably not the right behavior (we don't
     // do it when assembling the contents of a java_binary), but it is long-standing and projects
     // are depending upon it. The long term direction should be that we add an

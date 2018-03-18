@@ -761,7 +761,7 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public Iterable<AndroidPackageable> getRequiredPackageables() {
+      public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
         return AndroidPackageableCollector.getPackageableRules(params.getBuildDeps());
       }
 

@@ -109,7 +109,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
         new AndroidPackageableCollector(
             target, ImmutableSet.of(), ImmutableSet.of(), apkModuleGraph);
     collector.addPackageables(
-        AndroidPackageableCollector.getPackageableRules(ImmutableSet.of(ndkLibrary)));
+        AndroidPackageableCollector.getPackageableRules(ImmutableSet.of(ndkLibrary)), ruleResolver);
 
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibrariesOptional =
         enhancer.enhance(collector.build()).getCopyNativeLibraries();
@@ -189,7 +189,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
         new AndroidPackageableCollector(
             target, ImmutableSet.of(), ImmutableSet.of(), apkModuleGraph);
     collector.addPackageables(
-        AndroidPackageableCollector.getPackageableRules(ImmutableSet.of(cxxLibrary)));
+        AndroidPackageableCollector.getPackageableRules(ImmutableSet.of(cxxLibrary)), ruleResolver);
 
     AndroidPackageableCollection packageableCollection = collector.build();
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibrariesOptional =
@@ -395,7 +395,8 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
         new AndroidPackageableCollector(
             target, ImmutableSet.of(), ImmutableSet.of(), apkModuleGraph);
     collector.addPackageables(
-        AndroidPackageableCollector.getPackageableRules(ImmutableSet.of(cxxLibrary1, cxxLibrary2)));
+        AndroidPackageableCollector.getPackageableRules(ImmutableSet.of(cxxLibrary1, cxxLibrary2)),
+        ruleResolver);
 
     AndroidPackageableCollection packageableCollection = collector.build();
     thrown.expect(HumanReadableException.class);

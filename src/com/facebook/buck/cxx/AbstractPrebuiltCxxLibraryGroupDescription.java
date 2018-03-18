@@ -176,7 +176,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
               CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this, ruleResolver);
 
       @Override
-      public Iterable<AndroidPackageable> getRequiredPackageables() {
+      public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
         return AndroidPackageableCollector.getPackageableRules(params.getBuildDeps());
       }
 

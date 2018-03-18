@@ -209,9 +209,9 @@ public class JsBundleGenrule extends Genrule
   }
 
   @Override
-  public Iterable<AndroidPackageable> getRequiredPackageables() {
+  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
     return !this.skipResources && jsBundle instanceof AndroidPackageable
-        ? ((AndroidPackageable) jsBundle).getRequiredPackageables()
+        ? ((AndroidPackageable) jsBundle).getRequiredPackageables(ruleResolver)
         : ImmutableList.of();
   }
 

@@ -614,7 +614,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     // the dep in both lists). This difference is probably accidental, but it's now depended upon
     // by at least a couple projects.
     assertThat(
-        ImmutableSet.copyOf(library.getRequiredPackageables()),
+        ImmutableSet.copyOf(library.getRequiredPackageables(ruleResolver)),
         equalTo(
             ImmutableSet.of(
                 ruleResolver.getRule(depLibraryTarget),

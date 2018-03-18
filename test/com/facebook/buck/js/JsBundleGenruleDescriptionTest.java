@@ -42,6 +42,7 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
@@ -244,8 +245,10 @@ public class JsBundleGenruleDescriptionTest {
     setUp(defaultBundleTarget.withAppendedFlavors(JsFlavors.ANDROID));
 
     JsBundleAndroid jsBundleAndroid = setup.jsBundleAndroid();
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     assertEquals(
-        jsBundleAndroid.getRequiredPackageables(), setup.genrule().getRequiredPackageables());
+        jsBundleAndroid.getRequiredPackageables(ruleResolver),
+        setup.genrule().getRequiredPackageables(ruleResolver));
 
     AndroidPackageableCollector collector = packageableCollectorMock(setup);
     setup.genrule().addToCollector(collector);
@@ -256,7 +259,8 @@ public class JsBundleGenruleDescriptionTest {
   public void doesNotExposePackageablesWithSkipResources() {
     setupWithSkipResources(JsFlavors.ANDROID);
 
-    assertEquals(ImmutableList.of(), setup.genrule().getRequiredPackageables());
+    assertEquals(
+        ImmutableList.of(), setup.genrule().getRequiredPackageables(new TestBuildRuleResolver()));
     AndroidPackageableCollector collector = packageableCollectorMock(setup);
     setup.genrule().addToCollector(collector);
     verify(collector);
@@ -264,7 +268,8 @@ public class JsBundleGenruleDescriptionTest {
 
   @Test
   public void returnsNothingIfUnderlyingBundleIsNotForAndroid() {
-    assertEquals(ImmutableList.of(), setup.genrule().getRequiredPackageables());
+    assertEquals(
+        ImmutableList.of(), setup.genrule().getRequiredPackageables(new TestBuildRuleResolver()));
   }
 
   @Test

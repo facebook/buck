@@ -307,7 +307,7 @@ public class AndroidPackageableCollectorTest {
                 .build());
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector(a.getBuildTarget());
-    collector.addPackageables(ImmutableList.of(a));
+    collector.addPackageables(ImmutableList.of(a), ruleResolver);
 
     // Note that a topological sort for a DAG is not guaranteed to be unique, but we order nodes
     // within the same depth of the search.
@@ -394,7 +394,7 @@ public class AndroidPackageableCollectorTest {
                 .build());
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector(a.getBuildTarget());
-    collector.addPackageables(ImmutableList.of(a));
+    collector.addPackageables(ImmutableList.of(a), ruleResolver);
 
     AndroidPackageableCollection androidPackageableCollection = collector.build();
     AndroidPackageableCollection.ResourceDetails resourceDetails =

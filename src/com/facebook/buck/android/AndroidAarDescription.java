@@ -132,7 +132,8 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
             /* resourcesToExclude */ ImmutableSet.of(),
             apkModuleGraph);
     collector.addPackageables(
-        AndroidPackageableCollector.getPackageableRules(originalBuildRuleParams.getBuildDeps()));
+        AndroidPackageableCollector.getPackageableRules(originalBuildRuleParams.getBuildDeps()),
+        resolver);
     AndroidPackageableCollection packageableCollection = collector.build();
 
     ImmutableCollection<SourcePath> assetsDirectories =
