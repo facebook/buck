@@ -28,7 +28,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.util.RichStream;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -317,42 +316,45 @@ public final class AppleBuildRules {
                 Optional.empty()),
             ImmutableSet.of(targetNode));
 
-    return ImmutableSet.copyOf(
-        Iterables.filter(targetNodes, input -> isXcodeTargetDescription(input.getDescription())));
+    return RichStream.from(targetNodes)
+        .filter(input -> isXcodeTargetDescription(input.getDescription()))
+        .toImmutableSet();
   }
 
   public static <T> ImmutableSet<AppleAssetCatalogDescriptionArg> collectRecursiveAssetCatalogs(
       TargetGraph targetGraph,
       Optional<AppleDependenciesCache> cache,
       Iterable<TargetNode<T, ?>> targetNodes) {
-    return FluentIterable.from(targetNodes)
-        .transformAndConcat(
+    return RichStream.from(targetNodes)
+        .flatMap(
             input ->
                 getRecursiveTargetNodeDependenciesOfTypes(
-                    targetGraph,
-                    cache,
-                    RecursiveDependenciesMode.COPYING,
-                    input,
-                    APPLE_ASSET_CATALOG_DESCRIPTION_CLASSES))
-        .transform(input -> (AppleAssetCatalogDescriptionArg) input.getConstructorArg())
-        .toSet();
+                        targetGraph,
+                        cache,
+                        RecursiveDependenciesMode.COPYING,
+                        input,
+                        APPLE_ASSET_CATALOG_DESCRIPTION_CLASSES)
+                    .stream())
+        .map(input -> (AppleAssetCatalogDescriptionArg) input.getConstructorArg())
+        .toImmutableSet();
   }
 
   public static <T> ImmutableSet<AppleWrapperResourceArg> collectRecursiveWrapperResources(
       TargetGraph targetGraph,
       Optional<AppleDependenciesCache> cache,
       Iterable<TargetNode<T, ?>> targetNodes) {
-    return FluentIterable.from(targetNodes)
-        .transformAndConcat(
+    return RichStream.from(targetNodes)
+        .flatMap(
             input ->
                 getRecursiveTargetNodeDependenciesOfTypes(
-                    targetGraph,
-                    cache,
-                    RecursiveDependenciesMode.COPYING,
-                    input,
-                    WRAPPER_RESOURCE_DESCRIPTION_CLASSES))
-        .transform(input -> (AppleWrapperResourceArg) input.getConstructorArg())
-        .toSet();
+                        targetGraph,
+                        cache,
+                        RecursiveDependenciesMode.COPYING,
+                        input,
+                        WRAPPER_RESOURCE_DESCRIPTION_CLASSES)
+                    .stream())
+        .map(input -> (AppleWrapperResourceArg) input.getConstructorArg())
+        .toImmutableSet();
   }
 
   @SuppressWarnings("unchecked")
