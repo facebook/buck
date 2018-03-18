@@ -542,7 +542,7 @@ public class CxxDescriptionEnhancer {
           // Add any dependent headers
           cxxPreprocessorInputFromTestedRulesBuilder.addAll(
               CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                  cxxPlatform, ImmutableList.of(rule)));
+                  cxxPlatform, ruleResolver, ImmutableList.of(rule)));
         }
       }
     }
@@ -925,6 +925,7 @@ public class CxxDescriptionEnhancer {
             frameworks,
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 cxxPlatform,
+                resolver,
                 RichStream.from(deps)
                     .filter(CxxPreprocessorDep.class::isInstance)
                     .toImmutableList()),

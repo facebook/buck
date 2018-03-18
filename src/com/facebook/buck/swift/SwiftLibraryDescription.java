@@ -259,7 +259,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
       CxxPreprocessorInput inputs =
           CxxPreprocessorInput.concat(
               CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                  cxxPlatform, params.getBuildDeps()));
+                  cxxPlatform, resolver, params.getBuildDeps()));
       PreprocessorFlags cxxDeps =
           PreprocessorFlags.of(
               Optional.empty(),

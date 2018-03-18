@@ -69,23 +69,27 @@ public class CxxPreprocessablesTest {
     }
 
     @Override
-    public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+    public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(
+        CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
       return FluentIterable.from(getBuildDeps()).filter(CxxPreprocessorDep.class);
     }
 
     @Override
-    public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+    public CxxPreprocessorInput getCxxPreprocessorInput(
+        CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
       return input;
     }
 
     @Override
     public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-        CxxPlatform cxxPlatform) {
+        CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
       ImmutableMap.Builder<BuildTarget, CxxPreprocessorInput> builder = ImmutableMap.builder();
-      builder.put(getBuildTarget(), getCxxPreprocessorInput(cxxPlatform));
+      builder.put(getBuildTarget(), getCxxPreprocessorInput(cxxPlatform, ruleResolver));
       for (BuildRule dep : getBuildDeps()) {
         if (dep instanceof CxxPreprocessorDep) {
-          builder.putAll(((CxxPreprocessorDep) dep).getTransitiveCxxPreprocessorInput(cxxPlatform));
+          builder.putAll(
+              ((CxxPreprocessorDep) dep)
+                  .getTransitiveCxxPreprocessorInput(cxxPlatform, ruleResolver));
         }
       }
       return builder.build();
@@ -166,7 +170,7 @@ public class CxxPreprocessablesTest {
     ImmutableList<CxxPreprocessorInput> actual =
         ImmutableList.copyOf(
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                cxxPlatform, ImmutableList.<BuildRule>of(dep3)));
+                cxxPlatform, new TestBuildRuleResolver(), ImmutableList.<BuildRule>of(dep3)));
     assertEquals(expected, actual);
   }
 
@@ -237,7 +241,7 @@ public class CxxPreprocessablesTest {
     CxxPreprocessorInput totalInput =
         CxxPreprocessorInput.concat(
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                cxxPlatform, ImmutableList.of(top)));
+                cxxPlatform, new TestBuildRuleResolver(), ImmutableList.of(top)));
     assertTrue(bottomInput.getPreprocessorFlags().get(CxxSource.Type.C).contains(sentinal));
     assertFalse(totalInput.getPreprocessorFlags().get(CxxSource.Type.C).contains(sentinal));
   }

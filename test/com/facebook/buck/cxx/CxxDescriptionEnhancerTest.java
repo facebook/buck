@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePath;
@@ -53,11 +54,13 @@ public class CxxDescriptionEnhancerTest {
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
 
     BuildRuleParams libParams = TestBuildRuleParams.create();
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     FakeCxxLibrary libRule =
         new FakeCxxLibrary(
             libTarget,
             new FakeProjectFilesystem(),
             libParams,
+            ruleResolver,
             BuildTargetFactory.newInstance("//:header"),
             BuildTargetFactory.newInstance("//:symlink"),
             BuildTargetFactory.newInstance("//:privateheader"),
@@ -75,13 +78,13 @@ public class CxxDescriptionEnhancerTest {
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             testTarget,
             CxxPlatformUtils.DEFAULT_PLATFORM,
-            new TestBuildRuleResolver(),
+            ruleResolver,
             deps,
             ImmutableMultimap.of(),
             ImmutableList.of(),
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                CxxPlatformUtils.DEFAULT_PLATFORM, deps),
+                CxxPlatformUtils.DEFAULT_PLATFORM, ruleResolver, deps),
             ImmutableList.of(),
             Optional.empty(),
             ImmutableSortedSet.of());
@@ -105,11 +108,13 @@ public class CxxDescriptionEnhancerTest {
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
 
     BuildRuleParams otherlibParams = TestBuildRuleParams.create();
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     FakeCxxLibrary otherlibRule =
         new FakeCxxLibrary(
             otherlibTarget,
             new FakeProjectFilesystem(),
             otherlibParams,
+            ruleResolver,
             BuildTargetFactory.newInstance("//:otherheader"),
             BuildTargetFactory.newInstance("//:othersymlink"),
             BuildTargetFactory.newInstance("//:otherprivateheader"),
@@ -128,6 +133,7 @@ public class CxxDescriptionEnhancerTest {
             libTarget,
             new FakeProjectFilesystem(),
             libParams,
+            ruleResolver,
             BuildTargetFactory.newInstance("//:header"),
             BuildTargetFactory.newInstance("//:symlink"),
             BuildTargetFactory.newInstance("//:privateheader"),
@@ -145,13 +151,13 @@ public class CxxDescriptionEnhancerTest {
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             testTarget,
             CxxPlatformUtils.DEFAULT_PLATFORM,
-            new TestBuildRuleResolver(),
+            ruleResolver,
             deps,
             ImmutableMultimap.of(),
             ImmutableList.of(),
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                CxxPlatformUtils.DEFAULT_PLATFORM, deps),
+                CxxPlatformUtils.DEFAULT_PLATFORM, ruleResolver, deps),
             ImmutableList.of(),
             Optional.empty(),
             ImmutableSortedSet.of());
@@ -178,11 +184,13 @@ public class CxxDescriptionEnhancerTest {
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
 
     BuildRuleParams libParams = TestBuildRuleParams.create();
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     FakeCxxLibrary libRule =
         new FakeCxxLibrary(
             libTarget,
             new FakeProjectFilesystem(),
             libParams,
+            ruleResolver,
             BuildTargetFactory.newInstance("//:header"),
             BuildTargetFactory.newInstance("//:symlink"),
             BuildTargetFactory.newInstance("//:privateheader"),
@@ -201,13 +209,13 @@ public class CxxDescriptionEnhancerTest {
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             otherLibDepTarget,
             CxxPlatformUtils.DEFAULT_PLATFORM,
-            new TestBuildRuleResolver(),
+            ruleResolver,
             deps,
             ImmutableMultimap.of(),
             ImmutableList.of(),
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                CxxPlatformUtils.DEFAULT_PLATFORM, deps),
+                CxxPlatformUtils.DEFAULT_PLATFORM, ruleResolver, deps),
             ImmutableList.of(),
             Optional.empty(),
             ImmutableSortedSet.of());

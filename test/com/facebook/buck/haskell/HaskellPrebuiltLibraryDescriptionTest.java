@@ -221,7 +221,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     PrebuiltHaskellLibrary library = builder.build(resolver, filesystem, targetGraph);
     assertThat(
-        library.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM),
+        library.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, resolver),
         Matchers.equalTo(
             CxxPreprocessorInput.builder()
                 .addIncludes(CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, path))

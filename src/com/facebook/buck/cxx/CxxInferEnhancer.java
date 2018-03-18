@@ -303,6 +303,7 @@ public final class CxxInferEnhancer {
         args.getFrameworks(),
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
             cxxPlatform,
+            ruleResolver,
             RichStream.from(deps).filter(CxxPreprocessorDep.class::isInstance).toImmutableList()),
         args.getIncludeDirs(),
         sandboxTree,

@@ -525,7 +525,7 @@ public class HaskellLibraryDescription
     }.start();
 
     Collection<CxxPreprocessorInput> cxxPreprocessorInputs =
-        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, deps);
+        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, resolver, deps);
     ExplicitCxxToolFlags.Builder toolFlagsBuilder = CxxToolFlags.explicitBuilder();
     PreprocessorFlags.Builder ppFlagsBuilder = PreprocessorFlags.builder();
     toolFlagsBuilder.setPlatformFlags(
@@ -812,7 +812,8 @@ public class HaskellLibraryDescription
       }
 
       @Override
-      public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+      public CxxPreprocessorInput getCxxPreprocessorInput(
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
 
         Optional<Linker.LinkableDepType> depType =
@@ -839,7 +840,8 @@ public class HaskellLibraryDescription
       }
 
       @Override
-      public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+      public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         return RichStream.from(allDeps.get(resolver, cxxPlatform))
             .filter(CxxPreprocessorDep.class)
             .toImmutableList();
@@ -847,7 +849,7 @@ public class HaskellLibraryDescription
 
       @Override
       public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-          CxxPlatform cxxPlatform) {
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
       }
 
@@ -859,7 +861,7 @@ public class HaskellLibraryDescription
 
       private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
           transitiveCxxPreprocessorInputCache =
-              CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
+              CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this, resolver);
 
       @Override
       public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(

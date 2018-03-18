@@ -173,7 +173,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
 
       private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
           transitiveCxxPreprocessorInputCache =
-              CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
+              CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this, ruleResolver);
 
       @Override
       public Iterable<AndroidPackageable> getRequiredPackageables() {
@@ -186,7 +186,8 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
       }
 
       @Override
-      public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+      public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         if (!isPlatformSupported(cxxPlatform)) {
           return ImmutableList.of();
         }
@@ -194,7 +195,8 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
       }
 
       @Override
-      public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+      public CxxPreprocessorInput getCxxPreprocessorInput(
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
         builder.putAllPreprocessorFlags(
             ImmutableListMultimap.copyOf(
@@ -213,7 +215,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
 
       @Override
       public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-          CxxPlatform cxxPlatform) {
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
       }
 

@@ -492,7 +492,7 @@ public class PrebuiltCxxLibraryDescription
 
       private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
           transitiveCxxPreprocessorInputCache =
-              CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
+              CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this, ruleResolver);
 
       private boolean hasHeaders(CxxPlatform cxxPlatform) {
         if (!args.getExportedHeaders().isEmpty()) {
@@ -592,7 +592,8 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+      public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         if (!isPlatformSupported(cxxPlatform)) {
           return ImmutableList.of();
         }
@@ -600,7 +601,8 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+      public CxxPreprocessorInput getCxxPreprocessorInput(
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
 
         if (hasHeaders(cxxPlatform)) {
@@ -624,7 +626,7 @@ public class PrebuiltCxxLibraryDescription
 
       @Override
       public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-          CxxPlatform cxxPlatform) {
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
       }
 

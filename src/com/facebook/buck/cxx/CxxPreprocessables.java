@@ -117,7 +117,10 @@ public class CxxPreprocessables {
    * while traversing the dependencies starting from the {@link BuildRule} objects given.
    */
   public static Collection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, Iterable<? extends BuildRule> inputs, Predicate<Object> traverse) {
+      CxxPlatform cxxPlatform,
+      BuildRuleResolver ruleResolver,
+      Iterable<? extends BuildRule> inputs,
+      Predicate<Object> traverse) {
 
     // We don't really care about the order we get back here, since headers shouldn't
     // conflict.  However, we want something that's deterministic, so sort by build
@@ -130,7 +133,7 @@ public class CxxPreprocessables {
       public Iterable<BuildRule> visit(BuildRule rule) {
         if (rule instanceof CxxPreprocessorDep) {
           CxxPreprocessorDep dep = (CxxPreprocessorDep) rule;
-          deps.putAll(dep.getTransitiveCxxPreprocessorInput(cxxPlatform));
+          deps.putAll(dep.getTransitiveCxxPreprocessorInput(cxxPlatform, ruleResolver));
           return ImmutableSet.of();
         }
         return traverse.test(rule) ? rule.getBuildDeps() : ImmutableSet.of();
@@ -142,8 +145,10 @@ public class CxxPreprocessables {
   }
 
   public static Collection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, Iterable<? extends BuildRule> inputs) {
-    return getTransitiveCxxPreprocessorInput(cxxPlatform, inputs, x -> true);
+      CxxPlatform cxxPlatform,
+      BuildRuleResolver ruleResolver,
+      Iterable<? extends BuildRule> inputs) {
+    return getTransitiveCxxPreprocessorInput(cxxPlatform, ruleResolver, inputs, x -> true);
   }
 
   /**
@@ -221,13 +226,17 @@ public class CxxPreprocessables {
   }
 
   public static LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
-      getTransitiveCxxPreprocessorInputCache(CxxPreprocessorDep preprocessorDep) {
-    return getTransitiveCxxPreprocessorInputCache(preprocessorDep, Parallelizer.SERIAL);
+      getTransitiveCxxPreprocessorInputCache(
+          CxxPreprocessorDep preprocessorDep, BuildRuleResolver ruleResolver) {
+    return getTransitiveCxxPreprocessorInputCache(
+        preprocessorDep, ruleResolver, Parallelizer.SERIAL);
   }
 
   public static LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
       getTransitiveCxxPreprocessorInputCache(
-          CxxPreprocessorDep preprocessorDep, Parallelizer parallelizer) {
+          CxxPreprocessorDep preprocessorDep,
+          BuildRuleResolver ruleResolver,
+          Parallelizer parallelizer) {
     return CacheBuilder.newBuilder()
         .build(
             new CacheLoader<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>() {
@@ -235,16 +244,19 @@ public class CxxPreprocessables {
               public ImmutableMap<BuildTarget, CxxPreprocessorInput> load(
                   @Nonnull CxxPlatform key) {
                 return computeTransitiveCxxToPreprocessorInputMap(
-                    key, preprocessorDep, true, parallelizer);
+                    key, preprocessorDep, true, ruleResolver, parallelizer);
               }
             });
   }
 
   public static ImmutableMap<BuildTarget, CxxPreprocessorInput>
       computeTransitiveCxxToPreprocessorInputMap(
-          @Nonnull CxxPlatform key, CxxPreprocessorDep preprocessorDep, boolean includeDep) {
+          @Nonnull CxxPlatform key,
+          CxxPreprocessorDep preprocessorDep,
+          boolean includeDep,
+          BuildRuleResolver ruleResolver) {
     return computeTransitiveCxxToPreprocessorInputMap(
-        key, preprocessorDep, includeDep, Parallelizer.SERIAL);
+        key, preprocessorDep, includeDep, ruleResolver, Parallelizer.SERIAL);
   }
 
   private static ImmutableMap<BuildTarget, CxxPreprocessorInput>
@@ -252,14 +264,18 @@ public class CxxPreprocessables {
           @Nonnull CxxPlatform key,
           CxxPreprocessorDep preprocessorDep,
           boolean includeDep,
+          BuildRuleResolver ruleResolver,
           Parallelizer parallelizer) {
     Map<BuildTarget, CxxPreprocessorInput> builder = new LinkedHashMap<>();
     if (includeDep) {
-      builder.put(preprocessorDep.getBuildTarget(), preprocessorDep.getCxxPreprocessorInput(key));
+      builder.put(
+          preprocessorDep.getBuildTarget(),
+          preprocessorDep.getCxxPreprocessorInput(key, ruleResolver));
     }
 
     Stream<CxxPreprocessorDep> transitiveDepInputs =
-        parallelizer.maybeParallelize(RichStream.from(preprocessorDep.getCxxPreprocessorDeps(key)));
+        parallelizer.maybeParallelize(
+            RichStream.from(preprocessorDep.getCxxPreprocessorDeps(key, ruleResolver)));
 
     // We get CxxProcessorInput in parallel for each dep.
     // We have one cache per CxxPreprocessable. Cache miss may trigger the creation of more
@@ -268,7 +284,7 @@ public class CxxPreprocessables {
     // Futures of the tasks directly, FJP will have current thread steal the work for those tasks
     // and no deadlock will occur {@link BuildRuleResolverTest.deadLockOnDependencyTest() }.
     transitiveDepInputs
-        .map(dep -> dep.getTransitiveCxxPreprocessorInput(key))
+        .map(dep -> dep.getTransitiveCxxPreprocessorInput(key, ruleResolver))
         .forEachOrdered(builder::putAll);
     return ImmutableMap.copyOf(builder);
   }

@@ -378,6 +378,7 @@ public class CxxPrecompiledHeaderRuleTest {
                 libTarget,
                 filesystem,
                 libParams,
+                ruleResolver,
                 publicHeaderTarget,
                 publicHeaderSymlinkTreeTarget,
                 privateHeaderTarget,

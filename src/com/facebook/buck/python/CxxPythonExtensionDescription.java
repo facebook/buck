@@ -212,7 +212,7 @@ public class CxxPythonExtensionDescription
                             target, cellRoots, ruleResolver, cxxPlatform, f))),
             ImmutableList.of(headerSymlinkTree),
             ImmutableSet.of(),
-            CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, deps),
+            CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, ruleResolver, deps),
             args.getIncludeDirs(),
             sandboxTree,
             args.getRawHeaders());

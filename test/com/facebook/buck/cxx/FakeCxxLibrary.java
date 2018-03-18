@@ -58,13 +58,13 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSortedSet<BuildTarget> tests;
 
   private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
-      transitiveCxxPreprocessorInputCache =
-          CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
+      transitiveCxxPreprocessorInputCache;
 
   public FakeCxxLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
       BuildTarget publicHeaderTarget,
       BuildTarget publicHeaderSymlinkTreeTarget,
       BuildTarget privateHeaderTarget,
@@ -84,15 +84,19 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     this.sharedLibraryOutput = sharedLibraryOutput;
     this.sharedLibrarySoname = sharedLibrarySoname;
     this.tests = tests;
+    transitiveCxxPreprocessorInputCache =
+        CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this, ruleResolver);
   }
 
   @Override
-  public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+  public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return FluentIterable.from(getBuildDeps()).filter(CxxPreprocessorDep.class);
   }
 
   @Override
-  public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+  public CxxPreprocessorInput getCxxPreprocessorInput(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return CxxPreprocessorInput.builder()
         .addIncludes(
             CxxSymlinkTreeHeaders.builder()
@@ -129,7 +133,7 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform) {
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
   }
 

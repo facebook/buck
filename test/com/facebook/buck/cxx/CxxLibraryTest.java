@@ -76,11 +76,13 @@ public class CxxLibraryTest {
     String sharedLibrarySoname = "lib.so";
 
     // Construct a CxxLibrary object to test.
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     FakeCxxLibrary cxxLibrary =
         new FakeCxxLibrary(
             target,
             new FakeProjectFilesystem(),
             params,
+            ruleResolver,
             publicHeaderTarget,
             publicHeaderSymlinkTreeTarget,
             privateHeaderTarget,
@@ -110,7 +112,8 @@ public class CxxLibraryTest {
                     .build())
             .build();
     assertEquals(
-        expectedPublicCxxPreprocessorInput, cxxLibrary.getCxxPreprocessorInput(cxxPlatform));
+        expectedPublicCxxPreprocessorInput,
+        cxxLibrary.getCxxPreprocessorInput(cxxPlatform, ruleResolver));
 
     CxxPreprocessorInput expectedPrivateCxxPreprocessorInput =
         CxxPreprocessorInput.builder()
@@ -130,7 +133,7 @@ public class CxxLibraryTest {
             .build();
     assertEquals(
         expectedPrivateCxxPreprocessorInput,
-        cxxLibrary.getPrivateCxxPreprocessorInput(cxxPlatform, new TestBuildRuleResolver()));
+        cxxLibrary.getPrivateCxxPreprocessorInput(cxxPlatform, ruleResolver));
 
     // Verify that we get the static archive and its build target via the NativeLinkable
     // interface.

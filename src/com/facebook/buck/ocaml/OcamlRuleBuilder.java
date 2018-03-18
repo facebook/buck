@@ -222,6 +222,7 @@ public class OcamlRuleBuilder {
         CxxPreprocessorInput.concat(
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 defaultCxxPlatform,
+                resolver,
                 FluentIterable.from(params.getBuildDeps())
                     .filter(CxxPreprocessorDep.class::isInstance)));
     OcamlToolchain ocamlToolchain =
@@ -392,6 +393,7 @@ public class OcamlRuleBuilder {
         CxxPreprocessorInput.concat(
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 defaultCxxPlatform,
+                resolver,
                 FluentIterable.from(params.getBuildDeps())
                     .filter(CxxPreprocessorDep.class::isInstance)));
 

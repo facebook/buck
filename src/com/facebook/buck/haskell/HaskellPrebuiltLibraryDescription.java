@@ -67,7 +67,7 @@ public class HaskellPrebuiltLibraryDescription
 
       private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
           transitiveCxxPreprocessorInputCache =
-              CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
+              CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this, resolver);
 
       @Override
       public Iterable<BuildRule> getCompileDeps(HaskellPlatform platform) {
@@ -163,12 +163,14 @@ public class HaskellPrebuiltLibraryDescription
       }
 
       @Override
-      public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+      public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         return FluentIterable.from(getBuildDeps()).filter(CxxPreprocessorDep.class);
       }
 
       @Override
-      public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+      public CxxPreprocessorInput getCxxPreprocessorInput(
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
         for (SourcePath headerDir : args.getCxxHeaderDirs()) {
           builder.addIncludes(CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, headerDir));
@@ -178,7 +180,7 @@ public class HaskellPrebuiltLibraryDescription
 
       @Override
       public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-          CxxPlatform cxxPlatform) {
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
       }
     };

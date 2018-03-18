@@ -154,7 +154,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     this.delegate = delegate;
     this.transitiveCxxPreprocessorInputCache =
         CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(
-            this, ruleResolver.getParallelizer());
+            this, ruleResolver, ruleResolver.getParallelizer());
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
@@ -163,7 +163,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+  public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
@@ -194,7 +195,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+  public CxxPreprocessorInput getCxxPreprocessorInput(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     CxxPreprocessorInput publicHeaders =
         getPublicCxxPreprocessorInputExcludingDelegate(cxxPlatform);
     Optional<CxxPreprocessorInput> pluginHeaders =
@@ -233,7 +235,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform) {
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
   }
 

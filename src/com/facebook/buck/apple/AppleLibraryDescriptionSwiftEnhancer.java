@@ -109,7 +109,8 @@ public class AppleLibraryDescriptionSwiftEnhancer {
       BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform) {
     CxxLibrary lib = (CxxLibrary) resolver.requireRule(target.withFlavors());
     ImmutableMap<BuildTarget, CxxPreprocessorInput> transitiveMap =
-        CxxPreprocessables.computeTransitiveCxxToPreprocessorInputMap(platform, lib, false);
+        CxxPreprocessables.computeTransitiveCxxToPreprocessorInputMap(
+            platform, lib, false, resolver);
 
     ImmutableSet.Builder<CxxPreprocessorInput> builder = ImmutableSet.builder();
     builder.addAll(transitiveMap.values());

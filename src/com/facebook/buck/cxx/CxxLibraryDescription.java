@@ -333,7 +333,7 @@ public class CxxLibraryDescription
         BuildRule rawRule = ruleResolver.requireRule(rawTarget);
         CxxLibrary rule = (CxxLibrary) rawRule;
         ImmutableMap<BuildTarget, CxxPreprocessorInput> inputs =
-            rule.getTransitiveCxxPreprocessorInput(cxxPlatform);
+            rule.getTransitiveCxxPreprocessorInput(cxxPlatform, ruleResolver);
 
         ImmutableList<CxxPreprocessorDep> privateDepsForPlatform =
             RichStream.from(privateDeps.get(ruleResolver, cxxPlatform))
@@ -346,7 +346,7 @@ public class CxxLibraryDescription
           Map<BuildTarget, CxxPreprocessorInput> result = new LinkedHashMap<>();
           result.putAll(inputs);
           for (CxxPreprocessorDep dep : privateDepsForPlatform) {
-            result.putAll(dep.getTransitiveCxxPreprocessorInput(cxxPlatform));
+            result.putAll(dep.getTransitiveCxxPreprocessorInput(cxxPlatform, ruleResolver));
           }
           return result.values().stream();
         }
@@ -369,7 +369,8 @@ public class CxxLibraryDescription
         for (BuildRule rule : deps) {
           if (rule instanceof CxxPreprocessorDep) {
             input.putAll(
-                ((CxxPreprocessorDep) rule).getTransitiveCxxPreprocessorInput(cxxPlatform));
+                ((CxxPreprocessorDep) rule)
+                    .getTransitiveCxxPreprocessorInput(cxxPlatform, ruleResolver));
           }
         }
         return input.values().stream();

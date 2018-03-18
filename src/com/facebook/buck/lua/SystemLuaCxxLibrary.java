@@ -55,18 +55,20 @@ public class SystemLuaCxxLibrary implements AbstractCxxLibrary {
   public void addToCollector(AndroidPackageableCollector collector) {}
 
   @Override
-  public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+  public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return ImmutableList.of();
   }
 
   @Override
-  public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+  public CxxPreprocessorInput getCxxPreprocessorInput(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return CxxPreprocessorInput.of();
   }
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform) {
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return ImmutableMap.of();
   }
 

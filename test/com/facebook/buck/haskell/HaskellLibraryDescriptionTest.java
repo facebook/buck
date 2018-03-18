@@ -269,7 +269,7 @@ public class HaskellLibraryDescriptionTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM, resolver)),
         Matchers.allOf(Matchers.hasItem(depA), not(Matchers.hasItem(depB))));
     assertThat(
-        rule.getCxxPreprocessorDeps(CxxPlatformUtils.DEFAULT_PLATFORM),
+        rule.getCxxPreprocessorDeps(CxxPlatformUtils.DEFAULT_PLATFORM, resolver),
         Matchers.allOf(Matchers.hasItem(depA), not(Matchers.hasItem(depB))));
   }
 }

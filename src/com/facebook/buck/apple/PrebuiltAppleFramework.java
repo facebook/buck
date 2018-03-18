@@ -79,13 +79,13 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
       NativeLinkable.getNativeLinkableInputCache(this::getNativeLinkableInputUncached);
 
   private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
-      transitiveCxxPreprocessorInputCache =
-          CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
+      transitiveCxxPreprocessorInputCache;
 
   public PrebuiltAppleFramework(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       SourcePath frameworkPath,
       Linkage preferredLinkage,
@@ -104,6 +104,8 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
     this.out =
         BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s").resolve(frameworkName);
     this.applePlatformFlavorDomain = applePlatformFlavorDomain;
+    this.transitiveCxxPreprocessorInputCache =
+        CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this, ruleResolver);
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
@@ -158,7 +160,8 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
   }
 
   @Override
-  public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+  public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
@@ -166,7 +169,8 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
   }
 
   @Override
-  public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+  public CxxPreprocessorInput getCxxPreprocessorInput(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
 
     if (isPlatformSupported(cxxPlatform)) {
@@ -178,7 +182,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform) {
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
   }
 

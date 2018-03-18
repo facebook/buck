@@ -682,7 +682,7 @@ public class AppleTestDescription
         CxxLibraryDescription.queryMetadataCxxPreprocessorInput(
             ruleResolver, baseTarget, cxxPlatform, HeaderVisibility.PUBLIC);
     Collection<CxxPreprocessorInput> depsInputs =
-        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, deps);
+        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, ruleResolver, deps);
 
     ImmutableSet.Builder<CxxPreprocessorInput> inputsBuilder = ImmutableSet.builder();
     inputsBuilder.addAll(depsInputs);

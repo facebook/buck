@@ -179,10 +179,10 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
     ImmutableList.Builder<CxxPreprocessorInput> inputs = ImmutableList.builder();
     inputs.addAll(
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-            cxxPlatform, FluentIterable.from(deps).filter(BuildRule.class)));
+            cxxPlatform, getRuleResolver(), FluentIterable.from(deps).filter(BuildRule.class)));
     for (CxxPreprocessorDep dep :
         Iterables.filter(deps, Predicates.not(BuildRule.class::isInstance))) {
-      inputs.add(dep.getCxxPreprocessorInput(cxxPlatform));
+      inputs.add(dep.getCxxPreprocessorInput(cxxPlatform, getRuleResolver()));
     }
     return inputs.build();
   }

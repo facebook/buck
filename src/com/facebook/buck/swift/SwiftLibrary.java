@@ -65,8 +65,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements HasRuntimeDeps, NativeLinkable, CxxPreprocessorDep {
 
   private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
-      transitiveCxxPreprocessorInputCache =
-          CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
+      transitiveCxxPreprocessorInputCache;
 
   private final BuildRuleResolver ruleResolver;
 
@@ -91,6 +90,8 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       Optional<Pattern> supportedPlatformsRegex,
       Linkage linkage) {
     super(buildTarget, projectFilesystem, params);
+    this.transitiveCxxPreprocessorInputCache =
+        CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this, ruleResolver);
     this.ruleResolver = ruleResolver;
     this.exportedDeps = exportedDeps;
     this.bridgingHeader = bridgingHeader;
@@ -252,7 +253,8 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+  public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return getBuildDeps()
         .stream()
         .filter(CxxPreprocessorDep.class::isInstance)
@@ -261,7 +263,8 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+  public CxxPreprocessorInput getCxxPreprocessorInput(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     if (!isPlatformSupported(cxxPlatform)) {
       return CxxPreprocessorInput.of();
     }
@@ -279,9 +282,9 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform) {
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     if (getBuildTarget().getFlavors().contains(SWIFT_COMPANION_FLAVOR)) {
-      return ImmutableMap.of(getBuildTarget(), getCxxPreprocessorInput(cxxPlatform));
+      return ImmutableMap.of(getBuildTarget(), getCxxPreprocessorInput(cxxPlatform, ruleResolver));
     } else {
       return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
     }

@@ -96,6 +96,8 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
     this.ruleFinder = ruleFinder;
     this.sourcePath = sourcePath;
     this.absoluteHeaderPath = pathResolver.getAbsolutePath(sourcePath);
+    this.transitiveCxxPreprocessorInputCache =
+        CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this, ruleResolver);
   }
 
   /**
@@ -175,29 +177,30 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+  public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return RichStream.from(getBuildDeps()).filter(CxxPreprocessorDep.class).toImmutableList();
   }
 
   @Override
-  public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+  public CxxPreprocessorInput getCxxPreprocessorInput(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return CxxPreprocessorInput.of();
   }
 
   private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
-      transitiveCxxPreprocessorInputCache =
-          CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
+      transitiveCxxPreprocessorInputCache;
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform) {
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
   }
 
   private ImmutableList<CxxPreprocessorInput> getCxxPreprocessorInputs(CxxPlatform cxxPlatform) {
     ImmutableList.Builder<CxxPreprocessorInput> builder = ImmutableList.builder();
     for (Map.Entry<BuildTarget, CxxPreprocessorInput> entry :
-        getTransitiveCxxPreprocessorInput(cxxPlatform).entrySet()) {
+        getTransitiveCxxPreprocessorInput(cxxPlatform, ruleResolver).entrySet()) {
       builder.add(entry.getValue());
     }
     return builder.build();

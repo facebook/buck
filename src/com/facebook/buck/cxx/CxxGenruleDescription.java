@@ -473,8 +473,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
     /** Get the transitive C/C++ preprocessor input rooted at the given rules. */
     private Collection<CxxPreprocessorInput> getCxxPreprocessorInput(
-        ImmutableList<BuildRule> rules) {
-      return CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, rules);
+        BuildRuleResolver ruleResolver, ImmutableList<BuildRule> rules) {
+      return CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, ruleResolver, rules);
     }
 
     /**
@@ -504,7 +504,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     protected Arg expand(
         BuildRuleResolver resolver, ImmutableList<BuildRule> rules, Optional<Pattern> filter) {
       return new CxxPreprocessorFlagsArg(
-          getPreprocessorFlags(getCxxPreprocessorInput(rules)),
+          getPreprocessorFlags(getCxxPreprocessorInput(resolver, rules)),
           CxxSourceTypes.getPreprocessor(cxxPlatform, sourceType).resolve(resolver));
     }
 

@@ -173,7 +173,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
       CxxPreprocessorInput cxxPreprocessorInput =
           CxxPreprocessorInput.concat(
               CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                  cxxPlatform, params.getBuildDeps(), NdkLibrary.class::isInstance));
+                  cxxPlatform, resolver, params.getBuildDeps(), NdkLibrary.class::isInstance));
 
       // We add any dependencies from the C/C++ preprocessor input to this rule, even though
       // it technically should be added to the top-level rule.

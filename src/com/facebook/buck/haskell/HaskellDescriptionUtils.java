@@ -147,7 +147,7 @@ public class HaskellDescriptionUtils {
     }.start();
 
     Collection<CxxPreprocessorInput> cxxPreprocessorInputs =
-        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, deps);
+        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, resolver, deps);
     ExplicitCxxToolFlags.Builder toolFlagsBuilder = CxxToolFlags.explicitBuilder();
     PreprocessorFlags.Builder ppFlagsBuilder = PreprocessorFlags.builder();
     toolFlagsBuilder.setPlatformFlags(

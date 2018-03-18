@@ -148,7 +148,10 @@ public class CxxLuaExtensionDescription
     ImmutableSet<BuildRule> deps = args.getCxxDeps().get(ruleResolver, cxxPlatform);
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput =
         ImmutableList.<CxxPreprocessorInput>builder()
-            .add(luaPlatform.getLuaCxxLibrary(ruleResolver).getCxxPreprocessorInput(cxxPlatform))
+            .add(
+                luaPlatform
+                    .getLuaCxxLibrary(ruleResolver)
+                    .getCxxPreprocessorInput(cxxPlatform, ruleResolver))
             .addAll(
                 CxxDescriptionEnhancer.collectCxxPreprocessorInput(
                     buildTarget,
@@ -167,7 +170,8 @@ public class CxxLuaExtensionDescription
                                     buildTarget, cellRoots, ruleResolver, cxxPlatform, f))),
                     ImmutableList.of(headerSymlinkTree),
                     ImmutableSet.of(),
-                    CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, deps),
+                    CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+                        cxxPlatform, ruleResolver, deps),
                     args.getIncludeDirs(),
                     sandboxTree,
                     args.getRawHeaders()))

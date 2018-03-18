@@ -93,7 +93,8 @@ public class HalideLibraryDescriptionTest {
         HalideCompile.headerOutputPath(
             flavoredLibTarget, lib.getProjectFilesystem(), Optional.empty());
     CxxSymlinkTreeHeaders publicHeaders =
-        (CxxSymlinkTreeHeaders) lib.getCxxPreprocessorInput(cxxPlatform).getIncludes().get(0);
+        (CxxSymlinkTreeHeaders)
+            lib.getCxxPreprocessorInput(cxxPlatform, resolver).getIncludes().get(0);
     assertThat(
         publicHeaders.getIncludeType(), Matchers.equalTo(CxxPreprocessables.IncludeType.SYSTEM));
     assertThat(
