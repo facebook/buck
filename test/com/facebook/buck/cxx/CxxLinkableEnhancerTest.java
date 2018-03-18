@@ -97,12 +97,12 @@ public class CxxLinkableEnhancerTest {
     }
 
     @Override
-    public Iterable<NativeLinkable> getNativeLinkableDeps() {
+    public Iterable<NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
       return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
     }
 
     @Override
-    public Iterable<NativeLinkable> getNativeLinkableExportedDeps() {
+    public Iterable<NativeLinkable> getNativeLinkableExportedDeps(BuildRuleResolver ruleResolver) {
       return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
     }
 
@@ -471,8 +471,9 @@ public class CxxLinkableEnhancerTest {
   public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables() {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 
     // Create a native linkable that sits at the bottom of the dep chain.
     String sentinel = "bottom";
@@ -495,6 +496,7 @@ public class CxxLinkableEnhancerTest {
     NativeLinkableInput totalInput =
         NativeLinkables.getTransitiveNativeLinkableInput(
             cxxPlatform,
+            ruleResolver,
             ImmutableList.of(top),
             Linker.LinkableDepType.STATIC,
             r -> Optional.empty());

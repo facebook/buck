@@ -102,20 +102,21 @@ public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableDeps() {
+  public Iterable<NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
     return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableDepsForPlatform(CxxPlatform cxxPlatform) {
+  public Iterable<NativeLinkable> getNativeLinkableDepsForPlatform(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
-    return getNativeLinkableDeps();
+    return getNativeLinkableDeps(ruleResolver);
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableExportedDeps() {
+  public Iterable<NativeLinkable> getNativeLinkableExportedDeps(BuildRuleResolver ruleResolver) {
     return ImmutableList.of();
   }
 

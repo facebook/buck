@@ -295,7 +295,8 @@ public class HaskellDescriptionUtils {
     // the args go straight to the linker, and preserve their order.
     linkerArgsBuilder.addAll(linkerInputs);
     for (NativeLinkable nativeLinkable :
-        NativeLinkables.getNativeLinkables(platform.getCxxPlatform(), deps, depType).values()) {
+        NativeLinkables.getNativeLinkables(platform.getCxxPlatform(), resolver, deps, depType)
+            .values()) {
       NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(platform.getCxxPlatform());
       NativeLinkableInput input =
           nativeLinkable.getNativeLinkableInput(
@@ -480,12 +481,14 @@ public class HaskellDescriptionUtils {
         HaskellGhciDescription.getOmnibusSpec(
             buildTarget,
             platform.getCxxPlatform(),
+            resolver,
             NativeLinkables.getNativeLinkableRoots(
                 RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),
                 n ->
                     n instanceof HaskellLibrary || n instanceof PrebuiltHaskellLibrary
                         ? Optional.of(
-                            n.getNativeLinkableExportedDepsForPlatform(platform.getCxxPlatform()))
+                            n.getNativeLinkableExportedDepsForPlatform(
+                                platform.getCxxPlatform(), resolver))
                         : Optional.empty()),
             // The preloaded deps form our excluded roots, which we need to keep them separate from
             // the omnibus library so that they can be `LD_PRELOAD`ed early.
@@ -524,7 +527,7 @@ public class HaskellDescriptionUtils {
     SharedLibrariesBuilder sharedLibsBuilder = new SharedLibrariesBuilder();
     ImmutableMap<BuildTarget, NativeLinkable> transitiveDeps =
         NativeLinkables.getTransitiveNativeLinkables(
-            platform.getCxxPlatform(), omnibusSpec.getDeps().values());
+            platform.getCxxPlatform(), resolver, omnibusSpec.getDeps().values());
     transitiveDeps
         .values()
         .stream()

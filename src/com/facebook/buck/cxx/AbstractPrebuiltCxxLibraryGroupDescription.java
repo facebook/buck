@@ -218,12 +218,14 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableDeps() {
+      public Iterable<? extends NativeLinkable> getNativeLinkableDeps(
+          BuildRuleResolver ruleResolver) {
         return FluentIterable.from(params.getDeclaredDeps().get()).filter(NativeLinkable.class);
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
+      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+          BuildRuleResolver ruleResolver) {
         return FluentIterable.from(args.getExportedDeps())
             .transform(ruleResolver::getRule)
             .filter(NativeLinkable.class);
@@ -305,20 +307,20 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
 
       @Override
       public Iterable<? extends NativeLinkable> getNativeLinkableDepsForPlatform(
-          CxxPlatform cxxPlatform) {
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         if (!isPlatformSupported(cxxPlatform)) {
           return ImmutableList.of();
         }
-        return getNativeLinkableDeps();
+        return getNativeLinkableDeps(ruleResolver);
       }
 
       @Override
       public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
-          CxxPlatform cxxPlatform) {
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         if (!isPlatformSupported(cxxPlatform)) {
           return ImmutableList.of();
         }
-        return getNativeLinkableExportedDeps();
+        return getNativeLinkableExportedDeps(ruleResolver);
       }
 
       @Override

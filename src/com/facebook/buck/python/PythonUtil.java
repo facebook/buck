@@ -312,6 +312,7 @@ public class PythonUtil {
       ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
           NativeLinkables.getTransitiveNativeLinkables(
               cxxPlatform,
+              ruleResolver,
               Iterables.concat(nativeLinkableRoots.values(), extensionNativeDeps.values()));
       for (NativeLinkable nativeLinkable : nativeLinkables.values()) {
         NativeLinkable.Linkage linkage = nativeLinkable.getPreferredLinkage(cxxPlatform);

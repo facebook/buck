@@ -852,7 +852,8 @@ public class HaskellLibraryDescription
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableDeps() {
+      public Iterable<? extends NativeLinkable> getNativeLinkableDeps(
+          BuildRuleResolver ruleResolver) {
         return ImmutableList.of();
       }
 
@@ -862,14 +863,15 @@ public class HaskellLibraryDescription
 
       @Override
       public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
-          CxxPlatform cxxPlatform) {
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         return RichStream.from(allDeps.get(resolver, cxxPlatform))
             .filter(NativeLinkable.class)
             .toImmutableList();
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
+      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+          BuildRuleResolver ruleResolver) {
         return RichStream.from(allDeps.getForAllPlatforms(resolver))
             .filter(NativeLinkable.class)
             .toImmutableList();

@@ -88,10 +88,10 @@ public class Omnibus {
   }
 
   private static Iterable<NativeLinkable> getDeps(
-      NativeLinkable nativeLinkable, CxxPlatform cxxPlatform) {
+      NativeLinkable nativeLinkable, CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return Iterables.concat(
-        nativeLinkable.getNativeLinkableDepsForPlatform(cxxPlatform),
-        nativeLinkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform));
+        nativeLinkable.getNativeLinkableDepsForPlatform(cxxPlatform, ruleResolver),
+        nativeLinkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform, ruleResolver));
   }
 
   // Returned the dependencies for the given node, which can either be a `NativeLinkable` or a
@@ -104,7 +104,7 @@ public class Omnibus {
       BuildRuleResolver ruleResolver) {
     if (nativeLinkables.containsKey(target)) {
       NativeLinkable nativeLinkable = Preconditions.checkNotNull(nativeLinkables.get(target));
-      return getDeps(nativeLinkable, cxxPlatform);
+      return getDeps(nativeLinkable, cxxPlatform, ruleResolver);
     } else {
       NativeLinkTarget nativeLinkTarget = Preconditions.checkNotNull(nativeLinkTargets.get(target));
       return nativeLinkTarget.getNativeLinkTargetDeps(cxxPlatform, ruleResolver);
@@ -135,6 +135,7 @@ public class Omnibus {
       for (NativeLinkable dep :
           NativeLinkables.getNativeLinkables(
                   cxxPlatform,
+                  ruleResolver,
                   root.getNativeLinkTargetDeps(cxxPlatform, ruleResolver),
                   Linker.LinkableDepType.SHARED)
               .values()) {
@@ -167,7 +168,8 @@ public class Omnibus {
       public Iterable<BuildTarget> visit(BuildTarget target) {
         NativeLinkable nativeLinkable = Preconditions.checkNotNull(nativeLinkables.get(target));
         ImmutableMap<BuildTarget, NativeLinkable> deps =
-            Maps.uniqueIndex(getDeps(nativeLinkable, cxxPlatform), NativeLinkable::getBuildTarget);
+            Maps.uniqueIndex(
+                getDeps(nativeLinkable, cxxPlatform, ruleResolver), NativeLinkable::getBuildTarget);
         nativeLinkables.putAll(deps);
         if (!nativeLinkable.supportsOmnibusLinking(cxxPlatform)) {
           excluded.add(target);
@@ -182,7 +184,8 @@ public class Omnibus {
       public Iterable<BuildTarget> visit(BuildTarget target) {
         NativeLinkable nativeLinkable = Preconditions.checkNotNull(nativeLinkables.get(target));
         ImmutableMap<BuildTarget, NativeLinkable> deps =
-            Maps.uniqueIndex(getDeps(nativeLinkable, cxxPlatform), NativeLinkable::getBuildTarget);
+            Maps.uniqueIndex(
+                getDeps(nativeLinkable, cxxPlatform, ruleResolver), NativeLinkable::getBuildTarget);
         nativeLinkables.putAll(deps);
         excluded.add(target);
         return deps.keySet();
@@ -308,6 +311,7 @@ public class Omnibus {
     ImmutableMap<BuildTarget, NativeLinkable> deps =
         NativeLinkables.getNativeLinkables(
             cxxPlatform,
+            ruleResolver,
             root.getNativeLinkTargetDeps(cxxPlatform, ruleResolver),
             Linker.LinkableDepType.SHARED);
 
@@ -581,7 +585,7 @@ public class Omnibus {
     // normal shared link.
     ImmutableMap<BuildTarget, NativeLinkable> deps =
         NativeLinkables.getNativeLinkables(
-            cxxPlatform, spec.getDeps().values(), Linker.LinkableDepType.SHARED);
+            cxxPlatform, ruleResolver, spec.getDeps().values(), Linker.LinkableDepType.SHARED);
     for (NativeLinkable nativeLinkable : deps.values()) {
       NativeLinkableInput input =
           NativeLinkables.getNativeLinkableInput(

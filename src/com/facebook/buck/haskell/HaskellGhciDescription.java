@@ -122,6 +122,7 @@ public class HaskellGhciDescription
   public static HaskellGhciOmnibusSpec getOmnibusSpec(
       BuildTarget baseTarget,
       CxxPlatform cxxPlatform,
+      BuildRuleResolver ruleResolver,
       ImmutableMap<BuildTarget, ? extends NativeLinkable> omnibusRoots,
       ImmutableMap<BuildTarget, ? extends NativeLinkable> excludedRoots) {
 
@@ -132,7 +133,8 @@ public class HaskellGhciDescription
 
     // Calculate excluded roots/deps, and add them to the link.
     ImmutableMap<BuildTarget, NativeLinkable> transitiveExcludedLinkables =
-        NativeLinkables.getTransitiveNativeLinkables(cxxPlatform, excludedRoots.values());
+        NativeLinkables.getTransitiveNativeLinkables(
+            cxxPlatform, ruleResolver, excludedRoots.values());
     builder.setExcludedRoots(excludedRoots);
     builder.setExcludedTransitiveDeps(transitiveExcludedLinkables);
 
@@ -168,8 +170,8 @@ public class HaskellGhciDescription
           LOG.verbose(
               "%s: including C/C++ library %s", baseTarget, nativeLinkable.getBuildTarget());
           return Iterables.concat(
-              nativeLinkable.getNativeLinkableDepsForPlatform(cxxPlatform),
-              nativeLinkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform));
+              nativeLinkable.getNativeLinkableDepsForPlatform(cxxPlatform, ruleResolver),
+              nativeLinkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform, ruleResolver));
         }
 
         // Unexpected node.  Can this actually happen?
@@ -188,6 +190,7 @@ public class HaskellGhciDescription
   private static NativeLinkableInput getOmnibusNativeLinkableInput(
       BuildTarget baseTarget,
       CxxPlatform cxxPlatform,
+      BuildRuleResolver ruleResolver,
       Iterable<NativeLinkable> body,
       Iterable<NativeLinkable> deps) {
 
@@ -202,8 +205,10 @@ public class HaskellGhciDescription
             nativeLinkable ->
                 RichStream.from(
                         Iterables.concat(
-                            nativeLinkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform),
-                            nativeLinkable.getNativeLinkableDepsForPlatform(cxxPlatform)))
+                            nativeLinkable.getNativeLinkableExportedDepsForPlatform(
+                                cxxPlatform, ruleResolver),
+                            nativeLinkable.getNativeLinkableDepsForPlatform(
+                                cxxPlatform, ruleResolver)))
                     .filter(l -> bodyTargets.contains(l.getBuildTarget())));
 
     // Add the link inputs for all omnibus nodes.
@@ -243,7 +248,7 @@ public class HaskellGhciDescription
 
     // Link in omnibus deps dynamically.
     ImmutableMap<BuildTarget, NativeLinkable> depLinkables =
-        NativeLinkables.getNativeLinkables(cxxPlatform, deps, LinkableDepType.SHARED);
+        NativeLinkables.getNativeLinkables(cxxPlatform, ruleResolver, deps, LinkableDepType.SHARED);
     for (NativeLinkable linkable : depLinkables.values()) {
       nativeLinkableInputs.add(
           NativeLinkables.getNativeLinkableInput(cxxPlatform, LinkableDepType.SHARED, linkable));
@@ -283,7 +288,8 @@ public class HaskellGhciDescription
           ImmutableList.Builder<Arg> linkFlagsBuilder = ImmutableList.builder();
           linkFlagsBuilder.addAll(extraLdFlags);
           linkFlagsBuilder.addAll(
-              getOmnibusNativeLinkableInput(baseTarget, cxxPlatform, body, deps).getArgs());
+              getOmnibusNativeLinkableInput(baseTarget, cxxPlatform, resolver, body, deps)
+                  .getArgs());
 
           // ----------------------------------------------------------------
           // Add to resolver

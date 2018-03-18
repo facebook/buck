@@ -187,7 +187,8 @@ public class CxxLinkableEnhancer {
         ruleResolver
             .getParallelizer()
             .maybeParallelize(
-                NativeLinkables.getNativeLinkables(cxxPlatform, nativeLinkableDeps, depType)
+                NativeLinkables.getNativeLinkables(
+                        cxxPlatform, ruleResolver, nativeLinkableDeps, depType)
                     .entrySet()
                     .stream())
             .filter(entry -> !blacklist.contains(entry.getKey()))

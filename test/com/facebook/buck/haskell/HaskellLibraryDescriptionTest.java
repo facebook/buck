@@ -265,7 +265,8 @@ public class HaskellLibraryDescriptionTest {
         Matchers.allOf(Matchers.hasItem(depA), not(Matchers.hasItem(depB))));
     assertThat(
         ImmutableList.copyOf(
-            rule.getNativeLinkableExportedDepsForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)),
+            rule.getNativeLinkableExportedDepsForPlatform(
+                CxxPlatformUtils.DEFAULT_PLATFORM, resolver)),
         Matchers.allOf(Matchers.hasItem(depA), not(Matchers.hasItem(depB))));
     assertThat(
         rule.getCxxPreprocessorDeps(CxxPlatformUtils.DEFAULT_PLATFORM),

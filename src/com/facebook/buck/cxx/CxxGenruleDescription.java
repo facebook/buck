@@ -615,10 +615,11 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
 
     private NativeLinkableInput getNativeLinkableInput(
-        Iterable<BuildRule> rules, Optional<Pattern> filter) {
+        BuildRuleResolver ruleResolver, Iterable<BuildRule> rules, Optional<Pattern> filter) {
       ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
           NativeLinkables.getNativeLinkables(
               cxxPlatform,
+              ruleResolver,
               FluentIterable.from(rules).filter(NativeLinkable.class),
               depType,
               !filter.isPresent()
@@ -656,7 +657,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       if (depType == Linker.LinkableDepType.SHARED) {
         args.addAll(getSharedLinkArgs(resolver, rules));
       }
-      args.addAll(getNativeLinkableInput(rules, filter).getArgs());
+      args.addAll(getNativeLinkableInput(resolver, rules, filter).getArgs());
       return args.build();
     }
 

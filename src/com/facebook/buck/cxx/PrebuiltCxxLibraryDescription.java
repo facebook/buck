@@ -629,7 +629,7 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public Iterable<NativeLinkable> getNativeLinkableDeps() {
+      public Iterable<NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
         return getDeclaredDeps()
             .stream()
             .filter(r -> r instanceof NativeLinkable)
@@ -638,15 +638,17 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public Iterable<NativeLinkable> getNativeLinkableDepsForPlatform(CxxPlatform cxxPlatform) {
+      public Iterable<NativeLinkable> getNativeLinkableDepsForPlatform(
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         if (!isPlatformSupported(cxxPlatform)) {
           return ImmutableList.of();
         }
-        return getNativeLinkableDeps();
+        return getNativeLinkableDeps(ruleResolver);
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
+      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+          BuildRuleResolver ruleResolver) {
         return args.getExportedDeps()
             .stream()
             .map(ruleResolver::getRule)
@@ -657,11 +659,11 @@ public class PrebuiltCxxLibraryDescription
 
       @Override
       public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
-          CxxPlatform cxxPlatform) {
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         if (!isPlatformSupported(cxxPlatform)) {
           return ImmutableList.of();
         }
-        return getNativeLinkableExportedDeps();
+        return getNativeLinkableExportedDeps(ruleResolver);
       }
 
       private NativeLinkableInput getNativeLinkableInputUncached(NativeLinkableCacheKey key) {
@@ -806,8 +808,8 @@ public class PrebuiltCxxLibraryDescription
               public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
                   CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
                 return Iterables.concat(
-                    getNativeLinkableDepsForPlatform(cxxPlatform),
-                    getNativeLinkableExportedDepsForPlatform(cxxPlatform));
+                    getNativeLinkableDepsForPlatform(cxxPlatform, ruleResolver),
+                    getNativeLinkableExportedDepsForPlatform(cxxPlatform, ruleResolver));
               }
 
               @Override

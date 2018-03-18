@@ -194,6 +194,7 @@ public class RustCompileUtils {
       ImmutableList<Arg> nativeArgs =
           NativeLinkables.getTransitiveNativeLinkableInput(
                   cxxPlatform,
+                  resolver,
                   ruledeps,
                   depType,
                   r -> r instanceof RustLinkable ? Optional.of(r.getBuildDeps()) : Optional.empty())
@@ -369,6 +370,7 @@ public class RustCompileUtils {
                       CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
                           target,
                           projectFilesystem,
+                          resolver,
                           ruleFinder,
                           cxxPlatform,
                           params.getBuildDeps(),

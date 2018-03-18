@@ -95,7 +95,8 @@ public class JavaBinaryDescription
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     ImmutableMap<String, SourcePath> nativeLibraries =
-        JavaLibraryRules.getNativeLibraries(params.getBuildDeps(), getCxxPlatform(args));
+        JavaLibraryRules.getNativeLibraries(
+            params.getBuildDeps(), getCxxPlatform(args), context.getBuildRuleResolver());
     BuildTarget binaryBuildTarget = buildTarget;
     BuildRuleParams binaryParams = params;
 

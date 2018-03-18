@@ -50,12 +50,12 @@ public class DLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implements N
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableDeps() {
+  public Iterable<NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
     return ImmutableList.of();
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableExportedDeps() {
+  public Iterable<NativeLinkable> getNativeLinkableExportedDeps(BuildRuleResolver ruleResolver) {
     return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
   }
 

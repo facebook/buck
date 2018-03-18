@@ -129,7 +129,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
    * NativeLinkable}.
    */
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableDeps() {
+  public Iterable<? extends NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
     return RichStream.from(getBuildDeps()).filter(NativeLinkable.class).toImmutableList();
   }
 
@@ -138,7 +138,8 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
    * NativeLinkable}.
    */
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
+  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+      BuildRuleResolver ruleResolver) {
     return RichStream.from(getExportedDeps()).filter(NativeLinkable.class).toImmutableList();
   }
 
@@ -159,8 +160,8 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   /**
    * This class doesn't add any native linkable code of its own, it just has deps which need to be
-   * passed along (see {@link #getNativeLinkableDeps()} and {@link #getNativeLinkableExportedDeps()}
-   * for the handling of those linkables).
+   * passed along (see {@link #getNativeLinkableDeps(BuildRuleResolver)} and {@link
+   * #getNativeLinkableExportedDeps(BuildRuleResolver)} for the handling of those linkables).
    *
    * @return empty {@link NativeLinkableInput}
    */

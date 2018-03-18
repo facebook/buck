@@ -107,7 +107,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableDeps() {
+  public Iterable<NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
     // TODO(beng, markwang): Use pseudo targets to represent the Swift
     // runtime library's linker args here so NativeLinkables can
     // deduplicate the linker flags on the build target (which would be the same for
@@ -118,7 +118,8 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
+  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+      BuildRuleResolver ruleResolver) {
     throw new RuntimeException(
         "SwiftLibrary does not support getting linkable exported deps "
             + "without a specific platform.");
@@ -126,7 +127,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
-      CxxPlatform cxxPlatform) {
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }

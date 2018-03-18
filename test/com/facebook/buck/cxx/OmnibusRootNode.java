@@ -47,8 +47,8 @@ class OmnibusRootNode extends OmnibusNode implements NativeLinkTarget, NativeLin
   public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
       CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return Iterables.concat(
-        getNativeLinkableDepsForPlatform(cxxPlatform),
-        getNativeLinkableExportedDepsForPlatform(cxxPlatform));
+        getNativeLinkableDepsForPlatform(cxxPlatform, ruleResolver),
+        getNativeLinkableExportedDepsForPlatform(cxxPlatform, ruleResolver));
   }
 
   @Override

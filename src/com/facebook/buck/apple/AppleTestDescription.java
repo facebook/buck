@@ -541,7 +541,7 @@ public class AppleTestDescription
     ImmutableSet.Builder<BuildTarget> blacklistBuilder = ImmutableSet.builder();
     for (CxxPlatform platform : cxxPlatforms) {
       ImmutableSet<BuildTarget> blacklistables =
-          NativeLinkables.getTransitiveNativeLinkables(platform, roots.values())
+          NativeLinkables.getTransitiveNativeLinkables(platform, resolver, roots.values())
               .entrySet()
               .stream()
               .filter(x -> !(x.getValue() instanceof SwiftRuntimeNativeLinkable))

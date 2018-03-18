@@ -19,6 +19,7 @@ package com.facebook.buck.cxx.toolchain.nativelink;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -40,8 +41,8 @@ public interface NativeLinkable {
    */
   @SuppressWarnings("unused")
   default Iterable<? extends NativeLinkable> getNativeLinkableDepsForPlatform(
-      CxxPlatform cxxPlatform) {
-    return getNativeLinkableDeps();
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+    return getNativeLinkableDeps(ruleResolver);
   }
 
   /**
@@ -50,21 +51,21 @@ public interface NativeLinkable {
    */
   @SuppressWarnings("unused")
   default Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
-      CxxPlatform cxxPlatform) {
-    return getNativeLinkableExportedDeps();
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+    return getNativeLinkableExportedDeps(ruleResolver);
   }
 
   /**
    * @return All native linkable dependencies that might be required by this linkable on any
    *     platform.
    */
-  Iterable<? extends NativeLinkable> getNativeLinkableDeps();
+  Iterable<? extends NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver);
 
   /**
    * @return All native linkable exported dependencies that might be required by this linkable on
    *     any platform.
    */
-  Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps();
+  Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(BuildRuleResolver ruleResolver);
 
   enum LanguageExtensions {
     HS_PROFILE

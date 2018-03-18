@@ -1232,6 +1232,7 @@ public class CxxDescriptionEnhancer {
   public static SymlinkTree createSharedLibrarySymlinkTree(
       BuildTarget baseBuildTarget,
       ProjectFilesystem filesystem,
+      BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> deps,
@@ -1243,7 +1244,8 @@ public class CxxDescriptionEnhancer {
         getSharedLibrarySymlinkTreePath(filesystem, baseBuildTarget, cxxPlatform.getFlavor());
 
     ImmutableSortedMap<String, SourcePath> libraries =
-        NativeLinkables.getTransitiveSharedLibraries(cxxPlatform, deps, passthrough, false);
+        NativeLinkables.getTransitiveSharedLibraries(
+            cxxPlatform, ruleResolver, deps, passthrough, false);
 
     ImmutableMap.Builder<Path, SourcePath> links = ImmutableMap.builder();
     for (Map.Entry<String, SourcePath> ent : libraries.entrySet()) {
@@ -1272,6 +1274,7 @@ public class CxxDescriptionEnhancer {
                 createSharedLibrarySymlinkTree(
                     buildTarget,
                     filesystem,
+                    resolver,
                     new SourcePathRuleFinder(resolver),
                     cxxPlatform,
                     deps,
@@ -1292,6 +1295,7 @@ public class CxxDescriptionEnhancer {
   private static SymlinkTree createBinaryWithSharedLibrariesSymlinkTree(
       BuildTarget baseBuildTarget,
       ProjectFilesystem filesystem,
+      BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> deps,
@@ -1306,7 +1310,7 @@ public class CxxDescriptionEnhancer {
 
     ImmutableSortedMap<String, SourcePath> libraries =
         NativeLinkables.getTransitiveSharedLibraries(
-            cxxPlatform, deps, n -> Optional.empty(), false);
+            cxxPlatform, ruleResolver, deps, n -> Optional.empty(), false);
 
     ImmutableMap.Builder<Path, SourcePath> links = ImmutableMap.builder();
     for (Map.Entry<String, SourcePath> ent : libraries.entrySet()) {
@@ -1339,6 +1343,7 @@ public class CxxDescriptionEnhancer {
                 createBinaryWithSharedLibrariesSymlinkTree(
                     buildTarget,
                     filesystem,
+                    resolver,
                     ruleFinder,
                     cxxPlatform,
                     deps,

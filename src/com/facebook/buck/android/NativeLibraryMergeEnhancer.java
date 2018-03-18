@@ -177,7 +177,7 @@ class NativeLibraryMergeEnhancer {
     builder.setSharedObjectTargets(finalSonameTargetsBuilder.build());
 
     Iterable<MergedNativeLibraryConstituents> orderedConstituents =
-        getOrderedMergedConstituents(buildTarget, linkableMembership);
+        getOrderedMergedConstituents(buildTarget, ruleResolver, linkableMembership);
 
     Optional<NativeLinkable> glueLinkable = Optional.empty();
     if (nativeLibraryMergeGlue.isPresent()) {
@@ -360,6 +360,7 @@ class NativeLibraryMergeEnhancer {
   /** Topo-sort the constituents objects so we can process deps first. */
   private static Iterable<MergedNativeLibraryConstituents> getOrderedMergedConstituents(
       BuildTarget buildTarget,
+      BuildRuleResolver ruleResolver,
       Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership) {
     MutableDirectedGraph<MergedNativeLibraryConstituents> graph = new MutableDirectedGraph<>();
     for (MergedNativeLibraryConstituents constituents : linkableMembership.values()) {
@@ -368,8 +369,8 @@ class NativeLibraryMergeEnhancer {
         // For each dep of each constituent of each merged lib...
         for (NativeLinkable dep :
             Iterables.concat(
-                constituentLinkable.getNativeLinkableDeps(),
-                constituentLinkable.getNativeLinkableExportedDeps())) {
+                constituentLinkable.getNativeLinkableDeps(ruleResolver),
+                constituentLinkable.getNativeLinkableExportedDeps(ruleResolver))) {
           // If that dep is in a different merged lib, add a dependency.
           MergedNativeLibraryConstituents mergedDep =
               Preconditions.checkNotNull(linkableMembership.get(dep));
@@ -439,10 +440,10 @@ class NativeLibraryMergeEnhancer {
       ImmutableCollection<NativeLinkable> preMergeLibs = constituents.getLinkables();
 
       List<MergedLibNativeLinkable> orderedDeps =
-          getStructuralDeps(constituents, NativeLinkable::getNativeLinkableDeps, mergeResults);
+          getStructuralDeps(constituents, x -> x.getNativeLinkableDeps(ruleResolver), mergeResults);
       List<MergedLibNativeLinkable> orderedExportedDeps =
           getStructuralDeps(
-              constituents, NativeLinkable::getNativeLinkableExportedDeps, mergeResults);
+              constituents, x -> x.getNativeLinkableExportedDeps(ruleResolver), mergeResults);
 
       ProjectFilesystem targetProjectFilesystem = projectFilesystem;
       if (!constituents.isActuallyMerged()) {
@@ -750,25 +751,28 @@ class NativeLibraryMergeEnhancer {
     }
 
     @Override
-    public Iterable<? extends NativeLinkable> getNativeLinkableDeps() {
-      return getMappedDeps(NativeLinkable::getNativeLinkableDeps);
+    public Iterable<? extends NativeLinkable> getNativeLinkableDeps(
+        BuildRuleResolver ruleResolver) {
+      return getMappedDeps(x -> x.getNativeLinkableDeps(ruleResolver));
     }
 
     @Override
-    public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
-      return getMappedDeps(NativeLinkable::getNativeLinkableExportedDeps);
+    public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+        BuildRuleResolver ruleResolver) {
+      return getMappedDeps(x -> x.getNativeLinkableExportedDeps(ruleResolver));
     }
 
     @Override
     public Iterable<? extends NativeLinkable> getNativeLinkableDepsForPlatform(
-        CxxPlatform cxxPlatform) {
-      return getMappedDeps(l -> l.getNativeLinkableDepsForPlatform(cxxPlatform));
+        CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+      return getMappedDeps(l -> l.getNativeLinkableDepsForPlatform(cxxPlatform, ruleResolver));
     }
 
     @Override
     public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
-        CxxPlatform cxxPlatform) {
-      return getMappedDeps(l -> l.getNativeLinkableExportedDepsForPlatform(cxxPlatform));
+        CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+      return getMappedDeps(
+          l -> l.getNativeLinkableExportedDepsForPlatform(cxxPlatform, ruleResolver));
     }
 
     private Iterable<? extends NativeLinkable> getMappedDeps(
@@ -912,8 +916,8 @@ class NativeLibraryMergeEnhancer {
                       Linker.LinkableDepType.SHARED,
                       CxxLinkOptions.of(),
                       Iterables.concat(
-                          getNativeLinkableDepsForPlatform(cxxPlatform),
-                          getNativeLinkableExportedDepsForPlatform(cxxPlatform)),
+                          getNativeLinkableDepsForPlatform(cxxPlatform, ruleResolver),
+                          getNativeLinkableExportedDepsForPlatform(cxxPlatform, ruleResolver)),
                       Optional.empty(),
                       Optional.empty(),
                       ImmutableSet.of(),

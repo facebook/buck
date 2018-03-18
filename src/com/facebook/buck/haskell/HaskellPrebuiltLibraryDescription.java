@@ -115,12 +115,14 @@ public class HaskellPrebuiltLibraryDescription
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableDeps() {
+      public Iterable<? extends NativeLinkable> getNativeLinkableDeps(
+          BuildRuleResolver ruleResolver) {
         return ImmutableList.of();
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
+      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+          BuildRuleResolver ruleResolver) {
         return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
       }
 

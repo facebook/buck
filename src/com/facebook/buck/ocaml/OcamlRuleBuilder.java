@@ -192,9 +192,10 @@ public class OcamlRuleBuilder {
   }
 
   private static NativeLinkableInput getCLinkableInput(
-      CxxPlatform cxxPlatform, Iterable<BuildRule> deps) {
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver, Iterable<BuildRule> deps) {
     return NativeLinkables.getTransitiveNativeLinkableInput(
         cxxPlatform,
+        ruleResolver,
         deps,
         Linker.LinkableDepType.STATIC,
         r -> r instanceof OcamlLibrary ? Optional.of(r.getBuildDeps()) : Optional.empty());
@@ -242,7 +243,7 @@ public class OcamlRuleBuilder {
     NativeLinkableInput nativeLinkableInput = getNativeLinkableInput(params.getBuildDeps());
     NativeLinkableInput bytecodeLinkableInput = getBytecodeLinkableInput(params.getBuildDeps());
     NativeLinkableInput cLinkableInput =
-        getCLinkableInput(defaultCxxPlatform, params.getBuildDeps());
+        getCLinkableInput(defaultCxxPlatform, resolver, params.getBuildDeps());
 
     ImmutableList<OcamlLibrary> ocamlInput =
         OcamlUtil.getTransitiveOcamlInput(params.getBuildDeps());
@@ -410,7 +411,7 @@ public class OcamlRuleBuilder {
     NativeLinkableInput nativeLinkableInput = getNativeLinkableInput(params.getBuildDeps());
     NativeLinkableInput bytecodeLinkableInput = getBytecodeLinkableInput(params.getBuildDeps());
     NativeLinkableInput cLinkableInput =
-        getCLinkableInput(defaultCxxPlatform, params.getBuildDeps());
+        getCLinkableInput(defaultCxxPlatform, resolver, params.getBuildDeps());
 
     ImmutableList<OcamlLibrary> ocamlInput =
         OcamlUtil.getTransitiveOcamlInput(params.getBuildDeps());

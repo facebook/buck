@@ -36,6 +36,7 @@ import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -182,20 +183,22 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableDeps() {
+  public Iterable<NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
     return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableDepsForPlatform(CxxPlatform cxxPlatform) {
+  public Iterable<NativeLinkable> getNativeLinkableDepsForPlatform(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
-    return getNativeLinkableDeps();
+    return getNativeLinkableDeps(ruleResolver);
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
+  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+      BuildRuleResolver ruleResolver) {
     return ImmutableList.of();
   }
 

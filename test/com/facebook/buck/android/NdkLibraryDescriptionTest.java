@@ -48,12 +48,12 @@ public class NdkLibraryDescriptionTest {
     }
 
     @Override
-    public Iterable<NativeLinkable> getNativeLinkableDeps() {
+    public Iterable<NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
       return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
     }
 
     @Override
-    public Iterable<NativeLinkable> getNativeLinkableExportedDeps() {
+    public Iterable<NativeLinkable> getNativeLinkableExportedDeps(BuildRuleResolver ruleResolver) {
       return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
     }
 

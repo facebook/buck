@@ -160,7 +160,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .setExportedDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
                 .build(resolver);
     assertThat(
-        lib.getNativeLinkableExportedDepsForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM),
+        lib.getNativeLinkableExportedDepsForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM, resolver),
         Matchers.contains(dep));
   }
 
@@ -275,11 +275,11 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
         Matchers.equalTo(NativeLinkableInput.of()));
 
     assertThat(
-        lib.getNativeLinkableExportedDepsForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM),
+        lib.getNativeLinkableExportedDepsForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM, resolver),
         Matchers.emptyIterable());
 
     assertThat(
-        lib.getNativeLinkableDepsForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM),
+        lib.getNativeLinkableDepsForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM, resolver),
         Matchers.emptyIterable());
 
     assertThat(lib.getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM), Matchers.anEmptyMap());

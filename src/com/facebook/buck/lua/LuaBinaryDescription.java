@@ -498,7 +498,8 @@ public class LuaBinaryDescription
 
       // Add shared libraries from all native linkables.
       for (NativeLinkable nativeLinkable :
-          NativeLinkables.getTransitiveNativeLinkables(cxxPlatform, nativeLinkableRoots.values())
+          NativeLinkables.getTransitiveNativeLinkables(
+                  cxxPlatform, ruleResolver, nativeLinkableRoots.values())
               .values()) {
         NativeLinkable.Linkage linkage = nativeLinkable.getPreferredLinkage(cxxPlatform);
         if (linkage != NativeLinkable.Linkage.STATIC) {

@@ -312,12 +312,14 @@ public class RustLibraryDescription
 
       // NativeLinkable
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableDeps() {
+      public Iterable<? extends NativeLinkable> getNativeLinkableDeps(
+          BuildRuleResolver ruleResolver) {
         return ImmutableList.of();
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
+      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+          BuildRuleResolver ruleResolver) {
         // We want to skip over all the transitive Rust deps, and only return non-Rust
         // deps at the edge of the graph
         ImmutableList.Builder<NativeLinkable> nativedeps = ImmutableList.builder();

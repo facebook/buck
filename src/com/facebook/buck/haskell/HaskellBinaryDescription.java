@@ -212,6 +212,7 @@ public class HaskellBinaryDescription
               CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
                   buildTarget,
                   projectFilesystem,
+                  resolver,
                   ruleFinder,
                   platform.getCxxPlatform(),
                   deps,

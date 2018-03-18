@@ -198,6 +198,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
       NativeLinkableInput nativeLinkableInput =
           NativeLinkables.getTransitiveNativeLinkableInput(
               cxxPlatform,
+              resolver,
               params.getBuildDeps(),
               Linker.LinkableDepType.SHARED,
               r -> r instanceof NdkLibrary ? Optional.of(r.getBuildDeps()) : Optional.empty());

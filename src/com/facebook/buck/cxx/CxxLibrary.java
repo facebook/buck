@@ -238,7 +238,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableDeps() {
+  public Iterable<NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
     if (!propagateLinkables) {
       return ImmutableList.of();
     }
@@ -248,7 +248,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableDepsForPlatform(CxxPlatform cxxPlatform) {
+  public Iterable<NativeLinkable> getNativeLinkableDepsForPlatform(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     if (!propagateLinkables) {
       return ImmutableList.of();
     }
@@ -261,7 +262,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
+  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+      BuildRuleResolver ruleResolver) {
     if (!propagateLinkables) {
       return ImmutableList.of();
     }
@@ -272,7 +274,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
-      CxxPlatform cxxPlatform) {
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     if (!propagateLinkables) {
       return ImmutableList.of();
     }
@@ -458,8 +460,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
       CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return Iterables.concat(
-        getNativeLinkableDepsForPlatform(cxxPlatform),
-        getNativeLinkableExportedDepsForPlatform(cxxPlatform));
+        getNativeLinkableDepsForPlatform(cxxPlatform, ruleResolver),
+        getNativeLinkableExportedDepsForPlatform(cxxPlatform, ruleResolver));
   }
 
   @Override

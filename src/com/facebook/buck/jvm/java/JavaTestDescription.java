@@ -247,7 +247,7 @@ public class JavaTestDescription
       if (useCxxLibraries.orElse(false)) {
         SymlinkTree nativeLibsSymlinkTree =
             buildNativeLibsSymlinkTreeRule(
-                buildTarget, projectFilesystem, ruleFinder, params, cxxPlatform);
+                buildTarget, projectFilesystem, resolver, ruleFinder, params, cxxPlatform);
 
         // If the cxxLibraryWhitelist is present, remove symlinks that were not requested.
         // They could point to old, invalid versions of the library in question.
@@ -302,12 +302,14 @@ public class JavaTestDescription
     public static SymlinkTree buildNativeLibsSymlinkTreeRule(
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
+        BuildRuleResolver ruleResolver,
         SourcePathRuleFinder ruleFinder,
         BuildRuleParams buildRuleParams,
         CxxPlatform cxxPlatform) {
       return CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
           buildTarget,
           projectFilesystem,
+          ruleResolver,
           ruleFinder,
           cxxPlatform,
           buildRuleParams.getBuildDeps(),
