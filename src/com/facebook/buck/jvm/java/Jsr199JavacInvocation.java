@@ -365,10 +365,10 @@ class Jsr199JavacInvocation implements Javac.Invocation {
 
     private boolean buildSuccessful() {
       return diagnostics
-          .getDiagnostics()
-          .stream()
-          .filter(diag -> diag.getKind() == Diagnostic.Kind.ERROR)
-          .count()
+              .getDiagnostics()
+              .stream()
+              .filter(diag -> diag.getKind() == Diagnostic.Kind.ERROR)
+              .count()
           == 0;
     }
 
@@ -567,10 +567,10 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                     ruleInfo,
                     () ->
                         diagnostics
-                            .getDiagnostics()
-                            .stream()
-                            .filter(diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR)
-                            .count()
+                                .getDiagnostics()
+                                .stream()
+                                .filter(diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR)
+                                .count()
                             > 0,
                     abiGenerationMode.getDiagnosticKindForSourceOnlyAbiCompatibility());
           }
