@@ -4,12 +4,11 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-android_library(
+load("//android/buck_imports:visible_android_library.bzl", "visible_android_library")
+
+visible_android_library(
     name = "lib",
     srcs = glob(["*.java"]),
-    visibility = [
-        "PUBLIC",
-    ],
     deps = [
         "//android/cxx:jni",
         "//android/java/com/facebook/buck/demo/capitalize:capitalize",
