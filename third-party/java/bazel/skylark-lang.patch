@@ -2300,3 +2300,23 @@ index 5623847960..c087cb1ceb 100644
 -    return cloneBuilder(this.type);
 -  }
  }
+diff --git i/src/main/java/com/google/devtools/build/lib/syntax/BaseFunction.java w/src/main/java/com/google/devtools/build/lib/syntax/BaseFunction.java
+index e445e46cf8..21e3931b1f 100644
+--- i/src/main/java/com/google/devtools/build/lib/syntax/BaseFunction.java
++++ w/src/main/java/com/google/devtools/build/lib/syntax/BaseFunction.java
+@@ -431,11 +431,13 @@ public abstract class BaseFunction implements SkylarkValue {
+       @Nullable FuncallExpression ast,
+       Environment env)
+       throws EvalException, InterruptedException {
+-    Preconditions.checkState(isConfigured(), "Function %s was not configured", getName());
+-
+     // ast is null when called from Java (as there's no Skylark call site).
+     Location loc = ast == null ? Location.BUILTIN : ast.getLocation();
+ 
++    if (!isConfigured()) {
++      throw new EvalException(loc, String.format("Function %s was not configured", getName()));
++    }
++
+     Object[] arguments = processArguments(args, kwargs, loc, env);
+     canonicalizeArguments(arguments, loc);
+ 
