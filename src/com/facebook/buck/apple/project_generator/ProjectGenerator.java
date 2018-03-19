@@ -1104,21 +1104,15 @@ public class ProjectGenerator {
 
         ImmutableSet<PBXFileReference> targetNodeDeps =
             collectRecursiveLibraryDependencies(targetNode);
-        ImmutableSet<PBXFileReference> excludedDeps =
-            targetNode
-                .castArg(AppleTestDescriptionArg.class)
-                .flatMap(
-                    testNode -> {
-                      // only application tests share a runtime with their host application and need
-                      // to avoid linking dependencies already linked by the host. we know this is
-                      // an application test if it is not a UI test and has a bundle loader.
-                      return testNode.getConstructorArg().getIsUiTest()
-                          ? Optional.empty()
-                          : bundleLoaderNode;
-                    })
-                .map(this::collectRecursiveLibraryDependencies)
-                .orElse(ImmutableSet.of());
-        mutator.setArchives(Sets.difference(targetNodeDeps, excludedDeps));
+        if (isTargetNodeApplicationTestTarget(targetNode, bundleLoaderNode)) {
+          ImmutableSet<PBXFileReference> bundleLoaderDeps =
+              bundleLoaderNode.isPresent()
+                  ? collectRecursiveLibraryDependencies(bundleLoaderNode.get())
+                  : ImmutableSet.of();
+          mutator.setArchives(Sets.difference(targetNodeDeps, bundleLoaderDeps));
+        } else {
+          mutator.setArchives(targetNodeDeps);
+        }
       }
 
       if (isFocusedOnTarget) {
@@ -1506,7 +1500,7 @@ public class ProjectGenerator {
                         Iterables.concat(
                             targetNode.getConstructorArg().getLinkerFlags(),
                             collectRecursiveExportedLinkerFlags(targetNode))))
-                .addAll(collectRecursiveForceLoadLinkerFlags(targetNode))
+                .addAll(collectRecursiveForceLoadLinkerFlags(targetNode, bundleLoaderNode))
                 .addAll(swiftDebugLinkerFlagsBuilder.build())
                 .build();
 
@@ -3119,10 +3113,37 @@ public class ProjectGenerator {
         .toList();
   }
 
-  private ImmutableList<String> collectRecursiveForceLoadLinkerFlags(TargetNode<?, ?> targetNode) {
+  private boolean isTargetNodeApplicationTestTarget(
+      TargetNode<?, ?> targetNode,
+      Optional<TargetNode<AppleBundleDescriptionArg, ?>> bundleLoaderNode) {
+    // This is an application test if it is not a UI test and has a bundle loader.
+    Optional<TargetNode<AppleTestDescriptionArg, ?>> testNode =
+        targetNode.castArg(AppleTestDescriptionArg.class);
+    if (testNode.isPresent() && bundleLoaderNode.isPresent()) {
+      AppleTestDescriptionArg testArg = testNode.get().getConstructorArg();
+      return !testArg.getIsUiTest();
+    } else {
+      return false;
+    }
+  }
+
+  private ImmutableList<String> collectRecursiveForceLoadLinkerFlags(
+      TargetNode<?, ?> targetNode,
+      Optional<TargetNode<AppleBundleDescriptionArg, ?>> bundleLoaderNode) {
 
     if (shouldAddLinkerFlagsForLinkWholeLibraries()) {
-      return collectRecursiveLibraryDepTargetsWithOptions(targetNode, false)
+      FluentIterable<TargetNode<?, ?>> allDeps =
+          collectRecursiveLibraryDepTargetsWithOptions(targetNode, false);
+
+      // Don't duplicate force_load params from the test host app if this is an app test.
+      if (isTargetNodeApplicationTestTarget(targetNode, bundleLoaderNode)
+          && bundleLoaderNode.isPresent()) {
+        FluentIterable<TargetNode<?, ?>> bundleDeps =
+            collectRecursiveLibraryDepTargetsWithOptions(bundleLoaderNode.get(), false);
+        Set<TargetNode<?, ?>> directDeps = Sets.difference(allDeps.toSet(), bundleDeps.toSet());
+        allDeps = FluentIterable.from(ImmutableSet.copyOf(directDeps));
+      }
+      return allDeps
           .append(targetNode)
           .transform(
               input ->
