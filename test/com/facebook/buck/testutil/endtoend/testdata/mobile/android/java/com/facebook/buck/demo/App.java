@@ -11,6 +11,7 @@ package com.facebook.buck.demo;
 import android.app.Activity;
 import android.os.Bundle;
 import android.widget.TextView;
+import com.facebook.buck.demo.capitalize.CapitalizeUtils;
 
 public class App extends Activity {
   @Override
@@ -21,7 +22,7 @@ public class App extends Activity {
     setContentView(R.layout.hello);
     TextView textView = (TextView) findViewById(R.id.hello_text);
     try {
-      String message = new Hello().getHelloString();
+      String message = CapitalizeUtils.capitalize(new Hello().getHelloString());
       textView.setText(message);
     } catch (Exception e) {
       textView.setText(String.format("Unable to load jni library! %s", e.getMessage()));

@@ -7,5 +7,5 @@
  */
 
 const char *helloString() {
-  return "E2E Test";
+  return "e2E Test";
 }

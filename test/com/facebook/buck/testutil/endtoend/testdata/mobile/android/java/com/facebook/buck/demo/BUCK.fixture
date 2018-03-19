@@ -12,6 +12,7 @@ android_library(
     ],
     deps = [
         "//android/cxx:jni",
+        "//android/java/com/facebook/buck/demo/capitalize:capitalize",
         "//android/resources:res",
     ],
 )

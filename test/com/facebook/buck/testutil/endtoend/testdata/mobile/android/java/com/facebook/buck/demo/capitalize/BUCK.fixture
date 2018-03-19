@@ -1,0 +1,23 @@
+# Copyright 2018-present, Facebook, Inc.
+# All rights reserved.
+#
+# This source code is licensed under the license found in the
+# LICENSE file in the root directory of this source tree.
+
+android_prebuilt_aar(
+    name = "prebuilt_aar",
+    aar = "prebuilt_capitalize.aar",
+)
+
+android_library(
+    name = "capitalize",
+    srcs = [
+        "CapitalizeUtils.java",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":prebuilt_aar",
+    ],
+)
