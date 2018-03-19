@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.widget.TextView;
 import com.facebook.buck.BuildConfig;
 import com.facebook.buck.demo.capitalize.CapitalizeUtils;
+import com.facebook.buck.demo.target.AndroidTarget;
 
 public class App extends Activity {
   @Override
@@ -25,8 +26,10 @@ public class App extends Activity {
     try {
       String message =
           String.format(
-              "%s - id: %s",
-              CapitalizeUtils.capitalize(new Hello().getHelloString()), BuildConfig.BUILD_ID);
+              "%s - id: %s - target: %s",
+              CapitalizeUtils.capitalize(new Hello().getHelloString()),
+              BuildConfig.BUILD_ID,
+              AndroidTarget.getTarget());
       textView.setText(message);
     } catch (Exception e) {
       textView.setText(String.format("Unable to load jni library! %s", e.getMessage()));

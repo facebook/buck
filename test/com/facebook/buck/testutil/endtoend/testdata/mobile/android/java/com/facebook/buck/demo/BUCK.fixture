@@ -13,6 +13,7 @@ visible_android_library(
         "//android/configs:build_config",
         "//android/cxx:jni",
         "//android/java/com/facebook/buck/demo/capitalize:capitalize",
+        "//android/java/com/facebook/buck/demo/target:target_jar",
         "//android/resources:res",
     ],
 )
