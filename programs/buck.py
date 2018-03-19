@@ -61,7 +61,12 @@ def _get_java_version():
     match = re.search("java version \"(?P<version>.+)\"", java_version)
     if not match:
         return None
-    return match.group("version").split(".")[1]
+    pieces = match.group("version").split(".")
+    if pieces[0] != "1":
+        # versions starting at 9 look like "9.0.4"
+        return pieces[0]
+    # versions <9 look like "1.8.0_144"
+    return pieces[1]
 
 
 def _warn_about_wrong_java_version(required_version, actual_version):
