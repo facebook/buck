@@ -1,7 +1,7 @@
 java_library(
     name = "javax",
     srcs = [
-        "SynchronizedToolProvider.java",
+        glob('*.java'),
     ],
     visibility = ["PUBLIC"],
 )
