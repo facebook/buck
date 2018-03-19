@@ -8,6 +8,7 @@ android_binary(
     name = "demo-app",
     keystore = "//android/keystores:debug",
     manifest = "//android/manifest:generated_manifest",
+    proguard_config = "//android/configs:dont_obfuscate",
     deps = [
         "//android/java/com/facebook/buck/demo:lib",
     ],
