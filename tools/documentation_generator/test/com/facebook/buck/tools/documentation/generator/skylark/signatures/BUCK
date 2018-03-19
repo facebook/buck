@@ -1,0 +1,8 @@
+java_library(
+    name = "signatures",
+    srcs = ["DummyFunction.java"],
+    visibility = ["//tools/documentation_generator/test/..."],
+    deps = [
+        "//third-party/java/bazel:skylark-lang",
+    ],
+)

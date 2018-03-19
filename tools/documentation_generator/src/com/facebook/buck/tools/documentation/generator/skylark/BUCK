@@ -1,0 +1,10 @@
+java_library(
+    name = "collector",
+    srcs = ["SignatureCollector.java"],
+    visibility = ["//tools/documentation_generator/..."],
+    deps = [
+        "//src/com/facebook/buck/util/function:function",
+        "//third-party/java/bazel:skylark-lang",
+        "//third-party/java/guava:guava",
+    ],
+)
