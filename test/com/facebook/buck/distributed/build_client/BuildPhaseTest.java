@@ -125,6 +125,7 @@ public class BuildPhaseTest {
   private ClientStatsTracker distBuildClientStatsTracker;
   private ConsoleEventsDispatcher consoleEventsDispatcher;
   private BuildPhase buildPhase;
+  private BuildExecutorArgs executorArgs;
 
   @Before
   public void setUp() throws IOException, InterruptedException {
@@ -140,10 +141,33 @@ public class BuildPhaseTest {
     stampedeId = new StampedeId();
     stampedeId.setId("uber-cool-stampede-id");
     consoleEventsDispatcher = new ConsoleEventsDispatcher(mockEventBus);
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of("stampede", ImmutableMap.of("minion_queue", MINION_QUEUE_NAME)))
+            .build();
+    executorArgs =
+        BuildExecutorArgs.builder()
+            .setArtifactCacheFactory(new NoopArtifactCache.NoopArtifactCacheFactory())
+            .setBuckEventBus(mockEventBus)
+            .setBuildInfoStoreManager(new BuildInfoStoreManager())
+            .setClock(new DefaultClock())
+            .setConsole(new TestConsole())
+            .setPlatform(Platform.detect())
+            .setProjectFilesystemFactory(new FakeProjectFilesystemFactory())
+            .setRuleKeyConfiguration(
+                ConfigRuleKeyConfigurationFactory.create(
+                    FakeBuckConfig.builder().build(),
+                    BuckPluginManagerFactory.createPluginManager()))
+            .setRootCell(
+                new TestCellBuilder()
+                    .setFilesystem(new FakeProjectFilesystem())
+                    .setBuckConfig(buckConfig)
+                    .build())
+            .build();
   }
 
   private void createBuildPhase(
-      BuildExecutorArgs executorArgs,
       ImmutableSet<BuildTarget> topLevelTargets,
       ActionAndTargetGraphs graphs,
       Optional<CachingBuildEngineDelegate> buildEngineDelegate) {
@@ -163,7 +187,7 @@ public class BuildPhaseTest {
   }
 
   private void createBuildPhase() {
-    createBuildPhase(null, ImmutableSet.of(), null, Optional.empty());
+    createBuildPhase(ImmutableSet.of(), null, Optional.empty());
   }
 
   @After
@@ -179,32 +203,6 @@ public class BuildPhaseTest {
   public void testCoordinatorIsRunInLocalCoordinatorMode()
       throws IOException, InterruptedException {
     // Create the full BuildPhase for local coordinator mode.
-    BuckConfig buckConfig =
-        FakeBuckConfig.builder()
-            .setSections(
-                ImmutableMap.of("stampede", ImmutableMap.of("minion_queue", MINION_QUEUE_NAME)))
-            .build();
-
-    BuildExecutorArgs executorArgs =
-        BuildExecutorArgs.builder()
-            .setArtifactCacheFactory(new NoopArtifactCache.NoopArtifactCacheFactory())
-            .setBuckEventBus(mockEventBus)
-            .setBuildInfoStoreManager(new BuildInfoStoreManager())
-            .setClock(new DefaultClock())
-            .setConsole(new TestConsole())
-            .setPlatform(Platform.detect())
-            .setProjectFilesystemFactory(new FakeProjectFilesystemFactory())
-            .setRuleKeyConfiguration(
-                ConfigRuleKeyConfigurationFactory.create(
-                    FakeBuckConfig.builder().build(),
-                    BuckPluginManagerFactory.createPluginManager()))
-            .setRootCell(
-                new TestCellBuilder()
-                    .setFilesystem(new FakeProjectFilesystem())
-                    .setBuckConfig(buckConfig)
-                    .build())
-            .build();
-
     BuildRuleResolver resolver = CustomBuildRuleResolverFactory.createSimpleResolver();
     ImmutableSet<BuildTarget> targets =
         ImmutableSet.of(BuildTargetFactory.newInstance(CustomBuildRuleResolverFactory.ROOT_TARGET));
@@ -219,10 +217,7 @@ public class BuildPhaseTest {
     FileHashCache fileHashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of());
 
     createBuildPhase(
-        executorArgs,
-        targets,
-        graphs,
-        Optional.of(new LocalCachingBuildEngineDelegate(fileHashCache)));
+        targets, graphs, Optional.of(new LocalCachingBuildEngineDelegate(fileHashCache)));
 
     // Set expectations.
     mockDistBuildService.reportCoordinatorIsAlive(stampedeId);

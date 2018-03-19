@@ -169,6 +169,10 @@ public class DistBuildConfig {
       "pending_file_materialization_timeout_secs";
   private static final long DEFAULT_FILE_MATERIALIZATION_TIMEOUT_SECS = 30;
 
+  private static final String CACHE_SYNCHRONIZATION_SAFETY_MARGIN_MILLIS =
+      "cache_synchronization_safety_margin_millis";
+  private static final int DEFAULT_CACHE_SYNCHRONIZATION_SAFETY_MARGIN_MILLIS = 5000;
+
   private final SlbBuckConfig frontendConfig;
   private final BuckConfig buckConfig;
 
@@ -430,6 +434,12 @@ public class DistBuildConfig {
 
   public Optional<String> getAutoDistributedBuildMessage() {
     return buckConfig.getValue(STAMPEDE_SECTION, AUTO_STAMPEDE_BUILD_MESSAGE);
+  }
+
+  public int getCacheSynchronizationSafetyMarginMillis() {
+    return buckConfig
+        .getInteger(STAMPEDE_SECTION, CACHE_SYNCHRONIZATION_SAFETY_MARGIN_MILLIS)
+        .orElse(DEFAULT_CACHE_SYNCHRONIZATION_SAFETY_MARGIN_MILLIS);
   }
 
   public OkHttpClient createOkHttpClient() {

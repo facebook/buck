@@ -105,7 +105,6 @@ public class BuildPhase {
 
   private static final int WAIT_FOR_ALL_WORKER_FINAL_STATUS_TIMEOUT_MILLIS = 6000;
   private static final int WAIT_FOR_ALL_BUILD_EVENTS_TIMEOUT_MILLIS = 5000;
-  private static final int CACHE_SYNCHRONIZATION_SAFETY_MARGIN_MILLIS = 5000;
 
   private final BuildExecutorArgs buildExecutorArgs;
   private final ImmutableSet<BuildTarget> topLevelTargets;
@@ -155,7 +154,10 @@ public class BuildPhase {
     this.consoleEventsDispatcher = consoleEventsDispatcher;
     this.buildRuleEventManager =
         new BuildRuleEventManager(
-            remoteBuildRuleCompletionNotifier, clock, CACHE_SYNCHRONIZATION_SAFETY_MARGIN_MILLIS);
+            remoteBuildRuleCompletionNotifier,
+            clock,
+            new DistBuildConfig(buildExecutorArgs.getBuckConfig())
+                .getCacheSynchronizationSafetyMarginMillis());
   }
 
   public BuildPhase(
