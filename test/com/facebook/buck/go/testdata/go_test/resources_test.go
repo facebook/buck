@@ -1,4 +1,4 @@
-package test
+package lib_test
 
 import (
     "io/ioutil"

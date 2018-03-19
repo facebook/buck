@@ -135,8 +135,8 @@ public class GoBinaryIntegrationTest {
         workspace.runBuckCommand("run", "//:hello").assertSuccess().getStdout(),
         Matchers.containsString("Hello, world!"));
     workspace.writeContentsToPath(
-        workspace.getFileContents("messenger/printer.go").replace('!', '?'),
-        "messenger/printer.go");
+        workspace.getFileContents("messenger/printer/printer.go").replace('!', '?'),
+        "messenger/printer/printer.go");
     assertThat(
         workspace.runBuckCommand("run", "//:hello").assertSuccess().getStdout(),
         Matchers.containsString("Hello, world?"));
@@ -205,5 +205,13 @@ public class GoBinaryIntegrationTest {
     // Run another build and verify it successfully built locally.
     workspace.runBuckBuild("//:main").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:main");
+  }
+
+  @Test
+  public void buildConstraints() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "build_constraints", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:family").assertSuccess();
   }
 }

@@ -1,7 +1,7 @@
 go_library(
     name = "base",
     package_name = "buck_base",
-    srcs = ["base.go"],
+    srcs = ["buck_base/base.go"],
 )
 
 go_library(
@@ -52,13 +52,13 @@ go_test(
 
 go_test(
     name = "test-with-resources",
-    srcs = ["test_with_resources.go"],
+    srcs = ["resources_test.go"],
     resources = ["testdata/input"],
 )
 
 go_test(
     name = "test-spinning",
-    srcs = ["test_spinning.go"],
+    srcs = ["spinning_test.go"],
     test_rule_timeout_ms = 500,
 )
 

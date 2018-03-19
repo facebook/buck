@@ -19,6 +19,7 @@ package com.facebook.buck.go;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.file.WriteFile;
+import com.facebook.buck.go.GoListStep.FileType;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -52,6 +53,7 @@ import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -106,7 +108,8 @@ abstract class GoDescriptors {
       List<String> assemblerFlags,
       GoPlatform platform,
       Iterable<BuildTarget> deps,
-      ImmutableSortedSet<BuildTarget> cgoDeps) {
+      ImmutableSortedSet<BuildTarget> cgoDeps,
+      List<FileType> goFileTypes) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -125,9 +128,8 @@ abstract class GoDescriptors {
     resolver.addToIndex(symlinkTree);
 
     ImmutableList.Builder<SourcePath> extraAsmOutputsBuilder = ImmutableList.builder();
-    ImmutableSet.Builder<SourcePath> compileSrcBuilder = ImmutableSet.builder();
-    compileSrcBuilder.addAll(srcs);
 
+    ImmutableSet.Builder<SourcePath> generatedSrcBuilder = ImmutableSet.builder();
     for (BuildTarget dep : cgoDeps) {
       BuildRule rule = resolver.requireRule(dep);
       if (!(rule instanceof CGoLibrary)) {
@@ -136,25 +138,21 @@ abstract class GoDescriptors {
       }
 
       CGoLibrary lib = (CGoLibrary) rule;
-      compileSrcBuilder.addAll(lib.getGeneratedGoSource());
+      generatedSrcBuilder.addAll(lib.getGeneratedGoSource());
       extraAsmOutputsBuilder.add(lib.getOutput());
       linkableDepsBuilder
           .addAll(ruleFinder.filterBuildRuleInputs(lib.getOutput()))
           .addAll(ruleFinder.filterBuildRuleInputs(lib.getGeneratedGoSource()));
     }
 
-    ImmutableSet<SourcePath> compileSrcs = compileSrcBuilder.build();
-    ImmutableList<BuildRule> srcDependencies = getDependenciesFromSources(ruleFinder, compileSrcs);
-
     LOG.verbose("Symlink tree for compiling %s: %s", buildTarget, symlinkTree.getLinks());
-
     return new GoCompile(
         buildTarget,
         projectFilesystem,
         params
             .copyAppendingExtraDeps(linkableDepsBuilder.build())
             .copyAppendingExtraDeps(ImmutableList.of(symlinkTree))
-            .copyAppendingExtraDeps(srcDependencies),
+            .copyAppendingExtraDeps(getDependenciesFromSources(ruleFinder, srcs)),
         symlinkTree,
         packageName,
         getPackageImportMap(
@@ -164,15 +162,14 @@ abstract class GoDescriptors {
                 .stream()
                 .flatMap(input -> input.getGoLinkInput().keySet().stream())
                 .collect(ImmutableList.toImmutableList())),
-        compileSrcBuilder.build(),
+        srcs,
+        generatedSrcBuilder.build(),
+        goToolchain,
         ImmutableList.copyOf(compilerFlags),
-        goToolchain.getCompiler(),
         ImmutableList.copyOf(assemblerFlags),
-        goToolchain.getAssemblerIncludeDirs(),
-        goToolchain.getAssembler(),
-        goToolchain.getPacker(),
         platform,
-        extraAsmOutputsBuilder.build());
+        extraAsmOutputsBuilder.build(),
+        goFileTypes);
   }
 
   @VisibleForTesting
@@ -237,7 +234,8 @@ abstract class GoDescriptors {
                 .stream()
                 .map(BuildRule::getBuildTarget)
                 .collect(ImmutableList.toImmutableList()),
-            cgoDeps);
+            cgoDeps,
+            Arrays.asList(FileType.GoFiles));
     resolver.addToIndex(library);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
