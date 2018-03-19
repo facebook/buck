@@ -10,6 +10,7 @@ visible_android_library(
     name = "lib",
     srcs = glob(["*.java"]),
     deps = [
+        "//android/configs:build_config",
         "//android/cxx:jni",
         "//android/java/com/facebook/buck/demo/capitalize:capitalize",
         "//android/resources:res",
