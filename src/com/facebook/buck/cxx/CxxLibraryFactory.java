@@ -269,7 +269,7 @@ public class CxxLibraryFactory {
         buildTarget,
         projectFilesystem,
         metadataRuleParams,
-        resolver,
+        resolver.getParallelizer(),
         args.getPrivateCxxDeps(),
         args.getExportedCxxDeps(),
         hasObjects.negate(),

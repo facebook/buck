@@ -568,7 +568,12 @@ abstract class AbstractCxxSourceRuleFactory {
 
     return Optional.of(
         requirePrecompiledHeaderBuildRule(
-            preprocessorDelegateValue, source.getType(), source.getFlags()));
+            preprocessorDelegateValue,
+            source.getType(),
+            source.getFlags(),
+            getResolver(),
+            getRuleFinder(),
+            getPathResolver()));
   }
 
   @VisibleForTesting
@@ -609,7 +614,10 @@ abstract class AbstractCxxSourceRuleFactory {
   private CxxPrecompiledHeader requirePrecompiledHeaderBuildRule(
       PreprocessorDelegateCacheValue preprocessorDelegateCacheValue,
       CxxSource.Type sourceType,
-      ImmutableList<String> sourceFlags) {
+      ImmutableList<String> sourceFlags,
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
 
     // This method should be called only if prefix/precompiled header param present.
     Preconditions.checkState(getPreInclude().isPresent());
@@ -624,7 +632,10 @@ abstract class AbstractCxxSourceRuleFactory {
         preprocessorDelegateCacheValue::getBaseHash,
         getCxxPlatform(),
         sourceType,
-        sourceFlags);
+        sourceFlags,
+        ruleResolver,
+        ruleFinder,
+        pathResolver);
   }
 
   public ImmutableSet<CxxInferCapture> requireInferCaptureBuildRules(

@@ -274,7 +274,7 @@ public class PythonLibraryDescriptionTest {
             PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM);
     assertThat(
         components.getModules().values(),
-        Matchers.contains(src.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM)));
+        Matchers.contains(src.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, resolver)));
   }
 
   @Test

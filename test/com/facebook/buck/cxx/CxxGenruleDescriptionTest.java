@@ -273,13 +273,13 @@ public class CxxGenruleDescriptionTest {
     Genrule genrule =
         (Genrule)
             ruleFinder
-                .getRule(rule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM))
+                .getRule(rule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, resolver))
                 .orElseThrow(AssertionError::new);
     assertThat(
         Arg.stringify(Optionals.toStream(genrule.getCmd()).toOnceIterable(), pathResolver),
         Matchers.contains(
             pathResolver
-                .getAbsolutePath(dep.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM))
+                .getAbsolutePath(dep.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, resolver))
                 .toString()));
   }
 

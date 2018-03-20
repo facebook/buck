@@ -287,12 +287,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       return super.createBuildRule(
           context, buildTarget.withAppendedFlavors(cxxPlatform.get().getFlavor()), params, args);
     }
-    return new CxxGenrule(
-        buildTarget,
-        context.getProjectFilesystem(),
-        params,
-        context.getBuildRuleResolver(),
-        args.getOut());
+    return new CxxGenrule(buildTarget, context.getProjectFilesystem(), params, args.getOut());
   }
 
   @Override

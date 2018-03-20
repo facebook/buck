@@ -152,10 +152,8 @@ public class CxxPrecompiledHeaderRuleTest {
         target,
         new FakeProjectFilesystem(),
         deps,
-        ruleResolver,
-        pathResolver,
-        ruleFinder,
-        headerSourcePath);
+        headerSourcePath,
+        pathResolver.getAbsolutePath(headerSourcePath));
   }
 
   public CxxSource.Builder newCxxSourceBuilder() {

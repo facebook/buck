@@ -59,7 +59,7 @@ public class CxxLocationMacroExpanderTest {
         expanded,
         Matchers.equalTo(
             pathResolver
-                .getAbsolutePath(cxxGenrule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM))
+                .getAbsolutePath(cxxGenrule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, resolver))
                 .toString()));
   }
 }

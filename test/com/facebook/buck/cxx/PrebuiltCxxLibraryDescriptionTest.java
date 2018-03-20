@@ -265,7 +265,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary library =
         (PrebuiltCxxLibrary) libraryBuilder.build(resolver, filesystem, targetGraph);
     SourcePath staticLibraryPath =
-        library.getStaticLibrary(CxxPlatformUtils.DEFAULT_PLATFORM).get();
+        library.getStaticLibrary(CxxPlatformUtils.DEFAULT_PLATFORM, resolver).get();
     assertThat(
         pathResolver.getAbsolutePath(staticLibraryPath),
         Matchers.equalTo(pathResolver.getAbsolutePath(genrule.getSourcePathToOutput())));
@@ -289,11 +289,12 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary library =
         (PrebuiltCxxLibrary) libraryBuilder.build(resolver, filesystem, targetGraph);
     SourcePath staticLibraryPath =
-        library.getStaticLibrary(CxxPlatformUtils.DEFAULT_PLATFORM).get();
+        library.getStaticLibrary(CxxPlatformUtils.DEFAULT_PLATFORM, resolver).get();
     assertThat(
         pathResolver.getAbsolutePath(staticLibraryPath),
         Matchers.equalTo(
-            pathResolver.getAbsolutePath(genrule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM))));
+            pathResolver.getAbsolutePath(
+                genrule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, resolver))));
   }
 
   @Test
@@ -309,7 +310,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary library =
         (PrebuiltCxxLibrary) libraryBuilder.build(resolver, filesystem, targetGraph);
     SourcePath staticLibraryPath =
-        library.getStaticLibrary(CxxPlatformUtils.DEFAULT_PLATFORM).get();
+        library.getStaticLibrary(CxxPlatformUtils.DEFAULT_PLATFORM, resolver).get();
     assertThat(
         MorePaths.pathWithUnixSeparators(pathResolver.getAbsolutePath(staticLibraryPath)),
         Matchers.containsString(String.format("two/%s/libtarget.a", "lib")));
@@ -388,10 +389,10 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary library =
         (PrebuiltCxxLibrary) libraryBuilder.build(resolver, filesystem, targetGraph);
     assertThat(
-        pathResolver.getRelativePath(library.getStaticLibrary(platform1).get()),
+        pathResolver.getRelativePath(library.getStaticLibrary(platform1, resolver).get()),
         Matchers.equalTo(TARGET.getBasePath().resolve("libs/PLATFORM1/libtest-PLATFORM1.a")));
     assertThat(
-        pathResolver.getRelativePath(library.getStaticLibrary(platform2).get()),
+        pathResolver.getRelativePath(library.getStaticLibrary(platform2, resolver).get()),
         Matchers.equalTo(TARGET.getBasePath().resolve("libs/PLATFORM2/libtest-PLATFORM2.a")));
   }
 

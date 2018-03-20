@@ -38,7 +38,6 @@ import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -165,10 +164,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       PrebuiltCxxLibraryGroupDescriptionArg args) {
-    BuildRuleResolver resolverLocal = context.getBuildRuleResolver();
-    SourcePathRuleFinder ruleFinderLocal = new SourcePathRuleFinder(resolverLocal);
-    return new CustomPrebuiltCxxLibrary(
-        buildTarget, context.getProjectFilesystem(), params, resolverLocal, ruleFinderLocal) {
+    return new CustomPrebuiltCxxLibrary(buildTarget, context.getProjectFilesystem(), params) {
 
       private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
           new TransitiveCxxPreprocessorInputCache(this);
@@ -242,6 +238,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
         if (!isPlatformSupported(cxxPlatform)) {
           return NativeLinkableInput.of();
         }
+        SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
         NativeLinkableInput.Builder builder = NativeLinkableInput.builder();
         switch (type) {
           case STATIC:
@@ -304,7 +301,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
       @Override
       public boolean supportsOmnibusLinking(
           CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
-        return getPreferredLinkage(cxxPlatform, this.ruleResolver) != Linkage.SHARED;
+        return getPreferredLinkage(cxxPlatform, ruleResolver) != Linkage.SHARED;
       }
 
       @Override
@@ -347,27 +344,10 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
   public abstract static class CustomPrebuiltCxxLibrary
       extends NoopBuildRuleWithDeclaredAndExtraDeps
       implements AbstractCxxLibrary, CacheableBuildRule {
-    protected BuildRuleResolver ruleResolver;
-    protected SourcePathRuleFinder ruleFinder;
 
     public CustomPrebuiltCxxLibrary(
-        BuildTarget buildTarget,
-        ProjectFilesystem projectFilesystem,
-        BuildRuleParams params,
-        BuildRuleResolver ruleResolver,
-        SourcePathRuleFinder ruleFinder) {
+        BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
       super(buildTarget, projectFilesystem, params);
-      this.ruleResolver = ruleResolver;
-      this.ruleFinder = ruleFinder;
-    }
-
-    @Override
-    public void updateBuildRuleResolver(
-        BuildRuleResolver ruleResolver,
-        SourcePathRuleFinder ruleFinder,
-        SourcePathResolver pathResolver) {
-      this.ruleResolver = ruleResolver;
-      this.ruleFinder = ruleFinder;
     }
   }
 

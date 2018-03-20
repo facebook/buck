@@ -95,10 +95,8 @@ abstract class AbstractPreIncludeFactory {
                               prefixTarget,
                               getProjectFilesystem(),
                               ImmutableSortedSet.of(),
-                              getRuleResolver(),
-                              getPathResolver(),
-                              getRuleFinder(),
-                              getPrefixHeader().get())));
+                              getPrefixHeader().get(),
+                              getPathResolver().getAbsolutePath(getPrefixHeader().get()))));
     }
 
     if (getPrecompiledHeader().isPresent()) {

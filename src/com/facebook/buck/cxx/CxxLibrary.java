@@ -43,6 +43,7 @@ import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.concurrent.Parallelizer;
 import com.facebook.buck.util.function.QuadFunction;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
@@ -75,8 +76,6 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
         NativeLinkTarget,
         CacheableBuildRule {
 
-  private BuildRuleResolver ruleResolver;
-  private SourcePathRuleFinder ruleFinder;
   private Set<BuildRule> implicitDepsForCaching = Sets.newConcurrentHashSet();
 
   private final CxxDeps deps;
@@ -114,7 +113,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
+      Parallelizer preprocessorInputCacheParallelizer,
       CxxDeps deps,
       CxxDeps exportedDeps,
       Predicate<CxxPlatform> headerOnly,
@@ -136,8 +135,6 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       boolean reexportAllHeaderDependencies,
       Optional<CxxLibraryDescriptionDelegate> delegate) {
     super(buildTarget, projectFilesystem, params);
-    this.ruleResolver = ruleResolver;
-    this.ruleFinder = new SourcePathRuleFinder(ruleResolver);
     this.deps = deps;
     this.exportedDeps = exportedDeps;
     this.headerOnly = headerOnly;
@@ -155,7 +152,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     this.reexportAllHeaderDependencies = reexportAllHeaderDependencies;
     this.delegate = delegate;
     this.transitiveCxxPreprocessorInputCache =
-        new TransitiveCxxPreprocessorInputCache(this, ruleResolver.getParallelizer());
+        new TransitiveCxxPreprocessorInputCache(this, preprocessorInputCacheParallelizer);
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
@@ -179,7 +176,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   private CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility) {
+      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility, BuildRuleResolver ruleResolver) {
     // Handle via metadata query.
     CxxPreprocessorInput preprocessorInput =
         CxxLibraryDescription.queryMetadataCxxPreprocessorInput(
@@ -188,6 +185,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
     // Make sure we save preprocessor deps, which won't show up under buildDeps or runtimeDeps,
     // for the action graph cache.
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     for (BuildRule dep : preprocessorInput.getDeps(ruleResolver, ruleFinder)) {
       implicitDepsForCaching.add(dep);
     }
@@ -199,7 +197,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   public CxxPreprocessorInput getCxxPreprocessorInput(
       CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     CxxPreprocessorInput publicHeaders =
-        getPublicCxxPreprocessorInputExcludingDelegate(cxxPlatform);
+        getPublicCxxPreprocessorInputExcludingDelegate(cxxPlatform, ruleResolver);
     Optional<CxxPreprocessorInput> pluginHeaders =
         delegate.flatMap(p -> p.getPreprocessorInput(getBuildTarget(), ruleResolver, cxxPlatform));
 
@@ -214,15 +212,15 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
    * Returns public headers excluding contribution from any {@link CxxLibraryDescriptionDelegate}.
    */
   public CxxPreprocessorInput getPublicCxxPreprocessorInputExcludingDelegate(
-      CxxPlatform cxxPlatform) {
-    return getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC);
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+    return getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC, ruleResolver);
   }
 
   @Override
   public CxxPreprocessorInput getPrivateCxxPreprocessorInput(
       CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     CxxPreprocessorInput privateInput =
-        getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PRIVATE);
+        getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PRIVATE, ruleResolver);
     Optional<CxxPreprocessorInput> delegateInput =
         delegate.flatMap(
             p -> p.getPrivatePreprocessorInput(getBuildTarget(), ruleResolver, cxxPlatform));
@@ -347,6 +345,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
         Archive archive =
             (Archive)
                 requireBuildRule(
+                    ruleResolver,
                     cxxPlatform.getFlavor(),
                     type == Linker.LinkableDepType.STATIC
                         ? CxxDescriptionEnhancer.STATIC_FLAVOR
@@ -366,6 +365,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       } else {
         BuildRule rule =
             requireBuildRule(
+                ruleResolver,
                 cxxPlatform.getFlavor(),
                 cxxPlatform.getSharedLibraryInterfaceParams().isPresent()
                     ? CxxLibraryDescription.Type.SHARED_INTERFACE.getFlavor()
@@ -401,7 +401,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     }
   }
 
-  public BuildRule requireBuildRule(Flavor... flavors) {
+  /** Require a flavored version of this build rule */
+  public BuildRule requireBuildRule(BuildRuleResolver ruleResolver, Flavor... flavors) {
     BuildRule buildRule = ruleResolver.requireRule(getBuildTarget().withAppendedFlavors(flavors));
 
     // These dependencies are not tracked as part of deps for this library, but rather, end up
@@ -453,7 +454,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     String sharedLibrarySoname =
         CxxDescriptionEnhancer.getSharedLibrarySoname(soname, getBuildTarget(), cxxPlatform);
     BuildRule sharedLibraryBuildRule =
-        requireBuildRule(cxxPlatform.getFlavor(), CxxDescriptionEnhancer.SHARED_FLAVOR);
+        requireBuildRule(
+            ruleResolver, cxxPlatform.getFlavor(), CxxDescriptionEnhancer.SHARED_FLAVOR);
     libs.put(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
     return libs.build();
   }
@@ -509,21 +511,13 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
         .map(BuildRule::getBuildTarget);
   }
 
-  public Iterable<? extends Arg> getExportedLinkerFlags(CxxPlatform cxxPlatform) {
+  public Iterable<? extends Arg> getExportedLinkerFlags(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return exportedLinkerFlags.apply(cxxPlatform, ruleResolver);
   }
 
   @Override
   public SortedSet<BuildRule> getImplicitDepsForCaching() {
     return ImmutableSortedSet.copyOf(implicitDepsForCaching);
-  }
-
-  @Override
-  public void updateBuildRuleResolver(
-      BuildRuleResolver ruleResolver,
-      SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver) {
-    this.ruleResolver = ruleResolver;
-    this.ruleFinder = ruleFinder;
   }
 }

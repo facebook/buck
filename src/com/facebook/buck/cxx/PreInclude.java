@@ -61,10 +61,6 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
   private static final Flavor AGGREGATED_PREPROCESS_DEPS_FLAVOR =
       InternalFlavor.of("preprocessor-deps");
 
-  protected BuildRuleResolver ruleResolver;
-  protected SourcePathRuleFinder ruleFinder;
-  protected SourcePathResolver pathResolver;
-
   /**
    * The source path which was expressed as either: (1) the `prefix_header` attribute in a
    * `cxx_binary` or `cxx_library` (or similar) rule, or (2) the `src` in a `cxx_precompiled_header`
@@ -85,16 +81,11 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ImmutableSortedSet<BuildRule> deps,
-      BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
-      SourcePath sourcePath) {
+      SourcePath sourcePath,
+      Path absoluteHeaderPath) {
     super(buildTarget, projectFilesystem, makeBuildRuleParams(deps));
-    this.ruleResolver = ruleResolver;
-    this.pathResolver = pathResolver;
-    this.ruleFinder = ruleFinder;
     this.sourcePath = sourcePath;
-    this.absoluteHeaderPath = pathResolver.getAbsolutePath(sourcePath);
+    this.absoluteHeaderPath = absoluteHeaderPath;
   }
 
   /**
@@ -196,7 +187,8 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
     return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform, ruleResolver);
   }
 
-  private ImmutableList<CxxPreprocessorInput> getCxxPreprocessorInputs(CxxPlatform cxxPlatform) {
+  private ImmutableList<CxxPreprocessorInput> getCxxPreprocessorInputs(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     ImmutableList.Builder<CxxPreprocessorInput> builder = ImmutableList.builder();
     for (Map.Entry<BuildTarget, CxxPreprocessorInput> entry :
         getTransitiveCxxPreprocessorInput(cxxPlatform, ruleResolver).entrySet()) {
@@ -205,29 +197,32 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
     return builder.build();
   }
 
-  private ImmutableList<CxxHeaders> getIncludes(CxxPlatform cxxPlatform) {
-    return getCxxPreprocessorInputs(cxxPlatform)
+  private ImmutableList<CxxHeaders> getIncludes(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+    return getCxxPreprocessorInputs(cxxPlatform, ruleResolver)
         .stream()
         .flatMap(input -> input.getIncludes().stream())
         .collect(ImmutableList.toImmutableList());
   }
 
-  private ImmutableSet<FrameworkPath> getFrameworks(CxxPlatform cxxPlatform) {
-    return getCxxPreprocessorInputs(cxxPlatform)
+  private ImmutableSet<FrameworkPath> getFrameworks(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+    return getCxxPreprocessorInputs(cxxPlatform, ruleResolver)
         .stream()
         .flatMap(input -> input.getFrameworks().stream())
         .collect(ImmutableSet.toImmutableSet());
   }
 
-  private ImmutableSortedSet<BuildRule> getPreprocessDeps(CxxPlatform cxxPlatform) {
+  private ImmutableSortedSet<BuildRule> getPreprocessDeps(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver, SourcePathRuleFinder ruleFinder) {
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
-    for (CxxPreprocessorInput input : getCxxPreprocessorInputs(cxxPlatform)) {
+    for (CxxPreprocessorInput input : getCxxPreprocessorInputs(cxxPlatform, ruleResolver)) {
       builder.addAll(input.getDeps(ruleResolver, ruleFinder));
     }
-    for (CxxHeaders cxxHeaders : getIncludes(cxxPlatform)) {
+    for (CxxHeaders cxxHeaders : getIncludes(cxxPlatform, ruleResolver)) {
       cxxHeaders.getDeps(ruleFinder).forEachOrdered(builder::add);
     }
-    for (FrameworkPath frameworkPath : getFrameworks(cxxPlatform)) {
+    for (FrameworkPath frameworkPath : getFrameworks(cxxPlatform, ruleResolver)) {
       builder.addAll(frameworkPath.getDeps(ruleFinder));
     }
 
@@ -246,18 +241,25 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
    * Find or create a {@link DependencyAggregation} rule, representing a grouping of dependencies:
    * generally, those deps from the current {@link CxxPlatform}.
    */
-  protected DependencyAggregation requireAggregatedDepsRule(CxxPlatform cxxPlatform) {
+  protected DependencyAggregation requireAggregatedDepsRule(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver, SourcePathRuleFinder ruleFinder) {
     return (DependencyAggregation)
         ruleResolver.computeIfAbsent(
             createAggregatedDepsTarget(cxxPlatform),
             depAggTarget ->
                 new DependencyAggregation(
-                    depAggTarget, getProjectFilesystem(), getPreprocessDeps(cxxPlatform)));
+                    depAggTarget,
+                    getProjectFilesystem(),
+                    getPreprocessDeps(cxxPlatform, ruleResolver, ruleFinder)));
   }
 
   /** @return newly-built delegate for this PCH build (if precompiling enabled) */
   protected PreprocessorDelegate buildPreprocessorDelegate(
-      CxxPlatform cxxPlatform, Preprocessor preprocessor, CxxToolFlags preprocessorFlags) {
+      CxxPlatform cxxPlatform,
+      Preprocessor preprocessor,
+      CxxToolFlags preprocessorFlags,
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver) {
     return new PreprocessorDelegate(
         cxxPlatform.getCompilerDebugPathSanitizer(),
         cxxPlatform.getHeaderVerification(),
@@ -266,8 +268,8 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
         PreprocessorFlags.of(
             Optional.of(getHeaderSourcePath()),
             preprocessorFlags,
-            getIncludes(cxxPlatform),
-            getFrameworks(cxxPlatform)),
+            getIncludes(cxxPlatform, ruleResolver),
+            getFrameworks(cxxPlatform, ruleResolver)),
         CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver),
         /* getSandboxTree() */ Optional.empty(),
         /* leadingIncludePaths */ Optional.empty());
@@ -282,7 +284,10 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
       Function<CxxToolFlags, String> getBaseHash,
       CxxPlatform cxxPlatform,
       CxxSource.Type sourceType,
-      ImmutableList<String> sourceFlags);
+      ImmutableList<String> sourceFlags,
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver);
 
   /**
    * Look up or build a precompiled header build rule which this build rule is requesting.
@@ -300,7 +305,8 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxToolFlags compilerFlags,
       DepsBuilder depsBuilder,
       UnflavoredBuildTarget templateTarget,
-      ImmutableSortedSet<Flavor> flavors) {
+      ImmutableSortedSet<Flavor> flavors,
+      BuildRuleResolver ruleResolver) {
     return (CxxPrecompiledHeader)
         ruleResolver.computeIfAbsent(
             BuildTarget.of(templateTarget, flavors),
@@ -339,15 +345,5 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
                   sourceType,
                   cxxPlatform.getCompilerDebugPathSanitizer());
             });
-  }
-
-  @Override
-  public void updateBuildRuleResolver(
-      BuildRuleResolver ruleResolver,
-      SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver) {
-    this.ruleResolver = ruleResolver;
-    this.ruleFinder = ruleFinder;
-    this.pathResolver = pathResolver;
   }
 }

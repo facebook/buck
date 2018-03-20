@@ -29,6 +29,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
 import java.util.function.Function;
 
 /** Represents a header file mentioned in a `prefix_header` param in a cxx library/binary rule. */
@@ -40,11 +41,9 @@ public class CxxPrefixHeader extends PreInclude {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ImmutableSortedSet<BuildRule> deps,
-      BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
-      SourcePath sourcePath) {
-    super(buildTarget, projectFilesystem, deps, ruleResolver, pathResolver, ruleFinder, sourcePath);
+      SourcePath sourcePath,
+      Path absoluteHeaderPath) {
+    super(buildTarget, projectFilesystem, deps, sourcePath, absoluteHeaderPath);
   }
 
   @Override
@@ -57,7 +56,10 @@ public class CxxPrefixHeader extends PreInclude {
       Function<CxxToolFlags, String> getBaseHash,
       CxxPlatform cxxPlatform,
       CxxSource.Type sourceType,
-      ImmutableList<String> sourceFlags) {
+      ImmutableList<String> sourceFlags,
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
 
     DepsBuilder depsBuilder = new DepsBuilder(ruleFinder);
 
@@ -80,7 +82,7 @@ public class CxxPrefixHeader extends PreInclude {
         depsBuilder,
         getBuildTarget().getUnflavoredBuildTarget(),
         ImmutableSortedSet.of(
-            cxxPlatform.getFlavor(),
-            InternalFlavor.of(Flavor.replaceInvalidCharacters(pchFullID))));
+            cxxPlatform.getFlavor(), InternalFlavor.of(Flavor.replaceInvalidCharacters(pchFullID))),
+        ruleResolver);
   }
 }

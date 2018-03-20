@@ -53,10 +53,8 @@ public class CxxPrecompiledHeaderDescription
         buildTarget,
         context.getProjectFilesystem(),
         ruleResolver.getAllRules(args.getDeps()),
-        ruleResolver,
-        pathResolver,
-        ruleFinder,
-        args.getSrc());
+        args.getSrc(),
+        pathResolver.getAbsolutePath(args.getSrc()));
   }
 
   @BuckStyleImmutable

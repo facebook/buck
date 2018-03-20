@@ -188,7 +188,7 @@ public class CxxLibraryTest {
             target,
             projectFilesystem,
             params,
-            ruleResolver,
+            ruleResolver.getParallelizer(),
             CxxDeps.of(),
             CxxDeps.of(),
             /* headerOnly */ x -> true,

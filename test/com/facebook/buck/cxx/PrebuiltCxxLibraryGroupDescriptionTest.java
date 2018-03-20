@@ -242,7 +242,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
     NativeLinkableInput input =
         library.getNativeLinkableInput(
             CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, resolver);
-    SourcePath lib = cxxGenrule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM);
+    SourcePath lib = cxxGenrule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, resolver);
     assertThat(input.getArgs(), Matchers.contains(SourcePathArg.of(lib)));
   }
 

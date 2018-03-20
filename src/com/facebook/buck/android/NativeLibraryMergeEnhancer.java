@@ -828,7 +828,8 @@ class NativeLibraryMergeEnhancer {
       // If our constituents have exported linker flags, our dependents should use them.
       for (NativeLinkable linkable : constituents.getLinkables()) {
         if (linkable instanceof CxxLibrary) {
-          argsBuilder.addAll(((CxxLibrary) linkable).getExportedLinkerFlags(cxxPlatform));
+          argsBuilder.addAll(
+              ((CxxLibrary) linkable).getExportedLinkerFlags(cxxPlatform, ruleResolver));
         } else if (linkable instanceof PrebuiltCxxLibrary) {
           argsBuilder.addAll(
               StringArg.from(((PrebuiltCxxLibrary) linkable).getExportedLinkerFlags(cxxPlatform)));

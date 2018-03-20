@@ -114,7 +114,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
 
     ImmutableSet.Builder<CxxPreprocessorInput> builder = ImmutableSet.builder();
     builder.addAll(transitiveMap.values());
-    builder.add(lib.getPublicCxxPreprocessorInputExcludingDelegate(platform));
+    builder.add(lib.getPublicCxxPreprocessorInputExcludingDelegate(platform, resolver));
 
     return builder.build();
   }
