@@ -455,6 +455,12 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
       {param page: 'java_abis' /}
       {param text: 'Java ABIs' /}
     {/call}
+    {call .navigationLink}
+      {param currentnavid: $navid /}
+      {param folder: 'concept' /}
+      {param page: 'skylark' /}
+      {param text: 'Skylark' /}
+    {/call}
   </ul>
   <h3>Build Rules</h3>
   <ul>
@@ -890,6 +896,11 @@ docsearch({
 {/template}
 
 /***/
+{template .skylark}
+{call .concept_link_heading}{param page : 'skylark' /}{param heading : 'migration' /}{param name : 'Python DSL to Skylark migration' /}{/call}
+{/template}
+
+/***/
 {template .android_aar}
 {call .ruleLink}{param name : 'android_aar' /}{/call}
 {/template}
@@ -1095,6 +1106,11 @@ docsearch({
 /***/
 {template .fn_load}
 <a href="{ROOT}function/load.html"><code>load()</code></a>
+{/template}
+
+/***/
+{template .fn_get_base_path}
+<a href="{ROOT}function/get_base_path.html"><code>get_base_path()</code></a>
 {/template}
 
 /***/
