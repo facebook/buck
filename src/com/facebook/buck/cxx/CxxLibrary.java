@@ -45,17 +45,20 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.function.QuadFunction;
 import com.google.common.base.Preconditions;
-import com.google.common.cache.LoadingCache;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.concurrent.ExecutionException;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -102,8 +105,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
    */
   private final boolean propagateLinkables;
 
-  private final LoadingCache<NativeLinkableCacheKey, NativeLinkableInput> nativeLinkableCache =
-      NativeLinkable.getNativeLinkableInputCache(this::getNativeLinkableInputUncached);
+  private final Cache<NativeLinkableCacheKey, NativeLinkableInput> nativeLinkableCache =
+      CacheBuilder.newBuilder().build();
 
   private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache;
 
@@ -294,7 +297,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
         .toImmutableList();
   }
 
-  private NativeLinkableInput getNativeLinkableInputUncached(NativeLinkableCacheKey key) {
+  private NativeLinkableInput computeNativeLinkableInputUncached(
+      NativeLinkableCacheKey key, BuildRuleResolver ruleResolver) {
     CxxPlatform cxxPlatform = key.getCxxPlatform();
 
     if (!isPlatformSupported(cxxPlatform)) {
@@ -387,8 +391,14 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       boolean forceLinkWhole,
       ImmutableSet<LanguageExtensions> languageExtensions,
       BuildRuleResolver ruleResolver) {
-    return nativeLinkableCache.getUnchecked(
-        NativeLinkableCacheKey.of(cxxPlatform.getFlavor(), type, forceLinkWhole, cxxPlatform));
+    NativeLinkableCacheKey key =
+        NativeLinkableCacheKey.of(cxxPlatform.getFlavor(), type, forceLinkWhole, cxxPlatform);
+    try {
+      return nativeLinkableCache.get(
+          key, () -> computeNativeLinkableInputUncached(key, ruleResolver));
+    } catch (ExecutionException e) {
+      throw new UncheckedExecutionException(e.getCause());
+    }
   }
 
   public BuildRule requireBuildRule(Flavor... flavors) {

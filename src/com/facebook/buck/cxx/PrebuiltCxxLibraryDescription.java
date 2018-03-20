@@ -70,7 +70,8 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.Preconditions;
-import com.google.common.cache.LoadingCache;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -80,10 +81,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import org.immutables.value.Value;
@@ -487,8 +490,8 @@ public class PrebuiltCxxLibraryDescription
     PrebuiltCxxLibraryPaths paths = getPaths(buildTarget, args, versionSubdir);
     return new PrebuiltCxxLibrary(buildTarget, projectFilesystem, params, ruleResolverLocal) {
 
-      private final LoadingCache<NativeLinkableCacheKey, NativeLinkableInput> nativeLinkableCache =
-          NativeLinkable.getNativeLinkableInputCache(this::getNativeLinkableInputUncached);
+      private final Cache<NativeLinkableCacheKey, NativeLinkableInput> nativeLinkableCache =
+          CacheBuilder.newBuilder().build();
 
       private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
           new TransitiveCxxPreprocessorInputCache(this);
@@ -667,7 +670,8 @@ public class PrebuiltCxxLibraryDescription
         return getNativeLinkableExportedDeps(ruleResolver);
       }
 
-      private NativeLinkableInput getNativeLinkableInputUncached(NativeLinkableCacheKey key) {
+      private NativeLinkableInput computeNativeLinkableInputUncached(
+          NativeLinkableCacheKey key, BuildRuleResolver ruleResolver) {
         CxxPlatform cxxPlatform = key.getCxxPlatform();
 
         if (!isPlatformSupported(cxxPlatform)) {
@@ -730,8 +734,14 @@ public class PrebuiltCxxLibraryDescription
           boolean forceLinkWhole,
           ImmutableSet<LanguageExtensions> languageExtensions,
           BuildRuleResolver ruleResolver) {
-        return nativeLinkableCache.getUnchecked(
-            NativeLinkableCacheKey.of(cxxPlatform.getFlavor(), type, forceLinkWhole, cxxPlatform));
+        NativeLinkableCacheKey key =
+            NativeLinkableCacheKey.of(cxxPlatform.getFlavor(), type, forceLinkWhole, cxxPlatform);
+        try {
+          return nativeLinkableCache.get(
+              key, () -> computeNativeLinkableInputUncached(key, ruleResolver));
+        } catch (ExecutionException e) {
+          throw new UncheckedExecutionException(e.getCause());
+        }
       }
 
       @Override

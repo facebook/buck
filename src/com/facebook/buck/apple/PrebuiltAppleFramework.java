@@ -49,6 +49,8 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.google.common.base.Preconditions;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -76,7 +78,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
   private final FlavorDomain<AppleCxxPlatform> applePlatformFlavorDomain;
 
   private final LoadingCache<NativeLinkableCacheKey, NativeLinkableInput> nativeLinkableCache =
-      NativeLinkable.getNativeLinkableInputCache(this::getNativeLinkableInputUncached);
+      CacheBuilder.newBuilder().build(CacheLoader.from(this::getNativeLinkableInputUncached));
 
   private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
       new TransitiveCxxPreprocessorInputCache(this);
