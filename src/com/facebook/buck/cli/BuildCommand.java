@@ -165,6 +165,7 @@ public class BuildCommand extends AbstractCommand {
   private static final String SHOW_JSON_OUTPUT_LONG_ARG = "--show-json-output";
   private static final String SHOW_FULL_JSON_OUTPUT_LONG_ARG = "--show-full-json-output";
   private static final String SHOW_RULEKEY_LONG_ARG = "--show-rulekey";
+  private static final String LOCAL_BUILD_LONG_ARG = "--local";
   private static final String DISTRIBUTED_LONG_ARG = "--distributed";
   private static final String BUCK_BINARY_STRING_ARG = "--buck-binary";
   private static final String RULEKEY_LOG_PATH_LONG_ARG = "--rulekeys-log-path";
@@ -248,11 +249,17 @@ public class BuildCommand extends AbstractCommand {
   private boolean showRuleKey;
 
   @Option(
+    name = LOCAL_BUILD_LONG_ARG,
+    usage = "Disable distributed build (overrides --distributed)."
+  )
+  private boolean forceDisableDistributedBuild = false;
+
+  @Option(
     name = DISTRIBUTED_LONG_ARG,
     usage = "Whether to run in distributed build mode. (experimental)",
     hidden = true
   )
-  private boolean useDistributedBuild = false;
+  private boolean useDistributedBuild = false; // Must be accessed via the getter method.
 
   private boolean autoDistBuild = false;
   private Optional<String> autoDistBuildMessage = Optional.empty();
@@ -342,7 +349,12 @@ public class BuildCommand extends AbstractCommand {
     this.keepGoing = keepGoing;
   }
 
-  public boolean isUseDistributedBuild() {
+  /** Whether this build is using stampede or not. */
+  public boolean isUsingDistributedBuild() {
+    if (forceDisableDistributedBuild) {
+      useDistributedBuild = false;
+    }
+
     return useDistributedBuild;
   }
 
@@ -350,11 +362,23 @@ public class BuildCommand extends AbstractCommand {
    * Mark this build as being automatically converted to stampede.
    *
    * @param config to retrieve the message (if any) to be shown to the user.
+   * @return true if the build was converted to stampede.
    */
-  public void autoConversionToStampede(DistBuildConfig config) {
-    this.autoDistBuild = true;
-    this.useDistributedBuild = true;
-    this.autoDistBuildMessage = config.getAutoDistributedBuildMessage();
+  public boolean tryConvertingToStampede(DistBuildConfig config) {
+    if (forceDisableDistributedBuild) {
+      LOG.warn(
+          String.format(
+              "%s has been specified. Will not auto-convert build to stampede.",
+              LOCAL_BUILD_LONG_ARG));
+
+      useDistributedBuild = false; // Make sure
+      return false;
+    }
+
+    autoDistBuild = true;
+    useDistributedBuild = true;
+    autoDistBuildMessage = config.getAutoDistributedBuildMessage();
+    return true;
   }
 
   /** @return an absolute path or {@link Optional#empty()}. */
@@ -525,7 +549,7 @@ public class BuildCommand extends AbstractCommand {
       throws IOException, InterruptedException, ActionGraphCreationException {
     ExitCode exitCode = ExitCode.SUCCESS;
     ActionAndTargetGraphs graphs;
-    if (useDistributedBuild) {
+    if (isUsingDistributedBuild()) {
       DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
       ClientStatsTracker distBuildClientStatsTracker =
           new ClientStatsTracker(distBuildConfig.getBuildLabel());
@@ -1332,7 +1356,7 @@ public class BuildCommand extends AbstractCommand {
             new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
             executor,
             isKeepGoing(),
-            useDistributedBuild,
+            isUsingDistributedBuild(),
             isDownloadHeavyBuild,
             ruleKeyCacheScope,
             getBuildEngineMode(),
@@ -1410,7 +1434,7 @@ public class BuildCommand extends AbstractCommand {
       Map<ExecutorPool, ListeningExecutorService> executorPool,
       ScheduledExecutorService scheduledExecutorService) {
     ImmutableList.Builder<BuckEventListener> listeners = ImmutableList.builder();
-    if (useDistributedBuild) {
+    if (isUsingDistributedBuild()) {
       distBuildClientEventListener = new DistBuildClientEventListener();
       listeners.add(distBuildClientEventListener);
     }

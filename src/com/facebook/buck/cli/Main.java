@@ -614,10 +614,9 @@ public final class Main {
     // Automatically use distributed build for supported repositories and users.
     if (command.subcommand != null && command.subcommand instanceof BuildCommand) {
       BuildCommand subcommand = (BuildCommand) command.subcommand;
-      isUsingDistributedBuild = subcommand.isUseDistributedBuild();
+      isUsingDistributedBuild = subcommand.isUsingDistributedBuild();
       if (!isUsingDistributedBuild && distBuildConfig.shouldUseDistributedBuild(buildId)) {
-        isUsingDistributedBuild = true;
-        subcommand.autoConversionToStampede(distBuildConfig);
+        isUsingDistributedBuild = subcommand.tryConvertingToStampede(distBuildConfig);
       }
     }
 
