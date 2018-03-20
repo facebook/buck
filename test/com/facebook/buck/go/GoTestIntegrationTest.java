@@ -67,10 +67,10 @@ public class GoTestIntegrationTest {
     // This test should pass.
     workspace.runBuckCommand("test", "//:test-success").assertSuccess();
 
-    workspace.replaceFileContents("base.go", "n1 + n2", "n1 + n2 + 1");
+    workspace.replaceFileContents("buck_base/base.go", "n1 + n2", "n1 + n2 + 1");
     workspace.runBuckCommand("test", "//:test-success").assertTestFailure();
 
-    workspace.replaceFileContents("base.go", "n1 + n2 + 1", "n1 + n2 * 1");
+    workspace.replaceFileContents("buck_base/base.go", "n1 + n2 + 1", "n1 + n2 * 1");
     workspace.runBuckCommand("test", "//:test-success").assertSuccess();
   }
 

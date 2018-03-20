@@ -91,10 +91,14 @@ public abstract class ShellStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws InterruptedException, IOException {
+    ImmutableList<String> command = getShellCommand(context);
+    if (command.size() == 0) {
+      return StepExecutionResult.of(0);
+    }
+
     // Kick off a Process in which this ShellCommand will be run.
     ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
-
-    builder.setCommand(getShellCommand(context));
+    builder.setCommand(command);
     Map<String, String> environment = new HashMap<>();
     setProcessEnvironment(context, environment, workingDirectory.toString());
     if (LOG.isDebugEnabled()) {
@@ -204,7 +208,9 @@ public abstract class ShellStep implements Step {
   public final ImmutableList<String> getShellCommand(ExecutionContext context) {
     if (shellCommandArgs == null) {
       shellCommandArgs = getShellCommandInternal(context);
-      LOG.debug("Command: %s", Joiner.on(" ").join(shellCommandArgs));
+      if (shellCommandArgs.size() > 0) {
+        LOG.debug("Command: %s", Joiner.on(" ").join(shellCommandArgs));
+      }
     }
     return shellCommandArgs;
   }

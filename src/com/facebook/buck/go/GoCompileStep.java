@@ -16,12 +16,14 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 
@@ -31,13 +33,14 @@ public class GoCompileStep extends ShellStep {
   private final ImmutableList<String> compilerCommandPrefix;
   private final Path packageName;
   private final ImmutableList<String> flags;
-  private final ImmutableList<Path> srcs;
+  private final Iterable<Path> srcs;
   private final ImmutableMap<Path, Path> importPathMap;
   private final ImmutableList<Path> includeDirectories;
   private final Optional<Path> asmHeaderPath;
   private final boolean allowExternalReferences;
   private final GoPlatform platform;
   private final Path output;
+  private static final Logger LOG = Logger.get(GoCompileStep.class);
 
   public GoCompileStep(
       BuildTarget buildTarget,
@@ -46,7 +49,7 @@ public class GoCompileStep extends ShellStep {
       ImmutableList<String> compilerCommandPrefix,
       ImmutableList<String> flags,
       Path packageName,
-      ImmutableList<Path> srcs,
+      Iterable<Path> srcs,
       ImmutableMap<Path, Path> importPathMap,
       ImmutableList<Path> includeDirectories,
       Optional<Path> asmHeaderPath,
@@ -69,37 +72,46 @@ public class GoCompileStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    ImmutableList.Builder<String> commandBuilder =
-        ImmutableList.<String>builder()
-            .addAll(compilerCommandPrefix)
-            .add("-p", packageName.toString())
-            .add("-pack")
-            .add("-trimpath", workingDirectory.toString())
-            .add("-nolocalimports")
-            .addAll(flags)
-            .add("-o", output.toString());
-
-    for (Path dir : includeDirectories) {
-      commandBuilder.add("-I", dir.toString());
+    ArrayList<String> pathStrings = new ArrayList<>();
+    for (Path path : srcs) {
+      pathStrings.add(path.toString());
     }
+    if (pathStrings.size() > 0) {
+      ImmutableList.Builder<String> commandBuilder =
+          ImmutableList.<String>builder()
+              .addAll(compilerCommandPrefix)
+              .add("-p", packageName.toString())
+              .add("-pack")
+              .add("-trimpath", workingDirectory.toString())
+              .add("-nolocalimports")
+              .addAll(flags)
+              .add("-o", output.toString());
 
-    for (Map.Entry<Path, Path> importMap : importPathMap.entrySet()) {
-      commandBuilder.add("-importmap", importMap.getKey() + "=" + importMap.getValue());
+      for (Path dir : includeDirectories) {
+        commandBuilder.add("-I", dir.toString());
+      }
+
+      for (Map.Entry<Path, Path> entry : importPathMap.entrySet()) {
+        commandBuilder.add("-importmap", entry.getKey() + "=" + entry.getValue());
+      }
+
+      if (asmHeaderPath.isPresent()) {
+        commandBuilder.add("-asmhdr", asmHeaderPath.get().toString());
+      }
+
+      if (!allowExternalReferences) {
+        // -complete means the package does not use any non Go code, so external functions
+        // (e.g. Cgo, asm) aren't allowed.
+        commandBuilder.add("-complete");
+      }
+
+      commandBuilder.addAll(pathStrings);
+
+      return commandBuilder.build();
+    } else {
+      LOG.warn("No source files found in " + workingDirectory);
+      return ImmutableList.of();
     }
-
-    if (asmHeaderPath.isPresent()) {
-      commandBuilder.add("-asmhdr", asmHeaderPath.get().toString());
-    }
-
-    if (!allowExternalReferences) {
-      // -complete means the package does not use any non Go code, so external functions
-      // (e.g. Cgo, asm) aren't allowed.
-      commandBuilder.add("-complete");
-    }
-
-    commandBuilder.addAll(srcs.stream().map(Object::toString).iterator());
-
-    return commandBuilder.build();
   }
 
   @Override

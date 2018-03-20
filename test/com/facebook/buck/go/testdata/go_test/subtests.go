@@ -1,4 +1,4 @@
-package main
+package lib
 
 // modified from an example here: https://blog.golang.org/subtests
 

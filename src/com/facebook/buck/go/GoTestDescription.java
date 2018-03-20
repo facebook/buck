@@ -20,6 +20,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
+import com.facebook.buck.go.GoListStep.FileType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -58,6 +59,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -424,7 +426,8 @@ public class GoTestDescription
               ImmutableSortedSet.<BuildTarget>naturalOrder()
                   .addAll(libraryArg.getCgoDeps())
                   .addAll(args.getCgoDeps())
-                  .build());
+                  .build(),
+              Arrays.asList(FileType.GoFiles, FileType.TestGoFiles));
     } else {
       testLibrary =
           GoDescriptors.createGoCompileRule(
@@ -445,7 +448,8 @@ public class GoTestDescription
                   .stream()
                   .map(BuildRule::getBuildTarget)
                   .collect(ImmutableList.toImmutableList()),
-              args.getCgoDeps());
+              args.getCgoDeps(),
+              Arrays.asList(FileType.GoFiles, FileType.TestGoFiles, FileType.XTestGoFiles));
     }
 
     return testLibrary;
