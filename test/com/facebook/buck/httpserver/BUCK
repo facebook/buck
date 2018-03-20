@@ -158,7 +158,6 @@ java_test(
         "//third-party/java/aosp:aosp",
         "//third-party/java/args4j:args4j",
         "//third-party/java/asm:asm",
-        "//third-party/java/closure-templates:closure-templates",
         "//third-party/java/dd-plist:dd-plist",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:java-hamcrest",
