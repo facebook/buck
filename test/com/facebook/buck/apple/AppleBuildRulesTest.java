@@ -309,7 +309,8 @@ public class AppleBuildRulesTest {
               cache,
               AppleBuildRules.RecursiveDependenciesMode.COPYING,
               fooFrameworkNode,
-              IS_APPLE_BUNDLE_RESOURCE_NODE);
+              IS_APPLE_BUNDLE_RESOURCE_NODE,
+              Optional.empty());
 
       assertEquals(ImmutableSortedSet.of(sharedResourceNode), ImmutableSortedSet.copyOf(rules));
 
@@ -319,7 +320,8 @@ public class AppleBuildRulesTest {
               cache,
               AppleBuildRules.RecursiveDependenciesMode.COPYING,
               barAppNode,
-              IS_APPLE_BUNDLE_RESOURCE_NODE);
+              IS_APPLE_BUNDLE_RESOURCE_NODE,
+              Optional.empty());
 
       assertEquals(ImmutableSortedSet.of(staticResourceNode), ImmutableSortedSet.copyOf(rules));
     }

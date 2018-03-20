@@ -1340,6 +1340,22 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void bundleTraversesAppleResourceResourcesFromPlatformDepsForAdditionalResources()
+      throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_resources_from_deps", tmp);
+    workspace.setUp();
+    Path outputPath = workspace.buildAndReturnOutput("//:mybundle#iphonesimulator-x86_64");
+    assertTrue(
+        "Resource file matching platform should exist.",
+        Files.isRegularFile(outputPath.resolve("sim.txt")));
+    assertFalse(
+        "Resource file not matching platform should not exist.",
+        Files.isRegularFile(outputPath.resolve("device.txt")));
+  }
+
+  @Test
   public void defaultBinaryIsUsedWhenOnTargetPlatformMismatch() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(

@@ -590,7 +590,11 @@ public class AppleDescriptions {
 
     AppleBundleResources collectedResources =
         AppleResources.collectResourceDirsAndFiles(
-            targetGraph, resolver, Optional.empty(), targetGraph.get(buildTarget));
+            targetGraph,
+            resolver,
+            Optional.empty(),
+            targetGraph.get(buildTarget),
+            appleCxxPlatform);
 
     ImmutableSet.Builder<SourcePath> frameworksBuilder = ImmutableSet.builder();
     if (INCLUDE_FRAMEWORKS.getRequiredValue(buildTarget)) {

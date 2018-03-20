@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.GraphTraversable;
@@ -132,7 +133,7 @@ public final class AppleBuildRules {
 
     ImmutableSet<TargetNode<?, ?>> result =
         getRecursiveTargetNodeDependenciesOfTypes(
-            targetGraph, cache, mode, targetNode, isDependencyNode);
+            targetGraph, cache, mode, targetNode, isDependencyNode, Optional.empty());
 
     LOG.verbose(
         "Got recursive dependencies of node %s mode %s types %s: %s\n",
@@ -146,7 +147,8 @@ public final class AppleBuildRules {
       Optional<AppleDependenciesCache> cache,
       RecursiveDependenciesMode mode,
       TargetNode<?, ?> targetNode,
-      Predicate<TargetNode<?, ?>> isDependencyNode) {
+      Predicate<TargetNode<?, ?>> isDependencyNode,
+      Optional<AppleCxxPlatform> appleCxxPlatform) {
 
     @SuppressWarnings("unchecked")
     GraphTraversable<TargetNode<?, ?>> graphTraversable =
@@ -174,7 +176,8 @@ public final class AppleBuildRules {
                 ImmutableSortedSet.naturalOrder();
             ImmutableSortedSet.Builder<TargetNode<?, ?>> exportedDepsBuilder =
                 ImmutableSortedSet.naturalOrder();
-            addDirectAndExportedDeps(targetGraph, node, defaultDepsBuilder, exportedDepsBuilder);
+            addDirectAndExportedDeps(
+                targetGraph, node, defaultDepsBuilder, exportedDepsBuilder, appleCxxPlatform);
             defaultDeps = defaultDepsBuilder.build();
             exportedDeps = exportedDepsBuilder.build();
           } else {
@@ -196,7 +199,8 @@ public final class AppleBuildRules {
                     targetGraph,
                     targetGraph.get(rule.getBuildTarget()),
                     editedDeps,
-                    editedExportedDeps);
+                    editedExportedDeps,
+                    appleCxxPlatform);
               } else {
                 editedDeps.add(rule);
               }
@@ -282,7 +286,8 @@ public final class AppleBuildRules {
       TargetGraph targetGraph,
       TargetNode<?, ?> targetNode,
       ImmutableSortedSet.Builder<TargetNode<?, ?>> directDepsBuilder,
-      ImmutableSortedSet.Builder<TargetNode<?, ?>> exportedDepsBuilder) {
+      ImmutableSortedSet.Builder<TargetNode<?, ?>> exportedDepsBuilder,
+      Optional<AppleCxxPlatform> appleCxxPlatform) {
     directDepsBuilder.addAll(targetGraph.getAll(targetNode.getBuildDepsStream()::iterator));
     if (targetNode.getDescription() instanceof AppleLibraryDescription
         || targetNode.getDescription() instanceof CxxLibraryDescription) {
@@ -299,6 +304,16 @@ public final class AppleBuildRules {
     if (targetNode.getDescription() instanceof AppleBundleDescription) {
       AppleBundleDescriptionArg arg = (AppleBundleDescriptionArg) targetNode.getConstructorArg();
       directDepsBuilder.addAll(targetGraph.getAll(arg.getBinaryTargets()));
+    }
+    // if target platform is known, we should discover targets that match it to make sure that
+    // all resources are properly discovered and added to the final apple_bundle
+    if (appleCxxPlatform.isPresent()
+        && targetNode.getDescription() instanceof AppleLibraryDescription) {
+      AppleLibraryDescriptionArg arg = (AppleLibraryDescriptionArg) targetNode.getConstructorArg();
+      for (ImmutableSortedSet<BuildTarget> deps :
+          arg.getPlatformDeps().getMatchingValues(appleCxxPlatform.get().getFlavor().toString())) {
+        directDepsBuilder.addAll(targetGraph.getAll(deps));
+      }
     }
   }
 

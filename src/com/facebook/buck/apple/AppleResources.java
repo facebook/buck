@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -61,7 +62,8 @@ public class AppleResources {
       TargetGraph targetGraph,
       BuildRuleResolver resolver,
       Optional<AppleDependenciesCache> cache,
-      TargetNode<T, ?> targetNode) {
+      TargetNode<T, ?> targetNode,
+      AppleCxxPlatform appleCxxPlatform) {
     AppleBundleResources.Builder builder = AppleBundleResources.builder();
 
     Iterable<TargetNode<?, ?>> resourceNodes =
@@ -70,7 +72,8 @@ public class AppleResources {
             cache,
             AppleBuildRules.RecursiveDependenciesMode.COPYING,
             targetNode,
-            IS_APPLE_BUNDLE_RESOURCE_NODE);
+            IS_APPLE_BUNDLE_RESOURCE_NODE,
+            Optional.of(appleCxxPlatform));
     ProjectFilesystem filesystem = targetNode.getFilesystem();
 
     for (TargetNode<?, ?> resourceNode : resourceNodes) {
