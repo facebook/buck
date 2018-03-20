@@ -1,0 +1,18 @@
+{namespace skylark}
+
+/**
+ * Table of contents for the Skylark functions section.
+ * @param navid The current page's navigation id.
+ */
+{template .tableOfContents}
+  <h4>Skylark</h4>
+  <ul>
+                {call buck.navigationLink}
+                    {param currentnavid: $navid /}
+                    {param folder: 'function' /}
+                    {param page: 'dummy' /}
+                    {param text: 'dummy()' /}
+                {/call}
+
+  </ul>
+{/template}

@@ -1,7 +1,10 @@
 java_test(
     name = "collector_test",
     srcs = ["SoyTemplateSkylarkSignatureRendererTest.java"],
-    resources = ["//tools/documentation_generator/test/com/facebook/buck/tools/documentation/generator/skylark/rendering/data:expected_dummy_function.soy"],
+    resources = [
+        "//tools/documentation_generator/test/com/facebook/buck/tools/documentation/generator/skylark/rendering/data:expected_dummy_function.soy",
+        "//tools/documentation_generator/test/com/facebook/buck/tools/documentation/generator/skylark/rendering/data:expected_dummy_toc.soy",
+    ],
     deps = [
         "//src/com/facebook/buck/util/environment:platform",
         "//third-party/java/bazel:skylark-lang",

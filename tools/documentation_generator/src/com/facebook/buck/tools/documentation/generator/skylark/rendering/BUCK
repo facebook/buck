@@ -1,7 +1,10 @@
 java_library(
     name = "rendering",
     srcs = ["SoyTemplateSkylarkSignatureRenderer.java"],
-    resources = ["signature_template.stg"],
+    resources = [
+        "signature_template.stg",
+        "table_of_contents_template.stg",
+    ],
     visibility = ["//tools/documentation_generator/..."],
     deps = [
         "//third-party/java/bazel:skylark-lang",

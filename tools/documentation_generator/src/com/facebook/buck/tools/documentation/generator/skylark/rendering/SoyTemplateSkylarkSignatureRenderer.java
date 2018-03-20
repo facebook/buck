@@ -16,17 +16,18 @@
 
 package com.facebook.buck.tools.documentation.generator.skylark.rendering;
 
-import com.google.common.base.Suppliers;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Streams;
 import com.google.common.io.Resources;
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkSignature;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.stringtemplate.v4.ST;
 
@@ -35,20 +36,21 @@ class SoyTemplateSkylarkSignatureRenderer {
 
   private static final char DELIMITER_START_CHAR = '%';
   private static final char DELIMITER_STOP_CHAR = '%';
-  private static final String TEMPLATE_NAME = "signature_template.stg";
+  private static final String FUNCTION_TEMPLATE_NAME = "signature_template.stg";
+  private static final String TABLE_OF_CONTENTS_TEMPLATE_NAME = "table_of_contents_template.stg";
 
-  private final Supplier<String> stringTemplateSupplier;
+  private final LoadingCache<String, String> templateCache;
 
   SoyTemplateSkylarkSignatureRenderer() {
-    this.stringTemplateSupplier =
-        Suppliers.memoize(
-            () -> {
-              try {
-                return loadTemplate();
-              } catch (IOException e) {
-                throw new UncheckedExecutionException(e);
-              }
-            });
+    this.templateCache =
+        CacheBuilder.newBuilder()
+            .build(
+                new CacheLoader<String, String>() {
+                  @Override
+                  public String load(String templateName) throws Exception {
+                    return loadTemplate(templateName);
+                  }
+                });
   }
 
   /**
@@ -56,8 +58,7 @@ class SoyTemplateSkylarkSignatureRenderer {
    * templates for all Python DSL functions.
    */
   String render(SkylarkSignature skylarkSignature) {
-    ST stringTemplate =
-        new ST(stringTemplateSupplier.get(), DELIMITER_START_CHAR, DELIMITER_STOP_CHAR);
+    ST stringTemplate = createTemplate(FUNCTION_TEMPLATE_NAME);
     // open and close brace characters are not allowed inside of StringTemplate loops and using
     // named parameters seems nicer than their unicode identifiers
     stringTemplate.add("openCurly", "{");
@@ -66,8 +67,26 @@ class SoyTemplateSkylarkSignatureRenderer {
     return stringTemplate.render();
   }
 
-  private String loadTemplate() throws IOException {
-    URL template = Resources.getResource(SoyTemplateSkylarkSignatureRenderer.class, TEMPLATE_NAME);
+  /** Renders a table of contents for the Skylark functions subsection on buckbuild.com website. */
+  String renderTableOfContents(Iterable<SkylarkSignature> signatures) {
+    ST stringTemplate = createTemplate(TABLE_OF_CONTENTS_TEMPLATE_NAME);
+    stringTemplate.add("openCurly", "{");
+    stringTemplate.add("closeCurly", "}");
+    stringTemplate.add(
+        "signatures",
+        Streams.stream(signatures)
+            .map(SoyTemplateSkylarkSignatureRenderer::toMap)
+            .collect(Collectors.toList()));
+    return stringTemplate.render();
+  }
+
+  private ST createTemplate(String templateName) {
+    return new ST(
+        templateCache.getUnchecked(templateName), DELIMITER_START_CHAR, DELIMITER_STOP_CHAR);
+  }
+
+  private static String loadTemplate(String templateName) throws IOException {
+    URL template = Resources.getResource(SoyTemplateSkylarkSignatureRenderer.class, templateName);
     return Resources.toString(template, StandardCharsets.UTF_8);
   }
 

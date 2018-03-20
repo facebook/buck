@@ -28,6 +28,8 @@ import com.google.devtools.build.lib.syntax.SkylarkList;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import org.junit.Before;
 import org.junit.Test;
 
 public class SoyTemplateSkylarkSignatureRendererTest {
@@ -45,15 +47,29 @@ public class SoyTemplateSkylarkSignatureRendererTest {
   )
   private static final BuiltinFunction dummy = new BuiltinFunction("dummy");
 
-  @Test
-  public void rendersAnExpectedFunctionSoyTemplate() throws Exception {
+  @Before
+  public void setUp() {
     // ignore windows and its new line philosophy
     assumeTrue(Platform.detect() != Platform.WINDOWS);
+  }
 
+  @Test
+  public void rendersAnExpectedFunctionSoyTemplate() throws Exception {
     SoyTemplateSkylarkSignatureRenderer renderer = new SoyTemplateSkylarkSignatureRenderer();
     Field dummyField = getClass().getDeclaredField("dummy");
     String expectedContent = getExpectedContent("data/expected_dummy_function.soy");
     String actualContent = renderer.render(dummyField.getAnnotation(SkylarkSignature.class));
+    assertEquals(expectedContent, actualContent);
+  }
+
+  @Test
+  public void rendersExpectedTableOfContents() throws Exception {
+    SoyTemplateSkylarkSignatureRenderer renderer = new SoyTemplateSkylarkSignatureRenderer();
+    Field dummyField = getClass().getDeclaredField("dummy");
+    String expectedContent = getExpectedContent("data/expected_dummy_toc.soy");
+    String actualContent =
+        renderer.renderTableOfContents(
+            Collections.singleton(dummyField.getAnnotation(SkylarkSignature.class)));
     assertEquals(expectedContent, actualContent);
   }
 

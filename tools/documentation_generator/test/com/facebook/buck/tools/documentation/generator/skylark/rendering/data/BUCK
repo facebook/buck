@@ -2,3 +2,8 @@ export_file(
     name = "expected_dummy_function.soy",
     visibility = ["//tools/documentation_generator/test/..."],
 )
+
+export_file(
+    name = "expected_dummy_toc.soy",
+    visibility = ["//tools/documentation_generator/test/..."],
+)
