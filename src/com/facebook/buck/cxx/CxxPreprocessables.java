@@ -30,12 +30,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.concurrent.Parallelizer;
 import com.google.common.base.Preconditions;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -47,8 +42,6 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
-import javax.annotation.Nonnull;
 
 public class CxxPreprocessables {
 
@@ -223,69 +216,5 @@ public class CxxPreprocessables {
                 Multimaps.transformValues(exportedPreprocessorFlags, StringArg::of)))
         .addAllFrameworks(frameworks)
         .build();
-  }
-
-  public static LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
-      getTransitiveCxxPreprocessorInputCache(
-          CxxPreprocessorDep preprocessorDep, BuildRuleResolver ruleResolver) {
-    return getTransitiveCxxPreprocessorInputCache(
-        preprocessorDep, ruleResolver, Parallelizer.SERIAL);
-  }
-
-  public static LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
-      getTransitiveCxxPreprocessorInputCache(
-          CxxPreprocessorDep preprocessorDep,
-          BuildRuleResolver ruleResolver,
-          Parallelizer parallelizer) {
-    return CacheBuilder.newBuilder()
-        .build(
-            new CacheLoader<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>() {
-              @Override
-              public ImmutableMap<BuildTarget, CxxPreprocessorInput> load(
-                  @Nonnull CxxPlatform key) {
-                return computeTransitiveCxxToPreprocessorInputMap(
-                    key, preprocessorDep, true, ruleResolver, parallelizer);
-              }
-            });
-  }
-
-  public static ImmutableMap<BuildTarget, CxxPreprocessorInput>
-      computeTransitiveCxxToPreprocessorInputMap(
-          @Nonnull CxxPlatform key,
-          CxxPreprocessorDep preprocessorDep,
-          boolean includeDep,
-          BuildRuleResolver ruleResolver) {
-    return computeTransitiveCxxToPreprocessorInputMap(
-        key, preprocessorDep, includeDep, ruleResolver, Parallelizer.SERIAL);
-  }
-
-  private static ImmutableMap<BuildTarget, CxxPreprocessorInput>
-      computeTransitiveCxxToPreprocessorInputMap(
-          @Nonnull CxxPlatform key,
-          CxxPreprocessorDep preprocessorDep,
-          boolean includeDep,
-          BuildRuleResolver ruleResolver,
-          Parallelizer parallelizer) {
-    Map<BuildTarget, CxxPreprocessorInput> builder = new LinkedHashMap<>();
-    if (includeDep) {
-      builder.put(
-          preprocessorDep.getBuildTarget(),
-          preprocessorDep.getCxxPreprocessorInput(key, ruleResolver));
-    }
-
-    Stream<CxxPreprocessorDep> transitiveDepInputs =
-        parallelizer.maybeParallelize(
-            RichStream.from(preprocessorDep.getCxxPreprocessorDeps(key, ruleResolver)));
-
-    // We get CxxProcessorInput in parallel for each dep.
-    // We have one cache per CxxPreprocessable. Cache miss may trigger the creation of more
-    // BuildRules, acyclicly.
-    // The creation of new BuildRules will be through forked tasks, and because we wait on the
-    // Futures of the tasks directly, FJP will have current thread steal the work for those tasks
-    // and no deadlock will occur {@link BuildRuleResolverTest.deadLockOnDependencyTest() }.
-    transitiveDepInputs
-        .map(dep -> dep.getTransitiveCxxPreprocessorInput(key, ruleResolver))
-        .forEachOrdered(builder::putAll);
-    return ImmutableMap.copyOf(builder);
   }
 }

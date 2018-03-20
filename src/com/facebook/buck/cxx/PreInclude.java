@@ -39,7 +39,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.RichStream;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -96,8 +95,6 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
     this.ruleFinder = ruleFinder;
     this.sourcePath = sourcePath;
     this.absoluteHeaderPath = pathResolver.getAbsolutePath(sourcePath);
-    this.transitiveCxxPreprocessorInputCache =
-        CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this, ruleResolver);
   }
 
   /**
@@ -188,13 +185,13 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
     return CxxPreprocessorInput.of();
   }
 
-  private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
-      transitiveCxxPreprocessorInputCache;
+  private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
+      new TransitiveCxxPreprocessorInputCache(this);
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
-    return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
+    return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform, ruleResolver);
   }
 
   private ImmutableList<CxxPreprocessorInput> getCxxPreprocessorInputs(CxxPlatform cxxPlatform) {

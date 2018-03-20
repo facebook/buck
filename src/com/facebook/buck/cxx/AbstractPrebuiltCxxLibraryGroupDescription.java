@@ -49,7 +49,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.VersionPropagator;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -171,9 +170,8 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
     return new CustomPrebuiltCxxLibrary(
         buildTarget, context.getProjectFilesystem(), params, resolverLocal, ruleFinderLocal) {
 
-      private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
-          transitiveCxxPreprocessorInputCache =
-              CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this, ruleResolver);
+      private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
+          new TransitiveCxxPreprocessorInputCache(this);
 
       @Override
       public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
@@ -216,7 +214,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
       @Override
       public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
           CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
-        return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
+        return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform, ruleResolver);
       }
 
       @Override

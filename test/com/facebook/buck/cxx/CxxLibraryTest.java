@@ -82,7 +82,6 @@ public class CxxLibraryTest {
             target,
             new FakeProjectFilesystem(),
             params,
-            ruleResolver,
             publicHeaderTarget,
             publicHeaderSymlinkTreeTarget,
             privateHeaderTarget,

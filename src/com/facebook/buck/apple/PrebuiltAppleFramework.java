@@ -18,9 +18,9 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
-import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.cxx.TransitiveCxxPreprocessorInputCache;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -78,14 +78,13 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
   private final LoadingCache<NativeLinkableCacheKey, NativeLinkableInput> nativeLinkableCache =
       NativeLinkable.getNativeLinkableInputCache(this::getNativeLinkableInputUncached);
 
-  private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
-      transitiveCxxPreprocessorInputCache;
+  private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
+      new TransitiveCxxPreprocessorInputCache(this);
 
   public PrebuiltAppleFramework(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       SourcePath frameworkPath,
       Linkage preferredLinkage,
@@ -104,8 +103,6 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
     this.out =
         BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s").resolve(frameworkName);
     this.applePlatformFlavorDomain = applePlatformFlavorDomain;
-    this.transitiveCxxPreprocessorInputCache =
-        CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this, ruleResolver);
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
@@ -183,7 +180,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
-    return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
+    return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform, ruleResolver);
   }
 
   @Override

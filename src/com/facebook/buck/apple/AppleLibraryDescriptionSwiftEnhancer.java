@@ -19,10 +19,10 @@ package com.facebook.buck.apple;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryDescription;
-import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.HeaderSymlinkTreeWithHeaderMap;
 import com.facebook.buck.cxx.PreprocessorFlags;
+import com.facebook.buck.cxx.TransitiveCxxPreprocessorInputCache;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
@@ -109,7 +109,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
       BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform) {
     CxxLibrary lib = (CxxLibrary) resolver.requireRule(target.withFlavors());
     ImmutableMap<BuildTarget, CxxPreprocessorInput> transitiveMap =
-        CxxPreprocessables.computeTransitiveCxxToPreprocessorInputMap(
+        TransitiveCxxPreprocessorInputCache.computeTransitiveCxxToPreprocessorInputMap(
             platform, lib, false, resolver);
 
     ImmutableSet.Builder<CxxPreprocessorInput> builder = ImmutableSet.builder();

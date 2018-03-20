@@ -490,9 +490,8 @@ public class PrebuiltCxxLibraryDescription
       private final LoadingCache<NativeLinkableCacheKey, NativeLinkableInput> nativeLinkableCache =
           NativeLinkable.getNativeLinkableInputCache(this::getNativeLinkableInputUncached);
 
-      private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
-          transitiveCxxPreprocessorInputCache =
-              CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this, ruleResolver);
+      private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
+          new TransitiveCxxPreprocessorInputCache(this);
 
       private boolean hasHeaders(CxxPlatform cxxPlatform) {
         if (!args.getExportedHeaders().isEmpty()) {
@@ -627,7 +626,7 @@ public class PrebuiltCxxLibraryDescription
       @Override
       public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
           CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
-        return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
+        return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform, ruleResolver);
       }
 
       @Override

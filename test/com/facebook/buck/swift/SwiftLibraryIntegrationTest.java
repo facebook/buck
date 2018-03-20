@@ -102,7 +102,6 @@ public class SwiftLibraryIntegrationTest {
             libTarget,
             new FakeProjectFilesystem(),
             libParams,
-            resolver,
             BuildTargetFactory.newInstance("//:header"),
             symlinkTarget,
             BuildTargetFactory.newInstance("//:privateheader"),

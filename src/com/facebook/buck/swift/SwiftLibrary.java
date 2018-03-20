@@ -26,6 +26,7 @@ import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.cxx.TransitiveCxxPreprocessorInputCache;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -47,7 +48,6 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.util.RichStream;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -64,8 +64,8 @@ import java.util.stream.StreamSupport;
 class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements HasRuntimeDeps, NativeLinkable, CxxPreprocessorDep {
 
-  private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
-      transitiveCxxPreprocessorInputCache;
+  private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
+      new TransitiveCxxPreprocessorInputCache(this);
 
   private final BuildRuleResolver ruleResolver;
 
@@ -90,8 +90,6 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       Optional<Pattern> supportedPlatformsRegex,
       Linkage linkage) {
     super(buildTarget, projectFilesystem, params);
-    this.transitiveCxxPreprocessorInputCache =
-        CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this, ruleResolver);
     this.ruleResolver = ruleResolver;
     this.exportedDeps = exportedDeps;
     this.bridgingHeader = bridgingHeader;
@@ -286,7 +284,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     if (getBuildTarget().getFlavors().contains(SWIFT_COMPANION_FLAVOR)) {
       return ImmutableMap.of(getBuildTarget(), getCxxPreprocessorInput(cxxPlatform, ruleResolver));
     } else {
-      return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
+      return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform, ruleResolver);
     }
   }
 }

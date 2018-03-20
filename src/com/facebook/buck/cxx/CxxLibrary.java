@@ -105,8 +105,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final LoadingCache<NativeLinkableCacheKey, NativeLinkableInput> nativeLinkableCache =
       NativeLinkable.getNativeLinkableInputCache(this::getNativeLinkableInputUncached);
 
-  private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
-      transitiveCxxPreprocessorInputCache;
+  private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache;
 
   public CxxLibrary(
       BuildTarget buildTarget,
@@ -153,8 +152,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     this.reexportAllHeaderDependencies = reexportAllHeaderDependencies;
     this.delegate = delegate;
     this.transitiveCxxPreprocessorInputCache =
-        CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(
-            this, ruleResolver, ruleResolver.getParallelizer());
+        new TransitiveCxxPreprocessorInputCache(this, ruleResolver.getParallelizer());
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
@@ -236,7 +234,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
-    return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
+    return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform, ruleResolver);
   }
 
   @Override
