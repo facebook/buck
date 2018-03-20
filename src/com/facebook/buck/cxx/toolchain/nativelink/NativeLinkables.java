@@ -327,12 +327,12 @@ public class NativeLinkables {
 
   /** @return the {@link NativeLinkTarget} that can be extracted from {@code object}, if any. */
   public static Optional<NativeLinkTarget> getNativeLinkTarget(
-      Object object, CxxPlatform cxxPlatform) {
+      Object object, CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     if (object instanceof NativeLinkTarget) {
       return Optional.of((NativeLinkTarget) object);
     }
     if (object instanceof CanProvideNativeLinkTarget) {
-      return ((CanProvideNativeLinkTarget) object).getNativeLinkTarget(cxxPlatform);
+      return ((CanProvideNativeLinkTarget) object).getNativeLinkTarget(cxxPlatform, ruleResolver);
     }
     return Optional.empty();
   }

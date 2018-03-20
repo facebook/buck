@@ -17,11 +17,13 @@
 package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.rules.BuildRuleResolver;
 import java.util.Optional;
 
 /**
  * Helper interface for nodes which conditionally support the {@link NativeLinkTarget} interface.
  */
 public interface CanProvideNativeLinkTarget {
-  Optional<NativeLinkTarget> getNativeLinkTarget(CxxPlatform cxxPlatform);
+  Optional<NativeLinkTarget> getNativeLinkTarget(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver);
 }

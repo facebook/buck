@@ -700,7 +700,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     PrebuiltCxxLibrary rule =
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(resolver, filesystem, targetGraph);
-    assertFalse(rule.getNativeLinkTarget(CXX_PLATFORM).isPresent());
+    assertFalse(rule.getNativeLinkTarget(CXX_PLATFORM, resolver).isPresent());
   }
 
   @Test
@@ -714,7 +714,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     PrebuiltCxxLibrary rule =
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(resolver, filesystem, targetGraph);
-    assertFalse(rule.getNativeLinkTarget(CXX_PLATFORM).isPresent());
+    assertFalse(rule.getNativeLinkTarget(CXX_PLATFORM, resolver).isPresent());
   }
 
   @Test
@@ -726,7 +726,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     PrebuiltCxxLibrary rule =
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(resolver, filesystem, targetGraph);
-    assertTrue(rule.getNativeLinkTarget(CXX_PLATFORM).isPresent());
+    assertTrue(rule.getNativeLinkTarget(CXX_PLATFORM, resolver).isPresent());
   }
 
   @Test
@@ -740,7 +740,9 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary rule =
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(resolver, filesystem, targetGraph);
     assertThat(
-        rule.getNativeLinkTarget(CXX_PLATFORM).get().getNativeLinkTargetMode(CXX_PLATFORM),
+        rule.getNativeLinkTarget(CXX_PLATFORM, resolver)
+            .get()
+            .getNativeLinkTargetMode(CXX_PLATFORM),
         Matchers.equalTo(NativeLinkTargetMode.library("libsoname.so")));
   }
 
@@ -767,7 +769,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         (PrebuiltCxxLibrary) ruleBuilder.build(resolver, filesystem, targetGraph);
     assertThat(
         ImmutableList.copyOf(
-            rule.getNativeLinkTarget(CXX_PLATFORM)
+            rule.getNativeLinkTarget(CXX_PLATFORM, resolver)
                 .get()
                 .getNativeLinkTargetDeps(CXX_PLATFORM, resolver)),
         Matchers.hasItems(dep, exportedDep));
@@ -787,7 +789,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary rule =
         (PrebuiltCxxLibrary) ruleBuilder.build(resolver, filesystem, targetGraph);
     NativeLinkableInput input =
-        rule.getNativeLinkTarget(CXX_PLATFORM)
+        rule.getNativeLinkTarget(CXX_PLATFORM, resolver)
             .get()
             .getNativeLinkTargetInput(
                 CxxPlatformUtils.DEFAULT_PLATFORM, resolver, pathResolver, ruleFinder);

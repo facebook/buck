@@ -805,8 +805,9 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public Optional<NativeLinkTarget> getNativeLinkTarget(CxxPlatform cxxPlatform) {
-        if (getPreferredLinkage(cxxPlatform, ruleResolver) == Linkage.SHARED) {
+      public Optional<NativeLinkTarget> getNativeLinkTarget(
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+        if (getPreferredLinkage(cxxPlatform, this.ruleResolver) == Linkage.SHARED) {
           return Optional.empty();
         }
         return Optional.of(
