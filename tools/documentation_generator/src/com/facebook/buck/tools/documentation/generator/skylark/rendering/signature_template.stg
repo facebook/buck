@@ -1,0 +1,36 @@
+{namespace buck.%signature.name%}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: '%signature.name%()' /}
+    {param navid: 'function_%signature.name%' /}
+    {param prettify: true /}
+    {param description}
+      %signature.doc%
+    {/param}
+    {param content}
+
+      {call buck.function}
+        {param status: 'UNFROZEN' /}
+        {param overview}
+          %signature.doc%
+        {/param}
+
+        {param args}
+
+          %signature.parameters :{parameter |
+            %openCurly% call buck.functionArg %closeCurly%
+              %openCurly% param name : '%parameter.name%' /%closeCurly%
+              %openCurly% param desc %closeCurly%
+                %parameter.doc%
+              %openCurly%/param%closeCurly%
+              %openCurly% param default : '%parameter.defaultValue%' /%closeCurly%
+            %openCurly%/call%closeCurly%
+          }%
+
+        {/param}
+      {/call}
+    {/param} // content
+  {/call}
+{/template}

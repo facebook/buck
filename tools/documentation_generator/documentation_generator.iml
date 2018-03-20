@@ -12,5 +12,6 @@
     <orderEntry type="library" name="bazel" level="project" />
     <orderEntry type="library" scope="TEST" name="junit" level="project" />
     <orderEntry type="module" module-name="buck" scope="TEST" />
+    <orderEntry type="library" name="stringtemplate" level="project" />
   </component>
 </module>

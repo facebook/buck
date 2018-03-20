@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="stringtemplate">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/third-party/java/stringtemplate" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+    <jarDirectory url="file://$PROJECT_DIR$/third-party/java/stringtemplate" recursive="false" />
+  </library>
+</component>
