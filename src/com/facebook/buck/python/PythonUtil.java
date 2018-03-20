@@ -193,7 +193,8 @@ public class PythonUtil {
     Map<BuildTarget, CxxPythonExtension> extensions = new LinkedHashMap<>();
     Map<BuildTarget, NativeLinkable> nativeLinkableRoots = new LinkedHashMap<>();
 
-    OmnibusRoots.Builder omnibusRoots = OmnibusRoots.builder(cxxPlatform, preloadDeps);
+    OmnibusRoots.Builder omnibusRoots =
+        OmnibusRoots.builder(cxxPlatform, preloadDeps, ruleResolver);
 
     // Add the top-level components.
     allComponents.addComponent(packageComponents, buildTarget);
@@ -246,7 +247,7 @@ public class PythonUtil {
     // For the merged strategy, build up the lists of included native linkable roots, and the
     // excluded native linkable roots.
     if (nativeLinkStrategy == NativeLinkStrategy.MERGED) {
-      OmnibusRoots roots = omnibusRoots.build(ruleResolver);
+      OmnibusRoots roots = omnibusRoots.build();
       OmnibusLibraries libraries =
           Omnibus.getSharedLibraries(
               buildTarget,
@@ -315,10 +316,12 @@ public class PythonUtil {
               ruleResolver,
               Iterables.concat(nativeLinkableRoots.values(), extensionNativeDeps.values()));
       for (NativeLinkable nativeLinkable : nativeLinkables.values()) {
-        NativeLinkable.Linkage linkage = nativeLinkable.getPreferredLinkage(cxxPlatform);
+        NativeLinkable.Linkage linkage =
+            nativeLinkable.getPreferredLinkage(cxxPlatform, ruleResolver);
         if (nativeLinkableRoots.containsKey(nativeLinkable.getBuildTarget())
             || linkage != NativeLinkable.Linkage.STATIC) {
-          ImmutableMap<String, SourcePath> libs = nativeLinkable.getSharedLibraries(cxxPlatform);
+          ImmutableMap<String, SourcePath> libs =
+              nativeLinkable.getSharedLibraries(cxxPlatform, ruleResolver);
           for (Map.Entry<String, SourcePath> ent : libs.entrySet()) {
             allComponents.addNativeLibraries(
                 Paths.get(ent.getKey()), ent.getValue(), nativeLinkable.getBuildTarget());
@@ -343,7 +346,7 @@ public class PythonUtil {
         FluentIterable.from(preloadDeps)
             .transform(resolver::getRule)
             .filter(NativeLinkable.class)) {
-      builder.addAll(nativeLinkable.getSharedLibraries(cxxPlatform).keySet());
+      builder.addAll(nativeLinkable.getSharedLibraries(cxxPlatform, resolver).keySet());
     }
     return builder.build();
   }

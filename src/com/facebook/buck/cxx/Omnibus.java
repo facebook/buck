@@ -141,7 +141,7 @@ public class Omnibus {
               .values()) {
         Linker.LinkableDepType linkStyle =
             NativeLinkables.getLinkStyle(
-                dep.getPreferredLinkage(cxxPlatform), Linker.LinkableDepType.SHARED);
+                dep.getPreferredLinkage(cxxPlatform, ruleResolver), Linker.LinkableDepType.SHARED);
         Preconditions.checkState(linkStyle != Linker.LinkableDepType.STATIC);
 
         // We only consider deps which aren't *only* statically linked.
@@ -171,7 +171,7 @@ public class Omnibus {
             Maps.uniqueIndex(
                 getDeps(nativeLinkable, cxxPlatform, ruleResolver), NativeLinkable::getBuildTarget);
         nativeLinkables.putAll(deps);
-        if (!nativeLinkable.supportsOmnibusLinking(cxxPlatform)) {
+        if (!nativeLinkable.supportsOmnibusLinking(cxxPlatform, ruleResolver)) {
           excluded.add(target);
         }
         return deps.keySet();
@@ -322,12 +322,14 @@ public class Omnibus {
       NativeLinkable nativeLinkable = entry.getValue();
       Linker.LinkableDepType linkStyle =
           NativeLinkables.getLinkStyle(
-              nativeLinkable.getPreferredLinkage(cxxPlatform), Linker.LinkableDepType.SHARED);
+              nativeLinkable.getPreferredLinkage(cxxPlatform, ruleResolver),
+              Linker.LinkableDepType.SHARED);
 
       // If this dep needs to be linked statically, then we always link it directly.
       if (linkStyle != Linker.LinkableDepType.SHARED) {
         Preconditions.checkState(linkStyle == Linker.LinkableDepType.STATIC_PIC);
-        argsBuilder.addAll(nativeLinkable.getNativeLinkableInput(cxxPlatform, linkStyle).getArgs());
+        argsBuilder.addAll(
+            nativeLinkable.getNativeLinkableInput(cxxPlatform, linkStyle, ruleResolver).getArgs());
         continue;
       }
 
@@ -353,7 +355,8 @@ public class Omnibus {
       // Otherwise, this is either an explicitly statically linked or excluded node, so link it
       // normally.
       Preconditions.checkState(spec.getExcluded().containsKey(linkableTarget));
-      argsBuilder.addAll(nativeLinkable.getNativeLinkableInput(cxxPlatform, linkStyle).getArgs());
+      argsBuilder.addAll(
+          nativeLinkable.getNativeLinkableInput(cxxPlatform, linkStyle, ruleResolver).getArgs());
     }
 
     // Create the root library rule using the arguments assembled above.
@@ -577,7 +580,7 @@ public class Omnibus {
       NativeLinkable nativeLinkable = Preconditions.checkNotNull(spec.getBody().get(target));
       NativeLinkableInput input =
           NativeLinkables.getNativeLinkableInput(
-              cxxPlatform, Linker.LinkableDepType.STATIC_PIC, nativeLinkable);
+              cxxPlatform, Linker.LinkableDepType.STATIC_PIC, nativeLinkable, ruleResolver);
       argsBuilder.addAll(input.getArgs());
     }
 
@@ -589,7 +592,7 @@ public class Omnibus {
     for (NativeLinkable nativeLinkable : deps.values()) {
       NativeLinkableInput input =
           NativeLinkables.getNativeLinkableInput(
-              cxxPlatform, Linker.LinkableDepType.SHARED, nativeLinkable);
+              cxxPlatform, Linker.LinkableDepType.SHARED, nativeLinkable, ruleResolver);
       argsBuilder.addAll(input.getArgs());
     }
 
@@ -740,9 +743,10 @@ public class Omnibus {
     // static libraries.
     for (NativeLinkable nativeLinkable : spec.getExcluded().values()) {
       if (spec.getExcludedRoots().contains(nativeLinkable.getBuildTarget())
-          || nativeLinkable.getPreferredLinkage(cxxPlatform) != NativeLinkable.Linkage.STATIC) {
+          || nativeLinkable.getPreferredLinkage(cxxPlatform, ruleResolver)
+              != NativeLinkable.Linkage.STATIC) {
         for (Map.Entry<String, SourcePath> ent :
-            nativeLinkable.getSharedLibraries(cxxPlatform).entrySet()) {
+            nativeLinkable.getSharedLibraries(cxxPlatform, ruleResolver).entrySet()) {
           libs.addLibraries(OmnibusLibrary.of(ent.getKey(), ent.getValue()));
         }
       }

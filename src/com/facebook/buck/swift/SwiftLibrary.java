@@ -143,7 +143,8 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
-      ImmutableSet<LanguageExtensions> languageExtensions) {
+      ImmutableSet<LanguageExtensions> languageExtensions,
+      BuildRuleResolver ruleResolver) {
     SwiftCompile rule = requireSwiftCompileRule(cxxPlatform.getFlavor());
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder();
     inputBuilder
@@ -151,7 +152,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
         .addAllFrameworks(frameworks)
         .addAllLibraries(libraries);
     boolean isDynamic;
-    Linkage preferredLinkage = getPreferredLinkage(cxxPlatform);
+    Linkage preferredLinkage = getPreferredLinkage(cxxPlatform, ruleResolver);
     switch (preferredLinkage) {
       case STATIC:
         isDynamic = false;
@@ -178,7 +179,8 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+  public ImmutableMap<String, SourcePath> getSharedLibraries(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableMap.of();
     }
@@ -230,7 +232,8 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+  public NativeLinkable.Linkage getPreferredLinkage(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     // don't create dylib for swift companion target.
     if (getBuildTarget().getFlavors().contains(SWIFT_COMPANION_FLAVOR)) {
       return Linkage.STATIC;

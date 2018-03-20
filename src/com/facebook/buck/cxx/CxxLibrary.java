@@ -385,7 +385,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
-      ImmutableSet<LanguageExtensions> languageExtensions) {
+      ImmutableSet<LanguageExtensions> languageExtensions,
+      BuildRuleResolver ruleResolver) {
     return nativeLinkableCache.getUnchecked(
         NativeLinkableCacheKey.of(cxxPlatform.getFlavor(), type, forceLinkWhole, cxxPlatform));
   }
@@ -405,7 +406,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+  public NativeLinkable.Linkage getPreferredLinkage(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return linkage;
   }
 
@@ -429,7 +431,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+  public ImmutableMap<String, SourcePath> getSharedLibraries(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     if (headerOnly.test(cxxPlatform)) {
       return ImmutableMap.of();
     }

@@ -106,7 +106,7 @@ public class HalideLibraryDescriptionTest {
 
     // Check that the library rule has the correct native linkable input.
     NativeLinkableInput input =
-        lib.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC);
+        lib.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC, resolver);
     BuildRule buildRule =
         FluentIterable.from(input.getArgs())
             .transformAndConcat(
@@ -130,7 +130,7 @@ public class HalideLibraryDescriptionTest {
     assertThat(
         halideLibrary
             .getNativeLinkableInput(
-                CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC)
+                CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, resolver1)
             .getArgs(),
         not(Matchers.empty()));
 
@@ -142,7 +142,7 @@ public class HalideLibraryDescriptionTest {
     assertThat(
         halideLibrary
             .getNativeLinkableInput(
-                CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC)
+                CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, resolver2)
             .getArgs(),
         Matchers.empty());
   }

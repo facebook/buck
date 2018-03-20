@@ -140,7 +140,8 @@ public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
-      ImmutableSet<LanguageExtensions> languageExtensions) {
+      ImmutableSet<LanguageExtensions> languageExtensions,
+      BuildRuleResolver ruleResolver) {
     if (!isPlatformSupported(cxxPlatform)) {
       return NativeLinkableInput.of();
     }
@@ -151,12 +152,14 @@ public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+  public NativeLinkable.Linkage getPreferredLinkage(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return NativeLinkable.Linkage.STATIC;
   }
 
   @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+  public ImmutableMap<String, SourcePath> getSharedLibraries(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return ImmutableMap.of();
   }
 }

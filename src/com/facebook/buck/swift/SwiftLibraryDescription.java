@@ -355,7 +355,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
         NativeLinkableInput.builder()
             .from(
                 swiftRuntimeLinkable.getNativeLinkableInput(
-                    cxxPlatform, Linker.LinkableDepType.SHARED))
+                    cxxPlatform, Linker.LinkableDepType.SHARED, resolver))
             .addAllArgs(rule.getAstLinkArgs())
             .addAllArgs(rule.getFileListLinkArg());
     return resolver.addToIndex(

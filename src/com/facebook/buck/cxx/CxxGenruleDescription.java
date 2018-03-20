@@ -635,7 +635,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
       for (NativeLinkable nativeLinkable : nativeLinkables.values()) {
         nativeLinkableInputs.add(
-            NativeLinkables.getNativeLinkableInput(cxxPlatform, depType, nativeLinkable));
+            NativeLinkables.getNativeLinkableInput(
+                cxxPlatform, depType, nativeLinkable, ruleResolver));
       }
       return NativeLinkableInput.concat(nativeLinkableInputs.build());
     }

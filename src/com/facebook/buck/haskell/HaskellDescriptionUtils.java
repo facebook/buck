@@ -297,13 +297,15 @@ public class HaskellDescriptionUtils {
     for (NativeLinkable nativeLinkable :
         NativeLinkables.getNativeLinkables(platform.getCxxPlatform(), resolver, deps, depType)
             .values()) {
-      NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(platform.getCxxPlatform());
+      NativeLinkable.Linkage link =
+          nativeLinkable.getPreferredLinkage(platform.getCxxPlatform(), resolver);
       NativeLinkableInput input =
           nativeLinkable.getNativeLinkableInput(
               platform.getCxxPlatform(),
               NativeLinkables.getLinkStyle(link, depType),
               linkWholeDeps.contains(nativeLinkable.getBuildTarget()),
-              ImmutableSet.of());
+              ImmutableSet.of(),
+              resolver);
       linkerArgsBuilder.addAll(input.getArgs());
     }
 
@@ -532,8 +534,8 @@ public class HaskellDescriptionUtils {
         .values()
         .stream()
         // Skip statically linked libraries.
-        .filter(l -> l.getPreferredLinkage(platform.getCxxPlatform()) != Linkage.STATIC)
-        .forEach(l -> sharedLibsBuilder.add(platform.getCxxPlatform(), l));
+        .filter(l -> l.getPreferredLinkage(platform.getCxxPlatform(), resolver) != Linkage.STATIC)
+        .forEach(l -> sharedLibsBuilder.add(platform.getCxxPlatform(), l, resolver));
     ImmutableSortedMap<String, SourcePath> sharedLibs = sharedLibsBuilder.build();
 
     // Build up a set of all transitive preload libs, which are the ones that have been "excluded"
@@ -547,9 +549,9 @@ public class HaskellDescriptionUtils {
         // always link dynamically.
         .filter(
             l ->
-                l.getPreferredLinkage(platform.getCxxPlatform()) != Linkage.STATIC
+                l.getPreferredLinkage(platform.getCxxPlatform(), resolver) != Linkage.STATIC
                     || omnibusSpec.getExcludedRoots().containsKey(l.getBuildTarget()))
-        .forEach(l -> preloadLibsBuilder.add(platform.getCxxPlatform(), l));
+        .forEach(l -> preloadLibsBuilder.add(platform.getCxxPlatform(), l, resolver));
     ImmutableSortedMap<String, SourcePath> preloadLibs = preloadLibsBuilder.build();
 
     HaskellSources srcs =

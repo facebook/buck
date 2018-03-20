@@ -88,22 +88,24 @@ public class SystemLuaCxxLibrary implements AbstractCxxLibrary {
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
-      ImmutableSet<LanguageExtensions> languageExtensions) {
+      ImmutableSet<LanguageExtensions> languageExtensions,
+      BuildRuleResolver ruleResolver) {
     return NativeLinkableInput.builder().addAllArgs(StringArg.from("-llua")).build();
   }
 
   @Override
-  public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+  public Linkage getPreferredLinkage(CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return Linkage.SHARED;
   }
 
   @Override
-  public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {
+  public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return false;
   }
 
   @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+  public ImmutableMap<String, SourcePath> getSharedLibraries(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return ImmutableMap.of();
   }
 }

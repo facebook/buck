@@ -173,7 +173,7 @@ public class CxxPythonExtensionDescriptionTest {
 
     NativeLinkableInput depInput =
         dep.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED);
+            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED, resolver);
 
     // Verify that the shared library dep propagated to the link rule.
     extension.getPythonPackageComponents(PY2, CxxPlatformUtils.DEFAULT_PLATFORM);

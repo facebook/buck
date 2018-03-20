@@ -685,7 +685,8 @@ public class PrebuiltCxxLibraryDescription
 
         if (!args.isHeaderOnly()) {
           if (type == Linker.LinkableDepType.SHARED) {
-            Preconditions.checkState(getPreferredLinkage(cxxPlatform) != Linkage.STATIC);
+            Preconditions.checkState(
+                getPreferredLinkage(cxxPlatform, ruleResolver) != Linkage.STATIC);
             SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform, true);
             if (args.getLinkWithoutSoname()) {
               if (!(sharedLibrary instanceof PathSourcePath)) {
@@ -697,7 +698,8 @@ public class PrebuiltCxxLibraryDescription
               linkerArgsBuilder.add(SourcePathArg.of(requireSharedLibrary(cxxPlatform, true)));
             }
           } else {
-            Preconditions.checkState(getPreferredLinkage(cxxPlatform) != Linkage.SHARED);
+            Preconditions.checkState(
+                getPreferredLinkage(cxxPlatform, ruleResolver) != Linkage.SHARED);
             Optional<SourcePath> staticLibraryPath =
                 type == Linker.LinkableDepType.STATIC_PIC
                     ? getStaticPicLibrary(cxxPlatform)
@@ -726,13 +728,15 @@ public class PrebuiltCxxLibraryDescription
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type,
           boolean forceLinkWhole,
-          ImmutableSet<LanguageExtensions> languageExtensions) {
+          ImmutableSet<LanguageExtensions> languageExtensions,
+          BuildRuleResolver ruleResolver) {
         return nativeLinkableCache.getUnchecked(
             NativeLinkableCacheKey.of(cxxPlatform.getFlavor(), type, forceLinkWhole, cxxPlatform));
       }
 
       @Override
-      public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+      public NativeLinkable.Linkage getPreferredLinkage(
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         if (args.isHeaderOnly()) {
           return Linkage.ANY;
         }
@@ -746,7 +750,7 @@ public class PrebuiltCxxLibraryDescription
           return Linkage.SHARED;
         }
         Optional<Linkage> inferredLinkage =
-            paths.getLinkage(projectFilesystem, ruleResolver, cellRoots, cxxPlatform);
+            paths.getLinkage(projectFilesystem, this.ruleResolver, cellRoots, cxxPlatform);
         if (inferredLinkage.isPresent()) {
           return inferredLinkage.get();
         }
@@ -754,9 +758,10 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {
+      public boolean supportsOmnibusLinking(
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         return args.getSupportsMergedLinking()
-            .orElse(getPreferredLinkage(cxxPlatform) != Linkage.SHARED);
+            .orElse(getPreferredLinkage(cxxPlatform, this.ruleResolver) != Linkage.SHARED);
       }
 
       @Override
@@ -774,7 +779,8 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+      public ImmutableMap<String, SourcePath> getSharedLibraries(
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         if (!isPlatformSupported(cxxPlatform)) {
           return ImmutableMap.of();
         }
@@ -790,7 +796,7 @@ public class PrebuiltCxxLibraryDescription
 
       @Override
       public Optional<NativeLinkTarget> getNativeLinkTarget(CxxPlatform cxxPlatform) {
-        if (getPreferredLinkage(cxxPlatform) == Linkage.SHARED) {
+        if (getPreferredLinkage(cxxPlatform, ruleResolver) == Linkage.SHARED) {
           return Optional.empty();
         }
         return Optional.of(

@@ -48,21 +48,27 @@ abstract class AbstractOmnibusRoots {
   /** @return the {@link NativeLinkable} roots that are excluded from omnibus linking. */
   abstract ImmutableMap<BuildTarget, NativeLinkable> getExcludedRoots();
 
-  public static Builder builder(CxxPlatform cxxPlatform, ImmutableSet<BuildTarget> excludes) {
-    return new Builder(cxxPlatform, excludes);
+  public static Builder builder(
+      CxxPlatform cxxPlatform, ImmutableSet<BuildTarget> excludes, BuildRuleResolver ruleResolver) {
+    return new Builder(cxxPlatform, excludes, ruleResolver);
   }
 
   public static class Builder {
 
     private final CxxPlatform cxxPlatform;
     private final ImmutableSet<BuildTarget> excludes;
+    private final BuildRuleResolver ruleResolver;
 
     private final Map<BuildTarget, NativeLinkTarget> includedRoots = new LinkedHashMap<>();
     private final Map<BuildTarget, NativeLinkable> excludedRoots = new LinkedHashMap<>();
 
-    private Builder(CxxPlatform cxxPlatform, ImmutableSet<BuildTarget> excludes) {
+    private Builder(
+        CxxPlatform cxxPlatform,
+        ImmutableSet<BuildTarget> excludes,
+        BuildRuleResolver ruleResolver) {
       this.cxxPlatform = cxxPlatform;
       this.excludes = excludes;
+      this.ruleResolver = ruleResolver;
     }
 
     /** Add a root which is included in omnibus linking. */
@@ -84,15 +90,14 @@ abstract class AbstractOmnibusRoots {
       Optional<NativeLinkTarget> target = NativeLinkables.getNativeLinkTarget(node, cxxPlatform);
       if (target.isPresent()
           && !excludes.contains(node.getBuildTarget())
-          && node.supportsOmnibusLinking(cxxPlatform)) {
+          && node.supportsOmnibusLinking(cxxPlatform, ruleResolver)) {
         addIncludedRoot(target.get());
       } else {
         addExcludedRoot(node);
       }
     }
 
-    private ImmutableMap<BuildTarget, NativeLinkable> buildExcluded(
-        BuildRuleResolver ruleResolver) {
+    private ImmutableMap<BuildTarget, NativeLinkable> buildExcluded() {
       Map<BuildTarget, NativeLinkable> excluded = new LinkedHashMap<>();
       excluded.putAll(excludedRoots);
 
@@ -106,7 +111,7 @@ abstract class AbstractOmnibusRoots {
       new AbstractBreadthFirstTraversal<NativeLinkable>(includedRootDeps.values()) {
         @Override
         public Iterable<NativeLinkable> visit(NativeLinkable linkable) throws RuntimeException {
-          if (!linkable.supportsOmnibusLinking(cxxPlatform)) {
+          if (!linkable.supportsOmnibusLinking(cxxPlatform, ruleResolver)) {
             excluded.put(linkable.getBuildTarget(), linkable);
             return ImmutableSet.of();
           }
@@ -147,8 +152,8 @@ abstract class AbstractOmnibusRoots {
       return includedRoots.isEmpty() && excludedRoots.isEmpty();
     }
 
-    public OmnibusRoots build(BuildRuleResolver ruleResolver) {
-      ImmutableMap<BuildTarget, NativeLinkable> excluded = buildExcluded(ruleResolver);
+    public OmnibusRoots build() {
+      ImmutableMap<BuildTarget, NativeLinkable> excluded = buildExcluded();
       ImmutableMap<BuildTarget, NativeLinkTarget> included = buildIncluded(excluded.keySet());
       return OmnibusRoots.of(included, excluded);
     }

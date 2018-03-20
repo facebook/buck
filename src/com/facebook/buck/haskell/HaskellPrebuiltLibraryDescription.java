@@ -130,7 +130,8 @@ public class HaskellPrebuiltLibraryDescription
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type,
           boolean forceLinkWhole,
-          ImmutableSet<LanguageExtensions> languageExtensions) {
+          ImmutableSet<LanguageExtensions> languageExtensions,
+          BuildRuleResolver ruleResolver) {
         NativeLinkableInput.Builder builder = NativeLinkableInput.builder();
         builder.addAllArgs(StringArg.from(args.getExportedLinkerFlags()));
         if (type == Linker.LinkableDepType.SHARED) {
@@ -152,12 +153,13 @@ public class HaskellPrebuiltLibraryDescription
       }
 
       @Override
-      public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+      public Linkage getPreferredLinkage(CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         return Linkage.ANY;
       }
 
       @Override
-      public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+      public ImmutableMap<String, SourcePath> getSharedLibraries(
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         return args.getSharedLibs();
       }
 

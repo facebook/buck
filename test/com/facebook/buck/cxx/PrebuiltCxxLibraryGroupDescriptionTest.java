@@ -88,7 +88,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .build(resolver);
     assertThat(
         lib.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC),
+            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, resolver),
         Matchers.equalTo(
             NativeLinkableInput.builder()
                 .addArgs(
@@ -111,7 +111,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .build(resolver);
     assertThat(
         lib.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC_PIC),
+            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC_PIC, resolver),
         Matchers.equalTo(
             NativeLinkableInput.builder()
                 .addArgs(
@@ -137,7 +137,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .build(resolver);
     assertThat(
         lib.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED),
+            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED, resolver),
         Matchers.equalTo(
             NativeLinkableInput.builder()
                 .addArgs(
@@ -180,13 +180,13 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .build(resolver);
     assertThat(
         lib.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED),
+            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED, resolver),
         Matchers.equalTo(
             NativeLinkableInput.builder()
                 .addArgs(SourcePathArg.of(lib1), SourcePathArg.of(lib2))
                 .build()));
     assertThat(
-        lib.getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM),
+        lib.getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM, resolver),
         Matchers.equalTo(ImmutableMap.of("lib1.so", lib1)));
   }
 
@@ -201,7 +201,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .setStaticLink(ImmutableList.of("-something"))
                 .build(resolver);
     assertThat(
-        any.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
+        any.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM, resolver),
         Matchers.equalTo(NativeLinkable.Linkage.ANY));
 
     NativeLinkable staticOnly =
@@ -210,7 +210,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .setStaticLink(ImmutableList.of("-something"))
                 .build(resolver);
     assertThat(
-        staticOnly.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
+        staticOnly.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM, resolver),
         Matchers.equalTo(NativeLinkable.Linkage.STATIC));
 
     NativeLinkable sharedOnly =
@@ -219,7 +219,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .setSharedLink(ImmutableList.of("-something"))
                 .build(resolver);
     assertThat(
-        sharedOnly.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
+        sharedOnly.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM, resolver),
         Matchers.equalTo(NativeLinkable.Linkage.SHARED));
   }
 
@@ -241,7 +241,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
     NativeLinkable library = (NativeLinkable) builder.build(resolver);
     NativeLinkableInput input =
         library.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC);
+            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, resolver);
     SourcePath lib = cxxGenrule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM);
     assertThat(input.getArgs(), Matchers.contains(SourcePathArg.of(lib)));
   }
@@ -272,7 +272,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
 
     assertThat(
         lib.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED),
+            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED, resolver),
         Matchers.equalTo(NativeLinkableInput.of()));
 
     assertThat(
@@ -283,7 +283,8 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
         lib.getNativeLinkableDepsForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM, resolver),
         Matchers.emptyIterable());
 
-    assertThat(lib.getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM), Matchers.anEmptyMap());
+    assertThat(
+        lib.getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM, resolver), Matchers.anEmptyMap());
 
     CxxPreprocessorDep cxxPreprocessorDep = (CxxPreprocessorDep) buildRule;
 

@@ -79,27 +79,30 @@ public interface NativeLinkable {
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
-      ImmutableSet<LanguageExtensions> languageExtensions);
+      ImmutableSet<LanguageExtensions> languageExtensions,
+      BuildRuleResolver ruleResolver);
 
   /**
    * Return input that *dependents* should put on their link line when linking against this
    * linkable.
    */
   default NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform, Linker.LinkableDepType type) {
-    return getNativeLinkableInput(cxxPlatform, type, false, ImmutableSet.of());
+      CxxPlatform cxxPlatform, Linker.LinkableDepType type, BuildRuleResolver ruleResolver) {
+    return getNativeLinkableInput(cxxPlatform, type, false, ImmutableSet.of(), ruleResolver);
   }
 
-  Linkage getPreferredLinkage(CxxPlatform cxxPlatform);
+  Linkage getPreferredLinkage(CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver);
 
   /**
    * @return a map of shared library SONAME to shared library path for the given {@link
    *     CxxPlatform}.
    */
-  ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform);
+  ImmutableMap<String, SourcePath> getSharedLibraries(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver);
 
   /** @return whether this {@link NativeLinkable} supports omnibus linking. */
-  default boolean supportsOmnibusLinking(@SuppressWarnings("unused") CxxPlatform cxxPlatform) {
+  @SuppressWarnings("unused")
+  default boolean supportsOmnibusLinking(CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return true;
   }
 

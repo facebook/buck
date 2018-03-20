@@ -195,13 +195,15 @@ public class CxxLinkableEnhancer {
             .map(entry -> entry.getValue())
             .map(
                 nativeLinkable -> {
-                  NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform);
+                  NativeLinkable.Linkage link =
+                      nativeLinkable.getPreferredLinkage(cxxPlatform, ruleResolver);
                   NativeLinkableInput input =
                       nativeLinkable.getNativeLinkableInput(
                           cxxPlatform,
                           NativeLinkables.getLinkStyle(link, depType),
                           linkWholeDeps.contains(nativeLinkable.getBuildTarget()),
-                          ImmutableSet.of());
+                          ImmutableSet.of(),
+                          ruleResolver);
                   LOG.verbose("Native linkable %s returned input %s", nativeLinkable, input);
                   return input;
                 });

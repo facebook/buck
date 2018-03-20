@@ -883,7 +883,8 @@ public class HaskellLibraryDescription
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type,
           boolean forceLinkWhole,
-          ImmutableSet<LanguageExtensions> languageExtensions) {
+          ImmutableSet<LanguageExtensions> languageExtensions,
+          BuildRuleResolver ruleResolver) {
         Iterable<Arg> linkArgs;
         switch (type) {
           case STATIC:
@@ -930,12 +931,13 @@ public class HaskellLibraryDescription
       }
 
       @Override
-      public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+      public Linkage getPreferredLinkage(CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         return args.getPreferredLinkage();
       }
 
       @Override
-      public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+      public ImmutableMap<String, SourcePath> getSharedLibraries(
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
         String sharedLibrarySoname =
             CxxDescriptionEnhancer.getSharedLibrarySoname(

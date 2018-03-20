@@ -236,7 +236,8 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type,
           boolean forceLinkWhole,
-          ImmutableSet<LanguageExtensions> languageExtensions) {
+          ImmutableSet<LanguageExtensions> languageExtensions,
+          BuildRuleResolver ruleResolver) {
 
         if (!isPlatformSupported(cxxPlatform)) {
           return NativeLinkableInput.of();
@@ -278,7 +279,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
       }
 
       @Override
-      public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+      public Linkage getPreferredLinkage(CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
 
         // If we both shared and static libs, we support any linkage.
         if (!args.getSharedLink().isEmpty()
@@ -301,8 +302,9 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
       }
 
       @Override
-      public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {
-        return getPreferredLinkage(cxxPlatform) != Linkage.SHARED;
+      public boolean supportsOmnibusLinking(
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+        return getPreferredLinkage(cxxPlatform, this.ruleResolver) != Linkage.SHARED;
       }
 
       @Override
@@ -324,7 +326,8 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
       }
 
       @Override
-      public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+      public ImmutableMap<String, SourcePath> getSharedLibraries(
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         if (!isPlatformSupported(cxxPlatform)) {
           return ImmutableMap.of();
         }

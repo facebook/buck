@@ -83,17 +83,20 @@ class OmnibusNode implements NativeLinkable {
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
-      ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions) {
+      ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions,
+      BuildRuleResolver ruleResolver) {
     return NativeLinkableInput.builder().addArgs(StringArg.of(getBuildTarget().toString())).build();
   }
 
   @Override
-  public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+  public NativeLinkable.Linkage getPreferredLinkage(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return linkage;
   }
 
   @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+  public ImmutableMap<String, SourcePath> getSharedLibraries(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return ImmutableMap.of(
         getBuildTarget().toString(), FakeSourcePath.of(getBuildTarget().toString()));
   }

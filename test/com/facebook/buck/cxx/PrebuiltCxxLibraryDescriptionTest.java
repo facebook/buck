@@ -126,7 +126,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             ImmutableSet.of());
     assertEquals(
         expectedStaticLinkableInput,
-        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC, resolver));
 
     // Verify shared native linkable input.
     NativeLinkableInput expectedSharedLinkableInput =
@@ -138,7 +138,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             ImmutableSet.of());
     assertEquals(
         expectedSharedLinkableInput,
-        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED, resolver));
   }
 
   @Test
@@ -156,14 +156,14 @@ public class PrebuiltCxxLibraryDescriptionTest {
         NativeLinkableInput.of(ImmutableList.of(), ImmutableSet.of(), ImmutableSet.of());
     assertEquals(
         expectedStaticLinkableInput,
-        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC, resolver));
 
     // Verify shared native linkable input.
     NativeLinkableInput expectedSharedLinkableInput =
         NativeLinkableInput.of(ImmutableList.of(), ImmutableSet.of(), ImmutableSet.of());
     assertEquals(
         expectedSharedLinkableInput,
-        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED, resolver));
   }
 
   @Test
@@ -188,7 +188,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             ImmutableSet.of());
     assertEquals(
         expectedSharedLinkableInput,
-        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED, resolver));
   }
 
   @Test
@@ -202,7 +202,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary lib =
         (PrebuiltCxxLibrary) libBuilder.build(resolver, filesystem, targetGraph);
     NativeLinkableInput nativeLinkableInput =
-        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED);
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED, resolver);
     BuildRule rule =
         FluentIterable.from(nativeLinkableInput.getArgs())
             .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder))
@@ -222,7 +222,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary lib =
         (PrebuiltCxxLibrary) libBuilder.build(resolver, filesystem, targetGraph);
     NativeLinkableInput nativeLinkableInput =
-        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED);
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED, resolver);
     assertThat(
         FluentIterable.from(nativeLinkableInput.getArgs())
             .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder))
@@ -244,7 +244,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableMap.<String, SourcePath>of(
             getSharedLibrarySoname(arg),
             PathSourcePath.of(filesystem, TARGET.getBasePath().resolve("libfoo.so"))),
-        lib.getSharedLibraries(CXX_PLATFORM));
+        lib.getSharedLibraries(CXX_PLATFORM, resolver));
   }
 
   @Test
@@ -507,7 +507,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary lib =
         (PrebuiltCxxLibrary) libBuilder.build(resolver, filesystem, targetGraph);
     NativeLinkableInput nativeLinkableInput =
-        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC_PIC);
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC_PIC, resolver);
     assertThat(
         Arg.stringify(nativeLinkableInput.getArgs(), pathResolver).get(0),
         Matchers.endsWith("libfoo_pic.a"));
@@ -527,7 +527,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
                 .setStaticLib(FakeSourcePath.of("libfoo.a"))
                 .build(resolver, filesystem, targetGraph);
     NativeLinkableInput nativeLinkableInput =
-        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC_PIC);
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC_PIC, resolver);
     assertThat(
         Arg.stringify(nativeLinkableInput.getArgs(), pathResolver).get(0),
         Matchers.endsWith("libfoo.a"));
@@ -542,7 +542,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     PrebuiltCxxLibrary lib =
         (PrebuiltCxxLibrary) libBuilder.build(resolver, filesystem, targetGraph);
-    lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC_PIC);
+    lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC_PIC, resolver);
   }
 
   @Test
@@ -558,7 +558,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary prebuiltCxxLibrary =
         (PrebuiltCxxLibrary) builder.build(resolver, filesystem, targetGraph);
     assertThat(
-        prebuiltCxxLibrary.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
+        prebuiltCxxLibrary.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM, resolver),
         Matchers.equalTo(NativeLinkable.Linkage.STATIC));
   }
 
@@ -681,7 +681,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary rule =
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(resolver, filesystem, targetGraph);
     NativeLinkableInput input =
-        rule.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED);
+        rule.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED, resolver);
     assertThat(
         Arg.stringify(input.getArgs(), pathResolver),
         contains(
@@ -803,7 +803,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
     PrebuiltCxxLibrary rule =
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(resolver, filesystem, targetGraph);
-    assertThat(rule.getSharedLibraries(CXX_PLATFORM).entrySet(), empty());
+    assertThat(rule.getSharedLibraries(CXX_PLATFORM, resolver).entrySet(), empty());
   }
 
   @Test
@@ -817,7 +817,8 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary rule =
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(resolver, filesystem, targetGraph);
     assertThat(
-        rule.getPreferredLinkage(CXX_PLATFORM), Matchers.equalTo(NativeLinkable.Linkage.ANY));
+        rule.getPreferredLinkage(CXX_PLATFORM, resolver),
+        Matchers.equalTo(NativeLinkable.Linkage.ANY));
   }
 
   @Test
@@ -834,12 +835,14 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary prebuiltCxxLibrary =
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(resolver1, filesystem, targetGraph1);
     assertThat(
-        prebuiltCxxLibrary.getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM).entrySet(),
+        prebuiltCxxLibrary
+            .getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM, resolver1)
+            .entrySet(),
         Matchers.not(empty()));
     assertThat(
         prebuiltCxxLibrary
             .getNativeLinkableInput(
-                CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED)
+                CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED, resolver1)
             .getArgs(),
         Matchers.not(empty()));
 
@@ -852,12 +855,14 @@ public class PrebuiltCxxLibraryDescriptionTest {
     prebuiltCxxLibrary =
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(resolver2, filesystem, targetGraph2);
     assertThat(
-        prebuiltCxxLibrary.getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM).entrySet(),
+        prebuiltCxxLibrary
+            .getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM, resolver2)
+            .entrySet(),
         empty());
     assertThat(
         prebuiltCxxLibrary
             .getNativeLinkableInput(
-                CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED)
+                CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED, resolver2)
             .getArgs(),
         empty());
   }
@@ -880,7 +885,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     depBuilder.build(resolver, filesystem, graph);
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) builder.build(resolver, filesystem, graph);
     NativeLinkableInput nativeLinkableInput =
-        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC);
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC, resolver);
     assertThat(
         Arg.stringify(nativeLinkableInput.getArgs(), pathResolver).get(0),
         Matchers.endsWith(TARGET.getBasePath().resolve("sub-dir").resolve("libfoo.a").toString()));

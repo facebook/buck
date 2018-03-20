@@ -136,7 +136,7 @@ public class HaskellLibraryDescriptionTest {
     // Test static dep type.
     NativeLinkableInput staticInput =
         library.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC);
+            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, resolver);
     assertThat(
         Arg.stringify(staticInput.getArgs(), pathResolver),
         hasItems(linkWholeFlags.toArray(new String[linkWholeFlags.size()])));
@@ -144,7 +144,7 @@ public class HaskellLibraryDescriptionTest {
     // Test static-pic dep type.
     NativeLinkableInput staticPicInput =
         library.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC_PIC);
+            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC_PIC, resolver);
     assertThat(
         Arg.stringify(staticPicInput.getArgs(), pathResolver),
         hasItems(linkWholeFlags.toArray(new String[linkWholeFlags.size()])));
@@ -152,7 +152,7 @@ public class HaskellLibraryDescriptionTest {
     // Test shared dep type.
     NativeLinkableInput sharedInput =
         library.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED);
+            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED, resolver);
     assertThat(
         Arg.stringify(sharedInput.getArgs(), pathResolver),
         not(hasItems(linkWholeFlags.toArray(new String[linkWholeFlags.size()]))));
@@ -166,7 +166,7 @@ public class HaskellLibraryDescriptionTest {
     HaskellLibrary defaultLib =
         new HaskellLibraryBuilder(BuildTargetFactory.newInstance("//:default")).build(resolver);
     assertThat(
-        defaultLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
+        defaultLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM, resolver),
         Matchers.is(NativeLinkable.Linkage.ANY));
 
     // Test `ANY` value.
@@ -175,7 +175,7 @@ public class HaskellLibraryDescriptionTest {
             .setPreferredLinkage(NativeLinkable.Linkage.ANY)
             .build(resolver);
     assertThat(
-        anyLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
+        anyLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM, resolver),
         Matchers.is(NativeLinkable.Linkage.ANY));
 
     // Test `STATIC` value.
@@ -184,7 +184,7 @@ public class HaskellLibraryDescriptionTest {
             .setPreferredLinkage(NativeLinkable.Linkage.STATIC)
             .build(resolver);
     assertThat(
-        staticLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
+        staticLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM, resolver),
         Matchers.is(NativeLinkable.Linkage.STATIC));
 
     // Test `SHARED` value.
@@ -193,7 +193,7 @@ public class HaskellLibraryDescriptionTest {
             .setPreferredLinkage(NativeLinkable.Linkage.SHARED)
             .build(resolver);
     assertThat(
-        sharedLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
+        sharedLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM, resolver),
         Matchers.is(NativeLinkable.Linkage.SHARED));
   }
 
@@ -219,7 +219,7 @@ public class HaskellLibraryDescriptionTest {
     // Test static dep type.
     NativeLinkableInput staticInput =
         library.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC);
+            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, resolver);
     assertThat(
         FluentIterable.from(staticInput.getArgs())
             .transformAndConcat(

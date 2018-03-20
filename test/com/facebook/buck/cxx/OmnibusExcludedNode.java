@@ -17,6 +17,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.rules.BuildRuleResolver;
 
 /** A node that is always excluded from omnibus linking. */
 class OmnibusExcludedNode extends OmnibusNode {
@@ -30,7 +31,7 @@ class OmnibusExcludedNode extends OmnibusNode {
   }
 
   @Override
-  public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {
+  public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return false;
   }
 }

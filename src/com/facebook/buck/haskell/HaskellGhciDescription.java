@@ -90,7 +90,8 @@ public class HaskellGhciDescription
   }
 
   /** Whether the nativeLinkable should be linked shared or othewise */
-  public static boolean isPrebuiltSO(NativeLinkable nativeLinkable, CxxPlatform cxxPlatform) {
+  public static boolean isPrebuiltSO(
+      NativeLinkable nativeLinkable, CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
 
     if (nativeLinkable instanceof PrebuiltCxxLibraryGroupDescription.CustomPrebuiltCxxLibrary) {
       return true;
@@ -101,7 +102,7 @@ public class HaskellGhciDescription
     }
 
     ImmutableMap<String, SourcePath> sharedLibraries =
-        nativeLinkable.getSharedLibraries(cxxPlatform);
+        nativeLinkable.getSharedLibraries(cxxPlatform, ruleResolver);
 
     for (Map.Entry<String, SourcePath> ent : sharedLibraries.entrySet()) {
       if (!(ent.getValue() instanceof PathSourcePath)) {
@@ -155,7 +156,7 @@ public class HaskellGhciDescription
         // TODO(agallagher): We should also use `NativeLinkable.supportsOmnibusLinking()` to
         // determine if we can include the library, but this will need likely need to be updated for
         // a multi-pass walk first.
-        if (isPrebuiltSO(nativeLinkable, cxxPlatform)) {
+        if (isPrebuiltSO(nativeLinkable, cxxPlatform, ruleResolver)) {
           builder.putDeps(nativeLinkable.getBuildTarget(), nativeLinkable);
           LOG.verbose("%s: skipping prebuilt SO %s", baseTarget, nativeLinkable.getBuildTarget());
           return ImmutableSet.of();
@@ -216,13 +217,14 @@ public class HaskellGhciDescription
 
       // We link C/C++ libraries whole...
       if (nativeLinkable instanceof CxxLibrary) {
-        NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform);
+        NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform, ruleResolver);
         nativeLinkableInputs.add(
             nativeLinkable.getNativeLinkableInput(
                 cxxPlatform,
                 NativeLinkables.getLinkStyle(link, Linker.LinkableDepType.STATIC_PIC),
                 true,
-                ImmutableSet.of()));
+                ImmutableSet.of(),
+                ruleResolver));
         LOG.verbose(
             "%s: linking C/C++ library %s whole into omnibus",
             baseTarget, nativeLinkable.getBuildTarget());
@@ -233,7 +235,7 @@ public class HaskellGhciDescription
       if (nativeLinkable instanceof PrebuiltCxxLibrary) {
         nativeLinkableInputs.add(
             NativeLinkables.getNativeLinkableInput(
-                cxxPlatform, Linker.LinkableDepType.STATIC_PIC, nativeLinkable));
+                cxxPlatform, Linker.LinkableDepType.STATIC_PIC, nativeLinkable, ruleResolver));
         LOG.verbose(
             "%s: linking prebuilt C/C++ library %s into omnibus",
             baseTarget, nativeLinkable.getBuildTarget());
@@ -251,7 +253,8 @@ public class HaskellGhciDescription
         NativeLinkables.getNativeLinkables(cxxPlatform, ruleResolver, deps, LinkableDepType.SHARED);
     for (NativeLinkable linkable : depLinkables.values()) {
       nativeLinkableInputs.add(
-          NativeLinkables.getNativeLinkableInput(cxxPlatform, LinkableDepType.SHARED, linkable));
+          NativeLinkables.getNativeLinkableInput(
+              cxxPlatform, LinkableDepType.SHARED, linkable, ruleResolver));
     }
 
     return NativeLinkableInput.concat(nativeLinkableInputs);

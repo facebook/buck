@@ -143,7 +143,8 @@ public class CxxLibraryTest {
             ImmutableSet.of());
     assertEquals(
         expectedStaticNativeLinkableInput,
-        cxxLibrary.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC));
+        cxxLibrary.getNativeLinkableInput(
+            cxxPlatform, Linker.LinkableDepType.STATIC, ruleResolver));
 
     // Verify that we get the static archive and its build target via the NativeLinkable
     // interface.
@@ -154,7 +155,8 @@ public class CxxLibraryTest {
             ImmutableSet.of());
     assertEquals(
         expectedSharedNativeLinkableInput,
-        cxxLibrary.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.SHARED));
+        cxxLibrary.getNativeLinkableInput(
+            cxxPlatform, Linker.LinkableDepType.SHARED, ruleResolver));
 
     // Verify that the implemented BuildRule methods are effectively unused.
     assertEquals(ImmutableList.<Step>of(), cxxLibrary.getBuildSteps(null, null));
@@ -210,6 +212,7 @@ public class CxxLibraryTest {
 
     assertEquals(
         expectedSharedNativeLinkableInput,
-        cxxLibrary.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.SHARED));
+        cxxLibrary.getNativeLinkableInput(
+            cxxPlatform, Linker.LinkableDepType.SHARED, ruleResolver));
   }
 }

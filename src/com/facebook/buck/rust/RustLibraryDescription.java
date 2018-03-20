@@ -346,7 +346,8 @@ public class RustLibraryDescription
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType depType,
           boolean forceLinkWhole,
-          ImmutableSet<LanguageExtensions> languageExtensions) {
+          ImmutableSet<LanguageExtensions> languageExtensions,
+          BuildRuleResolver ruleResolver) {
         CrateType crateType;
 
         switch (depType) {
@@ -389,12 +390,13 @@ public class RustLibraryDescription
       }
 
       @Override
-      public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+      public Linkage getPreferredLinkage(CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         return args.getPreferredLinkage();
       }
 
       @Override
-      public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+      public ImmutableMap<String, SourcePath> getSharedLibraries(
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
         String sharedLibrarySoname =
             CrateType.DYLIB.filenameFor(getBuildTarget(), crate, cxxPlatform);

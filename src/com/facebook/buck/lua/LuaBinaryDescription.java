@@ -307,7 +307,8 @@ public class LuaBinaryDescription
     CxxPlatform cxxPlatform = luaPlatform.getCxxPlatform();
 
     LuaPackageComponents.Builder builder = LuaPackageComponents.builder();
-    OmnibusRoots.Builder omnibusRoots = OmnibusRoots.builder(cxxPlatform, ImmutableSet.of());
+    OmnibusRoots.Builder omnibusRoots =
+        OmnibusRoots.builder(cxxPlatform, ImmutableSet.of(), ruleResolver);
 
     Map<BuildTarget, NativeLinkable> nativeLinkableRoots = new LinkedHashMap<>();
     Map<BuildTarget, CxxLuaExtension> luaExtensions = new LinkedHashMap<>();
@@ -396,7 +397,7 @@ public class LuaBinaryDescription
       }
 
       // Build the omnibus libraries.
-      OmnibusRoots roots = omnibusRoots.build(ruleResolver);
+      OmnibusRoots roots = omnibusRoots.build();
       OmnibusLibraries libraries =
           Omnibus.getSharedLibraries(
               buildTarget,
@@ -501,9 +502,11 @@ public class LuaBinaryDescription
           NativeLinkables.getTransitiveNativeLinkables(
                   cxxPlatform, ruleResolver, nativeLinkableRoots.values())
               .values()) {
-        NativeLinkable.Linkage linkage = nativeLinkable.getPreferredLinkage(cxxPlatform);
+        NativeLinkable.Linkage linkage =
+            nativeLinkable.getPreferredLinkage(cxxPlatform, ruleResolver);
         if (linkage != NativeLinkable.Linkage.STATIC) {
-          builder.putAllNativeLibraries(nativeLinkable.getSharedLibraries(cxxPlatform));
+          builder.putAllNativeLibraries(
+              nativeLinkable.getSharedLibraries(cxxPlatform, ruleResolver));
         }
       }
     }

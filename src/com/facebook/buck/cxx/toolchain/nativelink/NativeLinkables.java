@@ -146,7 +146,7 @@ public class NativeLinkables {
         nativeLinkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform, ruleResolver);
 
     boolean shouldTraverse;
-    switch (nativeLinkable.getPreferredLinkage(cxxPlatform)) {
+    switch (nativeLinkable.getPreferredLinkage(cxxPlatform, ruleResolver)) {
       case ANY:
         shouldTraverse = linkStyle != Linker.LinkableDepType.SHARED;
         break;
@@ -223,9 +223,13 @@ public class NativeLinkables {
   }
 
   public static NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform, Linker.LinkableDepType linkStyle, NativeLinkable nativeLinkable) {
-    NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform);
-    return nativeLinkable.getNativeLinkableInput(cxxPlatform, getLinkStyle(link, linkStyle));
+      CxxPlatform cxxPlatform,
+      Linker.LinkableDepType linkStyle,
+      NativeLinkable nativeLinkable,
+      BuildRuleResolver ruleResolver) {
+    NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform, ruleResolver);
+    return nativeLinkable.getNativeLinkableInput(
+        cxxPlatform, getLinkStyle(link, linkStyle), ruleResolver);
   }
 
   /**
@@ -246,7 +250,8 @@ public class NativeLinkables {
         getNativeLinkables(cxxPlatform, ruleResolver, roots.values(), depType);
     ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
     for (NativeLinkable nativeLinkable : nativeLinkables.values()) {
-      nativeLinkableInputs.add(getNativeLinkableInput(cxxPlatform, depType, nativeLinkable));
+      nativeLinkableInputs.add(
+          getNativeLinkableInput(cxxPlatform, depType, nativeLinkable, ruleResolver));
     }
     return NativeLinkableInput.concat(nativeLinkableInputs.build());
   }
@@ -313,9 +318,10 @@ public class NativeLinkables {
         .stream()
         .filter(
             e ->
-                e.getValue().getPreferredLinkage(cxxPlatform) != NativeLinkable.Linkage.STATIC
+                e.getValue().getPreferredLinkage(cxxPlatform, ruleResolver)
+                        != NativeLinkable.Linkage.STATIC
                     || (alwaysIncludeRoots && roots.containsKey(e.getKey())))
-        .forEach(e -> builder.add(cxxPlatform, e.getValue()));
+        .forEach(e -> builder.add(cxxPlatform, e.getValue(), ruleResolver));
     return builder.build();
   }
 
@@ -340,8 +346,10 @@ public class NativeLinkables {
     private final Map<String, SourcePath> libraries = new LinkedHashMap<>();
 
     /** Adds libraries from the given {@link NativeLinkable}. */
-    public SharedLibrariesBuilder add(CxxPlatform cxxPlatform, NativeLinkable linkable) {
-      ImmutableMap<String, SourcePath> libs = linkable.getSharedLibraries(cxxPlatform);
+    public SharedLibrariesBuilder add(
+        CxxPlatform cxxPlatform, NativeLinkable linkable, BuildRuleResolver ruleResolver) {
+      ImmutableMap<String, SourcePath> libs =
+          linkable.getSharedLibraries(cxxPlatform, ruleResolver);
       for (Map.Entry<String, SourcePath> lib : libs.entrySet()) {
         SourcePath prev = libraries.put(lib.getKey(), lib.getValue());
         if (prev != null && !prev.equals(lib.getValue())) {

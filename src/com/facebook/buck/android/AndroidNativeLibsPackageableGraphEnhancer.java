@@ -146,10 +146,10 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
     for (Map.Entry<APKModule, NativeLinkable> linkableEntry : linkables.entries()) {
       NativeLinkable nativeLinkable = linkableEntry.getValue();
-      if (nativeLinkable.getPreferredLinkage(platform.getCxxPlatform())
+      if (nativeLinkable.getPreferredLinkage(platform.getCxxPlatform(), ruleResolver)
           != NativeLinkable.Linkage.STATIC) {
         ImmutableMap<String, SourcePath> solibs =
-            nativeLinkable.getSharedLibraries(platform.getCxxPlatform());
+            nativeLinkable.getSharedLibraries(platform.getCxxPlatform(), ruleResolver);
         for (Map.Entry<String, SourcePath> entry : solibs.entrySet()) {
           AndroidLinkableMetadata metadata =
               AndroidLinkableMetadata.builder()

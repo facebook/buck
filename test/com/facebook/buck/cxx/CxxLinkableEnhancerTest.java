@@ -111,17 +111,20 @@ public class CxxLinkableEnhancerTest {
         CxxPlatform cxxPlatform,
         Linker.LinkableDepType type,
         boolean forceLinkWhole,
-        ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions) {
+        ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions,
+        BuildRuleResolver ruleResolver) {
       return type == Linker.LinkableDepType.STATIC ? staticInput : sharedInput;
     }
 
     @Override
-    public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+    public NativeLinkable.Linkage getPreferredLinkage(
+        CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
       return Linkage.ANY;
     }
 
     @Override
-    public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+    public ImmutableMap<String, SourcePath> getSharedLibraries(
+        CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
       return ImmutableMap.of();
     }
   }

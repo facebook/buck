@@ -72,7 +72,7 @@ public class PrebuiltCxxLibraryTest {
         "class Test {}", pathResolver.getAbsolutePath(genSrc.getSourcePathToOutput()));
 
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) builder.build(resolver, filesystem, targetGraph);
-    lib.getNativeLinkableInput(platform, Linker.LinkableDepType.STATIC);
+    lib.getNativeLinkableInput(platform, Linker.LinkableDepType.STATIC, resolver);
 
     FileHashCache originalHashCache =
         new StackedFileHashCache(
