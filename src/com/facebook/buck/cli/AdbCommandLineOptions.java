@@ -16,8 +16,10 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.step.AdbOptions;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import org.kohsuke.args4j.Option;
 
@@ -48,6 +50,7 @@ public class AdbCommandLineOptions {
     if (buckConfig.getMultiInstallMode()) {
       multiInstallMode = true;
     }
-    return new AdbOptions(adbThreadCount, multiInstallMode);
+    AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, Platform.detect());
+    return new AdbOptions(adbThreadCount, multiInstallMode, androidBuckConfig.getAdbTimeout());
   }
 }

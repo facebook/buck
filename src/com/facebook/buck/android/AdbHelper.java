@@ -485,9 +485,9 @@ public class AdbHelper implements AndroidDevicesHelper {
   @Nullable
   @SuppressWarnings("PMD.EmptyCatchBlock")
   private static AndroidDebugBridge createAdb(
-      AndroidPlatformTarget androidPlatformTarget, ExecutionContext context)
+      AndroidPlatformTarget androidPlatformTarget, ExecutionContext context, int adbTimeout)
       throws InterruptedException {
-    DdmPreferences.setTimeOut(60000);
+    DdmPreferences.setTimeOut(adbTimeout);
 
     try {
       AndroidDebugBridge.init(/* clientSupport */ false);
@@ -526,7 +526,8 @@ public class AdbHelper implements AndroidDevicesHelper {
           createAdb(
               toolchainProvider.getByName(
                   AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
-              contextSupplier.get());
+              contextSupplier.get(),
+              options.getAdbTimeout());
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }

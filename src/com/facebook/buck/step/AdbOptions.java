@@ -22,14 +22,12 @@ public class AdbOptions {
 
   private int adbThreadCount;
   private boolean multiInstallMode;
+  private int adbTimeout;
 
-  public AdbOptions() {
-    this(0, false);
-  }
-
-  public AdbOptions(int adbThreadCount, boolean multiInstallMode) {
+  public AdbOptions(int adbThreadCount, boolean multiInstallMode, int adbTimeout) {
     this.adbThreadCount = adbThreadCount;
     this.multiInstallMode = multiInstallMode;
+    this.adbTimeout = adbTimeout;
   }
 
   public int getAdbThreadCount() {
@@ -38,5 +36,9 @@ public class AdbOptions {
 
   public boolean isMultiInstallModeEnabled() {
     return multiInstallMode;
+  }
+
+  public int getAdbTimeout() {
+    return adbTimeout;
   }
 }

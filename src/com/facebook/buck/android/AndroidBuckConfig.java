@@ -45,6 +45,10 @@ public class AndroidBuckConfig {
     return delegate.getValue("android", "build_tools_version");
   }
 
+  public Integer getAdbTimeout() {
+    return delegate.getInteger("android", "adb_timeout").orElse(60000);
+  }
+
   public Optional<String> getSdkPath() {
     return delegate.getValue("android", "sdk_path");
   }
