@@ -417,7 +417,7 @@ public class NdkCxxPlatforms {
             host.toString(),
             cxxRuntime,
             strictToolchainPaths,
-            androidConfig.getNdkUnifiedHeaders());
+            androidConfig.isNdkUnifiedHeaders());
     // Sanitized paths will have magic placeholders for parts of the paths that
     // are machine/host-specific. See comments on ANDROID_NDK_ROOT and
     // BUILD_HOST_SUBST above.
@@ -742,7 +742,9 @@ public class NdkCxxPlatforms {
     // NDK builds enable stack protector and debug symbols by default.
     flags.add("-fstack-protector", "-g3");
 
-    flags.add("-D__ANDROID_API__=" + targetConfiguration.getTargetAppPlatformLevel());
+    if (toolchainPaths.isUnifiedHeaders()) {
+      flags.add("-D__ANDROID_API__=" + targetConfiguration.getTargetAppPlatformLevel());
+    }
 
     return flags.build();
   }

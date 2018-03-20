@@ -97,7 +97,7 @@ public class AndroidBuckConfig {
     return delegate.getListWithoutComments("ndk", "extra_ldflags", ' ');
   }
 
-  public boolean getNdkUnifiedHeaders() {
+  public boolean isNdkUnifiedHeaders() {
     return delegate.getBooleanValue("ndk", "unified_headers", false);
   }
 
