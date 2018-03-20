@@ -377,7 +377,7 @@ public class PythonTestDescription
           Path path =
               coverageSpec.getBuildTarget().getBasePath().resolve(coverageSpec.getPathName().get());
           if (!pythonLibrary
-              .getPythonPackageComponents(pythonPlatform, cxxPlatform)
+              .getPythonPackageComponents(pythonPlatform, cxxPlatform, resolver)
               .getModules()
               .keySet()
               .contains(path)) {
@@ -390,7 +390,7 @@ public class PythonTestDescription
           paths =
               ImmutableSortedSet.copyOf(
                   pythonLibrary
-                      .getPythonPackageComponents(pythonPlatform, cxxPlatform)
+                      .getPythonPackageComponents(pythonPlatform, cxxPlatform, resolver)
                       .getModules()
                       .keySet());
         }

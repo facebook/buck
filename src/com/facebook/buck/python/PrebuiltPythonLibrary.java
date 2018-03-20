@@ -27,6 +27,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
@@ -63,13 +64,13 @@ public class PrebuiltPythonLibrary extends AbstractBuildRuleWithDeclaredAndExtra
 
   @Override
   public Iterable<BuildRule> getPythonPackageDeps(
-      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform) {
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return getBuildDeps();
   }
 
   @Override
   public PythonPackageComponents getPythonPackageComponents(
-      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform) {
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     // TODO(mikekap): Allow varying sources by cxx platform (in cases of prebuilt
     // extension modules).
     return PythonPackageComponents.of(

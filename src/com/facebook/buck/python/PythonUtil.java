@@ -214,7 +214,8 @@ public class PythonUtil {
           extensions.put(target.getBuildTarget(), extension);
           omnibusRoots.addIncludedRoot(target);
           List<BuildRule> cxxpydeps = new ArrayList<>();
-          for (BuildRule dep : extension.getPythonPackageDeps(pythonPlatform, cxxPlatform)) {
+          for (BuildRule dep :
+              extension.getPythonPackageDeps(pythonPlatform, cxxPlatform, ruleResolver)) {
             if (dep instanceof PythonPackagable) {
               cxxpydeps.add(dep);
             }
@@ -223,10 +224,11 @@ public class PythonUtil {
         } else if (rule instanceof PythonPackagable) {
           PythonPackagable packagable = (PythonPackagable) rule;
           PythonPackageComponents comps =
-              packagable.getPythonPackageComponents(pythonPlatform, cxxPlatform);
+              packagable.getPythonPackageComponents(pythonPlatform, cxxPlatform, ruleResolver);
           allComponents.addComponent(comps, rule.getBuildTarget());
           if (comps.hasNativeCode(cxxPlatform)) {
-            for (BuildRule dep : packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform)) {
+            for (BuildRule dep :
+                packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform, ruleResolver)) {
               if (dep instanceof NativeLinkable) {
                 NativeLinkable linkable = (NativeLinkable) dep;
                 nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
@@ -234,7 +236,7 @@ public class PythonUtil {
               }
             }
           }
-          deps = packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform);
+          deps = packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform, ruleResolver);
         } else if (rule instanceof NativeLinkable) {
           NativeLinkable linkable = (NativeLinkable) rule;
           nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
@@ -298,7 +300,7 @@ public class PythonUtil {
       Map<BuildTarget, NativeLinkable> extensionNativeDeps = new LinkedHashMap<>();
       for (Map.Entry<BuildTarget, CxxPythonExtension> entry : extensions.entrySet()) {
         allComponents.addComponent(
-            entry.getValue().getPythonPackageComponents(pythonPlatform, cxxPlatform),
+            entry.getValue().getPythonPackageComponents(pythonPlatform, cxxPlatform, ruleResolver),
             entry.getValue().getBuildTarget());
         extensionNativeDeps.putAll(
             Maps.uniqueIndex(

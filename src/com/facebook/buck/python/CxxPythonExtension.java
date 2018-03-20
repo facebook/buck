@@ -27,49 +27,26 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.annotations.VisibleForTesting;
 import java.nio.file.Path;
 
 public abstract class CxxPythonExtension extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements PythonPackagable, HasRuntimeDeps, CacheableBuildRule {
 
-  protected BuildRuleResolver ruleResolver;
-  protected SourcePathRuleFinder ruleFinder;
-  protected SourcePathResolver pathResolver;
-
   public CxxPythonExtension(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
-      SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver) {
+      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
     super(buildTarget, projectFilesystem, params);
-    this.ruleResolver = ruleResolver;
-    this.ruleFinder = ruleFinder;
-    this.pathResolver = pathResolver;
   }
 
   @VisibleForTesting
-  protected abstract BuildRule getExtension(PythonPlatform pythonPlatform, CxxPlatform cxxPlatform);
+  protected abstract BuildRule getExtension(
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver);
 
   public abstract Path getModule();
 
   @Override
   public abstract PythonPackageComponents getPythonPackageComponents(
-      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform);
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver);
 
   public abstract NativeLinkTarget getNativeLinkTarget(PythonPlatform pythonPlatform);
-
-  @Override
-  public void updateBuildRuleResolver(
-      BuildRuleResolver ruleResolver,
-      SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver) {
-    this.ruleResolver = ruleResolver;
-    this.ruleFinder = ruleFinder;
-    this.pathResolver = pathResolver;
-  }
 }

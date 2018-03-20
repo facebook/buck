@@ -19,11 +19,13 @@ package com.facebook.buck.python;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 
 public interface PythonPackagable {
 
-  Iterable<BuildRule> getPythonPackageDeps(PythonPlatform pythonPlatform, CxxPlatform cxxPlatform);
+  Iterable<BuildRule> getPythonPackageDeps(
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver);
 
   PythonPackageComponents getPythonPackageComponents(
-      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform);
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver);
 }

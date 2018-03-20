@@ -69,14 +69,13 @@ public class PythonLibraryDescriptionTest {
         new PythonLibraryBuilder(target)
             .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(source)));
     TargetGraph normalTargetGraph = TargetGraphFactory.newInstance(normalBuilder.build());
-    PythonLibrary normal =
-        normalBuilder.build(
-            new TestBuildRuleResolver(normalTargetGraph), filesystem, normalTargetGraph);
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(normalTargetGraph);
+    PythonLibrary normal = normalBuilder.build(ruleResolver, filesystem, normalTargetGraph);
     assertEquals(
         ImmutableMap.of(target.getBasePath().resolve(sourceName), source),
         normal
             .getPythonPackageComponents(
-                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM)
+                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, ruleResolver)
             .getModules());
 
     // Run *with* a base module set and verify it gets used to build the main module path.
@@ -87,16 +86,14 @@ public class PythonLibraryDescriptionTest {
             .setBaseModule(baseModule);
     TargetGraph withBaseModuleTargetGraph =
         TargetGraphFactory.newInstance(withBaseModuleBuilder.build());
+    ruleResolver = new TestBuildRuleResolver(withBaseModuleTargetGraph);
     PythonLibrary withBaseModule =
-        withBaseModuleBuilder.build(
-            new TestBuildRuleResolver(withBaseModuleTargetGraph),
-            filesystem,
-            withBaseModuleTargetGraph);
+        withBaseModuleBuilder.build(ruleResolver, filesystem, withBaseModuleTargetGraph);
     assertEquals(
         ImmutableMap.of(Paths.get(baseModule).resolve(sourceName), source),
         withBaseModule
             .getPythonPackageComponents(
-                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM)
+                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, ruleResolver)
             .getModules());
   }
 
@@ -118,12 +115,12 @@ public class PythonLibraryDescriptionTest {
                         SourceList.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
                     .build());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
-    PythonLibrary library =
-        builder.build(new TestBuildRuleResolver(targetGraph), filesystem, targetGraph);
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
+    PythonLibrary library = builder.build(ruleResolver, filesystem, targetGraph);
     assertThat(
         library
             .getPythonPackageComponents(
-                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM)
+                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, ruleResolver)
             .getModules()
             .values(),
         Matchers.contains(matchedSource));
@@ -147,12 +144,12 @@ public class PythonLibraryDescriptionTest {
                         SourceList.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
                     .build());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
-    PythonLibrary library =
-        builder.build(new TestBuildRuleResolver(targetGraph), filesystem, targetGraph);
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
+    PythonLibrary library = builder.build(ruleResolver, filesystem, targetGraph);
     assertThat(
         library
             .getPythonPackageComponents(
-                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM)
+                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, ruleResolver)
             .getResources()
             .values(),
         Matchers.contains(matchedSource));
@@ -200,7 +197,7 @@ public class PythonLibraryDescriptionTest {
     assertThat(
         library
             .getPythonPackageComponents(
-                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM)
+                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, resolver)
             .getModules()
             .values(),
         Matchers.contains(matchedSource));
@@ -248,7 +245,7 @@ public class PythonLibraryDescriptionTest {
     assertThat(
         library
             .getPythonPackageComponents(
-                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM)
+                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, resolver)
             .getResources()
             .values(),
         Matchers.contains(matchedSource));
@@ -271,7 +268,7 @@ public class PythonLibraryDescriptionTest {
     PythonLibrary library = (PythonLibrary) resolver.requireRule(libraryBuilder.getTarget());
     PythonPackageComponents components =
         library.getPythonPackageComponents(
-            PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM);
+            PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, resolver);
     assertThat(
         components.getModules().values(),
         Matchers.contains(src.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, resolver)));
@@ -304,7 +301,7 @@ public class PythonLibraryDescriptionTest {
     assertThat(
         RichStream.from(
                 rule.getPythonPackageDeps(
-                    PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM))
+                    PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, resolver))
             .map(BuildRule::getBuildTarget)
             .toImmutableSet(),
         Matchers.allOf(

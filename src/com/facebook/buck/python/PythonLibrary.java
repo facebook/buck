@@ -26,29 +26,22 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import java.util.stream.Stream;
 
 public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements PythonPackagable, HasRuntimeDeps, CacheableBuildRule {
 
-  private BuildRuleResolver resolver;
-
   PythonLibrary(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
-      BuildRuleResolver resolver) {
+      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
     super(buildTarget, projectFilesystem, params);
-    this.resolver = resolver;
   }
 
   @Override
   @SuppressWarnings("unchecked")
   public Iterable<BuildRule> getPythonPackageDeps(
-      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform) {
-    return resolver
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+    return ruleResolver
         .requireMetadata(
             getBuildTarget()
                 .withAppendedFlavors(
@@ -61,8 +54,8 @@ public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public PythonPackageComponents getPythonPackageComponents(
-      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform) {
-    return resolver
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+    return ruleResolver
         .requireMetadata(
             getBuildTarget()
                 .withAppendedFlavors(
@@ -76,13 +69,5 @@ public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return getDeclaredDeps().stream().map(BuildRule::getBuildTarget);
-  }
-
-  @Override
-  public void updateBuildRuleResolver(
-      BuildRuleResolver ruleResolver,
-      SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver) {
-    this.resolver = ruleResolver;
   }
 }

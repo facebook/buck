@@ -343,12 +343,12 @@ public class LuaBinaryDescription
         } else if (rule instanceof PythonPackagable) {
           PythonPackagable packageable = (PythonPackagable) rule;
           PythonPackageComponents components =
-              packageable.getPythonPackageComponents(pythonPlatform, cxxPlatform);
+              packageable.getPythonPackageComponents(pythonPlatform, cxxPlatform, ruleResolver);
           builder.putAllPythonModules(
               MoreMaps.transformKeys(components.getModules(), Object::toString));
           builder.putAllNativeLibraries(
               MoreMaps.transformKeys(components.getNativeLibraries(), Object::toString));
-          deps = packageable.getPythonPackageDeps(pythonPlatform, cxxPlatform);
+          deps = packageable.getPythonPackageDeps(pythonPlatform, cxxPlatform, ruleResolver);
           if (components.hasNativeCode(cxxPlatform)) {
             for (BuildRule dep : deps) {
               if (dep instanceof NativeLinkable) {
@@ -483,7 +483,7 @@ public class LuaBinaryDescription
       // python-platform specific deps to the native linkables.
       for (Map.Entry<BuildTarget, CxxPythonExtension> entry : pythonExtensions.entrySet()) {
         PythonPackageComponents components =
-            entry.getValue().getPythonPackageComponents(pythonPlatform, cxxPlatform);
+            entry.getValue().getPythonPackageComponents(pythonPlatform, cxxPlatform, ruleResolver);
         builder.putAllPythonModules(
             MoreMaps.transformKeys(components.getModules(), Object::toString));
         builder.putAllNativeLibraries(

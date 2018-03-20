@@ -113,7 +113,7 @@ public class CxxPythonExtensionDescriptionTest {
     CxxPythonExtension normal = builder.build(resolver, filesystem, targetGraph);
 
     PythonPackageComponents normalComps =
-        normal.getPythonPackageComponents(PY2, CxxPlatformUtils.DEFAULT_PLATFORM);
+        normal.getPythonPackageComponents(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, resolver);
     assertEquals(
         ImmutableSet.of(
             target
@@ -135,7 +135,7 @@ public class CxxPythonExtensionDescriptionTest {
     resolver = new TestBuildRuleResolver(targetGraph);
     CxxPythonExtension baseModule = baseModuleBuilder.build(resolver, filesystem, targetGraph);
     PythonPackageComponents baseModuleComps =
-        baseModule.getPythonPackageComponents(PY2, CxxPlatformUtils.DEFAULT_PLATFORM);
+        baseModule.getPythonPackageComponents(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, resolver);
     assertEquals(
         ImmutableSet.of(
             Paths.get(name)
@@ -176,7 +176,7 @@ public class CxxPythonExtensionDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED, resolver);
 
     // Verify that the shared library dep propagated to the link rule.
-    extension.getPythonPackageComponents(PY2, CxxPlatformUtils.DEFAULT_PLATFORM);
+    extension.getPythonPackageComponents(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, resolver);
     BuildRule rule =
         resolver.getRule(
             CxxPythonExtensionDescription.getExtensionTarget(
@@ -208,7 +208,7 @@ public class CxxPythonExtensionDescriptionTest {
 
     // Verify that we get the expected view from the python packageable interface.
     PythonPackageComponents actualComponent =
-        extension.getPythonPackageComponents(PY2, CxxPlatformUtils.DEFAULT_PLATFORM);
+        extension.getPythonPackageComponents(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, resolver);
     BuildRule rule =
         resolver.getRule(
             CxxPythonExtensionDescription.getExtensionTarget(
@@ -290,13 +290,15 @@ public class CxxPythonExtensionDescriptionTest {
     CxxPythonExtension extension = builder.build(resolver, filesystem, targetGraph);
 
     // Get the py2 extension, and verify it pulled in the py2 lib but not the py3 lib.
-    CxxLink py2Ext = (CxxLink) extension.getExtension(py2, CxxPlatformUtils.DEFAULT_PLATFORM);
+    CxxLink py2Ext =
+        (CxxLink) extension.getExtension(py2, CxxPlatformUtils.DEFAULT_PLATFORM, resolver);
     assertThat(
         Arg.stringify(py2Ext.getArgs(), pathResolver),
         Matchers.allOf(Matchers.hasItem("-lpython2"), Matchers.not(Matchers.hasItem("-lpython3"))));
 
     // Get the py3 extension, and verify it pulled in the py3 lib but not the py2 lib.
-    CxxLink py3Ext = (CxxLink) extension.getExtension(py3, CxxPlatformUtils.DEFAULT_PLATFORM);
+    CxxLink py3Ext =
+        (CxxLink) extension.getExtension(py3, CxxPlatformUtils.DEFAULT_PLATFORM, resolver);
     assertThat(
         Arg.stringify(py3Ext.getArgs(), pathResolver),
         Matchers.allOf(Matchers.hasItem("-lpython3"), Matchers.not(Matchers.hasItem("-lpython2"))));

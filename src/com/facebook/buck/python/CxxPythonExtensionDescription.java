@@ -450,23 +450,16 @@ public class CxxPythonExtensionDescription
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
-    SourcePathRuleFinder ruleFinderLocal = new SourcePathRuleFinder(ruleResolverLocal);
-    SourcePathResolver pathResolverLocal = DefaultSourcePathResolver.from(ruleFinderLocal);
     Path baseModule = PythonUtil.getBasePath(buildTarget, args.getBaseModule());
     String moduleName = args.getModuleName().orElse(buildTarget.getShortName());
     Path module = baseModule.resolve(getExtensionName(moduleName));
-    return new CxxPythonExtension(
-        buildTarget,
-        projectFilesystem,
-        params,
-        ruleResolverLocal,
-        ruleFinderLocal,
-        pathResolverLocal) {
+    return new CxxPythonExtension(buildTarget, projectFilesystem, params) {
 
       private Set<BuildRule> implicitDepsForCaching = Sets.newConcurrentHashSet();
 
       @Override
-      protected BuildRule getExtension(PythonPlatform pythonPlatform, CxxPlatform cxxPlatform) {
+      protected BuildRule getExtension(
+          PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         BuildRule extension =
             ruleResolver.requireRule(
                 getBuildTarget()
@@ -492,7 +485,7 @@ public class CxxPythonExtensionDescription
 
       @Override
       public Iterable<BuildRule> getPythonPackageDeps(
-          PythonPlatform pythonPlatform, CxxPlatform cxxPlatform) {
+          PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         return PythonUtil.getDeps(
                 pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps())
             .stream()
@@ -503,8 +496,8 @@ public class CxxPythonExtensionDescription
 
       @Override
       public PythonPackageComponents getPythonPackageComponents(
-          PythonPlatform pythonPlatform, CxxPlatform cxxPlatform) {
-        BuildRule extension = getExtension(pythonPlatform, cxxPlatform);
+          PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+        BuildRule extension = getExtension(pythonPlatform, cxxPlatform, ruleResolver);
         SourcePath output = extension.getSourcePathToOutput();
         return PythonPackageComponents.of(
             ImmutableMap.of(module, output),

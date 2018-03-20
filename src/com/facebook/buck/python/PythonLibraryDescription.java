@@ -78,8 +78,7 @@ public class PythonLibraryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       PythonLibraryDescriptionArg args) {
-    return new PythonLibrary(
-        buildTarget, context.getProjectFilesystem(), params, context.getBuildRuleResolver());
+    return new PythonLibrary(buildTarget, context.getProjectFilesystem(), params);
   }
 
   @Override
