@@ -17,7 +17,6 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Preconditions;
-import java.lang.ref.WeakReference;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
@@ -69,29 +68,16 @@ public final class MoreSuppliers {
         : new WeakMemoizingSupplier<>(delegate);
   }
 
-  private static class WeakMemoizingSupplier<T> implements Supplier<T> {
+  private static class WeakMemoizingSupplier<T> extends WeakMemoizer<T> implements Supplier<T> {
     private final Supplier<T> delegate;
-    private WeakReference<T> valueRef;
 
     public WeakMemoizingSupplier(Supplier<T> delegate) {
       this.delegate = delegate;
-      this.valueRef = new WeakReference<>(null);
     }
 
     @Override
     public T get() {
-      @Nullable T value = valueRef.get();
-      if (value == null) {
-        synchronized (this) {
-          // Check again in case someone else has populated the cache.
-          value = valueRef.get();
-          if (value == null) {
-            value = delegate.get();
-            valueRef = new WeakReference<>(value);
-          }
-        }
-      }
-      return value;
+      return get(delegate);
     }
   }
 }

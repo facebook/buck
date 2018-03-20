@@ -34,6 +34,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.util.WeakMemoizer;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -70,7 +71,7 @@ final class PreprocessorDelegate implements AddsToRuleKey {
 
   private final PathShortener minLengthPathRepresentation;
 
-  private Optional<HeaderPathNormalizer> headerPathNormalizer = Optional.empty();
+  private WeakMemoizer<HeaderPathNormalizer> headerPathNormalizer = new WeakMemoizer<>();
 
   public PreprocessorDelegate(
       DebugPathSanitizer sanitizer,
@@ -109,31 +110,31 @@ final class PreprocessorDelegate implements AddsToRuleKey {
   }
 
   public HeaderPathNormalizer getHeaderPathNormalizer(SourcePathResolver pathResolver) {
-    if (!headerPathNormalizer.isPresent()) {
-      // Cache the value using the first SourcePathResolver that we're called with. We expect
-      // this whole object to be recreated in cases where this computation would produce different
-      // results.
-      HeaderPathNormalizer.Builder builder = new HeaderPathNormalizer.Builder(pathResolver);
-      for (CxxHeaders include : preprocessorFlags.getIncludes()) {
-        include.addToHeaderPathNormalizer(builder);
-      }
-      for (FrameworkPath frameworkPath : preprocessorFlags.getFrameworkPaths()) {
-        frameworkPath.getSourcePath().ifPresent(builder::addHeaderDir);
-      }
-      if (preprocessorFlags.getPrefixHeader().isPresent()) {
-        SourcePath headerPath = preprocessorFlags.getPrefixHeader().get();
-        builder.addPrefixHeader(headerPath);
-      }
-      if (sandbox.isPresent()) {
-        ExplicitBuildTargetSourcePath root =
-            ExplicitBuildTargetSourcePath.of(
-                sandbox.get().getBuildTarget(),
-                sandbox.get().getProjectFilesystem().relativize(sandbox.get().getRoot()));
-        builder.addSymlinkTree(root, sandbox.get().getLinks());
-      }
-      headerPathNormalizer = Optional.of(builder.build());
-    }
-    return headerPathNormalizer.get();
+    return headerPathNormalizer.get(
+        () -> {
+          // Cache the value using the first SourcePathResolver that we're called with. We expect
+          // this whole object to be recreated in cases where this computation would produce
+          // different results.
+          HeaderPathNormalizer.Builder builder = new HeaderPathNormalizer.Builder(pathResolver);
+          for (CxxHeaders include : preprocessorFlags.getIncludes()) {
+            include.addToHeaderPathNormalizer(builder);
+          }
+          for (FrameworkPath frameworkPath : preprocessorFlags.getFrameworkPaths()) {
+            frameworkPath.getSourcePath().ifPresent(builder::addHeaderDir);
+          }
+          if (preprocessorFlags.getPrefixHeader().isPresent()) {
+            SourcePath headerPath = preprocessorFlags.getPrefixHeader().get();
+            builder.addPrefixHeader(headerPath);
+          }
+          if (sandbox.isPresent()) {
+            ExplicitBuildTargetSourcePath root =
+                ExplicitBuildTargetSourcePath.of(
+                    sandbox.get().getBuildTarget(),
+                    sandbox.get().getProjectFilesystem().relativize(sandbox.get().getRoot()));
+            builder.addSymlinkTree(root, sandbox.get().getLinks());
+          }
+          return builder.build();
+        });
   }
 
   /**
