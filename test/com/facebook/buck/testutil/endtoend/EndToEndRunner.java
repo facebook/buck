@@ -26,9 +26,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.internal.runners.model.ReflectiveCallable;
 import org.junit.internal.runners.statements.Fail;
+import org.junit.internal.runners.statements.RunBefores;
 import org.junit.runner.Description;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.ParentRunner;
@@ -326,6 +328,11 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
     return output;
   }
 
+  private Statement withBefores(Object target, Statement statement) {
+    List<FrameworkMethod> befores = getTestClass().getAnnotatedMethods(Before.class);
+    return befores.isEmpty() ? statement : new RunBefores(statement, befores, target);
+  }
+
   private Object createTest() throws Exception {
     return getTestClass().getOnlyConstructor().newInstance();
   }
@@ -345,7 +352,9 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
       return new Fail(e);
     }
 
-    return new BuckInvoker(testDescriptor, test);
+    Statement statement = new BuckInvoker(testDescriptor, test);
+    statement = withBefores(test, statement);
+    return statement;
   }
 
   @Override
@@ -353,6 +362,7 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
     super.collectInitializationErrors(errors);
     validateTestMethods(errors);
     validateEnvironments(errors);
+    validatePublicVoidNoArgMethods(Before.class, false, errors);
   }
 
   /**
