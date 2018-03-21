@@ -394,8 +394,8 @@ def add_rule(rule, build_env):
             'rules \'name\' field must be a string.  Found %s.' % rule_name)
 
     if rule_name in build_env.rules:
-        raise ValueError('Duplicate rule definition found.  Found %s and %s' %
-                         (rule, build_env.rules[rule_name]))
+        raise ValueError('Duplicate rule definition \'%s\' found.  Found %s and %s' %
+                         (rule_name, rule, build_env.rules[rule_name]))
     rule['buck.base_path'] = build_env.base_path
 
     build_env.rules[rule_name] = rule

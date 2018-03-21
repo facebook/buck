@@ -435,7 +435,7 @@ public class ParserTest {
   public void shouldThrowAnExceptionIfMultipleTargetsAreDefinedWithTheSameName()
       throws IOException, BuildFileParseException {
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Duplicate rule definition found.");
+    thrown.expectMessage("Duplicate rule definition 'cake' found.");
 
     Path buckFile = cellRoot.resolve("BUCK");
     Files.write(
