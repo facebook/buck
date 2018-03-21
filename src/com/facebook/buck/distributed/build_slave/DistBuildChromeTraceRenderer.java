@@ -159,12 +159,13 @@ public class DistBuildChromeTraceRenderer {
         "length_of_critical_path", String.format("%dms", ruleEntry.longestDependencyChainMillis));
     startArgs.put("number_of_dependents", String.format("%d", ruleEntry.numberOfDependents));
 
+    // This formatting helps in searching for the rule in the Chrome Trace.
+    // Otherwise the same name might appear in critical dependencies of other rules.
+    String ruleTitle = String.format("%s - title", ruleEntry.ruleName);
     chromeTraceWriter.writeEvent(
         new ChromeTraceEvent(
             kTraceCategory,
-            // This formatting helps in searching for the rule in the Chrome Trace.
-            // Otherwise the same name might appear in critical dependencies of other rules.
-            String.format("%s - title", ruleEntry.ruleName),
+            ruleTitle,
             Phase.BEGIN,
             pidForTrace,
             threadId,
@@ -174,7 +175,7 @@ public class DistBuildChromeTraceRenderer {
     chromeTraceWriter.writeEvent(
         new ChromeTraceEvent(
             kTraceCategory,
-            ruleEntry.ruleName,
+            ruleTitle,
             Phase.END,
             pidForTrace,
             threadId,
