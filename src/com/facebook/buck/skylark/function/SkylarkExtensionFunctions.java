@@ -37,7 +37,7 @@ public class SkylarkExtensionFunctions {
     extraKeywords = @Param(name = "kwargs", doc = "the struct attributes."),
     useLocation = true
   )
-  public static final Provider struct = NativeProvider.STRUCT;
+  private static final Provider struct = NativeProvider.STRUCT;
 
   static {
     SkylarkSignatureProcessor.configureSkylarkFunctions(SkylarkExtensionFunctions.class);

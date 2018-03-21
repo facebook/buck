@@ -26,6 +26,7 @@ import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInputSource;
+import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.util.EnumSet;
 import org.junit.Before;
@@ -52,8 +53,7 @@ public class SkylarkExtensionFunctionsTest {
     assertFalse(buildFileAST.containsErrors());
     try (Mutability mutability = Mutability.create("test")) {
       Environment env = Environment.builder(mutability).useDefaultSemantics().build();
-      env.setupDynamic(
-          SkylarkExtensionFunctions.struct.getName(), SkylarkExtensionFunctions.struct);
+      Runtime.setupModuleGlobals(env, SkylarkExtensionFunctions.class);
       boolean result = buildFileAST.exec(env, eventHandler);
       assertTrue(result);
       return env;
