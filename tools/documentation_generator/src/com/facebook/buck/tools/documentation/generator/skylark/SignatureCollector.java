@@ -26,7 +26,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /** Class responsible discovering Skylark signature metadata in the classpath. */
-class SignatureCollector {
+public class SignatureCollector {
   /**
    * Returns a stream of signatures found in the current classpath.
    *
@@ -34,8 +34,8 @@ class SignatureCollector {
    *     loaded. It's best to make it as precise as possible to avoid expensive loading - checking
    *     for class name and package is ideal.
    */
-  static Stream<SkylarkSignature> getSkylarkSignatures(Predicate<ClassInfo> classInfoPredicate)
-      throws IOException {
+  public static Stream<SkylarkSignature> getSkylarkSignatures(
+      Predicate<ClassInfo> classInfoPredicate) throws IOException {
     return ClassPath.from(ClassPath.class.getClassLoader())
         .getAllClasses()
         .stream()

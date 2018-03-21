@@ -10,7 +10,7 @@
       %signatures :{ signature |
           %openCurly%call buck.navigationLink%closeCurly%
               %openCurly%param currentnavid: $navid /%closeCurly%
-              %openCurly%param folder: 'function' /%closeCurly%
+              %openCurly%param folder: 'skylark/generated' /%closeCurly%
               %openCurly%param page: '%signature.name%' /%closeCurly%
               %openCurly%param text: '%signature.name%()' /%closeCurly%
           %openCurly%/call%closeCurly%

@@ -1,10 +1,10 @@
-{namespace buck.%signature.name%}
+{namespace buck.skylark.%signature.name%}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: '%signature.name%()' /}
-    {param navid: 'function_%signature.name%' /}
+    {param navid: 'skylark/generated_%signature.name%' /}
     {param prettify: true /}
     {param description}
       %signature.doc%

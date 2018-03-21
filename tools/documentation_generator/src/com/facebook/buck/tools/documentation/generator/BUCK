@@ -1,0 +1,21 @@
+java_binary(
+    name = "generator",
+    main_class = "com.facebook.buck.tools.documentation.generator.Main",
+    deps = [":main"],
+)
+
+java_library(
+    name = "main",
+    srcs = [
+        "CliArgs.java",
+        "Main.java",
+    ],
+    deps = [
+        "//src/com/facebook/buck/skylark/function:function",  # this is where the functions are coming from
+        "//third-party/java/args4j:args4j",
+        "//third-party/java/bazel:skylark-lang",
+        "//third-party/java/guava:guava",
+        "//tools/documentation_generator/src/com/facebook/buck/tools/documentation/generator/skylark:collector",
+        "//tools/documentation_generator/src/com/facebook/buck/tools/documentation/generator/skylark/rendering:rendering",
+    ],
+)

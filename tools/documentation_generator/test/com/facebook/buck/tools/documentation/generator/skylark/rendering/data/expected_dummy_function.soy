@@ -1,10 +1,10 @@
-{namespace buck.dummy}
+{namespace buck.skylark.dummy}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'dummy()' /}
-    {param navid: 'function_dummy' /}
+    {param navid: 'skylark/generated_dummy' /}
     {param prettify: true /}
     {param description}
       Returns a dummy list of strings.
@@ -21,7 +21,7 @@
                         {param desc }
                           the first element of the returned list.
                         {/param}
-                        {param default : '' /}
+                        {param default : 'None' /}
                       {/call}
 
         {/param}
