@@ -1,0 +1,42 @@
+{namespace skylark}
+
+/**
+ * Table of contents for the Skylark functions section.
+ * @param navid The current page's navigation id.
+ */
+{template .tableOfContents}
+  <h4>Skylark</h4>
+  <ul>
+                {call navigation.link}
+                    {param currentnavid: $navid /}
+                    {param folder: 'skylark/generated' /}
+                    {param page: 'glob' /}
+                    {param text: 'glob()' /}
+                {/call}
+                {call navigation.link}
+                    {param currentnavid: $navid /}
+                    {param folder: 'skylark/generated' /}
+                    {param page: 'host_info' /}
+                    {param text: 'host_info()' /}
+                {/call}
+                {call navigation.link}
+                    {param currentnavid: $navid /}
+                    {param folder: 'skylark/generated' /}
+                    {param page: 'read_config' /}
+                    {param text: 'read_config()' /}
+                {/call}
+                {call navigation.link}
+                    {param currentnavid: $navid /}
+                    {param folder: 'skylark/generated' /}
+                    {param page: 'struct' /}
+                    {param text: 'struct()' /}
+                {/call}
+                {call navigation.link}
+                    {param currentnavid: $navid /}
+                    {param folder: 'skylark/generated' /}
+                    {param page: 'package_name' /}
+                    {param text: 'package_name()' /}
+                {/call}
+
+  </ul>
+{/template}

@@ -8,7 +8,7 @@
   <h4>Skylark</h4>
   <ul>
       %signatures :{ signature |
-          %openCurly%call buck.navigationLink%closeCurly%
+          %openCurly%call navigation.link%closeCurly%
               %openCurly%param currentnavid: $navid /%closeCurly%
               %openCurly%param folder: 'skylark/generated' /%closeCurly%
               %openCurly%param page: '%signature.name%' /%closeCurly%

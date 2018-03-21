@@ -1,0 +1,45 @@
+{namespace buck.skylark.glob}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'glob()' /}
+    {param navid: 'skylark/generated_glob' /}
+    {param prettify: true /}
+    {param description}
+      Returns a list of files that match glob search pattern.
+    {/param}
+    {param content}
+      {call buck.function}
+        {param status: 'UNFROZEN' /}
+        {param overview}
+          Returns a list of files that match glob search pattern.
+        {/param}
+        {param args}
+                      {call buck.functionArg}
+                        {param name : 'include' /}
+                        {param desc }
+                          a list of strings specifying patterns of files to include.
+                        {/param}
+                        {param default : 'None' /}
+                      {/call}
+                      {call buck.functionArg}
+                        {param name : 'exclude' /}
+                        {param desc }
+                          a list of strings specifying patterns of files to exclude.
+                        {/param}
+                        {param default : '[]' /}
+                      {/call}
+                      {call buck.functionArg}
+                        {param name : 'exclude_directories' /}
+                        {param desc }
+                          True indicates directories should not be matched.
+                        {/param}
+                        {param default : 'True' /}
+                      {/call}
+
+        {/param}
+      {/call}
+    {/param} // content
+  {/call}
+{/template}

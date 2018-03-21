@@ -162,26 +162,6 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 
 /**
  * @param currentnavid The navigation id of the loaded page
- * @param page The filename of the target page
- * @param folder href folder target
- * @param text Navigation text
- */
-{template .navigationLink}
-  {let $targetnavid}
-    {$folder}_{$page}
-  {/let}
-  {let $classname}
-    {if $targetnavid == $currentnavid}
-      navActiveItem
-    {/if}
-  {/let}
-  <li{if isNonnull($classname)} class="{$classname}"{/if}>
-    <a href="{ROOT}{$folder}/{$page}.html">{$text}</a>
-  </li>
-{/template}
-
-/**
- * @param currentnavid The navigation id of the loaded page
  * @param platform
  * @param rules
  */
@@ -191,7 +171,7 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
         {let $ruletext}
           {$rule}()
         {/let}
-        {call .navigationLink}
+        {call navigation.link}
           {param currentnavid: $currentnavid /}
           {param folder: 'rule' /}
           {param page: $rule /}
@@ -316,38 +296,38 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
     ] /}
   <h3>The Basics</h3>
   <ul>
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'setup' /}
       {param page: 'getting_started' /}
       {param text: 'Getting Started' /}
     {/call}
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'about' /}
       {param page: 'overview' /}
       {param text: 'Key Topics' /}
     {/call}
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'learning' /}
       {param page: 'tutorial' /}
       {param text: 'Tutorial' /}
     {/call}
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'setup' /}
       {param page: 'intellij_plugin_install' /}
       {param text: 'Installing the IntelliJ Plugin' /}
     {/call}
 
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'article' /}
       {param page: 'exopackage' /}
       {param text: 'Exopackage' /}
     {/call}
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'article' /}
       {param page: 'query_cheat_sheet' /}
@@ -356,37 +336,37 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
   </ul>
   <h3>About</h3>
   <ul>
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'concept' /}
       {param page: 'what_makes_buck_so_fast' /}
       {param text: 'What Makes Buck so Fast?' /}
     {/call}
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'about' /}
       {param page: 'showcase' /}
       {param text: 'Showcase' /}
     {/call}
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'concept' /}
       {param page: 'troubleshooting' /}
       {param text: 'Troubleshooting' /}
     {/call}
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'about' /}
       {param page: 'performance_tuning' /}
       {param text: 'Performance Tuning' /}
     {/call}
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'concept' /}
       {param page: 'faq' /}
       {param text: 'FAQ' /}
     {/call}
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'presentations' /}
       {param page: 'index' /}
@@ -395,67 +375,67 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
   </ul>
   <h3>Concepts</h3>
   <ul>
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'concept' /}
       {param page: 'build_rule' /}
       {param text: 'Build Rule' /}
     {/call}
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'concept' /}
       {param page: 'build_file' /}
       {param text: 'Build File' /}
     {/call}
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'concept' /}
       {param page: 'build_target' /}
       {param text: 'Build Target' /}
     {/call}
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'concept' /}
       {param page: 'build_target_pattern' /}
       {param text: 'Build Target Pattern' /}
     {/call}
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'concept' /}
       {param page: 'buckjavaargs' /}
       {param text: '.buckjavaargs' /}
     {/call}
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'concept' /}
       {param page: 'buckconfig' /}
       {param text: '.buckconfig' /}
     {/call}
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'concept' /}
       {param page: 'visibility' /}
       {param text: 'Visibility' /}
     {/call}
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'concept' /}
       {param page: 'http_cache_api' /}
       {param text: 'HTTP Cache API' /}
     {/call}
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'concept' /}
       {param page: 'rule_keys' /}
       {param text: 'Rule Keys' /}
     {/call}
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'concept' /}
       {param page: 'java_abis' /}
       {param text: 'Java ABIs' /}
     {/call}
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'concept' /}
       {param page: 'skylark' /}
@@ -565,23 +545,26 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
       {let $functiontext}
         {$function}()
       {/let}
-      {call .navigationLink}
+      {call navigation.link}
         {param currentnavid: $navid /}
         {param folder: 'function' /}
         {param page: $function /}
         {param text: $functiontext /}
       {/call}
     {/foreach}
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'function' /}
       {param page: 'string_parameter_macros' /}
       {param text: 'String Parameter Macros' /}
     {/call}
   </ul>
+  {call skylark.tableOfContents}
+    {param navid: $navid /}
+  {/call}
   <h3>Commands</h3>
   <ul>
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'command' /}
       {param page: 'common_parameters' /}
@@ -609,14 +592,14 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
       {let $commandtext}
         buck {$command}
       {/let}
-      {call .navigationLink}
+      {call navigation.link}
         {param currentnavid: $navid /}
         {param folder: 'command' /}
         {param page: $command /}
         {param text: $commandtext /}
       {/call}
     {/foreach}
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'command' /}
       {param page: 'buckd' /}
@@ -625,13 +608,13 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
   </ul>
   <h3>Extending Buck</h3>
   <ul>
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'extending' /}
       {param page: 'macros' /}
       {param text: 'Custom Macros' /}
     {/call}
-    {call .navigationLink}
+    {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'extending' /}
       {param page: 'rules' /}

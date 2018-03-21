@@ -1,0 +1,21 @@
+{namespace navigation}
+
+/**
+ * @param currentnavid The navigation id of the loaded page
+ * @param page The filename of the target page
+ * @param folder href folder target
+ * @param text Navigation text
+ */
+{template .link}
+    {let $targetnavid}
+        {$folder}_{$page}
+    {/let}
+    {let $classname}
+        {if $targetnavid == $currentnavid}
+          navActiveItem
+        {/if}
+    {/let}
+    <li{if isNonnull($classname)} class="{$classname}"{/if}>
+      <a href="{ROOT}{$folder}/{$page}.html">{$text}</a>
+    </li>
+{/template}
