@@ -303,7 +303,7 @@ public class CxxLibraryFactory {
               cxxBuckConfig,
               cxxPlatform,
               args,
-              cxxDeps.get(resolver, cxxPlatform),
+              cxxDeps.get(ruleResolverInner, cxxPlatform),
               CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
                   args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform),
               CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
