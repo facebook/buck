@@ -72,21 +72,25 @@ public abstract class PlatformUtils {
       String prefix = i == -1 ? "" : cells[i] + "/";
       String buckconfig = prefix + ".buckconfig";
       String buildDefs = prefix + "BUILD_DEFS";
-      workspace.replaceFileContents(buckconfig, "$CL_EXE$", replacementForConfig(getClExe()));
-      workspace.replaceFileContents(buckconfig, "$LIB_EXE$", replacementForConfig(getLibExe()));
-      workspace.replaceFileContents(buckconfig, "$LINK_EXE$", replacementForConfig(getLinkExe()));
-      workspace.replaceFileContents(
-          buildDefs,
-          "$WINDOWS_COMPILE_FLAGS$",
-          Arrays.stream(getWindowsIncludeDirs())
-              .map(s -> quoter.quote("/I" + s))
-              .collect(Collectors.joining(", ")));
-      workspace.replaceFileContents(
-          buildDefs,
-          "$WINDOWS_LINK_FLAGS$",
-          Arrays.stream(getWindowsLibDirs())
-              .map(s -> quoter.quote("/LIBPATH:" + s))
-              .collect(Collectors.joining(", ")));
+      if (Files.exists(workspace.getPath(buckconfig))) {
+        workspace.replaceFileContents(buckconfig, "$CL_EXE$", replacementForConfig(getClExe()));
+        workspace.replaceFileContents(buckconfig, "$LIB_EXE$", replacementForConfig(getLibExe()));
+        workspace.replaceFileContents(buckconfig, "$LINK_EXE$", replacementForConfig(getLinkExe()));
+      }
+      if (Files.exists(workspace.getPath(buildDefs))) {
+        workspace.replaceFileContents(
+            buildDefs,
+            "$WINDOWS_COMPILE_FLAGS$",
+            Arrays.stream(getWindowsIncludeDirs())
+                .map(s -> quoter.quote("/I" + s))
+                .collect(Collectors.joining(", ")));
+        workspace.replaceFileContents(
+            buildDefs,
+            "$WINDOWS_LINK_FLAGS$",
+            Arrays.stream(getWindowsLibDirs())
+                .map(s -> quoter.quote("/LIBPATH:" + s))
+                .collect(Collectors.joining(", ")));
+      }
     }
   }
 
