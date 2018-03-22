@@ -16,7 +16,7 @@
 
 package com.facebook.buck.tools.documentation.generator.skylark.rendering;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.util.environment.Platform;

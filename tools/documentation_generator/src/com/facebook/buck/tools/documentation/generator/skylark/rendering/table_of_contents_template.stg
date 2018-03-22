@@ -5,8 +5,8 @@
  * @param navid The current page's navigation id.
  */
 {template .tableOfContents}
-  <h4>Skylark</h4>
   <ul>
+      <li><strong>Skylark</strong></li>
       %signatures :{ signature |
           %openCurly%call navigation.link%closeCurly%
               %openCurly%param currentnavid: $navid /%closeCurly%
