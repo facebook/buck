@@ -36,7 +36,6 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -110,12 +109,7 @@ public class OcamlLibraryDescription
           buildTarget,
           compileBuildTarget,
           context.getProjectFilesystem(),
-          params.withDeclaredDeps(
-              Suppliers.ofInstance(
-                  ImmutableSortedSet.<BuildRule>naturalOrder()
-                      .addAll(params.getDeclaredDeps().get())
-                      .addAll(result.getRules())
-                      .build())),
+          params,
           args.getLinkerFlags(),
           result.getObjectFiles(),
           result.getOcamlContext(),
@@ -125,7 +119,12 @@ public class OcamlLibraryDescription
           ImmutableSortedSet.<BuildRule>naturalOrder()
               .add(result.getBytecodeLink())
               .addAll(ruleFinder.filterBuildRuleInputs(result.getObjectFiles()))
-              .build());
+              .build(),
+          result
+              .getRules()
+              .stream()
+              .map(BuildRule::getBuildTarget)
+              .collect(ImmutableList.toImmutableList()));
 
     } else {
       OcamlBuild ocamlLibraryBuild =
@@ -144,12 +143,7 @@ public class OcamlLibraryDescription
           buildTarget,
           compileBuildTarget,
           context.getProjectFilesystem(),
-          params.withDeclaredDeps(
-              Suppliers.ofInstance(
-                  ImmutableSortedSet.<BuildRule>naturalOrder()
-                      .addAll(params.getDeclaredDeps().get())
-                      .add(ocamlLibraryBuild)
-                      .build())),
+          params,
           args.getLinkerFlags(),
           srcs.stream()
               .map(OcamlSource::getSource)
@@ -162,7 +156,8 @@ public class OcamlLibraryDescription
           ocamlLibraryBuild,
           ImmutableSortedSet.of(ocamlLibraryBuild),
           ImmutableSortedSet.of(ocamlLibraryBuild),
-          ImmutableSortedSet.of(ocamlLibraryBuild));
+          ImmutableSortedSet.of(ocamlLibraryBuild),
+          ImmutableList.of(ocamlLibraryBuild.getBuildTarget()));
     }
   }
 

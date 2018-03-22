@@ -23,15 +23,20 @@ import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
-class OcamlStaticLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implements OcamlLibrary {
+class OcamlStaticLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
+    implements OcamlLibrary, HasRuntimeDeps {
   private final BuildTarget staticLibraryTarget;
   private final ImmutableList<String> linkerFlags;
   private final ImmutableList<? extends SourcePath> objFiles;
@@ -40,6 +45,7 @@ class OcamlStaticLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implement
   private final ImmutableSortedSet<BuildRule> nativeCompileDeps;
   private final ImmutableSortedSet<BuildRule> bytecodeCompileDeps;
   private final ImmutableSortedSet<BuildRule> bytecodeLinkDeps;
+  private final Iterable<BuildTarget> runtimeDeps;
 
   public OcamlStaticLibrary(
       BuildTarget buildTarget,
@@ -52,7 +58,8 @@ class OcamlStaticLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implement
       BuildRule ocamlLibraryBuild,
       ImmutableSortedSet<BuildRule> nativeCompileDeps,
       ImmutableSortedSet<BuildRule> bytecodeCompileDeps,
-      ImmutableSortedSet<BuildRule> bytecodeLinkDeps) {
+      ImmutableSortedSet<BuildRule> bytecodeLinkDeps,
+      Iterable<BuildTarget> runtimeDeps) {
     super(buildTarget, projectFilesystem, params);
     this.linkerFlags = linkerFlags;
     this.objFiles = objFiles;
@@ -61,6 +68,7 @@ class OcamlStaticLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implement
     this.nativeCompileDeps = nativeCompileDeps;
     this.bytecodeCompileDeps = bytecodeCompileDeps;
     this.bytecodeLinkDeps = bytecodeLinkDeps;
+    this.runtimeDeps = runtimeDeps;
     staticLibraryTarget = OcamlRuleBuilder.createStaticLibraryBuildTarget(compileBuildTarget);
   }
 
@@ -124,5 +132,10 @@ class OcamlStaticLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implement
   @Override
   public ImmutableSortedSet<BuildRule> getBytecodeLinkDeps() {
     return bytecodeLinkDeps;
+  }
+
+  @Override
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+    return RichStream.from(runtimeDeps);
   }
 }
