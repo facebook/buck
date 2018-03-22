@@ -8,15 +8,6 @@
   <string>Hello Buck!</string>
 	<key>CFBundleExecutable</key>
 	<string>BuckDemoApp</string>
-  <key>CFBundleIconFiles</key>
-  <array>
-          <string>Icon.png</string>
-          <string>Icon@2x.png</string>
-          <string>Icon-72.png</string>
-          <string>Icon-72@2x.png</string>
-          <string>Icon-Small-50.png</string>
-          <string>Icon-Small-50@2x.png</string>
-  </array>
 	<key>CFBundleIdentifier</key>
 	<string>com.facebook.BuckDemoApp</string>
 	<key>CFBundleInfoDictionaryVersion</key>

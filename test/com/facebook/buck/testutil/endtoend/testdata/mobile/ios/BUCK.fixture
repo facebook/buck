@@ -10,6 +10,14 @@ apple_resource(
     files = glob(["*.png"]),
 )
 
+apple_asset_catalog(
+    name = "BuckDemoAssetCatalog",
+    app_icon = "AppIcon",
+    dirs = [
+        "Assets.xcassets",
+    ],
+)
+
 apple_bundle(
     name = "BuckDemoApp",
     binary = ":BuckDemoAppBinary",
@@ -35,6 +43,7 @@ apple_binary(
     ],
     deps = [
         ":BuckDemoAppResources",
+        ":BuckDemoAssetCatalog",
         "//common:hello",
     ],
 )
