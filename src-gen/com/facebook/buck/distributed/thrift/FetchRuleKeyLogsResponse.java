@@ -12,15 +12,18 @@ public class FetchRuleKeyLogsResponse implements org.apache.thrift.TBase<FetchRu
   private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("FetchRuleKeyLogsResponse");
 
   private static final org.apache.thrift.protocol.TField RULE_KEY_LOGS_FIELD_DESC = new org.apache.thrift.protocol.TField("ruleKeyLogs", org.apache.thrift.protocol.TType.LIST, (short)1);
+  private static final org.apache.thrift.protocol.TField LOOKED_UP_STORE_IDS_FIELD_DESC = new org.apache.thrift.protocol.TField("lookedUpStoreIds", org.apache.thrift.protocol.TType.LIST, (short)2);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new FetchRuleKeyLogsResponseStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new FetchRuleKeyLogsResponseTupleSchemeFactory();
 
   public java.util.List<RuleKeyLogEntry> ruleKeyLogs; // optional
+  public java.util.List<java.lang.String> lookedUpStoreIds; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-    RULE_KEY_LOGS((short)1, "ruleKeyLogs");
+    RULE_KEY_LOGS((short)1, "ruleKeyLogs"),
+    LOOKED_UP_STORE_IDS((short)2, "lookedUpStoreIds");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -37,6 +40,8 @@ public class FetchRuleKeyLogsResponse implements org.apache.thrift.TBase<FetchRu
       switch(fieldId) {
         case 1: // RULE_KEY_LOGS
           return RULE_KEY_LOGS;
+        case 2: // LOOKED_UP_STORE_IDS
+          return LOOKED_UP_STORE_IDS;
         default:
           return null;
       }
@@ -77,13 +82,16 @@ public class FetchRuleKeyLogsResponse implements org.apache.thrift.TBase<FetchRu
   }
 
   // isset id assignments
-  private static final _Fields optionals[] = {_Fields.RULE_KEY_LOGS};
+  private static final _Fields optionals[] = {_Fields.RULE_KEY_LOGS,_Fields.LOOKED_UP_STORE_IDS};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
     tmpMap.put(_Fields.RULE_KEY_LOGS, new org.apache.thrift.meta_data.FieldMetaData("ruleKeyLogs", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
             new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, RuleKeyLogEntry.class))));
+    tmpMap.put(_Fields.LOOKED_UP_STORE_IDS, new org.apache.thrift.meta_data.FieldMetaData("lookedUpStoreIds", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(FetchRuleKeyLogsResponse.class, metaDataMap);
   }
@@ -102,6 +110,10 @@ public class FetchRuleKeyLogsResponse implements org.apache.thrift.TBase<FetchRu
       }
       this.ruleKeyLogs = __this__ruleKeyLogs;
     }
+    if (other.isSetLookedUpStoreIds()) {
+      java.util.List<java.lang.String> __this__lookedUpStoreIds = new java.util.ArrayList<java.lang.String>(other.lookedUpStoreIds);
+      this.lookedUpStoreIds = __this__lookedUpStoreIds;
+    }
   }
 
   public FetchRuleKeyLogsResponse deepCopy() {
@@ -111,6 +123,7 @@ public class FetchRuleKeyLogsResponse implements org.apache.thrift.TBase<FetchRu
   @Override
   public void clear() {
     this.ruleKeyLogs = null;
+    this.lookedUpStoreIds = null;
   }
 
   public int getRuleKeyLogsSize() {
@@ -152,6 +165,45 @@ public class FetchRuleKeyLogsResponse implements org.apache.thrift.TBase<FetchRu
     }
   }
 
+  public int getLookedUpStoreIdsSize() {
+    return (this.lookedUpStoreIds == null) ? 0 : this.lookedUpStoreIds.size();
+  }
+
+  public java.util.Iterator<java.lang.String> getLookedUpStoreIdsIterator() {
+    return (this.lookedUpStoreIds == null) ? null : this.lookedUpStoreIds.iterator();
+  }
+
+  public void addToLookedUpStoreIds(java.lang.String elem) {
+    if (this.lookedUpStoreIds == null) {
+      this.lookedUpStoreIds = new java.util.ArrayList<java.lang.String>();
+    }
+    this.lookedUpStoreIds.add(elem);
+  }
+
+  public java.util.List<java.lang.String> getLookedUpStoreIds() {
+    return this.lookedUpStoreIds;
+  }
+
+  public FetchRuleKeyLogsResponse setLookedUpStoreIds(java.util.List<java.lang.String> lookedUpStoreIds) {
+    this.lookedUpStoreIds = lookedUpStoreIds;
+    return this;
+  }
+
+  public void unsetLookedUpStoreIds() {
+    this.lookedUpStoreIds = null;
+  }
+
+  /** Returns true if field lookedUpStoreIds is set (has been assigned a value) and false otherwise */
+  public boolean isSetLookedUpStoreIds() {
+    return this.lookedUpStoreIds != null;
+  }
+
+  public void setLookedUpStoreIdsIsSet(boolean value) {
+    if (!value) {
+      this.lookedUpStoreIds = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, java.lang.Object value) {
     switch (field) {
     case RULE_KEY_LOGS:
@@ -162,6 +214,14 @@ public class FetchRuleKeyLogsResponse implements org.apache.thrift.TBase<FetchRu
       }
       break;
 
+    case LOOKED_UP_STORE_IDS:
+      if (value == null) {
+        unsetLookedUpStoreIds();
+      } else {
+        setLookedUpStoreIds((java.util.List<java.lang.String>)value);
+      }
+      break;
+
     }
   }
 
@@ -169,6 +229,9 @@ public class FetchRuleKeyLogsResponse implements org.apache.thrift.TBase<FetchRu
     switch (field) {
     case RULE_KEY_LOGS:
       return getRuleKeyLogs();
+
+    case LOOKED_UP_STORE_IDS:
+      return getLookedUpStoreIds();
 
     }
     throw new java.lang.IllegalStateException();
@@ -183,6 +246,8 @@ public class FetchRuleKeyLogsResponse implements org.apache.thrift.TBase<FetchRu
     switch (field) {
     case RULE_KEY_LOGS:
       return isSetRuleKeyLogs();
+    case LOOKED_UP_STORE_IDS:
+      return isSetLookedUpStoreIds();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -211,6 +276,15 @@ public class FetchRuleKeyLogsResponse implements org.apache.thrift.TBase<FetchRu
         return false;
     }
 
+    boolean this_present_lookedUpStoreIds = true && this.isSetLookedUpStoreIds();
+    boolean that_present_lookedUpStoreIds = true && that.isSetLookedUpStoreIds();
+    if (this_present_lookedUpStoreIds || that_present_lookedUpStoreIds) {
+      if (!(this_present_lookedUpStoreIds && that_present_lookedUpStoreIds))
+        return false;
+      if (!this.lookedUpStoreIds.equals(that.lookedUpStoreIds))
+        return false;
+    }
+
     return true;
   }
 
@@ -221,6 +295,10 @@ public class FetchRuleKeyLogsResponse implements org.apache.thrift.TBase<FetchRu
     hashCode = hashCode * 8191 + ((isSetRuleKeyLogs()) ? 131071 : 524287);
     if (isSetRuleKeyLogs())
       hashCode = hashCode * 8191 + ruleKeyLogs.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetLookedUpStoreIds()) ? 131071 : 524287);
+    if (isSetLookedUpStoreIds())
+      hashCode = hashCode * 8191 + lookedUpStoreIds.hashCode();
 
     return hashCode;
   }
@@ -239,6 +317,16 @@ public class FetchRuleKeyLogsResponse implements org.apache.thrift.TBase<FetchRu
     }
     if (isSetRuleKeyLogs()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.ruleKeyLogs, other.ruleKeyLogs);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetLookedUpStoreIds()).compareTo(other.isSetLookedUpStoreIds());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetLookedUpStoreIds()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.lookedUpStoreIds, other.lookedUpStoreIds);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -269,6 +357,16 @@ public class FetchRuleKeyLogsResponse implements org.apache.thrift.TBase<FetchRu
         sb.append("null");
       } else {
         sb.append(this.ruleKeyLogs);
+      }
+      first = false;
+    }
+    if (isSetLookedUpStoreIds()) {
+      if (!first) sb.append(", ");
+      sb.append("lookedUpStoreIds:");
+      if (this.lookedUpStoreIds == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.lookedUpStoreIds);
       }
       first = false;
     }
@@ -334,6 +432,24 @@ public class FetchRuleKeyLogsResponse implements org.apache.thrift.TBase<FetchRu
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 2: // LOOKED_UP_STORE_IDS
+            if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
+              {
+                org.apache.thrift.protocol.TList _list187 = iprot.readListBegin();
+                struct.lookedUpStoreIds = new java.util.ArrayList<java.lang.String>(_list187.size);
+                java.lang.String _elem188;
+                for (int _i189 = 0; _i189 < _list187.size; ++_i189)
+                {
+                  _elem188 = iprot.readString();
+                  struct.lookedUpStoreIds.add(_elem188);
+                }
+                iprot.readListEnd();
+              }
+              struct.setLookedUpStoreIdsIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -354,9 +470,23 @@ public class FetchRuleKeyLogsResponse implements org.apache.thrift.TBase<FetchRu
           oprot.writeFieldBegin(RULE_KEY_LOGS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.ruleKeyLogs.size()));
-            for (RuleKeyLogEntry _iter187 : struct.ruleKeyLogs)
+            for (RuleKeyLogEntry _iter190 : struct.ruleKeyLogs)
             {
-              _iter187.write(oprot);
+              _iter190.write(oprot);
+            }
+            oprot.writeListEnd();
+          }
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.lookedUpStoreIds != null) {
+        if (struct.isSetLookedUpStoreIds()) {
+          oprot.writeFieldBegin(LOOKED_UP_STORE_IDS_FIELD_DESC);
+          {
+            oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.lookedUpStoreIds.size()));
+            for (java.lang.String _iter191 : struct.lookedUpStoreIds)
+            {
+              oprot.writeString(_iter191);
             }
             oprot.writeListEnd();
           }
@@ -384,13 +514,25 @@ public class FetchRuleKeyLogsResponse implements org.apache.thrift.TBase<FetchRu
       if (struct.isSetRuleKeyLogs()) {
         optionals.set(0);
       }
-      oprot.writeBitSet(optionals, 1);
+      if (struct.isSetLookedUpStoreIds()) {
+        optionals.set(1);
+      }
+      oprot.writeBitSet(optionals, 2);
       if (struct.isSetRuleKeyLogs()) {
         {
           oprot.writeI32(struct.ruleKeyLogs.size());
-          for (RuleKeyLogEntry _iter188 : struct.ruleKeyLogs)
+          for (RuleKeyLogEntry _iter192 : struct.ruleKeyLogs)
           {
-            _iter188.write(oprot);
+            _iter192.write(oprot);
+          }
+        }
+      }
+      if (struct.isSetLookedUpStoreIds()) {
+        {
+          oprot.writeI32(struct.lookedUpStoreIds.size());
+          for (java.lang.String _iter193 : struct.lookedUpStoreIds)
+          {
+            oprot.writeString(_iter193);
           }
         }
       }
@@ -399,20 +541,33 @@ public class FetchRuleKeyLogsResponse implements org.apache.thrift.TBase<FetchRu
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, FetchRuleKeyLogsResponse struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(1);
+      java.util.BitSet incoming = iprot.readBitSet(2);
       if (incoming.get(0)) {
         {
-          org.apache.thrift.protocol.TList _list189 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.ruleKeyLogs = new java.util.ArrayList<RuleKeyLogEntry>(_list189.size);
-          RuleKeyLogEntry _elem190;
-          for (int _i191 = 0; _i191 < _list189.size; ++_i191)
+          org.apache.thrift.protocol.TList _list194 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.ruleKeyLogs = new java.util.ArrayList<RuleKeyLogEntry>(_list194.size);
+          RuleKeyLogEntry _elem195;
+          for (int _i196 = 0; _i196 < _list194.size; ++_i196)
           {
-            _elem190 = new RuleKeyLogEntry();
-            _elem190.read(iprot);
-            struct.ruleKeyLogs.add(_elem190);
+            _elem195 = new RuleKeyLogEntry();
+            _elem195.read(iprot);
+            struct.ruleKeyLogs.add(_elem195);
           }
         }
         struct.setRuleKeyLogsIsSet(true);
+      }
+      if (incoming.get(1)) {
+        {
+          org.apache.thrift.protocol.TList _list197 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.lookedUpStoreIds = new java.util.ArrayList<java.lang.String>(_list197.size);
+          java.lang.String _elem198;
+          for (int _i199 = 0; _i199 < _list197.size; ++_i199)
+          {
+            _elem198 = iprot.readString();
+            struct.lookedUpStoreIds.add(_elem198);
+          }
+        }
+        struct.setLookedUpStoreIdsIsSet(true);
       }
     }
   }

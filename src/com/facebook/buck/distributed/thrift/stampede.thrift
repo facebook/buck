@@ -114,11 +114,19 @@ enum LogRequestType {
 
 enum BuildMode {
   UNKNOWN = 0,
+
   REMOTE_BUILD = 1,
+
   // A random BuildSlave will be the Coordinator.
   DISTRIBUTED_BUILD_WITH_REMOTE_COORDINATOR = 2
+
   // The machine launching the build is the Coordinator.
   DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR = 3,
+
+  // The machine launching the build is the Coordinator and proceeds to a normal
+  // local build using the CachingBuildEngine. Build nodes are sent to be built
+  // remotely in a strategy similar to distcc.
+  LOCAL_BUILD_WITH_REMOTE_EXECUTION = 4,
 }
 
 struct PathInfo {
@@ -433,6 +441,7 @@ struct FetchRuleKeyLogsRequest {
 
 struct FetchRuleKeyLogsResponse {
   1: optional list<RuleKeyLogEntry> ruleKeyLogs;
+  2: optional list<string> lookedUpStoreIds;
 }
 
 struct SetCoordinatorRequest {
