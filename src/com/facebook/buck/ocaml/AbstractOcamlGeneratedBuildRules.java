@@ -35,4 +35,6 @@ abstract class AbstractOcamlGeneratedBuildRules {
   public abstract ImmutableList<SourcePath> getObjectFiles();
 
   public abstract BuildRule getBytecodeLink();
+
+  public abstract OcamlBuildContext getOcamlContext();
 }

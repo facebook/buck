@@ -32,8 +32,10 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -78,21 +80,52 @@ public class OcamlBinaryDescription
           StringArg.from(
               ocamlPlatform.getWarningsFlags().orElse("") + args.getWarningsFlags().orElse("")));
     }
-    ImmutableList<String> linkerFlags = args.getLinkerFlags();
 
-    return OcamlRuleBuilder.createBuildRule(
-        ocamlPlatform,
+    BuildTarget compileBuildTarget = OcamlRuleBuilder.createOcamlLinkTarget(buildTarget);
+
+    ImmutableList<BuildRule> rules;
+    if (OcamlRuleBuilder.shouldUseFineGrainedRules(context.getBuildRuleResolver(), srcs)) {
+      OcamlGeneratedBuildRules result =
+          OcamlRuleBuilder.createFineGrainedBuildRules(
+              ocamlPlatform,
+              compileBuildTarget,
+              context.getProjectFilesystem(),
+              params,
+              context.getBuildRuleResolver(),
+              srcs,
+              /* isLibrary */ false,
+              args.getBytecodeOnly().orElse(false),
+              flags.build(),
+              args.getOcamldepFlags(),
+              /* buildNativePlugin */ false);
+      rules = result.getRules();
+    } else {
+
+      OcamlBuild ocamlLibraryBuild =
+          OcamlRuleBuilder.createBulkCompileRule(
+              ocamlPlatform,
+              compileBuildTarget,
+              context.getProjectFilesystem(),
+              params,
+              context.getBuildRuleResolver(),
+              srcs,
+              /* isLibrary */ false,
+              args.getBytecodeOnly().orElse(false),
+              flags.build(),
+              args.getOcamldepFlags());
+      rules = ImmutableList.of(ocamlLibraryBuild);
+    }
+
+    return new OcamlBinary(
         buildTarget,
         context.getProjectFilesystem(),
-        params,
-        context.getBuildRuleResolver(),
-        srcs,
-        /*isLibrary*/ false,
-        args.getBytecodeOnly().orElse(false),
-        flags.build(),
-        linkerFlags,
-        args.getOcamldepFlags(),
-        /*buildNativePlugin*/ false);
+        params.withDeclaredDeps(
+            Suppliers.ofInstance(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(params.getDeclaredDeps().get())
+                    .addAll(rules)
+                    .build())),
+        rules.get(0));
   }
 
   @Override

@@ -102,4 +102,8 @@ public class OcamlBuild extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     // Intermediate OCaml rules are not cacheable because the compiler is not deterministic.
     return false;
   }
+
+  public OcamlBuildContext getOcamlContext() {
+    return ocamlContext;
+  }
 }

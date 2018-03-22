@@ -22,9 +22,13 @@ import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.OcamlSource;
@@ -32,8 +36,10 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -61,42 +67,103 @@ public class OcamlLibraryDescription
       BuildRuleParams params,
       OcamlLibraryDescriptionArg args) {
 
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(context.getBuildRuleResolver());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+
     OcamlToolchain ocamlToolchain =
         toolchainProvider.getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class);
     OcamlPlatform ocamlPlatform = ocamlToolchain.getDefaultOcamlPlatform();
 
     ImmutableList<OcamlSource> srcs = args.getSrcs();
-    ImmutableList.Builder<Arg> flags = ImmutableList.builder();
-    flags.addAll(
+    ImmutableList.Builder<Arg> flagsBuilder = ImmutableList.builder();
+    flagsBuilder.addAll(
         OcamlDescriptionEnhancer.toStringWithMacrosArgs(
             buildTarget,
             context.getCellPathResolver(),
             context.getBuildRuleResolver(),
             args.getCompilerFlags()));
     if (ocamlPlatform.getWarningsFlags().isPresent() || args.getWarningsFlags().isPresent()) {
-      flags.addAll(
+      flagsBuilder.addAll(
           StringArg.from(
               "-w",
               ocamlPlatform.getWarningsFlags().orElse("") + args.getWarningsFlags().orElse("")));
     }
-    ImmutableList<String> linkerflags = args.getLinkerFlags();
+    ImmutableList<Arg> flags = flagsBuilder.build();
 
-    boolean bytecodeOnly = args.getBytecodeOnly();
-    boolean nativePlugin = !bytecodeOnly && args.getNativePlugin();
+    BuildTarget compileBuildTarget = OcamlRuleBuilder.createStaticLibraryBuildTarget(buildTarget);
 
-    return OcamlRuleBuilder.createBuildRule(
-        ocamlPlatform,
-        buildTarget,
-        context.getProjectFilesystem(),
-        params,
-        context.getBuildRuleResolver(),
-        srcs,
-        /*isLibrary*/ true,
-        bytecodeOnly,
-        flags.build(),
-        linkerflags,
-        args.getOcamldepFlags(),
-        nativePlugin);
+    if (OcamlRuleBuilder.shouldUseFineGrainedRules(context.getBuildRuleResolver(), srcs)) {
+      OcamlGeneratedBuildRules result =
+          OcamlRuleBuilder.createFineGrainedBuildRules(
+              ocamlPlatform,
+              compileBuildTarget,
+              context.getProjectFilesystem(),
+              params,
+              context.getBuildRuleResolver(),
+              srcs,
+              /* isLibrary */ true,
+              args.getBytecodeOnly(),
+              flags,
+              args.getOcamldepFlags(),
+              !args.getBytecodeOnly() && args.getNativePlugin());
+      return new OcamlStaticLibrary(
+          buildTarget,
+          compileBuildTarget,
+          context.getProjectFilesystem(),
+          params.withDeclaredDeps(
+              Suppliers.ofInstance(
+                  ImmutableSortedSet.<BuildRule>naturalOrder()
+                      .addAll(params.getDeclaredDeps().get())
+                      .addAll(result.getRules())
+                      .build())),
+          args.getLinkerFlags(),
+          result.getObjectFiles(),
+          result.getOcamlContext(),
+          result.getRules().get(0),
+          result.getNativeCompileDeps(),
+          result.getBytecodeCompileDeps(),
+          ImmutableSortedSet.<BuildRule>naturalOrder()
+              .add(result.getBytecodeLink())
+              .addAll(ruleFinder.filterBuildRuleInputs(result.getObjectFiles()))
+              .build());
+
+    } else {
+      OcamlBuild ocamlLibraryBuild =
+          OcamlRuleBuilder.createBulkCompileRule(
+              ocamlPlatform,
+              compileBuildTarget,
+              context.getProjectFilesystem(),
+              params,
+              context.getBuildRuleResolver(),
+              srcs,
+              /* isLibrary */ true,
+              args.getBytecodeOnly(),
+              flags,
+              args.getOcamldepFlags());
+      return new OcamlStaticLibrary(
+          buildTarget,
+          compileBuildTarget,
+          context.getProjectFilesystem(),
+          params.withDeclaredDeps(
+              Suppliers.ofInstance(
+                  ImmutableSortedSet.<BuildRule>naturalOrder()
+                      .addAll(params.getDeclaredDeps().get())
+                      .add(ocamlLibraryBuild)
+                      .build())),
+          args.getLinkerFlags(),
+          srcs.stream()
+              .map(OcamlSource::getSource)
+              .map(pathResolver::getAbsolutePath)
+              .filter(OcamlUtil.ext(OcamlCompilables.OCAML_C))
+              .map(ocamlLibraryBuild.getOcamlContext()::getCOutput)
+              .map(input -> ExplicitBuildTargetSourcePath.of(compileBuildTarget, input))
+              .collect(ImmutableList.toImmutableList()),
+          ocamlLibraryBuild.getOcamlContext(),
+          ocamlLibraryBuild,
+          ImmutableSortedSet.of(ocamlLibraryBuild),
+          ImmutableSortedSet.of(ocamlLibraryBuild),
+          ImmutableSortedSet.of(ocamlLibraryBuild));
+    }
   }
 
   @Override

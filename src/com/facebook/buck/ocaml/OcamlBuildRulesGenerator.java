@@ -142,6 +142,7 @@ public class OcamlBuildRulesGenerator {
         .setBytecodeCompileDeps(ImmutableSortedSet.copyOf(bytecodeCompileDeps.build()))
         .setObjectFiles(objFiles)
         .setBytecodeLink(bytecodeLink)
+        .setOcamlContext(ocamlContext)
         .build();
   }
 
