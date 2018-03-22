@@ -4,15 +4,15 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-apple_library(
+# Uses load for simple change to test `load` at a basic level
+load("//ios/buck_imports:visible_apple_library.bzl", "visible_apple_library")
+
+visible_apple_library(
     name = "capitalize",
     srcs = [
         "CapitalizeUtil.m",
     ],
     exported_headers = [
         "CapitalizeUtil.h",
-    ],
-    visibility = [
-        "PUBLIC",
     ],
 )
