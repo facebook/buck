@@ -104,7 +104,7 @@ public class OcamlRuleBuilder {
 
   public static BuildRule createBuildRule(
       ToolchainProvider toolchainProvider,
-      OcamlBuckConfig ocamlBuckConfig,
+      OcamlPlatform ocamlPlatform,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
@@ -132,7 +132,7 @@ public class OcamlRuleBuilder {
     if (noYaccOrLexSources && noGeneratedSources) {
       return createFineGrainedBuildRule(
           toolchainProvider,
-          ocamlBuckConfig,
+          ocamlPlatform,
           buildTarget,
           projectFilesystem,
           params,
@@ -147,7 +147,7 @@ public class OcamlRuleBuilder {
     } else {
       return createBulkBuildRule(
           toolchainProvider,
-          ocamlBuckConfig,
+          ocamlPlatform,
           buildTarget,
           projectFilesystem,
           params,
@@ -203,7 +203,7 @@ public class OcamlRuleBuilder {
 
   public static BuildRule createBulkBuildRule(
       ToolchainProvider toolchainProvider,
-      OcamlBuckConfig ocamlBuckConfig,
+      OcamlPlatform ocamlPlatform,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
@@ -225,9 +225,6 @@ public class OcamlRuleBuilder {
                 resolver,
                 FluentIterable.from(params.getBuildDeps())
                     .filter(CxxPreprocessorDep.class::isInstance)));
-    OcamlToolchain ocamlToolchain =
-        toolchainProvider.getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class);
-    OcamlPlatform ocamlPlatform = ocamlToolchain.getDefaultOcamlPlatform();
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -299,7 +296,7 @@ public class OcamlRuleBuilder {
       bytecodeLinkDepsBuilder.addAll(library.getBytecodeLinkDeps());
     }
     OcamlBuildContext ocamlContext =
-        OcamlBuildContext.builder(ocamlPlatform, ocamlBuckConfig)
+        OcamlBuildContext.builder(ocamlPlatform)
             .setProjectFilesystem(projectFilesystem)
             .setSourcePathResolver(pathResolver)
             .setFlags(flagsBuilder.build())
@@ -371,7 +368,7 @@ public class OcamlRuleBuilder {
 
   public static BuildRule createFineGrainedBuildRule(
       ToolchainProvider toolchainProvider,
-      OcamlBuckConfig ocamlBuckConfig,
+      OcamlPlatform ocamlPlatform,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
@@ -387,9 +384,6 @@ public class OcamlRuleBuilder {
         toolchainProvider
             .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
             .getDefaultCxxPlatform();
-    OcamlToolchain ocamlToolchain =
-        toolchainProvider.getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class);
-    OcamlPlatform ocamlPlatform = ocamlToolchain.getDefaultOcamlPlatform();
 
     CxxPreprocessorInput cxxPreprocessorInputFromDeps =
         CxxPreprocessorInput.concat(
@@ -466,7 +460,7 @@ public class OcamlRuleBuilder {
       bytecodeLinkDepsBuilder.addAll(library.getBytecodeLinkDeps());
     }
     OcamlBuildContext ocamlContext =
-        OcamlBuildContext.builder(ocamlPlatform, ocamlBuckConfig)
+        OcamlBuildContext.builder(ocamlPlatform)
             .setProjectFilesystem(projectFilesystem)
             .setSourcePathResolver(pathResolver)
             .setFlags(flagsBuilder.build())

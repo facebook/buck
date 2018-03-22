@@ -32,6 +32,7 @@ import com.facebook.buck.cxx.CxxSourceRuleFactoryHelper;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.io.ExecutableFinder;
@@ -40,10 +41,17 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.DefaultCellPathResolver;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.toolchain.ToolchainCreationContext;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
@@ -54,6 +62,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -83,13 +92,37 @@ public class OCamlIntegrationTest {
             ImmutableMap.copyOf(System.getenv()),
             DefaultCellPathResolver.of(filesystem.getRootPath(), rawConfig));
 
-    OcamlBuckConfig ocamlBuckConfig = new OcamlBuckConfig(buckConfig);
+    ToolchainProvider toolchainProvider =
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                CxxPlatformsProvider.DEFAULT_NAME,
+                CxxPlatformsProvider.of(
+                    CxxPlatformUtils.DEFAULT_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORMS))
+            .build();
 
-    assumeTrue(ocamlBuckConfig.getOcamlCompiler().isPresent());
-    assumeTrue(ocamlBuckConfig.getOcamlBytecodeCompiler().isPresent());
-    assumeTrue(ocamlBuckConfig.getOcamlDepTool().isPresent());
-    assumeTrue(ocamlBuckConfig.getYaccCompiler().isPresent());
-    assumeTrue(ocamlBuckConfig.getLexCompiler().isPresent());
+    ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
+    ExecutableFinder executableFinder = new ExecutableFinder();
+    ToolchainCreationContext toolchainCreationContext =
+        ToolchainCreationContext.of(
+            ImmutableMap.of(),
+            buckConfig,
+            new FakeProjectFilesystem(),
+            processExecutor,
+            executableFinder,
+            TestRuleKeyConfigurationFactory.create());
+
+    OcamlToolchainFactory factory = new OcamlToolchainFactory();
+    Optional<OcamlToolchain> toolchain =
+        factory.createToolchain(toolchainProvider, toolchainCreationContext);
+
+    OcamlPlatform ocamlPlatform =
+        toolchain.orElseThrow(AssertionError::new).getDefaultOcamlPlatform();
+
+    assumeTrue(ocamlPlatform.getOcamlCompiler().isPresent());
+    assumeTrue(ocamlPlatform.getOcamlBytecodeCompiler().isPresent());
+    assumeTrue(ocamlPlatform.getOcamlDepTool().isPresent());
+    assumeTrue(ocamlPlatform.getYaccCompiler().isPresent());
+    assumeTrue(ocamlPlatform.getLexCompiler().isPresent());
   }
 
   @Test

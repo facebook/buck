@@ -16,7 +16,6 @@
 
 package com.facebook.buck.ocaml;
 
-import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.DescriptionCreationContext;
 import com.facebook.buck.rules.DescriptionProvider;
@@ -31,12 +30,9 @@ public class OcamlDescriptionsProvider implements DescriptionProvider {
   @Override
   public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
-    BuckConfig config = context.getBuckConfig();
-    OcamlBuckConfig ocamlBuckConfig = new OcamlBuckConfig(config);
-
     return Arrays.asList(
-        new OcamlBinaryDescription(toolchainProvider, ocamlBuckConfig),
-        new OcamlLibraryDescription(toolchainProvider, ocamlBuckConfig),
+        new OcamlBinaryDescription(toolchainProvider),
+        new OcamlLibraryDescription(toolchainProvider),
         new PrebuiltOcamlLibraryDescription());
   }
 }

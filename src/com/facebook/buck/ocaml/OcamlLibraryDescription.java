@@ -46,16 +46,9 @@ public class OcamlLibraryDescription
         VersionPropagator<OcamlLibraryDescriptionArg> {
 
   private final ToolchainProvider toolchainProvider;
-  private final OcamlBuckConfig ocamlBuckConfig;
 
-  public OcamlLibraryDescription(
-      ToolchainProvider toolchainProvider, OcamlBuckConfig ocamlBuckConfig) {
+  public OcamlLibraryDescription(ToolchainProvider toolchainProvider) {
     this.toolchainProvider = toolchainProvider;
-    this.ocamlBuckConfig = ocamlBuckConfig;
-  }
-
-  public OcamlBuckConfig getOcamlBuckConfig() {
-    return ocamlBuckConfig;
   }
 
   @Override
@@ -70,6 +63,10 @@ public class OcamlLibraryDescription
       BuildRuleParams params,
       OcamlLibraryDescriptionArg args) {
 
+    OcamlToolchain ocamlToolchain =
+        toolchainProvider.getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class);
+    OcamlPlatform ocamlPlatform = ocamlToolchain.getDefaultOcamlPlatform();
+
     ImmutableList<OcamlSource> srcs = args.getSrcs();
     ImmutableList.Builder<Arg> flags = ImmutableList.builder();
     flags.addAll(
@@ -78,11 +75,11 @@ public class OcamlLibraryDescription
             context.getCellPathResolver(),
             context.getBuildRuleResolver(),
             args.getCompilerFlags()));
-    if (ocamlBuckConfig.getWarningsFlags().isPresent() || args.getWarningsFlags().isPresent()) {
+    if (ocamlPlatform.getWarningsFlags().isPresent() || args.getWarningsFlags().isPresent()) {
       flags.addAll(
           StringArg.from(
               "-w",
-              ocamlBuckConfig.getWarningsFlags().orElse("") + args.getWarningsFlags().orElse("")));
+              ocamlPlatform.getWarningsFlags().orElse("") + args.getWarningsFlags().orElse("")));
     }
     ImmutableList<String> linkerflags = args.getLinkerFlags();
 
@@ -91,7 +88,7 @@ public class OcamlLibraryDescription
 
     return OcamlRuleBuilder.createBuildRule(
         toolchainProvider,
-        ocamlBuckConfig,
+        ocamlPlatform,
         buildTarget,
         context.getProjectFilesystem(),
         params,

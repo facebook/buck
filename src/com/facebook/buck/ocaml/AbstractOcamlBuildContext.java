@@ -365,16 +365,15 @@ abstract class AbstractOcamlBuildContext implements AddsToRuleKey {
     return addPrefix("-ccopt", getLdFlags());
   }
 
-  public static OcamlBuildContext.Builder builder(
-      OcamlPlatform ocamlPlatform, OcamlBuckConfig config) {
+  public static OcamlBuildContext.Builder builder(OcamlPlatform ocamlPlatform) {
     return OcamlBuildContext.builder()
-        .setOcamlDepTool(config.getOcamlDepTool())
-        .setOcamlCompiler(config.getOcamlCompiler())
-        .setOcamlDebug(config.getOcamlDebug())
-        .setYaccCompiler(config.getYaccCompiler())
-        .setLexCompiler(config.getLexCompiler())
-        .setOcamlBytecodeCompiler(config.getOcamlBytecodeCompiler())
-        .setOcamlInteropIncludesDir(config.getOcamlInteropIncludesDir())
+        .setOcamlDepTool(ocamlPlatform.getOcamlDepTool())
+        .setOcamlCompiler(ocamlPlatform.getOcamlCompiler())
+        .setOcamlDebug(ocamlPlatform.getOcamlDebug())
+        .setYaccCompiler(ocamlPlatform.getYaccCompiler())
+        .setLexCompiler(ocamlPlatform.getLexCompiler())
+        .setOcamlBytecodeCompiler(ocamlPlatform.getOcamlBytecodeCompiler())
+        .setOcamlInteropIncludesDir(ocamlPlatform.getOcamlInteropIncludesDir())
         .setCFlags(ocamlPlatform.getCFlags())
         .setLdFlags(ocamlPlatform.getLdFlags());
   }

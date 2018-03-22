@@ -45,16 +45,9 @@ public class OcamlBinaryDescription
         VersionRoot<OcamlBinaryDescriptionArg> {
 
   private final ToolchainProvider toolchainProvider;
-  private final OcamlBuckConfig ocamlBuckConfig;
 
-  public OcamlBinaryDescription(
-      ToolchainProvider toolchainProvider, OcamlBuckConfig ocamlBuckConfig) {
+  public OcamlBinaryDescription(ToolchainProvider toolchainProvider) {
     this.toolchainProvider = toolchainProvider;
-    this.ocamlBuckConfig = ocamlBuckConfig;
-  }
-
-  public OcamlBuckConfig getOcamlBuckConfig() {
-    return ocamlBuckConfig;
   }
 
   @Override
@@ -69,6 +62,10 @@ public class OcamlBinaryDescription
       BuildRuleParams params,
       OcamlBinaryDescriptionArg args) {
 
+    OcamlToolchain ocamlToolchain =
+        toolchainProvider.getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class);
+    OcamlPlatform ocamlPlatform = ocamlToolchain.getDefaultOcamlPlatform();
+
     ImmutableList<OcamlSource> srcs = args.getSrcs();
     ImmutableList.Builder<Arg> flags = ImmutableList.builder();
     flags.addAll(
@@ -77,17 +74,17 @@ public class OcamlBinaryDescription
             context.getCellPathResolver(),
             context.getBuildRuleResolver(),
             args.getCompilerFlags()));
-    if (ocamlBuckConfig.getWarningsFlags().isPresent() || args.getWarningsFlags().isPresent()) {
+    if (ocamlPlatform.getWarningsFlags().isPresent() || args.getWarningsFlags().isPresent()) {
       flags.addAll(StringArg.from("-w"));
       flags.addAll(
           StringArg.from(
-              ocamlBuckConfig.getWarningsFlags().orElse("") + args.getWarningsFlags().orElse("")));
+              ocamlPlatform.getWarningsFlags().orElse("") + args.getWarningsFlags().orElse("")));
     }
     ImmutableList<String> linkerFlags = args.getLinkerFlags();
 
     return OcamlRuleBuilder.createBuildRule(
         toolchainProvider,
-        ocamlBuckConfig,
+        ocamlPlatform,
         buildTarget,
         context.getProjectFilesystem(),
         params,

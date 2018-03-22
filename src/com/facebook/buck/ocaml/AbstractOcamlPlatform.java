@@ -18,15 +18,33 @@ package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Abstracting the tooling/flags/libraries used to build OCaml rules. */
 @Value.Immutable
 @BuckStyleImmutable
 interface AbstractOcamlPlatform extends Toolchain {
+
+  Optional<Tool> getOcamlCompiler();
+
+  Optional<Tool> getOcamlDepTool();
+
+  Optional<Tool> getYaccCompiler();
+
+  Optional<Tool> getLexCompiler();
+
+  Optional<String> getOcamlInteropIncludesDir();
+
+  Optional<String> getWarningsFlags();
+
+  Optional<Tool> getOcamlBytecodeCompiler();
+
+  Optional<Tool> getOcamlDebug();
 
   CompilerProvider getCCompiler();
 

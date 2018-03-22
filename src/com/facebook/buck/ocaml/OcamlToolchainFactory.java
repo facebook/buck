@@ -18,17 +18,41 @@ package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.rules.HashedFileTool;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.collect.ImmutableList;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.function.BiFunction;
 
 public class OcamlToolchainFactory implements ToolchainFactory<OcamlToolchain> {
+
+  private static final String SECTION = "ocaml";
+
+  private static final Path DEFAULT_OCAML_COMPILER = Paths.get("ocamlopt.opt");
+  private static final Path DEFAULT_OCAML_BYTECODE_COMPILER = Paths.get("ocamlc.opt");
+  private static final Path DEFAULT_OCAML_DEP_TOOL = Paths.get("ocamldep.opt");
+  private static final Path DEFAULT_OCAML_YACC_COMPILER = Paths.get("ocamlyacc");
+  private static final Path DEFAULT_OCAML_DEBUG = Paths.get("ocamldebug");
+  private static final Path DEFAULT_OCAML_LEX_COMPILER = Paths.get("ocamllex.opt");
 
   @Override
   public Optional<OcamlToolchain> createToolchain(
       ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+    BiFunction<String, Path, Optional<Tool>> getTool =
+        (field, defaultValue) ->
+            context
+                .getExecutableFinder()
+                .getOptionalExecutable(
+                    context.getBuckConfig().getPath(SECTION, field).orElse(defaultValue),
+                    context.getBuckConfig().getEnvironment())
+                .map(
+                    path ->
+                        new HashedFileTool(() -> context.getBuckConfig().getPathSourcePath(path)));
     CxxPlatform cxxPlatform =
         toolchainProvider
             .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
@@ -36,6 +60,16 @@ public class OcamlToolchainFactory implements ToolchainFactory<OcamlToolchain> {
     return Optional.of(
         OcamlToolchain.of(
             OcamlPlatform.builder()
+                .setOcamlCompiler(getTool.apply("ocaml.compiler", DEFAULT_OCAML_COMPILER))
+                .setOcamlDepTool(getTool.apply("dep.tool", DEFAULT_OCAML_DEP_TOOL))
+                .setYaccCompiler(getTool.apply("yacc.compiler", DEFAULT_OCAML_YACC_COMPILER))
+                .setLexCompiler(getTool.apply("lex.compiler", DEFAULT_OCAML_LEX_COMPILER))
+                .setOcamlInteropIncludesDir(
+                    context.getBuckConfig().getValue(SECTION, "interop.includes"))
+                .setWarningsFlags(context.getBuckConfig().getValue(SECTION, "warnings_flags"))
+                .setOcamlBytecodeCompiler(
+                    getTool.apply("ocaml.bytecode.compiler", DEFAULT_OCAML_BYTECODE_COMPILER))
+                .setOcamlDebug(getTool.apply("debug", DEFAULT_OCAML_DEBUG))
                 .setCCompiler(cxxPlatform.getCc())
                 .setCxxCompiler(cxxPlatform.getCxx())
                 .setCPreprocessor(cxxPlatform.getCpp())
