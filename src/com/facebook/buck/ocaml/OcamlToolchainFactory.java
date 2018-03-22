@@ -16,10 +16,12 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
+import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 public class OcamlToolchainFactory implements ToolchainFactory<OcamlToolchain> {
@@ -27,10 +29,23 @@ public class OcamlToolchainFactory implements ToolchainFactory<OcamlToolchain> {
   @Override
   public Optional<OcamlToolchain> createToolchain(
       ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+    CxxPlatform cxxPlatform =
+        toolchainProvider
+            .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+            .getDefaultCxxPlatform();
     return Optional.of(
-        new OcamlToolchain(
-            toolchainProvider
-                .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
-                .getDefaultCxxPlatform()));
+        OcamlToolchain.of(
+            OcamlPlatform.builder()
+                .setCCompiler(cxxPlatform.getCc())
+                .setCxxCompiler(cxxPlatform.getCxx())
+                .setCPreprocessor(cxxPlatform.getCpp())
+                .setCFlags(
+                    ImmutableList.<String>builder()
+                        .addAll(cxxPlatform.getCppflags())
+                        .addAll(cxxPlatform.getCflags())
+                        .addAll(cxxPlatform.getAsflags())
+                        .build())
+                .setLdFlags(cxxPlatform.getLdflags())
+                .build()));
   }
 }

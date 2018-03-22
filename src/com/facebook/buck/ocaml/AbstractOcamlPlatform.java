@@ -17,43 +17,25 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.facebook.buck.toolchain.Toolchain;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
+import org.immutables.value.Value;
 
-public class OcamlToolchain implements Toolchain {
+/** Abstracting the tooling/flags/libraries used to build OCaml rules. */
+@Value.Immutable
+@BuckStyleImmutable
+interface AbstractOcamlPlatform extends Toolchain {
 
-  public static final String DEFAULT_NAME = "ocaml-toolchain";
+  CompilerProvider getCCompiler();
 
-  private final CxxPlatform cxxPlatform;
+  PreprocessorProvider getCPreprocessor();
 
-  public OcamlToolchain(CxxPlatform cxxPlatform) {
-    this.cxxPlatform = cxxPlatform;
-  }
-
-  public CompilerProvider getCCompiler() {
-    return cxxPlatform.getCc();
-  }
-
-  public PreprocessorProvider getCPreprocessor() {
-    return cxxPlatform.getCpp();
-  }
-
-  public CompilerProvider getCxxCompiler() {
-    return cxxPlatform.getCxx();
-  }
+  CompilerProvider getCxxCompiler();
 
   /** @return all C/C++ platform flags used to preprocess, compiler, and assemble C sources. */
-  public ImmutableList<String> getCFlags() {
-    return ImmutableList.<String>builder()
-        .addAll(cxxPlatform.getCppflags())
-        .addAll(cxxPlatform.getCflags())
-        .addAll(cxxPlatform.getAsflags())
-        .build();
-  }
+  ImmutableList<String> getCFlags();
 
-  public ImmutableList<String> getLdFlags() {
-    return cxxPlatform.getLdflags();
-  }
+  ImmutableList<String> getLdFlags();
 }

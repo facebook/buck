@@ -227,6 +227,7 @@ public class OcamlRuleBuilder {
                     .filter(CxxPreprocessorDep.class::isInstance)));
     OcamlToolchain ocamlToolchain =
         toolchainProvider.getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class);
+    OcamlPlatform ocamlPlatform = ocamlToolchain.getDefaultOcamlPlatform();
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -262,10 +263,10 @@ public class OcamlRuleBuilder {
     }
     allDepsBuilder.addAll(
         BuildableSupport.getDepsCollection(
-            ocamlToolchain.getCCompiler().resolve(resolver), ruleFinder));
+            ocamlPlatform.getCCompiler().resolve(resolver), ruleFinder));
     allDepsBuilder.addAll(
         BuildableSupport.getDepsCollection(
-            ocamlToolchain.getCxxCompiler().resolve(resolver), ruleFinder));
+            ocamlPlatform.getCxxCompiler().resolve(resolver), ruleFinder));
     allDepsBuilder.addAll(
         argFlags
             .stream()
@@ -298,7 +299,7 @@ public class OcamlRuleBuilder {
       bytecodeLinkDepsBuilder.addAll(library.getBytecodeLinkDeps());
     }
     OcamlBuildContext ocamlContext =
-        OcamlBuildContext.builder(ocamlToolchain, ocamlBuckConfig)
+        OcamlBuildContext.builder(ocamlPlatform, ocamlBuckConfig)
             .setProjectFilesystem(projectFilesystem)
             .setSourcePathResolver(pathResolver)
             .setFlags(flagsBuilder.build())
@@ -316,7 +317,7 @@ public class OcamlRuleBuilder {
             .setNativeCompileDeps(nativeCompileDepsBuilder.build())
             .setBytecodeCompileDeps(bytecodeCompileDepsBuilder.build())
             .setBytecodeLinkDeps(bytecodeLinkDepsBuilder.build())
-            .setCPreprocessor(ocamlToolchain.getCPreprocessor().resolve(resolver))
+            .setCPreprocessor(ocamlPlatform.getCPreprocessor().resolve(resolver))
             .build();
 
     OcamlBuild ocamlLibraryBuild =
@@ -325,8 +326,8 @@ public class OcamlRuleBuilder {
             projectFilesystem,
             params.withDeclaredDeps(allDeps).withoutExtraDeps(),
             ocamlContext,
-            ocamlToolchain.getCCompiler().resolve(resolver),
-            ocamlToolchain.getCxxCompiler().resolve(resolver),
+            ocamlPlatform.getCCompiler().resolve(resolver),
+            ocamlPlatform.getCxxCompiler().resolve(resolver),
             bytecodeOnly);
     resolver.addToIndex(ocamlLibraryBuild);
 
@@ -388,6 +389,7 @@ public class OcamlRuleBuilder {
             .getDefaultCxxPlatform();
     OcamlToolchain ocamlToolchain =
         toolchainProvider.getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class);
+    OcamlPlatform ocamlPlatform = ocamlToolchain.getDefaultOcamlPlatform();
 
     CxxPreprocessorInput cxxPreprocessorInputFromDeps =
         CxxPreprocessorInput.concat(
@@ -442,10 +444,10 @@ public class OcamlRuleBuilder {
                             .iterator())
                     .addAll(
                         BuildableSupport.getDepsCollection(
-                            ocamlToolchain.getCCompiler().resolve(resolver), ruleFinder))
+                            ocamlPlatform.getCCompiler().resolve(resolver), ruleFinder))
                     .addAll(
                         BuildableSupport.getDepsCollection(
-                            ocamlToolchain.getCxxCompiler().resolve(resolver), ruleFinder))
+                            ocamlPlatform.getCxxCompiler().resolve(resolver), ruleFinder))
                     .build())
             .withoutExtraDeps();
 
@@ -464,7 +466,7 @@ public class OcamlRuleBuilder {
       bytecodeLinkDepsBuilder.addAll(library.getBytecodeLinkDeps());
     }
     OcamlBuildContext ocamlContext =
-        OcamlBuildContext.builder(ocamlToolchain, ocamlBuckConfig)
+        OcamlBuildContext.builder(ocamlPlatform, ocamlBuckConfig)
             .setProjectFilesystem(projectFilesystem)
             .setSourcePathResolver(pathResolver)
             .setFlags(flagsBuilder.build())
@@ -482,7 +484,7 @@ public class OcamlRuleBuilder {
             .setNativeCompileDeps(nativeCompileDepsBuilder.build())
             .setBytecodeCompileDeps(bytecodeCompileDepsBuilder.build())
             .setBytecodeLinkDeps(bytecodeLinkDepsBuilder.build())
-            .setCPreprocessor(ocamlToolchain.getCPreprocessor().resolve(resolver))
+            .setCPreprocessor(ocamlPlatform.getCPreprocessor().resolve(resolver))
             .build();
 
     Path baseDir = projectFilesystem.getRootPath().toAbsolutePath();
@@ -502,8 +504,8 @@ public class OcamlRuleBuilder {
             ocamlContext,
             mlInput,
             cInput,
-            ocamlToolchain.getCCompiler().resolve(resolver),
-            ocamlToolchain.getCxxCompiler().resolve(resolver),
+            ocamlPlatform.getCCompiler().resolve(resolver),
+            ocamlPlatform.getCxxCompiler().resolve(resolver),
             bytecodeOnly,
             buildNativePlugin);
 

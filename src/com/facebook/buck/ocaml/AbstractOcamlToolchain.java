@@ -16,22 +16,16 @@
 
 package com.facebook.buck.ocaml;
 
-import static org.junit.Assert.assertThat;
+import com.facebook.buck.toolchain.Toolchain;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
+import org.immutables.value.Value;
 
-import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import org.hamcrest.Matchers;
-import org.junit.Test;
+/** Container for {@link OcamlPlatform}s. */
+@Value.Immutable
+@BuckStyleTuple
+interface AbstractOcamlToolchain extends Toolchain {
 
-public class OCamlToolchainTest {
+  String DEFAULT_NAME = "ocaml-toolchain";
 
-  @Test
-  public void getCFlags() {
-    OcamlToolchain toolchain =
-        new OcamlToolchain(
-            CxxPlatformUtils.DEFAULT_PLATFORM
-                .withCppflags("-cppflag")
-                .withCflags("-cflag")
-                .withAsflags("-asflag"));
-    assertThat(toolchain.getCFlags(), Matchers.contains("-cppflag", "-cflag", "-asflag"));
-  }
+  OcamlPlatform getDefaultOcamlPlatform();
 }

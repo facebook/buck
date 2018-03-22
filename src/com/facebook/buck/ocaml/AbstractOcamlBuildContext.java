@@ -366,7 +366,7 @@ abstract class AbstractOcamlBuildContext implements AddsToRuleKey {
   }
 
   public static OcamlBuildContext.Builder builder(
-      OcamlToolchain ocamlToolchain, OcamlBuckConfig config) {
+      OcamlPlatform ocamlPlatform, OcamlBuckConfig config) {
     return OcamlBuildContext.builder()
         .setOcamlDepTool(config.getOcamlDepTool())
         .setOcamlCompiler(config.getOcamlCompiler())
@@ -375,7 +375,7 @@ abstract class AbstractOcamlBuildContext implements AddsToRuleKey {
         .setLexCompiler(config.getLexCompiler())
         .setOcamlBytecodeCompiler(config.getOcamlBytecodeCompiler())
         .setOcamlInteropIncludesDir(config.getOcamlInteropIncludesDir())
-        .setCFlags(ocamlToolchain.getCFlags())
-        .setLdFlags(ocamlToolchain.getLdFlags());
+        .setCFlags(ocamlPlatform.getCFlags())
+        .setLdFlags(ocamlPlatform.getLdFlags());
   }
 }
