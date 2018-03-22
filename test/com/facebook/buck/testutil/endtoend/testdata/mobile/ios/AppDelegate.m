@@ -10,6 +10,7 @@
 #import "AppViewController.h"
 
 #import "common/hello.h"
+#import "ios/lib/CapitalizeUtil.h"
 
 @interface AppDelegate ()
 
@@ -21,7 +22,8 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    self.helloString = [NSString stringWithUTF8String:helloString()];
+    NSString *uncapitalizedString = [NSString stringWithUTF8String:helloString()];
+    self.helloString = CapitalizeFirstLetter(uncapitalizedString);
 
     UIViewController *viewController = [[AppViewController alloc] initWithHelloString:_helloString];
 
