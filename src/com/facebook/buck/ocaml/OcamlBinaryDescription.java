@@ -26,7 +26,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.OcamlSource;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -67,19 +66,15 @@ public class OcamlBinaryDescription
     OcamlPlatform ocamlPlatform = ocamlToolchain.getDefaultOcamlPlatform();
 
     ImmutableList<OcamlSource> srcs = args.getSrcs();
-    ImmutableList.Builder<Arg> flags = ImmutableList.builder();
-    flags.addAll(
-        OcamlDescriptionEnhancer.toStringWithMacrosArgs(
+
+    ImmutableList<Arg> flags =
+        OcamlRuleBuilder.getFlags(
             buildTarget,
             context.getCellPathResolver(),
             context.getBuildRuleResolver(),
-            args.getCompilerFlags()));
-    if (ocamlPlatform.getWarningsFlags().isPresent() || args.getWarningsFlags().isPresent()) {
-      flags.addAll(StringArg.from("-w"));
-      flags.addAll(
-          StringArg.from(
-              ocamlPlatform.getWarningsFlags().orElse("") + args.getWarningsFlags().orElse("")));
-    }
+            ocamlPlatform,
+            args.getCompilerFlags(),
+            args.getWarningsFlags());
 
     BuildTarget compileBuildTarget = OcamlRuleBuilder.createOcamlLinkTarget(buildTarget);
 
@@ -95,7 +90,7 @@ public class OcamlBinaryDescription
               srcs,
               /* isLibrary */ false,
               args.getBytecodeOnly().orElse(false),
-              flags.build(),
+              flags,
               args.getOcamldepFlags(),
               /* buildNativePlugin */ false);
       rules = result.getRules();
@@ -111,7 +106,7 @@ public class OcamlBinaryDescription
               srcs,
               /* isLibrary */ false,
               args.getBytecodeOnly().orElse(false),
-              flags.build(),
+              flags,
               args.getOcamldepFlags());
       rules = ImmutableList.of(ocamlLibraryBuild);
     }

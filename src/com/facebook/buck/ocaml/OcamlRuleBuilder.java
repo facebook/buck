@@ -34,12 +34,15 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableSupport;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.OcamlSource;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
@@ -480,5 +483,23 @@ public class OcamlRuleBuilder {
       throw new HumanReadableException(result.getStderr().get());
     }
     return result.getStdout();
+  }
+
+  static ImmutableList<Arg> getFlags(
+      BuildTarget target,
+      CellPathResolver cellRoots,
+      BuildRuleResolver resolver,
+      OcamlPlatform platform,
+      ImmutableList<StringWithMacros> compilerFlags,
+      Optional<String> warningsFlags) {
+    ImmutableList.Builder<Arg> flags = ImmutableList.builder();
+    flags.addAll(
+        OcamlDescriptionEnhancer.toStringWithMacrosArgs(
+            target, cellRoots, resolver, compilerFlags));
+    if (platform.getWarningsFlags().isPresent() || warningsFlags.isPresent()) {
+      flags.addAll(
+          StringArg.from("-w", platform.getWarningsFlags().orElse("") + warningsFlags.orElse("")));
+    }
+    return flags.build();
   }
 }

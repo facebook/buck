@@ -30,7 +30,6 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.OcamlSource;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -74,20 +73,15 @@ public class OcamlLibraryDescription
     OcamlPlatform ocamlPlatform = ocamlToolchain.getDefaultOcamlPlatform();
 
     ImmutableList<OcamlSource> srcs = args.getSrcs();
-    ImmutableList.Builder<Arg> flagsBuilder = ImmutableList.builder();
-    flagsBuilder.addAll(
-        OcamlDescriptionEnhancer.toStringWithMacrosArgs(
+
+    ImmutableList<Arg> flags =
+        OcamlRuleBuilder.getFlags(
             buildTarget,
             context.getCellPathResolver(),
             context.getBuildRuleResolver(),
-            args.getCompilerFlags()));
-    if (ocamlPlatform.getWarningsFlags().isPresent() || args.getWarningsFlags().isPresent()) {
-      flagsBuilder.addAll(
-          StringArg.from(
-              "-w",
-              ocamlPlatform.getWarningsFlags().orElse("") + args.getWarningsFlags().orElse("")));
-    }
-    ImmutableList<Arg> flags = flagsBuilder.build();
+            ocamlPlatform,
+            args.getCompilerFlags(),
+            args.getWarningsFlags());
 
     BuildTarget compileBuildTarget = OcamlRuleBuilder.createStaticLibraryBuildTarget(buildTarget);
 
