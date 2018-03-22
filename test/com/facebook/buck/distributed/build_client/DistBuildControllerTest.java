@@ -397,7 +397,7 @@ public class DistBuildControllerTest {
 
     expect(mockDistBuildService.getCurrentBuildJobState(stampedeId)).andReturn(job);
 
-    expect(mockLogStateTracker.createRealtimeLogRequests(job.getBuildSlaves()))
+    expect(mockLogStateTracker.createStreamLogRequests(job.getBuildSlaves()))
         .andReturn(ImmutableList.of());
     expect(mockDistBuildService.createBuildSlaveEventsQuery(stampedeId, buildSlaveRunId, 0))
         .andReturn(query);
@@ -415,7 +415,7 @@ public class DistBuildControllerTest {
     job.setStatus(BuildStatus.FAILED);
     expect(mockDistBuildService.getCurrentBuildJobState(stampedeId)).andReturn(job);
 
-    expect(mockLogStateTracker.createRealtimeLogRequests(job.getBuildSlaves()))
+    expect(mockLogStateTracker.createStreamLogRequests(job.getBuildSlaves()))
         .andReturn(ImmutableList.of());
     expect(mockLogStateTracker.getBuildSlaveLogsMaterializer())
         .andReturn(createNiceMock(BuildSlaveLogsMaterializer.class))
@@ -447,7 +447,7 @@ public class DistBuildControllerTest {
     job.getBuildSlaves().set(0, slaveInfo1);
     expect(mockDistBuildService.getCurrentBuildJobState(stampedeId)).andReturn(job);
 
-    expect(mockLogStateTracker.createRealtimeLogRequests(job.getBuildSlaves()))
+    expect(mockLogStateTracker.createStreamLogRequests(job.getBuildSlaves()))
         .andReturn(ImmutableList.of());
 
     query.setFirstEventNumber(1);

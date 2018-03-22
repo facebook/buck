@@ -18,7 +18,6 @@ package com.facebook.buck.distributed.build_client;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
-import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.LogLineBatch;
 import com.facebook.buck.distributed.thrift.LogLineBatchRequest;
 import com.facebook.buck.distributed.thrift.LogStreamType;
@@ -62,12 +61,18 @@ public class LogStateTracker {
     this.materializer = new BuildSlaveLogsMaterializer(service, filesystem, logDirectoryPath);
   }
 
-  public List<LogLineBatchRequest> createRealtimeLogRequests(
+  /** Creates requests for the next set of StreamLogs. */
+  public List<LogLineBatchRequest> createStreamLogRequests(
       Collection<BuildSlaveInfo> latestBuildSlaveInfos) {
     List<LogLineBatchRequest> requests = new ArrayList<>();
     for (LogStreamType streamType : SUPPORTED_STREAM_TYPES) {
       for (BuildSlaveInfo buildSlaveInfo : latestBuildSlaveInfos) {
-        createRealtimeLogRequests(buildSlaveInfo, streamType, requests);
+        SlaveStream slaveStream =
+            new SlaveStream()
+                .setBuildSlaveRunId(buildSlaveInfo.buildSlaveRunId)
+                .setStreamType(streamType);
+        int lastBatchNumber = getLatestBatchNumber(slaveStream);
+        requests.add(createRequest(slaveStream, lastBatchNumber));
       }
     }
     return requests;
@@ -77,7 +82,7 @@ public class LogStateTracker {
     for (StreamLogs streamLogs : multiStreamLogs) {
       if (streamLogs.isSetErrorMessage()) {
         LOG.error(
-            "Failed to get stream logs for runId [%]. Error: %s",
+            "Failed to get stream logs for runId [%s]. Error: [%s].",
             streamLogs.slaveStream.buildSlaveRunId, streamLogs.errorMessage);
 
         continue;
@@ -98,6 +103,11 @@ public class LogStateTracker {
    */
 
   private void processStreamLogs(StreamLogs streamLogs) {
+    if (streamLogs.logLineBatches.isEmpty()) {
+      // No new lines have been logged.
+      return;
+    }
+
     if (!seenSlaveLogs.containsKey(streamLogs.slaveStream)) {
       seenSlaveLogs.put(streamLogs.slaveStream, new SlaveStreamState());
     }
@@ -141,62 +151,12 @@ public class LogStateTracker {
     seenStreamState.seenBatchLineCount = lastReceivedBatch.lines.size();
   }
 
-  private void createRealtimeLogRequests(
-      BuildSlaveInfo buildSlaveInfo, LogStreamType streamType, List<LogLineBatchRequest> requests) {
-    BuildSlaveRunId runId = buildSlaveInfo.buildSlaveRunId;
-    SlaveStream slaveStream = new SlaveStream();
-    slaveStream.setBuildSlaveRunId(runId);
-    slaveStream.setStreamType(streamType);
-
-    int latestBatchNumber = getLatestBatchNumber(buildSlaveInfo, streamType);
-
-    // No logs have been created for this slave stream yet
-    if (latestBatchNumber == 0) {
-      return;
+  private int getLatestBatchNumber(SlaveStream stream) {
+    if (seenSlaveLogs.containsKey(stream)) {
+      return seenSlaveLogs.get(stream).seenBatchNumber;
     }
 
-    // Logs exist, but no requests have been made yet => request everything
-    if (!seenSlaveLogs.containsKey(slaveStream)) {
-      requests.add(createRequest(slaveStream, 1));
-      return;
-    }
-
-    int latestBatchLineNumber = getLatestBatchLineNumber(buildSlaveInfo, streamType);
-    SlaveStreamState seenState = seenSlaveLogs.get(slaveStream);
-    // Logs exists, but we have seen them all already.
-    if (seenState.seenBatchNumber > latestBatchNumber
-        || (seenState.seenBatchNumber == latestBatchNumber
-            && seenState.seenBatchLineCount >= latestBatchLineNumber)) {
-      return;
-    }
-
-    // New logs exists, that we haven't seen yet.
-    requests.add(createRequest(slaveStream, seenState.seenBatchNumber));
-  }
-
-  private static int getLatestBatchNumber(BuildSlaveInfo buildSlaveInfo, LogStreamType streamType) {
-    switch (streamType) {
-      case STDOUT:
-        return buildSlaveInfo.getStdOutCurrentBatchNumber();
-      case STDERR:
-        return buildSlaveInfo.getStdErrCurrentBatchNumber();
-      case UNKNOWN:
-      default:
-        throw new RuntimeException("Unsupported stream type: " + streamType);
-    }
-  }
-
-  private static int getLatestBatchLineNumber(
-      BuildSlaveInfo buildSlaveInfo, LogStreamType streamType) {
-    switch (streamType) {
-      case STDOUT:
-        return buildSlaveInfo.getStdOutCurrentBatchLineCount();
-      case STDERR:
-        return buildSlaveInfo.getStdErrCurrentBatchLineCount();
-      case UNKNOWN:
-      default:
-        throw new RuntimeException("Unsupported stream type: " + streamType);
-    }
+    return 0;
   }
 
   private static LogLineBatchRequest createRequest(SlaveStream slaveStream, int batchNumber) {

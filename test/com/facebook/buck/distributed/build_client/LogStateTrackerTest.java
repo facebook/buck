@@ -90,26 +90,18 @@ public class LogStateTrackerTest {
     BuildSlaveRunId runOneId = new BuildSlaveRunId();
     runOneId.setId(RUN_ONE_ID);
     runOneSlaveInfo.setBuildSlaveRunId(runOneId);
-    runOneSlaveInfo.setStdOutCurrentBatchNumber(0);
-    runOneSlaveInfo.setStdOutCurrentBatchLineCount(0);
-    runOneSlaveInfo.setStdErrCurrentBatchNumber(1);
-    runOneSlaveInfo.setStdErrCurrentBatchLineCount(1);
 
     BuildSlaveInfo runTwoSlaveInfo = new BuildSlaveInfo();
     BuildSlaveRunId runTwoId = new BuildSlaveRunId();
     runTwoId.setId(RUN_TWO_ID);
     runTwoSlaveInfo.setBuildSlaveRunId(runTwoId);
-    runTwoSlaveInfo.setStdOutCurrentBatchNumber(2);
-    runTwoSlaveInfo.setStdOutCurrentBatchLineCount(2);
-    runTwoSlaveInfo.setStdErrCurrentBatchNumber(0);
-    runTwoSlaveInfo.setStdErrCurrentBatchLineCount(0);
 
     // runOne has stdErr, and runTwo has stdOut to download.
     List<BuildSlaveInfo> buildSlaveInfos = ImmutableList.of(runOneSlaveInfo, runTwoSlaveInfo);
     List<LogLineBatchRequest> requestsOne =
-        distBuildLogStateTracker.createRealtimeLogRequests(buildSlaveInfos);
+        distBuildLogStateTracker.createStreamLogRequests(buildSlaveInfos);
 
-    assertThat(requestsOne.size(), Matchers.equalTo(2));
+    assertThat(requestsOne.size(), Matchers.equalTo(4));
 
     // Request runOne/stdErr from batch 1
     assertTrue(
@@ -119,7 +111,7 @@ public class LogStateTrackerTest {
                 r ->
                     r.slaveStream.buildSlaveRunId.equals(runOneId)
                         && r.slaveStream.streamType.equals(LogStreamType.STDERR)
-                        && r.batchNumber == 1));
+                        && r.batchNumber == 0));
     // Request runTwo/stdOut from batch 1
     assertTrue(
         requestsOne
@@ -128,7 +120,7 @@ public class LogStateTrackerTest {
                 r ->
                     r.slaveStream.buildSlaveRunId.equals(runTwoId)
                         && r.slaveStream.streamType.equals(LogStreamType.STDOUT)
-                        && r.batchNumber == 1));
+                        && r.batchNumber == 0));
 
     // Process new logs
 
@@ -174,30 +166,6 @@ public class LogStateTrackerTest {
         RUN_TWO_STD_OUT_LOG,
         ImmutableList.of("runTwoStdOutLine1", "runTwoStdOutLine2", "runTwoStdOutLine3"));
 
-    // New build status arrives.
-    // runOne/stdErr has same values as last time (so fewer lines than already processed).
-    // => ignore
-    // runTwo/stdOut updated within existing batch 2
-    // => fetch batch 2 and process new lines
-
-    runTwoSlaveInfo.setStdOutCurrentBatchNumber(2);
-    runTwoSlaveInfo.setStdOutCurrentBatchLineCount(3);
-    buildSlaveInfos = ImmutableList.of(runOneSlaveInfo, runTwoSlaveInfo);
-
-    List<LogLineBatchRequest> requestsTwo =
-        distBuildLogStateTracker.createRealtimeLogRequests(buildSlaveInfos);
-
-    assertThat(requestsTwo.size(), Matchers.equalTo(1));
-    // Request runTwo/stdOut from batch 2
-    assertTrue(
-        requestsTwo
-            .stream()
-            .anyMatch(
-                r ->
-                    r.slaveStream.buildSlaveRunId.equals(runTwoId)
-                        && r.slaveStream.streamType.equals(LogStreamType.STDOUT)
-                        && r.batchNumber == 2));
-
     // Process new logs
 
     runTwoStdOutLogs = new StreamLogs();
@@ -219,32 +187,17 @@ public class LogStateTrackerTest {
         ImmutableList.of(
             "runTwoStdOutLine1", "runTwoStdOutLine2", "runTwoStdOutLine3", "runTwoStdOutLine4"));
 
-    // New build status arrives.
-    // runOne/stdOut has now been populated with 2 batches
-    // runOne/stdErr updated to new batch 2, with changes to batch 1 too
-    // => fetch 1 and 2, processing new lines in batch 1 and all lines in batch 2.
-    // runTwo/stdOut updated to new batch 3, no changes to existing batches
-    // => fetch batch 2 and 3, processing only changes in batch 3
-
-    runOneSlaveInfo.setStdOutCurrentBatchNumber(2);
-    runOneSlaveInfo.setStdOutCurrentBatchLineCount(2);
-    runOneSlaveInfo.setStdErrCurrentBatchNumber(2);
-    runOneSlaveInfo.setStdErrCurrentBatchLineCount(1);
-
-    runTwoSlaveInfo.setStdOutCurrentBatchNumber(3);
-    runTwoSlaveInfo.setStdOutCurrentBatchLineCount(2);
-
     // runOne has stdErr, and runTwo has stdOut to download.
     buildSlaveInfos = ImmutableList.of(runOneSlaveInfo, runTwoSlaveInfo);
 
-    List<LogLineBatchRequest> requestsThree =
-        distBuildLogStateTracker.createRealtimeLogRequests(buildSlaveInfos);
+    List<LogLineBatchRequest> requestTwo =
+        distBuildLogStateTracker.createStreamLogRequests(buildSlaveInfos);
 
-    assertThat(requestsThree.size(), Matchers.equalTo(3));
+    assertThat(requestTwo.size(), Matchers.equalTo(4));
 
     // Request runOne/stdErr from batch 1
     assertTrue(
-        requestsThree
+        requestTwo
             .stream()
             .anyMatch(
                 r ->
@@ -253,16 +206,16 @@ public class LogStateTrackerTest {
                         && r.batchNumber == 1));
     // Request runOne/stdOut from batch 1
     assertTrue(
-        requestsThree
+        requestTwo
             .stream()
             .anyMatch(
                 r ->
                     r.slaveStream.buildSlaveRunId.equals(runOneId)
                         && r.slaveStream.streamType.equals(LogStreamType.STDOUT)
-                        && r.batchNumber == 1));
+                        && r.batchNumber == 0));
     // Request runTwo/stdOut from batch 2
     assertTrue(
-        requestsThree
+        requestTwo
             .stream()
             .anyMatch(
                 r ->

@@ -13,10 +13,6 @@ public class BuildSlaveInfo implements org.apache.thrift.TBase<BuildSlaveInfo, B
 
   private static final org.apache.thrift.protocol.TField BUILD_SLAVE_RUN_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("buildSlaveRunId", org.apache.thrift.protocol.TType.STRUCT, (short)1);
   private static final org.apache.thrift.protocol.TField HOSTNAME_FIELD_DESC = new org.apache.thrift.protocol.TField("hostname", org.apache.thrift.protocol.TType.STRING, (short)2);
-  private static final org.apache.thrift.protocol.TField STD_OUT_CURRENT_BATCH_NUMBER_FIELD_DESC = new org.apache.thrift.protocol.TField("stdOutCurrentBatchNumber", org.apache.thrift.protocol.TType.I32, (short)4);
-  private static final org.apache.thrift.protocol.TField STD_OUT_CURRENT_BATCH_LINE_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("stdOutCurrentBatchLineCount", org.apache.thrift.protocol.TType.I32, (short)5);
-  private static final org.apache.thrift.protocol.TField STD_ERR_CURRENT_BATCH_NUMBER_FIELD_DESC = new org.apache.thrift.protocol.TField("stdErrCurrentBatchNumber", org.apache.thrift.protocol.TType.I32, (short)6);
-  private static final org.apache.thrift.protocol.TField STD_ERR_CURRENT_BATCH_LINE_COUNT_FIELD_DESC = new org.apache.thrift.protocol.TField("stdErrCurrentBatchLineCount", org.apache.thrift.protocol.TType.I32, (short)7);
   private static final org.apache.thrift.protocol.TField LOG_DIR_ZIP_WRITTEN_FIELD_DESC = new org.apache.thrift.protocol.TField("logDirZipWritten", org.apache.thrift.protocol.TType.BOOL, (short)8);
   private static final org.apache.thrift.protocol.TField STATUS_FIELD_DESC = new org.apache.thrift.protocol.TField("status", org.apache.thrift.protocol.TType.I32, (short)10);
 
@@ -25,10 +21,6 @@ public class BuildSlaveInfo implements org.apache.thrift.TBase<BuildSlaveInfo, B
 
   public BuildSlaveRunId buildSlaveRunId; // optional
   public java.lang.String hostname; // optional
-  public int stdOutCurrentBatchNumber; // optional
-  public int stdOutCurrentBatchLineCount; // optional
-  public int stdErrCurrentBatchNumber; // optional
-  public int stdErrCurrentBatchLineCount; // optional
   public boolean logDirZipWritten; // optional
   /**
    * 
@@ -40,10 +32,6 @@ public class BuildSlaveInfo implements org.apache.thrift.TBase<BuildSlaveInfo, B
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
     BUILD_SLAVE_RUN_ID((short)1, "buildSlaveRunId"),
     HOSTNAME((short)2, "hostname"),
-    STD_OUT_CURRENT_BATCH_NUMBER((short)4, "stdOutCurrentBatchNumber"),
-    STD_OUT_CURRENT_BATCH_LINE_COUNT((short)5, "stdOutCurrentBatchLineCount"),
-    STD_ERR_CURRENT_BATCH_NUMBER((short)6, "stdErrCurrentBatchNumber"),
-    STD_ERR_CURRENT_BATCH_LINE_COUNT((short)7, "stdErrCurrentBatchLineCount"),
     LOG_DIR_ZIP_WRITTEN((short)8, "logDirZipWritten"),
     /**
      * 
@@ -68,14 +56,6 @@ public class BuildSlaveInfo implements org.apache.thrift.TBase<BuildSlaveInfo, B
           return BUILD_SLAVE_RUN_ID;
         case 2: // HOSTNAME
           return HOSTNAME;
-        case 4: // STD_OUT_CURRENT_BATCH_NUMBER
-          return STD_OUT_CURRENT_BATCH_NUMBER;
-        case 5: // STD_OUT_CURRENT_BATCH_LINE_COUNT
-          return STD_OUT_CURRENT_BATCH_LINE_COUNT;
-        case 6: // STD_ERR_CURRENT_BATCH_NUMBER
-          return STD_ERR_CURRENT_BATCH_NUMBER;
-        case 7: // STD_ERR_CURRENT_BATCH_LINE_COUNT
-          return STD_ERR_CURRENT_BATCH_LINE_COUNT;
         case 8: // LOG_DIR_ZIP_WRITTEN
           return LOG_DIR_ZIP_WRITTEN;
         case 10: // STATUS
@@ -120,13 +100,9 @@ public class BuildSlaveInfo implements org.apache.thrift.TBase<BuildSlaveInfo, B
   }
 
   // isset id assignments
-  private static final int __STDOUTCURRENTBATCHNUMBER_ISSET_ID = 0;
-  private static final int __STDOUTCURRENTBATCHLINECOUNT_ISSET_ID = 1;
-  private static final int __STDERRCURRENTBATCHNUMBER_ISSET_ID = 2;
-  private static final int __STDERRCURRENTBATCHLINECOUNT_ISSET_ID = 3;
-  private static final int __LOGDIRZIPWRITTEN_ISSET_ID = 4;
+  private static final int __LOGDIRZIPWRITTEN_ISSET_ID = 0;
   private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.BUILD_SLAVE_RUN_ID,_Fields.HOSTNAME,_Fields.STD_OUT_CURRENT_BATCH_NUMBER,_Fields.STD_OUT_CURRENT_BATCH_LINE_COUNT,_Fields.STD_ERR_CURRENT_BATCH_NUMBER,_Fields.STD_ERR_CURRENT_BATCH_LINE_COUNT,_Fields.LOG_DIR_ZIP_WRITTEN,_Fields.STATUS};
+  private static final _Fields optionals[] = {_Fields.BUILD_SLAVE_RUN_ID,_Fields.HOSTNAME,_Fields.LOG_DIR_ZIP_WRITTEN,_Fields.STATUS};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -134,14 +110,6 @@ public class BuildSlaveInfo implements org.apache.thrift.TBase<BuildSlaveInfo, B
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, BuildSlaveRunId.class)));
     tmpMap.put(_Fields.HOSTNAME, new org.apache.thrift.meta_data.FieldMetaData("hostname", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.STD_OUT_CURRENT_BATCH_NUMBER, new org.apache.thrift.meta_data.FieldMetaData("stdOutCurrentBatchNumber", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
-    tmpMap.put(_Fields.STD_OUT_CURRENT_BATCH_LINE_COUNT, new org.apache.thrift.meta_data.FieldMetaData("stdOutCurrentBatchLineCount", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
-    tmpMap.put(_Fields.STD_ERR_CURRENT_BATCH_NUMBER, new org.apache.thrift.meta_data.FieldMetaData("stdErrCurrentBatchNumber", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
-    tmpMap.put(_Fields.STD_ERR_CURRENT_BATCH_LINE_COUNT, new org.apache.thrift.meta_data.FieldMetaData("stdErrCurrentBatchLineCount", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     tmpMap.put(_Fields.LOG_DIR_ZIP_WRITTEN, new org.apache.thrift.meta_data.FieldMetaData("logDirZipWritten", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
     tmpMap.put(_Fields.STATUS, new org.apache.thrift.meta_data.FieldMetaData("status", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
@@ -166,10 +134,6 @@ public class BuildSlaveInfo implements org.apache.thrift.TBase<BuildSlaveInfo, B
     if (other.isSetHostname()) {
       this.hostname = other.hostname;
     }
-    this.stdOutCurrentBatchNumber = other.stdOutCurrentBatchNumber;
-    this.stdOutCurrentBatchLineCount = other.stdOutCurrentBatchLineCount;
-    this.stdErrCurrentBatchNumber = other.stdErrCurrentBatchNumber;
-    this.stdErrCurrentBatchLineCount = other.stdErrCurrentBatchLineCount;
     this.logDirZipWritten = other.logDirZipWritten;
     if (other.isSetStatus()) {
       this.status = other.status;
@@ -184,14 +148,6 @@ public class BuildSlaveInfo implements org.apache.thrift.TBase<BuildSlaveInfo, B
   public void clear() {
     this.buildSlaveRunId = null;
     this.hostname = null;
-    setStdOutCurrentBatchNumberIsSet(false);
-    this.stdOutCurrentBatchNumber = 0;
-    setStdOutCurrentBatchLineCountIsSet(false);
-    this.stdOutCurrentBatchLineCount = 0;
-    setStdErrCurrentBatchNumberIsSet(false);
-    this.stdErrCurrentBatchNumber = 0;
-    setStdErrCurrentBatchLineCountIsSet(false);
-    this.stdErrCurrentBatchLineCount = 0;
     setLogDirZipWrittenIsSet(false);
     this.logDirZipWritten = false;
     this.status = com.facebook.buck.distributed.thrift.BuildStatus.UNKNOWN;
@@ -244,98 +200,6 @@ public class BuildSlaveInfo implements org.apache.thrift.TBase<BuildSlaveInfo, B
     if (!value) {
       this.hostname = null;
     }
-  }
-
-  public int getStdOutCurrentBatchNumber() {
-    return this.stdOutCurrentBatchNumber;
-  }
-
-  public BuildSlaveInfo setStdOutCurrentBatchNumber(int stdOutCurrentBatchNumber) {
-    this.stdOutCurrentBatchNumber = stdOutCurrentBatchNumber;
-    setStdOutCurrentBatchNumberIsSet(true);
-    return this;
-  }
-
-  public void unsetStdOutCurrentBatchNumber() {
-    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __STDOUTCURRENTBATCHNUMBER_ISSET_ID);
-  }
-
-  /** Returns true if field stdOutCurrentBatchNumber is set (has been assigned a value) and false otherwise */
-  public boolean isSetStdOutCurrentBatchNumber() {
-    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __STDOUTCURRENTBATCHNUMBER_ISSET_ID);
-  }
-
-  public void setStdOutCurrentBatchNumberIsSet(boolean value) {
-    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __STDOUTCURRENTBATCHNUMBER_ISSET_ID, value);
-  }
-
-  public int getStdOutCurrentBatchLineCount() {
-    return this.stdOutCurrentBatchLineCount;
-  }
-
-  public BuildSlaveInfo setStdOutCurrentBatchLineCount(int stdOutCurrentBatchLineCount) {
-    this.stdOutCurrentBatchLineCount = stdOutCurrentBatchLineCount;
-    setStdOutCurrentBatchLineCountIsSet(true);
-    return this;
-  }
-
-  public void unsetStdOutCurrentBatchLineCount() {
-    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __STDOUTCURRENTBATCHLINECOUNT_ISSET_ID);
-  }
-
-  /** Returns true if field stdOutCurrentBatchLineCount is set (has been assigned a value) and false otherwise */
-  public boolean isSetStdOutCurrentBatchLineCount() {
-    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __STDOUTCURRENTBATCHLINECOUNT_ISSET_ID);
-  }
-
-  public void setStdOutCurrentBatchLineCountIsSet(boolean value) {
-    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __STDOUTCURRENTBATCHLINECOUNT_ISSET_ID, value);
-  }
-
-  public int getStdErrCurrentBatchNumber() {
-    return this.stdErrCurrentBatchNumber;
-  }
-
-  public BuildSlaveInfo setStdErrCurrentBatchNumber(int stdErrCurrentBatchNumber) {
-    this.stdErrCurrentBatchNumber = stdErrCurrentBatchNumber;
-    setStdErrCurrentBatchNumberIsSet(true);
-    return this;
-  }
-
-  public void unsetStdErrCurrentBatchNumber() {
-    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __STDERRCURRENTBATCHNUMBER_ISSET_ID);
-  }
-
-  /** Returns true if field stdErrCurrentBatchNumber is set (has been assigned a value) and false otherwise */
-  public boolean isSetStdErrCurrentBatchNumber() {
-    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __STDERRCURRENTBATCHNUMBER_ISSET_ID);
-  }
-
-  public void setStdErrCurrentBatchNumberIsSet(boolean value) {
-    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __STDERRCURRENTBATCHNUMBER_ISSET_ID, value);
-  }
-
-  public int getStdErrCurrentBatchLineCount() {
-    return this.stdErrCurrentBatchLineCount;
-  }
-
-  public BuildSlaveInfo setStdErrCurrentBatchLineCount(int stdErrCurrentBatchLineCount) {
-    this.stdErrCurrentBatchLineCount = stdErrCurrentBatchLineCount;
-    setStdErrCurrentBatchLineCountIsSet(true);
-    return this;
-  }
-
-  public void unsetStdErrCurrentBatchLineCount() {
-    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __STDERRCURRENTBATCHLINECOUNT_ISSET_ID);
-  }
-
-  /** Returns true if field stdErrCurrentBatchLineCount is set (has been assigned a value) and false otherwise */
-  public boolean isSetStdErrCurrentBatchLineCount() {
-    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __STDERRCURRENTBATCHLINECOUNT_ISSET_ID);
-  }
-
-  public void setStdErrCurrentBatchLineCountIsSet(boolean value) {
-    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __STDERRCURRENTBATCHLINECOUNT_ISSET_ID, value);
   }
 
   public boolean isLogDirZipWritten() {
@@ -411,38 +275,6 @@ public class BuildSlaveInfo implements org.apache.thrift.TBase<BuildSlaveInfo, B
       }
       break;
 
-    case STD_OUT_CURRENT_BATCH_NUMBER:
-      if (value == null) {
-        unsetStdOutCurrentBatchNumber();
-      } else {
-        setStdOutCurrentBatchNumber((java.lang.Integer)value);
-      }
-      break;
-
-    case STD_OUT_CURRENT_BATCH_LINE_COUNT:
-      if (value == null) {
-        unsetStdOutCurrentBatchLineCount();
-      } else {
-        setStdOutCurrentBatchLineCount((java.lang.Integer)value);
-      }
-      break;
-
-    case STD_ERR_CURRENT_BATCH_NUMBER:
-      if (value == null) {
-        unsetStdErrCurrentBatchNumber();
-      } else {
-        setStdErrCurrentBatchNumber((java.lang.Integer)value);
-      }
-      break;
-
-    case STD_ERR_CURRENT_BATCH_LINE_COUNT:
-      if (value == null) {
-        unsetStdErrCurrentBatchLineCount();
-      } else {
-        setStdErrCurrentBatchLineCount((java.lang.Integer)value);
-      }
-      break;
-
     case LOG_DIR_ZIP_WRITTEN:
       if (value == null) {
         unsetLogDirZipWritten();
@@ -470,18 +302,6 @@ public class BuildSlaveInfo implements org.apache.thrift.TBase<BuildSlaveInfo, B
     case HOSTNAME:
       return getHostname();
 
-    case STD_OUT_CURRENT_BATCH_NUMBER:
-      return getStdOutCurrentBatchNumber();
-
-    case STD_OUT_CURRENT_BATCH_LINE_COUNT:
-      return getStdOutCurrentBatchLineCount();
-
-    case STD_ERR_CURRENT_BATCH_NUMBER:
-      return getStdErrCurrentBatchNumber();
-
-    case STD_ERR_CURRENT_BATCH_LINE_COUNT:
-      return getStdErrCurrentBatchLineCount();
-
     case LOG_DIR_ZIP_WRITTEN:
       return isLogDirZipWritten();
 
@@ -503,14 +323,6 @@ public class BuildSlaveInfo implements org.apache.thrift.TBase<BuildSlaveInfo, B
       return isSetBuildSlaveRunId();
     case HOSTNAME:
       return isSetHostname();
-    case STD_OUT_CURRENT_BATCH_NUMBER:
-      return isSetStdOutCurrentBatchNumber();
-    case STD_OUT_CURRENT_BATCH_LINE_COUNT:
-      return isSetStdOutCurrentBatchLineCount();
-    case STD_ERR_CURRENT_BATCH_NUMBER:
-      return isSetStdErrCurrentBatchNumber();
-    case STD_ERR_CURRENT_BATCH_LINE_COUNT:
-      return isSetStdErrCurrentBatchLineCount();
     case LOG_DIR_ZIP_WRITTEN:
       return isSetLogDirZipWritten();
     case STATUS:
@@ -552,42 +364,6 @@ public class BuildSlaveInfo implements org.apache.thrift.TBase<BuildSlaveInfo, B
         return false;
     }
 
-    boolean this_present_stdOutCurrentBatchNumber = true && this.isSetStdOutCurrentBatchNumber();
-    boolean that_present_stdOutCurrentBatchNumber = true && that.isSetStdOutCurrentBatchNumber();
-    if (this_present_stdOutCurrentBatchNumber || that_present_stdOutCurrentBatchNumber) {
-      if (!(this_present_stdOutCurrentBatchNumber && that_present_stdOutCurrentBatchNumber))
-        return false;
-      if (this.stdOutCurrentBatchNumber != that.stdOutCurrentBatchNumber)
-        return false;
-    }
-
-    boolean this_present_stdOutCurrentBatchLineCount = true && this.isSetStdOutCurrentBatchLineCount();
-    boolean that_present_stdOutCurrentBatchLineCount = true && that.isSetStdOutCurrentBatchLineCount();
-    if (this_present_stdOutCurrentBatchLineCount || that_present_stdOutCurrentBatchLineCount) {
-      if (!(this_present_stdOutCurrentBatchLineCount && that_present_stdOutCurrentBatchLineCount))
-        return false;
-      if (this.stdOutCurrentBatchLineCount != that.stdOutCurrentBatchLineCount)
-        return false;
-    }
-
-    boolean this_present_stdErrCurrentBatchNumber = true && this.isSetStdErrCurrentBatchNumber();
-    boolean that_present_stdErrCurrentBatchNumber = true && that.isSetStdErrCurrentBatchNumber();
-    if (this_present_stdErrCurrentBatchNumber || that_present_stdErrCurrentBatchNumber) {
-      if (!(this_present_stdErrCurrentBatchNumber && that_present_stdErrCurrentBatchNumber))
-        return false;
-      if (this.stdErrCurrentBatchNumber != that.stdErrCurrentBatchNumber)
-        return false;
-    }
-
-    boolean this_present_stdErrCurrentBatchLineCount = true && this.isSetStdErrCurrentBatchLineCount();
-    boolean that_present_stdErrCurrentBatchLineCount = true && that.isSetStdErrCurrentBatchLineCount();
-    if (this_present_stdErrCurrentBatchLineCount || that_present_stdErrCurrentBatchLineCount) {
-      if (!(this_present_stdErrCurrentBatchLineCount && that_present_stdErrCurrentBatchLineCount))
-        return false;
-      if (this.stdErrCurrentBatchLineCount != that.stdErrCurrentBatchLineCount)
-        return false;
-    }
-
     boolean this_present_logDirZipWritten = true && this.isSetLogDirZipWritten();
     boolean that_present_logDirZipWritten = true && that.isSetLogDirZipWritten();
     if (this_present_logDirZipWritten || that_present_logDirZipWritten) {
@@ -620,22 +396,6 @@ public class BuildSlaveInfo implements org.apache.thrift.TBase<BuildSlaveInfo, B
     hashCode = hashCode * 8191 + ((isSetHostname()) ? 131071 : 524287);
     if (isSetHostname())
       hashCode = hashCode * 8191 + hostname.hashCode();
-
-    hashCode = hashCode * 8191 + ((isSetStdOutCurrentBatchNumber()) ? 131071 : 524287);
-    if (isSetStdOutCurrentBatchNumber())
-      hashCode = hashCode * 8191 + stdOutCurrentBatchNumber;
-
-    hashCode = hashCode * 8191 + ((isSetStdOutCurrentBatchLineCount()) ? 131071 : 524287);
-    if (isSetStdOutCurrentBatchLineCount())
-      hashCode = hashCode * 8191 + stdOutCurrentBatchLineCount;
-
-    hashCode = hashCode * 8191 + ((isSetStdErrCurrentBatchNumber()) ? 131071 : 524287);
-    if (isSetStdErrCurrentBatchNumber())
-      hashCode = hashCode * 8191 + stdErrCurrentBatchNumber;
-
-    hashCode = hashCode * 8191 + ((isSetStdErrCurrentBatchLineCount()) ? 131071 : 524287);
-    if (isSetStdErrCurrentBatchLineCount())
-      hashCode = hashCode * 8191 + stdErrCurrentBatchLineCount;
 
     hashCode = hashCode * 8191 + ((isSetLogDirZipWritten()) ? 131071 : 524287);
     if (isSetLogDirZipWritten())
@@ -672,46 +432,6 @@ public class BuildSlaveInfo implements org.apache.thrift.TBase<BuildSlaveInfo, B
     }
     if (isSetHostname()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.hostname, other.hostname);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetStdOutCurrentBatchNumber()).compareTo(other.isSetStdOutCurrentBatchNumber());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetStdOutCurrentBatchNumber()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.stdOutCurrentBatchNumber, other.stdOutCurrentBatchNumber);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetStdOutCurrentBatchLineCount()).compareTo(other.isSetStdOutCurrentBatchLineCount());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetStdOutCurrentBatchLineCount()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.stdOutCurrentBatchLineCount, other.stdOutCurrentBatchLineCount);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetStdErrCurrentBatchNumber()).compareTo(other.isSetStdErrCurrentBatchNumber());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetStdErrCurrentBatchNumber()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.stdErrCurrentBatchNumber, other.stdErrCurrentBatchNumber);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = java.lang.Boolean.valueOf(isSetStdErrCurrentBatchLineCount()).compareTo(other.isSetStdErrCurrentBatchLineCount());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetStdErrCurrentBatchLineCount()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.stdErrCurrentBatchLineCount, other.stdErrCurrentBatchLineCount);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -773,30 +493,6 @@ public class BuildSlaveInfo implements org.apache.thrift.TBase<BuildSlaveInfo, B
       } else {
         sb.append(this.hostname);
       }
-      first = false;
-    }
-    if (isSetStdOutCurrentBatchNumber()) {
-      if (!first) sb.append(", ");
-      sb.append("stdOutCurrentBatchNumber:");
-      sb.append(this.stdOutCurrentBatchNumber);
-      first = false;
-    }
-    if (isSetStdOutCurrentBatchLineCount()) {
-      if (!first) sb.append(", ");
-      sb.append("stdOutCurrentBatchLineCount:");
-      sb.append(this.stdOutCurrentBatchLineCount);
-      first = false;
-    }
-    if (isSetStdErrCurrentBatchNumber()) {
-      if (!first) sb.append(", ");
-      sb.append("stdErrCurrentBatchNumber:");
-      sb.append(this.stdErrCurrentBatchNumber);
-      first = false;
-    }
-    if (isSetStdErrCurrentBatchLineCount()) {
-      if (!first) sb.append(", ");
-      sb.append("stdErrCurrentBatchLineCount:");
-      sb.append(this.stdErrCurrentBatchLineCount);
       first = false;
     }
     if (isSetLogDirZipWritten()) {
@@ -880,38 +576,6 @@ public class BuildSlaveInfo implements org.apache.thrift.TBase<BuildSlaveInfo, B
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 4: // STD_OUT_CURRENT_BATCH_NUMBER
-            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-              struct.stdOutCurrentBatchNumber = iprot.readI32();
-              struct.setStdOutCurrentBatchNumberIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 5: // STD_OUT_CURRENT_BATCH_LINE_COUNT
-            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-              struct.stdOutCurrentBatchLineCount = iprot.readI32();
-              struct.setStdOutCurrentBatchLineCountIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 6: // STD_ERR_CURRENT_BATCH_NUMBER
-            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-              struct.stdErrCurrentBatchNumber = iprot.readI32();
-              struct.setStdErrCurrentBatchNumberIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 7: // STD_ERR_CURRENT_BATCH_LINE_COUNT
-            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-              struct.stdErrCurrentBatchLineCount = iprot.readI32();
-              struct.setStdErrCurrentBatchLineCountIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
           case 8: // LOG_DIR_ZIP_WRITTEN
             if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
               struct.logDirZipWritten = iprot.readBool();
@@ -957,26 +621,6 @@ public class BuildSlaveInfo implements org.apache.thrift.TBase<BuildSlaveInfo, B
           oprot.writeFieldEnd();
         }
       }
-      if (struct.isSetStdOutCurrentBatchNumber()) {
-        oprot.writeFieldBegin(STD_OUT_CURRENT_BATCH_NUMBER_FIELD_DESC);
-        oprot.writeI32(struct.stdOutCurrentBatchNumber);
-        oprot.writeFieldEnd();
-      }
-      if (struct.isSetStdOutCurrentBatchLineCount()) {
-        oprot.writeFieldBegin(STD_OUT_CURRENT_BATCH_LINE_COUNT_FIELD_DESC);
-        oprot.writeI32(struct.stdOutCurrentBatchLineCount);
-        oprot.writeFieldEnd();
-      }
-      if (struct.isSetStdErrCurrentBatchNumber()) {
-        oprot.writeFieldBegin(STD_ERR_CURRENT_BATCH_NUMBER_FIELD_DESC);
-        oprot.writeI32(struct.stdErrCurrentBatchNumber);
-        oprot.writeFieldEnd();
-      }
-      if (struct.isSetStdErrCurrentBatchLineCount()) {
-        oprot.writeFieldBegin(STD_ERR_CURRENT_BATCH_LINE_COUNT_FIELD_DESC);
-        oprot.writeI32(struct.stdErrCurrentBatchLineCount);
-        oprot.writeFieldEnd();
-      }
       if (struct.isSetLogDirZipWritten()) {
         oprot.writeFieldBegin(LOG_DIR_ZIP_WRITTEN_FIELD_DESC);
         oprot.writeBool(struct.logDirZipWritten);
@@ -1013,42 +657,18 @@ public class BuildSlaveInfo implements org.apache.thrift.TBase<BuildSlaveInfo, B
       if (struct.isSetHostname()) {
         optionals.set(1);
       }
-      if (struct.isSetStdOutCurrentBatchNumber()) {
+      if (struct.isSetLogDirZipWritten()) {
         optionals.set(2);
       }
-      if (struct.isSetStdOutCurrentBatchLineCount()) {
+      if (struct.isSetStatus()) {
         optionals.set(3);
       }
-      if (struct.isSetStdErrCurrentBatchNumber()) {
-        optionals.set(4);
-      }
-      if (struct.isSetStdErrCurrentBatchLineCount()) {
-        optionals.set(5);
-      }
-      if (struct.isSetLogDirZipWritten()) {
-        optionals.set(6);
-      }
-      if (struct.isSetStatus()) {
-        optionals.set(7);
-      }
-      oprot.writeBitSet(optionals, 8);
+      oprot.writeBitSet(optionals, 4);
       if (struct.isSetBuildSlaveRunId()) {
         struct.buildSlaveRunId.write(oprot);
       }
       if (struct.isSetHostname()) {
         oprot.writeString(struct.hostname);
-      }
-      if (struct.isSetStdOutCurrentBatchNumber()) {
-        oprot.writeI32(struct.stdOutCurrentBatchNumber);
-      }
-      if (struct.isSetStdOutCurrentBatchLineCount()) {
-        oprot.writeI32(struct.stdOutCurrentBatchLineCount);
-      }
-      if (struct.isSetStdErrCurrentBatchNumber()) {
-        oprot.writeI32(struct.stdErrCurrentBatchNumber);
-      }
-      if (struct.isSetStdErrCurrentBatchLineCount()) {
-        oprot.writeI32(struct.stdErrCurrentBatchLineCount);
       }
       if (struct.isSetLogDirZipWritten()) {
         oprot.writeBool(struct.logDirZipWritten);
@@ -1061,7 +681,7 @@ public class BuildSlaveInfo implements org.apache.thrift.TBase<BuildSlaveInfo, B
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, BuildSlaveInfo struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(8);
+      java.util.BitSet incoming = iprot.readBitSet(4);
       if (incoming.get(0)) {
         struct.buildSlaveRunId = new BuildSlaveRunId();
         struct.buildSlaveRunId.read(iprot);
@@ -1072,26 +692,10 @@ public class BuildSlaveInfo implements org.apache.thrift.TBase<BuildSlaveInfo, B
         struct.setHostnameIsSet(true);
       }
       if (incoming.get(2)) {
-        struct.stdOutCurrentBatchNumber = iprot.readI32();
-        struct.setStdOutCurrentBatchNumberIsSet(true);
-      }
-      if (incoming.get(3)) {
-        struct.stdOutCurrentBatchLineCount = iprot.readI32();
-        struct.setStdOutCurrentBatchLineCountIsSet(true);
-      }
-      if (incoming.get(4)) {
-        struct.stdErrCurrentBatchNumber = iprot.readI32();
-        struct.setStdErrCurrentBatchNumberIsSet(true);
-      }
-      if (incoming.get(5)) {
-        struct.stdErrCurrentBatchLineCount = iprot.readI32();
-        struct.setStdErrCurrentBatchLineCountIsSet(true);
-      }
-      if (incoming.get(6)) {
         struct.logDirZipWritten = iprot.readBool();
         struct.setLogDirZipWrittenIsSet(true);
       }
-      if (incoming.get(7)) {
+      if (incoming.get(3)) {
         struct.status = com.facebook.buck.distributed.thrift.BuildStatus.findByValue(iprot.readI32());
         struct.setStatusIsSet(true);
       }

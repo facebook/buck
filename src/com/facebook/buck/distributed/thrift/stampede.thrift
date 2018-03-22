@@ -66,14 +66,6 @@ enum BuildStatus {
 struct BuildSlaveInfo {
   1: optional BuildSlaveRunId buildSlaveRunId;
   2: optional string hostname;
-
-  // TODO(ruibm): Fields [4-7] have fallen out of sync and should not be used anymore however
-  //              the buck client code otherwise we get compile errors.
-  4: optional i32 stdOutCurrentBatchNumber;
-  5: optional i32 stdOutCurrentBatchLineCount;
-  6: optional i32 stdErrCurrentBatchNumber;
-  7: optional i32 stdErrCurrentBatchLineCount;
-
   8: optional bool logDirZipWritten;
   10: optional BuildStatus status = BuildStatus.UNKNOWN;
 }
@@ -320,7 +312,7 @@ struct MultiGetBuildSlaveLogDirResponse {
 }
 
 # Uniquely identifies a log stream at a particular build slave,
-# and the first batch number to request. Batches numbers start at 1.
+# and the first batch number to request. Batches numbers start at 0.
 struct LogLineBatchRequest {
   1: optional SlaveStream slaveStream;
   2: optional i32 batchNumber;
