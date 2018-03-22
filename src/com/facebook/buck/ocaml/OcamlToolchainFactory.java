@@ -80,6 +80,7 @@ public class OcamlToolchainFactory implements ToolchainFactory<OcamlToolchain> {
                         .addAll(cxxPlatform.getAsflags())
                         .build())
                 .setLdFlags(cxxPlatform.getLdflags())
+                .setCxxPlatform(cxxPlatform)
                 .build()));
   }
 }

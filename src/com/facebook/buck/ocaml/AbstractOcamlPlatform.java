@@ -17,6 +17,7 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.toolchain.Toolchain;
@@ -56,4 +57,7 @@ interface AbstractOcamlPlatform extends Toolchain {
   ImmutableList<String> getCFlags();
 
   ImmutableList<String> getLdFlags();
+
+  /** @return the {@link CxxPlatform} to use for C/C++ dependencies. */
+  CxxPlatform getCxxPlatform();
 }

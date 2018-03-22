@@ -87,7 +87,6 @@ public class OcamlLibraryDescription
     boolean nativePlugin = !bytecodeOnly && args.getNativePlugin();
 
     return OcamlRuleBuilder.createBuildRule(
-        toolchainProvider,
         ocamlPlatform,
         buildTarget,
         context.getProjectFilesystem(),
