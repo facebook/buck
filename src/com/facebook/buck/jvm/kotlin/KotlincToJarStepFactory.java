@@ -392,9 +392,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   }
 
   private String encodeOptions(Map<String, String> options) {
-    try {
-      ByteArrayOutputStream os = new ByteArrayOutputStream();
-      ObjectOutputStream oos = new ObjectOutputStream(os);
+    try (ByteArrayOutputStream os = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(os)) {
 
       oos.writeInt(options.size());
       for (Map.Entry<String, String> entry : options.entrySet()) {

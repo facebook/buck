@@ -1,0 +1,28 @@
+java_annotation_processor(
+    name = "ap",
+    deps = [
+        ":ap-lib",
+    ],
+    processor_class = "",
+    visibility = [
+      'PUBLIC',
+    ],
+)
+
+kotlin_library(
+    name = "ap-lib",
+    srcs = [
+      "AnnotationProcessorKotlin.kt",
+    ],
+    deps = [
+      "//com/example/ap/libs:kotlinpoet.jar",
+      "//com/example/ap/kotlinannotation:annotation-lib"
+    ],
+    resources = glob([
+        'resources/**',
+    ]),
+    resources_root = "resources",
+    visibility = [
+      'PUBLIC',
+    ],
+)
