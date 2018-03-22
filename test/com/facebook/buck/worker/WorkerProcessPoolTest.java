@@ -245,7 +245,7 @@ public class WorkerProcessPoolTest {
     // thread 1 continues, returns the worker, and borrows another one
     secondThreadWaitingForWorker.countDown();
 
-    awaitThreadState(firstThread, State.TERMINATED, State.BLOCKED);
+    awaitThreadState(firstThread, State.TERMINATED, State.BLOCKED, State.WAITING);
     // here, thread 1 has borrowed a worker two times, or is blocked returning the first worker.
 
     assertThat(firstThread.getState(), Matchers.is(State.TERMINATED));
