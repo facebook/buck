@@ -1,10 +1,25 @@
 #!/usr/bin/env python
+
 from __future__ import print_function
+import sys
+
+
+class ExitCode(object):
+    """Python equivalent of com.facebook.buck.util.ExitCode"""
+    FATAL_BOOTSTRAP = 11
+
+
+if sys.version_info < (2, 7):
+    import platform
+    print(("Buck requires at least version 2.7 of Python, but you are using {}."
+           "\nPlease follow https://buckbuild.com/setup/getting_started.html " +
+           "to properly setup your development environment.").format(platform.version()))
+    sys.exit(ExitCode.FATAL_BOOTSTRAP)
+
 import logging
 import os
 import signal
 import subprocess
-import sys
 import re
 import uuid
 import zipfile
@@ -77,7 +92,7 @@ def _warn_about_wrong_java_version(required_version, actual_version):
     logging.warning(
         "You're using Java %s, but Buck requires Java %s.\nPlease follow " +
         "https://buckbuild.com/setup/getting_started.html " +
-        "to properly setup your local enviroment and avoid build issues.",
+        "to properly setup your local environment and avoid build issues.",
         actual_version, required_version)
 
 
