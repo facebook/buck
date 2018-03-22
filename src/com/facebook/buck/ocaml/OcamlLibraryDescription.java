@@ -16,8 +16,6 @@
 
 package com.facebook.buck.ocaml;
 
-import com.facebook.buck.cxx.toolchain.CxxPlatforms;
-import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
@@ -109,10 +107,10 @@ public class OcamlLibraryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     targetGraphOnlyDepsBuilder.addAll(
-        CxxPlatforms.getParseTimeDeps(
+        OcamlUtil.getParseTimeDeps(
             toolchainProvider
-                .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
-                .getDefaultCxxPlatform()));
+                .getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class)
+                .getDefaultOcamlPlatform()));
   }
 
   @BuckStyleImmutable

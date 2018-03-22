@@ -16,8 +16,10 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.TopologicalSort;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.facebook.buck.rules.SourcePath;
@@ -94,5 +96,14 @@ public class OcamlUtil {
     // if dot is in the first position,
     // we are dealing with a hidden file rather than an extension
     return (index > 0) ? fileName.substring(0, index) : fileName;
+  }
+
+  static Iterable<BuildTarget> getParseTimeDeps(OcamlPlatform platform) {
+    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
+    deps.addAll(platform.getCCompiler().getParseTimeDeps());
+    deps.addAll(platform.getCxxCompiler().getParseTimeDeps());
+    deps.addAll(platform.getCPreprocessor().getParseTimeDeps());
+    deps.addAll(CxxPlatforms.getParseTimeDeps(platform.getCxxPlatform()));
+    return deps.build();
   }
 }
