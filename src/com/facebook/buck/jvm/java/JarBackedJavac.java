@@ -26,20 +26,9 @@ import com.google.common.collect.Ordering;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
-import java.util.function.Function;
 import javax.tools.JavaCompiler;
 
 public class JarBackedJavac extends Jsr199Javac {
-
-  private static final Function<Path, URL> PATH_TO_URL =
-      p -> {
-        try {
-          return p.toUri().toURL();
-        } catch (MalformedURLException e) {
-          throw new RuntimeException(e);
-        }
-      };
-
   @AddToRuleKey private final String compilerClassName;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> classpath;
 
@@ -58,7 +47,7 @@ public class JarBackedJavac extends Jsr199Javac {
             resolver
                 .getAllAbsolutePaths(classpath)
                 .stream()
-                .map(PATH_TO_URL)
+                .map(JarBackedJavac::pathToUrl)
                 // Use "toString" since URL.equals does DNS lookups.
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.usingToString()))
                 .asList());
@@ -77,5 +66,13 @@ public class JarBackedJavac extends Jsr199Javac {
   @VisibleForTesting
   String getCompilerClassName() {
     return compilerClassName;
+  }
+
+  private static URL pathToUrl(Path p) {
+    try {
+      return p.toUri().toURL();
+    } catch (MalformedURLException e) {
+      throw new RuntimeException(e);
+    }
   }
 }
