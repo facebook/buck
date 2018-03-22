@@ -19,3 +19,23 @@
       <a href="{ROOT}{$folder}/{$page}.html">{$text}</a>
     </li>
 {/template}
+
+/**
+ * @param currentnavid The navigation id of the loaded page
+ * @param platform
+ * @param rules
+ */
+{template .platformBuildRuleLink}
+    <li><strong>{$platform}</strong></li>
+    {foreach $rule in $rules}
+        {let $ruletext}
+          {$rule}()
+        {/let}
+        {call .link}
+          {param currentnavid: $currentnavid /}
+          {param folder: 'rule' /}
+          {param page: $rule /}
+          {param text: $ruletext /}
+        {/call}
+    {/foreach}
+{/template}
