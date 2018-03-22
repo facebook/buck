@@ -1,0 +1,22 @@
+# Copyright 2018-present, Facebook, Inc.
+# All rights reserved.
+#
+# This source code is licensed under the license found in the
+# LICENSE file in the root directory of this source tree.
+
+python_binary(
+    name = "py_cat",
+    main = "py_cat.py",
+)
+
+genrule(
+    name = "generated_plist",
+    srcs = [
+        "Info.plist",
+    ],
+    out = "GeneratedInfo.plist",
+    # We don't just use "cat" so we can use a python_binary
+    cmd = "$(exe :py_cat) $SRCS > $OUT",
+    cmd_exe = "$(exe :py_cat) %SRCS% > $OUT",
+    visibility = ["PUBLIC"],
+)
