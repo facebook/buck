@@ -25,12 +25,15 @@ import org.immutables.value.Value;
 /** Simple type representing a {@link SourcePath} and a list of file-specific flags. */
 @Value.Immutable(copy = true)
 @BuckStyleImmutable
-abstract class AbstractSourceWithFlags implements Comparable<AbstractSourceWithFlags> {
+abstract class AbstractSourceWithFlags
+    implements Comparable<AbstractSourceWithFlags>, AddsToRuleKey {
 
   @Value.Parameter
+  @AddToRuleKey
   public abstract SourcePath getSourcePath();
 
   @Value.Parameter
+  @AddToRuleKey
   public abstract List<String> getFlags();
 
   @Override

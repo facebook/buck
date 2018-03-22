@@ -40,7 +40,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceRoot;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -145,8 +144,6 @@ public class RuleKeyBuilderTest {
           ARCHIVE_PATH_2,
           TARGET_PATH_1,
           TARGET_PATH_2,
-          SourceWithFlags.of(SOURCE_PATH_1, ImmutableList.of("42")),
-          SourceWithFlags.of(SOURCE_PATH_2, ImmutableList.of("42")),
 
           // Buck rules & appendables
           RULE_1,
