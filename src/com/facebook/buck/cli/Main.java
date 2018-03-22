@@ -442,9 +442,7 @@ public final class Main {
       console.printBuildFailure(e.getHumanReadableErrorMessage());
     } catch (InterruptionFailedException e) { // Command could not be interrupted.
       exitCode = ExitCode.SIGNAL_INTERRUPT;
-      if (context.isPresent()) {
-        context.get().getNGServer().shutdown(false);
-      }
+      context.ifPresent(ngContext -> ngContext.getNGServer().shutdown(false));
     } catch (BuckIsDyingException e) {
       exitCode = ExitCode.FATAL_GENERIC;
       LOG.warn(e, "Fallout because buck was already dying");
