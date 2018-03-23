@@ -25,7 +25,23 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import org.kohsuke.args4j.CmdLineParser;
 
-/** Entry point of the documentation generator binary. */
+/**
+ * Entry point of the documentation generator binary.
+ *
+ * <p>Executing this class produces a function Soy template for each field in a classpath annotated
+ * by {@link SkylarkSignature} and a table of contents that lists all of them.
+ *
+ * <p>To use, make sure that the target with all Skylark functions is included as a dependency of
+ * //tools/documentation_generator/src/com/facebook/buck/tools/documentation/generator:main and run:
+ *
+ * <pre>
+ * buck run //tools/documentation_generator/src/com/facebook/buck/tools/documentation/generator:generator \
+ *   -- --destination_directory path/to/buck/docs/skylark/generated
+ * </pre>
+ *
+ * By default all packages inside of com.facebook.buck.skylark.function package are scanned, but
+ * {@code --skylark_package} command line flag can be used to specify any other package.
+ */
 public class Main {
 
   /** Executable entry point. */
