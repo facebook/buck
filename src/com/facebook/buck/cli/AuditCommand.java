@@ -36,6 +36,7 @@ public class AuditCommand extends AbstractContainerCommand {
     @SubCommand(name = "dependencies", impl = AuditDependenciesCommand.class),
     @SubCommand(name = "flavors", impl = AuditFlavorsCommand.class),
     @SubCommand(name = "input", impl = AuditInputCommand.class),
+    @SubCommand(name = "modules", impl = AuditModulesCommand.class),
     @SubCommand(name = "owner", impl = AuditOwnerCommand.class),
     @SubCommand(name = "rules", impl = AuditRulesCommand.class),
     @SubCommand(name = "tests", impl = AuditTestsCommand.class),

@@ -1,0 +1,12 @@
+Module id: module1.id
+Module hash: hash1
+Module dependencies:
+
+Module id: module2.id
+Module hash: hash1
+Module dependencies: module1.id
+
+Module id: module3.id
+Module hash: hash1
+Module dependencies: module1.id, module2.id
+

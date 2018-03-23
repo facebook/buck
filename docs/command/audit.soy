@@ -140,6 +140,14 @@ cxx.cxx&#9;/usr/bin/g++
   {/call}
 
   {call buck.param}
+    {param name: 'modules' /}
+    {param nodash: true /}
+    {param desc}
+        List the modules known by Buck as well as their content hashes and dependencies.
+    {/param}
+  {/call}
+
+  {call buck.param}
     {param name: 'tests <targets>' /}
     {param nodash: true /}
     {param desc}

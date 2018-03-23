@@ -16,10 +16,21 @@
 
 package com.facebook.buck.module;
 
+import com.google.common.collect.ImmutableSortedSet;
+
 /** Provides access to module information. */
 public interface BuckModuleManager {
 
   boolean isClassInModule(Class<?> cls);
 
   String getModuleHash(Class<?> cls);
+
+  /** @return the hash of module's content (which includes code and resources.) */
+  String getModuleHash(String moduleId);
+
+  /** @return IDs of all modules known to this instance. */
+  ImmutableSortedSet<String> getModuleIds();
+
+  /** @return IDs of all modules the provided module depends on. */
+  ImmutableSortedSet<String> getModuleDependencies(String moduleId);
 }

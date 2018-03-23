@@ -1,0 +1,13 @@
+[ {
+  "id" : "module1.id",
+  "hash" : "hash1",
+  "dependencies" : [ ]
+}, {
+  "id" : "module2.id",
+  "hash" : "hash1",
+  "dependencies" : [ "module1.id" ]
+}, {
+  "id" : "module3.id",
+  "hash" : "hash1",
+  "dependencies" : [ "module1.id", "module2.id" ]
+} ]

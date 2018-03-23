@@ -4,6 +4,7 @@ java_library(
         ["*.java"],
     ),
     exported_deps = [
+        "//third-party/java/guava:guava",
         "//third-party/java/pf4j:pf4j",
     ],
     required_for_source_only_abi = True,

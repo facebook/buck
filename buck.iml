@@ -12,6 +12,7 @@
       <sourceFolder url="file://$MODULE_DIR$/test/com/facebook/buck/config/testdata" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/test/com/facebook/buck/apple/toolchain/impl/testdata" type="java-test-resource" />
       <sourceFolder url="file://$MODULE_DIR$/test/com/facebook/buck/android/toolchain/ndk/impl/testdata" type="java-test-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/test/com/facebook/buck/cli/testdata" type="java-test-resource" relativeOutputPath="com/facebook/buck/cli/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/.buckd" />
       <excludeFolder url="file://$MODULE_DIR$/buck-out" />
       <excludeFolder url="file://$MODULE_DIR$/build" />
