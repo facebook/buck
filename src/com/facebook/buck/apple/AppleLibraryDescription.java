@@ -86,7 +86,6 @@ import com.facebook.buck.util.types.Either;
 import com.facebook.buck.versions.Version;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -240,7 +239,7 @@ public class AppleLibraryDescription
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return FluentIterable.from(flavors).allMatch(SUPPORTED_FLAVORS::contains)
+    return SUPPORTED_FLAVORS.containsAll(flavors)
         || cxxLibraryFlavored.hasFlavors(flavors)
         || swiftDelegate.map(swift -> swift.hasFlavors(flavors)).orElse(false);
   }
