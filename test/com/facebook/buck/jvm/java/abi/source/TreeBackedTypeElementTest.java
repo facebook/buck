@@ -438,4 +438,21 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
     TypeElement fooElement = elements.getTypeElement("Foo");
     assertEquals("Foo", fooElement.getQualifiedName().toString());
   }
+
+  @Test
+  public void testGracefulErrorOnNonexistentMemberType() throws IOException {
+    if (!testingTrees()) {
+      return;
+    }
+    testCompiler.setAllowCompilationErrors(true);
+    compile(Joiner.on('\n').join("public class Foo {", "  Foo.Bar b;", "}"));
+
+    assertError(
+        Joiner.on('\n')
+            .join(
+                "Foo.java:2: error: cannot find symbol generating source-only ABI",
+                "  Foo.Bar b;",
+                "     ^",
+                "  Build the #source-abi flavor of this rule to see if the symbol is truly missing or if the rule just needs a source_only_abi_dep."));
+  }
 }

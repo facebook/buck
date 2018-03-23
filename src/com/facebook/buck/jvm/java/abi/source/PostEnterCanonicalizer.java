@@ -211,7 +211,13 @@ class PostEnterCanonicalizer {
             throw new IllegalArgumentException("Cannot resolve error types without a Tree.");
           }
 
-          return getInferredType(treePath);
+          try {
+            return getInferredType(treePath);
+          } catch (CompilerErrorException e) {
+            javacTrees.printMessage(
+                Kind.ERROR, e.getMessage(), treePath.getLeaf(), treePath.getCompilationUnit());
+            return typeMirror;
+          }
         }
       case BOOLEAN:
       case BYTE:
@@ -238,7 +244,7 @@ class PostEnterCanonicalizer {
     return Preconditions.checkNotNull(javacTrees.getTypeMirror(treePath));
   }
 
-  private TypeMirror getInferredType(TreePath treePath) {
+  private TypeMirror getInferredType(TreePath treePath) throws CompilerErrorException {
     Tree tree = treePath.getLeaf();
     switch (tree.getKind()) {
       case PARAMETERIZED_TYPE:

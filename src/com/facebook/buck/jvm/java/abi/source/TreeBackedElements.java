@@ -195,10 +195,16 @@ class TreeBackedElements extends ElementsExtendedImpl {
   }
 
   public ArtificialTypeElement getOrCreateTypeElement(
-      ArtificialQualifiedNameable enclosingElement, Name simpleName) {
+      ArtificialQualifiedNameable enclosingElement, Name simpleName) throws CompilerErrorException {
     Name fullyQualifiedName = getFullyQualifiedName(enclosingElement, simpleName);
     ArtificialTypeElement result = (ArtificialTypeElement) getTypeElement(fullyQualifiedName);
     if (result == null) {
+      if (enclosingElement instanceof TreeBackedTypeElement) {
+        throw new CompilerErrorException(
+            String.format(
+                "cannot find symbol generating source-only ABI\nBuild the #source-abi flavor of this rule to see if the symbol is truly missing or if the rule just needs a source_only_abi_dep.",
+                fullyQualifiedName));
+      }
       result = new InferredTypeElement(simpleName, fullyQualifiedName, enclosingElement);
       knownTypes.put(fullyQualifiedName, result);
     }
