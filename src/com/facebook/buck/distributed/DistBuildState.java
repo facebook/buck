@@ -29,6 +29,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.module.BuckModuleManager;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellProvider;
 import com.facebook.buck.rules.DefaultCellPathResolver;
@@ -140,6 +141,7 @@ public class DistBuildState {
       ImmutableMap<String, String> environment,
       ProcessExecutor processExecutor,
       ExecutableFinder executableFinder,
+      BuckModuleManager moduleManager,
       PluginManager pluginManager,
       ProjectFilesystemFactory projectFilesystemFactory)
       throws InterruptedException, IOException {
@@ -182,7 +184,8 @@ public class DistBuildState {
               environment,
               processExecutor,
               executableFinder,
-              pluginManager);
+              pluginManager,
+              moduleManager);
       cellParams.put(cellRoot, currentCellParams);
       cellIndex.put(remoteCellEntry.getKey(), cellRoot);
 

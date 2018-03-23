@@ -264,6 +264,7 @@ java_immutables_library(
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/jvm/java:fakepackagefinder",
         "//test/com/facebook/buck/model:testutil",
+        "//test/com/facebook/buck/module:testutil",
         "//test/com/facebook/buck/rules/keys:testutil",
         "//test/com/facebook/buck/rules/keys/config:testutil",
         "//test/com/facebook/buck/sandbox:testutil",

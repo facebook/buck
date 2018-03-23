@@ -24,6 +24,7 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.log.InvocationInfo;
+import com.facebook.buck.module.BuckModuleManager;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildInfoStoreManager;
@@ -150,6 +151,9 @@ public abstract class AbstractCommandRunnerParams {
 
   @Value.Parameter
   public abstract PluginManager getPluginManager();
+
+  @Value.Parameter
+  public abstract BuckModuleManager getBuckModuleManager();
 
   /**
    * Create {@link BuildExecutorArgs} using this {@link CommandRunnerParams}.

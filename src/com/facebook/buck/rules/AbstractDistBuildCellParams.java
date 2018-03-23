@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.module.BuckModuleManager;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableMap;
@@ -42,4 +43,6 @@ interface AbstractDistBuildCellParams {
   ExecutableFinder getExecutableFinder();
 
   PluginManager getPluginManager();
+
+  BuckModuleManager getBuckModuleManager();
 }

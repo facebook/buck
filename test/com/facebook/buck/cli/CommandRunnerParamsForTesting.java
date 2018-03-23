@@ -29,6 +29,7 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
+import com.facebook.buck.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
@@ -66,6 +67,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Optional;
 import javax.annotation.Nullable;
+import org.pf4j.PluginManager;
 
 public class CommandRunnerParamsForTesting {
 
@@ -98,12 +100,11 @@ public class CommandRunnerParamsForTesting {
       throws IOException {
     ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
-                processExecutor,
-                BuckPluginManagerFactory.createPluginManager(),
-                new TestSandboxExecutionStrategyFactory()));
+                processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory()));
 
     return CommandRunnerParams.of(
         console,
@@ -144,7 +145,8 @@ public class CommandRunnerParamsForTesting {
         TestRuleKeyConfigurationFactory.create(),
         processExecutor,
         new ExecutableFinder(),
-        BuckPluginManagerFactory.createPluginManager());
+        pluginManager,
+        TestBuckModuleManagerFactory.create(pluginManager));
   }
 
   public static Builder builder() {

@@ -24,6 +24,7 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
@@ -110,7 +111,7 @@ public class TestCellBuilder {
             cellConfig,
             rootCellCellPathResolver.getPathMapping(),
             rootCellCellPathResolver,
-            BuckPluginManagerFactory.createPluginManager(),
+            TestBuckModuleManagerFactory.create(pluginManager),
             toolchainProviderFactory,
             new DefaultProjectFilesystemFactory())
         .getCellByPath(filesystem.getRootPath());

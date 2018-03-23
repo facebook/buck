@@ -31,6 +31,7 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
+import com.facebook.buck.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.ActionGraphCache;
@@ -318,6 +319,7 @@ public class CleanCommandTest extends EasyMockSupport {
         TestRuleKeyConfigurationFactory.create(),
         processExecutor,
         new ExecutableFinder(),
-        pluginManager);
+        pluginManager,
+        TestBuckModuleManagerFactory.create(pluginManager));
   }
 }

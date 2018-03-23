@@ -1,0 +1,17 @@
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = [
+            "*Benchmark.java",
+            "*Test.java",
+        ],
+    ),
+    exported_deps = [
+        "//src/com/facebook/buck/module:module",
+    ],
+    visibility = ["//test/..."],
+    deps = [
+        "//src/com/facebook/buck/module/impl:impl",
+    ],
+)

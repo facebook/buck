@@ -20,6 +20,7 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.module.BuckModuleManager;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -44,6 +45,7 @@ class RootCellFactory {
       CellProvider cellProvider,
       CellPathResolver rootCellCellPathResolver,
       ProjectFilesystem rootFilesystem,
+      BuckModuleManager moduleManager,
       PluginManager pluginManager,
       BuckConfig rootConfig,
       ImmutableMap<String, String> environment,
@@ -54,7 +56,7 @@ class RootCellFactory {
         !rootCellCellPathResolver.getCanonicalCellName(rootFilesystem.getRootPath()).isPresent(),
         "Root cell should be nameless");
     RuleKeyConfiguration ruleKeyConfiguration =
-        ConfigRuleKeyConfigurationFactory.create(rootConfig, pluginManager);
+        ConfigRuleKeyConfigurationFactory.create(rootConfig, moduleManager);
     ToolchainProvider toolchainProvider =
         new DefaultToolchainProvider(
             pluginManager,
@@ -80,14 +82,14 @@ class RootCellFactory {
       CellPathResolver rootCellCellPathResolver,
       ToolchainProviderFactory toolchainProviderFactory,
       ProjectFilesystem rootFilesystem,
-      PluginManager pluginManager,
+      BuckModuleManager moduleManager,
       BuckConfig rootConfig,
       Watchman watchman) {
     Preconditions.checkState(
         !rootCellCellPathResolver.getCanonicalCellName(rootFilesystem.getRootPath()).isPresent(),
         "Root cell should be nameless");
     RuleKeyConfiguration ruleKeyConfiguration =
-        ConfigRuleKeyConfigurationFactory.create(rootConfig, pluginManager);
+        ConfigRuleKeyConfigurationFactory.create(rootConfig, moduleManager);
     ToolchainProvider toolchainProvider =
         toolchainProviderFactory.create(rootConfig, rootFilesystem, ruleKeyConfiguration);
     return Cell.of(

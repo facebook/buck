@@ -19,23 +19,22 @@ package com.facebook.buck.rules.keys.config.impl;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.module.BuckModuleHashStrategy;
-import com.facebook.buck.module.impl.BuckModuleJarHashProvider;
+import com.facebook.buck.module.BuckModuleManager;
 import com.facebook.buck.module.impl.DefaultBuckModuleHashStrategy;
-import com.facebook.buck.module.impl.DefaultBuckModuleManager;
 import com.facebook.buck.module.impl.NoOpBuckModuleHashStrategy;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
-import org.pf4j.PluginManager;
 
 /** Creates {@link RuleKeyConfiguration} using information from {@link BuckConfig}. */
 public class ConfigRuleKeyConfigurationFactory {
 
-  public static RuleKeyConfiguration create(BuckConfig buckConfig, PluginManager pluginManager) {
+  public static RuleKeyConfiguration create(
+      BuckConfig buckConfig, BuckModuleManager moduleManager) {
     long inputKeySizeLimit = buckConfig.getBuildInputRuleKeyFileSizeLimit();
     return RuleKeyConfiguration.builder()
         .setSeed(buckConfig.getKeySeed())
         .setCoreKey(getCoreKey(buckConfig))
         .setBuildInputRuleKeyFileSizeLimit(inputKeySizeLimit)
-        .setBuckModuleHashStrategy(createBuckModuleHashStrategy(buckConfig, pluginManager))
+        .setBuckModuleHashStrategy(createBuckModuleHashStrategy(buckConfig, moduleManager))
         .build();
   }
 
@@ -50,12 +49,10 @@ public class ConfigRuleKeyConfigurationFactory {
   }
 
   private static BuckModuleHashStrategy createBuckModuleHashStrategy(
-      BuckConfig buckConfig, PluginManager pluginManager) {
+      BuckConfig buckConfig, BuckModuleManager moduleManager) {
     BuckModuleHashStrategy hashStrategy;
     if (buckConfig.useBuckBinaryHash()) {
-      hashStrategy =
-          new DefaultBuckModuleHashStrategy(
-              new DefaultBuckModuleManager(pluginManager, new BuckModuleJarHashProvider()));
+      hashStrategy = new DefaultBuckModuleHashStrategy(moduleManager);
     } else {
       hashStrategy = new NoOpBuckModuleHashStrategy();
     }

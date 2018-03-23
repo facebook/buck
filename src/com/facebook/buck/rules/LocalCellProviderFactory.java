@@ -21,6 +21,7 @@ import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.module.BuckModuleManager;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -36,7 +37,6 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.pf4j.PluginManager;
 
 /** Creates a {@link CellProvider} to be used in a local (non-distributed) build. */
 public class LocalCellProviderFactory {
@@ -49,7 +49,7 @@ public class LocalCellProviderFactory {
       CellConfig rootCellConfigOverrides,
       ImmutableMap<RelativeCellName, Path> cellPathMapping,
       CellPathResolver rootCellCellPathResolver,
-      PluginManager pluginManager,
+      BuckModuleManager moduleManager,
       ToolchainProviderFactory toolchainProviderFactory,
       ProjectFilesystemFactory projectFilesystemFactory) {
 
@@ -134,7 +134,7 @@ public class LocalCellProviderFactory {
                         cellPathResolver);
 
                 RuleKeyConfiguration ruleKeyConfiguration =
-                    ConfigRuleKeyConfigurationFactory.create(buckConfig, pluginManager);
+                    ConfigRuleKeyConfigurationFactory.create(buckConfig, moduleManager);
 
                 ToolchainProvider toolchainProvider =
                     toolchainProviderFactory.create(
@@ -159,7 +159,7 @@ public class LocalCellProviderFactory {
                 rootCellCellPathResolver,
                 toolchainProviderFactory,
                 rootFilesystem,
-                pluginManager,
+                moduleManager,
                 rootConfig,
                 watchman));
   }

@@ -78,6 +78,9 @@ import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.LogConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.module.BuckModuleManager;
+import com.facebook.buck.module.impl.BuckModuleJarHashProvider;
+import com.facebook.buck.module.impl.DefaultBuckModuleManager;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -317,6 +320,7 @@ public final class Main {
 
   private static boolean isSessionLeader;
   private static PluginManager pluginManager;
+  private static BuckModuleManager moduleManager;
 
   @Nullable private static FileLock resourcesFileLock = null;
 
@@ -581,8 +585,9 @@ public final class Main {
     // statically configure Buck logging environment based on Buck config, usually buck-x.log files
     setupLogging(commandMode, command, args);
 
-    if (pluginManager == null) {
+    if (moduleManager == null) {
       pluginManager = BuckPluginManagerFactory.createPluginManager();
+      moduleManager = new DefaultBuckModuleManager(pluginManager, new BuckModuleJarHashProvider());
     }
 
     Config config = setupDefaultConfig(rootCellMapping, command);
@@ -636,7 +641,7 @@ public final class Main {
       }
 
       RuleKeyConfiguration ruleKeyConfiguration =
-          ConfigRuleKeyConfigurationFactory.create(buckConfig, pluginManager);
+          ConfigRuleKeyConfigurationFactory.create(buckConfig, moduleManager);
 
       String previousBuckCoreKey;
       if (!command.isReadOnly()) {
@@ -715,7 +720,7 @@ public final class Main {
                   command.getConfigOverrides(),
                   rootCellCellPathResolver.getPathMapping(),
                   rootCellCellPathResolver,
-                  pluginManager,
+                  moduleManager,
                   toolchainProviderFactory,
                   projectFilesystemFactory)
               .getCellByPath(filesystem.getRootPath());
@@ -1153,7 +1158,8 @@ public final class Main {
                         ruleKeyConfiguration,
                         processExecutor,
                         executableFinder,
-                        pluginManager));
+                        pluginManager,
+                        moduleManager));
           } catch (InterruptedException | ClosedByInterruptException e) {
             buildEventBus.post(CommandEvent.interrupted(startedEvent, ExitCode.SIGNAL_INTERRUPT));
             throw e;

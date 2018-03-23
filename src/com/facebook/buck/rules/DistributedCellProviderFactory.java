@@ -70,7 +70,7 @@ public class DistributedCellProviderFactory {
                       cellParam.getConfig().withCellPathResolver(currentCellResolver);
                   RuleKeyConfiguration ruleKeyConfiguration =
                       ConfigRuleKeyConfigurationFactory.create(
-                          configWithResolver, cellParam.getPluginManager());
+                          configWithResolver, cellParam.getBuckModuleManager());
                   ToolchainProvider toolchainProvider =
                       new DefaultToolchainProvider(
                           cellParam.getPluginManager(),
@@ -98,6 +98,7 @@ public class DistributedCellProviderFactory {
                 cellProvider,
                 rootCellResolver,
                 rootCell.getFilesystem(),
+                rootCell.getBuckModuleManager(),
                 rootCell.getPluginManager(),
                 rootCell.getConfig(),
                 rootCell.getEnvironment(),

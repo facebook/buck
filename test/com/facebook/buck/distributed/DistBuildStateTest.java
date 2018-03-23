@@ -36,6 +36,8 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.module.BuckModuleManager;
+import com.facebook.buck.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
@@ -107,12 +109,14 @@ public class DistBuildStateTest {
   private KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
   private ProcessExecutor processExecutor;
   private ExecutableFinder executableFinder;
+  private BuckModuleManager moduleManager;
   private PluginManager pluginManager;
 
   private void setUp() {
     processExecutor = new DefaultProcessExecutor(new TestConsole());
     executableFinder = new ExecutableFinder();
     pluginManager = BuckPluginManagerFactory.createPluginManager();
+    moduleManager = TestBuckModuleManagerFactory.create(pluginManager);
 
     knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
@@ -158,6 +162,7 @@ public class DistBuildStateTest {
             ImmutableMap.of(),
             processExecutor,
             executableFinder,
+            moduleManager,
             pluginManager,
             new DefaultProjectFilesystemFactory());
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
@@ -226,6 +231,7 @@ public class DistBuildStateTest {
             ImmutableMap.of(),
             processExecutor,
             executableFinder,
+            moduleManager,
             pluginManager,
             new DefaultProjectFilesystemFactory());
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
@@ -289,6 +295,7 @@ public class DistBuildStateTest {
             ImmutableMap.of(),
             processExecutor,
             executableFinder,
+            moduleManager,
             pluginManager,
             new DefaultProjectFilesystemFactory());
 
@@ -376,6 +383,7 @@ public class DistBuildStateTest {
             ImmutableMap.of(),
             processExecutor,
             executableFinder,
+            moduleManager,
             pluginManager,
             new DefaultProjectFilesystemFactory());
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();

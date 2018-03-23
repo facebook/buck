@@ -57,6 +57,7 @@ import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.InvocationInfo;
+import com.facebook.buck.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.ActionAndTargetGraphs;
 import com.facebook.buck.rules.ActionGraph;
@@ -153,7 +154,8 @@ public class DistBuildControllerTest {
             .setRuleKeyConfiguration(
                 ConfigRuleKeyConfigurationFactory.create(
                     FakeBuckConfig.builder().build(),
-                    BuckPluginManagerFactory.createPluginManager()))
+                    TestBuckModuleManagerFactory.create(
+                        BuckPluginManagerFactory.createPluginManager())))
             .setRootCell(
                 new TestCellBuilder()
                     .setFilesystem(new FakeProjectFilesystem())
