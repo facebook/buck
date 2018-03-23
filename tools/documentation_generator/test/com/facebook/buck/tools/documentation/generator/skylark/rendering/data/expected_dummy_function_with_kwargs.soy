@@ -1,0 +1,31 @@
+{namespace buck.skylark.dummy}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'dummy()' /}
+    {param navid: 'skylark/generated_dummy' /}
+    {param prettify: true /}
+    {param description}
+      Returns a dummy list of strings.
+    {/param}
+    {param content}
+      {call buck.function}
+        {param status: 'UNFROZEN' /}
+        {param overview}
+          Returns a dummy list of strings.
+        {/param}
+        {param args}
+                      {call buck.functionArg}
+                        {param name : 'kwargs' /}
+                        {param desc }
+                          the dummy attributes.
+                        {/param}
+                        {param default : 'None' /}
+                      {/call}
+
+        {/param}
+      {/call}
+    {/param} // content
+  {/call}
+{/template}

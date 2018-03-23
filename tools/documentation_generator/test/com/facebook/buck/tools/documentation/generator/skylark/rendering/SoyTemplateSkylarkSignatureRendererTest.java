@@ -47,6 +47,17 @@ public class SoyTemplateSkylarkSignatureRendererTest {
   )
   private static final BuiltinFunction dummy = new BuiltinFunction("dummy");
 
+  @SkylarkSignature(
+    name = "dummy",
+    returnType = SkylarkList.class,
+    doc = "Returns a dummy list of strings.",
+    extraKeywords = @Param(name = "kwargs", doc = "the dummy attributes."),
+    documented = false,
+    useAst = true,
+    useEnvironment = true
+  )
+  private static final BuiltinFunction dummyWithKwargs = new BuiltinFunction("dummy");
+
   @Before
   public void setUp() {
     // ignore windows and its new line philosophy
@@ -58,6 +69,15 @@ public class SoyTemplateSkylarkSignatureRendererTest {
     SoyTemplateSkylarkSignatureRenderer renderer = new SoyTemplateSkylarkSignatureRenderer();
     Field dummyField = getClass().getDeclaredField("dummy");
     String expectedContent = getExpectedContent("data/expected_dummy_function.soy");
+    String actualContent = renderer.render(dummyField.getAnnotation(SkylarkSignature.class));
+    assertEquals(expectedContent, actualContent);
+  }
+
+  @Test
+  public void rendersAnExpectedFunctionSoyTemplateWithKwargs() throws Exception {
+    SoyTemplateSkylarkSignatureRenderer renderer = new SoyTemplateSkylarkSignatureRenderer();
+    Field dummyField = getClass().getDeclaredField("dummyWithKwargs");
+    String expectedContent = getExpectedContent("data/expected_dummy_function_with_kwargs.soy");
     String actualContent = renderer.render(dummyField.getAnnotation(SkylarkSignature.class));
     assertEquals(expectedContent, actualContent);
   }

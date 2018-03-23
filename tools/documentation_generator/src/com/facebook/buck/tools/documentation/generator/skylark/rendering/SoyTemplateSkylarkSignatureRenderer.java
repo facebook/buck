@@ -19,6 +19,7 @@ package com.facebook.buck.tools.documentation.generator.skylark.rendering;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
 import com.google.common.io.Resources;
@@ -91,13 +92,23 @@ public class SoyTemplateSkylarkSignatureRenderer {
   }
 
   private static ImmutableMap<String, Object> toMap(SkylarkSignature skylarkSignature) {
+    ImmutableList.Builder<Param> parameters =
+        ImmutableList.<Param>builder().addAll(Arrays.asList(skylarkSignature.parameters()));
+    if (!skylarkSignature.extraKeywords().name().isEmpty()) {
+      parameters.add(skylarkSignature.extraKeywords());
+    }
+
     return ImmutableMap.of(
-        "name", skylarkSignature.name(),
-        "doc", skylarkSignature.doc(),
+        "name",
+        skylarkSignature.name(),
+        "doc",
+        skylarkSignature.doc(),
         "parameters",
-            Arrays.stream(skylarkSignature.parameters())
-                .map(SoyTemplateSkylarkSignatureRenderer::toMap)
-                .collect(Collectors.toList()));
+        parameters
+            .build()
+            .stream()
+            .map(SoyTemplateSkylarkSignatureRenderer::toMap)
+            .collect(Collectors.toList()));
   }
 
   private static ImmutableMap<String, String> toMap(Param param) {
