@@ -104,9 +104,7 @@ public class PerfTimesEventListener implements BuckEventListener {
    */
   @Subscribe
   public synchronized void onRuleKeyCalculationStarted(BuildRuleEvent.StartedRuleKeyCalc event) {
-    ruleKeysCosts.computeIfAbsent(
-        event.getBuildRule(),
-        buildRule -> ruleKeysCosts.put(buildRule, new TimeCostEntry<>(event)));
+    ruleKeysCosts.computeIfAbsent(event.getBuildRule(), buildRule -> new TimeCostEntry<>(event));
   }
 
   /**
