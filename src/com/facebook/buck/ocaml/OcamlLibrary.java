@@ -17,26 +17,37 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
 /** An action graph representation of an OCaml library. */
-public interface OcamlLibrary extends BuildRule {
+public abstract class OcamlLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
 
-  Path getIncludeLibDir();
+  public OcamlLibrary(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams buildRuleParams) {
+    super(buildTarget, projectFilesystem, buildRuleParams);
+  }
 
-  Iterable<String> getBytecodeIncludeDirs();
+  public abstract Path getIncludeLibDir();
+
+  public abstract Iterable<String> getBytecodeIncludeDirs();
 
   /** Dependencies for the native (ocamlopt) build */
-  ImmutableSortedSet<BuildRule> getNativeCompileDeps();
+  public abstract ImmutableSortedSet<BuildRule> getNativeCompileDeps();
 
   /** Dependencies for the bytecode (ocamlc) build */
-  ImmutableSortedSet<BuildRule> getBytecodeCompileDeps();
+  public abstract ImmutableSortedSet<BuildRule> getBytecodeCompileDeps();
 
-  ImmutableSortedSet<BuildRule> getBytecodeLinkDeps();
+  public abstract ImmutableSortedSet<BuildRule> getBytecodeLinkDeps();
 
-  NativeLinkableInput getNativeLinkableInput();
+  public abstract NativeLinkableInput getNativeLinkableInput();
 
-  NativeLinkableInput getBytecodeLinkableInput();
+  public abstract NativeLinkableInput getBytecodeLinkableInput();
 }

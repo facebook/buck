@@ -19,26 +19,20 @@ package com.facebook.buck.ocaml;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
-import javax.annotation.Nullable;
 
-class PrebuiltOcamlLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements OcamlLibrary {
+class PrebuiltOcamlLibrary extends OcamlLibrary {
 
   private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey private final Optional<SourcePath> staticNativeLibraryPath;
@@ -127,17 +121,5 @@ class PrebuiltOcamlLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .addAll(ruleFinder.filterBuildRuleInputs(ImmutableList.of(bytecodeLibraryPath)))
         .addAll(ruleFinder.filterBuildRuleInputs(staticBytecodeLibraryPath))
         .build();
-  }
-
-  @Override
-  public ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
-    return ImmutableList.of();
-  }
-
-  @Nullable
-  @Override
-  public SourcePath getSourcePathToOutput() {
-    return null;
   }
 }

@@ -24,7 +24,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -35,8 +34,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-class OcamlStaticLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements OcamlLibrary, HasRuntimeDeps {
+class OcamlStaticLibrary extends OcamlLibrary implements HasRuntimeDeps {
   private final BuildTarget staticLibraryTarget;
   private final ImmutableList<String> linkerFlags;
   private final ImmutableList<? extends SourcePath> objFiles;
