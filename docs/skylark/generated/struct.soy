@@ -18,6 +18,14 @@
           return s.x + getattr(s, "y")  # returns 5</pre>
         {/param}
         {param args}
+                      {call buck.functionArg}
+                        {param name : 'kwargs' /}
+                        {param desc }
+                          the struct attributes.
+                        {/param}
+                        {param default : 'None' /}
+                      {/call}
+
         {/param}
       {/call}
     {/param} // content
