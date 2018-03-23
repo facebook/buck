@@ -462,7 +462,7 @@ public class InstallCommand extends BuildCommand {
         params.getConsole().printBuildFailure(hre.getMessage());
         return ExitCode.RUN_ERROR;
       } catch (Exception e) {
-        throw new BuckUncheckedExecutionException("When starting activity.");
+        throw new BuckUncheckedExecutionException(e, "When starting activity.");
       }
     }
 
