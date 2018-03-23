@@ -25,6 +25,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Escaper;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -125,10 +126,15 @@ class BuckPythonProgram implements AutoCloseable {
       out.write("from buck_parser.buck import *\n\n");
       BuckPyFunction function = new BuckPyFunction(typeCoercerFactory, CoercedTypeCache.INSTANCE);
       for (Description<?> description : descriptions) {
-        out.write(
-            function.toPythonFunction(
-                Description.getBuildRuleType(description), description.getConstructorArgType()));
-        out.write('\n');
+        try {
+          out.write(
+              function.toPythonFunction(
+                  Description.getBuildRuleType(description), description.getConstructorArgType()));
+          out.write('\n');
+        } catch (RuntimeException e) {
+          throw new BuckUncheckedExecutionException(
+              e, "When writing python function for %s.", description.getClass().getName());
+        }
       }
     }
 
