@@ -82,7 +82,7 @@ class PrebuiltOcamlLibrary extends OcamlLibrary {
   }
 
   @Override
-  public NativeLinkableInput getNativeLinkableInput() {
+  public NativeLinkableInput getNativeLinkableInput(OcamlPlatform platform) {
     if (staticNativeLibraryPath.isPresent()) {
       return getLinkableInput(staticNativeLibraryPath.get());
     } else {
@@ -91,32 +91,32 @@ class PrebuiltOcamlLibrary extends OcamlLibrary {
   }
 
   @Override
-  public NativeLinkableInput getBytecodeLinkableInput() {
+  public NativeLinkableInput getBytecodeLinkableInput(OcamlPlatform platform) {
     return getLinkableInput(staticBytecodeLibraryPath);
   }
 
   @Override
-  public Path getIncludeLibDir() {
+  public Path getIncludeLibDir(OcamlPlatform platform) {
     return includeDir;
   }
 
   @Override
-  public Iterable<String> getBytecodeIncludeDirs() {
+  public Iterable<String> getBytecodeIncludeDirs(OcamlPlatform platform) {
     return ImmutableList.of(includeDir.toString());
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getNativeCompileDeps() {
+  public ImmutableSortedSet<BuildRule> getNativeCompileDeps(OcamlPlatform platform) {
     return ImmutableSortedSet.of();
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getBytecodeCompileDeps() {
+  public ImmutableSortedSet<BuildRule> getBytecodeCompileDeps(OcamlPlatform platform) {
     return ImmutableSortedSet.of();
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getBytecodeLinkDeps() {
+  public ImmutableSortedSet<BuildRule> getBytecodeLinkDeps(OcamlPlatform platform) {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
         .addAll(ruleFinder.filterBuildRuleInputs(ImmutableList.of(bytecodeLibraryPath)))
         .addAll(ruleFinder.filterBuildRuleInputs(staticBytecodeLibraryPath))

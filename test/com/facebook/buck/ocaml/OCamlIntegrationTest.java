@@ -33,6 +33,7 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.io.ExecutableFinder;
@@ -132,7 +133,8 @@ public class OCamlIntegrationTest {
     BuildTarget binary = createOcamlLinkTarget(target);
     BuildTarget lib =
         BuildTargetFactory.newInstance(workspace.getDestPath(), "//hello_ocaml:ocamllib");
-    BuildTarget staticLib = createStaticLibraryBuildTarget(lib);
+    BuildTarget staticLib =
+        createStaticLibraryBuildTarget(lib).withAppendedFlavors(DefaultCxxPlatforms.FLAVOR);
     ImmutableSet<BuildTarget> targets = ImmutableSet.of(target, binary, lib, staticLib);
 
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
@@ -194,7 +196,8 @@ public class OCamlIntegrationTest {
 
     BuildTarget lib1 =
         BuildTargetFactory.newInstance(workspace.getDestPath(), "//hello_ocaml:ocamllib1");
-    BuildTarget staticLib1 = createStaticLibraryBuildTarget(lib1);
+    BuildTarget staticLib1 =
+        createStaticLibraryBuildTarget(lib1).withAppendedFlavors(DefaultCxxPlatforms.FLAVOR);
     ImmutableSet<BuildTarget> targets1 = ImmutableSet.of(target, binary, lib1, staticLib1);
     // We rebuild if lib name changes
     workspace.replaceFileContents(
@@ -213,7 +216,8 @@ public class OCamlIntegrationTest {
   public void testNativePlugin() throws Exception {
     // Build the plugin
     BuildTarget pluginTarget =
-        BuildTargetFactory.newInstance(workspace.getDestPath(), "//ocaml_native_plugin:plugin");
+        BuildTargetFactory.newInstance(
+            workspace.getDestPath(), "//ocaml_native_plugin:plugin#default");
     workspace.runBuckCommand("build", pluginTarget.toString()).assertSuccess();
 
     // Also build a test binary that we'll use to verify that the .cmxs file
@@ -412,7 +416,8 @@ public class OCamlIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance(workspace.getDestPath(), "//clib:clib");
     BuildTarget binary = createOcamlLinkTarget(target);
     BuildTarget libplus = BuildTargetFactory.newInstance(workspace.getDestPath(), "//clib:plus");
-    BuildTarget libplusStatic = createStaticLibraryBuildTarget(libplus);
+    BuildTarget libplusStatic =
+        createStaticLibraryBuildTarget(libplus).withAppendedFlavors(DefaultCxxPlatforms.FLAVOR);
     BuildTarget cclib = BuildTargetFactory.newInstance(workspace.getDestPath(), "//clib:cc");
 
     CxxPlatform cxxPlatform =

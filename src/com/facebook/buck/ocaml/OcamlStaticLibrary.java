@@ -97,38 +97,38 @@ class OcamlStaticLibrary extends OcamlLibrary implements HasRuntimeDeps {
   }
 
   @Override
-  public NativeLinkableInput getNativeLinkableInput() {
+  public NativeLinkableInput getNativeLinkableInput(OcamlPlatform platform) {
     return getLinkableInput(false);
   }
 
   @Override
-  public NativeLinkableInput getBytecodeLinkableInput() {
+  public NativeLinkableInput getBytecodeLinkableInput(OcamlPlatform platform) {
     return getLinkableInput(true);
   }
 
   @Override
-  public Path getIncludeLibDir() {
+  public Path getIncludeLibDir(OcamlPlatform platform) {
     return OcamlBuildContext.getCompileNativeOutputDir(
         staticLibraryTarget.getUnflavoredBuildTarget(), getProjectFilesystem(), true);
   }
 
   @Override
-  public Iterable<String> getBytecodeIncludeDirs() {
+  public Iterable<String> getBytecodeIncludeDirs(OcamlPlatform platform) {
     return ocamlContext.getBytecodeIncludeDirectories();
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getNativeCompileDeps() {
+  public ImmutableSortedSet<BuildRule> getNativeCompileDeps(OcamlPlatform platform) {
     return nativeCompileDeps;
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getBytecodeCompileDeps() {
+  public ImmutableSortedSet<BuildRule> getBytecodeCompileDeps(OcamlPlatform platform) {
     return bytecodeCompileDeps;
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getBytecodeLinkDeps() {
+  public ImmutableSortedSet<BuildRule> getBytecodeLinkDeps(OcamlPlatform platform) {
     return bytecodeLinkDeps;
   }
 

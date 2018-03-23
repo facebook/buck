@@ -35,19 +35,19 @@ public abstract class OcamlLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     super(buildTarget, projectFilesystem, buildRuleParams);
   }
 
-  public abstract Path getIncludeLibDir();
+  public abstract Path getIncludeLibDir(OcamlPlatform platform);
 
-  public abstract Iterable<String> getBytecodeIncludeDirs();
+  public abstract Iterable<String> getBytecodeIncludeDirs(OcamlPlatform platform);
 
   /** Dependencies for the native (ocamlopt) build */
-  public abstract ImmutableSortedSet<BuildRule> getNativeCompileDeps();
+  public abstract ImmutableSortedSet<BuildRule> getNativeCompileDeps(OcamlPlatform platform);
 
   /** Dependencies for the bytecode (ocamlc) build */
-  public abstract ImmutableSortedSet<BuildRule> getBytecodeCompileDeps();
+  public abstract ImmutableSortedSet<BuildRule> getBytecodeCompileDeps(OcamlPlatform platform);
 
-  public abstract ImmutableSortedSet<BuildRule> getBytecodeLinkDeps();
+  public abstract ImmutableSortedSet<BuildRule> getBytecodeLinkDeps(OcamlPlatform platform);
 
-  public abstract NativeLinkableInput getNativeLinkableInput();
+  public abstract NativeLinkableInput getNativeLinkableInput(OcamlPlatform platform);
 
-  public abstract NativeLinkableInput getBytecodeLinkableInput();
+  public abstract NativeLinkableInput getBytecodeLinkableInput(OcamlPlatform platform);
 }
