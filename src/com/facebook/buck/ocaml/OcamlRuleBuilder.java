@@ -237,10 +237,13 @@ public class OcamlRuleBuilder {
         ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<BuildRule> bytecodeLinkDepsBuilder =
         ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<String> transitiveBytecodeIncludesBuilder =
+        ImmutableSortedSet.naturalOrder();
     for (OcamlLibrary library : ocamlInput) {
       nativeCompileDepsBuilder.addAll(library.getNativeCompileDeps());
       bytecodeCompileDepsBuilder.addAll(library.getBytecodeCompileDeps());
       bytecodeLinkDepsBuilder.addAll(library.getBytecodeLinkDeps());
+      transitiveBytecodeIncludesBuilder.addAll(library.getBytecodeIncludeDirs());
     }
     OcamlBuildContext ocamlContext =
         OcamlBuildContext.builder(ocamlPlatform)
@@ -250,7 +253,7 @@ public class OcamlRuleBuilder {
             .setOcamlDepFlags(ocamlDepFlags)
             .setNativeIncludes(nativeIncludes)
             .setBytecodeIncludes(bytecodeIncludes)
-            .setOcamlInput(ocamlInput)
+            .setTransitiveBytecodeIncludes(transitiveBytecodeIncludesBuilder.build())
             .setNativeLinkableInput(nativeLinkableInput)
             .setBytecodeLinkableInput(bytecodeLinkableInput)
             .setCLinkableInput(cLinkableInput)
@@ -352,10 +355,13 @@ public class OcamlRuleBuilder {
         ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<BuildRule> bytecodeLinkDepsBuilder =
         ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<String> transitiveBytecodeIncludesBuilder =
+        ImmutableSortedSet.naturalOrder();
     for (OcamlLibrary library : ocamlInput) {
       nativeCompileDepsBuilder.addAll(library.getNativeCompileDeps());
       bytecodeCompileDepsBuilder.addAll(library.getBytecodeCompileDeps());
       bytecodeLinkDepsBuilder.addAll(library.getBytecodeLinkDeps());
+      transitiveBytecodeIncludesBuilder.addAll(library.getBytecodeIncludeDirs());
     }
     OcamlBuildContext ocamlContext =
         OcamlBuildContext.builder(ocamlPlatform)
@@ -365,7 +371,7 @@ public class OcamlRuleBuilder {
             .setOcamlDepFlags(ocamlDepFlags)
             .setNativeIncludes(nativeIncludes)
             .setBytecodeIncludes(bytecodeIncludes)
-            .setOcamlInput(ocamlInput)
+            .setTransitiveBytecodeIncludes(transitiveBytecodeIncludesBuilder.build())
             .setNativeLinkableInput(nativeLinkableInput)
             .setBytecodeLinkableInput(bytecodeLinkableInput)
             .setCLinkableInput(cLinkableInput)

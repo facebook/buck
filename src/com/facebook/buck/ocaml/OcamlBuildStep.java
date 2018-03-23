@@ -182,7 +182,7 @@ public class OcamlBuildStep implements Step {
               new OcamlDebugLauncherStep.Args(
                   ocamlContext.getOcamlDebug().get(),
                   ocamlContext.getBytecodeOutput(),
-                  ocamlContext.getOcamlInput(),
+                  ocamlContext.getTransitiveBytecodeIncludes(),
                   ocamlContext.getBytecodeIncludeFlags()));
       return debugLauncher.execute(context);
     } else {

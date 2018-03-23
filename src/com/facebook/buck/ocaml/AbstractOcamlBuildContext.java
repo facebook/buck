@@ -84,6 +84,8 @@ abstract class AbstractOcamlBuildContext implements AddsToRuleKey {
 
   public abstract List<String> getBytecodeIncludes();
 
+  public abstract ImmutableSortedSet<String> getTransitiveBytecodeIncludes();
+
   /** Inputs for the native (ocamlopt) build */
   public abstract NativeLinkableInput getNativeLinkableInput();
 
@@ -92,8 +94,6 @@ abstract class AbstractOcamlBuildContext implements AddsToRuleKey {
 
   /** Inputs for the C compiler (both builds) */
   public abstract NativeLinkableInput getCLinkableInput();
-
-  public abstract List<OcamlLibrary> getOcamlInput();
 
   public abstract CxxPreprocessorInput getCxxPreprocessorInput();
 

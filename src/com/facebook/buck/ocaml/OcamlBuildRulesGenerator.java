@@ -249,7 +249,7 @@ public class OcamlBuildRulesGenerator {
             new OcamlDebugLauncherStep.Args(
                 ocamlContext.getOcamlDebug().get(),
                 ocamlContext.getBytecodeOutput(),
-                ocamlContext.getOcamlInput(),
+                ocamlContext.getTransitiveBytecodeIncludes(),
                 ocamlContext.getBytecodeIncludeFlags()));
     resolver.addToIndex(debugLauncher);
     return debugLauncher;

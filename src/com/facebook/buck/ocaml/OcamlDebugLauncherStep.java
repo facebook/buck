@@ -28,8 +28,8 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Joiner;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -75,14 +75,11 @@ public class OcamlDebugLauncherStep implements Step {
     debugCmd.add("rlwrap");
     debugCmd.addAll(args.ocamlDebug.getCommandPrefix(resolver));
 
-    Iterable<String> includesBytecodeDirs =
-        FluentIterable.from(args.ocamlInput)
-            .transformAndConcat(OcamlLibrary::getBytecodeIncludeDirs);
-
     ImmutableList<String> includesBytecodeFlags =
         ImmutableList.copyOf(
             MoreIterables.zipAndConcat(
-                Iterables.cycle(OcamlCompilables.OCAML_INCLUDE_FLAG), includesBytecodeDirs));
+                Iterables.cycle(OcamlCompilables.OCAML_INCLUDE_FLAG),
+                args.transitiveBytecodeIncludes));
 
     debugCmd.addAll(includesBytecodeFlags);
     debugCmd.addAll(args.bytecodeIncludeFlags);
@@ -107,17 +104,17 @@ public class OcamlDebugLauncherStep implements Step {
     @AddToRuleKey(stringify = true)
     public final Path bytecodeOutput;
 
-    public final ImmutableList<OcamlLibrary> ocamlInput;
+    public final ImmutableSortedSet<String> transitiveBytecodeIncludes;
     @AddToRuleKey public final ImmutableList<String> bytecodeIncludeFlags;
 
     public Args(
         Tool ocamlDebug,
         Path bytecodeOutput,
-        List<OcamlLibrary> ocamlInput,
+        ImmutableSortedSet<String> transitiveBytecodeIncludes,
         List<String> bytecodeIncludeFlags) {
       this.ocamlDebug = ocamlDebug;
       this.bytecodeOutput = bytecodeOutput;
-      this.ocamlInput = ImmutableList.copyOf(ocamlInput);
+      this.transitiveBytecodeIncludes = transitiveBytecodeIncludes;
       this.bytecodeIncludeFlags = ImmutableList.copyOf(bytecodeIncludeFlags);
     }
 
