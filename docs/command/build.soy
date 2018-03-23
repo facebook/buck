@@ -158,6 +158,87 @@ Example:
 
 {/param}
 
+{param examples}
+
+<h3>View compiler flags using the compilation database</h3>
+
+<p>
+For C++ builds, to view the compiler flags that Buck is passing to the
+C++ compiler, tell Buck to generate a <em>compilation database</em> for
+the target. The compilation database is a JSON file that contains
+information about how Buck compiled the target. The syntax is:
+</p>
+
+{literal}<pre class="prettyprint lang-bash">
+buck build path/to/target#compilation-database
+</pre>{/literal}
+
+<p>
+You can then get the path to the compilation-database file itself using:
+</p>
+
+{literal}<pre class="prettyprint lang-bash">
+buck targets --show-output path/to/target#compilation-database
+</pre>{/literal}
+
+<p>
+For example:
+</p>
+
+{literal}<pre class="prettyprint lang-bash">
+$ buck clean
+Parsing buck files: finished in 1.7 sec (100%)
+Building: finished in 1.5 sec (100%) 3/3 jobs, 3 updated, 0.0% cache miss
+  Total time: 3.7 sec
+
+$ buck build :main#compilation-database
+Building: finished in 1.5 sec (100%) 3/3 jobs, 3 updated, 0.0% cache miss
+  Total time: 3.7 sec
+
+$ buck targets --show-output :main#compilation-database
+//:main#compilation-database buck-out/gen/__main#compilation-database/compile_commands.json
+
+$ jq . buck-out/gen/__main#compilation-database/compile_commands.json 
+[
+  {
+    "directory": "/Users/devuser/git/gtDev/C++/oop/simple-classes",
+    "file": "/Users/devuser/git/gtDev/C++/oop/simple-classes/main.cpp",
+    "arguments": [
+      "/usr/bin/clang++",
+      "-x",
+      "c++",
+      "-I",
+      "buck-out/gen/main#default,private-headers.hmap",
+      "-I",
+      "buck-out",
+      "-Xclang",
+      "-fdebug-compilation-dir",
+      "-Xclang",
+      ".",
+      "-fdebug-prefix-map=/Users/devuser/git/gtDev/C++/oop/simple-classes=.",
+      "-c",
+      "-MD",
+      "-MF",
+      "buck-out/gen/main#compile-main.cpp.oa5b6a1ba,default/main.cpp.o.dep",
+      "main.cpp",
+      "-o",
+      "buck-out/gen/main#compile-main.cpp.oa5b6a1ba,default/main.cpp.o"
+    ]
+  }
+]
+</pre>{/literal}
+
+<p>
+In the preceding example <code>:main</code> specifies 
+a <em>relative</em> build target that is defined in the build file 
+located in the current directory.
+The <code>jq</code> tool&mdash;available through package managers such 
+as Homebrew&mdash;enables you to pretty-print JSON files.
+</p>
+
+
+{/param} // examples
+
 {/call}
 
     {/param}  // content
