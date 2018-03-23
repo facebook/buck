@@ -89,6 +89,8 @@ public final class CommonRuleKeyHasherTest {
                     .map(num -> pair.apply(num.getFirst(), h -> h.putNumber(num.getSecond())))
                     .iterator())
             .add(
+                pair.apply("(char) 0", h -> h.putCharacter((char) 0)),
+                pair.apply("(char) 42", h -> h.putCharacter((char) 42)),
                 pair.apply("\"\"", h -> h.putString("")),
                 pair.apply("\"42\"", h -> h.putString("42")),
                 pair.apply("\"4\", \"2\"", h -> h.putString("4").putString("2")),

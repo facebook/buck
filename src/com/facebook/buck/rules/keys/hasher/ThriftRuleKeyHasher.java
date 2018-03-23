@@ -90,6 +90,11 @@ public class ThriftRuleKeyHasher implements RuleKeyHasher<FullRuleKey> {
   }
 
   @Override
+  public RuleKeyHasher<FullRuleKey> putCharacter(char val) {
+    return push(Value.numberValue(val));
+  }
+
+  @Override
   public RuleKeyHasher<FullRuleKey> putBoolean(boolean val) {
     return push(Value.boolValue(val));
   }

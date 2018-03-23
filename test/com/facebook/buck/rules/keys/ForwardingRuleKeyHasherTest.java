@@ -109,6 +109,11 @@ public class ForwardingRuleKeyHasherTest {
     expect(guavaHasher.hash()).andReturn(hash);
     expect(stringHasher.hash()).andReturn(string);
 
+    expect(guavaHasher.putCharacter((char) 42)).andReturn(guavaHasher);
+    expect(stringHasher.putCharacter((char) 42)).andReturn(stringHasher);
+    expect(guavaHasher.hash()).andReturn(hash);
+    expect(stringHasher.hash()).andReturn(string);
+
     expect(guavaHasher.putString("42")).andReturn(guavaHasher);
     expect(stringHasher.putString("42")).andReturn(stringHasher);
     expect(guavaHasher.hash()).andReturn(hash);
@@ -279,6 +284,7 @@ public class ForwardingRuleKeyHasherTest {
     newHasher(guavaHasher, stringHasher).putNumber((byte) 42).hash();
     newHasher(guavaHasher, stringHasher).putNumber((float) 42).hash();
     newHasher(guavaHasher, stringHasher).putNumber((double) 42).hash();
+    newHasher(guavaHasher, stringHasher).putCharacter((char) 42).hash();
     newHasher(guavaHasher, stringHasher).putString("42").hash();
     newHasher(guavaHasher, stringHasher).putBytes(BYTE_ARRAY).hash();
     newHasher(guavaHasher, stringHasher).putPattern(PATTERN).hash();

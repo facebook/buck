@@ -77,6 +77,8 @@ public interface RuleKeyHasher<HASH> {
   /** Puts the field's value, Java types */
   RuleKeyHasher<HASH> putNull();
 
+  RuleKeyHasher<HASH> putCharacter(char val);
+
   RuleKeyHasher<HASH> putBoolean(boolean val);
 
   RuleKeyHasher<HASH> putNumber(Number val);

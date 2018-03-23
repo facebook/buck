@@ -432,6 +432,7 @@ public class DefaultRuleKeyFactoryTest {
     assertBothKeysAndValuesGetHashed((long) 123, (long) 42);
     assertBothKeysAndValuesGetHashed((short) 123, (short) 42);
     assertBothKeysAndValuesGetHashed((byte) 123, (byte) 42);
+    assertBothKeysAndValuesGetHashed((char) 0, (char) 42);
     assertBothKeysAndValuesGetHashed(new byte[] {1, 2, 3}, new byte[] {4, 2});
     assertBothKeysAndValuesGetHashed(DummyEnum.BLACK, DummyEnum.WHITE);
     assertBothKeysAndValuesGetHashed("abc", "def");

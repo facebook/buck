@@ -56,6 +56,13 @@ public class CountingRuleKeyHasher<HASH> implements RuleKeyHasher<HASH> {
   }
 
   @Override
+  public CountingRuleKeyHasher<HASH> putCharacter(char val) {
+    count++;
+    delegate.putCharacter(val);
+    return this;
+  }
+
+  @Override
   public CountingRuleKeyHasher<HASH> putBoolean(boolean val) {
     count++;
     delegate.putBoolean(val);

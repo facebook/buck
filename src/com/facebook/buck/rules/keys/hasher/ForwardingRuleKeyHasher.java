@@ -58,6 +58,13 @@ public abstract class ForwardingRuleKeyHasher<HASH, HASH2> implements RuleKeyHas
   }
 
   @Override
+  public ForwardingRuleKeyHasher<HASH, HASH2> putCharacter(char val) {
+    secondHasher.putCharacter(val);
+    delegate.putCharacter(val);
+    return this;
+  }
+
+  @Override
   public ForwardingRuleKeyHasher<HASH, HASH2> putBoolean(boolean val) {
     secondHasher.putBoolean(val);
     delegate.putBoolean(val);

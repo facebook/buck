@@ -83,6 +83,13 @@ public class CountingRuleKeyHasherTest {
     assertEquals(
         newGuavaHasher().putNumber((double) 42).hash(),
         newCountHasher().putNumber((double) 42).hash());
+    assertEquals(
+        newGuavaHasher().putCharacter((char) 0).hash(),
+        newCountHasher().putCharacter((char) 0).hash());
+    assertEquals(
+        newGuavaHasher().putCharacter((char) 42).hash(),
+        newCountHasher().putCharacter((char) 42).hash());
+
     assertEquals(newGuavaHasher().putString("").hash(), newCountHasher().putString("").hash());
     assertEquals(newGuavaHasher().putString("42").hash(), newCountHasher().putString("42").hash());
     assertEquals(
@@ -299,6 +306,10 @@ public class CountingRuleKeyHasherTest {
     hasher.putNumber((double) 0);
     assertEquals(++count, hasher.getCount());
     hasher.putNumber((double) 42).putNumber((double) 43);
+    assertEquals(count += 2, hasher.getCount());
+    hasher.putCharacter((char) 0);
+    assertEquals(++count, hasher.getCount());
+    hasher.putCharacter((char) 42).putCharacter((char) 43);
     assertEquals(count += 2, hasher.getCount());
     hasher.putString("");
     assertEquals(++count, hasher.getCount());

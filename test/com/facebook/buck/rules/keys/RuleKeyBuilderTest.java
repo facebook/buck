@@ -113,6 +113,8 @@ public class RuleKeyBuilderTest {
           (float) 42,
           (double) 0,
           (double) 42,
+          (char) 0,
+          (char) 42,
           "",
           "42",
           new byte[0],

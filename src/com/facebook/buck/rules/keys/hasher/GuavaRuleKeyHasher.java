@@ -67,6 +67,12 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
   }
 
   @Override
+  public GuavaRuleKeyHasher putCharacter(char val) {
+    hasher.putChar(val);
+    return this;
+  }
+
+  @Override
   public GuavaRuleKeyHasher putBoolean(boolean val) {
     hasher.putByte(val ? RuleKeyHasherTypes.TRUE : RuleKeyHasherTypes.FALSE);
     return this;

@@ -49,6 +49,12 @@ public class StringRuleKeyHasher implements RuleKeyHasher<String> {
   }
 
   @Override
+  public StringRuleKeyHasher putCharacter(char val) {
+    parts.add(String.format("char(%s)", val));
+    return this;
+  }
+
+  @Override
   public StringRuleKeyHasher putBoolean(boolean val) {
     parts.add(String.format("boolean(%s)", val ? "true" : "false"));
     return this;

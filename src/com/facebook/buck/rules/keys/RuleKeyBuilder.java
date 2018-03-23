@@ -257,6 +257,8 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
       hasher.putBoolean((boolean) val);
     } else if (val instanceof Enum) {
       hasher.putString(String.valueOf(val));
+    } else if (val instanceof Character) {
+      hasher.putCharacter((Character) val);
     } else if (val instanceof Number) {
       hasher.putNumber((Number) val);
     } else if (val instanceof String) {
