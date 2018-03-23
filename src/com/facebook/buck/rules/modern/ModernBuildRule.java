@@ -21,14 +21,11 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -106,12 +103,8 @@ import javax.annotation.Nullable;
  * }
  * }</pre>
  */
-public abstract class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
-    implements HasRuntimeDeps,
-        SupportsInputBasedRuleKey,
-        CacheableBuildRule,
-        InitializableFromDisk<ModernBuildRule.DataHolder> {
-  private final BuildOutputInitializer<DataHolder> buildOutputInitializer;
+public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
+    implements CacheableBuildRule, SupportsInputBasedRuleKey {
   private final OutputPathResolver outputPathResolver;
 
   private final Supplier<ImmutableSortedSet<BuildRule>> deps;
@@ -144,7 +137,6 @@ public abstract class ModernBuildRule<T extends Buildable> extends AbstractBuild
     super(buildTarget, filesystem);
     this.deps = MoreSuppliers.memoize(this::computeDeps);
     this.inputRuleResolver = new DefaultInputRuleResolver(ruleFinder);
-    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
     this.outputPathResolver =
         new DefaultOutputPathResolver(this.getProjectFilesystem(), this.getBuildTarget());
     this.buildable = buildableSource.transform(b -> b, clz -> clz.cast(this));
@@ -208,10 +200,6 @@ public abstract class ModernBuildRule<T extends Buildable> extends AbstractBuild
   // ---------------------- Everything below here is intentionally final ---------------------------
   // -----------------------------------------------------------------------------------------------
 
-  public static final class DataHolder {
-    // TODO(cjhopman): implement initialize from disk stuff
-  }
-
   /**
    * This should only be exposed to implementations of the ModernBuildRule, not of the Buildable.
    */
@@ -250,12 +238,10 @@ public abstract class ModernBuildRule<T extends Buildable> extends AbstractBuild
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), filesystem, outputPathResolver.getRootPath())));
-
     stepBuilder.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), filesystem, outputPathResolver.getTempPath())));
-
     stepBuilder.addAll(
         buildable.getBuildSteps(
             context,
@@ -311,23 +297,6 @@ public abstract class ModernBuildRule<T extends Buildable> extends AbstractBuild
   @Override
   public final void appendToRuleKey(RuleKeyObjectSink sink) {
     AlterRuleKeys.amendKey(sink, buildable);
-  }
-
-  @Override
-  public final DataHolder initializeFromDisk() {
-    // TODO(cjhopman): implement
-    return new DataHolder();
-  }
-
-  @Override
-  public final BuildOutputInitializer<DataHolder> getBuildOutputInitializer() {
-    return buildOutputInitializer;
-  }
-
-  @Override
-  public final Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
-    // TODO(cjhopman): implement
-    return Stream.of();
   }
 
   @Override
