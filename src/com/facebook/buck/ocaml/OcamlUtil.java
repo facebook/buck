@@ -17,15 +17,9 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
-import com.facebook.buck.graph.DirectedAcyclicGraph;
-import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -67,18 +61,6 @@ public class OcamlUtil {
           }
           return false;
         };
-  }
-
-  public static ImmutableList<OcamlLibrary> getTransitiveOcamlInput(
-      Iterable<? extends BuildRule> inputs) {
-
-    DirectedAcyclicGraph<BuildRule> graph =
-        BuildRuleDependencyVisitors.getBuildRuleDirectedGraphFilteredBy(
-            inputs, OcamlLibrary.class::isInstance, OcamlLibrary.class::isInstance);
-
-    ImmutableList<BuildRule> sorted = TopologicalSort.sort(graph);
-
-    return FluentIterable.from(sorted).filter(OcamlLibrary.class).toList();
   }
 
   static ImmutableSet<Path> getExtensionVariants(Path output, String... extensions) {

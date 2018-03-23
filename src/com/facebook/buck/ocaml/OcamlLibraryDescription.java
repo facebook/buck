@@ -101,6 +101,10 @@ public class OcamlLibraryDescription
                 context.getProjectFilesystem(),
                 params,
                 context.getBuildRuleResolver(),
+                args.getDeps()
+                    .stream()
+                    .map(context.getBuildRuleResolver()::getRule)
+                    .collect(ImmutableList.toImmutableList()),
                 srcs,
                 /* isLibrary */ true,
                 args.getBytecodeOnly(),
@@ -136,6 +140,10 @@ public class OcamlLibraryDescription
                 context.getProjectFilesystem(),
                 params,
                 context.getBuildRuleResolver(),
+                args.getDeps()
+                    .stream()
+                    .map(context.getBuildRuleResolver()::getRule)
+                    .collect(ImmutableList.toImmutableList()),
                 srcs,
                 /* isLibrary */ true,
                 args.getBytecodeOnly(),

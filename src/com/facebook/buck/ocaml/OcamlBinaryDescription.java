@@ -88,6 +88,10 @@ public class OcamlBinaryDescription
               context.getProjectFilesystem(),
               params,
               context.getBuildRuleResolver(),
+              args.getDeps()
+                  .stream()
+                  .map(context.getBuildRuleResolver()::getRule)
+                  .collect(ImmutableList.toImmutableList()),
               srcs,
               /* isLibrary */ false,
               args.getBytecodeOnly().orElse(false),
@@ -105,6 +109,10 @@ public class OcamlBinaryDescription
               context.getProjectFilesystem(),
               params,
               context.getBuildRuleResolver(),
+              args.getDeps()
+                  .stream()
+                  .map(context.getBuildRuleResolver()::getRule)
+                  .collect(ImmutableList.toImmutableList()),
               srcs,
               /* isLibrary */ false,
               args.getBytecodeOnly().orElse(false),
