@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.internal.runners.model.ReflectiveCallable;
 import org.junit.internal.runners.statements.Fail;
@@ -378,6 +379,10 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
     validateTestAnnotations(errors);
   }
 
+  protected boolean isIgnored(EndToEndTestDescriptor child) {
+    return child.getMethod().getAnnotation(Ignore.class) != null;
+  }
+
   /**
    * Needed for ParentRunner implementation, getChildren setups our environments, and returns
    * testDescriptors for each method against each configuration in their respective {@link
@@ -418,6 +423,9 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
     Statement statement;
     if (setupError != null) {
       statement = new Fail(setupError);
+    } else if (isIgnored(child)) {
+      notifier.fireTestIgnored(description);
+      return;
     } else {
       statement =
           new Statement() {
