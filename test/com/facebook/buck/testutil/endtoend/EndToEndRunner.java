@@ -31,6 +31,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.internal.runners.model.ReflectiveCallable;
+import org.junit.internal.runners.statements.ExpectException;
 import org.junit.internal.runners.statements.Fail;
 import org.junit.internal.runners.statements.RunAfters;
 import org.junit.internal.runners.statements.RunBefores;
@@ -346,6 +347,18 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
     return afters.isEmpty() ? statement : new RunAfters(statement, afters, target);
   }
 
+  private Statement withExpectedExceptions(EndToEndTestDescriptor child, Statement statement) {
+    FrameworkMethod verificationMethod = child.getMethod();
+    Test annotation = verificationMethod.getAnnotation(Test.class);
+    Class<? extends Throwable> expectedException = annotation.expected();
+    // ExpectException doesn't account for the default Test.None.class, so skip expecting an
+    // exception if it is Test.None.class
+    if (expectedException.isAssignableFrom(Test.None.class)) {
+      return statement;
+    }
+    return new ExpectException(statement, expectedException);
+  }
+
   private Object createTest() throws Exception {
     return getTestClass().getOnlyConstructor().newInstance();
   }
@@ -368,6 +381,7 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
     Statement statement = new BuckInvoker(testDescriptor, test);
     statement = withBefores(test, statement);
     statement = withAfters(test, statement);
+    statement = withExpectedExceptions(testDescriptor, statement);
     return statement;
   }
 
