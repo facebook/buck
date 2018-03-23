@@ -55,11 +55,11 @@ following escape sequences are supported:
 </tr><tr>
 <td>\t</td><td>tab</td>
 </tr><tr>
-<td>\x##</td><td>unicode character with code point ## (in hex)</td>
+<td>\x##</td><td>Unicode character with code point ## (in hex)</td>
 </tr><tr>
-<td>\u####</td><td>unicode character with code point #### (in hex)</td>
+<td>\u####</td><td>Unicode character with code point #### (in hex)</td>
 </tr><tr>
-<td>\U########</td><td>unicode character with code point ######## (in hex)</td>
+<td>\U########</td><td>Unicode character with code point ######## (in hex)</td>
 </tr></table>
 
 <p>
@@ -238,7 +238,7 @@ $ buck targets --resolve-alias app#src_jar
     This specifies the absolute path to the Android SDK that all Android code in the project should
     be built against.  This is equivalent to setting the environment variable
     <code>ANDROID_SDK=/Library/Android/sdk</code>. The environment variables
-    <code>ANDROID_SDK</code> and <code>ANDROID_HOME</code> both supercede the buckconfig setting.
+    <code>ANDROID_SDK</code> and <code>ANDROID_HOME</code> both supersede the buckconfig setting.
     The default is empty.
   {/param}
 {/call}
@@ -368,7 +368,7 @@ $ buck targets --resolve-alias app#src_jar
 {literal}<pre class="prettyprint lang-init">
   [apple]
     test_log_directory_environment_variable=MY_LOG_DIRECTORY
-    test_log_level_environmant_variable=MY_LOG_LEVEL
+    test_log_level_environment_variable=MY_LOG_LEVEL
     test_log_level=verbose
 </pre>{/literal}
   {/param}
@@ -669,7 +669,7 @@ $ buck targets --resolve-alias app#src_jar
   {param example_value: '4' /}
   {param description}
     Sets the maximum number of threads to use for building.  By default, Buck uses the number of
-    available cores multipled by <code>1.25</code>.
+    available cores multiplied by <code>1.25</code>.
   {/param}
 {/call}
 
@@ -757,12 +757,12 @@ $ buck targets --resolve-alias app#src_jar
 {call buckconfig.entry}
   {param section: 'buildfile' /}
   {param name: 'name' /}
-  {param example_value: 'TARGETS' /}
+  {param example_value: 'BUILD' /}
   {param description}
     The name of {call buck.build_file /}s within a project. 
     This defaults to <code>BUCK</code>.
     We recommend that you use the default name. However, you could
-    specify a different name&mdash;such as <code>TARGETS</code> shown
+    specify a different name&mdash;such as <code>BUILD</code> shown
     below&mdash;in order to support, for example, a legacy
     project that used different buildfile naming conventions.
   {/param}
@@ -967,7 +967,7 @@ $ buck targets --resolve-alias app#src_jar
   {param example_value: '1800' /}
   {param description}
     The length of time to wait after the build completes for any remaining http cache uploads to
-    complete before forecfully shutting down the writer thread pool when using http-based caching
+    complete before forcefully shutting down the writer thread pool when using http-based caching
     {sp}({call buckconfig.cache_mode /} must contain <code>http</code>).  The default is{sp}
     <code>1800</code> (30 minutes).
   {/param}
@@ -1176,7 +1176,7 @@ $ buck targets --resolve-alias app#src_jar
   {param example_value: 'http://my.server.one/,http://my.server.two' /}
   {param description}
   A comma separated list of server URLs of valid servers. The client
-  side loadbalancer will try to pick the best server to connect to for every
+  side load balancer will try to pick the best server to connect to for every
   single connection.
   {/param}
 {/call}
@@ -1186,7 +1186,7 @@ $ buck targets --resolve-alias app#src_jar
   {param name: 'slb_ping_endpoint' /}
   {param example_value: '/ping.php' /}
   {param description}
-  The client side loadbalancer will use this endpoint to check whether the
+  The client side load balancer will use this endpoint to check whether the
   server is in healthy state or not. It will also be used to measure request
   latency.
   {/param}
@@ -1197,7 +1197,7 @@ $ buck targets --resolve-alias app#src_jar
   {param name: 'slb_health_check_internal_millis' /}
   {param example_value: '1000' /}
   {param description}
-  The timeout in milliseconds between two consecutive client side loadbalancer
+  The timeout in milliseconds between two consecutive client side load balancer
   health checks to the slb_server_pool.
   {/param}
 {/call}
@@ -1232,7 +1232,7 @@ $ buck targets --resolve-alias app#src_jar
   {param description}
   The max error percentage allowed within the last
   slb_error_check_time_range_millis that is acceptable to keep a particular
-  server marked as healthy and usable by the loadbalancer.
+  server marked as healthy and usable by the load balancer.
 
   Expects a float value in the interval [0, 1].
   {/param}
@@ -1334,7 +1334,7 @@ $ buck build //big:expensive-rule            # Action Graph is rebuilt.</pre>
   practice is to add <code>--config
   client.skip-action-graph-cache=true</code> for any sort of "one-off" build
   for which the cost of caching the Action Graph for the new build likely
-  outweights the benefit of evicting the Action Graph from the previous build.
+  outweighs the benefit of evicting the Action Graph from the previous build.
   As this is commonly the case for tools, this flag is frequently used in
   concert with <code>--config client.id</code>:
   {literal}<pre class="prettyprint lang-sh">
@@ -1801,7 +1801,7 @@ cxx_library(
   {param example_value: '3' /}
   {param description}
     The number of jobs that each C/C++ link rule consumes when running.
-    By default, this is <code>1</code>, but this can overriden to change
+    By default, this is <code>1</code>, but this can overridden to change
     how many link rules can execute in parallel for a given <code>-j</code>
     value.
     This is useful for builds with large I/O intensive static links where using
@@ -1837,7 +1837,7 @@ cxx_library(
   {param name: 'shlib_interfaces' /}
   {param example_value: 'enabled' /}
   {param description}
-    When linking a executiable or shared library, any dependencies that build shared
+    When linking a executable or shared library, any dependencies that build shared
     libraries are normally added to the link line.  If this option is set, Buck will
     use shared library interfaces for these dependencies instead of full shared libraries.
     Shared library interfaces are a subset of the original shared library, removing
@@ -1858,7 +1858,7 @@ cxx_library(
     library interfaces for all dependencies be built, this means that dynamic
     linking has inherent non-parallelism, due to this build dependency tree.
 
-    When this option is set, Buck will build shared library interfaces indepedent
+    When this option is set, Buck will build shared library interfaces independent
     of the rule's shared library (e.g. by linking it's own shared library without
     any dependency shared libraries), allowing all shared library interfaces to
     be built in parallel, and therefore also allowing subsequent shared libraries
@@ -2349,7 +2349,7 @@ cxx_library(
       <li>
         <code>direct_to_jar</code>: compiler output will be directly written to a <code>.jar</code>
         {sp}file with the intermediate <code>.class</code> files held in memory.  The compiler
-        output will still be written to disk if there are any postprocessing commands specified
+        output will still be written to disk if there are any post-processing commands specified
         during the build.
       </li>
     </ul>
@@ -2561,7 +2561,7 @@ cxx_library(
         command line.
       </li>
       <li>
-        <code>-1</code>: Explicitely disables the server.
+        <code>-1</code>: Explicitly disables the server.
       </li>
     </ul>
   {/param}
@@ -2763,7 +2763,7 @@ your <code>.buckjavaargs</code> file</a>:
   {param description}
     This specifies the absolute path to the Android NDK. This is equivalent to setting the
     environment variable <code>ANDROID_NDK=/Library/Android/ndk/r10c</code>. The environment
-    variables <code>ANDROID_NDK</code> and <code>NDK_HOME</code> both supercede the buckconfig
+    variables <code>ANDROID_NDK</code> and <code>NDK_HOME</code> both supersede the buckconfig
     setting. The default is empty.
   {/param}
 {/call}
@@ -2775,7 +2775,7 @@ your <code>.buckjavaargs</code> file</a>:
   {param description}
     This specifies the absolute path to a directory containing versions of the Android NDK. This is
     equivalent to setting the environment variable
-    <code>ANDROID_NDK_REPOSITORY=/Library/Android/ndk</code>. The environment variable supercedes
+    <code>ANDROID_NDK_REPOSITORY=/Library/Android/ndk</code>. The environment variable supersedes
     the buckconfig setting. The default is empty.
   {/param}
 {/call}
@@ -2785,7 +2785,7 @@ your <code>.buckjavaargs</code> file</a>:
   {param name: 'app_platform' /}
   {param example_value: 'android-21' /}
   {param description}
-    The android platform libraries that the code is targetting.  This is equivalent to the{sp}
+    The android platform libraries that the code is targeting.  This is equivalent to the{sp}
     <code>APP_TARGET</code> in the NDK build system.  The default is <code>android-16</code>.
   {/param}
 {/call}
@@ -3088,7 +3088,7 @@ your <code>.buckjavaargs</code> file</a>:
   {param example_value: '60000' /}
   {param description}
     When communicating with <a href="https://facebook.github.io/watchman/">Watchman</a>, Buck will
-    wait this long for a response.  The defaut is <code>60000</code> ms.
+    wait this long for a response.  The default is <code>60000</code> ms.
   {/param}
 {/call}
 
@@ -3189,7 +3189,7 @@ your <code>.buckjavaargs</code> file</a>:
       an alternate python section.  This python section will be used instead of{sp}
       <code>[python]</code> if the compilation flavor is invoked by appending <i>#version</i> to a
       {sp}{call buck.build_target /}.  This can be useful if you have Python 2 and Python 3 code in
-      your project and need to differentiate accorindgly (namely by changing the value of{sp}
+      your project and need to differentiate accordingly (namely by changing the value of{sp}
       {call buckconfig.python_interpreter /}.  On the command line, to build with{sp}
       <code>[python#py3]</code> rather than <code>[python]</code>:
     </p>
@@ -3248,7 +3248,7 @@ your <code>.buckjavaargs</code> file</a>:
     values are:
     <ul>
         <li>
-          <code>inplace</code>: builds exectuables which are only able to run from within the
+          <code>inplace</code>: builds executables which are only able to run from within the
           repository.  This style of packaging is significantly faster than <code>standalone</code>
           {sp}packages.
         </li>
@@ -3275,7 +3275,7 @@ your <code>.buckjavaargs</code> file</a>:
         </li>
         <li>
           <code>separate</code> (default): Transitive native dependencies are linked as full,
-          separate, shared libraries.  This is prefererred for faster build-time speed.
+          separate, shared libraries.  This is preferred for faster build-time speed.
         </li>
     </ul>
   {/param}
@@ -3504,7 +3504,7 @@ your <code>.buckjavaargs</code> file</a>:
   {param example_value: 'false' /}
   {param description}
     When <code>force_rlib</code> is true, then buck will always compile static (rlib) libraries
-    even when the final target (binary or unittest) is being linked with a shared link style.
+    even when the final target (binary or unit test) is being linked with a shared link style.
     Rust code is typically always statically linked, and a lot of surrounding tooling doesn't
     cope well with dynamically linked Rust crates. Linking with a shared link style will still
     dynamically link with C/C++ shared objects.
@@ -3562,7 +3562,7 @@ your <code>.buckjavaargs</code> file</a>:
   {param name: 'timeout' /}
   {param example_value: '300000' /}
   {param description}
-    The number of miliseconds per test to allow before stopping the test and reporting a failure.
+    The number of milliseconds per test to allow before stopping the test and reporting a failure.
     The default is no timeout.  Not all <code>*_test</code> rules utilize this value.  A JUnit test
     can override this via the <code>@Test</code> annotation.
   {/param}
@@ -3584,7 +3584,7 @@ your <code>.buckjavaargs</code> file</a>:
   {param example_value: 'command args...' /}
   {param description}
     <p>
-      This specifies an external test runner comamnd to use instead of Buck's built-in test runner.
+      This specifies an external test runner command to use instead of Buck's built-in test runner.
       The external test runner is invoked by Buck after it has built all the test rules.  It passes
       the test runner the path to a file which contains a JSON-encoded list of test file infos via
       the <code>--buck-test-info [path]</code> command line option.
