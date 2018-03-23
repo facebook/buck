@@ -14,9 +14,10 @@
 {call buck.rule}
 {param status: 'UNFROZEN' /}
 {param overview}
-  An <code>export_file()</code> takes a single file or folder and exposes it so other rules can
-  use it.  This is especially useful to work around package boundary violations where you want to
-  use a file that is owned by a different {call buck.build_file /}.
+  <p><b>Warning:</b> this build rule is deprecated.
+  Use {call buck.ruleLink}{param name : 'filegroup' /}{/call} instead.</p>
+  <p>An <code>export_file()</code> takes a single file or folder and exposes it so other rules can
+  use it.</p>
 {/param}
 
 {param args}
