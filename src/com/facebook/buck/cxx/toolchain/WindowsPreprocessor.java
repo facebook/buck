@@ -20,13 +20,9 @@ import com.facebook.buck.rules.DelegatingTool;
 import com.facebook.buck.rules.Tool;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
-import java.util.function.Function;
 
 /** Preprocessor implementation for the Windows toolchain. */
 public class WindowsPreprocessor extends DelegatingTool implements Preprocessor {
-
-  private static Function<String, String> prependIncludeFlag = "/I"::concat;
-
   public WindowsPreprocessor(Tool tool) {
     super(tool);
   }
@@ -44,19 +40,23 @@ public class WindowsPreprocessor extends DelegatingTool implements Preprocessor 
     return false;
   }
 
+  private static String prependIncludeFlag(String includeRoot) {
+    return "/I" + includeRoot;
+  }
+
   @Override
   public Iterable<String> localIncludeArgs(Iterable<String> includeRoots) {
-    return Iterables.transform(includeRoots, prependIncludeFlag::apply);
+    return Iterables.transform(includeRoots, WindowsPreprocessor::prependIncludeFlag);
   }
 
   @Override
   public Iterable<String> systemIncludeArgs(Iterable<String> includeRoots) {
-    return Iterables.transform(includeRoots, prependIncludeFlag::apply);
+    return Iterables.transform(includeRoots, WindowsPreprocessor::prependIncludeFlag);
   }
 
   @Override
   public Iterable<String> quoteIncludeArgs(Iterable<String> includeRoots) {
-    return Iterables.transform(includeRoots, prependIncludeFlag::apply);
+    return Iterables.transform(includeRoots, WindowsPreprocessor::prependIncludeFlag);
   }
 
   @Override
