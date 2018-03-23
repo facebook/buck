@@ -229,7 +229,7 @@ public class OCamlIntegrationTest {
     Path ocamlNativePluginDir =
         workspace.getDestPath().resolve("buck-out").resolve("gen").resolve("ocaml_native_plugin");
 
-    Path pluginCmxsFile = ocamlNativePluginDir.resolve("plugin").resolve("libplugin.cmxs");
+    Path pluginCmxsFile = ocamlNativePluginDir.resolve("plugin#default").resolve("libplugin.cmxs");
 
     Path testerExecutableFile = ocamlNativePluginDir.resolve("tester").resolve("tester");
 

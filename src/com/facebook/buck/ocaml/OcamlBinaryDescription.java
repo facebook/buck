@@ -82,6 +82,7 @@ public class OcamlBinaryDescription
     if (OcamlRuleBuilder.shouldUseFineGrainedRules(context.getBuildRuleResolver(), srcs)) {
       OcamlGeneratedBuildRules result =
           OcamlRuleBuilder.createFineGrainedBuildRules(
+              buildTarget,
               ocamlPlatform,
               compileBuildTarget,
               context.getProjectFilesystem(),
@@ -98,6 +99,7 @@ public class OcamlBinaryDescription
 
       OcamlBuild ocamlLibraryBuild =
           OcamlRuleBuilder.createBulkCompileRule(
+              buildTarget,
               ocamlPlatform,
               compileBuildTarget,
               context.getProjectFilesystem(),

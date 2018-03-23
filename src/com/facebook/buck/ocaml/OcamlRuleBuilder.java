@@ -163,6 +163,7 @@ public class OcamlRuleBuilder {
   }
 
   static OcamlBuild createBulkCompileRule(
+      BuildTarget buildTarget,
       OcamlPlatform ocamlPlatform,
       BuildTarget compileBuildTarget,
       ProjectFilesystem projectFilesystem,
@@ -262,7 +263,7 @@ public class OcamlRuleBuilder {
             .setNativeLinkableInput(nativeLinkableInput)
             .setBytecodeLinkableInput(bytecodeLinkableInput)
             .setCLinkableInput(cLinkableInput)
-            .setBuildTarget(compileBuildTarget.getUnflavoredBuildTarget())
+            .setBuildTarget(buildTarget)
             .setLibrary(isLibrary)
             .setCxxPreprocessorInput(cxxPreprocessorInputFromDeps)
             .setInput(getInput(srcs))
@@ -284,6 +285,7 @@ public class OcamlRuleBuilder {
   }
 
   static OcamlGeneratedBuildRules createFineGrainedBuildRules(
+      BuildTarget buildTarget,
       OcamlPlatform ocamlPlatform,
       BuildTarget compileBuildTarget,
       ProjectFilesystem projectFilesystem,
@@ -382,7 +384,7 @@ public class OcamlRuleBuilder {
             .setNativeLinkableInput(nativeLinkableInput)
             .setBytecodeLinkableInput(bytecodeLinkableInput)
             .setCLinkableInput(cLinkableInput)
-            .setBuildTarget(compileBuildTarget.getUnflavoredBuildTarget())
+            .setBuildTarget(buildTarget)
             .setLibrary(isLibrary)
             .setCxxPreprocessorInput(cxxPreprocessorInputFromDeps)
             .setInput(getInput(srcs))

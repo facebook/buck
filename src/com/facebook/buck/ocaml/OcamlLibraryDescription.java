@@ -95,6 +95,7 @@ public class OcamlLibraryDescription
       if (OcamlRuleBuilder.shouldUseFineGrainedRules(context.getBuildRuleResolver(), srcs)) {
         OcamlGeneratedBuildRules result =
             OcamlRuleBuilder.createFineGrainedBuildRules(
+                buildTarget,
                 ocamlPlatform,
                 compileBuildTarget,
                 context.getProjectFilesystem(),
@@ -108,7 +109,6 @@ public class OcamlLibraryDescription
                 !args.getBytecodeOnly() && args.getNativePlugin());
         return new OcamlStaticLibrary(
             buildTarget,
-            compileBuildTarget,
             context.getProjectFilesystem(),
             params,
             args.getLinkerFlags(),
@@ -130,6 +130,7 @@ public class OcamlLibraryDescription
       } else {
         OcamlBuild ocamlLibraryBuild =
             OcamlRuleBuilder.createBulkCompileRule(
+                buildTarget,
                 ocamlPlatform,
                 compileBuildTarget,
                 context.getProjectFilesystem(),
@@ -142,7 +143,6 @@ public class OcamlLibraryDescription
                 args.getOcamldepFlags());
         return new OcamlStaticLibrary(
             buildTarget,
-            compileBuildTarget,
             context.getProjectFilesystem(),
             params,
             args.getLinkerFlags(),

@@ -19,7 +19,6 @@ package com.facebook.buck.ocaml;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
@@ -35,7 +34,6 @@ import java.nio.file.Path;
 import java.util.stream.Stream;
 
 class OcamlStaticLibrary extends OcamlLibrary implements HasRuntimeDeps {
-  private final BuildTarget staticLibraryTarget;
   private final ImmutableList<String> linkerFlags;
   private final ImmutableList<? extends SourcePath> objFiles;
   private final OcamlBuildContext ocamlContext;
@@ -47,7 +45,6 @@ class OcamlStaticLibrary extends OcamlLibrary implements HasRuntimeDeps {
 
   public OcamlStaticLibrary(
       BuildTarget buildTarget,
-      BuildTarget compileBuildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ImmutableList<String> linkerFlags,
@@ -67,7 +64,6 @@ class OcamlStaticLibrary extends OcamlLibrary implements HasRuntimeDeps {
     this.bytecodeCompileDeps = bytecodeCompileDeps;
     this.bytecodeLinkDeps = bytecodeLinkDeps;
     this.runtimeDeps = runtimeDeps;
-    staticLibraryTarget = OcamlRuleBuilder.createStaticLibraryBuildTarget(compileBuildTarget);
   }
 
   private NativeLinkableInput getLinkableInput(boolean isBytecode) {
@@ -77,16 +73,15 @@ class OcamlStaticLibrary extends OcamlLibrary implements HasRuntimeDeps {
     inputBuilder.addAllArgs(StringArg.from(linkerFlags));
 
     // Add arg and input for static library.
-    UnflavoredBuildTarget staticBuildTarget = staticLibraryTarget.getUnflavoredBuildTarget();
     inputBuilder.addArgs(
         SourcePathArg.of(
             ExplicitBuildTargetSourcePath.of(
                 ocamlLibraryBuild.getBuildTarget(),
                 isBytecode
                     ? OcamlBuildContext.getBytecodeOutputPath(
-                        staticBuildTarget, getProjectFilesystem(), /* isLibrary */ true)
+                        getBuildTarget(), getProjectFilesystem(), /* isLibrary */ true)
                     : OcamlBuildContext.getNativeOutputPath(
-                        staticBuildTarget, getProjectFilesystem(), /* isLibrary */ true))));
+                        getBuildTarget(), getProjectFilesystem(), /* isLibrary */ true))));
 
     // Add args and inputs for C object files.
     for (SourcePath objFile : objFiles) {
@@ -109,7 +104,7 @@ class OcamlStaticLibrary extends OcamlLibrary implements HasRuntimeDeps {
   @Override
   public Path getIncludeLibDir(OcamlPlatform platform) {
     return OcamlBuildContext.getCompileNativeOutputDir(
-        staticLibraryTarget.getUnflavoredBuildTarget(), getProjectFilesystem(), true);
+        getBuildTarget(), getProjectFilesystem(), true);
   }
 
   @Override
