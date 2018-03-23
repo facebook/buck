@@ -26,10 +26,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.internal.runners.model.ReflectiveCallable;
 import org.junit.internal.runners.statements.Fail;
+import org.junit.internal.runners.statements.RunAfters;
 import org.junit.internal.runners.statements.RunBefores;
 import org.junit.runner.Description;
 import org.junit.runner.notification.RunNotifier;
@@ -268,6 +270,11 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
     }
   }
 
+  private void validateTestAnnotations(List<Throwable> errors) {
+    validatePublicVoidNoArgMethods(Before.class, false, errors);
+    validatePublicVoidNoArgMethods(After.class, false, errors);
+  }
+
   /**
    * Marks validation errors in errors if:
    *
@@ -333,6 +340,11 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
     return befores.isEmpty() ? statement : new RunBefores(statement, befores, target);
   }
 
+  private Statement withAfters(Object target, Statement statement) {
+    List<FrameworkMethod> afters = getTestClass().getAnnotatedMethods(After.class);
+    return afters.isEmpty() ? statement : new RunAfters(statement, afters, target);
+  }
+
   private Object createTest() throws Exception {
     return getTestClass().getOnlyConstructor().newInstance();
   }
@@ -354,6 +366,7 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
 
     Statement statement = new BuckInvoker(testDescriptor, test);
     statement = withBefores(test, statement);
+    statement = withAfters(test, statement);
     return statement;
   }
 
@@ -362,7 +375,7 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
     super.collectInitializationErrors(errors);
     validateTestMethods(errors);
     validateEnvironments(errors);
-    validatePublicVoidNoArgMethods(Before.class, false, errors);
+    validateTestAnnotations(errors);
   }
 
   /**
