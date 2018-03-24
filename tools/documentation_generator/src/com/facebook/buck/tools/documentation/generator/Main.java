@@ -58,7 +58,7 @@ public class Main {
             .collect(ImmutableList.toImmutableList());
 
     Path destinationPath = parsedArgs.destinationDirectory.toPath();
-    Path tableOfContentsPath = destinationPath.resolve("toc.soy");
+    Path tableOfContentsPath = destinationPath.resolve("__table_of_contents.soy");
     String tableOfContents = renderer.renderTableOfContents(skylarkSignatures);
     Files.write(tableOfContentsPath, tableOfContents.getBytes(StandardCharsets.UTF_8));
     for (SkylarkSignature signature : skylarkSignatures) {
