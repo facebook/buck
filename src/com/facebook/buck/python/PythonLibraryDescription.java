@@ -78,7 +78,8 @@ public class PythonLibraryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       PythonLibraryDescriptionArg args) {
-    return new PythonLibrary(buildTarget, context.getProjectFilesystem(), params);
+    return new PythonLibrary(
+        buildTarget, context.getProjectFilesystem(), params, args.isExcludeDepsFromMergedLinking());
   }
 
   @Override
@@ -231,6 +232,11 @@ public class PythonLibraryDescription
     Optional<String> getBaseModule();
 
     Optional<Boolean> getZipSafe();
+
+    @Value.Default
+    default boolean isExcludeDepsFromMergedLinking() {
+      return false;
+    }
   }
 
   @BuckStyleImmutable

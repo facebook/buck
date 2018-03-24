@@ -103,4 +103,9 @@ public class PythonLibraryBuilder
     getArgForPopulating().setVersionedResources(Optional.of(versionedResources));
     return this;
   }
+
+  public PythonLibraryBuilder setExcludeDepsFromMergedLinking(boolean excludeDepsFromOmnibus) {
+    getArgForPopulating().setExcludeDepsFromMergedLinking(excludeDepsFromOmnibus);
+    return this;
+  }
 }

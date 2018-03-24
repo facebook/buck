@@ -38,6 +38,8 @@ files that contain tests to run via the <a href="https://docs.python.org/2/libra
 
 {call python_common.base_module_arg /}
 
+{call python_common.exclude_deps_from_merged_linking_arg /}
+
 {call buck.arg}
   {param name: 'main_module' /}
   {param default : 'None' /}

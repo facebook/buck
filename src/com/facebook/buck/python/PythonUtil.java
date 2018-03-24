@@ -226,7 +226,7 @@ public class PythonUtil {
           PythonPackageComponents comps =
               packagable.getPythonPackageComponents(pythonPlatform, cxxPlatform, ruleResolver);
           allComponents.addComponent(comps, rule.getBuildTarget());
-          if (comps.hasNativeCode(cxxPlatform)) {
+          if (packagable.doesPythonPackageDisallowOmnibus() || comps.hasNativeCode(cxxPlatform)) {
             for (BuildRule dep :
                 packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform, ruleResolver)) {
               if (dep instanceof NativeLinkable) {

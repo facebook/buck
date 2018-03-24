@@ -28,4 +28,12 @@ public interface PythonPackagable {
 
   PythonPackageComponents getPythonPackageComponents(
       PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver);
+
+  /**
+   * @return whether this {@link PythonPackagable}'s transitive deps must be excluded from omnibus
+   *     linking.
+   */
+  default boolean doesPythonPackageDisallowOmnibus() {
+    return false;
+  }
 }

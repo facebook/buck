@@ -111,3 +111,17 @@
   {/param}
 {/call}
 {/template}
+
+/***/
+{template .exclude_deps_from_merged_linking_arg}
+{call buck.arg}
+  {param name : 'exclude_deps_from_merged_linking' /}
+  {param default : 'False' /}
+  {param desc}
+  When linking the top-level binary with a <code>merged</code> <code>native_link_style</code>,
+  do not merge or re-link any native transitive deps of this library.  This is useful if
+  this library wraps prebuilt native extensions which cannot be re-linked as part of
+  library merging.
+  {/param}
+{/call}
+{/template}

@@ -19,9 +19,12 @@ package com.facebook.buck.python;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxGenrule;
 import com.facebook.buck.cxx.CxxGenruleBuilder;
+import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -30,6 +33,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TestBuildRuleResolver;
@@ -48,6 +52,7 @@ import com.facebook.buck.versions.VersionedTargetGraphBuilder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.nio.file.Paths;
 import java.util.concurrent.ForkJoinPool;
 import java.util.regex.Pattern;
@@ -307,5 +312,48 @@ public class PythonLibraryDescriptionTest {
         Matchers.allOf(
             Matchers.hasItem(libraryABuilder.getTarget()),
             Matchers.not(Matchers.hasItem(libraryBBuilder.getTarget()))));
+  }
+
+  @Test
+  public void excludingTransitiveNativeDepsUsingMergedNativeLinkStrategy() {
+    CxxLibraryBuilder cxxDepBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("dep.c"))));
+    CxxLibraryBuilder cxxBuilder =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:cxx"))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("cxx.c"))))
+            .setDeps(ImmutableSortedSet.of(cxxDepBuilder.getTarget()));
+    PythonLibraryBuilder libBuilder =
+        new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+            .setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()))
+            .setExcludeDepsFromMergedLinking(true);
+
+    PythonBuckConfig config =
+        new PythonBuckConfig(FakeBuckConfig.builder().build()) {
+          @Override
+          public NativeLinkStrategy getNativeLinkStrategy() {
+            return NativeLinkStrategy.MERGED;
+          }
+        };
+    PythonBinaryBuilder binaryBuilder =
+        PythonBinaryBuilder.create(
+            BuildTargetFactory.newInstance("//:bin"), config, PythonTestUtils.PYTHON_PLATFORMS);
+    binaryBuilder.setMainModule("main");
+    binaryBuilder.setDeps(ImmutableSortedSet.of(libBuilder.getTarget()));
+
+    BuildRuleResolver resolver =
+        new TestBuildRuleResolver(
+            TargetGraphFactory.newInstance(
+                cxxDepBuilder.build(),
+                cxxBuilder.build(),
+                libBuilder.build(),
+                binaryBuilder.build()));
+    cxxDepBuilder.build(resolver);
+    cxxBuilder.build(resolver);
+    libBuilder.build(resolver);
+    PythonBinary binary = binaryBuilder.build(resolver);
+    assertThat(
+        Iterables.transform(binary.getComponents().getNativeLibraries().keySet(), Object::toString),
+        Matchers.containsInAnyOrder("libdep.so", "libcxx.so"));
   }
 }

@@ -41,7 +41,11 @@ public class PrebuiltPythonLibraryDescription
       BuildRuleParams params,
       PrebuiltPythonLibraryDescriptionArg args) {
     return new PrebuiltPythonLibrary(
-        buildTarget, context.getProjectFilesystem(), params, args.getBinarySrc());
+        buildTarget,
+        context.getProjectFilesystem(),
+        params,
+        args.getBinarySrc(),
+        args.isExcludeDepsFromMergedLinking());
   }
 
   @BuckStyleImmutable
@@ -49,5 +53,10 @@ public class PrebuiltPythonLibraryDescription
   interface AbstractPrebuiltPythonLibraryDescriptionArg
       extends CommonDescriptionArg, HasDeclaredDeps {
     SourcePath getBinarySrc();
+
+    @Value.Default
+    default boolean isExcludeDepsFromMergedLinking() {
+      return false;
+    }
   }
 }

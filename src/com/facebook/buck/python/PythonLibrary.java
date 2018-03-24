@@ -32,9 +32,15 @@ import java.util.stream.Stream;
 public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements PythonPackagable, HasRuntimeDeps, CacheableBuildRule {
 
+  private boolean excludeDepsFromOmnibus;
+
   PythonLibrary(
-      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      boolean excludeDepsFromOmnibus) {
     super(buildTarget, projectFilesystem, params);
+    this.excludeDepsFromOmnibus = excludeDepsFromOmnibus;
   }
 
   @Override
@@ -69,5 +75,10 @@ public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return getDeclaredDeps().stream().map(BuildRule::getBuildTarget);
+  }
+
+  @Override
+  public boolean doesPythonPackageDisallowOmnibus() {
+    return excludeDepsFromOmnibus;
   }
 }

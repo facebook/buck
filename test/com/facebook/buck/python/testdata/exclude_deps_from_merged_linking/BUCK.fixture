@@ -1,0 +1,35 @@
+python_binary(
+    name = "bin",
+    main_module = "main",
+    deps = [
+        ":lib",
+    ],
+)
+
+python_library(
+    name = "lib",
+    srcs = [
+        "main.py",
+    ],
+    exclude_deps_from_merged_linking = True,
+    deps = [
+        ":cxx",
+    ],
+)
+
+cxx_library(
+    name = "cxx",
+    srcs = [
+        "cxx.c",
+    ],
+    deps = [
+        ":transitive-cxx",
+    ],
+)
+
+cxx_library(
+    name = "transitive-cxx",
+    srcs = [
+        "transitive-cxx.c",
+    ],
+)
