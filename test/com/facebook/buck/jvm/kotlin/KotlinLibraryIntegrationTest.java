@@ -21,11 +21,11 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import java.io.IOException;
-import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import java.io.IOException;
+import java.nio.file.Path;
 
 public class KotlinLibraryIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
@@ -47,6 +47,13 @@ public class KotlinLibraryIntegrationTest {
   @Test
   public void shouldCompileKotlinClass() throws Exception {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/good:example");
+    buildResult.assertSuccess("Build should have succeeded.");
+  }
+
+  @Test
+  public void shouldAnnotationProcessorClass() throws Exception {
+    ProcessResult buildResult =
+        workspace.runBuckCommand("build", "//com/example/ap:kotlin");
     buildResult.assertSuccess("Build should have succeeded.");
   }
 

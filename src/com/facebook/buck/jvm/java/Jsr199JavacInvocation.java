@@ -183,6 +183,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   }
 
   private class CompilerWorker implements AutoCloseable {
+
     private final ListeningExecutorService executor;
 
     private final SettableFuture<Integer> compilerResult = SettableFuture.create();
@@ -413,7 +414,14 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                       new JavacEventSinkScopedSimplePerfEvent(
                           context.getEventSink(), invokingRule.toString());
                   try {
-                    boolean success = javacTask.call();
+                    boolean success = false;
+                    try {
+                      success = javacTask.call();
+                    } catch (IllegalStateException ex) {
+                      if (ex.getLocalizedMessage().equals("no source files")) {
+                        success = true;
+                      }
+                    }
                     if (javacTask instanceof FrontendOnlyJavacTaskProxy) {
                       if (success) {
                         return 0;
