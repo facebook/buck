@@ -16,14 +16,21 @@
 
 package com.facebook.buck.skylark.function;
 
+import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.packages.Info;
 import com.google.devtools.build.lib.packages.NativeProvider;
 import com.google.devtools.build.lib.packages.Provider;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkSignature;
+import com.google.devtools.build.lib.syntax.BuiltinFunction;
+import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.SkylarkSignatureProcessor;
 
-/** Defines a set of functions that are available only in Skylark extension files. */
+/**
+ * Defines a set of functions that are available only in Skylark extension files.
+ *
+ * <p>The implementation is based on Bazel's {@code SkylarkRuleClassFunctions} for compatibility.
+ */
 public class SkylarkExtensionFunctions {
 
   @SkylarkSignature(
@@ -38,6 +45,36 @@ public class SkylarkExtensionFunctions {
     useLocation = true
   )
   private static final Provider struct = NativeProvider.STRUCT;
+
+  @SkylarkSignature(
+    name = "to_json",
+    doc =
+        "Creates a JSON string from the struct parameter. This method only works if all "
+            + "struct elements (recursively) are strings, ints, booleans, other structs or a "
+            + "list of these types. Quotes and new lines in strings are escaped. "
+            + "Examples:<br><pre class=language-python>"
+            + "struct(key=123).to_json()\n# {\"key\":123}\n\n"
+            + "struct(key=True).to_json()\n# {\"key\":true}\n\n"
+            + "struct(key=[1, 2, 3]).to_json()\n# {\"key\":[1,2,3]}\n\n"
+            + "struct(key='text').to_json()\n# {\"key\":\"text\"}\n\n"
+            + "struct(key=struct(inner_key='text')).to_json()\n"
+            + "# {\"key\":{\"inner_key\":\"text\"}}\n\n"
+            + "struct(key=[struct(inner_key=1), struct(inner_key=2)]).to_json()\n"
+            + "# {\"key\":[{\"inner_key\":1},{\"inner_key\":2}]}\n\n"
+            + "struct(key=struct(inner_key=struct(inner_inner_key='text'))).to_json()\n"
+            + "# {\"key\":{\"inner_key\":{\"inner_inner_key\":\"text\"}}}\n</pre>",
+    objectType = Info.class,
+    returnType = String.class,
+    parameters = {@Param(name = "self", type = Info.class, doc = "this struct.")},
+    useLocation = true
+  )
+  private static final BuiltinFunction toJson =
+      new BuiltinFunction("to_json") {
+        @SuppressWarnings("unused") // it's used through reflection by Skylark runtime
+        public String invoke(Info self, Location loc) throws EvalException {
+          return JsonPrinter.printJson(self, loc);
+        }
+      };
 
   static {
     SkylarkSignatureProcessor.configureSkylarkFunctions(SkylarkExtensionFunctions.class);

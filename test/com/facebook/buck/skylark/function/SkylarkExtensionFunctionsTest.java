@@ -47,6 +47,12 @@ public class SkylarkExtensionFunctionsTest {
     assertEquals(5, env.lookup("sum"));
   }
 
+  @Test
+  public void canConvertStructToJson() throws Exception {
+    Environment env = evaluate("s = struct(x=2,y=3); json = s.to_json()");
+    assertEquals("{\"x\":2,\"y\":3}", env.lookup("json"));
+  }
+
   /** Evaluates Skylark content and returns an environment produced during execution. */
   private Environment evaluate(String content) throws InterruptedException {
     BuildFileAST buildFileAST = parseBuildFile(content);
