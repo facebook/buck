@@ -4,7 +4,7 @@ Homepage: https://buckbuild.com
 Standards-Version: 3.9.2
 
 Package: buck
-Version: v2017.11.16
+Version: v2018.03.26.01
 Maintainer: team@buckaroo.pm
 Recommends: watchman, nailgun
 Depends: openjdk-8-jre, python2.7
