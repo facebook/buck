@@ -16,6 +16,7 @@
 
 package com.facebook.buck.zip.bundler;
 
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
@@ -53,8 +54,8 @@ public abstract class FileBundler {
       Map<Path, Path> relativePathMap) {
     Path pathRelativeToBaseDir;
 
-    if (relativeFilePath.startsWith(basePath)) {
-      pathRelativeToBaseDir = basePath.relativize(relativeFilePath);
+    if (relativeFilePath.startsWith(basePath) || basePath.equals(MorePaths.EMPTY_PATH)) {
+      pathRelativeToBaseDir = MorePaths.relativize(basePath, relativeFilePath);
     } else {
       pathRelativeToBaseDir = assumedAbsoluteBasePath.relativize(absoluteFilePath);
     }

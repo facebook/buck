@@ -1,0 +1,4 @@
+filegroup(
+    name = "dir_txt",
+    srcs = glob(["dir/**/*.txt"]),
+)

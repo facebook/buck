@@ -76,4 +76,24 @@ public class FilegroupIntegrationTest {
             .getFileContents(outputPath.resolve("generated_dir").resolve("generated_file.txt"))
             .trim());
   }
+
+  @Test
+  public void testDirectoryStructureIsKeptAtTopLevel() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "filegroup", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("build", "--show-output", "//:dir_txt");
+
+    result.assertSuccess();
+
+    String output = result.getStdout();
+    Path outputPath = workspace.getPath(output.split("\\s+")[1]);
+
+    assertEquals("file", workspace.getFileContents(outputPath.resolve("dir").resolve("file.txt")));
+    assertEquals(
+        "another_file",
+        workspace.getFileContents(
+            outputPath.resolve("dir").resolve("subdir").resolve("another_file.txt")));
+  }
 }
