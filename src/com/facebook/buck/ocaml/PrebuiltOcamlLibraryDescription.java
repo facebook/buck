@@ -26,6 +26,7 @@ import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableList;
@@ -89,7 +90,10 @@ public class PrebuiltOcamlLibraryDescription
         staticCLibraryPaths,
         bytecodeLibraryPath,
         libPath,
-        includeDir);
+        includeDir,
+        RichStream.from(args.getDeps())
+            .map(context.getBuildRuleResolver()::getRule)
+            .collect(ImmutableList.toImmutableList()));
   }
 
   @BuckStyleImmutable

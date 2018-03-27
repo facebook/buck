@@ -49,6 +49,8 @@ class PrebuiltOcamlLibrary extends OcamlLibrary {
 
   private final Path includeDir;
 
+  private final ImmutableList<BuildRule> deps;
+
   public PrebuiltOcamlLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -59,7 +61,8 @@ class PrebuiltOcamlLibrary extends OcamlLibrary {
       ImmutableList<SourcePath> staticCLibraryPaths,
       SourcePath bytecodeLibraryPath,
       Path libPath,
-      Path includeDir) {
+      Path includeDir,
+      ImmutableList<BuildRule> deps) {
     super(buildTarget, projectFilesystem, params);
     this.ruleFinder = ruleFinder;
     this.staticNativeLibraryPath = staticNativeLibraryPath;
@@ -68,6 +71,7 @@ class PrebuiltOcamlLibrary extends OcamlLibrary {
     this.bytecodeLibraryPath = bytecodeLibraryPath;
     this.libPath = libPath;
     this.includeDir = includeDir;
+    this.deps = deps;
   }
 
   private NativeLinkableInput getLinkableInput(SourcePath sourcePath) {
@@ -121,5 +125,10 @@ class PrebuiltOcamlLibrary extends OcamlLibrary {
         .addAll(ruleFinder.filterBuildRuleInputs(ImmutableList.of(bytecodeLibraryPath)))
         .addAll(ruleFinder.filterBuildRuleInputs(staticBytecodeLibraryPath))
         .build();
+  }
+
+  @Override
+  public Iterable<BuildRule> getOcamlLibraryDeps(OcamlPlatform platform) {
+    return deps;
   }
 }

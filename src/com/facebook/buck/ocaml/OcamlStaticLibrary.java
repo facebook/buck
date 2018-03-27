@@ -128,6 +128,11 @@ class OcamlStaticLibrary extends OcamlLibrary implements HasRuntimeDeps {
   }
 
   @Override
+  public Iterable<BuildRule> getOcamlLibraryDeps(OcamlPlatform platform) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return RichStream.from(runtimeDeps);
   }

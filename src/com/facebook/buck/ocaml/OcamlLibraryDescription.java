@@ -36,6 +36,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.OcamlSource;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableCollection;
@@ -215,6 +216,13 @@ public class OcamlLibraryDescription
       @Override
       public NativeLinkableInput getBytecodeLinkableInput(OcamlPlatform platform) {
         return getWrapped(platform).getBytecodeLinkableInput(platform);
+      }
+
+      @Override
+      public Iterable<BuildRule> getOcamlLibraryDeps(OcamlPlatform platform) {
+        return RichStream.from(args.getDeps())
+            .map(context.getBuildRuleResolver()::getRule)
+            .toImmutableList();
       }
     };
   }

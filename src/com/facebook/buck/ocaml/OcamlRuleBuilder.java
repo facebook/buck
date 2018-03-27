@@ -19,17 +19,18 @@ package com.facebook.buck.ocaml;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.graph.DirectedAcyclicGraph;
+import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -121,18 +122,27 @@ public class OcamlRuleBuilder {
     return noYaccOrLexSources && noGeneratedSources;
   }
 
-  private static ImmutableList<BuildRule> getTransitiveOcamlLibraryDeps(
-      Iterable<? extends BuildRule> deps) {
-    return TopologicalSort.sort(
-        BuildRuleDependencyVisitors.getBuildRuleDirectedGraphFilteredBy(
-            deps, OcamlLibrary.class::isInstance, OcamlLibrary.class::isInstance));
-  }
+  private static ImmutableList<OcamlLibrary> getTransitiveOcamlLibraryDeps(
+      OcamlPlatform platform, Iterable<? extends BuildRule> deps) {
+    MutableDirectedGraph<OcamlLibrary> graph = new MutableDirectedGraph<>();
 
-  private static ImmutableList<OcamlLibrary> getTransitiveOcamlInput(
-      Iterable<? extends BuildRule> deps) {
-    return RichStream.from(getTransitiveOcamlLibraryDeps(deps))
-        .filter(OcamlLibrary.class)
-        .toImmutableList();
+    new AbstractBreadthFirstTraversal<OcamlLibrary>(
+        RichStream.from(deps).filter(OcamlLibrary.class).toImmutableList()) {
+      @Override
+      public Iterable<OcamlLibrary> visit(OcamlLibrary node) {
+        graph.addNode(node);
+        Iterable<OcamlLibrary> deps =
+            RichStream.from(node.getOcamlLibraryDeps(platform))
+                .filter(OcamlLibrary.class)
+                .toImmutableList();
+        for (OcamlLibrary dep : deps) {
+          graph.addEdge(node, dep);
+        }
+        return deps;
+      }
+    }.start();
+
+    return TopologicalSort.sort(new DirectedAcyclicGraph<>(graph));
   }
 
   private static NativeLinkableInput getNativeLinkableInput(
@@ -140,9 +150,9 @@ public class OcamlRuleBuilder {
     List<NativeLinkableInput> inputs = new ArrayList<>();
 
     // Add in the linkable input from OCaml libraries.
-    ImmutableList<BuildRule> ocamlDeps = getTransitiveOcamlLibraryDeps(deps);
-    for (BuildRule dep : ocamlDeps) {
-      inputs.add(((OcamlLibrary) dep).getNativeLinkableInput(platform));
+    ImmutableList<OcamlLibrary> ocamlDeps = getTransitiveOcamlLibraryDeps(platform, deps);
+    for (OcamlLibrary dep : ocamlDeps) {
+      inputs.add(dep.getNativeLinkableInput(platform));
     }
 
     return NativeLinkableInput.concat(inputs);
@@ -153,22 +163,25 @@ public class OcamlRuleBuilder {
     List<NativeLinkableInput> inputs = new ArrayList<>();
 
     // Add in the linkable input from OCaml libraries.
-    ImmutableList<BuildRule> ocamlDeps = getTransitiveOcamlLibraryDeps(deps);
-    for (BuildRule dep : ocamlDeps) {
-      inputs.add(((OcamlLibrary) dep).getBytecodeLinkableInput(platform));
+    ImmutableList<OcamlLibrary> ocamlDeps = getTransitiveOcamlLibraryDeps(platform, deps);
+    for (OcamlLibrary dep : ocamlDeps) {
+      inputs.add(dep.getBytecodeLinkableInput(platform));
     }
 
     return NativeLinkableInput.concat(inputs);
   }
 
   private static NativeLinkableInput getCLinkableInput(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver, Iterable<BuildRule> deps) {
+      OcamlPlatform platform, BuildRuleResolver ruleResolver, Iterable<BuildRule> deps) {
     return NativeLinkables.getTransitiveNativeLinkableInput(
-        cxxPlatform,
+        platform.getCxxPlatform(),
         ruleResolver,
         deps,
         Linker.LinkableDepType.STATIC,
-        r -> r instanceof OcamlLibrary ? Optional.of(r.getBuildDeps()) : Optional.empty());
+        r ->
+            r instanceof OcamlLibrary
+                ? Optional.of(((OcamlLibrary) r).getOcamlLibraryDeps(platform))
+                : Optional.empty());
   }
 
   static OcamlBuild createBulkCompileRule(
@@ -206,10 +219,9 @@ public class OcamlRuleBuilder {
 
     NativeLinkableInput nativeLinkableInput = getNativeLinkableInput(ocamlPlatform, deps);
     NativeLinkableInput bytecodeLinkableInput = getBytecodeLinkableInput(ocamlPlatform, deps);
-    NativeLinkableInput cLinkableInput =
-        getCLinkableInput(ocamlPlatform.getCxxPlatform(), resolver, deps);
+    NativeLinkableInput cLinkableInput = getCLinkableInput(ocamlPlatform, resolver, deps);
 
-    ImmutableList<OcamlLibrary> ocamlInput = getTransitiveOcamlInput(deps);
+    ImmutableList<OcamlLibrary> ocamlInput = getTransitiveOcamlLibraryDeps(ocamlPlatform, deps);
 
     ImmutableSortedSet.Builder<BuildRule> allDepsBuilder = ImmutableSortedSet.naturalOrder();
     allDepsBuilder.addAll(ruleFinder.filterBuildRuleInputs(getInput(srcs)));
@@ -327,10 +339,9 @@ public class OcamlRuleBuilder {
 
     NativeLinkableInput nativeLinkableInput = getNativeLinkableInput(ocamlPlatform, deps);
     NativeLinkableInput bytecodeLinkableInput = getBytecodeLinkableInput(ocamlPlatform, deps);
-    NativeLinkableInput cLinkableInput =
-        getCLinkableInput(ocamlPlatform.getCxxPlatform(), resolver, deps);
+    NativeLinkableInput cLinkableInput = getCLinkableInput(ocamlPlatform, resolver, deps);
 
-    ImmutableList<OcamlLibrary> ocamlInput = getTransitiveOcamlInput(deps);
+    ImmutableList<OcamlLibrary> ocamlInput = getTransitiveOcamlLibraryDeps(ocamlPlatform, deps);
 
     BuildRuleParams compileParams =
         params

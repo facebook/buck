@@ -50,4 +50,6 @@ public abstract class OcamlLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   public abstract NativeLinkableInput getNativeLinkableInput(OcamlPlatform platform);
 
   public abstract NativeLinkableInput getBytecodeLinkableInput(OcamlPlatform platform);
+
+  public abstract Iterable<BuildRule> getOcamlLibraryDeps(OcamlPlatform platform);
 }
