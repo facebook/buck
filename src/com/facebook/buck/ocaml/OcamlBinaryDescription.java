@@ -18,6 +18,8 @@ package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -56,6 +58,15 @@ public class OcamlBinaryDescription
     return OcamlBinaryDescriptionArg.class;
   }
 
+  private OcamlPlatform getPlatform(Optional<Flavor> platformFlavor) {
+    OcamlToolchain ocamlToolchain =
+        toolchainProvider.getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class);
+    FlavorDomain<OcamlPlatform> ocamlPlatforms = ocamlToolchain.getOcamlPlatforms();
+    return platformFlavor
+        .map(ocamlPlatforms::getValue)
+        .orElse(ocamlToolchain.getDefaultOcamlPlatform());
+  }
+
   @Override
   public BuildRule createBuildRule(
       BuildRuleCreationContext context,
@@ -63,9 +74,7 @@ public class OcamlBinaryDescription
       BuildRuleParams params,
       OcamlBinaryDescriptionArg args) {
 
-    OcamlToolchain ocamlToolchain =
-        toolchainProvider.getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class);
-    OcamlPlatform ocamlPlatform = ocamlToolchain.getDefaultOcamlPlatform();
+    OcamlPlatform ocamlPlatform = getPlatform(args.getPlatform());
 
     CxxDeps allDeps =
         CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
@@ -140,10 +149,7 @@ public class OcamlBinaryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     targetGraphOnlyDepsBuilder.addAll(
-        OcamlUtil.getParseTimeDeps(
-            toolchainProvider
-                .getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class)
-                .getDefaultOcamlPlatform()));
+        OcamlUtil.getParseTimeDeps(getPlatform(constructorArg.getPlatform())));
   }
 
   @BuckStyleImmutable
@@ -160,6 +166,8 @@ public class OcamlBinaryDescription
     Optional<String> getWarningsFlags();
 
     Optional<Boolean> getBytecodeOnly();
+
+    Optional<Flavor> getPlatform();
 
     @Value.Default
     default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {
