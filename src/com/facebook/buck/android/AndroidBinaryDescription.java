@@ -197,6 +197,7 @@ public class AndroidBinaryDescription
         apkModuleGraph =
             new APKModuleGraph(
                 Optional.of(args.getApplicationModuleConfigs()),
+                args.getApplicationModuleDependencies(),
                 context.getTargetGraph(),
                 buildTarget);
       } else {
@@ -637,6 +638,8 @@ public class AndroidBinaryDescription
     Optional<SourcePath> getAndroidAppModularityResult();
 
     Map<String, List<BuildTarget>> getApplicationModuleConfigs();
+
+    Optional<Map<String, List<String>>> getApplicationModuleDependencies();
 
     @Value.Default
     default long getLinearAllocHardLimit() {

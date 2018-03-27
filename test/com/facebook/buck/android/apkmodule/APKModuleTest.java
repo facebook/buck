@@ -37,7 +37,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.Test;
@@ -266,6 +270,619 @@ public class APKModuleTest {
   }
 
   /*
+                             +- - - - - - - - - - - - +
+                             ' root:                  '
+                             '                        '
+                             ' +--------------------+ '
+        +------------------- ' |       Binary       | ' ---------------------+
+        |                    ' +--------------------+ '                      |
+        |                    '   |                    '                      |
+        |                    '   |                    '                      |
+        v                    '   |                    '                      v
+    + - - - - - - +          '   |                    '          +- - - - - - - - - - - - +
+    ' android:    '          '   |                    '          ' java:                  '
+    '             '          '   v                    '          '                        '
+    ' +---------+ '          ' +--------------------+ '          ' +--------------------+ '
+    ' | Android | ' =======> ' |       Common       | ' <======= ' |        Java        | '
+    ' +---------+ '          ' +--------------------+ '          ' +--------------------+ '
+    '             '          '                        '          '           |            '
+    + - - - - - - +          +- - - - - - - - - - - - +          '           |            '
+        H                                                        '           v            '
+        H                                                        ' +--------------------+ '
+        #======================================================> ' |       Shared       | '
+                                                                 ' +--------------------+ '
+                                                                 '                        '
+                                                                 +- - - - - - - - - - - - +
+
+       Android module depends on the Java Module
+       -- target dependecy
+       == package and target dependecy
+  */
+  @Test
+  public void testAPKModuleGraphWithDeclaredDependency() {
+
+    ImmutableSet.Builder<TargetNode<?, ?>> nodeBuilder = ImmutableSet.builder();
+    BuildTarget commonLibraryTarget = BuildTargetFactory.newInstance("//:test-common-library");
+    nodeBuilder.add(
+        AndroidLibraryBuilder.createBuilder(commonLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestCommonLibrary.java"))
+            .build());
+
+    BuildTarget sharedLibraryTarget = BuildTargetFactory.newInstance("//:test-shared-library");
+    nodeBuilder.add(
+        AndroidLibraryBuilder.createBuilder(sharedLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestSharedLibrary.java"))
+            .addDep(commonLibraryTarget)
+            .build());
+
+    BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//:test-java-library");
+    nodeBuilder.add(
+        JavaLibraryBuilder.createBuilder(javaLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestJavaLibrary.java"))
+            .addDep(commonLibraryTarget)
+            .addDep(sharedLibraryTarget)
+            .build());
+
+    BuildTarget androidLibraryTarget = BuildTargetFactory.newInstance("//:test-android-library");
+    nodeBuilder.add(
+        AndroidLibraryBuilder.createBuilder(androidLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
+            .addDep(commonLibraryTarget)
+            .addDep(sharedLibraryTarget)
+            .build());
+
+    BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//:keystore");
+    nodeBuilder.add(
+        KeystoreBuilder.createBuilder(keystoreTarget)
+            .setStore(FakeSourcePath.of("debug.keystore"))
+            .setProperties(FakeSourcePath.of("keystore.properties"))
+            .build());
+
+    BuildTarget androidBinaryTarget = BuildTargetFactory.newInstance("//:test-android-binary");
+    nodeBuilder.add(
+        AndroidBinaryBuilder.createBuilder(androidBinaryTarget)
+            .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
+            .setKeystore(keystoreTarget)
+            .setOriginalDeps(
+                ImmutableSortedSet.of(androidLibraryTarget, javaLibraryTarget, commonLibraryTarget))
+            .build());
+
+    TargetGraph graph = TargetGraphFactory.newInstance(nodeBuilder.build());
+
+    Map<String, List<BuildTarget>> seedConfigMap = new HashMap<>();
+
+    List<BuildTarget> androidSeedConfig = new ArrayList<>();
+    androidSeedConfig.add(androidLibraryTarget);
+    seedConfigMap.put("android", androidSeedConfig);
+
+    List<BuildTarget> javaSeedConfig = new ArrayList<>();
+    javaSeedConfig.add(javaLibraryTarget);
+    seedConfigMap.put("java", javaSeedConfig);
+
+    Map<String, List<String>> appModuleDependencies = new HashMap<>();
+    List<String> androidDependencies = new ArrayList<>();
+    androidDependencies.add("java");
+    appModuleDependencies.put("android", androidDependencies);
+
+    APKModuleGraph dag =
+        new APKModuleGraph(
+            Optional.of(seedConfigMap),
+            Optional.of(appModuleDependencies),
+            graph,
+            androidBinaryTarget);
+
+    ImmutableSet<APKModule> topLevelNodes = dag.getGraph().getNodesWithNoIncomingEdges();
+    assertThat(topLevelNodes.size(), is(1));
+
+    APKModule topModule = Iterables.getFirst(topLevelNodes, null);
+    assertThat(topModule.getName(), is("android"));
+
+    ImmutableSet<APKModule> dependencies = dag.getGraph().getOutgoingNodesFor(topModule);
+    assertThat(dependencies.size(), is(2));
+
+    for (APKModule dependency : dependencies) {
+      assertThat(dependency.getName(), oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "java"));
+      if (dependency.getName().equals("java")) {
+        ImmutableSet<APKModule> javaDeps = dag.getGraph().getOutgoingNodesFor(dependency);
+        assertThat(javaDeps.size(), is(1));
+        assertThat(
+            Iterables.getFirst(javaDeps, null).getName(), is(APKModuleGraph.ROOT_APKMODULE_NAME));
+      }
+    }
+  }
+
+  /*
+                        +- - - - - - - - - - - - +
+                        ' root:                  '
+                        '                        '
+                        ' +--------------------+ ' -----------------------+
+        +-------------- ' |       Binary       | ' --------+              |
+        |               ' +--------------------+ '         |              |
+        |               '   |                    '         |              |
+        |               '   |                    '         |              |
+        v               '   |                    '         v              v
+    + - - - - - - +     '   |                    '    + - - - - - +   + - - - - - +
+    ' android:    '     '   |                    '    ' java:     '   ' java2:    '
+    '             '     '   v                    '    '           '   '           '
+    ' +---------+ '     ' +--------------------+ '    ' +-------+ '   ' +-------+ '
+    ' | Android | ' ==> ' |       Common       | ' <= ' | Java  | '   ' | Java2 | '
+    ' +---------+ '     ' +--------------------+ '    ' +-------+ '   ' +-------+ '
+    '             '     '                        '    +- - - - - -+   + - - - - - +
+    + - - - - - - +     +- - - - - - - - - - - - +           H            H  H
+        |                            ^                       H            H  H
+        |                            H                       H            H  H
+        |                            #=======================#============#  H
+        |                                                    H               H
+        |                                                    v               H
+        |                                             + - - - - - +          H
+        |                                             ' shared:   '          H
+        |                                             '           '          H
+        |                                             ' +-------+ '          H
+        +-------------------------------------------> ' |Shared | ' <========#
+                                                      ' +-------+ '
+                                                      + - - - - - +
+
+       Android module depends on the Java module.
+       -- target dependecy
+       == package and target dependecy
+  */
+
+  @Test
+  public void testAPKModuleGraphSharedWithDeclaredDependency() {
+
+    ImmutableSet.Builder<TargetNode<?, ?>> nodeBuilder = ImmutableSet.builder();
+    BuildTarget commonLibraryTarget = BuildTargetFactory.newInstance("//:test-common-library");
+    nodeBuilder.add(
+        AndroidLibraryBuilder.createBuilder(commonLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestCommonLibrary.java"))
+            .build());
+
+    BuildTarget sharedLibraryTarget = BuildTargetFactory.newInstance("//:test-shared-library");
+    nodeBuilder.add(
+        AndroidLibraryBuilder.createBuilder(sharedLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestSharedLibrary.java"))
+            .addDep(commonLibraryTarget)
+            .build());
+
+    BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//:test-java-library");
+    nodeBuilder.add(
+        JavaLibraryBuilder.createBuilder(javaLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestJavaLibrary.java"))
+            .addDep(commonLibraryTarget)
+            .addDep(sharedLibraryTarget)
+            .build());
+
+    BuildTarget java2LibraryTarget = BuildTargetFactory.newInstance("//:test-java2-library");
+    nodeBuilder.add(
+        JavaLibraryBuilder.createBuilder(java2LibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestJava2Library.java"))
+            .addDep(commonLibraryTarget)
+            .addDep(sharedLibraryTarget)
+            .build());
+
+    BuildTarget androidLibraryTarget = BuildTargetFactory.newInstance("//:test-android-library");
+    nodeBuilder.add(
+        AndroidLibraryBuilder.createBuilder(androidLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
+            .addDep(commonLibraryTarget)
+            .addDep(sharedLibraryTarget)
+            .build());
+
+    BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//:keystore");
+    nodeBuilder.add(
+        KeystoreBuilder.createBuilder(keystoreTarget)
+            .setStore(FakeSourcePath.of("debug.keystore"))
+            .setProperties(FakeSourcePath.of("keystore.properties"))
+            .build());
+
+    BuildTarget androidBinaryTarget = BuildTargetFactory.newInstance("//:test-android-binary");
+    nodeBuilder.add(
+        AndroidBinaryBuilder.createBuilder(androidBinaryTarget)
+            .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
+            .setKeystore(keystoreTarget)
+            .setOriginalDeps(
+                ImmutableSortedSet.of(
+                    androidLibraryTarget,
+                    javaLibraryTarget,
+                    java2LibraryTarget,
+                    commonLibraryTarget))
+            .build());
+
+    TargetGraph graph = TargetGraphFactory.newInstance(nodeBuilder.build());
+
+    Map<String, List<BuildTarget>> seedConfigMap = new HashMap<>();
+
+    List<BuildTarget> androidSeedConfig = new ArrayList<>();
+    androidSeedConfig.add(androidLibraryTarget);
+    seedConfigMap.put("android", androidSeedConfig);
+
+    List<BuildTarget> javaSeedConfig = new ArrayList<>();
+    javaSeedConfig.add(javaLibraryTarget);
+    seedConfigMap.put("java", javaSeedConfig);
+
+    List<BuildTarget> java2SeedConfig = new ArrayList<>();
+    java2SeedConfig.add(java2LibraryTarget);
+    seedConfigMap.put("java2", java2SeedConfig);
+
+    Map<String, List<String>> appModuleDependencies = new HashMap<>();
+    List<String> androidAppDependencies = new ArrayList<>();
+    androidAppDependencies.add("java");
+    appModuleDependencies.put("android", androidAppDependencies);
+
+    APKModuleGraph dag =
+        new APKModuleGraph(
+            Optional.of(seedConfigMap),
+            Optional.of(appModuleDependencies),
+            graph,
+            androidBinaryTarget);
+
+    ImmutableSet<APKModule> topLevelNodes = dag.getGraph().getNodesWithNoIncomingEdges();
+    assertThat(topLevelNodes.size(), is(2));
+
+    for (APKModule topModule : topLevelNodes) {
+      assertThat(topModule.getName(), oneOf("java2", "android"));
+      switch (topModule.getName()) {
+        case "java2":
+          Set<APKModule> java2Dependencies = dag.getGraph().getOutgoingNodesFor(topModule);
+          for (APKModule dependency : java2Dependencies) {
+            assertThat(
+                dependency.getName(),
+                oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "test.shared.library"));
+          }
+          break;
+        case "android":
+          Set<APKModule> androidDependencies = dag.getGraph().getOutgoingNodesFor(topModule);
+          for (APKModule dependency : androidDependencies) {
+            assertThat(dependency.getName(), oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "java"));
+            if (dependency.getName().equals("java")) {
+              Set<APKModule> javaDeps = dag.getGraph().getOutgoingNodesFor(dependency);
+              for (APKModule javaDep : javaDeps) {
+                assertThat(
+                    javaDep.getName(),
+                    oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "test.shared.library"));
+              }
+            }
+          }
+          break;
+        default:
+      }
+    }
+  }
+
+  /*
+
+                                                             + - - - - - - - - - +
+                                                             ' root:             '
+                                                             '                   '
+              +--------------------------------------------- ' +---------------+ '
+              |             +------------------------------- ' |    Binary     | '
+              v             |              +---------------- ' +---------------+ '
+     + - - - - - - +        |              |                 '         |         '
+     ' android:    '        |              |                 '         |         '
+     '             '        |              |                 '         v         '
+     ' +---------+ ' =======+==============+===#             ' +---------------+ '
+     ' | Android | '        v              |   H             ' |               | '
+     ' +---------+ '   + - - - - - +       |   #===========> ' |               | '
+     '             '   ' java:     '       |                 ' |               | '
+     + - - - - - - +   '           '       |                 ' |               | '
+           |   H       ' +-------+ ' ======+===============> ' |               | '
+           |   #=====> ' | Java  | '       v                 ' |    Common     | '
+           |           ' +-------+ '   + - - - - - - - +     ' |               | '
+           |           '           '   ' java2:        '     ' |               | '
+           |           + - - - - - +   '               '     ' |               | '
+           |               |   H       ' +-----------+ '     ' |               | '
+           |               |   #=====> ' |   Java2   | ' ==> ' |               | '
+           |               |           ' +-----------+ '     ' +---------------+ '
+           |               |           '               '     '                   '
+           |               |           '               '     + - - - - - - - - - +
+           |               +---------> ' +-----------+ '
+           |                           ' |  Shared   | '
+           +-------------------------> ' +-----------+ '
+                                       '               '
+                                       + - - - - - - - +
+
+     There is a declared dependency from android -> java and java -> java2.
+  */
+
+  @Test
+  public void testAPKModuleGraphWithMultiLevelDependencies() {
+
+    ImmutableSet.Builder<TargetNode<?, ?>> nodeBuilder = ImmutableSet.builder();
+    BuildTarget commonLibraryTarget = BuildTargetFactory.newInstance("//:test-common-library");
+    nodeBuilder.add(
+        AndroidLibraryBuilder.createBuilder(commonLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestCommonLibrary.java"))
+            .build());
+
+    BuildTarget sharedLibraryTarget = BuildTargetFactory.newInstance("//:test-shared-library");
+    nodeBuilder.add(
+        AndroidLibraryBuilder.createBuilder(sharedLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestSharedLibrary.java"))
+            .addDep(commonLibraryTarget)
+            .build());
+
+    BuildTarget java2LibraryTarget = BuildTargetFactory.newInstance("//:test-java2-library");
+    nodeBuilder.add(
+        JavaLibraryBuilder.createBuilder(java2LibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestJava2Library.java"))
+            .addDep(commonLibraryTarget)
+            .addDep(sharedLibraryTarget)
+            .build());
+
+    BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//:test-java-library");
+    nodeBuilder.add(
+        JavaLibraryBuilder.createBuilder(javaLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestJavaLibrary.java"))
+            .addDep(commonLibraryTarget)
+            .addDep(sharedLibraryTarget)
+            .addDep(java2LibraryTarget)
+            .build());
+
+    BuildTarget androidLibraryTarget = BuildTargetFactory.newInstance("//:test-android-library");
+    nodeBuilder.add(
+        AndroidLibraryBuilder.createBuilder(androidLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
+            .addDep(commonLibraryTarget)
+            .addDep(sharedLibraryTarget)
+            .addDep(java2LibraryTarget)
+            .addDep(javaLibraryTarget)
+            .build());
+
+    BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//:keystore");
+    nodeBuilder.add(
+        KeystoreBuilder.createBuilder(keystoreTarget)
+            .setStore(FakeSourcePath.of("debug.keystore"))
+            .setProperties(FakeSourcePath.of("keystore.properties"))
+            .build());
+
+    BuildTarget androidBinaryTarget = BuildTargetFactory.newInstance("//:test-android-binary");
+    nodeBuilder.add(
+        AndroidBinaryBuilder.createBuilder(androidBinaryTarget)
+            .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
+            .setKeystore(keystoreTarget)
+            .setOriginalDeps(
+                ImmutableSortedSet.of(
+                    androidLibraryTarget,
+                    javaLibraryTarget,
+                    java2LibraryTarget,
+                    commonLibraryTarget))
+            .build());
+
+    TargetGraph graph = TargetGraphFactory.newInstance(nodeBuilder.build());
+
+    Map<String, List<BuildTarget>> seedConfigMap = new HashMap<>();
+
+    List<BuildTarget> androidSeedConfig = new ArrayList<>();
+    androidSeedConfig.add(androidLibraryTarget);
+    seedConfigMap.put("android", androidSeedConfig);
+
+    List<BuildTarget> javaSeedConfig = new ArrayList<>();
+    javaSeedConfig.add(javaLibraryTarget);
+    seedConfigMap.put("java", javaSeedConfig);
+
+    List<BuildTarget> java2SeedConfig = new ArrayList<>();
+    java2SeedConfig.add(java2LibraryTarget);
+    seedConfigMap.put("java2", java2SeedConfig);
+
+    Map<String, List<String>> appModuleDependencies = new HashMap<>();
+
+    List<String> androidAppDependencies = new ArrayList<>();
+    androidAppDependencies.add("java");
+    appModuleDependencies.put("android", androidAppDependencies);
+
+    List<String> javaAppDependencies = new ArrayList<>();
+    javaAppDependencies.add("java2");
+    appModuleDependencies.put("java", javaAppDependencies);
+
+    APKModuleGraph dag =
+        new APKModuleGraph(
+            Optional.of(seedConfigMap),
+            Optional.of(appModuleDependencies),
+            graph,
+            androidBinaryTarget);
+
+    ImmutableSet<APKModule> topLevelNodes = dag.getGraph().getNodesWithNoIncomingEdges();
+    assertThat(topLevelNodes.size(), is(1));
+
+    APKModule topModule = Iterables.getFirst(topLevelNodes, null);
+    assertThat(topModule.getName(), is("android"));
+
+    ImmutableSet<APKModule> topLevelDeps = dag.getGraph().getOutgoingNodesFor(topModule);
+    assertThat(topLevelDeps.size(), is(2));
+
+    APKModule middleModule = null;
+    for (APKModule apkModule : topLevelDeps) {
+      assertThat(apkModule.getName(), oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "java"));
+      if (apkModule.getName().equals("java")) {
+        middleModule = apkModule;
+      }
+    }
+
+    ImmutableSet<APKModule> middleLevelDeps = dag.getGraph().getOutgoingNodesFor(middleModule);
+    assertThat(middleLevelDeps.size(), is(2));
+
+    APKModule bottomModule = null;
+    for (APKModule apkModule : middleLevelDeps) {
+      assertThat(apkModule.getName(), oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "java2"));
+      if (apkModule.getName().equals("java2")) {
+        bottomModule = apkModule;
+      }
+    }
+
+    ImmutableSet<APKModule> bottomLevelDeps = dag.getGraph().getOutgoingNodesFor(bottomModule);
+    assertThat(bottomLevelDeps.size(), is(1));
+
+    APKModule bottomDep = Iterables.getFirst(bottomLevelDeps, null);
+    assertThat(bottomDep.getName(), is(APKModuleGraph.ROOT_APKMODULE_NAME));
+  }
+
+  /*
+
+                                                             + - - - - - - - - - +
+                                                             ' root:             '
+                                                             '                   '
+              +--------------------------------------------- ' +---------------+ '
+              |             +------------------------------- ' |    Binary     | '
+              v             |              +---------------- ' +---------------+ '
+     + - - - - - - +        |              |                 '         |         '
+     ' android:    '        |              |                 '         |         '
+     '             '        |              |                 '         v         '
+     ' +---------+ ' =======+==============+===#             ' +---------------+ '
+     ' | Android | '        v              |   H             ' |               | '
+     ' +---------+ '   + - - - - - +       |   #===========> ' |               | '
+     '             '   ' java:     '       |                 ' |               | '
+     + - - - - - - +   '           '       |                 ' |               | '
+           |   H       ' +-------+ ' ======+===============> ' |               | '
+           |   #=====> ' | Java  | '       v                 ' |    Common     | '
+           |           ' +-------+ '   + - - - - - - - +     ' |               | '
+           |           '           '   ' java2:        '     ' |               | '
+           |           + - - - - - +   '               '     ' |               | '
+           |                           ' +-----------+ '     ' |               | '
+           |                           ' |   Java2   | ' ==> ' |               | '
+           |                           ' +-----------+ '     ' +---------------+ '
+           |                           '               '     '                   '
+           |                           '               '     + - - - - - - - - - +
+           |                           ' +-----------+ '
+           |                           ' |  Shared   | '
+           +-------------------------> ' +-----------+ '
+                                       '               '
+                                       + - - - - - - - +
+
+     There is a declared dependency from android -> java and java -> java2.
+  */
+
+  @Test
+  public void testAPKModuleGraphThatLowestDeclaredDepTakesCareOfMultipleLevelsOfIndirection() {
+
+    ImmutableSet.Builder<TargetNode<?, ?>> nodeBuilder = ImmutableSet.builder();
+    BuildTarget commonLibraryTarget = BuildTargetFactory.newInstance("//:test-common-library");
+    nodeBuilder.add(
+        AndroidLibraryBuilder.createBuilder(commonLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestCommonLibrary.java"))
+            .build());
+
+    BuildTarget sharedLibraryTarget = BuildTargetFactory.newInstance("//:test-shared-library");
+    nodeBuilder.add(
+        AndroidLibraryBuilder.createBuilder(sharedLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestSharedLibrary.java"))
+            .addDep(commonLibraryTarget)
+            .build());
+
+    BuildTarget java2LibraryTarget = BuildTargetFactory.newInstance("//:test-java2-library");
+    nodeBuilder.add(
+        JavaLibraryBuilder.createBuilder(java2LibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestJava2Library.java"))
+            .addDep(commonLibraryTarget)
+            .addDep(sharedLibraryTarget)
+            .build());
+
+    BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//:test-java-library");
+    nodeBuilder.add(
+        JavaLibraryBuilder.createBuilder(javaLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestJavaLibrary.java"))
+            .addDep(commonLibraryTarget)
+            .addDep(java2LibraryTarget)
+            .build());
+
+    BuildTarget androidLibraryTarget = BuildTargetFactory.newInstance("//:test-android-library");
+    nodeBuilder.add(
+        AndroidLibraryBuilder.createBuilder(androidLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
+            .addDep(commonLibraryTarget)
+            .addDep(sharedLibraryTarget)
+            .addDep(java2LibraryTarget)
+            .addDep(javaLibraryTarget)
+            .build());
+
+    BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//:keystore");
+    nodeBuilder.add(
+        KeystoreBuilder.createBuilder(keystoreTarget)
+            .setStore(FakeSourcePath.of("debug.keystore"))
+            .setProperties(FakeSourcePath.of("keystore.properties"))
+            .build());
+
+    BuildTarget androidBinaryTarget = BuildTargetFactory.newInstance("//:test-android-binary");
+    nodeBuilder.add(
+        AndroidBinaryBuilder.createBuilder(androidBinaryTarget)
+            .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
+            .setKeystore(keystoreTarget)
+            .setOriginalDeps(
+                ImmutableSortedSet.of(
+                    androidLibraryTarget,
+                    javaLibraryTarget,
+                    java2LibraryTarget,
+                    commonLibraryTarget))
+            .build());
+
+    TargetGraph graph = TargetGraphFactory.newInstance(nodeBuilder.build());
+
+    Map<String, List<BuildTarget>> seedConfigMap = new HashMap<>();
+
+    List<BuildTarget> androidSeedConfig = new ArrayList<>();
+    androidSeedConfig.add(androidLibraryTarget);
+    seedConfigMap.put("android", androidSeedConfig);
+
+    List<BuildTarget> javaSeedConfig = new ArrayList<>();
+    javaSeedConfig.add(javaLibraryTarget);
+    seedConfigMap.put("java", javaSeedConfig);
+
+    List<BuildTarget> java2SeedConfig = new ArrayList<>();
+    java2SeedConfig.add(java2LibraryTarget);
+    seedConfigMap.put("java2", java2SeedConfig);
+
+    Map<String, List<String>> appModuleDependencies = new HashMap<>();
+
+    List<String> androidAppDependencies = new ArrayList<>();
+    androidAppDependencies.add("java");
+    appModuleDependencies.put("android", androidAppDependencies);
+
+    List<String> javaAppDependencies = new ArrayList<>();
+    javaAppDependencies.add("java2");
+    appModuleDependencies.put("java", javaAppDependencies);
+
+    APKModuleGraph dag =
+        new APKModuleGraph(
+            Optional.of(seedConfigMap),
+            Optional.of(appModuleDependencies),
+            graph,
+            androidBinaryTarget);
+
+    ImmutableSet<APKModule> topLevelNodes = dag.getGraph().getNodesWithNoIncomingEdges();
+    assertThat(topLevelNodes.size(), is(1));
+
+    APKModule topModule = Iterables.getFirst(topLevelNodes, null);
+    assertThat(topModule.getName(), is("android"));
+
+    ImmutableSet<APKModule> topLevelDeps = dag.getGraph().getOutgoingNodesFor(topModule);
+    assertThat(topLevelDeps.size(), is(2));
+
+    APKModule middleModule = null;
+    for (APKModule apkModule : topLevelDeps) {
+      assertThat(apkModule.getName(), oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "java"));
+      if (apkModule.getName().equals("java")) {
+        middleModule = apkModule;
+      }
+    }
+
+    ImmutableSet<APKModule> middleLevelDeps = dag.getGraph().getOutgoingNodesFor(middleModule);
+    assertThat(middleLevelDeps.size(), is(2));
+
+    APKModule bottomModule = null;
+    for (APKModule apkModule : middleLevelDeps) {
+      assertThat(apkModule.getName(), oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "java2"));
+      if (apkModule.getName().equals("java2")) {
+        bottomModule = apkModule;
+      }
+    }
+
+    ImmutableSet<APKModule> bottomLevelDeps = dag.getGraph().getOutgoingNodesFor(bottomModule);
+    assertThat(bottomLevelDeps.size(), is(1));
+
+    APKModule bottomDep = Iterables.getFirst(bottomLevelDeps, null);
+    assertThat(bottomDep.getName(), is(APKModuleGraph.ROOT_APKMODULE_NAME));
+  }
+
+  /*
                    +----------------------------+
                    |                            |
                    |                            |
@@ -283,6 +900,7 @@ public class APKModuleTest {
                                    |                           ^
                                    +---------------------------+
   */
+
   @Test
   public void testAPKModuleGraphComplexDependencyTree() {
     ImmutableSet.Builder<TargetNode<?, ?>> nodeBuilder = ImmutableSet.builder();

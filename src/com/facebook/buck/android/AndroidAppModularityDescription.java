@@ -48,7 +48,10 @@ public class AndroidAppModularityDescription
       AndroidAppModularityDescriptionArg args) {
     APKModuleGraph apkModuleGraph =
         new APKModuleGraph(
-            Optional.of(args.getApplicationModuleConfigs()), context.getTargetGraph(), buildTarget);
+            Optional.of(args.getApplicationModuleConfigs()),
+            args.getApplicationModuleDependencies(),
+            context.getTargetGraph(),
+            buildTarget);
 
     AndroidAppModularityGraphEnhancer graphEnhancer =
         new AndroidAppModularityGraphEnhancer(
@@ -69,6 +72,8 @@ public class AndroidAppModularityDescription
       extends CommonDescriptionArg, HasDeclaredDeps {
 
     Map<String, List<BuildTarget>> getApplicationModuleConfigs();
+
+    Optional<Map<String, List<String>>> getApplicationModuleDependencies();
 
     @Hint(isDep = false)
     ImmutableSet<BuildTarget> getNoDx();

@@ -206,7 +206,8 @@ public class AndroidInstrumentationApkDescription
             dxExecutorService,
             apkUnderTest.getManifestEntries(),
             cxxBuckConfig,
-            new APKModuleGraph(context.getTargetGraph(), buildTarget, Optional.empty()),
+            new APKModuleGraph(
+                Optional.empty(), Optional.empty(), context.getTargetGraph(), buildTarget),
             dxConfig,
             args.getDexTool(),
             /* postFilterResourcesCommands */ Optional.empty(),

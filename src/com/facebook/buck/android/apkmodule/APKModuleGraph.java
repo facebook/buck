@@ -57,8 +57,10 @@ import java.util.function.Supplier;
 /**
  * Utility class for grouping sets of targets and their dependencies into APK Modules containing
  * their exclusive dependencies. Targets that are dependencies of the root target are included in
- * the root. Targets that are dependencies of two or more groups but not dependencies of the root
- * are added to their own group.
+ * the root. Targets that have dependencies in two are more groups are put the APKModule that
+ * represents the dependent modules minimal cover based on the declared dependencies given. If the
+ * minimal cover contains more than one APKModule, the target will belong to a new shared APKModule
+ * that is a dependency of all APKModules in the minimal cover.
  */
 public class APKModuleGraph implements AddsToRuleKey {
 
@@ -67,6 +69,7 @@ public class APKModuleGraph implements AddsToRuleKey {
   private final TargetGraph targetGraph;
   @AddToRuleKey private final BuildTarget target;
   @AddToRuleKey private final Optional<Map<String, List<BuildTarget>>> suppliedSeedConfigMap;
+  @AddToRuleKey private final Optional<Map<String, List<String>>> appModuleDependencies;
   private final Optional<Set<BuildTarget>> seedTargets;
   private final Map<APKModule, Set<BuildTarget>> buildTargetsMap = new HashMap<>();
 
@@ -93,6 +96,9 @@ public class APKModuleGraph implements AddsToRuleKey {
   private final Supplier<DirectedAcyclicGraph<APKModule>> graphSupplier =
       MoreSuppliers.memoize(this::generateGraph);
 
+  private final Supplier<DirectedAcyclicGraph<String>> declaredDependencyGraphSupplier =
+      MoreSuppliers.memoize(this::generateDeclaredDependencyGraph);
+
   private final Supplier<ImmutableSet<APKModule>> modulesSupplier =
       MoreSuppliers.memoize(
           () -> {
@@ -117,14 +123,24 @@ public class APKModuleGraph implements AddsToRuleKey {
    * Constructor for the {@code APKModule} graph generator object
    *
    * @param seedConfigMap A map of names to seed targets to use for creating {@code APKModule}.
+   * @param appModuleDependencies
+   *     <p>a mapping of declared dependencies between module names. If a APKModule <b>m1</b>
+   *     depends on <b>m2</b>, it implies to buck that in order for <b>m1</b> to be available for
+   *     execution <b>m2</b> must be available for use as well. Because of this, we can say that
+   *     including a buck target in <b>m2</b> effectively includes the buck-target in <b>m2's</b>
+   *     dependent <b>m1</b>. In other words, <b>m2</b> covers <b>m1</b>. Therefore, if a buck
+   *     target is required by both these modules, we can safely place it in the minimal cover which
+   *     is the APKModule <b>m2</b>.
    * @param targetGraph The full target graph of the build
    * @param target The root target to use to traverse the graph
    */
   public APKModuleGraph(
       Optional<Map<String, List<BuildTarget>>> seedConfigMap,
+      Optional<Map<String, List<String>>> appModuleDependencies,
       TargetGraph targetGraph,
       BuildTarget target) {
     this.targetGraph = targetGraph;
+    this.appModuleDependencies = appModuleDependencies;
     this.target = target;
     this.seedTargets = Optional.empty();
     this.suppliedSeedConfigMap = seedConfigMap;
@@ -143,6 +159,7 @@ public class APKModuleGraph implements AddsToRuleKey {
     this.target = target;
     this.seedTargets = seedTargets;
     this.suppliedSeedConfigMap = Optional.empty();
+    this.appModuleDependencies = Optional.empty();
   }
 
   public ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> toOutgoingEdgesMap() {
@@ -179,6 +196,16 @@ public class APKModuleGraph implements AddsToRuleKey {
    */
   public DirectedAcyclicGraph<APKModule> getGraph() {
     return graphSupplier.get();
+  }
+
+  /**
+   * Lazy generate the declared dependency graph.
+   *
+   * @return the DAG representing the declared dependency relationship of declared app module
+   *     configurations.
+   */
+  private DirectedAcyclicGraph<String> getDeclaredDependencyGraph() {
+    return declaredDependencyGraphSupplier.get();
   }
 
   /**
@@ -266,9 +293,53 @@ public class APKModuleGraph implements AddsToRuleKey {
       Multimap<BuildTarget, String> targetToContainingApkModulesMap =
           mapTargetsToContainingModules();
       generateSharedModules(apkModuleGraph, targetToContainingApkModulesMap);
+      // add declared dependencies as well.
+      Map<String, APKModule> nameToAPKModules = new HashMap<>();
+      for (APKModule node : apkModuleGraph.getNodes()) {
+        nameToAPKModules.put(node.getName(), node);
+      }
+      DirectedAcyclicGraph<String> declaredDependencies = getDeclaredDependencyGraph();
+      for (String source : declaredDependencies.getNodes()) {
+        for (String sink : declaredDependencies.getOutgoingNodesFor(source)) {
+          apkModuleGraph.addEdge(nameToAPKModules.get(source), nameToAPKModules.get(sink));
+        }
+      }
     }
 
     return new DirectedAcyclicGraph<>(apkModuleGraph);
+  }
+
+  private DirectedAcyclicGraph<String> generateDeclaredDependencyGraph() {
+    MutableDirectedGraph<String> declaredDependencyGraph = new MutableDirectedGraph<>();
+
+    if (appModuleDependencies.isPresent()) {
+      for (Map.Entry<String, List<String>> moduleDependencies :
+          appModuleDependencies.get().entrySet()) {
+        for (String moduleDep : moduleDependencies.getValue()) {
+          declaredDependencyGraph.addEdge(moduleDependencies.getKey(), moduleDep);
+        }
+      }
+    }
+
+    DirectedAcyclicGraph<String> result = new DirectedAcyclicGraph<>(declaredDependencyGraph);
+    verifyNoUnrecognizedModulesInDependencyGraph(result);
+    return result;
+  }
+
+  private void verifyNoUnrecognizedModulesInDependencyGraph(
+      DirectedAcyclicGraph<String> dependencyGraph) {
+    Set<String> configModules =
+        getSeedConfigMap().isPresent() ? getSeedConfigMap().get().keySet() : new HashSet<>();
+    Set<String> unrecognizedModules = new HashSet<>(dependencyGraph.getNodes());
+    unrecognizedModules.removeAll(configModules);
+    if (!unrecognizedModules.isEmpty()) {
+      StringBuilder errorString =
+          new StringBuilder("Unrecognized App Modules in Dependency Graph: ");
+      for (String module : unrecognizedModules) {
+        errorString.append(module).append(" ");
+      }
+      throw new IllegalStateException(errorString.toString());
+    }
   }
 
   /**
@@ -328,6 +399,30 @@ public class APKModuleGraph implements AddsToRuleKey {
           }
         }.start();
       }
+    }
+    // Now to generate the minimal covers of APKModules for each set of APKModules that contain
+    // a buildTarget
+    DirectedAcyclicGraph<String> declaredDependencies = getDeclaredDependencyGraph();
+    Multimap<BuildTarget, String> targetModuleEntriesToRemove =
+        MultimapBuilder.treeKeys().treeSetValues().build();
+    for (BuildTarget key : targetToContainingApkModuleNameMap.keySet()) {
+      Collection<String> modulesForTarget = targetToContainingApkModuleNameMap.get(key);
+      new AbstractBreadthFirstTraversal<String>(modulesForTarget) {
+        @Override
+        public Iterable<String> visit(String moduleName) throws RuntimeException {
+          Collection<String> dependentModules =
+              declaredDependencies.getIncomingNodesFor(moduleName);
+          for (String dependent : dependentModules) {
+            if (modulesForTarget.contains(dependent)) {
+              targetModuleEntriesToRemove.put(key, dependent);
+            }
+          }
+          return dependentModules;
+        }
+      }.start();
+    }
+    for (Map.Entry<BuildTarget, String> entryToRemove : targetModuleEntriesToRemove.entries()) {
+      targetToContainingApkModuleNameMap.remove(entryToRemove.getKey(), entryToRemove.getValue());
     }
     return targetToContainingApkModuleNameMap;
   }

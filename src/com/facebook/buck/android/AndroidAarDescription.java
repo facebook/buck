@@ -122,7 +122,8 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
     aarExtraDepsBuilder.add(resolver.addToIndex(manifest));
 
     APKModuleGraph apkModuleGraph =
-        new APKModuleGraph(context.getTargetGraph(), buildTarget, Optional.empty());
+        new APKModuleGraph(
+            Optional.empty(), Optional.empty(), context.getTargetGraph(), buildTarget);
 
     /* assemble dirs */
     AndroidPackageableCollector collector =

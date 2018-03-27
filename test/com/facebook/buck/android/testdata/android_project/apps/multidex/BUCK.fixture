@@ -279,6 +279,57 @@ android_app_modularity(
     ],
 )
 
+android_app_modularity(
+    name = "modularity-metadata-simple-declared-dep",
+    application_module_configs = {
+        "small_inner_class_with_no_resource_deps": ["//java/com/sample/small_inner_class:small_inner_class_with_no_resource_deps"],
+        "small_with_no_resource_deps": ["//java/com/sample/small:small_with_no_resource_deps"],
+    },
+    application_module_dependencies = {
+        "small_with_no_resource_deps": ["small_inner_class_with_no_resource_deps"],
+    },
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/small:small_with_no_resource_deps",
+        "//java/com/sample/small_inner_class:small_inner_class_with_no_resource_deps",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_app_modularity(
+    name = "modularity-metadata-shared-module",
+    application_module_configs = {
+        "small_with_shared_with_no_resource_deps": ["//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps"],
+        "small_with_shared2_with_no_resource_deps": ["//java/com/sample/small_with_shared2:small_with_shared2_with_no_resource_deps"],
+    },
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps",
+        "//java/com/sample/small_with_shared2:small_with_shared2_with_no_resource_deps",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_app_modularity(
+    name = "modularity-metadata-declared-dep-with-shared-target",
+    application_module_configs = {
+        "small_with_shared_with_no_resource_deps": ["//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps"],
+        "small_with_shared2_with_no_resource_deps": ["//java/com/sample/small_with_shared2:small_with_shared2_with_no_resource_deps"],
+    },
+    application_module_dependencies = {
+        "small_with_shared_with_no_resource_deps": ["small_with_shared2_with_no_resource_deps"],
+    },
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps",
+        "//java/com/sample/small_with_shared2:small_with_shared2_with_no_resource_deps",
+        "//res/com/sample/base:base",
+    ],
+)
+
 android_binary(
     name = "app-with-consistency-check",
     android_app_modularity_result = ":modularity-metadata",

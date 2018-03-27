@@ -72,7 +72,7 @@ public class AndroidPackageableCollector {
         collectionRoot,
         ImmutableSet.of(),
         ImmutableSet.of(),
-        new APKModuleGraph(TargetGraph.EMPTY, collectionRoot, Optional.empty()));
+        new APKModuleGraph(Optional.empty(), Optional.empty(), TargetGraph.EMPTY, collectionRoot));
   }
 
   /**
