@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
@@ -27,6 +28,7 @@ import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.OcamlSource;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -65,6 +67,9 @@ public class OcamlBinaryDescription
         toolchainProvider.getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class);
     OcamlPlatform ocamlPlatform = ocamlToolchain.getDefaultOcamlPlatform();
 
+    CxxDeps allDeps =
+        CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
+
     ImmutableList<OcamlSource> srcs = args.getSrcs();
 
     ImmutableList<Arg> flags =
@@ -88,10 +93,7 @@ public class OcamlBinaryDescription
               context.getProjectFilesystem(),
               params,
               context.getBuildRuleResolver(),
-              args.getDeps()
-                  .stream()
-                  .map(context.getBuildRuleResolver()::getRule)
-                  .collect(ImmutableList.toImmutableList()),
+              allDeps.get(context.getBuildRuleResolver(), ocamlPlatform.getCxxPlatform()),
               srcs,
               /* isLibrary */ false,
               args.getBytecodeOnly().orElse(false),
@@ -109,10 +111,7 @@ public class OcamlBinaryDescription
               context.getProjectFilesystem(),
               params,
               context.getBuildRuleResolver(),
-              args.getDeps()
-                  .stream()
-                  .map(context.getBuildRuleResolver()::getRule)
-                  .collect(ImmutableList.toImmutableList()),
+              allDeps.get(context.getBuildRuleResolver(), ocamlPlatform.getCxxPlatform()),
               srcs,
               /* isLibrary */ false,
               args.getBytecodeOnly().orElse(false),
@@ -161,5 +160,10 @@ public class OcamlBinaryDescription
     Optional<String> getWarningsFlags();
 
     Optional<Boolean> getBytecodeOnly();
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {
+      return PatternMatchedCollection.of();
+    }
   }
 }

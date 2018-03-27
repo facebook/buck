@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -49,7 +50,7 @@ class PrebuiltOcamlLibrary extends OcamlLibrary {
 
   private final Path includeDir;
 
-  private final ImmutableList<BuildRule> deps;
+  private final CxxDeps deps;
 
   public PrebuiltOcamlLibrary(
       BuildTarget buildTarget,
@@ -62,7 +63,7 @@ class PrebuiltOcamlLibrary extends OcamlLibrary {
       SourcePath bytecodeLibraryPath,
       Path libPath,
       Path includeDir,
-      ImmutableList<BuildRule> deps) {
+      CxxDeps deps) {
     super(buildTarget, projectFilesystem, params);
     this.ruleFinder = ruleFinder;
     this.staticNativeLibraryPath = staticNativeLibraryPath;
@@ -129,6 +130,6 @@ class PrebuiltOcamlLibrary extends OcamlLibrary {
 
   @Override
   public Iterable<BuildRule> getOcamlLibraryDeps(OcamlPlatform platform) {
-    return deps;
+    return deps.get(ruleFinder.getRuleResolver(), platform.getCxxPlatform());
   }
 }

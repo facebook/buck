@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -34,9 +35,9 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.OcamlSource;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableCollection;
@@ -72,6 +73,9 @@ public class OcamlLibraryDescription
       BuildRuleParams params,
       OcamlLibraryDescriptionArg args) {
 
+    CxxDeps allDeps =
+        CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
+
     OcamlToolchain ocamlToolchain =
         toolchainProvider.getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class);
     OcamlPlatform ocamlPlatform = ocamlToolchain.getDefaultOcamlPlatform();
@@ -102,10 +106,7 @@ public class OcamlLibraryDescription
                 context.getProjectFilesystem(),
                 params,
                 context.getBuildRuleResolver(),
-                args.getDeps()
-                    .stream()
-                    .map(context.getBuildRuleResolver()::getRule)
-                    .collect(ImmutableList.toImmutableList()),
+                allDeps.get(context.getBuildRuleResolver(), ocamlPlatform.getCxxPlatform()),
                 srcs,
                 /* isLibrary */ true,
                 args.getBytecodeOnly(),
@@ -141,10 +142,7 @@ public class OcamlLibraryDescription
                 context.getProjectFilesystem(),
                 params,
                 context.getBuildRuleResolver(),
-                args.getDeps()
-                    .stream()
-                    .map(context.getBuildRuleResolver()::getRule)
-                    .collect(ImmutableList.toImmutableList()),
+                allDeps.get(context.getBuildRuleResolver(), ocamlPlatform.getCxxPlatform()),
                 srcs,
                 /* isLibrary */ true,
                 args.getBytecodeOnly(),
@@ -220,9 +218,7 @@ public class OcamlLibraryDescription
 
       @Override
       public Iterable<BuildRule> getOcamlLibraryDeps(OcamlPlatform platform) {
-        return RichStream.from(args.getDeps())
-            .map(context.getBuildRuleResolver()::getRule)
-            .toImmutableList();
+        return allDeps.get(context.getBuildRuleResolver(), platform.getCxxPlatform());
       }
     };
   }
@@ -272,6 +268,11 @@ public class OcamlLibraryDescription
     @Value.Default
     default boolean getNativePlugin() {
       return false;
+    }
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {
+      return PatternMatchedCollection.of();
     }
   }
 }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleCreationContext;
@@ -26,10 +27,11 @@ import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -80,6 +82,9 @@ public class PrebuiltOcamlLibraryDescription
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(context.getBuildRuleResolver());
 
+    CxxDeps allDeps =
+        CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
+
     return new PrebuiltOcamlLibrary(
         buildTarget,
         projectFilesystem,
@@ -91,9 +96,7 @@ public class PrebuiltOcamlLibraryDescription
         bytecodeLibraryPath,
         libPath,
         includeDir,
-        RichStream.from(args.getDeps())
-            .map(context.getBuildRuleResolver()::getRule)
-            .collect(ImmutableList.toImmutableList()));
+        allDeps);
   }
 
   @BuckStyleImmutable
@@ -131,6 +134,11 @@ public class PrebuiltOcamlLibraryDescription
     @Value.Default
     boolean getBytecodeOnly() {
       return false;
+    }
+
+    @Value.Default
+    PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {
+      return PatternMatchedCollection.of();
     }
   }
 }

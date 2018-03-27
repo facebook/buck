@@ -1,9 +1,27 @@
 load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["*Test.java"],
+    ),
+    deps = [
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/ocaml:ocaml",
+        "//src/com/facebook/buck/rules/coercer:coercer",
+        "//test/com/facebook/buck/cxx/toolchain:testutil",
+        "//test/com/facebook/buck/rules:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//test/com/facebook/buck/toolchain/impl:testutil",
+    ],
+)
+
 standard_java_test(
     name = "ocaml",
     with_test_data = True,
     deps = [
+        ":testutil",
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:rules",
