@@ -30,7 +30,8 @@ from buck_tool import ExecuteTarget, install_signal_handlers, \
     BuckStatusReporter
 from buck_project import BuckProject, NoBuckConfigFoundException
 from tracing import Tracing
-from subprocutils import propagate_failure, check_output
+from subprocutils import propagate_failure
+from subprocess import check_output
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 REQUIRED_JAVA_VERSION = "8"

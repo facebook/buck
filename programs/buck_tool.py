@@ -18,7 +18,8 @@ import uuid
 from pynailgun import NailgunConnection, NailgunException
 from timing import monotonic_time_nanos
 from tracing import Tracing
-from subprocutils import check_output, which, CalledProcessError
+from subprocutils import which
+from subprocess import check_output, CalledProcessError
 
 BUCKD_CLIENT_TIMEOUT_MILLIS = 120000
 BUCKD_STARTUP_TIMEOUT_MILLIS = 10000

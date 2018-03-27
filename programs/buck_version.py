@@ -5,7 +5,8 @@ import sys
 import subprocess
 import tempfile
 
-from subprocutils import check_output, which, CalledProcessError
+from subprocutils import which
+from subprocess import check_output, CalledProcessError
 
 
 class EmptyTempFile(object):
