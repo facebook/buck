@@ -1,0 +1,30 @@
+java_annotation_processor(
+    name = "ap",
+    processor_class = "",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":ap-lib",
+    ],
+)
+
+java_library(
+    name = "ap-lib",
+    srcs = [
+        "AnnotationProcessor.java",
+    ],
+    resources = glob([
+        "resources/**",
+    ]),
+    resources_root = "resources",
+    source = "8",
+    target = "8",
+    visibility = [
+        "//com/example/ap/javaap:ap",
+    ],
+    deps = [
+        "//com/example/ap/javaannotation:annotation-lib",
+        "//com/example/ap/libs:javapoet.jar",
+    ],
+)

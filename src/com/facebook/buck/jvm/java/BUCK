@@ -202,6 +202,7 @@ java_immutables_library(
         "//src/com/facebook/buck/jvm/java:javac-sink",
         "//src/com/facebook/buck/jvm/java:packagefinder",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
+        "//src/com/facebook/buck/jvm/java/javax:javax",
         "//src/com/facebook/buck/jvm/java/lang/model:model",
         "//src/com/facebook/buck/jvm/java/plugin:plugin",
         "//src/com/facebook/buck/jvm/java/tracing:tracing",

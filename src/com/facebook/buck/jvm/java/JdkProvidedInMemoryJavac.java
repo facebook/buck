@@ -16,22 +16,16 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.jvm.java.javax.SynchronizedToolProvider;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
 import javax.tools.JavaCompiler;
-import javax.tools.ToolProvider;
 
 public class JdkProvidedInMemoryJavac extends Jsr199Javac {
   @Override
   protected JavaCompiler createCompiler(
       JavacExecutionContext context, SourcePathResolver pathResolver) {
-    JavaCompiler compiler;
-    synchronized (ToolProvider.class) {
-      // ToolProvider has no synchronization internally, so if we don't synchronize from the
-      // outside we could wind up loading the compiler classes multiple times from different
-      // class loaders.
-      compiler = ToolProvider.getSystemJavaCompiler();
-    }
+    JavaCompiler compiler = SynchronizedToolProvider.getSystemJavaCompiler();
 
     if (compiler == null) {
       throw new HumanReadableException(

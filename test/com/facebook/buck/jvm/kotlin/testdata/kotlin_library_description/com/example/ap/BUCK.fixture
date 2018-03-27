@@ -1,0 +1,18 @@
+kotlin_library(
+    name = "kotlin",
+    srcs = glob([
+        "*.kt",
+        "*.java",
+    ]),
+    plugins = [
+        "//com/example/ap/javaap:ap",
+        "//com/example/ap/kotlinap:ap",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//com/example/ap/javaannotation:annotation-lib",
+        "//com/example/ap/kotlinannotation:annotation-lib",
+    ],
+)

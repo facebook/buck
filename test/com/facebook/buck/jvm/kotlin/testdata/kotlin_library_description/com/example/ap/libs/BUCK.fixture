@@ -1,0 +1,14 @@
+import re
+
+file_name_regex = re.compile(
+    "^.*/([^/]+)\.(jar|aar)$",
+    re.IGNORECASE,
+)
+
+for jar in glob(['*.jar']):
+  name = file_name_regex.sub(r'\1', jar)
+  prebuilt_jar(
+    name = jar,
+    binary_jar = jar,
+    visibility = ['PUBLIC'],
+  )

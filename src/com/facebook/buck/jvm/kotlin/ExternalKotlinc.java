@@ -25,6 +25,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Result;
@@ -105,12 +106,27 @@ public class ExternalKotlinc implements Kotlinc, RuleKeyAppendable {
       ProjectFilesystem projectFilesystem)
       throws InterruptedException {
 
+    ImmutableList<Path> expandedSources;
+    try {
+      expandedSources =
+          getExpandedSourcePaths(
+              projectFilesystem,
+              context.getProjectFilesystemFactory(),
+              kotlinSourceFilePaths,
+              workingDirectory);
+    } catch (Throwable throwable) {
+      throwable.printStackTrace();
+      throw new HumanReadableException(
+          "Unable to expand sources for %s into %s", invokingRule, workingDirectory);
+    }
+
     ImmutableList<String> command =
         ImmutableList.<String>builder()
             .add(pathToKotlinc.toString())
+            .addAll(options)
             .addAll(
                 transform(
-                    kotlinSourceFilePaths,
+                    expandedSources,
                     path -> projectFilesystem.resolve(path).toAbsolutePath().toString()))
             .build();
 
@@ -155,6 +171,16 @@ public class ExternalKotlinc implements Kotlinc, RuleKeyAppendable {
   @Override
   public String getShortName() {
     return pathToKotlinc.toString();
+  }
+
+  @Override
+  public Path getAnnotationProcessorPath() {
+    throw new IllegalStateException("Not supported yet");
+  }
+
+  @Override
+  public Path getStdlibPath() {
+    throw new IllegalStateException("Not supported yet");
   }
 
   @Override

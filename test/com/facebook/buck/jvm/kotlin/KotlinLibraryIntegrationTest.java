@@ -51,6 +51,12 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
+  public void shouldAnnotationProcessorClass() throws Exception {
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/ap:kotlin");
+    buildResult.assertSuccess("Build should have succeeded.");
+  }
+
+  @Test
   public void shouldCompileLibraryWithDependencyOnAnother() throws Exception {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/child:child");
     buildResult.assertSuccess("Build should have succeeded.");

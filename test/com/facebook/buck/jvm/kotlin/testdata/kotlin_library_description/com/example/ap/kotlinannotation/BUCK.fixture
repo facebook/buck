@@ -1,0 +1,9 @@
+kotlin_library(
+    name = "annotation-lib",
+    srcs = [
+        "KotlinAnnotation.kt",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

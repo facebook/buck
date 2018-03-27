@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,21 +13,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.facebook.buck.jvm.kotlin;
 
-import com.facebook.buck.rules.AddsToRuleKey;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractKotlincVersion implements AddsToRuleKey {
+public class PathMatchers {
 
-  @Value.Parameter
-  public abstract String getVersionString();
+  public static final PathOrGlobMatcher KOTLIN_PATH_MATCHER = new PathOrGlobMatcher("**.kt");
 
-  @Override
-  public String toString() {
-    return getVersionString();
-  }
+  public static final PathOrGlobMatcher JAVA_PATH_MATCHER = new PathOrGlobMatcher("**.java");
 }

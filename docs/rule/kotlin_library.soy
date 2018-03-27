@@ -34,7 +34,10 @@ of the compiled class files and resources.
   {param name: 'srcs' /}
   {param default: '[]' /}
   {param desc}
-  The set of <code>.kt</code> or <code>.kts</code> files to compile for this rule.
+  The set of <code>.kt</code>, <code>.java</code> or <code>.kts</code> files to compile for this rule.
+  If any of the files in this list end in <code>.src.zip</code>,
+  then the entries in the ZIP file that end in <code>.java</code> or <code>.kt</code> will be
+  included as ordinary inputs to compilation.
   {/param}
 {/call}
 

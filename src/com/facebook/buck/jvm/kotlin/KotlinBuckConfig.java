@@ -18,9 +18,11 @@ package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,6 +31,9 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 public class KotlinBuckConfig {
+
+  private static final Logger LOG = Logger.get(KotlinBuckConfig.class);
+
   private static final String SECTION = "kotlin";
 
   private static final Path DEFAULT_KOTLIN_COMPILER = Paths.get("kotlinc");
@@ -51,8 +56,18 @@ public class KotlinBuckConfig {
               delegate.getPathSourcePath(getPathToScriptRuntimeJar()),
               delegate.getPathSourcePath(getPathToCompilerJar()));
 
-      return new JarBackedReflectedKotlinc(classpathEntries);
+      return new JarBackedReflectedKotlinc(
+          classpathEntries, getPathToAnnotationProcessingJar(), getPathToStdlibJar());
     }
+  }
+
+  public ImmutableSortedSet<Path> getKotlinHomeLibraries() {
+    return ImmutableSortedSet.copyOf(
+        ImmutableSortedSet.of(
+            getPathToStdlibJar(),
+            getPathToReflectJar(),
+            getPathToScriptRuntimeJar(),
+            getPathToCompilerJar()));
   }
 
   Path getPathToCompilerBinary() {
@@ -67,45 +82,38 @@ public class KotlinBuckConfig {
     return new ExecutableFinder().getExecutable(compilerPath, delegate.getEnvironment());
   }
 
+  private Path getPathToJar(String jarName) {
+    Path reflect = getKotlinHome().resolve(jarName + ".jar");
+    if (Files.isRegularFile(reflect)) {
+      return reflect.normalize();
+    }
+
+    reflect = getKotlinHome().resolve(Paths.get("lib", jarName + ".jar"));
+    if (Files.isRegularFile(reflect)) {
+      return reflect.normalize();
+    }
+
+    reflect = getKotlinHome().resolve(Paths.get("libexec", "lib", jarName + ".jar"));
+    if (Files.isRegularFile(reflect)) {
+      return reflect.normalize();
+    }
+
+    throw new HumanReadableException(
+        "Could not resolve " + jarName + " JAR location (kotlin home:" + getKotlinHome() + ").");
+  }
+
   /**
    * Get the path to the Kotlin runtime jar.
    *
    * @return the Kotlin runtime jar path
    */
   Path getPathToStdlibJar() {
-    Path stdlib = getKotlinHome().resolve("kotlin-stdlib.jar");
-    if (Files.isRegularFile(stdlib)) {
-      return stdlib.normalize();
+    try {
+      return getPathToJar("kotlin-stdlib");
+    } catch (HumanReadableException e) {
+      // TODO: Check if kt version < 1.1
+      return getPathToJar("kotlin-runtime");
     }
-
-    stdlib = getKotlinHome().resolve(Paths.get("lib", "kotlin-stdlib.jar"));
-    if (Files.isRegularFile(stdlib)) {
-      return stdlib.normalize();
-    }
-
-    stdlib = getKotlinHome().resolve(Paths.get("libexec", "lib", "kotlin-stdlib.jar"));
-    if (Files.isRegularFile(stdlib)) {
-      return stdlib.normalize();
-    }
-
-    // Support for Kotlin < 1.1 ... kotlin-stdlib used to be kotlin-runtime.
-    stdlib = getKotlinHome().resolve("kotlin-runtime.jar");
-    if (Files.isRegularFile(stdlib)) {
-      return stdlib.normalize();
-    }
-
-    stdlib = getKotlinHome().resolve(Paths.get("lib", "kotlin-runtime.jar"));
-    if (Files.isRegularFile(stdlib)) {
-      return stdlib.normalize();
-    }
-
-    stdlib = getKotlinHome().resolve(Paths.get("libexec", "lib", "kotlin-runtime.jar"));
-    if (Files.isRegularFile(stdlib)) {
-      return stdlib.normalize();
-    }
-
-    throw new HumanReadableException(
-        "Could not resolve kotlin stdlib JAR location (kotlin home:" + getKotlinHome() + ").");
   }
 
   /**
@@ -114,23 +122,7 @@ public class KotlinBuckConfig {
    * @return the Kotlin reflection jar path
    */
   Path getPathToReflectJar() {
-    Path reflect = getKotlinHome().resolve("kotlin-reflect.jar");
-    if (Files.isRegularFile(reflect)) {
-      return reflect.normalize();
-    }
-
-    reflect = getKotlinHome().resolve(Paths.get("lib", "kotlin-reflect.jar"));
-    if (Files.isRegularFile(reflect)) {
-      return reflect.normalize();
-    }
-
-    reflect = getKotlinHome().resolve(Paths.get("libexec", "lib", "kotlin-reflect.jar"));
-    if (Files.isRegularFile(reflect)) {
-      return reflect.normalize();
-    }
-
-    throw new HumanReadableException(
-        "Could not resolve kotlin reflect JAR location (kotlin home:" + getKotlinHome() + ").");
+    return getPathToJar("kotlin-reflect");
   }
 
   /**
@@ -139,25 +131,7 @@ public class KotlinBuckConfig {
    * @return the Kotlin script runtime jar path
    */
   Path getPathToScriptRuntimeJar() {
-    Path script = getKotlinHome().resolve("kotlin-script-runtime.jar");
-    if (Files.isRegularFile(script)) {
-      return script.normalize();
-    }
-
-    script = getKotlinHome().resolve(Paths.get("lib", "kotlin-script-runtime.jar"));
-    if (Files.isRegularFile(script)) {
-      return script.normalize();
-    }
-
-    script = getKotlinHome().resolve(Paths.get("libexec", "lib", "kotlin-script-runtime.jar"));
-    if (Files.isRegularFile(script)) {
-      return script.normalize();
-    }
-
-    throw new HumanReadableException(
-        "Could not resolve kotlin script runtime JAR location (kotlin home:"
-            + getKotlinHome()
-            + ").");
+    return getPathToJar("kotlin-script-runtime");
   }
 
   /**
@@ -166,23 +140,42 @@ public class KotlinBuckConfig {
    * @return the Kotlin compiler jar path
    */
   Path getPathToCompilerJar() {
-    Path compiler = getKotlinHome().resolve("kotlin-compiler.jar");
-    if (Files.isRegularFile(compiler)) {
-      return compiler.normalize();
+    try {
+      return getPathToJar("kotlin-compiler-embeddable");
+    } catch (HumanReadableException e) {
+      LOG.warn(
+          "kotlin-compiler-embeddable.jar was not found in "
+              + kotlinHome
+              + " directory, this"
+              + " may result in kapt not working properly. Proceeding with kotlin-compiler.jar");
+      return getPathToJar("kotlin-compiler");
     }
+  }
 
-    compiler = getKotlinHome().resolve(Paths.get("lib", "kotlin-compiler.jar"));
-    if (Files.isRegularFile(compiler)) {
-      return compiler.normalize();
+  /**
+   * Get the path to the Kotlin annotation processing jar.
+   *
+   * @return the Kotlin annotation processing jar path
+   */
+  Path getPathToAnnotationProcessingJar() {
+    try {
+      return getPathToJar("kotlin-annotation-processing-gradle");
+    } catch (HumanReadableException e) {
+      LOG.warn(
+          "kotlin-annotation-processing-gradle.jar was not found in "
+              + kotlinHome
+              + " directory, searching for kotlin-annotation-processing-maven.jar");
+      try {
+        return getPathToJar("kotlin-annotation-processing-maven");
+      } catch (HumanReadableException er) {
+        LOG.warn(
+            "kotlin-annotation-processing-maven.jar was not found in "
+                + kotlinHome
+                + " directory, this"
+                + " may result in kapt not working properly. Proceeding with kotlin-annotation-processing.jar");
+        return getPathToJar("kotlin-annotation-processing");
+      }
     }
-
-    compiler = getKotlinHome().resolve(Paths.get("libexec", "lib", "kotlin-compiler.jar"));
-    if (Files.isRegularFile(compiler)) {
-      return compiler.normalize();
-    }
-
-    throw new HumanReadableException(
-        "Could not resolve kotlin compiler JAR location (kotlin home:" + getKotlinHome() + ").");
   }
 
   /**
