@@ -30,8 +30,5 @@ interface AbstractOcamlToolchain extends Toolchain {
 
   OcamlPlatform getDefaultOcamlPlatform();
 
-  @Value.Derived
-  default FlavorDomain<OcamlPlatform> getOcamlPlatforms() {
-    return FlavorDomain.of("OCaml Platforms", getDefaultOcamlPlatform());
-  }
+  FlavorDomain<OcamlPlatform> getOcamlPlatforms();
 }

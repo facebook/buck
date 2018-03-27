@@ -17,6 +17,7 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
@@ -27,17 +28,19 @@ public class OcamlLibraryBuilder
         OcamlLibraryDescriptionArg.Builder, OcamlLibraryDescriptionArg, OcamlLibraryDescription,
         OcamlLibrary> {
 
-  public OcamlLibraryBuilder(BuildTarget target, OcamlPlatform defaultPlatform) {
+  public OcamlLibraryBuilder(
+      BuildTarget target, OcamlPlatform defaultPlatform, FlavorDomain<OcamlPlatform> platforms) {
     super(
         new OcamlLibraryDescription(
             new ToolchainProviderBuilder()
-                .withToolchain(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.of(defaultPlatform))
+                .withToolchain(
+                    OcamlToolchain.DEFAULT_NAME, OcamlToolchain.of(defaultPlatform, platforms))
                 .build()),
         target);
   }
 
   public OcamlLibraryBuilder(BuildTarget target) {
-    this(target, OcamlTestUtils.DEFAULT_PLATFORM);
+    this(target, OcamlTestUtils.DEFAULT_PLATFORM, OcamlTestUtils.DEFAULT_PLATFORMS);
   }
 
   public OcamlLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
