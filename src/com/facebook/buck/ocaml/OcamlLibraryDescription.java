@@ -20,6 +20,7 @@ import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
@@ -78,9 +79,9 @@ public class OcamlLibraryDescription
 
     OcamlToolchain ocamlToolchain =
         toolchainProvider.getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class);
-    OcamlPlatform ocamlPlatform = ocamlToolchain.getDefaultOcamlPlatform();
-
-    if (buildTarget.getFlavors().contains(ocamlPlatform.getFlavor())) {
+    FlavorDomain<OcamlPlatform> ocamlPlatforms = ocamlToolchain.getOcamlPlatforms();
+    Optional<OcamlPlatform> ocamlPlatform = ocamlPlatforms.getValue(buildTarget);
+    if (ocamlPlatform.isPresent()) {
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(context.getBuildRuleResolver());
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -91,7 +92,7 @@ public class OcamlLibraryDescription
               buildTarget,
               context.getCellPathResolver(),
               context.getBuildRuleResolver(),
-              ocamlPlatform,
+              ocamlPlatform.get(),
               args.getCompilerFlags(),
               args.getWarningsFlags());
 
@@ -101,12 +102,12 @@ public class OcamlLibraryDescription
         OcamlGeneratedBuildRules result =
             OcamlRuleBuilder.createFineGrainedBuildRules(
                 buildTarget,
-                ocamlPlatform,
+                ocamlPlatform.get(),
                 compileBuildTarget,
                 context.getProjectFilesystem(),
                 params,
                 context.getBuildRuleResolver(),
-                allDeps.get(context.getBuildRuleResolver(), ocamlPlatform.getCxxPlatform()),
+                allDeps.get(context.getBuildRuleResolver(), ocamlPlatform.get().getCxxPlatform()),
                 srcs,
                 /* isLibrary */ true,
                 args.getBytecodeOnly(),
@@ -137,12 +138,12 @@ public class OcamlLibraryDescription
         OcamlBuild ocamlLibraryBuild =
             OcamlRuleBuilder.createBulkCompileRule(
                 buildTarget,
-                ocamlPlatform,
+                ocamlPlatform.get(),
                 compileBuildTarget,
                 context.getProjectFilesystem(),
                 params,
                 context.getBuildRuleResolver(),
-                allDeps.get(context.getBuildRuleResolver(), ocamlPlatform.getCxxPlatform()),
+                allDeps.get(context.getBuildRuleResolver(), ocamlPlatform.get().getCxxPlatform()),
                 srcs,
                 /* isLibrary */ true,
                 args.getBytecodeOnly(),
@@ -230,11 +231,13 @@ public class OcamlLibraryDescription
       AbstractOcamlLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    targetGraphOnlyDepsBuilder.addAll(
-        OcamlUtil.getParseTimeDeps(
-            toolchainProvider
-                .getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class)
-                .getDefaultOcamlPlatform()));
+    for (OcamlPlatform platform :
+        toolchainProvider
+            .getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class)
+            .getOcamlPlatforms()
+            .getValues()) {
+      targetGraphOnlyDepsBuilder.addAll(OcamlUtil.getParseTimeDeps(platform));
+    }
   }
 
   @Override

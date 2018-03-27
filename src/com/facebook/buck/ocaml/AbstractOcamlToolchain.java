@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
@@ -28,4 +29,9 @@ interface AbstractOcamlToolchain extends Toolchain {
   String DEFAULT_NAME = "ocaml-toolchain";
 
   OcamlPlatform getDefaultOcamlPlatform();
+
+  @Value.Derived
+  default FlavorDomain<OcamlPlatform> getOcamlPlatforms() {
+    return FlavorDomain.of("OCaml Platforms", getDefaultOcamlPlatform());
+  }
 }
