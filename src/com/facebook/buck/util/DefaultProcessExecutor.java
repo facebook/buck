@@ -183,7 +183,11 @@ public class DefaultProcessExecutor implements ProcessExecutor {
   public Result waitForLaunchedProcess(LaunchedProcess launchedProcess)
       throws InterruptedException {
     Preconditions.checkState(launchedProcess instanceof LaunchedProcessImpl);
-    int exitCode = ((LaunchedProcessImpl) launchedProcess).process.waitFor();
+    Preconditions.checkState(
+        !waitForInternal(
+            ((LaunchedProcessImpl) launchedProcess).process, Optional.empty(), Optional.empty()));
+    int exitCode = ((LaunchedProcessImpl) launchedProcess).process.exitValue();
+
     return new Result(exitCode, false, Optional.empty(), Optional.empty());
   }
 
@@ -193,27 +197,32 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       throws InterruptedException {
     Preconditions.checkState(launchedProcess instanceof LaunchedProcessImpl);
     Process process = ((LaunchedProcessImpl) launchedProcess).process;
-    boolean timedOut = waitForTimeoutInternal(process, millis, timeOutHandler);
+    boolean timedOut = waitForInternal(process, Optional.of(millis), timeOutHandler);
     int exitCode = !timedOut ? process.exitValue() : 1;
     return new Result(exitCode, timedOut, Optional.empty(), Optional.empty());
   }
 
   /**
-   * Waits up to {@code millis} milliseconds for the given process to finish.
+   * Waits up to {@code timeoutMillis} milliseconds for the given process to finish. If no timeout
+   * is present, waits forever.
    *
    * @return whether the wait has timed out.
    */
-  private boolean waitForTimeoutInternal(
-      Process process, long millis, Optional<Consumer<Process>> timeOutHandler)
+  private boolean waitForInternal(
+      Process process, Optional<Long> timeoutMs, Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException {
 
-    if (!process.waitFor(millis, TimeUnit.MILLISECONDS)) {
-      try {
-        timeOutHandler.ifPresent(consumer -> consumer.accept(process));
-      } catch (RuntimeException e1) {
-        LOG.error(e1, "ProcessExecutor timeOutHandler threw an exception, ignored.");
+    if (timeoutMs.isPresent()) {
+      if (!process.waitFor(timeoutMs.get(), TimeUnit.MILLISECONDS)) {
+        try {
+          timeOutHandler.ifPresent(consumer -> consumer.accept(process));
+        } catch (RuntimeException e1) {
+          LOG.error(e1, "ProcessExecutor timeOutHandler threw an exception, ignored.");
+        }
+        return true;
       }
-      return true;
+    } else {
+      process.waitFor();
     }
     return false;
   }
@@ -281,15 +290,10 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       }
 
       // Wait for the process to complete.  If a timeout was given, we wait up to the timeout
-      // for it to finish then force kill it.  If no timeout was given, just wait for it using
-      // the regular `waitFor` method.
-      if (timeOutMs.isPresent()) {
-        timedOut = waitForTimeoutInternal(process, timeOutMs.get(), timeOutHandler);
-        if (!processHelper.hasProcessFinished(process)) {
-          process.destroyForcibly();
-        }
-      } else {
-        process.waitFor();
+      // for it to finish then force kill it.  If no timeout was given, just wait for it forever.
+      timedOut = waitForInternal(process, timeOutMs, timeOutHandler);
+      if (timedOut && !processHelper.hasProcessFinished(process)) {
+        process.destroyForcibly();
       }
 
       stdOutTerminationFuture.get();
