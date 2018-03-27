@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /** Fake implementation of {@link java.lang.Process}. */
 public class FakeProcess extends Process {
@@ -114,6 +115,12 @@ public class FakeProcess extends Process {
       }
       return exitValue;
     }
+  }
+
+  @Override
+  public boolean waitFor(long timeout, TimeUnit unit) throws InterruptedException {
+    waitFor();
+    return true;
   }
 
   /** Returns true if {@link #destroy()} was called on this object, false otherwise. */

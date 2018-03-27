@@ -36,7 +36,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 /** Executes a {@link Process} and blocks until it is finished. */
@@ -207,27 +206,14 @@ public class DefaultProcessExecutor implements ProcessExecutor {
   private boolean waitForTimeoutInternal(
       Process process, long millis, Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException {
-    Future<?> waiter =
-        THREAD_POOL.submit(
-            () -> {
-              try {
-                process.waitFor();
-              } catch (InterruptedException e) {
-                // The thread waiting has hit its timeout.
-              }
-            });
-    try {
-      waiter.get(millis, TimeUnit.MILLISECONDS);
-    } catch (TimeoutException e) {
+
+    if (!process.waitFor(millis, TimeUnit.MILLISECONDS)) {
       try {
         timeOutHandler.ifPresent(consumer -> consumer.accept(process));
       } catch (RuntimeException e1) {
         LOG.error(e1, "ProcessExecutor timeOutHandler threw an exception, ignored.");
       }
-      waiter.cancel(true);
       return true;
-    } catch (ExecutionException e) {
-      throw new IllegalStateException("Unexpected exception thrown from waiter.", e);
     }
     return false;
   }
