@@ -301,11 +301,6 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
       return file;
     }
 
-    // TODO(mbolin): Eliminate this temporary exemption for symbolic links.
-    if (isSymLink(file)) {
-      return file;
-    }
-
     throw new RuntimeException(
         String.format("Not an ordinary file: '%s'.", pathRelativeToProjectRoot));
   }
