@@ -471,7 +471,7 @@ public class BuildCommand extends AbstractCommand {
       this.arguments.addAll(additionalTargets);
     }
     BuildEvent.Started started = postBuildStartedEvent(params);
-    ExitCode exitCode = ExitCode.SUCCESS;
+    ExitCode exitCode = ExitCode.BUILD_ERROR;
     try (CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
         getForkJoinPoolSupplier(params.getBuckConfig())) {
       exitCode = executeBuildAndProcessResult(params, commandThreadManager, poolSupplier);
