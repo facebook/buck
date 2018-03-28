@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.ParserStateObjectInputStream;
 import com.facebook.buck.parser.thrift.RemoteDaemonicParserState;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -88,7 +89,7 @@ public class ParserCacheCommand extends AbstractCommand {
           ZipInputStream zipis = new ZipInputStream(fis)) {
         ZipEntry entry = zipis.getNextEntry();
         Preconditions.checkState(entry.getName().equals("parser_data"));
-        try (ObjectInputStream ois = new ObjectInputStream(zipis)) {
+        try (ObjectInputStream ois = new ParserStateObjectInputStream(zipis)) {
           RemoteDaemonicParserState state;
           try {
             state = (RemoteDaemonicParserState) ois.readObject();

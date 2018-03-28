@@ -35,6 +35,7 @@ java_immutables_library(
         "Parser.java",
         "ParserMessages.java",
         "ParserPythonInterpreterProvider.java",
+        "ParserStateObjectInputStream.java",
         "ParserTargetNodeFactory.java",
         "PerBuildState.java",
         "PipelineNodeCache.java",
