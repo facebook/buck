@@ -358,6 +358,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       ImmutableList<ExtensionData> dependencies) {
     return dependencies
         .stream()
+        .distinct() // it's possible to have multiple loads from the same extension file
         .collect(
             ImmutableMap.toImmutableMap(
                 ExtensionData::getImportString, ExtensionData::getExtension));

@@ -23,6 +23,7 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -270,6 +271,15 @@ public class SkylarkProjectBuildFileParserTest {
     Event printEvent = eventCollector.iterator().next();
     assertThat(printEvent.getMessage(), equalTo("hello world"));
     assertThat(printEvent.getKind(), equalTo(EventKind.DEBUG));
+  }
+
+  @Test
+  public void canLoadSameExtensionMultipleTimes() throws Exception {
+    Path buildFile = projectFilesystem.resolve("BUCK");
+    Files.write(buildFile, Arrays.asList("load('//:ext.bzl', 'ext')", "load('//:ext.bzl', 'ext')"));
+    Path extensionFile = projectFilesystem.resolve("ext.bzl");
+    Files.write(extensionFile, Arrays.asList("ext = 'hello'", "print('hello world')"));
+    assertTrue(parser.getAll(buildFile, new AtomicLong()).isEmpty());
   }
 
   @Test
