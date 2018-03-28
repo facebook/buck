@@ -57,7 +57,7 @@ public class WorkerMacroArgTest {
     Integer maxWorkers = 5;
     WorkerToolBuilder.newWorkerToolBuilder(BuildTargetFactory.newInstance("//:worker_rule"))
         .setExe(shBinaryRule.getBuildTarget())
-        .setArgs(startupArgs)
+        .setArgs(StringWithMacrosUtils.format(startupArgs))
         .setMaxWorkers(maxWorkers)
         .build(resolver);
 

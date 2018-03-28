@@ -30,6 +30,8 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestBuildRuleResolver;
+import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -54,7 +56,7 @@ public class WorkerToolTest {
     BuildRule workerRule =
         WorkerToolBuilder.newWorkerToolBuilder(BuildTargetFactory.newInstance("//:worker_rule"))
             .setExe(shBinaryRule.getBuildTarget())
-            .setArgs("arg1", "arg2")
+            .setArgs(StringWithMacrosUtils.format("arg1"), StringWithMacrosUtils.format("arg2"))
             .build(resolver);
 
     assertThat(
@@ -102,11 +104,14 @@ public class WorkerToolTest {
     WorkerToolBuilder workerToolBuilder =
         WorkerToolBuilder.newWorkerToolBuilder(BuildTargetFactory.newInstance("//:worker_rule"))
             .setExe(shBinaryRule.getBuildTarget())
-            .setArgs("--input $(location //:file)");
+            .setArgs(
+                StringWithMacrosUtils.format(
+                    "--input %s", LocationMacro.of(exportFileRule.getBuildTarget())));
     DefaultWorkerTool workerTool = workerToolBuilder.build(resolver);
 
     assertThat(
-        workerToolBuilder.findImplicitDeps(), Matchers.hasItem(exportFileRule.getBuildTarget()));
+        workerToolBuilder.build().getExtraDeps(),
+        Matchers.hasItem(exportFileRule.getBuildTarget()));
     assertThat(workerTool.getBuildDeps(), Matchers.hasItems(shBinaryRule, exportFileRule));
     assertThat(
         workerTool.getRuntimeDeps(ruleFinder).collect(ImmutableSet.toImmutableSet()),
@@ -136,11 +141,16 @@ public class WorkerToolTest {
     WorkerToolBuilder workerToolBuilder =
         WorkerToolBuilder.newWorkerToolBuilder(BuildTargetFactory.newInstance("//:worker_rule"))
             .setExe(shBinaryRule.getBuildTarget())
-            .setEnv(ImmutableMap.of("ENV_VAR_NAME", "$(location //:file)"));
+            .setEnv(
+                ImmutableMap.of(
+                    "ENV_VAR_NAME",
+                    StringWithMacrosUtils.format(
+                        "%s", LocationMacro.of(exportFileRule.getBuildTarget()))));
     DefaultWorkerTool workerTool = workerToolBuilder.build(resolver);
 
     assertThat(
-        workerToolBuilder.findImplicitDeps(), Matchers.hasItem(exportFileRule.getBuildTarget()));
+        workerToolBuilder.build().getExtraDeps(),
+        Matchers.hasItem(exportFileRule.getBuildTarget()));
     assertThat(workerTool.getBuildDeps(), Matchers.hasItems(shBinaryRule, exportFileRule));
     assertThat(
         workerTool.getRuntimeDeps(ruleFinder).collect(ImmutableSet.toImmutableSet()),
@@ -169,7 +179,10 @@ public class WorkerToolTest {
     WorkerToolBuilder workerToolBuilder =
         WorkerToolBuilder.newWorkerToolBuilder(BuildTargetFactory.newInstance("//:worker_rule"))
             .setExe(shBinaryRule.getBuildTarget())
-            .setArgs("--input", "$(location //:file)");
+            .setArgs(
+                StringWithMacrosUtils.format("--input"),
+                StringWithMacrosUtils.format(
+                    "%s", LocationMacro.of(exportFileRule.getBuildTarget())));
     WorkerTool workerTool = workerToolBuilder.build(resolver);
 
     assertThat(

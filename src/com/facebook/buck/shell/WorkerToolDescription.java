@@ -18,54 +18,43 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ProxyArg;
+import com.facebook.buck.rules.macros.AbstractMacroExpander;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.rules.macros.MacroArg;
-import com.facebook.buck.rules.macros.MacroExpander;
-import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.types.Either;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import org.immutables.value.Value;
 
-public class WorkerToolDescription
-    implements Description<WorkerToolDescriptionArg>,
-        ImplicitDepsInferringDescription<WorkerToolDescription.AbstractWorkerToolDescriptionArg> {
+public class WorkerToolDescription implements Description<WorkerToolDescriptionArg> {
 
   private static final String CONFIG_SECTION = "worker";
   private static final String CONFIG_PERSISTENT_KEY = "persistent";
 
-  public static final MacroHandler MACRO_HANDLER =
-      new MacroHandler(
-          ImmutableMap.<String, MacroExpander>builder()
-              .put("location", new LocationMacroExpander())
-              .put("classpath", new ClasspathMacroExpander())
-              .put("exe", new ExecutableMacroExpander())
-              .build());
+  public static final ImmutableList<AbstractMacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
+      ImmutableList.of(
+          new LocationMacroExpander(), new ClasspathMacroExpander(), new ExecutableMacroExpander());
 
   private final BuckConfig buckConfig;
 
@@ -109,13 +98,17 @@ public class WorkerToolDescription
             .filter(Objects::nonNull)
             .collect(ImmutableList.toImmutableList()));
 
-    Function<String, Arg> toArg =
-        MacroArg.toMacroArgFunction(
-            MACRO_HANDLER, buildTarget, context.getCellPathResolver(), resolver);
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.builder()
+            .setBuildTarget(buildTarget)
+            .setCellPathResolver(context.getCellPathResolver())
+            .setResolver(resolver)
+            .setExpanders(MACRO_EXPANDERS)
+            .build();
 
     if (args.getArgs().isLeft()) {
       builder.addArg(
-          new ProxyArg(toArg.apply(args.getArgs().getLeft())) {
+          new ProxyArg(macrosConverter.convert(args.getArgs().getLeft())) {
             @Override
             public void appendToCommandLine(
                 Consumer<String> consumer, SourcePathResolver pathResolver) {
@@ -129,12 +122,12 @@ public class WorkerToolDescription
             }
           });
     } else {
-      for (String arg : args.getArgs().getRight()) {
-        builder.addArg(toArg.apply(arg));
+      for (StringWithMacros arg : args.getArgs().getRight()) {
+        builder.addArg(macrosConverter.convert(arg));
       }
     }
-    for (Map.Entry<String, String> e : args.getEnv().entrySet()) {
-      builder.addEnv(e.getKey(), toArg.apply(e.getValue()));
+    for (Map.Entry<String, StringWithMacros> e : args.getEnv().entrySet()) {
+      builder.addEnv(e.getKey(), macrosConverter.convert(e.getValue()));
     }
 
     // negative or zero: unlimited number of worker processes
@@ -151,43 +144,13 @@ public class WorkerToolDescription
             .orElse(buckConfig.getBooleanValue(CONFIG_SECTION, CONFIG_PERSISTENT_KEY, false)));
   }
 
-  @Override
-  public void findDepsForTargetFromConstructorArgs(
-      BuildTarget buildTarget,
-      CellPathResolver cellRoots,
-      AbstractWorkerToolDescriptionArg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
-      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    try {
-      if (constructorArg.getArgs().isLeft()) {
-        MACRO_HANDLER.extractParseTimeDeps(
-            buildTarget,
-            cellRoots,
-            constructorArg.getArgs().getLeft(),
-            extraDepsBuilder,
-            targetGraphOnlyDepsBuilder);
-      } else {
-        for (String arg : constructorArg.getArgs().getRight()) {
-          MACRO_HANDLER.extractParseTimeDeps(
-              buildTarget, cellRoots, arg, extraDepsBuilder, targetGraphOnlyDepsBuilder);
-        }
-      }
-      for (Map.Entry<String, String> env : constructorArg.getEnv().entrySet()) {
-        MACRO_HANDLER.extractParseTimeDeps(
-            buildTarget, cellRoots, env.getValue(), extraDepsBuilder, targetGraphOnlyDepsBuilder);
-      }
-    } catch (MacroException e) {
-      throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
-    }
-  }
-
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractWorkerToolDescriptionArg extends CommonDescriptionArg {
-    ImmutableMap<String, String> getEnv();
+    ImmutableMap<String, StringWithMacros> getEnv();
 
     @Value.Default
-    default Either<String, ImmutableList<String>> getArgs() {
+    default Either<StringWithMacros, ImmutableList<StringWithMacros>> getArgs() {
       return Either.ofRight(ImmutableList.of());
     }
 
