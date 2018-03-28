@@ -33,7 +33,7 @@ class EmptyTempFile(object):
         return self.file
 
 
-def is_git(dirpath):
+def is_git(dirpath):  # type: (str) -> bool
     dot_git = os.path.join(dirpath, '.git')
     if which('git') and sys.platform != 'cygwin':
         if os.path.exists(dot_git) and os.path.isdir(dot_git):
@@ -50,7 +50,7 @@ def is_git(dirpath):
     return False
 
 
-def is_dirty(dirpath):
+def is_dirty(dirpath):  # type: (str) -> bool
     # Ignore any changes under these paths for the purposes of forcing a rebuild
     # of Buck itself.
     IGNORE_PATHS = ['test']
@@ -67,27 +67,27 @@ def is_dirty(dirpath):
     return bool(output.strip())
 
 
-def get_git_revision(dirpath):
+def get_git_revision(dirpath):  # type: (str) -> str
     output = check_output(
         ['git', 'rev-parse', 'HEAD', '--'],
         cwd=dirpath)
     return output.splitlines()[0].strip()
 
 
-def get_git_revision_timestamp(dirpath):
+def get_git_revision_timestamp(dirpath):  # type: (str) -> str
     return check_output(
         ['git', 'log', '--pretty=format:%ct', '-1', 'HEAD', '--'],
         cwd=dirpath).strip()
 
 
-def get_clean_buck_version(dirpath, allow_dirty=False):
+def get_clean_buck_version(dirpath, allow_dirty=False):  # type: (str, bool) -> str
     if not is_git(dirpath):
         return 'N/A'
     if allow_dirty or not is_dirty(dirpath):
         return get_git_revision(dirpath)
 
 
-def get_dirty_buck_version(dirpath):
+def get_dirty_buck_version(dirpath):  # type: (str) -> str
     git_tree_in = check_output(
         ['git', 'log', '-n1', '--pretty=format:%T', 'HEAD', '--'],
         cwd=dirpath).strip()
