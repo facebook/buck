@@ -128,7 +128,7 @@ public interface BuildRule extends Comparable<BuildRule> {
    * @return the provider of the type desired from this BuildRule
    * @throws MissingProviderException if the required provider is not present
    */
-  <T extends BuildRuleInfoProvider> T getProvider(T.ProviderKey providerKey)
+  <T extends BuildRuleInfoProvider> T getProvider(BuildRuleInfoProvider.ProviderKey providerKey)
       throws MissingProviderException;
 
   /**
