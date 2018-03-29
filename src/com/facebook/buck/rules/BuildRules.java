@@ -19,13 +19,15 @@ package com.facebook.buck.rules;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class BuildRules {
 
@@ -75,16 +77,21 @@ public class BuildRules {
     return exportedRules.build();
   }
 
-  public static void buildExportedRules(
+  private static void buildExportedRules(
       Iterable<? extends BuildRule> rules, ImmutableCollection.Builder<BuildRule> exportedRules) {
     AbstractBreadthFirstTraversal<ExportDependencies> visitor =
         new AbstractBreadthFirstTraversal<ExportDependencies>(
             Iterables.filter(rules, ExportDependencies.class)) {
           @Override
           public Iterable<ExportDependencies> visit(ExportDependencies exporter) {
-            Iterable<BuildRule> exported = exporter.getExportedDeps();
+            Set<BuildRule> exported = exporter.getExportedDeps();
+            Set<BuildRule> exportedProvided = exporter.getExportedProvidedDeps();
             exportedRules.addAll(exported);
-            return FluentIterable.from(exported).filter(ExportDependencies.class).toSet();
+            exportedRules.addAll(exportedProvided);
+            return Stream.concat(exported.stream(), exportedProvided.stream())
+                .filter(ExportDependencies.class::isInstance)
+                .map(ExportDependencies.class::cast)
+                .collect(Collectors.toSet());
           }
         };
     visitor.start();

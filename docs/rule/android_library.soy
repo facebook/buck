@@ -167,6 +167,8 @@ compiled class files and resources.
   {param binary: 'android_binary' /}
 {/call}
 
+{call jvm_common.exported_provided_deps /}
+
 {call buck.deps_query_arg /}
 
 {call buck.provided_deps_query_arg /}

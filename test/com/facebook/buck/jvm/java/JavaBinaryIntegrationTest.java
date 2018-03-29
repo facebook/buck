@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
@@ -231,6 +232,15 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
                 containsString("javac"),
                 containsString("-bootclasspath"),
                 containsString(workspace.getPath("clowntown.jar").toString()))));
+  }
+
+  @Test
+  public void testExportedProvidedDepsExcludedFromBinary() throws IOException {
+    setUpProjectWorkspaceForScenario("exported_provided_deps");
+    Path jar = workspace.buildAndReturnOutput("//:binary_without_exported_provided_dep");
+    try (JarFile jarFile = new JarFile(jar.toFile())) {
+      assertNull(jarFile.getEntry("com/test/ExportedProvidedLibraryClass.class"));
+    }
   }
 
   private ProjectWorkspace setUpProjectWorkspaceForScenario(String scenario) throws IOException {

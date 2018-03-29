@@ -133,8 +133,10 @@ of the compiled class files and resources.
 {/call}
 
 {call jvm_common.provided_deps}
-  {param binary: 'java_binary' /}
+  {param binary: 'java_library' /}
 {/call}
+
+{call jvm_common.exported_provided_deps /}
 
 {call jvm_common.abi_generation_mode /}
 

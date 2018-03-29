@@ -1029,6 +1029,54 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
             "    When building rule //:main."));
   }
 
+  @Test
+  public void testExportedProvidedDepsPropagated() throws IOException {
+    setUpProjectWorkspaceForScenario("exported_provided_deps");
+
+    ProcessResult buildResult =
+        workspace.runBuckCommand("build", "//:lib_with_implicit_dep_on_provided_lib");
+    buildResult.assertSuccess();
+
+    workspace.verify();
+  }
+
+  @Test
+  public void testExportedProvidedDepsPropagatedThroughExportedDeps() throws IOException {
+    setUpProjectWorkspaceForScenario("exported_provided_deps");
+
+    ProcessResult buildResult =
+        workspace.runBuckCommand(
+            "build", "//:lib_with_implicit_dep_on_provided_lib_through_exported_deps");
+    buildResult.assertSuccess();
+
+    workspace.verify();
+  }
+
+  @Test
+  public void testExportedProvidedDepsPropagatedThroughProvidedDeps() throws IOException {
+    setUpProjectWorkspaceForScenario("exported_provided_deps");
+
+    ProcessResult buildResult =
+        workspace.runBuckCommand(
+            "build", "//:lib_with_implicit_dep_on_provided_lib_through_provided_deps");
+    buildResult.assertSuccess();
+
+    workspace.verify();
+  }
+
+  @Test
+  public void testExportedProvidedDepsPropagatedThroughExportedDepsOfAnotherLibrary()
+      throws IOException {
+    setUpProjectWorkspaceForScenario("exported_provided_deps");
+
+    ProcessResult buildResult =
+        workspace.runBuckCommand(
+            "build", "//:lib_with_implicit_dep_on_provided_lib_through_exported_library_deps");
+    buildResult.assertSuccess();
+
+    workspace.verify();
+  }
+
   /** Asserts that the specified file exists and returns its contents. */
   private String getContents(Path relativePathToFile) throws IOException {
     Path file = workspace.getPath(relativePathToFile);

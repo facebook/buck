@@ -95,3 +95,14 @@ java_library(
         "buck//third-party/java/jsr:jsr305",
     ],
 )
+
+java_library(
+    name = "bar_with_exported_provided_dep",
+    srcs = ["Bar.java"],
+    exported_provided_deps = [
+        "buck//third-party/java/jsr:jsr305",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

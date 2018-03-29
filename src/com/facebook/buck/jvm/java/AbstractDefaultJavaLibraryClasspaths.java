@@ -165,7 +165,9 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
   @Value.Lazy
   Iterable<BuildRule> getCompileTimeFirstOrderDeps() {
     return Iterables.concat(
-        getAllFirstOrderNonProvidedDeps(), Preconditions.checkNotNull(getDeps()).getProvidedDeps());
+        getAllFirstOrderNonProvidedDeps(),
+        Preconditions.checkNotNull(getDeps()).getProvidedDeps(),
+        Preconditions.checkNotNull(getDeps()).getExportedProvidedDeps());
   }
 
   @Value.Lazy

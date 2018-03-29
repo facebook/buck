@@ -23,4 +23,7 @@ import org.immutables.value.Value;
 public interface HasProvidedDeps {
   @Value.NaturalOrder
   ImmutableSortedSet<BuildTarget> getProvidedDeps();
+
+  @Value.NaturalOrder
+  ImmutableSortedSet<BuildTarget> getExportedProvidedDeps();
 }

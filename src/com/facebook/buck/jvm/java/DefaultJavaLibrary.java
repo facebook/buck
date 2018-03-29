@@ -116,6 +116,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   private final SortedSet<BuildRule> firstOrderPackageableDeps;
   private final ImmutableSortedSet<BuildRule> fullJarExportedDeps;
   private final ImmutableSortedSet<BuildRule> fullJarProvidedDeps;
+  private final ImmutableSortedSet<BuildRule> fullJarExportedProvidedDeps;
 
   private final Supplier<ImmutableSet<SourcePath>> outputClasspathEntriesSupplier;
   private final Supplier<ImmutableSet<SourcePath>> transitiveClasspathsSupplier;
@@ -163,6 +164,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       SortedSet<BuildRule> firstOrderPackageableDeps,
       ImmutableSortedSet<BuildRule> fullJarExportedDeps,
       ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
+      ImmutableSortedSet<BuildRule> fullJarExportedProvidedDeps,
       @Nullable BuildTarget abiJar,
       @Nullable BuildTarget sourceOnlyAbiJar,
       Optional<String> mavenCoords,
@@ -178,18 +180,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
     // and so only make sense for java library types.
-    for (BuildRule dep : fullJarExportedDeps) {
-      if (!(dep instanceof JavaLibrary)) {
-        throw new HumanReadableException(
-            buildTarget
-                + ": exported dep "
-                + dep.getBuildTarget()
-                + " ("
-                + dep.getType()
-                + ") "
-                + "must be a type of java library.");
-      }
-    }
+    validateExportedDepsType(buildTarget, fullJarExportedDeps);
+    validateExportedDepsType(buildTarget, fullJarExportedProvidedDeps);
 
     Sets.SetView<BuildRule> missingExports =
         Sets.difference(fullJarExportedDeps, firstOrderPackageableDeps);
@@ -200,6 +192,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     this.firstOrderPackageableDeps = firstOrderPackageableDeps;
     this.fullJarExportedDeps = fullJarExportedDeps;
     this.fullJarProvidedDeps = fullJarProvidedDeps;
+    this.fullJarExportedProvidedDeps = fullJarExportedProvidedDeps;
     this.mavenCoords = mavenCoords;
     this.tests = tests;
     this.requiredForSourceOnlyAbi = requiredForSourceOnlyAbi;
@@ -225,6 +218,22 @@ public class DefaultJavaLibrary extends AbstractBuildRule
             () -> JavaLibraryClasspathProvider.getTransitiveClasspathDeps(DefaultJavaLibrary.this));
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+  }
+
+  private static void validateExportedDepsType(
+      BuildTarget buildTarget, ImmutableSortedSet<BuildRule> exportedDeps) {
+    for (BuildRule dep : exportedDeps) {
+      if (!(dep instanceof JavaLibrary)) {
+        throw new HumanReadableException(
+            buildTarget
+                + ": exported dep "
+                + dep.getBuildTarget()
+                + " ("
+                + dep.getType()
+                + ") "
+                + "must be a type of java library.");
+      }
+    }
   }
 
   @Override
@@ -323,6 +332,11 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     return fullJarExportedDeps;
   }
 
+  @Override
+  public SortedSet<BuildRule> getExportedProvidedDeps() {
+    return fullJarExportedProvidedDeps;
+  }
+
   /**
    * Building a java_library() rule entails compiling the .java files specified in the srcs
    * attribute. They are compiled into a directory under {@link BuckPaths#getScratchDir()}.
@@ -389,12 +403,14 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
     // TODO(jkeljo): Subtracting out provided deps is probably not the right behavior (we don't
     // do it when assembling the contents of a java_binary), but it is long-standing and projects
-    // are depending upon it. The long term direction should be that we add an
-    // `exported_provided_deps` field and either require that a dependency be present in only one
-    // list or define a strict order of precedence among the lists (exported overrides deps
-    // overrides exported_provided overrides provided.)
+    // are depending upon it. The long term direction should be that we either require that
+    // a dependency be present in only one list or define a strict order of precedence among
+    // the lists (exported overrides deps overrides exported_provided overrides provided.)
     return AndroidPackageableCollector.getPackageableRules(
-        ImmutableSortedSet.copyOf(Sets.difference(firstOrderPackageableDeps, fullJarProvidedDeps)));
+        ImmutableSortedSet.copyOf(
+            Sets.difference(
+                firstOrderPackageableDeps,
+                Sets.union(fullJarProvidedDeps, fullJarExportedProvidedDeps))));
   }
 
   @Override

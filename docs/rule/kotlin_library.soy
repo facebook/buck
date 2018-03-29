@@ -70,6 +70,8 @@ of the compiled class files and resources.
   {param binary: 'kotlin_library' /}
 {/call}
 
+{call jvm_common.exported_provided_deps /}
+
 {call buck.labels_arg /}
 
 {call buck.tests_arg /}

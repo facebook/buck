@@ -46,6 +46,7 @@ public abstract class JavaLibraryDeps {
             .setDepTargets(args.getDeps())
             .setExportedDepTargets(args.getExportedDeps())
             .setProvidedDepTargets(args.getProvidedDeps())
+            .setExportedProvidedDepTargets(args.getExportedProvidedDeps())
             .setSourceOnlyAbiDepTargets(args.getSourceOnlyAbiDeps());
 
     if (args instanceof HasDepsQuery) {
@@ -70,6 +71,9 @@ public abstract class JavaLibraryDeps {
   abstract ImmutableSortedSet<BuildTarget> getExportedDepTargets();
 
   @Value.NaturalOrder
+  abstract ImmutableSortedSet<BuildTarget> getExportedProvidedDepTargets();
+
+  @Value.NaturalOrder
   abstract ImmutableSortedSet<BuildTarget> getSourceOnlyAbiDepTargets();
 
   abstract Optional<Query> getDepsQuery();
@@ -90,12 +94,18 @@ public abstract class JavaLibraryDeps {
     return resolve(
         Iterables.concat(
             getProvidedDepTargets(),
+            getExportedProvidedDepTargets(),
             getProvidedDepsQuery().map(Query::getResolvedQuery).orElse(ImmutableSortedSet.of())));
   }
 
   @Value.Lazy
   public ImmutableSortedSet<BuildRule> getExportedDeps() {
     return resolve(getExportedDepTargets());
+  }
+
+  @Value.Lazy
+  public ImmutableSortedSet<BuildRule> getExportedProvidedDeps() {
+    return resolve(getExportedProvidedDepTargets());
   }
 
   @Value.Lazy

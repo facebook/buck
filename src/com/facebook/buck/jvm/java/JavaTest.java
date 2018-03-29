@@ -501,6 +501,11 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return ImmutableSortedSet.of(compiledTestsLibrary);
   }
 
+  @Override
+  public SortedSet<BuildRule> getExportedProvidedDeps() {
+    return ImmutableSortedSet.of();
+  }
+
   @VisibleForTesting
   static class CompiledClassFileFinder {
 

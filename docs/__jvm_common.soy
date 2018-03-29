@@ -111,6 +111,19 @@
 {/template}
 
 /***/
+{template .exported_provided_deps}
+{call buck.arg}
+  {param name: 'exported_provided_deps' /}
+  {param default: '[]' /}
+  {param desc}
+  This is a combination of <code>provided_deps</code> and <code>exported_deps</code>. Rules listed
+  in this parameter will be added to classpath of rules that depend on this rule, but they will not
+  be included in a binary if binary depends on a such target.
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .source_only_abi_deps}
 {call buck.arg}
   {param name: 'source_only_abi_deps' /}
