@@ -28,7 +28,7 @@ java_test(
 java_test(
     name = "transformation_stackuse",
     srcs = ["DefaultAsyncTransformationEngineStackUseTest.java"],
-    vm_args = ["-Xss200k"],  #explicitly set a small stack for testing stack use
+    vm_args = ["-Xss500k"],  #explicitly set a small stack for testing stack use
     deps = [
         ":childrenadder",
         "//third-party/java/junit:junit",

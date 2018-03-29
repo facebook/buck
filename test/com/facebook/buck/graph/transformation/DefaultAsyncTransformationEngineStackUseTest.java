@@ -27,8 +27,8 @@ public class DefaultAsyncTransformationEngineStackUseTest {
   @Test
   public void largeGraphShouldNotStackOverflow() {
     MutableGraph<Long> graph = GraphBuilder.directed().build();
-    // We set -Xss200k for the JVM for this test, so our stack is very small.
-    for (long i = 1L; i <= 5000L; i++) {
+    // We set -Xss500k for the JVM for this test, so our stack is very small.
+    for (long i = 1L; i <= 7000L; i++) {
       graph.addNode(i);
       if (i > 1) {
         graph.putEdge(i - 1, i);
@@ -37,8 +37,8 @@ public class DefaultAsyncTransformationEngineStackUseTest {
 
     ChildrenAdder transformer = new ChildrenAdder(graph);
     assertEquals(
-        (Long) 12502500L, // arithmetic series from 1 to 5000
-        // https://www.wolframalpha.com/input/?i=sum+from+1+to+5000
+        (Long) 24503500L, // arithmetic series from 1 to 7000
+        // https://www.wolframalpha.com/input/?i=sum+from+1+to+7000
         new DefaultAsyncTransformationEngine<>(transformer, graph.nodes().size())
             .computeUnchecked((Long) 1L));
   }
