@@ -105,7 +105,7 @@ public class WatchmanWatcher {
       int numThreads) {
     this(
         fileChangeEventBus,
-        () -> watchman.createClient(),
+        watchman::createClient,
         DEFAULT_TIMEOUT_MILLIS,
         createQueries(watchman.getProjectWatches(), ignorePaths, watchman.getCapabilities()),
         cursors,
