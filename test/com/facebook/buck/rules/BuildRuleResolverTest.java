@@ -79,7 +79,7 @@ public class BuildRuleResolverTest {
             (BuildRuleResolverFactory)
                 (graph, transformer) ->
                     new SingleThreadedBuildRuleResolver(
-                        graph, transformer, new TestCellBuilder().build().getCellProvider(), null),
+                        graph, transformer, new TestCellBuilder().build().getCellProvider()),
             MoreExecutors.newDirectExecutorService(),
           },
           {
@@ -87,11 +87,7 @@ public class BuildRuleResolverTest {
             (BuildRuleResolverFactory)
                 (graph, transformer) ->
                     new MultiThreadedBuildRuleResolver(
-                        pool,
-                        graph,
-                        transformer,
-                        new TestCellBuilder().build().getCellProvider(),
-                        null),
+                        pool, graph, transformer, new TestCellBuilder().build().getCellProvider()),
             pool,
           },
         });
@@ -373,8 +369,7 @@ public class BuildRuleResolverTest {
                   return new FakeBuildRule(targetNode.getBuildTarget());
                 }
               },
-              new TestCellBuilder().build().getCellProvider(),
-              null);
+              new TestCellBuilder().build().getCellProvider());
 
       // mimic our actual parallel action graph construction, in which we call requireRule with
       // threads

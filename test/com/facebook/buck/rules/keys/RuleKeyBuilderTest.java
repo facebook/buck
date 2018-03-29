@@ -269,8 +269,7 @@ public class RuleKeyBuilderTest {
       super(
           TargetGraph.EMPTY,
           new DefaultTargetNodeToBuildRuleTransformer(),
-          new TestCellBuilder().build().getCellProvider(),
-          null);
+          new TestCellBuilder().build().getCellProvider());
       this.ruleMap = ruleMap;
     }
 

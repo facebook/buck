@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellProvider;
@@ -63,7 +62,6 @@ public class VerifyCachesCommand extends AbstractCommand {
   }
 
   private boolean verifyRuleKeyCache(
-      BuckEventBus eventBus,
       CellProvider cellProvider,
       PrintStream stdOut,
       RuleKeyConfiguration ruleKeyConfiguration,
@@ -73,10 +71,7 @@ public class VerifyCachesCommand extends AbstractCommand {
     RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(ruleKeyConfiguration);
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
-            TargetGraph.EMPTY,
-            new DefaultTargetNodeToBuildRuleTransformer(),
-            cellProvider,
-            eventBus);
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer(), cellProvider);
     contents.forEach(e -> resolver.addToIndex(e.getKey()));
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -128,7 +123,6 @@ public class VerifyCachesCommand extends AbstractCommand {
             .map(
                 recycler ->
                     verifyRuleKeyCache(
-                        params.getBuckEventBus(),
                         params.getCell().getCellProvider(),
                         params.getConsole().getStdOut(),
                         params.getRuleKeyConfiguration(),

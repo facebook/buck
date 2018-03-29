@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.concurrent.Parallelizer;
@@ -50,7 +49,6 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
 
   private final TargetGraph targetGraph;
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
-  @Nullable private final BuckEventBus eventBus;
   private final CellProvider cellProvider;
 
   private final BuildRuleResolverMetadataCache metadataCache;
@@ -60,12 +58,10 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
       ForkJoinPool forkJoinPool,
       TargetGraph targetGraph,
       TargetNodeToBuildRuleTransformer buildRuleGenerator,
-      CellProvider cellProvider,
-      BuckEventBus eventBus) {
+      CellProvider cellProvider) {
     this.forkJoinPool = forkJoinPool;
     this.targetGraph = targetGraph;
     this.buildRuleGenerator = buildRuleGenerator;
-    this.eventBus = eventBus;
     this.cellProvider = cellProvider;
 
     int initialCapacity = (int) (targetGraph.getNodes().size() * 5 * 1.1);
@@ -155,13 +151,6 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
   public <T> Optional<T> requireMetadata(BuildTarget target, Class<T> metadataClass) {
     Preconditions.checkState(isValid);
     return metadataCache.requireMetadata(target, metadataClass);
-  }
-
-  @Nullable
-  @Override
-  public BuckEventBus getEventBus() {
-    Preconditions.checkState(isValid);
-    return eventBus;
   }
 
   @Override

@@ -33,8 +33,6 @@ import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.event.PerfEventId;
-import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -162,260 +160,252 @@ public class AndroidBinaryDescription
       AndroidBinaryDescriptionArg args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
 
-    try (SimplePerfEvent.Scope ignored =
-        SimplePerfEvent.scope(
-            Optional.ofNullable(resolver.getEventBus()),
-            PerfEventId.of("AndroidBinaryDescription"),
-            "target",
-            buildTarget.toString())) {
-      params = params.withoutExtraDeps();
+    params = params.withoutExtraDeps();
 
-      // All of our supported flavors are constructed as side-effects
-      // of the main target.
-      for (Flavor flavor : FLAVORS) {
-        if (buildTarget.getFlavors().contains(flavor)) {
-          resolver.requireRule(buildTarget.withoutFlavors(flavor));
-          return resolver.getRule(buildTarget);
-        }
+    // All of our supported flavors are constructed as side-effects
+    // of the main target.
+    for (Flavor flavor : FLAVORS) {
+      if (buildTarget.getFlavors().contains(flavor)) {
+        resolver.requireRule(buildTarget.withoutFlavors(flavor));
+        return resolver.getRule(buildTarget);
       }
-
-      // We don't support requiring other flavors right now.
-      if (buildTarget.isFlavored()) {
-        throw new HumanReadableException(
-            "Requested target %s contains an unrecognized flavor", buildTarget);
-      }
-
-      BuildRule keystore = resolver.getRule(args.getKeystore());
-      if (!(keystore instanceof Keystore)) {
-        throw new HumanReadableException(
-            "In %s, keystore='%s' must be a keystore() but was %s().",
-            buildTarget, keystore.getFullyQualifiedName(), keystore.getType());
-      }
-
-      APKModuleGraph apkModuleGraph = null;
-      if (!args.getApplicationModuleConfigs().isEmpty()) {
-        apkModuleGraph =
-            new APKModuleGraph(
-                Optional.of(args.getApplicationModuleConfigs()),
-                args.getApplicationModuleDependencies(),
-                context.getTargetGraph(),
-                buildTarget);
-      } else {
-        apkModuleGraph =
-            new APKModuleGraph(
-                context.getTargetGraph(),
-                buildTarget,
-                Optional.of(args.getApplicationModuleTargets()));
-      }
-
-      EnumSet<ExopackageMode> exopackageModes = EnumSet.noneOf(ExopackageMode.class);
-      if (!args.getExopackageModes().isEmpty()) {
-        exopackageModes = EnumSet.copyOf(args.getExopackageModes());
-      } else if (args.isExopackage().orElse(false)) {
-        LOG.error(
-            "Target %s specified exopackage=True, which is deprecated. Use exopackage_modes.",
-            buildTarget);
-        exopackageModes = EnumSet.of(ExopackageMode.SECONDARY_DEX);
-      }
-
-      DexSplitMode dexSplitMode = createDexSplitMode(args, exopackageModes);
-
-      PackageType packageType = getPackageType(args);
-
-      ProGuardObfuscateStep.SdkProguardType androidSdkProguardConfig =
-          args.getAndroidSdkProguardConfig().orElse(ProGuardObfuscateStep.SdkProguardType.NONE);
-
-      boolean shouldProguard =
-          args.getProguardConfig().isPresent()
-              || !ProGuardObfuscateStep.SdkProguardType.NONE.equals(androidSdkProguardConfig);
-
-      boolean shouldPreDex =
-          !args.getDisablePreDex()
-              && !shouldProguard
-              && !args.getPreprocessJavaClassesBash().isPresent();
-
-      // Build rules added to "no_dx" are only hints, not hard dependencies. Therefore, although a
-      // target may be mentioned in that parameter, it may not be present as a build rule.
-      ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
-      for (BuildTarget noDxTarget : args.getNoDx()) {
-        Optional<BuildRule> ruleOptional = resolver.getRuleOptional(noDxTarget);
-        if (ruleOptional.isPresent()) {
-          builder.add(ruleOptional.get());
-        } else {
-          LOG.info("%s: no_dx target not a dependency: %s", buildTarget, noDxTarget);
-        }
-      }
-
-      ImmutableSortedSet<BuildRule> buildRulesToExcludeFromDex = builder.build();
-      ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex =
-          RichStream.from(buildRulesToExcludeFromDex)
-              .filter(JavaLibrary.class)
-              .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-
-      ToolchainProvider toolchainProvider = context.getToolchainProvider();
-      ListeningExecutorService dxExecutorService =
-          toolchainProvider
-              .getByName(DxToolchain.DEFAULT_NAME, DxToolchain.class)
-              .getDxExecutorService();
-
-      JavaOptionsProvider javaOptionsProvider =
-          toolchainProvider.getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class);
-
-      CellPathResolver cellRoots = context.getCellPathResolver();
-
-      NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs =
-          NonPredexedDexBuildableArgs.builder()
-              .setProguardAgentPath(proGuardConfig.getProguardAgentPath())
-              .setProguardJarOverride(proGuardConfig.getProguardJarOverride())
-              .setProguardMaxHeapSize(proGuardConfig.getProguardMaxHeapSize())
-              .setSdkProguardConfig(androidSdkProguardConfig)
-              .setPreprocessJavaClassesBash(
-                  getPreprocessJavaClassesBash(args, buildTarget, resolver, cellRoots))
-              .setReorderClassesIntraDex(args.isReorderClassesIntraDex())
-              .setDexReorderToolFile(args.getDexReorderToolFile())
-              .setDexReorderDataDumpFile(args.getDexReorderDataDumpFile())
-              .setDxExecutorService(dxExecutorService)
-              .setDxMaxHeapSize(dxConfig.getDxMaxHeapSize())
-              .setOptimizationPasses(args.getOptimizationPasses())
-              .setProguardJvmArgs(args.getProguardJvmArgs())
-              .setSkipProguard(args.isSkipProguard())
-              .setJavaRuntimeLauncher(javaOptionsProvider.getJavaOptions().getJavaRuntimeLauncher())
-              .setProguardConfigPath(args.getProguardConfig())
-              .setShouldProguard(shouldProguard)
-              .build();
-
-      ResourceFilter resourceFilter = new ResourceFilter(args.getResourceFilter());
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-
-      AndroidPlatformTarget androidPlatformTarget =
-          toolchainProvider.getByName(
-              AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
-
-      ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-
-      AndroidBinaryGraphEnhancer graphEnhancer =
-          new AndroidBinaryGraphEnhancer(
-              toolchainProvider,
-              cellRoots,
-              buildTarget,
-              projectFilesystem,
-              androidPlatformTarget,
-              params,
-              resolver,
-              args.getAaptMode(),
-              args.getResourceCompression(),
-              resourceFilter,
-              args.getEffectiveBannedDuplicateResourceTypes(),
-              args.getDuplicateResourceWhitelist(),
-              args.getResourceUnionPackage(),
-              addFallbackLocales(args.getLocales()),
-              args.getLocalizedStringFileName(),
-              args.getManifest(),
-              args.getManifestSkeleton(),
-              packageType,
-              ImmutableSet.copyOf(args.getCpuFilters()),
-              args.isBuildStringSourceMap(),
-              shouldPreDex,
-              dexSplitMode,
-              args.getNoDx(),
-              /* resourcesToExclude */ ImmutableSet.of(),
-              args.isSkipCrunchPngs(),
-              args.isIncludesVectorDrawables(),
-              args.isNoAutoVersionResources(),
-              javaBuckConfig,
-              JavacFactory.create(ruleFinder, javaBuckConfig, null),
-              toolchainProvider
-                  .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
-                  .getJavacOptions(),
-              exopackageModes,
-              args.getBuildConfigValues(),
-              args.getBuildConfigValuesFile(),
-              Optional.empty(),
-              args.isTrimResourceIds(),
-              args.getKeepResourcePattern(),
-              args.isIgnoreAaptProguardConfig(),
-              Optional.of(args.getNativeLibraryMergeMap()),
-              args.getNativeLibraryMergeGlue(),
-              args.getNativeLibraryMergeCodeGenerator(),
-              args.getNativeLibraryMergeLocalizedSymbols(),
-              shouldProguard ? args.getNativeLibraryProguardConfigGenerator() : Optional.empty(),
-              args.isEnableRelinker() ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
-              args.getRelinkerWhitelist(),
-              dxExecutorService,
-              args.getManifestEntries(),
-              cxxBuckConfig,
-              apkModuleGraph,
-              dxConfig,
-              args.getDexTool(),
-              getPostFilterResourcesArgs(args, buildTarget, resolver, cellRoots),
-              nonPreDexedDexBuildableArgs,
-              rulesToExcludeFromDex);
-      AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
-
-      Optional<BuildRule> moduleVerification;
-      if (args.getAndroidAppModularityResult().isPresent()) {
-        moduleVerification =
-            Optional.of(
-                new AndroidAppModularityVerification(
-                    ruleFinder,
-                    buildTarget.withFlavors(ANDROID_MODULARITY_VERIFICATION_FLAVOR),
-                    projectFilesystem,
-                    args.getAndroidAppModularityResult().get(),
-                    args.isSkipProguard(),
-                    result.getDexFilesInfo().proguardTextFilesPath,
-                    result.getPackageableCollection()));
-        resolver.addToIndex(moduleVerification.get());
-      } else {
-        moduleVerification = Optional.empty();
-      }
-
-      AndroidBinaryFilesInfo filesInfo =
-          new AndroidBinaryFilesInfo(result, exopackageModes, args.isPackageAssetLibraries());
-
-      AndroidBinary androidBinary =
-          new AndroidBinary(
-              buildTarget,
-              projectFilesystem,
-              toolchainProvider.getByName(
-                  AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class),
-              androidPlatformTarget,
-              params,
-              ruleFinder,
-              Optional.of(args.getProguardJvmArgs()),
-              (Keystore) keystore,
-              dexSplitMode,
-              args.getNoDx(),
-              androidSdkProguardConfig,
-              args.getOptimizationPasses(),
-              args.getProguardConfig(),
-              args.isSkipProguard(),
-              getRedexOptions(buildTarget, resolver, cellRoots, args),
-              args.getResourceCompression(),
-              args.getCpuFilters(),
-              resourceFilter,
-              exopackageModes,
-              rulesToExcludeFromDex,
-              result,
-              args.getXzCompressionLevel(),
-              args.isPackageAssetLibraries(),
-              args.isCompressAssetLibraries(),
-              args.getManifestEntries(),
-              javaOptionsProvider.getJavaOptions().getJavaRuntimeLauncher(),
-              args.getIsCacheable(),
-              moduleVerification,
-              filesInfo.getDexFilesInfo(),
-              filesInfo.getNativeFilesInfo(),
-              filesInfo.getResourceFilesInfo(),
-              ImmutableSortedSet.copyOf(result.getAPKModuleGraph().getAPKModules()),
-              filesInfo.getExopackageInfo(),
-              apkConfig.getCompressionLevel());
-      // The exo installer is always added to the index so that the action graph is the same
-      // between build and install calls.
-      new AndroidBinaryInstallGraphEnhancer(
-              androidInstallConfig, projectFilesystem, buildTarget, androidBinary)
-          .enhance(resolver);
-      return androidBinary;
     }
+
+    // We don't support requiring other flavors right now.
+    if (buildTarget.isFlavored()) {
+      throw new HumanReadableException(
+          "Requested target %s contains an unrecognized flavor", buildTarget);
+    }
+
+    BuildRule keystore = resolver.getRule(args.getKeystore());
+    if (!(keystore instanceof Keystore)) {
+      throw new HumanReadableException(
+          "In %s, keystore='%s' must be a keystore() but was %s().",
+          buildTarget, keystore.getFullyQualifiedName(), keystore.getType());
+    }
+
+    APKModuleGraph apkModuleGraph = null;
+    if (!args.getApplicationModuleConfigs().isEmpty()) {
+      apkModuleGraph =
+          new APKModuleGraph(
+              Optional.of(args.getApplicationModuleConfigs()),
+              args.getApplicationModuleDependencies(),
+              context.getTargetGraph(),
+              buildTarget);
+    } else {
+      apkModuleGraph =
+          new APKModuleGraph(
+              context.getTargetGraph(),
+              buildTarget,
+              Optional.of(args.getApplicationModuleTargets()));
+    }
+
+    EnumSet<ExopackageMode> exopackageModes = EnumSet.noneOf(ExopackageMode.class);
+    if (!args.getExopackageModes().isEmpty()) {
+      exopackageModes = EnumSet.copyOf(args.getExopackageModes());
+    } else if (args.isExopackage().orElse(false)) {
+      LOG.error(
+          "Target %s specified exopackage=True, which is deprecated. Use exopackage_modes.",
+          buildTarget);
+      exopackageModes = EnumSet.of(ExopackageMode.SECONDARY_DEX);
+    }
+
+    DexSplitMode dexSplitMode = createDexSplitMode(args, exopackageModes);
+
+    PackageType packageType = getPackageType(args);
+
+    ProGuardObfuscateStep.SdkProguardType androidSdkProguardConfig =
+        args.getAndroidSdkProguardConfig().orElse(ProGuardObfuscateStep.SdkProguardType.NONE);
+
+    boolean shouldProguard =
+        args.getProguardConfig().isPresent()
+            || !ProGuardObfuscateStep.SdkProguardType.NONE.equals(androidSdkProguardConfig);
+
+    boolean shouldPreDex =
+        !args.getDisablePreDex()
+            && !shouldProguard
+            && !args.getPreprocessJavaClassesBash().isPresent();
+
+    // Build rules added to "no_dx" are only hints, not hard dependencies. Therefore, although a
+    // target may be mentioned in that parameter, it may not be present as a build rule.
+    ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
+    for (BuildTarget noDxTarget : args.getNoDx()) {
+      Optional<BuildRule> ruleOptional = resolver.getRuleOptional(noDxTarget);
+      if (ruleOptional.isPresent()) {
+        builder.add(ruleOptional.get());
+      } else {
+        LOG.info("%s: no_dx target not a dependency: %s", buildTarget, noDxTarget);
+      }
+    }
+
+    ImmutableSortedSet<BuildRule> buildRulesToExcludeFromDex = builder.build();
+    ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex =
+        RichStream.from(buildRulesToExcludeFromDex)
+            .filter(JavaLibrary.class)
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+
+    ToolchainProvider toolchainProvider = context.getToolchainProvider();
+    ListeningExecutorService dxExecutorService =
+        toolchainProvider
+            .getByName(DxToolchain.DEFAULT_NAME, DxToolchain.class)
+            .getDxExecutorService();
+
+    JavaOptionsProvider javaOptionsProvider =
+        toolchainProvider.getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class);
+
+    CellPathResolver cellRoots = context.getCellPathResolver();
+
+    NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs =
+        NonPredexedDexBuildableArgs.builder()
+            .setProguardAgentPath(proGuardConfig.getProguardAgentPath())
+            .setProguardJarOverride(proGuardConfig.getProguardJarOverride())
+            .setProguardMaxHeapSize(proGuardConfig.getProguardMaxHeapSize())
+            .setSdkProguardConfig(androidSdkProguardConfig)
+            .setPreprocessJavaClassesBash(
+                getPreprocessJavaClassesBash(args, buildTarget, resolver, cellRoots))
+            .setReorderClassesIntraDex(args.isReorderClassesIntraDex())
+            .setDexReorderToolFile(args.getDexReorderToolFile())
+            .setDexReorderDataDumpFile(args.getDexReorderDataDumpFile())
+            .setDxExecutorService(dxExecutorService)
+            .setDxMaxHeapSize(dxConfig.getDxMaxHeapSize())
+            .setOptimizationPasses(args.getOptimizationPasses())
+            .setProguardJvmArgs(args.getProguardJvmArgs())
+            .setSkipProguard(args.isSkipProguard())
+            .setJavaRuntimeLauncher(javaOptionsProvider.getJavaOptions().getJavaRuntimeLauncher())
+            .setProguardConfigPath(args.getProguardConfig())
+            .setShouldProguard(shouldProguard)
+            .build();
+
+    ResourceFilter resourceFilter = new ResourceFilter(args.getResourceFilter());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+
+    AndroidPlatformTarget androidPlatformTarget =
+        toolchainProvider.getByName(
+            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+
+    AndroidBinaryGraphEnhancer graphEnhancer =
+        new AndroidBinaryGraphEnhancer(
+            toolchainProvider,
+            cellRoots,
+            buildTarget,
+            projectFilesystem,
+            androidPlatformTarget,
+            params,
+            resolver,
+            args.getAaptMode(),
+            args.getResourceCompression(),
+            resourceFilter,
+            args.getEffectiveBannedDuplicateResourceTypes(),
+            args.getDuplicateResourceWhitelist(),
+            args.getResourceUnionPackage(),
+            addFallbackLocales(args.getLocales()),
+            args.getLocalizedStringFileName(),
+            args.getManifest(),
+            args.getManifestSkeleton(),
+            packageType,
+            ImmutableSet.copyOf(args.getCpuFilters()),
+            args.isBuildStringSourceMap(),
+            shouldPreDex,
+            dexSplitMode,
+            args.getNoDx(),
+            /* resourcesToExclude */ ImmutableSet.of(),
+            args.isSkipCrunchPngs(),
+            args.isIncludesVectorDrawables(),
+            args.isNoAutoVersionResources(),
+            javaBuckConfig,
+            JavacFactory.create(ruleFinder, javaBuckConfig, null),
+            toolchainProvider
+                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getJavacOptions(),
+            exopackageModes,
+            args.getBuildConfigValues(),
+            args.getBuildConfigValuesFile(),
+            Optional.empty(),
+            args.isTrimResourceIds(),
+            args.getKeepResourcePattern(),
+            args.isIgnoreAaptProguardConfig(),
+            Optional.of(args.getNativeLibraryMergeMap()),
+            args.getNativeLibraryMergeGlue(),
+            args.getNativeLibraryMergeCodeGenerator(),
+            args.getNativeLibraryMergeLocalizedSymbols(),
+            shouldProguard ? args.getNativeLibraryProguardConfigGenerator() : Optional.empty(),
+            args.isEnableRelinker() ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
+            args.getRelinkerWhitelist(),
+            dxExecutorService,
+            args.getManifestEntries(),
+            cxxBuckConfig,
+            apkModuleGraph,
+            dxConfig,
+            args.getDexTool(),
+            getPostFilterResourcesArgs(args, buildTarget, resolver, cellRoots),
+            nonPreDexedDexBuildableArgs,
+            rulesToExcludeFromDex);
+    AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
+
+    Optional<BuildRule> moduleVerification;
+    if (args.getAndroidAppModularityResult().isPresent()) {
+      moduleVerification =
+          Optional.of(
+              new AndroidAppModularityVerification(
+                  ruleFinder,
+                  buildTarget.withFlavors(ANDROID_MODULARITY_VERIFICATION_FLAVOR),
+                  projectFilesystem,
+                  args.getAndroidAppModularityResult().get(),
+                  args.isSkipProguard(),
+                  result.getDexFilesInfo().proguardTextFilesPath,
+                  result.getPackageableCollection()));
+      resolver.addToIndex(moduleVerification.get());
+    } else {
+      moduleVerification = Optional.empty();
+    }
+
+    AndroidBinaryFilesInfo filesInfo =
+        new AndroidBinaryFilesInfo(result, exopackageModes, args.isPackageAssetLibraries());
+
+    AndroidBinary androidBinary =
+        new AndroidBinary(
+            buildTarget,
+            projectFilesystem,
+            toolchainProvider.getByName(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class),
+            androidPlatformTarget,
+            params,
+            ruleFinder,
+            Optional.of(args.getProguardJvmArgs()),
+            (Keystore) keystore,
+            dexSplitMode,
+            args.getNoDx(),
+            androidSdkProguardConfig,
+            args.getOptimizationPasses(),
+            args.getProguardConfig(),
+            args.isSkipProguard(),
+            getRedexOptions(buildTarget, resolver, cellRoots, args),
+            args.getResourceCompression(),
+            args.getCpuFilters(),
+            resourceFilter,
+            exopackageModes,
+            rulesToExcludeFromDex,
+            result,
+            args.getXzCompressionLevel(),
+            args.isPackageAssetLibraries(),
+            args.isCompressAssetLibraries(),
+            args.getManifestEntries(),
+            javaOptionsProvider.getJavaOptions().getJavaRuntimeLauncher(),
+            args.getIsCacheable(),
+            moduleVerification,
+            filesInfo.getDexFilesInfo(),
+            filesInfo.getNativeFilesInfo(),
+            filesInfo.getResourceFilesInfo(),
+            ImmutableSortedSet.copyOf(result.getAPKModuleGraph().getAPKModules()),
+            filesInfo.getExopackageInfo(),
+            apkConfig.getCompressionLevel());
+    // The exo installer is always added to the index so that the action graph is the same
+    // between build and install calls.
+    new AndroidBinaryInstallGraphEnhancer(
+            androidInstallConfig, projectFilesystem, buildTarget, androidBinary)
+        .enhance(resolver);
+    return androidBinary;
   }
 
   private DexSplitMode createDexSplitMode(

@@ -16,8 +16,6 @@
 
 package com.facebook.buck.rules.query;
 
-import com.facebook.buck.event.PerfEventId;
-import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetPatternParser;
@@ -112,12 +110,7 @@ public final class QueryUtils {
             cellRoots,
             BuildTargetPatternParser.forBaseName(target.getBaseName()),
             declaredDeps);
-    try (SimplePerfEvent.Scope ignored =
-        SimplePerfEvent.scope(
-            Optional.ofNullable(resolver.getEventBus()),
-            PerfEventId.of("resolve_dep_query"),
-            "target",
-            target.toString())) {
+    try {
       QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env);
       Set<QueryTarget> queryTargets = cache.getQueryEvaluator(targetGraph).eval(parsedExp, env);
       return queryTargets

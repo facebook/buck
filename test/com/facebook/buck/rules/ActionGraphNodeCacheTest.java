@@ -551,7 +551,6 @@ public class ActionGraphNodeCacheTest {
     return new SingleThreadedBuildRuleResolver(
         targetGraph,
         new DefaultTargetNodeToBuildRuleTransformer(),
-        new TestCellBuilder().build().getCellProvider(),
-        null);
+        new TestCellBuilder().build().getCellProvider());
   }
 }

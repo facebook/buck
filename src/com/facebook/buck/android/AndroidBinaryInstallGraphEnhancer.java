@@ -62,8 +62,7 @@ class AndroidBinaryInstallGraphEnhancer {
   }
 
   public void enhance(BuildRuleResolver resolver) {
-    if (androidInstallConfig.getConcurrentInstallEnabled(
-        Optional.ofNullable(resolver.getEventBus()))) {
+    if (androidInstallConfig.getConcurrentInstallEnabled(Optional.empty())) {
       if (exopackageEnabled()) {
         enhanceForConcurrentExopackageInstall(resolver);
       } else {

@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.rules;
 
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
@@ -24,7 +23,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Function;
-import javax.annotation.Nullable;
 
 public interface BuildRuleResolver {
   /** @return an unmodifiable view of the rules in the index */
@@ -67,13 +65,6 @@ public interface BuildRuleResolver {
    */
   @Deprecated
   <T extends BuildRule> T addToIndex(T buildRule);
-
-  /**
-   * An event bus to send log messages. It's just here for convenience and has no relation with how
-   * BuildRuleResolver works.
-   */
-  @Nullable
-  BuckEventBus getEventBus();
 
   /**
    * Returns a parallelizer object that parallelizes if the current BuildRuleResolver supports

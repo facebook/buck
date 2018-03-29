@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.concurrent.Parallelizer;
 import com.google.common.annotations.VisibleForTesting;
@@ -25,7 +24,6 @@ import com.google.common.collect.Iterables;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
-import javax.annotation.Nullable;
 
 /**
  * Provides a mechanism for mapping between a {@link BuildTarget} and the {@link BuildRule} it
@@ -38,21 +36,16 @@ public class SingleThreadedBuildRuleResolver implements BuildRuleResolver {
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
   private final CellProvider cellProvider;
 
-  /** Event bus for reporting performance information. Will likely be null in unit tests. */
-  @Nullable private final BuckEventBus eventBus;
-
   private final ConcurrentHashMap<BuildTarget, BuildRule> buildRuleIndex;
   private final BuildRuleResolverMetadataCache metadataCache;
 
   public SingleThreadedBuildRuleResolver(
       TargetGraph targetGraph,
       TargetNodeToBuildRuleTransformer buildRuleGenerator,
-      CellProvider cellProvider,
-      @Nullable BuckEventBus eventBus) {
+      CellProvider cellProvider) {
     this.targetGraph = targetGraph;
     this.buildRuleGenerator = buildRuleGenerator;
     this.cellProvider = cellProvider;
-    this.eventBus = eventBus;
 
     // We preallocate our maps to have this amount of slots to get rid of re-allocations
     int initialCapacity = (int) (targetGraph.getNodes().size() * 5 * 1.1);
@@ -143,13 +136,6 @@ public class SingleThreadedBuildRuleResolver implements BuildRuleResolver {
           "A build rule for this target has already been created: " + oldValue.getBuildTarget());
     }
     return buildRule;
-  }
-
-  @Override
-  @Nullable
-  public BuckEventBus getEventBus() {
-    Preconditions.checkState(isValid);
-    return eventBus;
   }
 
   @Override

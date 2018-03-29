@@ -343,12 +343,7 @@ public class ActionGraphCache {
     switch (parallelizationMode) {
       case ENABLED:
         return createActionGraphInParallel(
-            eventBus,
-            transformer,
-            targetGraph,
-            cellProvider,
-            incrementalActionGraphMode,
-            poolSupplier.get());
+            transformer, targetGraph, cellProvider, incrementalActionGraphMode, poolSupplier.get());
       case DISABLED:
         return createActionGraphSerially(
             eventBus,
@@ -366,14 +361,13 @@ public class ActionGraphCache {
   }
 
   private ActionGraphAndResolver createActionGraphInParallel(
-      BuckEventBus eventBus,
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
       CellProvider cellProvider,
       IncrementalActionGraphMode incrementalActionGraphMode,
       ForkJoinPool pool) {
     BuildRuleResolver resolver =
-        new MultiThreadedBuildRuleResolver(pool, targetGraph, transformer, cellProvider, eventBus);
+        new MultiThreadedBuildRuleResolver(pool, targetGraph, transformer, cellProvider);
     HashMap<BuildTarget, CompletableFuture<BuildRule>> futures = new HashMap<>();
 
     if (incrementalActionGraphMode == IncrementalActionGraphMode.ENABLED) {
@@ -442,7 +436,7 @@ public class ActionGraphCache {
       IncrementalActionGraphMode incrementalActionGraphMode) {
     // TODO: Reduce duplication between the serial and parallel creation methods.
     BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(targetGraph, transformer, cellProvider, eventBus);
+        new SingleThreadedBuildRuleResolver(targetGraph, transformer, cellProvider);
 
     if (incrementalActionGraphMode == IncrementalActionGraphMode.ENABLED) {
       nodeCache.prepareForTargetGraphWalk(targetGraph, resolver);

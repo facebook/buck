@@ -28,20 +28,19 @@ public class TestBuildRuleResolver extends SingleThreadedBuildRuleResolver {
     super(
         targetGraph,
         buildRuleGenerator,
-        new TestCellBuilder().setToolchainProvider(toolchainProvider).build().getCellProvider(),
-        null);
+        new TestCellBuilder().setToolchainProvider(toolchainProvider).build().getCellProvider());
   }
 
   public TestBuildRuleResolver(
       TargetGraph targetGraph,
       TargetNodeToBuildRuleTransformer buildRuleGenerator,
       CellProvider cellProvider) {
-    super(targetGraph, buildRuleGenerator, cellProvider, null);
+    super(targetGraph, buildRuleGenerator, cellProvider);
   }
 
   public TestBuildRuleResolver(
       TargetGraph targetGraph, TargetNodeToBuildRuleTransformer buildRuleGenerator) {
-    super(targetGraph, buildRuleGenerator, new TestCellBuilder().build().getCellProvider(), null);
+    super(targetGraph, buildRuleGenerator, new TestCellBuilder().build().getCellProvider());
   }
 
   public TestBuildRuleResolver(TargetNodeToBuildRuleTransformer buildRuleGenerator) {

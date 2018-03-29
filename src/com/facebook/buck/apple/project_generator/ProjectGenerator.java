@@ -352,8 +352,7 @@ public class ProjectGenerator {
                 new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY,
                     new DefaultTargetNodeToBuildRuleTransformer(),
-                    cell.getCellProvider(),
-                    buckEventBus)));
+                    cell.getCellProvider())));
     this.buckEventBus = buckEventBus;
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
@@ -960,8 +959,7 @@ public class ProjectGenerator {
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY,
             new DefaultTargetNodeToBuildRuleTransformer(),
-            projectCell.getCellProvider(),
-            buckEventBus);
+            projectCell.getCellProvider());
     ImmutableList.Builder<String> result = new ImmutableList.Builder<>();
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(

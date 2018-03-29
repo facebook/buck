@@ -402,8 +402,7 @@ public class XCodeProjectCommandHelper {
     }
 
     LazyActionGraph lazyActionGraph =
-        new LazyActionGraph(
-            targetGraphAndTargets.getTargetGraph(), cell.getCellProvider(), buckEventBus);
+        new LazyActionGraph(targetGraphAndTargets.getTargetGraph(), cell.getCellProvider());
 
     LOG.debug("Generating workspace for config targets %s", targets);
     ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
@@ -836,15 +835,11 @@ public class XCodeProjectCommandHelper {
     private final TargetGraph targetGraph;
     private final BuildRuleResolver resolver;
 
-    public LazyActionGraph(
-        TargetGraph targetGraph, CellProvider cellProvider, BuckEventBus buckEventBus) {
+    public LazyActionGraph(TargetGraph targetGraph, CellProvider cellProvider) {
       this.targetGraph = targetGraph;
       this.resolver =
           new SingleThreadedBuildRuleResolver(
-              targetGraph,
-              new DefaultTargetNodeToBuildRuleTransformer(),
-              cellProvider,
-              buckEventBus);
+              targetGraph, new DefaultTargetNodeToBuildRuleTransformer(), cellProvider);
     }
 
     public BuildRuleResolver getBuildRuleResolverWhileRequiringSubgraph(TargetNode<?, ?> root) {

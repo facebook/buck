@@ -16,8 +16,6 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.event.PerfEventId;
-import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.parser.BuildTargetPatternParser;
@@ -100,12 +98,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
             cellNames,
             BuildTargetPatternParser.forBaseName(target.getBaseName()),
             ImmutableSet.of());
-    try (SimplePerfEvent.Scope ignored =
-        SimplePerfEvent.scope(
-            Optional.ofNullable(resolver.getEventBus()),
-            PerfEventId.of("resolve_query_macro"),
-            "target",
-            target.toString())) {
+    try {
       QueryExpression parsedExp = QueryExpression.parse(queryExpression, env);
       Set<QueryTarget> queryTargets = new NoopQueryEvaluator().eval(parsedExp, env);
       return queryTargets.stream();
