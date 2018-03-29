@@ -799,7 +799,8 @@ public class AppleLibraryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder.addAll(
-        CxxPlatforms.getParseTimeDeps(getCxxPlatformsProvider().getCxxPlatforms().getValues()));
+        CxxPlatforms.getParseTimeDeps(
+            getCxxPlatformsProvider().getCxxPlatforms().getValues(buildTarget)));
   }
 
   public static boolean isNotStaticallyLinkedLibraryNode(

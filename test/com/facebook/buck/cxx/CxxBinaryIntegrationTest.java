@@ -2481,6 +2481,14 @@ public class CxxBinaryIntegrationTest {
             "has dependencies using headers that can be included using the same path"));
   }
 
+  @Test
+  public void testPlatformDependenciesNotResolvedEagerly() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_binary_platform_deps", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild(":binary#working-platform").assertSuccess();
+  }
+
   private ImmutableSortedSet<Path> findFiles(Path root, PathMatcher matcher) throws IOException {
     ImmutableSortedSet.Builder<Path> files = ImmutableSortedSet.naturalOrder();
     Files.walkFileTree(

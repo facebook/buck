@@ -19,6 +19,7 @@ package com.facebook.buck.model;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -103,6 +104,18 @@ public class FlavorDomain<T> {
     return flavor.map(translation::get);
   }
 
+  /**
+   * @return a list of values for flavors that are present in this domain. Non-existing flavors are
+   *     ignored.
+   */
+  private ImmutableList<T> getValues(Set<Flavor> flavors) {
+    return flavors
+        .stream()
+        .filter(translation::containsKey)
+        .map(translation::get)
+        .collect(ImmutableList.toImmutableList());
+  }
+
   public Optional<T> getValue(BuildTarget buildTarget) {
     try {
       return getValue(buildTarget.getFlavors());
@@ -110,6 +123,14 @@ public class FlavorDomain<T> {
       throw new FlavorDomainException(
           String.format("In build target %s: %s", buildTarget, e.getHumanReadableErrorMessage()));
     }
+  }
+
+  /**
+   * @return a list of values for the flavors from the given target. Target's flavors that are not
+   *     present in this domain are ignored.
+   */
+  public ImmutableList<T> getValues(BuildTarget buildTarget) {
+    return getValues(buildTarget.getFlavors());
   }
 
   public T getRequiredValue(BuildTarget buildTarget) {

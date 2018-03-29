@@ -120,7 +120,8 @@ public class RustBinaryDescription
     extraDepsBuilder.addAll(compiler.getParseTimeDeps());
 
     extraDepsBuilder.addAll(
-        CxxPlatforms.getParseTimeDeps(getCxxPlatformsProvider().getCxxPlatforms().getValues()));
+        CxxPlatforms.getParseTimeDeps(
+            getCxxPlatformsProvider().getCxxPlatforms().getValues(buildTarget)));
     extraDepsBuilder.addAll(
         rustBuckConfig.getLinker().map(ToolProvider::getParseTimeDeps).orElse(ImmutableList.of()));
   }

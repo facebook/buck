@@ -579,7 +579,8 @@ public class CxxPythonExtensionDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Get any parse time deps from the C/C++ platforms.
-    extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(getCxxPlatforms().getValues()));
+    extraDepsBuilder.addAll(
+        CxxPlatforms.getParseTimeDeps(getCxxPlatforms().getValues(buildTarget)));
 
     for (PythonPlatform pythonPlatform : getPythonPlatforms().getValues()) {
       Optionals.addIfPresent(pythonPlatform.getCxxLibrary(), extraDepsBuilder);

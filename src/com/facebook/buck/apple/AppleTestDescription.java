@@ -479,7 +479,8 @@ public class AppleTestDescription
     }
     extraDepsBuilder.addAll(appleConfig.getCodesignProvider().getParseTimeDeps());
     extraDepsBuilder.addAll(
-        CxxPlatforms.getParseTimeDeps(getCxxPlatformsProvider().getCxxPlatforms().getValues()));
+        CxxPlatforms.getParseTimeDeps(
+            getCxxPlatformsProvider().getCxxPlatforms().getValues(buildTarget)));
   }
 
   private AppleBundle getBuildRuleForTestHostAppTarget(

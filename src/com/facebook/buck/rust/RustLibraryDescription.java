@@ -435,7 +435,8 @@ public class RustLibraryDescription
         rustBuckConfig.getLinker().map(ToolProvider::getParseTimeDeps).orElse(ImmutableList.of()));
 
     extraDepsBuilder.addAll(
-        CxxPlatforms.getParseTimeDeps(getCxxPlatformsProvider().getCxxPlatforms().getValues()));
+        CxxPlatforms.getParseTimeDeps(
+            getCxxPlatformsProvider().getCxxPlatforms().getValues(buildTarget)));
   }
 
   @Override
