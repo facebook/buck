@@ -165,7 +165,7 @@ public abstract class WorkerProcessPool implements Closeable {
 
   protected abstract WorkerProcess startWorkerProcess() throws IOException;
 
-  public HashCode getPoolHash() {
+  HashCode getPoolHash() {
     return poolHash;
   }
 }
