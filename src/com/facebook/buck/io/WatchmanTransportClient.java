@@ -47,7 +47,7 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
   private final BserSerializer bserSerializer;
   private final BserDeserializer bserDeserializer;
 
-  boolean disabledWarningShown = false;
+  private boolean disabledWarningShown = false;
 
   public WatchmanTransportClient(Console console, Clock clock, Transport transport) {
     this.listeningExecutorService = listeningDecorator(newSingleThreadExecutor("Watchman"));
