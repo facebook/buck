@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
 /** Fake BuildRule that uses the provider interface */
 public class FakeBuildRuleWithProviders extends AbstractBuildRuleWithProviders {
 
-  protected FakeBuildRuleWithProviders(BuildRuleInfoProviderCollection providers) {
+  public FakeBuildRuleWithProviders(BuildRuleInfoProviderCollection providers) {
     super(providers);
   }
 

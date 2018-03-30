@@ -1,0 +1,17 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
+
+java_test(
+    name = "graphbuilder",
+    srcs = glob(["*Test.java"]),
+    has_immutable_types = True,
+    deps = [
+        "//src/com/facebook/buck/graph/transformation:transformation",
+        "//src/com/facebook/buck/rules/graphbuilder:graphbuilder",
+        "//test/com/facebook/buck/model:testutil",
+        "//test/com/facebook/buck/rules:testutil",
+        "//test/com/facebook/buck/rules/provider:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/easymock:easymock",
+        "//third-party/java/junit:junit",
+    ],
+)
