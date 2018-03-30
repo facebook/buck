@@ -102,7 +102,10 @@ public class BuckModuleAnnotationProcessor extends AbstractProcessor {
     try {
       buckModuleAdapterPluginGenerator.write();
     } catch (IOException e) {
-      processingEnv.getMessager().printMessage(Kind.ERROR, "Could not generate Buck module: " + e);
+      processingEnv
+          .getMessager()
+          .printMessage(
+              Kind.ERROR, "Could not generate Buck module: " + ThrowablesUtils.toString(e));
       return false;
     }
 

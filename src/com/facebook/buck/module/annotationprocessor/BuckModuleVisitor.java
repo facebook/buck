@@ -64,7 +64,7 @@ class BuckModuleVisitor extends SimpleElementVisitor6<Void, TypeElement> {
           .getMessager()
           .printMessage(
               Diagnostic.Kind.ERROR,
-              "Cannot collect information Buck modules: " + e.getMessage(),
+              "Cannot collect information about Buck modules: " + ThrowablesUtils.toString(e),
               type);
       hadError = true;
     }
