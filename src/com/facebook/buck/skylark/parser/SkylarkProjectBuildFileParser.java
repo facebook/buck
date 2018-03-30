@@ -144,7 +144,16 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
 
   /** Always disable implicit native imports in skylark rules, they should utilize native.foo */
   private Environment.GlobalFrame getBuckLoadContextGlobals() {
-    return getBuckGlobals(true);
+    try (Mutability mutability = Mutability.create("global_load_ctx")) {
+      Environment extensionEnv =
+          Environment.builder(mutability)
+              .useDefaultSemantics()
+              .setGlobals(getBuckGlobals(true))
+              .build();
+      extensionEnv.setup("native", nativeModuleSupplier.get());
+      Runtime.setupModuleGlobals(extensionEnv, SkylarkExtensionFunctions.class);
+      return extensionEnv.getGlobals();
+    }
   }
 
   /** Disable implicit native rules depending on configuration */
@@ -392,8 +401,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         envBuilder.setImportedExtensions(toImportMap(dependencies));
       }
       Environment extensionEnv = envBuilder.useDefaultSemantics().build();
-      extensionEnv.setup("native", nativeModuleSupplier.get());
-      Runtime.setupModuleGlobals(extensionEnv, SkylarkExtensionFunctions.class);
       boolean success = extensionAst.exec(extensionEnv, eventHandler);
       if (!success) {
         throw BuildFileParseException.createForUnknownParseError(
