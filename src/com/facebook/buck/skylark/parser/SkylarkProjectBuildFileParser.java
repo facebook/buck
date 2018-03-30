@@ -23,7 +23,6 @@ import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.skylark.function.Glob;
 import com.facebook.buck.skylark.function.SkylarkNativeModule;
 import com.facebook.buck.skylark.io.impl.SimpleGlobber;
@@ -88,21 +87,13 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       ProjectBuildFileParserOptions options,
       BuckEventBus buckEventBus,
       FileSystem fileSystem,
-      TypeCoercerFactory typeCoercerFactory,
+      BuckGlobals buckGlobals,
       EventHandler eventHandler) {
     this.options = options;
     this.buckEventBus = buckEventBus;
     this.fileSystem = fileSystem;
     this.eventHandler = eventHandler;
-    // TODO(ttsugrii): request factory and globals through a constructor instead of creating them
-    // here
-    RuleFunctionFactory ruleFunctionFactory = new RuleFunctionFactory(typeCoercerFactory);
-    this.buckGlobals =
-        BuckGlobals.builder()
-            .setDescriptions(options.getDescriptions())
-            .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
-            .setRuleFunctionFactory(ruleFunctionFactory::create)
-            .build();
+    this.buckGlobals = buckGlobals;
 
     this.extensionDataCache =
         CacheBuilder.newBuilder()
@@ -120,10 +111,10 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       ProjectBuildFileParserOptions options,
       BuckEventBus buckEventBus,
       FileSystem fileSystem,
-      TypeCoercerFactory typeCoercerFactory,
+      BuckGlobals buckGlobals,
       EventHandler eventHandler) {
     return new SkylarkProjectBuildFileParser(
-        options, buckEventBus, fileSystem, typeCoercerFactory, eventHandler);
+        options, buckEventBus, fileSystem, buckGlobals, eventHandler);
   }
 
   @Override

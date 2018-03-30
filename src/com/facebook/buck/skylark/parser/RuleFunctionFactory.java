@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
  *
  * <p>Callers can setup created functions in the {@link Environment}.
  */
-class RuleFunctionFactory {
+public class RuleFunctionFactory {
 
   private static final ImmutableSet<String> IMPLICIT_ATTRIBUTES =
       ImmutableSet.of("visibility", "within_view");
@@ -50,7 +50,7 @@ class RuleFunctionFactory {
 
   private final TypeCoercerFactory typeCoercerFactory;
 
-  RuleFunctionFactory(TypeCoercerFactory typeCoercerFactory) {
+  public RuleFunctionFactory(TypeCoercerFactory typeCoercerFactory) {
     this.typeCoercerFactory = typeCoercerFactory;
   }
 

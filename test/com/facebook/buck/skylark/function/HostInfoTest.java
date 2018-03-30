@@ -24,6 +24,8 @@ import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.skylark.parser.BuckGlobals;
+import com.facebook.buck.skylark.parser.RuleFunctionFactory;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Architecture;
@@ -260,7 +262,7 @@ public class HostInfoTest {
 
   private SkylarkProjectBuildFileParser createParser(
       ProjectFilesystem filesystem, EventHandler eventHandler) {
-    return SkylarkProjectBuildFileParser.using(
+    ProjectBuildFileParserOptions options =
         ProjectBuildFileParserOptions.builder()
             .setProjectRoot(filesystem.getRootPath())
             .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
@@ -268,10 +270,18 @@ public class HostInfoTest {
             .setBuildFileName("BUCK")
             .setBuildFileImportWhitelist(ImmutableList.of())
             .setPythonInterpreter("skylark")
-            .build(),
+            .build();
+    RuleFunctionFactory ruleFunctionFactory =
+        new RuleFunctionFactory(new DefaultTypeCoercerFactory());
+    return SkylarkProjectBuildFileParser.using(
+        options,
         BuckEventBusForTests.newInstance(),
         SkylarkFilesystem.using(filesystem),
-        new DefaultTypeCoercerFactory(),
+        BuckGlobals.builder()
+            .setDescriptions(options.getDescriptions())
+            .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
+            .setRuleFunctionFactory(ruleFunctionFactory)
+            .build(),
         eventHandler);
   }
 }

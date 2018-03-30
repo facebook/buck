@@ -33,7 +33,6 @@ import com.google.devtools.build.lib.syntax.ClassObject;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Runtime;
-import java.util.function.Function;
 import org.immutables.value.Value;
 import org.immutables.value.Value.Lazy;
 
@@ -75,7 +74,7 @@ abstract class AbstractBuckGlobals {
   abstract boolean getDisableImplicitNativeRules();
 
   /** @return A Skylark rule function factory. */
-  abstract Function<Description<?>, BuiltinFunction> getRuleFunctionFactory();
+  abstract RuleFunctionFactory getRuleFunctionFactory();
 
   /** @return A set of rules supported by Buck. */
   abstract ImmutableSet<Description<?>> getDescriptions();
@@ -87,7 +86,7 @@ abstract class AbstractBuckGlobals {
   ImmutableList<BuiltinFunction> getBuckRuleFunctions() {
     return getDescriptions()
         .stream()
-        .map(this.getRuleFunctionFactory())
+        .map(getRuleFunctionFactory()::create)
         .collect(ImmutableList.toImmutableList());
   }
 

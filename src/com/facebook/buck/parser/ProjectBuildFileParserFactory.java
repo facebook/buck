@@ -29,7 +29,9 @@ import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.skylark.parser.BuckGlobals;
 import com.facebook.buck.skylark.parser.ConsoleEventHandler;
+import com.facebook.buck.skylark.parser.RuleFunctionFactory;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -150,6 +152,7 @@ public class ProjectBuildFileParserFactory {
             eventBus,
             new DefaultProcessExecutor(console));
     if (parserConfig.isPolyglotParsingEnabled()) {
+      RuleFunctionFactory ruleFunctionFactory = new RuleFunctionFactory(typeCoercerFactory);
       return HybridProjectBuildFileParser.using(
           ImmutableMap.of(
               Syntax.PYTHON_DSL,
@@ -159,7 +162,12 @@ public class ProjectBuildFileParserFactory {
                   buildFileParserOptions,
                   eventBus,
                   SkylarkFilesystem.using(cell.getFilesystem()),
-                  typeCoercerFactory,
+                  BuckGlobals.builder()
+                      .setDisableImplicitNativeRules(
+                          buildFileParserOptions.getDisableImplicitNativeRules())
+                      .setDescriptions(buildFileParserOptions.getDescriptions())
+                      .setRuleFunctionFactory(ruleFunctionFactory)
+                      .build(),
                   new ConsoleEventHandler(eventBus, EventKind.ALL_EVENTS))),
           parserConfig.getDefaultBuildFileSyntax());
     }

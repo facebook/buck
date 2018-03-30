@@ -104,7 +104,11 @@ public class SkylarkProjectBuildFileParserTest {
         options,
         BuckEventBusForTests.newInstance(),
         SkylarkFilesystem.using(projectFilesystem),
-        new DefaultTypeCoercerFactory(),
+        BuckGlobals.builder()
+            .setRuleFunctionFactory(new RuleFunctionFactory(new DefaultTypeCoercerFactory()))
+            .setDescriptions(options.getDescriptions())
+            .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
+            .build(),
         eventHandler);
   }
 
@@ -540,21 +544,27 @@ public class SkylarkProjectBuildFileParserTest {
     Files.createDirectories(extensionDirectory);
     Path extensionFile = extensionDirectory.resolve("build_rules.bzl");
 
+    ProjectBuildFileParserOptions options =
+        ProjectBuildFileParserOptions.builder()
+            .setProjectRoot(cell.getRoot())
+            .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
+            .setIgnorePaths(ImmutableSet.of())
+            .setBuildFileName("BUCK")
+            .setDescriptions(knownBuildRuleTypesProvider.get(cell).getDescriptions())
+            .setBuildFileImportWhitelist(ImmutableList.of())
+            .setPythonInterpreter("skylark")
+            .setCellRoots(ImmutableMap.of("tp2", anotherCell))
+            .build();
     parser =
         SkylarkProjectBuildFileParser.using(
-            ProjectBuildFileParserOptions.builder()
-                .setProjectRoot(cell.getRoot())
-                .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
-                .setIgnorePaths(ImmutableSet.of())
-                .setBuildFileName("BUCK")
-                .setDescriptions(knownBuildRuleTypesProvider.get(cell).getDescriptions())
-                .setBuildFileImportWhitelist(ImmutableList.of())
-                .setPythonInterpreter("skylark")
-                .setCellRoots(ImmutableMap.of("tp2", anotherCell))
-                .build(),
+            options,
             BuckEventBusForTests.newInstance(),
             SkylarkFilesystem.using(projectFilesystem),
-            new DefaultTypeCoercerFactory(),
+            BuckGlobals.builder()
+                .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
+                .setDescriptions(options.getDescriptions())
+                .setRuleFunctionFactory(new RuleFunctionFactory(new DefaultTypeCoercerFactory()))
+                .build(),
             new PrintingEventHandler(EnumSet.allOf(EventKind.class)));
 
     Files.write(
