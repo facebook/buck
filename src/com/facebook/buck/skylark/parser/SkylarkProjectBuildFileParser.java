@@ -23,9 +23,6 @@ import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.coercer.CoercedTypeCache;
-import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.skylark.function.Glob;
 import com.facebook.buck.skylark.function.SkylarkNativeModule;
@@ -33,14 +30,12 @@ import com.facebook.buck.skylark.io.impl.SimpleGlobber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.packages.PackageFactory;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.CaseFormat;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -49,12 +44,8 @@ import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.cmdline.RepositoryName;
 import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.syntax.BuildFileAST;
-import com.google.devtools.build.lib.syntax.BuiltinFunction;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.Environment.Extension;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.FuncallExpression;
-import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInputSource;
 import com.google.devtools.build.lib.syntax.Runtime;
@@ -67,7 +58,6 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
@@ -82,19 +72,12 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
 
   private static final Logger LOG = Logger.get(SkylarkProjectBuildFileParser.class);
 
-  // internal variable exposed to rules that is used to track parse events. This allows us to
-  // remove parse state from rules and as such makes rules reusable across parse invocations
-  private static final String PARSE_CONTEXT = "$parse_context";
-  private static final ImmutableSet<String> IMPLICIT_ATTRIBUTES =
-      ImmutableSet.of("visibility", "within_view");
   // Dummy label used for resolving paths for other labels.
   private static final Label EMPTY_LABEL =
       Label.createUnvalidated(PackageIdentifier.EMPTY_PACKAGE_ID, "");
-  // URL prefix for all build rule documentation pages
-  private static final String BUCK_RULE_DOC_URL_PREFIX = "https://buckbuild.com/rule/";
 
   private final FileSystem fileSystem;
-  private final TypeCoercerFactory typeCoercerFactory;
+
   private final ProjectBuildFileParserOptions options;
   private final BuckEventBus buckEventBus;
   private final EventHandler eventHandler;
@@ -110,13 +93,15 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     this.options = options;
     this.buckEventBus = buckEventBus;
     this.fileSystem = fileSystem;
-    this.typeCoercerFactory = typeCoercerFactory;
     this.eventHandler = eventHandler;
+    // TODO(ttsugrii): request factory and globals through a constructor instead of creating them
+    // here
+    RuleFunctionFactory ruleFunctionFactory = new RuleFunctionFactory(typeCoercerFactory);
     this.buckGlobals =
         BuckGlobals.builder()
             .setDescriptions(options.getDescriptions())
             .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
-            .setRuleFunctionFactory(this::newRuleDefinition)
+            .setRuleFunctionFactory(ruleFunctionFactory::create)
             .build();
 
     this.extensionDataCache =
@@ -257,7 +242,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
             .build();
     String basePath = getBasePath(buildFile);
     env.setupDynamic(Runtime.PKG_NAME, basePath);
-    env.setupDynamic(PARSE_CONTEXT, parseContext);
+    parseContext.setup(env);
     env.setup("glob", Glob.create());
     env.setup("package_name", SkylarkNativeModule.packageName);
     PackageContext packageContext =
@@ -420,100 +405,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         .orElse("");
   }
 
-  /**
-   * Create a Skylark definition for the {@code ruleClass} rule.
-   *
-   * <p>This makes functions like @{code java_library} available in build files. All they do is
-   * capture passed attribute values in a map and adds them to the {@code ruleRegistry}.
-   *
-   * @param ruleClass The name of the rule to to define.
-   * @return Skylark function to handle the Buck rule.
-   */
-  private BuiltinFunction newRuleDefinition(Description<?> ruleClass) {
-    String name = Description.getBuildRuleType(ruleClass).getName();
-    return new BuiltinFunction(
-        name, FunctionSignature.KWARGS, BuiltinFunction.USE_AST_ENV, /*isRule=*/ true) {
-
-      @SuppressWarnings({"unused"})
-      public Runtime.NoneType invoke(
-          Map<String, Object> kwargs, FuncallExpression ast, Environment env) throws EvalException {
-        ImmutableMap.Builder<String, Object> builder =
-            ImmutableMap.<String, Object>builder()
-                .put("buck.base_path", env.lookup(Runtime.PKG_NAME))
-                .put("buck.type", name);
-        ImmutableMap<String, ParamInfo> allParamInfo =
-            CoercedTypeCache.INSTANCE.getAllParamInfo(
-                typeCoercerFactory, ruleClass.getConstructorArgType());
-        populateAttributes(kwargs, builder, allParamInfo);
-        throwOnMissingRequiredAttribute(kwargs, allParamInfo, getName(), ast);
-        ParseContext parseContext = getParseContext(env, ast);
-        parseContext.recordRule(builder.build());
-        return Runtime.NONE;
-      }
-    };
-  }
-
-  /**
-   * Validates attributes passed to the rule and in case any required attribute is not provided,
-   * throws an {@link IllegalArgumentException}.
-   *
-   * @param kwargs The keyword arguments passed to the rule.
-   * @param allParamInfo The mapping from build rule attributes to their information.
-   * @param name The build rule name. (e.g. {@code java_library}).
-   * @param ast The abstract syntax tree of the build rule function invocation.
-   */
-  private void throwOnMissingRequiredAttribute(
-      Map<String, Object> kwargs,
-      ImmutableMap<String, ParamInfo> allParamInfo,
-      String name,
-      FuncallExpression ast)
-      throws EvalException {
-    ImmutableList<ParamInfo> missingAttributes =
-        allParamInfo
-            .values()
-            .stream()
-            .filter(param -> !param.isOptional() && !kwargs.containsKey(param.getPythonName()))
-            .collect(ImmutableList.toImmutableList());
-    if (!missingAttributes.isEmpty()) {
-      throw new EvalException(
-          ast.getLocation(),
-          name
-              + " requires "
-              + missingAttributes
-                  .stream()
-                  .map(ParamInfo::getPythonName)
-                  .collect(Collectors.joining(" and "))
-              + " but they are not provided.",
-          BUCK_RULE_DOC_URL_PREFIX + name);
-    }
-  }
-
-  /**
-   * Populates provided {@code builder} with values from {@code kwargs} assuming {@code ruleClass}
-   * as the target {@link Description} class.
-   *
-   * @param kwargs The keyword arguments and their values passed to rule function in build file.
-   * @param builder The map builder used for storing extracted attributes and their values.
-   * @param allParamInfo The parameter information for every build rule attribute.
-   */
-  private void populateAttributes(
-      Map<String, Object> kwargs,
-      ImmutableMap.Builder<String, Object> builder,
-      ImmutableMap<String, ParamInfo> allParamInfo) {
-    for (Map.Entry<String, Object> kwargEntry : kwargs.entrySet()) {
-      String paramName =
-          CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, kwargEntry.getKey());
-      if (!allParamInfo.containsKey(paramName)
-          && !(IMPLICIT_ATTRIBUTES.contains(kwargEntry.getKey()))) {
-        throw new IllegalArgumentException(kwargEntry.getKey() + " is not a recognized attribute");
-      }
-      if (Runtime.NONE.equals(kwargEntry.getValue())) {
-        continue;
-      }
-      builder.put(paramName, kwargEntry.getValue());
-    }
-  }
-
   @Override
   public void reportProfile() {
     // TODO(ttsugrii): implement
@@ -522,21 +413,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   @Override
   public void close() throws BuildFileParseException, InterruptedException, IOException {
     // nothing to do
-  }
-
-  /** Get the {@link ParseContext} by looking up in the environment. */
-  private static ParseContext getParseContext(Environment env, FuncallExpression ast)
-      throws EvalException {
-    @Nullable ParseContext value = (ParseContext) env.lookup(PARSE_CONTEXT);
-    if (value == null) {
-      // if PARSE_CONTEXT is missing, we're not called from a build file. This happens if someone
-      // uses native.some_func() in the wrong place.
-      throw new EvalException(
-          ast.getLocation(),
-          "The native module cannot be accessed from here. "
-              + "Wrap the function in a macro and call it from a BUCK file");
-    }
-    return value;
   }
 
   /**
