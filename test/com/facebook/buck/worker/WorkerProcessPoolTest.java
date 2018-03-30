@@ -217,6 +217,7 @@ public class WorkerProcessPoolTest {
   public void canReturnAndBorrowWorkersWhileStartingUpOtherWorkers() throws Exception {
     SynchronousQueue<Future<WorkerProcess>> workers = new SynchronousQueue<>();
     WorkerProcessPool pool = createPool(2, workers);
+    CountDownLatch firstThreadWaitingToBorrowProcess = new CountDownLatch(1);
     CountDownLatch secondThreadWaitingForWorker = new CountDownLatch(1);
 
     AtomicReference<WorkerProcess> firstBorrowedWorker = new AtomicReference<>();
@@ -227,6 +228,7 @@ public class WorkerProcessPoolTest {
         testThreads.startThread(
             () -> {
               WorkerProcess workerProcess = pool.borrowWorkerProcess();
+              firstThreadWaitingToBorrowProcess.countDown();
               firstBorrowedWorker.set(workerProcess);
               secondThreadWaitingForWorker.await();
               pool.returnWorkerProcess(workerProcess);
@@ -235,6 +237,8 @@ public class WorkerProcessPoolTest {
 
     // transfer a fake worker to thread 1
     workers.put(CompletableFuture.completedFuture(new FakeWorkerProcess(ImmutableMap.of())));
+
+    firstThreadWaitingToBorrowProcess.await();
 
     // thread 2, attempting to borrow a worker
     testThreads.startThread(borrowWorkerProcessWithoutReturning(pool, concurrentSet()));
