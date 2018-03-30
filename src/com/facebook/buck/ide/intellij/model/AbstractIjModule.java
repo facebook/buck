@@ -135,4 +135,16 @@ abstract class AbstractIjModule implements IjProjectElement {
     }
     dependencyListBuilder.addModule(getName(), scope, false /* exported */);
   }
+
+  @Override
+  public int hashCode() {
+    return getModuleImlFilePath().hashCode();
+  }
+
+  @Override
+  public boolean equals(Object another) {
+    return this == another
+        || another instanceof IjModule
+            && getModuleImlFilePath().equals(((IjModule) another).getModuleImlFilePath());
+  }
 }
