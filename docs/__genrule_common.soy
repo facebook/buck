@@ -44,7 +44,9 @@
 
     It is also possible to expand references to other rules within the
     {sp}<code>cmd</code>, using builtin {call buck.string_parameter_macros /}.
-    This expansion takes two supported forms:
+    Note that all build rules expanded in the command will be automatically
+    considered to be dependencies of the <code>genrule()</code>.
+
     <dl>
       <dt><code>$(classpath /&#x2F;path/to:target)</code></dt>
       <dd>Expands a build rule for something that has a java classpath
@@ -76,8 +78,6 @@
       </dd>
     </dl>
 
-    Note that all build rules expanded in the command will be automatically
-    considered to be dependencies of the <code>genrule()</code>.
   {/param}
 {/call}
 {/template}
@@ -88,9 +88,10 @@
   {param name: 'bash' /}
   {param default: 'None' /}
   {param desc}
-  The platform-specific version of parameter <code>cmd</code>.
-  It runs on UNIX in which <code>bash</code> is installed and has a higher priority than
-  {sp}<code>cmd</code>. Command specified will be run with <code>/bin/bash -c</code>.
+  A platform-specific version of the shell command parameter <code>cmd</code>.
+  It runs on Linux and UNIX systems&mdash;including OSX&mdash;on which <code>bash</code> is installed. 
+  It has a higher priority than {sp}<code>cmd</code>. The <code>bash</code> argument is run with <code>/bin/bash -c</code>.
+  It has access to the same set of macros and variables as the <code>cmd</code> argument.
   {/param}
 {/call}
 {/template}
@@ -101,8 +102,9 @@
   {param name: 'cmd_exe' /}
   {param default: 'None' /}
   {param desc}
-  The platform-specific version of parameter <code>cmd</code>. It runs on Windows and has a higher
-  {sp}priority than <code>cmd</code>. Command specified will be run with <code>cmd.exe /c</code>.
+  A platform-specific version of the shell command parameter <code>cmd</code>. It runs on Windows and has a higher
+  {sp}priority than <code>cmd</code>. The <code>cmd_exe</code> argument is run with <code>cmd.exe /c</code>.
+  It has access to the same set of macros and variables as the <code>cmd</code> argument.
   {/param}
 {/call}
 {/template}
