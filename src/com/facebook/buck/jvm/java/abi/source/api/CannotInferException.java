@@ -21,11 +21,20 @@ import javax.lang.model.type.TypeMirror;
 
 public class CannotInferException extends RuntimeException {
   public CannotInferException(String what, Element owner) {
-    super(
-        String.format("We cannot know the %s of an inferred element: %s", what, owner.toString()));
+    super(formatMessage(what, owner));
   }
 
   public CannotInferException(String what, TypeMirror owner) {
-    super(String.format("We cannot know the %s of an inferred type: %s", what, owner.toString()));
+    super(formatMessage(what, owner));
+  }
+
+  private static String formatMessage(String what, Object owner) {
+    return String.format(
+        "Buck had to infer the existence of %1$s for source-only ABI generation, and thus cannot know the %2$s of the type.\n"
+            + "One of three things is happening:\n"
+            + "  1. The BUCK file is missing a dependency for %1$s\n"
+            + "  2. The module containing %1$s needs to be marked with required_for_source_only_abi or referenced as a source_only_abi_dep\n"
+            + "  3. An annotatin processor is accessing a type that it shouldn't be",
+        owner, what);
   }
 }

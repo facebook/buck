@@ -615,6 +615,42 @@ public class StubJarTest {
         .createStubJar();
   }
 
+  @Test
+  public void failsWhenAnnotationWillNotLoad() throws IOException {
+    if (testingMode != MODE_SOURCE_BASED_MISSING_DEPS) {
+      return;
+    }
+
+    tester
+        .setSourceFile(
+            "DepAnno.java", "package com.example.buck.dependency;", "public @interface DepAnno { }")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "import com.example.buck.dependency.DepAnno;",
+            "@DepAnno",
+            "public class A {",
+            "  public void foo(@DepAnno int d) { }",
+            "}")
+        .addExpectedCompileError(
+            "A.java:3: error: Could not find the annotation com.example.buck.dependency.DepAnno.\n"
+                + "@DepAnno\n"
+                + "^\n"
+                + "  This can happen for one of two reasons:\n"
+                + "  1. A dependency is missing in the BUCK file for the current target. Try building the current rule without the #source-only-abi flavor, fix any errors that are reported, and then build this flavor again.\n"
+                + "  2. The rule that owns com.example.buck.dependency.DepAnno is not marked with required_for_source_only_abi = True. Add that parameter to the rule and try again.")
+        .addExpectedCompileError(
+            "A.java:5: error: Could not find the annotation com.example.buck.dependency.DepAnno.\n"
+                + "  public void foo(@DepAnno int d) { }\n"
+                + "                  ^\n"
+                + "  This can happen for one of two reasons:\n"
+                + "  1. A dependency is missing in the BUCK file for the current target. Try building the current rule without the #source-only-abi flavor, fix any errors that are reported, and then build this flavor again.\n"
+                + "  2. The rule that owns com.example.buck.dependency.DepAnno is not marked with required_for_source_only_abi = True. Add that parameter to the rule and try again.")
+        .createStubJar();
+  }
+
   /**
    * Regression test for a bug where our error suppressing listener wasn't tracking Context changes
    * across rounds.
@@ -986,9 +1022,12 @@ public class StubJarTest {
             "  public void cheese(String key) {}",
             "}")
         .addExpectedCompileError(
-            "A.java:3: error: Could not load the class file for this annotation. Consider adding required_for_source_only_abi = True to its build rule.\n"
+            "A.java:3: error: Could not find the annotation com.example.buck.Foo.\n"
                 + "  @Foo\n"
-                + "  ^")
+                + "  ^\n"
+                + "  This can happen for one of two reasons:\n"
+                + "  1. A dependency is missing in the BUCK file for the current target. Try building the current rule without the #source-only-abi flavor, fix any errors that are reported, and then build this flavor again.\n"
+                + "  2. The rule that owns com.example.buck.Foo is not marked with required_for_source_only_abi = True. Add that parameter to the rule and try again.")
         .createStubJar();
   }
 
