@@ -18,11 +18,13 @@ package com.facebook.buck.graph.transformation;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.RichStream;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,12 +37,15 @@ import java.util.function.Function;
  *
  * <p>This engine is able to deal with dependencies in the computation graph by having Transformer
  * request dependent results of other transformations through {@link
- * TransformationEnvironment#evaluate(Object, Function)}.
+ * TransformationEnvironment#evaluate(Object, Function)} or {@link
+ * TransformationEnvironment#evaluateAll(Iterable, Function)}.
  *
  * <p>The transformation is incremental, so cached portions of the transformation will be used
  * whenever possible based on {@code ComputeKey.equals()}. Therefore, {@link ComputeKey} should be
  * immutable, and have deterministic equals. For future perspective, we want to have {@link
  * ComputeKey} be serializable, so that we can eventually send keys to be computed remotely.
+ *
+ * <p>A custom cache can be supplied to the engine to cache the computation as desired.
  *
  * <p>Transformations will be applied asynchronously, so independent transformations can be executed
  * in parallel. It is therefore important that transformations are thread safe.
@@ -64,16 +69,72 @@ import java.util.function.Function;
 public final class DefaultAsyncTransformationEngine<ComputeKey, ComputeResult>
     implements AsyncTransformationEngine<ComputeKey, ComputeResult> {
 
+  /**
+   * Internally, on the first request, AsyncTransformation schedules the requested key to be
+   * completed via a Future, and stores the Future in a map with key of ComputeKey. Subsequent
+   * requests for the same ComputeKey will reuse the stored Future, where async operations are then
+   * added to the scheduled Future.
+   *
+   * <p>Due to memory overhead of the Future, upon Future completion, the future is deleted from the
+   * stored map to allow it to be garbage collected. The raw result will be put into the result
+   * cache. Subsequent requests will reuse the raw result from the cache directly.
+   */
   private static final Logger LOG = Logger.get(DefaultAsyncTransformationEngine.class);
 
   private final AsyncTransformer<ComputeKey, ComputeResult> transformer;
 
-  private final ConcurrentHashMap<ComputeKey, CompletableFuture<ComputeResult>> computationIndex;
+  @VisibleForTesting
+  final ConcurrentHashMap<ComputeKey, CompletableFuture<ComputeResult>> computationIndex;
 
+  // for caching the completed results.
+  private final TransformationEngineCache<ComputeKey, ComputeResult> resultCache;
+
+  /**
+   * Constructs a {@link DefaultAsyncTransformationEngine} with an internal cache that uses the
+   * {@link ComputeKey} for reusability.
+   *
+   * @param transformer the {@link AsyncTransformer} this engine executes
+   * @param estimatedNumOps the estimated number of operations this engine will execute given a
+   *     computation, to reserve the size of its computation index
+   */
   public DefaultAsyncTransformationEngine(
       AsyncTransformer<ComputeKey, ComputeResult> transformer, int estimatedNumOps) {
+    this(
+        transformer,
+        estimatedNumOps,
+        // Default Cache is just a ConcurrentHashMap
+        new TransformationEngineCache<ComputeKey, ComputeResult>() {
+          private final ConcurrentHashMap<ComputeKey, ComputeResult> map =
+              new ConcurrentHashMap<>(estimatedNumOps);
+
+          @Override
+          public Optional<ComputeResult> get(ComputeKey k) {
+            return Optional.ofNullable(map.get(k));
+          }
+
+          @Override
+          public void put(ComputeKey k, ComputeResult v) {
+            map.put(k, v);
+          }
+        });
+  }
+
+  /**
+   * Constructs a {@link DefaultAsyncTransformationEngine} with an internal cache that uses the
+   * {@link ComputeKey} for reusability.
+   *
+   * @param transformer the {@link AsyncTransformer} this engine executes
+   * @param estimatedNumOps the estimated number of operations this engine will execute given a
+   *     computation, to reserve the size of its computation index
+   * @param cache the cache to store the computed results
+   */
+  public DefaultAsyncTransformationEngine(
+      AsyncTransformer<ComputeKey, ComputeResult> transformer,
+      int estimatedNumOps,
+      TransformationEngineCache<ComputeKey, ComputeResult> cache) {
     this.transformer = transformer;
     this.computationIndex = new ConcurrentHashMap<>(estimatedNumOps);
+    this.resultCache = cache;
   }
 
   @Override
@@ -104,12 +165,33 @@ public final class DefaultAsyncTransformationEngine<ComputeKey, ComputeResult>
 
   private CompletableFuture<ComputeResult> computeWithEnvironment(
       ComputeKey key, TransformationEnvironment<ComputeKey, ComputeResult> env) {
-    LOG.verbose("Computing transformation for requested key: %s", key);
+    LOG.verbose("Attempting to load from cache for key: %s", key);
+    Optional<ComputeResult> result = resultCache.get(key);
+    if (result.isPresent()) {
+      return CompletableFuture.completedFuture(result.get());
+    }
+
     return computationIndex.computeIfAbsent(
         key,
         mapKey -> {
+          // recheck the resultCache in event that the cache got populated while we were waiting to
+          // access the computationIndex.
+          Optional<ComputeResult> cachedResult = resultCache.get(mapKey);
+          if (cachedResult.isPresent()) {
+            return CompletableFuture.completedFuture(cachedResult.get());
+          }
+
+          LOG.verbose("Result cache miss. Computing transformation for requested key: %s", key);
           return CompletableFuture.supplyAsync(() -> mapKey)
-              .thenComposeAsync(computeKey -> transformer.transform(computeKey, env));
+              .thenComposeAsync(computeKey -> transformer.transform(computeKey, env))
+              .thenApplyAsync(
+                  computedResult -> {
+                    // add to the result cache first then remove from the computationIndex to ensure
+                    // the result is reused.
+                    resultCache.put(mapKey, computedResult);
+                    computationIndex.remove(mapKey);
+                    return computedResult;
+                  });
         });
   }
 
