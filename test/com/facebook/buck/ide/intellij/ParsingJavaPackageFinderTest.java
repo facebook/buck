@@ -94,6 +94,42 @@ public class ParsingJavaPackageFinderTest {
   }
 
   @Test
+  public void testMisleadingCommentsWithPackageStatement() {
+    Path misleadingPath = Paths.get("case1/org/test/package1/Foo.java");
+    fakeProjectFilesystem.writeContentsToPath(
+        "/**\n"
+            + "package misleading;\n"
+            + "import haha;\n"
+            + "*/\n"
+            + "package org.is.correct;\n"
+            + "\n"
+            + "class Foo{}",
+        misleadingPath);
+    JavaPackageFinder parsingJavaPackageFinder =
+        ParsingJavaPackageFinder.preparse(
+            javaFileParser,
+            fakeProjectFilesystem,
+            ImmutableSortedSet.of(misleadingPath),
+            dummyPackageFinder);
+    assertEquals("org.is.correct", parsingJavaPackageFinder.findJavaPackage(misleadingPath));
+  }
+
+  @Test
+  public void testMisleadingCommentsWithoutPackageGoesToFallback() {
+    Path misleadingPath = Paths.get("case1/org/test/package1/Foo.java");
+    fakeProjectFilesystem.writeContentsToPath(
+        "/**\n" + "package misleading;\n" + "import haha;\n" + "*/\n" + "class Foo{}",
+        misleadingPath);
+    JavaPackageFinder parsingJavaPackageFinder =
+        ParsingJavaPackageFinder.preparse(
+            javaFileParser,
+            fakeProjectFilesystem,
+            ImmutableSortedSet.of(misleadingPath),
+            dummyPackageFinder);
+    assertEquals("dummy", parsingJavaPackageFinder.findJavaPackage(misleadingPath));
+  }
+
+  @Test
   public void testFallBackToDefaultFinder() {
     JavaPackageFinder parsingJavaPackageFinder =
         ParsingJavaPackageFinder.preparse(

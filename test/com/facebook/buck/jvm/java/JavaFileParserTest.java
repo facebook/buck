@@ -18,9 +18,11 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -759,5 +761,24 @@ public class JavaFileParserTest {
     assertEquals(
         ImmutableSortedSet.of("com.google.common.base.Function", "org.stringtemplate.v4.ST"),
         features.exportedSymbols);
+  }
+
+  @Test
+  public void testPackageParsingWithoutRestOfFile() {
+    JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
+    final Optional<String> packageNameFromSource =
+        parser.getPackageNameFromSource("package com.domain.subdomain;");
+    assertTrue(packageNameFromSource.isPresent());
+    assertEquals("com.domain.subdomain", packageNameFromSource.get());
+  }
+
+  @Test
+  public void testPackageParsingWithMisleadingComments() {
+    JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
+    final Optional<String> packageNameFromSource =
+        parser.getPackageNameFromSource(
+            "/**\n" + "package misleading;\n" + "*/\n" + "package com.domain.subdomain;");
+    assertTrue(packageNameFromSource.isPresent());
+    assertEquals("com.domain.subdomain", packageNameFromSource.get());
   }
 }
