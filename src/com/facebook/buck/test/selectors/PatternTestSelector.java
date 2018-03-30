@@ -166,14 +166,14 @@ public class PatternTestSelector implements TestSelector {
 
   @Override
   public boolean matchesClassName(String className) {
-    if (classPattern == null) {
+    if (classPattern == null || className == null) {
       return true;
     }
     return classPattern.matcher(className).find();
   }
 
   private boolean matchesMethodName(String methodName) {
-    if (methodPattern == null) {
+    if (methodPattern == null || methodName == null) {
       return true;
     }
     return methodPattern.matcher(methodName).find();

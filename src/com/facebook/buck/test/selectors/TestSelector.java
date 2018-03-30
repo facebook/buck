@@ -31,6 +31,13 @@ public interface TestSelector {
 
   boolean isMatchAnyMethod();
 
+  /**
+   * Whether this {@link TestSelector} matches the given {@link TestDescription}. A class or method
+   * name being null in the {@link TestDescription} means that it will match anything.
+   *
+   * @param description the {@link TestDescription} to match
+   * @return true if this selector matches the given {@link TestDescription}
+   */
   boolean matches(TestDescription description);
 
   boolean matchesClassName(String className);
