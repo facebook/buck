@@ -28,14 +28,10 @@ import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.skylark.function.Glob;
-import com.facebook.buck.skylark.function.HostInfo;
-import com.facebook.buck.skylark.function.ReadConfig;
-import com.facebook.buck.skylark.function.SkylarkExtensionFunctions;
 import com.facebook.buck.skylark.function.SkylarkNativeModule;
 import com.facebook.buck.skylark.io.impl.SimpleGlobber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.packages.PackageFactory;
-import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Throwables;
@@ -52,11 +48,8 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.cmdline.RepositoryName;
 import com.google.devtools.build.lib.events.EventHandler;
-import com.google.devtools.build.lib.packages.NativeProvider;
-import com.google.devtools.build.lib.syntax.BazelLibrary;
 import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.BuiltinFunction;
-import com.google.devtools.build.lib.syntax.ClassObject;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.Environment.Extension;
 import com.google.devtools.build.lib.syntax.EvalException;
@@ -74,7 +67,6 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -106,11 +98,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private final ProjectBuildFileParserOptions options;
   private final BuckEventBus buckEventBus;
   private final EventHandler eventHandler;
-  private final Supplier<ImmutableList<BuiltinFunction>> buckRuleFunctionsSupplier;
-  private final Supplier<ClassObject> nativeModuleSupplier;
-  private final Supplier<Environment.GlobalFrame> buckLoadContextGlobalsSupplier;
-  private final Supplier<Environment.GlobalFrame> buckBuildFileContextGlobalsSupplier;
   private final LoadingCache<LoadImport, ExtensionData> extensionDataCache;
+  private final BuckGlobals buckGlobals;
 
   private SkylarkProjectBuildFileParser(
       ProjectBuildFileParserOptions options,
@@ -123,14 +112,13 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     this.fileSystem = fileSystem;
     this.typeCoercerFactory = typeCoercerFactory;
     this.eventHandler = eventHandler;
-    // since Skylark parser is currently disabled by default, avoid creating functions in case
-    // it's never used
-    // TODO(ttsugrii): replace suppliers with eager loading once Skylark parser is on by default
-    this.buckRuleFunctionsSupplier = MoreSuppliers.memoize(this::getBuckRuleFunctions);
-    this.nativeModuleSupplier = MoreSuppliers.memoize(this::newNativeModule);
-    this.buckLoadContextGlobalsSupplier = MoreSuppliers.memoize(this::getBuckLoadContextGlobals);
-    this.buckBuildFileContextGlobalsSupplier =
-        MoreSuppliers.memoize(this::getBuckBuildFileContextGlobals);
+    this.buckGlobals =
+        BuckGlobals.builder()
+            .setDescriptions(options.getDescriptions())
+            .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
+            .setRuleFunctionFactory(this::newRuleDefinition)
+            .build();
+
     this.extensionDataCache =
         CacheBuilder.newBuilder()
             .build(
@@ -140,25 +128,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
                     return loadExtension(loadImport);
                   }
                 });
-  }
-
-  /** Always disable implicit native imports in skylark rules, they should utilize native.foo */
-  private Environment.GlobalFrame getBuckLoadContextGlobals() {
-    try (Mutability mutability = Mutability.create("global_load_ctx")) {
-      Environment extensionEnv =
-          Environment.builder(mutability)
-              .useDefaultSemantics()
-              .setGlobals(getBuckGlobals(true))
-              .build();
-      extensionEnv.setup("native", nativeModuleSupplier.get());
-      Runtime.setupModuleGlobals(extensionEnv, SkylarkExtensionFunctions.class);
-      return extensionEnv.getGlobals();
-    }
-  }
-
-  /** Disable implicit native rules depending on configuration */
-  private Environment.GlobalFrame getBuckBuildFileContextGlobals() {
-    return getBuckGlobals(options.getDisableImplicitNativeRules());
   }
 
   /** Create an instance of Skylark project build file parser using provided options. */
@@ -281,7 +250,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     Environment env =
         Environment.builder(mutability)
             .setImportedExtensions(importMap)
-            .setGlobals(buckBuildFileContextGlobalsSupplier.get())
+            .setGlobals(buckGlobals.getBuckBuildFileContextGlobals())
             .setPhase(Environment.Phase.LOADING)
             .useDefaultSemantics()
             .setEventHandler(eventHandler)
@@ -395,7 +364,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       Environment.Builder envBuilder =
           Environment.builder(mutability)
               .setEventHandler(eventHandler)
-              .setGlobals(buckLoadContextGlobalsSupplier.get());
+              .setGlobals(buckGlobals.getBuckLoadContextGlobals());
       if (!extensionAst.getImports().isEmpty()) {
         dependencies = loadExtensions(label, extensionAst.getImports());
         envBuilder.setImportedExtensions(toImportMap(dependencies));
@@ -414,30 +383,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         .setDependencies(dependencies)
         .setImportString(loadImport.getImport().getImportString())
         .build();
-  }
-
-  /**
-   * @return The environment frame with configured buck globals. This includes built-in rules like
-   *     {@code java_library}.
-   * @param disableImplicitNativeRules If true, do not export native rules into the provided context
-   */
-  private Environment.GlobalFrame getBuckGlobals(boolean disableImplicitNativeRules) {
-    try (Mutability mutability = Mutability.create("global")) {
-      Environment globalEnv =
-          Environment.builder(mutability)
-              .setGlobals(BazelLibrary.GLOBALS)
-              .useDefaultSemantics()
-              .build();
-
-      BuiltinFunction readConfigFunction = ReadConfig.create();
-      globalEnv.setup(readConfigFunction.getName(), readConfigFunction);
-      if (!disableImplicitNativeRules) {
-        for (BuiltinFunction buckRuleFunction : buckRuleFunctionsSupplier.get()) {
-          globalEnv.setup(buckRuleFunction.getName(), buckRuleFunction);
-        }
-      }
-      return globalEnv.getGlobals();
-    }
   }
 
   /**
@@ -473,17 +418,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     return Optional.ofNullable(options.getProjectRoot().relativize(buildFile).getParent())
         .map(MorePaths::pathWithUnixSeparators)
         .orElse("");
-  }
-
-  /**
-   * @return The list of functions supporting all native Buck functions like {@code java_library}.
-   */
-  private ImmutableList<BuiltinFunction> getBuckRuleFunctions() {
-    return options
-        .getDescriptions()
-        .stream()
-        .map(this::newRuleDefinition)
-        .collect(ImmutableList.toImmutableList());
   }
 
   /**
@@ -588,25 +522,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   @Override
   public void close() throws BuildFileParseException, InterruptedException, IOException {
     // nothing to do
-  }
-
-  /**
-   * Returns a native module with built-in functions and Buck rules.
-   *
-   * <p>It's the module that handles method calls like {@code native.glob} or {@code
-   * native.cxx_library}.
-   */
-  private ClassObject newNativeModule() {
-    ImmutableMap.Builder<String, Object> builder = new ImmutableMap.Builder<>();
-    BuiltinFunction packageName = SkylarkNativeModule.packageName;
-    builder.put(packageName.getName(), packageName);
-    BuiltinFunction glob = Glob.create();
-    builder.put(glob.getName(), glob);
-    for (BuiltinFunction ruleFunction : buckRuleFunctionsSupplier.get()) {
-      builder.put(ruleFunction.getName(), ruleFunction);
-    }
-    builder.put("host_info", HostInfo.create());
-    return NativeProvider.STRUCT.create(builder.build(), "no native function or rule '%s'");
   }
 
   /** Get the {@link ParseContext} by looking up in the environment. */

@@ -1,0 +1,137 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.skylark.parser;
+
+import com.facebook.buck.rules.Description;
+import com.facebook.buck.skylark.function.Glob;
+import com.facebook.buck.skylark.function.HostInfo;
+import com.facebook.buck.skylark.function.ReadConfig;
+import com.facebook.buck.skylark.function.SkylarkExtensionFunctions;
+import com.facebook.buck.skylark.function.SkylarkNativeModule;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.devtools.build.lib.packages.NativeProvider;
+import com.google.devtools.build.lib.syntax.BazelLibrary;
+import com.google.devtools.build.lib.syntax.BuiltinFunction;
+import com.google.devtools.build.lib.syntax.ClassObject;
+import com.google.devtools.build.lib.syntax.Environment;
+import com.google.devtools.build.lib.syntax.Mutability;
+import com.google.devtools.build.lib.syntax.Runtime;
+import java.util.function.Function;
+import org.immutables.value.Value;
+import org.immutables.value.Value.Lazy;
+
+/**
+ * Provides access to global Skylark interpreter frames.
+ *
+ * <p>It's recommended to use global frames for all globally accessible variables for improved
+ * performance and easier maintenance, since there is only one place to check for variable
+ * definitions.
+ */
+@Value.Immutable
+@BuckStyleImmutable
+abstract class AbstractBuckGlobals {
+
+  /** Always disable implicit native imports in skylark rules, they should utilize native.foo */
+  @Lazy
+  Environment.GlobalFrame getBuckLoadContextGlobals() {
+    try (Mutability mutability = Mutability.create("global_load_ctx")) {
+      Environment extensionEnv =
+          Environment.builder(mutability)
+              .useDefaultSemantics()
+              .setGlobals(getBuckGlobals(true))
+              .build();
+      extensionEnv.setup("native", getNativeModule());
+      Runtime.setupModuleGlobals(extensionEnv, SkylarkExtensionFunctions.class);
+      return extensionEnv.getGlobals();
+    }
+  }
+
+  /** Disable implicit native rules depending on configuration */
+  @Lazy
+  Environment.GlobalFrame getBuckBuildFileContextGlobals() {
+    return getBuckGlobals(getDisableImplicitNativeRules());
+  }
+
+  /**
+   * @return Whether implicit native rules should not be available in the context of extension file.
+   */
+  abstract boolean getDisableImplicitNativeRules();
+
+  /** @return A Skylark rule function factory. */
+  abstract Function<Description<?>, BuiltinFunction> getRuleFunctionFactory();
+
+  /** @return A set of rules supported by Buck. */
+  abstract ImmutableSet<Description<?>> getDescriptions();
+
+  /**
+   * @return The list of functions supporting all native Buck functions like {@code java_library}.
+   */
+  @Lazy
+  ImmutableList<BuiltinFunction> getBuckRuleFunctions() {
+    return getDescriptions()
+        .stream()
+        .map(this.getRuleFunctionFactory())
+        .collect(ImmutableList.toImmutableList());
+  }
+
+  /**
+   * Returns a native module with built-in functions and Buck rules.
+   *
+   * <p>It's the module that handles method calls like {@code native.glob} or {@code
+   * native.cxx_library}.
+   */
+  @Lazy
+  ClassObject getNativeModule() {
+    ImmutableMap.Builder<String, Object> builder = new ImmutableMap.Builder<>();
+    BuiltinFunction packageName = SkylarkNativeModule.packageName;
+    builder.put(packageName.getName(), packageName);
+    BuiltinFunction glob = Glob.create();
+    builder.put(glob.getName(), glob);
+    for (BuiltinFunction ruleFunction : getBuckRuleFunctions()) {
+      builder.put(ruleFunction.getName(), ruleFunction);
+    }
+    builder.put("host_info", HostInfo.create());
+    return NativeProvider.STRUCT.create(builder.build(), "no native function or rule '%s'");
+  }
+
+  /**
+   * @return The environment frame with configured buck globals. This includes built-in rules like
+   *     {@code java_library}.
+   * @param disableImplicitNativeRules If true, do not export native rules into the provided context
+   */
+  private Environment.GlobalFrame getBuckGlobals(boolean disableImplicitNativeRules) {
+    try (Mutability mutability = Mutability.create("global")) {
+      Environment globalEnv =
+          Environment.builder(mutability)
+              .setGlobals(BazelLibrary.GLOBALS)
+              .useDefaultSemantics()
+              .build();
+
+      BuiltinFunction readConfigFunction = ReadConfig.create();
+      globalEnv.setup(readConfigFunction.getName(), readConfigFunction);
+      if (!disableImplicitNativeRules) {
+        for (BuiltinFunction buckRuleFunction : getBuckRuleFunctions()) {
+          globalEnv.setup(buckRuleFunction.getName(), buckRuleFunction);
+        }
+      }
+      return globalEnv.getGlobals();
+    }
+  }
+}
