@@ -1,4 +1,4 @@
-From ec9e575a21d4051afcec76358ec617c79c5ffe9b Mon Sep 17 00:00:00 2001
+From 2ecb11692fd831fc13e1da81d32c7dc27b382813 Mon Sep 17 00:00:00 2001
 From: Gautam Korlam <gkorlam@uber.com>
 Date: Tue, 21 Nov 2017 22:52:39 -0800
 Subject: [PATCH] Compute referenced resources in D8 and bypass default
@@ -9,13 +9,13 @@ Subject: [PATCH] Compute referenced resources in D8 and bypass default
 - Set default min sdk for D8 to Api level J
 ---
  src/main/java/com/android/tools/r8/D8Command.java        |  8 +++++++-
- .../java/com/android/tools/r8/graph/DexItemFactory.java  | 15 +++++++++++++++
+ .../java/com/android/tools/r8/graph/DexItemFactory.java  | 14 ++++++++++++++
  .../com/android/tools/r8/ir/desugar/ClassProcessor.java  | 16 ++++------------
  .../java/com/android/tools/r8/utils/AndroidApiLevel.java |  3 ++-
- 4 files changed, 28 insertions(+), 14 deletions(-)
+ 4 files changed, 27 insertions(+), 14 deletions(-)
 
 diff --git a/src/main/java/com/android/tools/r8/D8Command.java b/src/main/java/com/android/tools/r8/D8Command.java
-index 0e39dae4..4e1214bc 100644
+index 394805d4..d017b388 100644
 --- a/src/main/java/com/android/tools/r8/D8Command.java
 +++ b/src/main/java/com/android/tools/r8/D8Command.java
 @@ -179,6 +179,11 @@ public class D8Command extends BaseCompilerCommand {
@@ -41,10 +41,10 @@ index 0e39dae4..4e1214bc 100644
      internal.debug = getMode() == CompilationMode.DEBUG;
      internal.programConsumer = getProgramConsumer();
 diff --git a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
-index d674ccb5..f0a277e5 100644
+index 75f2ee83..a946eb06 100644
 --- a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
 +++ b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
-@@ -24,9 +24,11 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+@@ -27,6 +27,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
  import java.util.ArrayList;
  import java.util.Collection;
  import java.util.HashMap;
@@ -52,11 +52,7 @@ index d674ccb5..f0a277e5 100644
  import java.util.IdentityHashMap;
  import java.util.List;
  import java.util.Map;
-+import java.util.Set;
- import java.util.concurrent.ConcurrentHashMap;
- import java.util.function.Consumer;
- 
-@@ -571,4 +573,17 @@ public class DexItemFactory {
+@@ -672,4 +673,17 @@ public class DexItemFactory {
    synchronized public void forAllTypes(Consumer<DexType> f) {
      new ArrayList<>(types.values()).forEach(f);
    }
@@ -75,17 +71,17 @@ index d674ccb5..f0a277e5 100644
 +  }
  }
 diff --git a/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java b/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java
-index fa0958bf..45113b21 100644
+index 2152364b..fc42fc16 100644
 --- a/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java
 +++ b/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java
-@@ -165,18 +165,10 @@ final class ClassProcessor {
+@@ -164,18 +164,10 @@ final class ClassProcessor {
          if (superClass != null) {
            current = superClass;
          } else {
 -          String message = "Default method desugaring of `" + clazz.toSourceString() + "` failed";
 -          if (current == clazz) {
--            message += " because its super class `" + clazz.superType.toSourceString()
--            + "` is missing";
+-            message += " because its super class `" +
+-                clazz.superType.toSourceString() + "` is missing";
 -          } else {
 -            message +=
 -                " because it's hierarchy is incomplete. The class `"
@@ -116,5 +112,5 @@ index 127debef..45793dad 100644
  
    public DexVersion getDexVersion() {
 -- 
-2.16.1
+2.16.2
 
