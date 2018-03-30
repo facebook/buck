@@ -16,8 +16,10 @@
 
 package com.facebook.buck.ide.intellij.model.folders;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.function.Supplier;
 
 /** A path which contains a set of sources we wish to present to IntelliJ. */
 public abstract class IjFolder implements Comparable<IjFolder> {
@@ -27,11 +29,18 @@ public abstract class IjFolder implements Comparable<IjFolder> {
   private final Path path;
   private final ImmutableSortedSet<Path> inputs;
   private final boolean wantsPackagePrefix;
+  private final Supplier<Integer> hashCodeSupplier;
 
   IjFolder(Path path, boolean wantsPackagePrefix, ImmutableSortedSet<Path> inputs) {
     this.path = path;
     this.wantsPackagePrefix = wantsPackagePrefix;
     this.inputs = (inputs == null) ? EMPTY_INPUTS : inputs;
+    hashCodeSupplier =
+        Suppliers.memoize(
+            () ->
+                (getPath().hashCode() << 31)
+                    ^ (getWantsPackagePrefix() ? 0x8000 : 0)
+                    ^ inputs.hashCode());
   }
 
   IjFolder(Path path, boolean wantsPackagePrefix) {
@@ -131,9 +140,7 @@ public abstract class IjFolder implements Comparable<IjFolder> {
 
   @Override
   public int hashCode() {
-    return (getPath().hashCode() << 31)
-        ^ (getWantsPackagePrefix() ? 0x8000 : 0)
-        ^ inputs.hashCode();
+    return hashCodeSupplier.get();
   }
 
   @Override
