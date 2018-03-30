@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
-import java.util.concurrent.CompletionStage;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -59,32 +58,6 @@ public class DefaultAsyncTransformationEngineTest {
     graph.putEdge(2L, 3L);
   }
 
-  /**
-   * Demonstration of usage of {@link AsyncTransformer}.
-   *
-   * <p>This returns the value of the sum of its input graph's chidren and itself. For the above
-   * graph in {@code graph}, operating on the root would result in 19.
-   */
-  private class ChildrenAdder implements AsyncTransformer<Long, Long> {
-
-    private final MutableGraph<Long> input;
-
-    public ChildrenAdder(MutableGraph<Long> input) {
-      this.input = input;
-    }
-
-    @Override
-    public CompletionStage<Long> transform(Long key, TransformationEnvironment<Long, Long> env) {
-      Iterable<Long> children = input.successors(key);
-
-      return env.evaluateAll(
-          children,
-          childValues -> {
-            return key + childValues.values().parallelStream().mapToLong(Long::new).sum();
-          });
-    }
-  }
-
   @Test
   public void requestOnLeafResultsSameValue() {
     ChildrenAdder transformer = new ChildrenAdder(graph);
@@ -99,25 +72,6 @@ public class DefaultAsyncTransformationEngineTest {
     ChildrenAdder transformer = new ChildrenAdder(graph);
     assertEquals(
         (Long) 19L,
-        new DefaultAsyncTransformationEngine<>(transformer, graph.nodes().size())
-            .computeUnchecked((Long) 1L));
-  }
-
-  @Test
-  public void largeGraphShouldNotStackOverflow() {
-    graph = GraphBuilder.directed().build();
-    // graph of 100000 depth is plenty deep for testing
-    for (long i = 1L; i <= 100000L; i++) {
-      graph.addNode(i);
-      if (i > 1) {
-        graph.putEdge(i - 1, i);
-      }
-    }
-
-    ChildrenAdder transformer = new ChildrenAdder(graph);
-    assertEquals(
-        (Long) 5000050000L, // arithmetic series from 1 to 100000
-        // https://www.wolframalpha.com/input/?i=sum+from+1+to+100000
         new DefaultAsyncTransformationEngine<>(transformer, graph.nodes().size())
             .computeUnchecked((Long) 1L));
   }
