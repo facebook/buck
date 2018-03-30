@@ -36,9 +36,9 @@ import javax.tools.Diagnostic.Kind;
  * <p>For example, given the following configuration:
  *
  * <pre>
- *  {@literal @}BuckModule(
- *     name = "com.facebook.buck.some.module"
- *   )
+ *   package com.facebook.buck.some.module;
+ *
+ *  {@literal @}BuckModule
  *   public class SomeModule {}
  * </pre>
  *
