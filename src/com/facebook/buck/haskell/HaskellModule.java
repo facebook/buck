@@ -18,5 +18,5 @@ package com.facebook.buck.haskell;
 
 import com.facebook.buck.module.BuckModule;
 
-@BuckModule(id = "com.facebook.buck.haskell")
+@BuckModule
 public class HaskellModule {}

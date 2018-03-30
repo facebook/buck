@@ -19,5 +19,5 @@ package com.facebook.buck.dotnet;
 import com.facebook.buck.module.BuckModule;
 
 /** A modules that provides .NET build rules. */
-@BuckModule(id = "com.facebook.buck.dotnet")
+@BuckModule
 public class DotnetModule {}

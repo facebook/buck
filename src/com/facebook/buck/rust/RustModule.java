@@ -19,5 +19,5 @@ package com.facebook.buck.rust;
 import com.facebook.buck.module.BuckModule;
 
 /** A modules that provides Rust build rules. */
-@BuckModule(id = "com.facebook.buck.rust")
+@BuckModule
 public class RustModule {}

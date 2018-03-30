@@ -21,7 +21,6 @@ import com.facebook.buck.zip.bundler.ZipBundlerModule;
 
 /** A modules that provides `zip_rule` build rule. */
 @BuckModule(
-  id = "com.facebook.buck.zip.ziprules",
   dependencies = {
     ZipBundlerModule.class,
   }

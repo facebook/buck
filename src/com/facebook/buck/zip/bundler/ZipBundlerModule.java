@@ -18,5 +18,5 @@ package com.facebook.buck.zip.bundler;
 
 import com.facebook.buck.module.BuckModule;
 
-@BuckModule(id = "com.facebook.buck.zip.bundler")
+@BuckModule
 public class ZipBundlerModule {}

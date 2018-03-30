@@ -20,7 +20,6 @@ import com.facebook.buck.module.BuckModule;
 import com.facebook.buck.zip.bundler.ZipBundlerModule;
 
 @BuckModule(
-  id = "com.facebook.buck.shell.filegroup",
   dependencies = {
     ZipBundlerModule.class,
   }

@@ -18,5 +18,5 @@ package com.facebook.buck.module.impl.modulewithdeps.test_module;
 
 import com.facebook.buck.module.BuckModule;
 
-@BuckModule(id = "com.facebook.buck.module.impl.modulewithdeps.test_module")
+@BuckModule
 public class TestModule {}

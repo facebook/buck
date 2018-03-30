@@ -18,5 +18,5 @@ package com.facebook.buck.lua;
 
 import com.facebook.buck.module.BuckModule;
 
-@BuckModule(id = "com.facebook.buck.lua")
+@BuckModule
 public class LuaModule {}

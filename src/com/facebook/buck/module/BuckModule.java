@@ -30,9 +30,6 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 @Target(TYPE)
 public @interface BuckModule {
-  /** ID of the module. */
-  String id();
-
   /** IDs of the modules this module depend on. */
   Class<?>[] dependencies() default {};
 }

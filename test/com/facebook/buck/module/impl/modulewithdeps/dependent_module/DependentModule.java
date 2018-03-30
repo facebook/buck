@@ -19,8 +19,5 @@ package com.facebook.buck.module.impl.modulewithdeps.dependent_module;
 import com.facebook.buck.module.BuckModule;
 import com.facebook.buck.module.impl.modulewithdeps.test_module.TestModule;
 
-@BuckModule(
-  id = "com.facebook.buck.module.impl.modulewithdeps.dependent_module",
-  dependencies = {TestModule.class}
-)
+@BuckModule(dependencies = {TestModule.class})
 public class DependentModule {}

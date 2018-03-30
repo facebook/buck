@@ -18,5 +18,5 @@ package com.facebook.buck.go;
 
 import com.facebook.buck.module.BuckModule;
 
-@BuckModule(id = "com.facebook.buck.go")
+@BuckModule
 public class GoModule {}

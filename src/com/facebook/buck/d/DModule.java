@@ -19,5 +19,5 @@ package com.facebook.buck.d;
 import com.facebook.buck.module.BuckModule;
 
 /** A modules that provides D build rules. */
-@BuckModule(id = "com.facebook.buck.d")
+@BuckModule
 public class DModule {}
