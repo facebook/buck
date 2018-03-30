@@ -25,11 +25,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
-import java.lang.Thread.State;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -48,6 +45,7 @@ import org.junit.Test;
 
 public class WorkerProcessPoolTest {
 
+  private static final int WAIT_FOR_TEST_THREADS_TIMEOUT = 500;
   private TestThreads testThreads;
 
   @Before
@@ -69,12 +67,8 @@ public class WorkerProcessPoolTest {
     for (int i = 0; i < maxWorkers; i++) {
       testThreads.startThread(borrowWorkerProcessWithoutReturning(pool, createdWorkers));
     }
+    testThreads.join(WAIT_FOR_TEST_THREADS_TIMEOUT);
 
-    testThreads.awaitThreadStates(State.TERMINATED, State.WAITING);
-
-    State[] testThreadStates =
-        testThreads.threads().stream().map(Thread::getState).toArray(State[]::new);
-    assertThat(Arrays.asList(testThreadStates), Matchers.everyItem(Matchers.is(State.TERMINATED)));
     assertThat(createdWorkers.size(), Matchers.is(maxWorkers));
   }
 
@@ -204,9 +198,7 @@ public class WorkerProcessPoolTest {
     FakeWorkerProcess worker = new FakeWorkerProcess(ImmutableMap.of());
     workers.put(CompletableFuture.completedFuture(worker));
 
-    awaitThreadState(secondThread, State.TERMINATED, State.BLOCKED);
-
-    assertThat(secondThread.getState(), Matchers.is(State.TERMINATED));
+    secondThread.join(WAIT_FOR_TEST_THREADS_TIMEOUT);
 
     // here, the second thread has finished running, and has thus added the worker it borrowed to
     // `createdWorkers`.
@@ -249,10 +241,9 @@ public class WorkerProcessPoolTest {
     // thread 1 continues, returns the worker, and borrows another one
     secondThreadWaitingForWorker.countDown();
 
-    awaitThreadState(firstThread, State.TERMINATED, State.BLOCKED, State.WAITING);
+    firstThread.join(WAIT_FOR_TEST_THREADS_TIMEOUT);
     // here, thread 1 has borrowed a worker two times, or is blocked returning the first worker.
 
-    assertThat(firstThread.getState(), Matchers.is(State.TERMINATED));
     assertThat(secondBorrowedWorker.get(), Matchers.is(firstBorrowedWorker.get()));
   }
 
@@ -322,18 +313,6 @@ public class WorkerProcessPoolTest {
     };
   }
 
-  private static void awaitThreadState(Thread thread, State... desiredState)
-      throws InterruptedException {
-    awaitThreadState(thread, Arrays.asList(desiredState));
-  }
-
-  private static void awaitThreadState(Thread thread, List<State> desiredState)
-      throws InterruptedException {
-    while (!desiredState.contains(thread.getState())) {
-      Thread.sleep(1);
-    }
-  }
-
   @FunctionalInterface
   interface UnsafeRunnable {
     void run() throws Exception;
@@ -374,10 +353,9 @@ public class WorkerProcessPoolTest {
       }
     }
 
-    void awaitThreadStates(State... desiredStates) throws InterruptedException {
-      List<State> states = Arrays.asList(desiredStates);
+    void join(int millis) throws InterruptedException {
       for (Thread thread : threads) {
-        awaitThreadState(thread, states);
+        thread.join(millis);
       }
     }
 
