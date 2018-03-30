@@ -221,7 +221,7 @@ public abstract class AbstractCommand implements Command {
   @Override
   public final ExitCode run(CommandRunnerParams params) throws IOException, InterruptedException {
     if (help) {
-      printUsage(params.getConsole().getStdErr());
+      printUsage(params.getConsole().getStdOut());
       return ExitCode.SUCCESS;
     }
     if (params.getConsole().getAnsi().isAnsiTerminal()) {

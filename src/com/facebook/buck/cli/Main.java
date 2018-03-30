@@ -577,7 +577,7 @@ public final class Main {
     }
 
     // Return help strings fast if the command is a help request.
-    Optional<ExitCode> result = command.runHelp(stdErr);
+    Optional<ExitCode> result = command.runHelp(stdOut);
     if (result.isPresent()) {
       return result.get();
     }
