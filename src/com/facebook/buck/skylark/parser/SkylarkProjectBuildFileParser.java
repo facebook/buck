@@ -415,7 +415,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    * @param disableImplicitNativeRules If true, do not export native rules into the provided context
    */
   private Environment.GlobalFrame getBuckGlobals(boolean disableImplicitNativeRules) {
-    Environment.GlobalFrame buckGlobals;
     try (Mutability mutability = Mutability.create("global")) {
       Environment globalEnv =
           Environment.builder(mutability)
@@ -430,9 +429,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
           globalEnv.setup(buckRuleFunction.getName(), buckRuleFunction);
         }
       }
-      buckGlobals = globalEnv.getGlobals();
+      return globalEnv.getGlobals();
     }
-    return buckGlobals;
   }
 
   /**
