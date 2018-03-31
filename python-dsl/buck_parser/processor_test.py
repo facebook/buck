@@ -572,6 +572,35 @@ class BuckTest(unittest.TestCase):
             get_config_from_results(result),
             {'hello': {'world': 'foo', 'bar': None, 'goo': None}})
 
+    def test_can_read_main_repository_name(self):
+        """
+        Verify that the builtin native `repository_name()` function works.
+        """
+
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                'assert native.repository_name() == "@"',
+            ))
+        self.write_file(build_file)
+        build_file_processor = self.create_build_file_processor()
+        build_file_processor.process(build_file.root, build_file.prefix, build_file.path,
+                                     [])
+
+    def test_can_read_custom_repository_name(self):
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                'assert native.repository_name() == "@foo"',
+            ))
+        self.write_file(build_file)
+        self.cell_name = 'foo'
+        build_file_processor = self.create_build_file_processor()
+        build_file_processor.process(build_file.root, build_file.prefix, build_file.path,
+                                     [])
+
     def test_struct_is_available(self):
         extension_file = ProjectFile(
             self.project_root,

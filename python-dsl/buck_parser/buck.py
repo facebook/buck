@@ -602,6 +602,27 @@ def get_cell_name(build_env=None):
     return build_env.cell_name
 
 
+@provide_as_native_rule
+def repository_name(build_env=None):
+    """
+    Get the repository (cell) name of the build file that was initially
+    evaluated.
+
+    This function is intended to be used from within a build defs file that
+    likely contains macros that could be called from any build file.
+    Such macros may need to know the base path of the file in which they
+    are defining new build rules.
+
+    :return: a string, such as "@cell". The return value will be "@" if
+             the build file is in the main (standalone) repository.
+             :rtype: str
+
+    """
+    assert isinstance(build_env, BuildFileContext), (
+        "Cannot use `repository_name()` at the top-level of an included file.")
+    return "@" + build_env.cell_name
+
+
 def flatten_list_of_dicts(list_of_dicts):
     """Flatten the given list of dictionaries by merging l[1:] onto
     l[0], one at a time. Key/Value pairs which appear in later list entries
