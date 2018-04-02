@@ -129,14 +129,12 @@ public class ThriftScribeLoggerTest {
   }
 
   @Test
-  public void allLogRequestsFailAfterClosingTheLogger()
+  public void allLogRequestsDoNotFailAfterClosingTheLogger()
       throws IOException, ExecutionException, InterruptedException {
     logger = new ThriftScribeLogger(createDefaultListener(), executorService);
     logger.close();
     ListenableFuture<Void> future = logger.log("topspin", Lists.newArrayList("down the line"));
     assertTrue(future.isDone());
-    expectedException.expect(ExecutionException.class);
-    expectedException.expectCause(Matchers.any(IllegalStateException.class));
     future.get();
   }
 
