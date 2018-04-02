@@ -26,6 +26,8 @@ import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.packages.PackageFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
+import com.google.devtools.build.lib.cmdline.PackageIdentifier;
+import com.google.devtools.build.lib.cmdline.RepositoryName;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
 import com.google.devtools.build.lib.syntax.BazelLibrary;
@@ -36,6 +38,7 @@ import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInputSource;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.Path;
+import com.google.devtools.build.lib.vfs.PathFragment;
 import java.io.IOException;
 import java.util.EnumSet;
 import org.junit.Assert;
@@ -87,14 +90,17 @@ public class SkylarkNativeModuleTest {
             .setPhase(Phase.LOADING)
             .useDefaultSemantics()
             .build();
+    String packageName = "my/package";
     env.setupDynamic(
         PackageFactory.PACKAGE_CONTEXT,
         PackageContext.builder()
             .setGlobber(SimpleGlobber.create(root))
             .setRawConfig(rawConfig)
+            .setPackageIdentifier(
+                PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create(packageName)))
             .build());
     env.setup("package_name", SkylarkNativeModule.packageName);
-    env.setup("PACKAGE_NAME", "my/package");
+    env.setup("PACKAGE_NAME", packageName);
     boolean exec = buildFileAst.exec(env, eventHandler);
     if (!exec) {
       Assert.fail("Build file evaluation must have succeeded");

@@ -236,10 +236,15 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     parseContext.setup(env);
     env.setup("glob", Glob.create());
     env.setup("package_name", SkylarkNativeModule.packageName);
+    env.setup("repository_name", SkylarkNativeModule.repositoryName);
     PackageContext packageContext =
         PackageContext.builder()
             .setGlobber(SimpleGlobber.create(fileSystem.getPath(buildFile.getParent().toString())))
             .setRawConfig(options.getRawConfig())
+            .setPackageIdentifier(
+                PackageIdentifier.create(
+                    RepositoryName.createFromValidStrippedName(options.getCellName()),
+                    PathFragment.create(basePath)))
             .build();
     env.setupDynamic(PackageFactory.PACKAGE_CONTEXT, packageContext);
     return EnvironmentData.builder()

@@ -27,6 +27,8 @@ import com.facebook.buck.skylark.packages.PackageFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
+import com.google.devtools.build.lib.cmdline.PackageIdentifier;
+import com.google.devtools.build.lib.cmdline.RepositoryName;
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.events.EventKind;
@@ -40,6 +42,7 @@ import com.google.devtools.build.lib.syntax.ParserInputSource;
 import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.Path;
+import com.google.devtools.build.lib.vfs.PathFragment;
 import java.io.IOException;
 import java.util.EnumSet;
 import javax.annotation.Nullable;
@@ -194,7 +197,11 @@ public class GlobTest {
             .build();
     env.setupDynamic(
         PackageFactory.PACKAGE_CONTEXT,
-        PackageContext.builder().setGlobber(SimpleGlobber.create(root)).build());
+        PackageContext.builder()
+            .setGlobber(SimpleGlobber.create(root))
+            .setPackageIdentifier(
+                PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("pkg")))
+            .build());
     env.setup("glob", Glob.create());
     return new Pair<>(buildFileAst.exec(env, eventHandler), env);
   }
