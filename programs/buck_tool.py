@@ -310,7 +310,7 @@ class BuckTool(object):
                                      "You can use 'buck kill' to kill buck " +
                                      "if you suspect buck is stuck.")
                         busy_diagnostic_displayed = True
-                    time.sleep(1)
+                    time.sleep(3)
         return exit_code
 
     def _run_without_nailgun(self, argv, env):

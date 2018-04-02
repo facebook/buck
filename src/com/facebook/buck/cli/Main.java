@@ -582,62 +582,65 @@ public final class Main {
       return result.get();
     }
 
-    // statically configure Buck logging environment based on Buck config, usually buck-x.log files
-    setupLogging(commandMode, command, args);
-
-    if (moduleManager == null) {
-      pluginManager = BuckPluginManagerFactory.createPluginManager();
-      moduleManager = new DefaultBuckModuleManager(pluginManager, new BuckModuleJarHashProvider());
-    }
-
-    Config config = setupDefaultConfig(rootCellMapping, command);
-
-    ProjectFilesystemFactory projectFilesystemFactory = new DefaultProjectFilesystemFactory();
-    ProjectFilesystem filesystem =
-        projectFilesystemFactory.createProjectFilesystem(canonicalRootPath, config);
-
-    DefaultCellPathResolver cellPathResolver =
-        DefaultCellPathResolver.of(filesystem.getRootPath(), config);
-    BuckConfig buckConfig =
-        new BuckConfig(
-            config, filesystem, architecture, platform, clientEnvironment, cellPathResolver);
-    ImmutableSet<Path> projectWatchList =
-        getProjectWatchList(canonicalRootPath, buckConfig, cellPathResolver);
-
-    checkJavaSpecificationVersions(buckConfig);
-
-    Verbosity verbosity = VerbosityParser.parse(args);
-
-    // Setup the console.
-    console = makeCustomConsole(context, verbosity, buckConfig);
-
-    DistBuildConfig distBuildConfig = new DistBuildConfig(buckConfig);
-    boolean isUsingDistributedBuild = false;
-
-    // Automatically use distributed build for supported repositories and users.
-    if (command.subcommand != null && command.subcommand instanceof BuildCommand) {
-      BuildCommand subcommand = (BuildCommand) command.subcommand;
-      isUsingDistributedBuild = subcommand.isUsingDistributedBuild();
-      if (!isUsingDistributedBuild && distBuildConfig.shouldUseDistributedBuild(buildId)) {
-        isUsingDistributedBuild = subcommand.tryConvertingToStampede(distBuildConfig);
-      }
-    }
-
-    // Switch to async file logging, if configured. A few log samples will have already gone
-    // via the regular file logger, but that's OK.
-    boolean isDistBuildCommand =
-        command.subcommand != null && command.subcommand instanceof DistBuildCommand;
-    if (isDistBuildCommand) {
-      LogConfig.setUseAsyncFileLogging(distBuildConfig.isAsyncLoggingEnabled());
-    }
-
-    // No more early outs: if this command is not read only, acquire the command semaphore to
-    // become the only executing read/write command.
+    // If this command is not read only, acquire the command semaphore to become the only executing
+    // read/write command. Early out will also help to not rotate log on each BUSY status which
+    // happens in setupLogging().
     boolean shouldCleanUpTrash = false;
     try (CloseableWrapper<Semaphore> semaphore = getSemaphoreWrapper(command)) {
       if (!command.isReadOnly() && semaphore == null) {
         LOG.warn("Buck server was busy executing a command. Maybe retrying later will help.");
         return ExitCode.BUSY;
+      }
+
+      if (moduleManager == null) {
+        pluginManager = BuckPluginManagerFactory.createPluginManager();
+        moduleManager =
+            new DefaultBuckModuleManager(pluginManager, new BuckModuleJarHashProvider());
+      }
+
+      // statically configure Buck logging environment based on Buck config, usually buck-x.log
+      // files
+      setupLogging(commandMode, command, args);
+
+      Config config = setupDefaultConfig(rootCellMapping, command);
+
+      ProjectFilesystemFactory projectFilesystemFactory = new DefaultProjectFilesystemFactory();
+      ProjectFilesystem filesystem =
+          projectFilesystemFactory.createProjectFilesystem(canonicalRootPath, config);
+
+      DefaultCellPathResolver cellPathResolver =
+          DefaultCellPathResolver.of(filesystem.getRootPath(), config);
+      BuckConfig buckConfig =
+          new BuckConfig(
+              config, filesystem, architecture, platform, clientEnvironment, cellPathResolver);
+      ImmutableSet<Path> projectWatchList =
+          getProjectWatchList(canonicalRootPath, buckConfig, cellPathResolver);
+
+      checkJavaSpecificationVersions(buckConfig);
+
+      Verbosity verbosity = VerbosityParser.parse(args);
+
+      // Setup the console.
+      console = makeCustomConsole(context, verbosity, buckConfig);
+
+      DistBuildConfig distBuildConfig = new DistBuildConfig(buckConfig);
+      boolean isUsingDistributedBuild = false;
+
+      // Automatically use distributed build for supported repositories and users.
+      if (command.subcommand != null && command.subcommand instanceof BuildCommand) {
+        BuildCommand subcommand = (BuildCommand) command.subcommand;
+        isUsingDistributedBuild = subcommand.isUsingDistributedBuild();
+        if (!isUsingDistributedBuild && distBuildConfig.shouldUseDistributedBuild(buildId)) {
+          isUsingDistributedBuild = subcommand.tryConvertingToStampede(distBuildConfig);
+        }
+      }
+
+      // Switch to async file logging, if configured. A few log samples will have already gone
+      // via the regular file logger, but that's OK.
+      boolean isDistBuildCommand =
+          command.subcommand != null && command.subcommand instanceof DistBuildCommand;
+      if (isDistBuildCommand) {
+        LogConfig.setUseAsyncFileLogging(distBuildConfig.isAsyncLoggingEnabled());
       }
 
       RuleKeyConfiguration ruleKeyConfiguration =
@@ -947,6 +950,20 @@ public final class Main {
                     stampedeSyncBuildHttpFetchExecutorService.get(),
                     diskIoExecutorService.get());
 
+            // Once command completes it should be safe to not wait for executors and other stateful
+            // objects to terminate and release semaphore right away. It will help to retry
+            // command faster if user terminated with Ctrl+C.
+            // Ideally, we should come up with a better lifecycle management strategy for the
+            // semaphore object
+            CloseableWrapper<Optional<CloseableWrapper<Semaphore>>> semaphoreCloser =
+                CloseableWrapper.of(
+                    Optional.ofNullable(semaphore),
+                    s -> {
+                      if (s.isPresent()) {
+                        s.get().close();
+                      }
+                    });
+
             // This will get executed first once it gets out of try block and just wait for
             // event bus to dispatch all pending events before we proceed to termination
             // procedures
@@ -1172,12 +1189,6 @@ public final class Main {
         } finally {
           // signal nailgun that we are not interested in client disconnect events anymore
           context.ifPresent(c -> c.removeAllClientListeners());
-
-          // release global command semaphore earlier to allow other waiting command to execute
-          // close() is idempotent so it is ok to call it now
-          if (semaphore != null) {
-            semaphore.close();
-          }
 
           if (daemon.isPresent() && shouldCleanUpTrash) {
             // Clean up the trash in the background if this was a buckd
