@@ -39,6 +39,9 @@ buck_module(
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jackson:jackson-databind",
     ],
+    tests = [
+        "//test/com/facebook/buck/rust:rust",
+    ],
     visibility = [
         "//test/com/facebook/buck/rust/...",
     ],
