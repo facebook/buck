@@ -99,6 +99,7 @@ public class InstallCommand extends BuildCommand {
   private static final ImmutableList<String> APPLE_SIMULATOR_APPS =
       ImmutableList.of("Simulator.app", "iOS Simulator.app");
   private static final String DEFAULT_APPLE_SIMULATOR_NAME = "iPhone 5s";
+  private static final String DEFAULT_APPLE_TV_SIMULATOR_NAME = "Apple TV";
   private static final InstallResult FAILURE =
       InstallResult.builder().setExitCode(ExitCode.RUN_ERROR).build();
 
@@ -476,11 +477,12 @@ public class InstallCommand extends BuildCommand {
       ProcessExecutor processExecutor,
       SourcePathResolver pathResolver)
       throws IOException, InterruptedException, NoSuchBuildTargetException {
-    if (appleBundle.getPlatformName().equals(ApplePlatform.IPHONESIMULATOR.getName())) {
+    String platformName = appleBundle.getPlatformName();
+    if (isSimulator(platformName)) {
       return installAppleBundleForSimulator(
           params, appleBundle, pathResolver, projectFilesystem, processExecutor);
     }
-    if (appleBundle.getPlatformName().equals(ApplePlatform.IPHONEOS.getName())) {
+    if (isDevice(platformName)) {
       return installAppleBundleForDevice(
           params, appleBundle, projectFilesystem, processExecutor, pathResolver);
     }
@@ -940,8 +942,13 @@ public class InstallCommand extends BuildCommand {
         simulatorByName = Optional.of(simulator);
         // We assume the simulators are sorted by OS version, so we'll keep
         // looking for a more recent simulator with this name.
-      } else if (simulator.getName().equals(DEFAULT_APPLE_SIMULATOR_NAME)) {
+      } else if (isIPhoneSimulator(appleBundle.getPlatformName())
+          && simulator.getName().equals(DEFAULT_APPLE_SIMULATOR_NAME)) {
         LOG.debug("Got default match (%s): %s", DEFAULT_APPLE_SIMULATOR_NAME, simulator);
+        defaultSimulator = Optional.of(simulator);
+      } else if (isAppleTVSimulator(appleBundle.getPlatformName())
+          && simulator.getName().equals(DEFAULT_APPLE_TV_SIMULATOR_NAME)) {
+        LOG.debug("Got default match (%s): %s", DEFAULT_APPLE_TV_SIMULATOR_NAME, simulator);
         defaultSimulator = Optional.of(simulator);
       }
     }
@@ -977,6 +984,23 @@ public class InstallCommand extends BuildCommand {
   @Override
   public boolean isReadOnly() {
     return false;
+  }
+
+  private boolean isSimulator(String platformName) {
+    return platformName.equals(ApplePlatform.IPHONESIMULATOR.getName())
+        || platformName.equals(ApplePlatform.APPLETVSIMULATOR.getName());
+  }
+
+  private boolean isDevice(String platformName) {
+    return platformName.equals(ApplePlatform.IPHONEOS.getName());
+  }
+
+  private boolean isIPhoneSimulator(String platformName) {
+    return platformName.equals(ApplePlatform.IPHONESIMULATOR.getName());
+  }
+
+  private boolean isAppleTVSimulator(String platformName) {
+    return platformName.equals(ApplePlatform.APPLETVSIMULATOR.getName());
   }
 
   private static class TriggerCloseable implements Closeable {

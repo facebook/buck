@@ -1,0 +1,24 @@
+apple_resource(
+    name = "DemoAppResources",
+    dirs = [],
+    files = glob(["*.xib"]),
+)
+
+apple_bundle(
+    name = "DemoApp",
+    binary = ":DemoAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+)
+
+apple_binary(
+    name = "DemoAppBinary",
+    srcs = ["AppDelegate.m"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    headers = [],
+    preprocessor_flags = ["-fobjc-arc"],
+    deps = [":DemoAppResources"],
+)
