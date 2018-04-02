@@ -634,9 +634,17 @@ class BuckTool(object):
                 "-Dbuck.git_commit={0}".format(self._get_buck_version_uid()),
                 "-Dbuck.git_commit_timestamp={0}".format(self._get_buck_version_timestamp()),
                 "-Dbuck.binary_hash={0}".format(self._get_buck_binary_hash()),
-                "-Djava.nio.file.spi.DefaultFileSystemProvider="
-                "com.facebook.buck.cli.bootstrapper.filesystem.BuckFileSystemProvider",
             ]
+
+            if "BUCK_DEFAULT_FILESYSTEM" not in os.environ and (
+                sys.platform == "darwin" or sys.platform.startswith("linux")
+            ):
+                # Change default filesystem to custom filesystem for memory optimizations
+                # Calls like Paths.get() would return optimized Path implementation
+                java_args.append(
+                  "-Djava.nio.file.spi.DefaultFileSystemProvider="
+                  "com.facebook.buck.cli.bootstrapper.filesystem.BuckFileSystemProvider"
+                )
 
             resource_lock_path = self._get_resource_lock_path()
             if resource_lock_path is not None:

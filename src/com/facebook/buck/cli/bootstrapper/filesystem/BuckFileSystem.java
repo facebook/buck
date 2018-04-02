@@ -24,83 +24,131 @@ import java.nio.file.PathMatcher;
 import java.nio.file.WatchService;
 import java.nio.file.attribute.UserPrincipalLookupService;
 import java.nio.file.spi.FileSystemProvider;
+import java.util.ArrayList;
 import java.util.Set;
 
 /**
- * File system implementation that returns memory-optimized Path object. It delegates other calls to
- * default file system.
+ * File system implementation that returns memory footprint optimized Path object. It delegates
+ * other calls to Java-default file system.
  */
 public class BuckFileSystem extends FileSystem {
 
-  private FileSystem defaultFileSystem;
-  private FileSystemProvider provider;
+  private BuckFileSystemProvider provider;
+  private BuckUnixPath rootDirectory = new BuckUnixPath(this, new String[] {""}, true);
+  private BuckUnixPath emptyPath = new BuckUnixPath(this, new String[0], false);
+  private BuckUnixPath defaultDirectory;
 
-  public BuckFileSystem(FileSystem defaultFileSystem, FileSystemProvider provider) {
-    this.defaultFileSystem = defaultFileSystem;
-    this.provider = provider;
-  }
   /**
-   * Returns the provider that created this file system.
+   * Create a new filesystem that returns Path object optimized for memory usage
    *
-   * @return The provider that created this file system.
+   * @param provider File system provider that created this filesystem
+   * @param defaultDirectory The directory to use when constructing absolute paths out of relative
+   *     paths, usually this is a user directory
    */
+  public BuckFileSystem(BuckFileSystemProvider provider, String defaultDirectory) {
+    this.provider = provider;
+    this.defaultDirectory = BuckUnixPath.of(this, defaultDirectory);
+  }
+
   @Override
   public FileSystemProvider provider() {
     return provider;
   }
 
+  /** @return root directory of current filesystem */
+  BuckUnixPath getRootDirectory() {
+    return rootDirectory;
+  }
+
+  /** @return default directory, usually user directory */
+  BuckUnixPath getDefaultDirectory() {
+    return defaultDirectory;
+  }
+
+  /** @return empty path, used to indicate that path has no elements */
+  BuckUnixPath getEmptyPath() {
+    return emptyPath;
+  }
+
+  /**
+   * @return delegate file system, i.e. the one used originally by Java runtime for current platform
+   */
+  FileSystem getDefaultFileSystem() {
+    return provider.getDefaultFileSystem();
+  }
+
   @Override
   public void close() throws IOException {
-    defaultFileSystem.close();
+    getDefaultFileSystem().close();
   }
 
   @Override
   public boolean isOpen() {
-    return defaultFileSystem.isOpen();
+    return getDefaultFileSystem().isOpen();
   }
 
   @Override
   public boolean isReadOnly() {
-    return defaultFileSystem.isReadOnly();
+    return getDefaultFileSystem().isReadOnly();
   }
 
   @Override
   public String getSeparator() {
-    return defaultFileSystem.getSeparator();
+    return getDefaultFileSystem().getSeparator();
   }
 
   @Override
   public Iterable<Path> getRootDirectories() {
-    return defaultFileSystem.getRootDirectories();
+    ArrayList<Path> buckRootDirs = new ArrayList<>();
+    getDefaultFileSystem()
+        .getRootDirectories()
+        .forEach(dir -> buckRootDirs.add(BuckUnixPath.of(this, dir.toString())));
+    return buckRootDirs;
   }
 
   @Override
   public Iterable<FileStore> getFileStores() {
-    return defaultFileSystem.getFileStores();
+    return getDefaultFileSystem().getFileStores();
   }
 
   @Override
   public Set<String> supportedFileAttributeViews() {
-    return defaultFileSystem.supportedFileAttributeViews();
+    return getDefaultFileSystem().supportedFileAttributeViews();
   }
 
   @Override
   public Path getPath(String first, String... more) {
-    return defaultFileSystem.getPath(first, more);
+    String path;
+    if (more.length == 0) {
+      path = first;
+    } else {
+      StringBuilder sb = new StringBuilder();
+      sb.append(first);
+      for (String segment : more) {
+        if (!segment.isEmpty()) {
+          if (sb.length() > 0) {
+            sb.append('/');
+          }
+          sb.append(segment);
+        }
+      }
+      path = sb.toString();
+    }
+    return BuckUnixPath.of(this, path);
   }
 
   @Override
   public PathMatcher getPathMatcher(String syntaxAndPattern) {
-    return defaultFileSystem.getPathMatcher(syntaxAndPattern);
+    return getDefaultFileSystem().getPathMatcher(syntaxAndPattern);
   }
 
   @Override
   public UserPrincipalLookupService getUserPrincipalLookupService() {
-    return defaultFileSystem.getUserPrincipalLookupService();
+    return getDefaultFileSystem().getUserPrincipalLookupService();
   }
 
   @Override
   public WatchService newWatchService() throws IOException {
-    return defaultFileSystem.newWatchService();
+    return getDefaultFileSystem().newWatchService();
   }
 }
