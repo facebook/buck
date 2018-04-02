@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="junitparams">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/third-party/java/junitparams" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/third-party/java/junitparams" />
+    </SOURCES>
+    <jarDirectory url="file://$PROJECT_DIR$/third-party/java/junitparams" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/third-party/java/junitparams" recursive="false" type="SOURCES" />
+  </library>
+</component>

@@ -178,6 +178,9 @@ class BuckUnixPath implements Path {
     if (isEmpty()) {
       return null;
     }
+    if (isAbsolute() && segments.length == 1) {
+      return fs.getRootDirectory();
+    }
     return new BuckUnixPath(fs, new String[] {segments[segments.length - 1]}, false);
   }
 

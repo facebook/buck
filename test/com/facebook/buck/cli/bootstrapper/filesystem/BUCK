@@ -5,5 +5,6 @@ standard_java_test(
     deps = [
         "//src/com/facebook/buck/cli/bootstrapper/filesystem:filesystem_lib",
         "//third-party/java/junit:junit",
+        "//third-party/java/junitparams:junitparams",
     ],
 )

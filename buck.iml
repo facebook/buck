@@ -116,5 +116,6 @@
     <orderEntry type="library" name="json-simple" level="project" />
     <orderEntry type="library" name="d8" level="project" />
     <orderEntry type="library" name="objenesis-1.2" level="project" />
+    <orderEntry type="library" name="junitparams" level="project" />
   </component>
 </module>
