@@ -1,0 +1,10 @@
+JUnitParams is JUnit4 runner that enables parametrization of individual test methods in test class. It is used for testing Buck itself.
+
+https://github.com/Pragmatists/JUnitParams
+
+To update JUnitParams, follow the procedure:
+
+- Download the latest release from https://github.com/Pragmatists/JUnitParams/releases
+- Build it with `mvn package`
+- Copy JUnitParams-<version>.jar and JUnitParams-<version>-sources.jar to here
+- If version has changed and so did filenames of jar files, modify BUCK file accordingly

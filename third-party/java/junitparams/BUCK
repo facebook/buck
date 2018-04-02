@@ -1,0 +1,9 @@
+prebuilt_jar(
+    name = "junitparams",
+    binary_jar = "JUnitParams-1.1.1.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "JUnitParams-1.1.1-sources.jar",
+    visibility = ["//test/..."],
+)
