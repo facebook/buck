@@ -1,0 +1,8 @@
+java_library(
+    name = "filesystem_lib",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "//src/com/facebook/buck/cli/bootstrapper/...",
+        "//test/...",
+    ],
+)

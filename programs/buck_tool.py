@@ -633,7 +633,9 @@ class BuckTool(object):
                 "-Dorg.eclipse.jetty.util.log.class=org.eclipse.jetty.util.log.JavaUtilLog",
                 "-Dbuck.git_commit={0}".format(self._get_buck_version_uid()),
                 "-Dbuck.git_commit_timestamp={0}".format(self._get_buck_version_timestamp()),
-                "-Dbuck.binary_hash={0}".format(self._get_buck_binary_hash())
+                "-Dbuck.binary_hash={0}".format(self._get_buck_binary_hash()),
+                "-Djava.nio.file.spi.DefaultFileSystemProvider="
+                "com.facebook.buck.cli.bootstrapper.filesystem.BuckFileSystemProvider",
             ]
 
             resource_lock_path = self._get_resource_lock_path()

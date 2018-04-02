@@ -8,6 +8,7 @@ java_binary(
     ],
     deps = [
         ":bootstrapper_lib",
+        "//src/com/facebook/buck/cli/bootstrapper/filesystem:filesystem_lib",
     ],
 )
 
