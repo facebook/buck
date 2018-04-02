@@ -9,6 +9,10 @@ java_library_with_plugins(
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android/toolchain:toolchain",
     ],
+    tests = [
+        "//test/com/facebook/buck/apple:apple",
+        "//test/com/facebook/buck/apple:apple_test_integration",
+    ],
     visibility = [
         "PUBLIC",
     ],
