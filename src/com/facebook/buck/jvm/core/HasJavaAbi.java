@@ -33,6 +33,7 @@ import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.jar.JarFile;
 import javax.annotation.Nullable;
@@ -116,7 +117,7 @@ public interface HasJavaAbi {
     private SourcePathResolver resolver;
     @Nullable private final SourcePath jarSourcePath;
     @Nullable private ImmutableSortedSet<SourcePath> contents;
-    @Nullable private ImmutableSet<String> contentPaths;
+    @Nullable private ImmutableSet<Path> contentPaths;
 
     public JarContentsSupplier(SourcePathResolver resolver, @Nullable SourcePath jarSourcePath) {
       this.resolver = resolver;
@@ -157,7 +158,6 @@ public interface HasJavaAbi {
                         return ((ArchiveMemberSourcePath) sourcePath).getMemberPath();
                       }
                     })
-                .map(Path::toString)
                 .collect(ImmutableSet.toImmutableSet());
       }
     }
@@ -167,7 +167,7 @@ public interface HasJavaAbi {
     }
 
     public boolean jarContains(String path) {
-      return contentPaths.contains(path);
+      return contentPaths.contains(Paths.get(path));
     }
 
     public void updateSourcePathResolver(SourcePathResolver resolver) {
