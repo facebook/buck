@@ -148,7 +148,6 @@ public class GoTestDescription
       ImmutableMap<Path, ImmutableMap<String, Path>> coverVariables,
       GoTestCoverStep.Mode coverageMode,
       Path packageName,
-      ImmutableSortedSet<BuildRule> extraDeps,
       ImmutableSortedSet<BuildTarget> cgoDeps) {
     Tool testMainGenerator =
         GoDescriptors.getTestMainGenerator(
@@ -167,13 +166,10 @@ public class GoTestDescription
         new GoTestMain(
             buildTarget.withAppendedFlavors(InternalFlavor.of("test-main-src")),
             projectFilesystem,
-            params
-                .withDeclaredDeps(
-                    ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(BuildableSupport.getDepsCollection(testMainGenerator, ruleFinder))
-                        .addAll(extraDeps)
-                        .build())
-                .withoutExtraDeps(),
+            params.withDeclaredDeps(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(BuildableSupport.getDepsCollection(testMainGenerator, ruleFinder))
+                    .build()),
             testMainGenerator,
             srcs,
             packageName,
@@ -256,7 +252,6 @@ public class GoTestDescription
             coverVariables,
             coverageMode,
             args,
-            extraDeps.build(),
             platform);
     resolver.addToIndex(testMain);
 
@@ -284,7 +279,6 @@ public class GoTestDescription
       ImmutableMap<String, Path> coverVariables,
       GoTestCoverStep.Mode coverageMode,
       GoTestDescriptionArg args,
-      ImmutableSortedSet<BuildRule> extraDeps,
       GoPlatform platform) {
     Path packageName = getGoPackageName(resolver, buildTarget, args);
 
@@ -304,7 +298,6 @@ public class GoTestDescription
             ImmutableMap.of(packageName, coverVariables),
             coverageMode,
             packageName,
-            extraDeps,
             args.getCgoDeps());
     GoBinary testMain =
         GoDescriptors.createGoBinaryRule(

@@ -126,4 +126,16 @@ public class GoTestIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("test", "//cgo/lib:all_tests");
     result.assertSuccess();
   }
+
+  @Test
+  public void testGenRuleAsSrc() throws IOException {
+    ProcessResult result = workspace.runBuckCommand("test", "//genrule_as_src:test");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void testGenRuleWithLibAsSrc() throws IOException {
+    ProcessResult result = workspace.runBuckCommand("test", "//genrule_wtih_lib_as_src:test");
+    result.assertSuccess();
+  }
 }
