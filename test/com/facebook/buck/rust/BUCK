@@ -195,6 +195,7 @@ standard_java_test(
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
+        "//src/com/facebook/buck/python:rules",
         "//src/com/facebook/buck/query:query",
         "//src/com/facebook/buck/rules:cli",
         "//src/com/facebook/buck/rules:rules",

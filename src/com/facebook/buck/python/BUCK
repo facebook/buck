@@ -19,12 +19,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/ocaml:rules",
         "//src/com/facebook/buck/python/toolchain/impl:impl",
         "//src/com/facebook/buck/rules:types",
-        "//test/com/facebook/buck/cxx:cxx",
-        "//test/com/facebook/buck/cxx:testutil",
-        "//test/com/facebook/buck/jvm/java:java",
-        "//test/com/facebook/buck/lua:lua",
-        "//test/com/facebook/buck/python:",
-        "//test/com/facebook/buck/versions:",
+        "//test/...",
     ],
     deps = [
         "//src/com/facebook/buck/cxx:rules",
