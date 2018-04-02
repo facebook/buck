@@ -24,7 +24,6 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.util.filesystem.FileSystemMap.Entry;
-import com.google.devtools.build.lib.vfs.PathFragment;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
@@ -45,8 +44,8 @@ public class FileSystemMapTest {
     FileSystemMap.Entry<Boolean> file = bar.subLevels.get("HelloWorld.java");
     assertNotNull(file);
     assertTrue(file.getWithoutLoading());
-    assertEquals(fsMap.map.size(), 1);
-    assertTrue(fsMap.map.get(PathFragments.pathToFragment(path)).getWithoutLoading());
+    assertEquals(1, fsMap.map.size());
+    assertTrue(fsMap.map.get(path).getWithoutLoading());
   }
 
   @Test
@@ -60,12 +59,12 @@ public class FileSystemMapTest {
 
     // Write the new entry and check data structure state.
     fsMap.put(path, true);
-    assertEquals(fsMap.root.subLevels.get("usr").size(), 0);
+    assertEquals(0, fsMap.root.subLevels.get("usr").size());
     Entry<Boolean> file =
         fsMap.root.subLevels.get("foo").subLevels.get("bar").subLevels.get("HelloWorld.java");
     assertTrue(file.getWithoutLoading());
-    assertEquals(fsMap.map.size(), 2);
-    assertTrue(fsMap.map.get(PathFragments.pathToFragment(path)).getWithoutLoading());
+    assertEquals(2, fsMap.map.size());
+    assertTrue(fsMap.map.get(path).getWithoutLoading());
   }
 
   @Test
@@ -76,7 +75,7 @@ public class FileSystemMapTest {
     // Insert the entry into the map, verify resulting state.
     fsMap.put(path, true);
     FileSystemMap.Entry<Boolean> usr = fsMap.root.subLevels.get("usr");
-    Entry<Boolean> helloWorld = fsMap.map.get(PathFragments.pathToFragment(path));
+    Entry<Boolean> helloWorld = fsMap.map.get(path);
     assertTrue(helloWorld.getWithoutLoading());
     assertSame(helloWorld, fsMap.root.subLevels.get("usr").subLevels.get("HelloWorld.java"));
 
@@ -90,7 +89,7 @@ public class FileSystemMapTest {
     assertNotNull(helloWorldEntry);
     assertFalse(helloWorldEntry.getWithoutLoading());
     assertEquals(fsMap.map.size(), 1);
-    assertFalse(fsMap.map.get(PathFragments.pathToFragment(path)).getWithoutLoading());
+    assertFalse(fsMap.map.get(path).getWithoutLoading());
   }
 
   @Test
@@ -110,8 +109,8 @@ public class FileSystemMapTest {
     Entry<Boolean> file = usr.subLevels.get("HelloWorld.java");
     assertNotNull(file);
     assertTrue(file.getWithoutLoading());
-    assertEquals(fsMap.map.size(), 2);
-    assertTrue(fsMap.map.get(PathFragments.pathToFragment(path)).getWithoutLoading());
+    assertEquals(2, fsMap.map.size());
+    assertTrue(fsMap.map.get(path).getWithoutLoading());
   }
 
   @Test
@@ -127,7 +126,7 @@ public class FileSystemMapTest {
     // Remove the item and check intermediate nodes are deleted.
     fsMap.remove(path);
     assertFalse(fsMap.root.subLevels != null && fsMap.root.subLevels.containsKey("usr"));
-    assertEquals(fsMap.map.size(), 0);
+    assertEquals(0, fsMap.map.size());
   }
 
   @Test
@@ -142,8 +141,8 @@ public class FileSystemMapTest {
     assertNull(fsMap.root.subLevels.get("usr").getWithoutLoading());
     assertFalse(fsMap.root.subLevels.get("usr").subLevels.containsKey("HelloWorld.java"));
     assertTrue(fsMap.root.subLevels.get("usr").subLevels.containsKey("Yo.java"));
-    assertEquals(fsMap.map.size(), 1);
-    assertTrue(fsMap.map.get(PathFragment.create("usr/Yo.java")).getWithoutLoading());
+    assertEquals(1, fsMap.map.size());
+    assertTrue(fsMap.map.get(Paths.get("usr/Yo.java")).getWithoutLoading());
   }
 
   @Test
@@ -154,7 +153,7 @@ public class FileSystemMapTest {
     fsMap.remove(path);
     assertFalse(fsMap.root.subLevels != null && fsMap.root.subLevels.containsKey("usr"));
     assertEquals(0, fsMap.map.size());
-    assertFalse(fsMap.map.containsKey(PathFragments.pathToFragment(path)));
+    assertFalse(fsMap.map.containsKey(path));
   }
 
   @Test
@@ -168,9 +167,9 @@ public class FileSystemMapTest {
 
     fsMap.remove(path);
     assertFalse(fsMap.root.subLevels != null && fsMap.root.subLevels.containsKey("usr"));
-    assertFalse(fsMap.map.containsKey(PathFragments.pathToFragment(path)));
-    assertFalse(fsMap.map.containsKey(PathFragment.create("usr/HelloWorld.java")));
-    assertFalse(fsMap.map.containsKey(PathFragment.create("usr/Yo.java")));
+    assertFalse(fsMap.map.containsKey(path));
+    assertFalse(fsMap.map.containsKey(Paths.get("usr/HelloWorld.java")));
+    assertFalse(fsMap.map.containsKey(Paths.get("usr/Yo.java")));
   }
 
   @Test
@@ -178,12 +177,12 @@ public class FileSystemMapTest {
     FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
     fsMap.put(Paths.get("usr/HelloWorld.java"), true);
     fsMap.put(Paths.get("usr/Yo.java"), true);
-    assertEquals(fsMap.root.size(), 1);
-    assertEquals(fsMap.map.size(), 2);
+    assertEquals(1, fsMap.root.size());
+    assertEquals(2, fsMap.map.size());
 
     fsMap.removeAll();
-    assertEquals(fsMap.root.size(), 0);
-    assertEquals(fsMap.map.size(), 0);
+    assertEquals(0, fsMap.root.size());
+    assertEquals(0, fsMap.map.size());
   }
 
   @Test
@@ -201,7 +200,7 @@ public class FileSystemMapTest {
     fsMap.put(path, true);
     assertTrue(fsMap.get(path));
     assertEquals(fsMap.root.size(), 1);
-    assertTrue(fsMap.map.get(PathFragments.pathToFragment(path)).getWithoutLoading());
+    assertTrue(fsMap.map.get(path).getWithoutLoading());
   }
 
   @Test
@@ -211,7 +210,7 @@ public class FileSystemMapTest {
     fsMap.put(path, true);
     assertTrue(fsMap.get(path));
     assertEquals(fsMap.root.size(), 1);
-    assertTrue(fsMap.map.get(PathFragments.pathToFragment(path)).getWithoutLoading());
+    assertTrue(fsMap.map.get(path).getWithoutLoading());
   }
 
   @Test
@@ -227,6 +226,6 @@ public class FileSystemMapTest {
     assertNotNull(entry);
     assertTrue(entry);
     assertEquals(fsMap.map.size(), 2);
-    assertTrue(fsMap.map.get(PathFragments.pathToFragment(path)).getWithoutLoading());
+    assertTrue(fsMap.map.get(path).getWithoutLoading());
   }
 }

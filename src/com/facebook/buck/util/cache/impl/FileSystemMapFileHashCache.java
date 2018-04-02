@@ -22,7 +22,6 @@ import com.facebook.buck.util.cache.FileHashCacheEngine;
 import com.facebook.buck.util.cache.HashCodeAndFileType;
 import com.facebook.buck.util.cache.JarHashCodeAndFileType;
 import com.facebook.buck.util.filesystem.FileSystemMap;
-import com.facebook.buck.util.filesystem.PathFragments;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
@@ -39,10 +38,8 @@ class FileSystemMapFileHashCache implements FileHashCacheEngine {
 
   private FileSystemMapFileHashCache(
       ValueLoader<HashCodeAndFileType> hashLoader, ValueLoader<Long> sizeLoader) {
-    this.loadingCache =
-        new FileSystemMap<>(fragment -> hashLoader.load(PathFragments.fragmentToPath(fragment)));
-    this.sizeCache =
-        new FileSystemMap<>(fragment -> sizeLoader.load(PathFragments.fragmentToPath(fragment)));
+    this.loadingCache = new FileSystemMap<>(fragment -> hashLoader.load(fragment));
+    this.sizeCache = new FileSystemMap<>(fragment -> sizeLoader.load(fragment));
   }
 
   public static FileHashCacheEngine createWithStats(

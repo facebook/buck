@@ -22,12 +22,10 @@ import com.facebook.buck.util.cache.FileHashCacheEngine;
 import com.facebook.buck.util.cache.HashCodeAndFileType;
 import com.facebook.buck.util.cache.JarHashCodeAndFileType;
 import com.facebook.buck.util.filesystem.FileSystemMap;
-import com.facebook.buck.util.filesystem.PathFragments;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.hash.HashCode;
-import com.google.devtools.build.lib.vfs.PathFragment;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -62,7 +60,7 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
   // (sergeyb): Please do not add any more fields to this data structure or at least make sure they
   // are optimized for memory footprint
   private final class Data {
-    private final PathFragment path;
+    private final Path path;
 
     // One of FILE_TYPE consts
     private final byte fileType;
@@ -71,8 +69,8 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
     private volatile @Nullable HashCodeAndFileType hashCodeAndFileType = null;
     private volatile long size = -1;
 
-    private Data(PathFragment path) {
-      this.fileType = loadType(PathFragments.fragmentToPath(path));
+    private Data(Path path) {
+      this.fileType = loadType(path);
       this.path = path;
     }
 
@@ -91,18 +89,17 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
     }
 
     private HashCodeAndFileType loadHashCodeAndFileType() {
-      Path asPath = PathFragments.fragmentToPath(path);
       switch (fileType) {
         case FILE_TYPE_FILE:
         case FILE_TYPE_SYMLINK:
-          HashCode loadedValue = fileHashLoader.load(asPath);
-          if (isArchive(asPath)) {
+          HashCode loadedValue = fileHashLoader.load(path);
+          if (isArchive(path)) {
             return JarHashCodeAndFileType.ofArchive(
                 loadedValue, new DefaultJarContentHasher(filesystem, path));
           }
           return HashCodeAndFileType.ofFile(loadedValue);
         case FILE_TYPE_DIRECTORY:
-          HashCodeAndFileType loadedDirValue = dirHashLoader.load(asPath);
+          HashCodeAndFileType loadedDirValue = dirHashLoader.load(path);
           Preconditions.checkState(loadedDirValue.getType() == HashCodeAndFileType.TYPE_DIRECTORY);
           return loadedDirValue;
       }
@@ -110,7 +107,7 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
     }
 
     private long loadSize() {
-      return sizeLoader.load(PathFragments.fragmentToPath(path));
+      return sizeLoader.load(path);
     }
 
     public void set(HashCodeAndFileType value) {
