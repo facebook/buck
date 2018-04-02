@@ -17,7 +17,6 @@
 package com.facebook.buck.rust;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.model.BuildTarget;
@@ -118,10 +117,8 @@ public class RustBinaryDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     ToolProvider compiler = rustBuckConfig.getRustCompiler();
     extraDepsBuilder.addAll(compiler.getParseTimeDeps());
-
     extraDepsBuilder.addAll(
-        CxxPlatforms.getParseTimeDeps(
-            getCxxPlatformsProvider().getCxxPlatforms().getValues(buildTarget)));
+        RustCompileUtils.getPlatformParseTimeDeps(getCxxPlatformsProvider(), buildTarget));
     extraDepsBuilder.addAll(
         rustBuckConfig.getLinker().map(ToolProvider::getParseTimeDeps).orElse(ImmutableList.of()));
   }

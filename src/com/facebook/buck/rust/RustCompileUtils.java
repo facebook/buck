@@ -21,6 +21,8 @@ import static com.facebook.buck.cxx.CxxDescriptionEnhancer.createSharedLibrarySy
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.linker.Linkers;
@@ -296,6 +298,15 @@ public class RustCompileUtils {
     }
 
     return ret;
+  }
+
+  public static Iterable<BuildTarget> getPlatformParseTimeDeps(
+      CxxPlatformsProvider cxxPlatformsProvider, BuildTarget buildTarget) {
+    return CxxPlatforms.getParseTimeDeps(
+        cxxPlatformsProvider
+            .getCxxPlatforms()
+            .getValue(buildTarget)
+            .orElse(cxxPlatformsProvider.getDefaultCxxPlatform()));
   }
 
   public static BinaryWrapperRule createBinaryBuildRule(

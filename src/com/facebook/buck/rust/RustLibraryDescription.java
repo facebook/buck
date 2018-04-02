@@ -19,7 +19,6 @@ package com.facebook.buck.rust;
 import static com.facebook.buck.rust.RustCompileUtils.ruleToCrateName;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -433,10 +432,8 @@ public class RustLibraryDescription
     extraDepsBuilder.addAll(rustBuckConfig.getRustCompiler().getParseTimeDeps());
     extraDepsBuilder.addAll(
         rustBuckConfig.getLinker().map(ToolProvider::getParseTimeDeps).orElse(ImmutableList.of()));
-
     extraDepsBuilder.addAll(
-        CxxPlatforms.getParseTimeDeps(
-            getCxxPlatformsProvider().getCxxPlatforms().getValues(buildTarget)));
+        RustCompileUtils.getPlatformParseTimeDeps(getCxxPlatformsProvider(), buildTarget));
   }
 
   @Override
