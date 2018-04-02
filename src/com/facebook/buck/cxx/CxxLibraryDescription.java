@@ -18,8 +18,6 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.CxxPlatforms;
-import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
@@ -44,7 +42,6 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -126,19 +123,16 @@ public class CxxLibraryDescription
   static final FlavorDomain<HeaderMode> HEADER_MODE =
       FlavorDomain.from("C/C++ Header Mode", HeaderMode.class);
 
-  private final ToolchainProvider toolchainProvider;
   private final CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors;
   private final CxxLibraryFlavored cxxLibraryFlavored;
   private final CxxLibraryFactory cxxLibraryFactory;
   private final CxxLibraryMetadataFactory cxxLibraryMetadataFactory;
 
   public CxxLibraryDescription(
-      ToolchainProvider toolchainProvider,
       CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors,
       CxxLibraryFlavored cxxLibraryFlavored,
       CxxLibraryFactory cxxLibraryFactory,
       CxxLibraryMetadataFactory cxxLibraryMetadataFactory) {
-    this.toolchainProvider = toolchainProvider;
     this.cxxLibraryImplicitFlavors = cxxLibraryImplicitFlavors;
     this.cxxLibraryFlavored = cxxLibraryFlavored;
     this.cxxLibraryFactory = cxxLibraryFactory;
@@ -254,8 +248,7 @@ public class CxxLibraryDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Get any parse time deps from the C/C++ platforms.
     targetGraphOnlyDepsBuilder.addAll(
-        CxxPlatforms.getParseTimeDeps(
-            getCxxPlatformsProvider().getCxxPlatforms().getValues(buildTarget)));
+        cxxLibraryFactory.getPlatformParseTimeDeps(buildTarget, constructorArg));
   }
 
   /**
@@ -293,11 +286,6 @@ public class CxxLibraryDescription
       ImmutableSortedSet<Flavor> argDefaultFlavors) {
     return cxxLibraryImplicitFlavors.addImplicitFlavorsForRuleTypes(
         argDefaultFlavors, Description.getBuildRuleType(this));
-  }
-
-  private CxxPlatformsProvider getCxxPlatformsProvider() {
-    return toolchainProvider.getByName(
-        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
   }
 
   /**

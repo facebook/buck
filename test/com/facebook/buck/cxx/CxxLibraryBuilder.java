@@ -66,7 +66,6 @@ public class CxxLibraryBuilder
     CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
         new CxxLibraryMetadataFactory(toolchainProvider);
     return new CxxLibraryDescription(
-        toolchainProvider,
         cxxLibraryImplicitFlavors,
         new CxxLibraryFlavored(toolchainProvider, cxxBuckConfig),
         cxxLibraryFactory,

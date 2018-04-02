@@ -62,10 +62,7 @@ public class MultiarchFileInfos {
       return Optional.empty();
     }
 
-    if (!Sets.intersection(target.getFlavors(), FORBIDDEN_BUILD_ACTIONS).isEmpty()) {
-      throw new HumanReadableException(
-          "%s: Fat binaries is only supported when building an actual binary.", target);
-    }
+    assertTargetSupportsMultiarch(target);
 
     AppleCxxPlatform representativePlatform = null;
     AppleSdk sdk = null;
@@ -93,6 +90,24 @@ public class MultiarchFileInfos {
     }
 
     return Optional.of(builder.build());
+  }
+
+  public static void checkTargetSupportsMultiarch(
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatforms, BuildTarget target) {
+    ImmutableList<ImmutableSortedSet<Flavor>> thinFlavorSets =
+        generateThinFlavors(appleCxxPlatforms.getFlavors(), target.getFlavors());
+    if (thinFlavorSets.size() <= 1) { // Actually a thin binary
+      return;
+    }
+
+    assertTargetSupportsMultiarch(target);
+  }
+
+  private static void assertTargetSupportsMultiarch(BuildTarget target) {
+    if (!Sets.intersection(target.getFlavors(), FORBIDDEN_BUILD_ACTIONS).isEmpty()) {
+      throw new HumanReadableException(
+          "%s: Fat binaries is only supported when building an actual binary.", target);
+    }
   }
 
   /**

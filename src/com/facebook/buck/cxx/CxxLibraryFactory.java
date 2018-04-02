@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
@@ -41,6 +42,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
+import com.facebook.buck.rules.HasDefaultPlatform;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -63,6 +65,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimaps;
+import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -70,6 +73,13 @@ import java.util.SortedSet;
 import java.util.function.Predicate;
 
 public class CxxLibraryFactory {
+
+  private static final ImmutableSet<Flavor> FLAVORS_WITH_DEFAULT_PLATFORM =
+      ImmutableSet.<Flavor>builder()
+          .add(CxxCompilationDatabase.COMPILATION_DATABASE)
+          .add(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)
+          .addAll(CxxInferEnhancer.INFER_FLAVOR_DOMAIN.getFlavors())
+          .build();
 
   private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
@@ -331,6 +341,54 @@ public class CxxLibraryFactory {
         args.isReexportAllHeaderDependencies()
             .orElse(cxxBuckConfig.getDefaultReexportAllHeaderDependencies()),
         delegate);
+  }
+
+  /**
+   * Calculates a platform flavor for a given target. If a target has no flavor, then calculate it
+   * using other flavors.
+   *
+   * <p>Note that this logic should be kept in sync with {@link #createBuildRule}.
+   */
+  private Flavor getPlatformFlavor(BuildTarget buildTarget, HasDefaultPlatform args) {
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
+    Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor();
+    Optional<CxxPlatform> platform = cxxPlatforms.getValue(buildTarget);
+    if (buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
+      CxxPlatform cxxPlatform =
+          platform.orElse(
+              cxxPlatforms.getValue(args.getDefaultPlatform().orElse(defaultCxxFlavor)));
+      return cxxPlatform.getFlavor();
+    } else if (buildTarget
+        .getFlavors()
+        .contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
+      return platform.isPresent()
+          ? platform.get().getFlavor()
+          : args.getDefaultPlatform().orElse(defaultCxxFlavor);
+    } else if (CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors())) {
+      return platform.orElse(cxxPlatforms.getValue(defaultCxxFlavor)).getFlavor();
+    } else {
+      throw new IllegalArgumentException(
+          String.format(
+              "Target %s contains unrecognized flavors: %s",
+              buildTarget.getFullyQualifiedName(), buildTarget.getFlavors()));
+    }
+  }
+
+  /**
+   * @return an {@link Iterable} with platform dependencies that need to be resolved at parse time.
+   */
+  public Iterable<BuildTarget> getPlatformParseTimeDeps(
+      BuildTarget buildTarget, HasDefaultPlatform args) {
+    if (Sets.intersection(buildTarget.getFlavors(), FLAVORS_WITH_DEFAULT_PLATFORM).isEmpty()) {
+      return CxxPlatforms.getParseTimeDeps(
+          getCxxPlatformsProvider().getCxxPlatforms().getValues(buildTarget));
+    } else {
+      return CxxPlatforms.getParseTimeDeps(
+          getCxxPlatformsProvider()
+              .getCxxPlatforms()
+              .getValue(getPlatformFlavor(buildTarget, args)));
+    }
   }
 
   private static ImmutableList<SourcePath> requireObjects(

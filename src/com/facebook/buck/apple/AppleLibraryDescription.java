@@ -42,7 +42,6 @@ import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.cxx.HeaderSymlinkTreeWithHeaderMap;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
@@ -798,9 +797,9 @@ public class AppleLibraryDescription
       AbstractAppleLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    MultiarchFileInfos.checkTargetSupportsMultiarch(getAppleCxxPlatformDomain(), buildTarget);
     extraDepsBuilder.addAll(
-        CxxPlatforms.getParseTimeDeps(
-            getCxxPlatformsProvider().getCxxPlatforms().getValues(buildTarget)));
+        cxxLibraryFactory.getPlatformParseTimeDeps(buildTarget, constructorArg));
   }
 
   public static boolean isNotStaticallyLinkedLibraryNode(
