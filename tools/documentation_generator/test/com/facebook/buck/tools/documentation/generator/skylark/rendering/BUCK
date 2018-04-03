@@ -4,6 +4,7 @@ java_test(
     resources = [
         "//tools/documentation_generator/test/com/facebook/buck/tools/documentation/generator/skylark/rendering/data:expected_dummy_function.soy",
         "//tools/documentation_generator/test/com/facebook/buck/tools/documentation/generator/skylark/rendering/data:expected_dummy_function_with_kwargs.soy",
+        "//tools/documentation_generator/test/com/facebook/buck/tools/documentation/generator/skylark/rendering/data:expected_dummy_function_without_args.soy",
         "//tools/documentation_generator/test/com/facebook/buck/tools/documentation/generator/skylark/rendering/data:expected_dummy_toc.soy",
     ],
     deps = [

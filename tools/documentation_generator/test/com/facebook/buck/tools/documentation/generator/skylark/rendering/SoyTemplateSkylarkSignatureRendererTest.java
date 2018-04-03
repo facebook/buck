@@ -51,6 +51,17 @@ public class SoyTemplateSkylarkSignatureRendererTest {
     name = "dummy",
     returnType = SkylarkList.class,
     doc = "Returns a dummy list of strings.",
+    parameters = {},
+    documented = false,
+    useAst = true,
+    useEnvironment = true
+  )
+  private static final BuiltinFunction dummyWithoutArgs = new BuiltinFunction("dummy");
+
+  @SkylarkSignature(
+    name = "dummy",
+    returnType = SkylarkList.class,
+    doc = "Returns a dummy list of strings.",
     extraKeywords = @Param(name = "kwargs", doc = "the dummy attributes."),
     documented = false,
     useAst = true,
@@ -78,6 +89,15 @@ public class SoyTemplateSkylarkSignatureRendererTest {
     SoyTemplateSkylarkSignatureRenderer renderer = new SoyTemplateSkylarkSignatureRenderer();
     Field dummyField = getClass().getDeclaredField("dummyWithKwargs");
     String expectedContent = getExpectedContent("data/expected_dummy_function_with_kwargs.soy");
+    String actualContent = renderer.render(dummyField.getAnnotation(SkylarkSignature.class));
+    assertEquals(expectedContent, actualContent);
+  }
+
+  @Test
+  public void rendersAnExpectedFunctionSoyTemplateWithoutArgs() throws Exception {
+    SoyTemplateSkylarkSignatureRenderer renderer = new SoyTemplateSkylarkSignatureRenderer();
+    Field dummyField = getClass().getDeclaredField("dummyWithoutArgs");
+    String expectedContent = getExpectedContent("data/expected_dummy_function_without_args.soy");
     String actualContent = renderer.render(dummyField.getAnnotation(SkylarkSignature.class));
     assertEquals(expectedContent, actualContent);
   }

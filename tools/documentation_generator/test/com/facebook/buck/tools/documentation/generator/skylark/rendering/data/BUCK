@@ -12,3 +12,8 @@ export_file(
     name = "expected_dummy_function_with_kwargs.soy",
     visibility = ["//tools/documentation_generator/test/..."],
 )
+
+export_file(
+    name = "expected_dummy_function_without_args.soy",
+    visibility = ["//tools/documentation_generator/test/..."],
+)

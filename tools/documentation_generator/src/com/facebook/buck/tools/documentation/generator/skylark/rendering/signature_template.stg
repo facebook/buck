@@ -15,17 +15,19 @@
         {param overview}
           %signature.doc%
         {/param}
-        {param args}
-          %signature.parameters :{parameter |
-            %openCurly%call buck.functionArg%closeCurly%
-              %openCurly%param name : '%parameter.name%' /%closeCurly%
-              %openCurly%param desc %closeCurly%
-                %parameter.doc%
-              %openCurly%/param%closeCurly%
-              %openCurly%param default : '%parameter.defaultValue%' /%closeCurly%
-            %openCurly%/call%closeCurly%
-          }%
-        {/param}
+        %if(signature.parameters)%
+          {param args}
+            %signature.parameters :{parameter |
+              %openCurly%call buck.functionArg%closeCurly%
+                %openCurly%param name : '%parameter.name%' /%closeCurly%
+                %openCurly%param desc %closeCurly%
+                  %parameter.doc%
+                %openCurly%/param%closeCurly%
+                %openCurly%param default : '%parameter.defaultValue%' /%closeCurly%
+              %openCurly%/call%closeCurly%
+            }%
+          {/param}
+        %endif%
       {/call}
     {/param} // content
   {/call}
