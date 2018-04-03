@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx;
+package com.facebook.buck.cxx.endtoend;
 
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.endtoend.EndToEndEnvironment;
