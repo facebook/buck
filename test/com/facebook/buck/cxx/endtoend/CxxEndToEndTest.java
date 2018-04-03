@@ -14,15 +14,21 @@
  * under the License.
  */
 
-package com.facebook.buck.testutil.endtoend;
+package com.facebook.buck.cxx.endtoend;
 
 import com.facebook.buck.testutil.ProcessResult;
-import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.testutil.endtoend.EndToEndEnvironment;
+import com.facebook.buck.testutil.endtoend.EndToEndRunner;
+import com.facebook.buck.testutil.endtoend.EndToEndTestDescriptor;
+import com.facebook.buck.testutil.endtoend.EndToEndWorkspace;
+import com.facebook.buck.testutil.endtoend.Environment;
+import com.facebook.buck.testutil.endtoend.EnvironmentFor;
+import com.facebook.buck.testutil.endtoend.ToggleState;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(EndToEndRunner.class)
-public class EndToEndRunnerTest {
+public class CxxEndToEndTest {
 
   private static final String successTarget =
       "//simple_successful_helloworld:simple_successful_helloworld";
@@ -49,8 +55,7 @@ public class EndToEndRunnerTest {
   public void shouldBuildAndRunSuccessfully(
       EndToEndTestDescriptor test, EndToEndWorkspace workspace, ProcessResult result)
       throws Exception {
-    result.assertExitCode(
-        String.format("%s did not successfully build", test.getName()), ExitCode.map(0));
+    result.assertSuccess(String.format("%s did not successfully build", test.getName()));
     ProcessResult targetResult = workspace.runBuiltResult(successTarget);
     targetResult.assertSuccess();
   }
