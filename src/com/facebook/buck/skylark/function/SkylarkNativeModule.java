@@ -26,7 +26,6 @@ import com.google.devtools.build.lib.syntax.BuiltinFunction;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
-import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkSignatureProcessor;
 
 /**
@@ -65,7 +64,8 @@ public class SkylarkNativeModule {
         @SuppressWarnings("unused")
         public String invoke(FuncallExpression ast, Environment env) throws EvalException {
           env.checkLoadingPhase("native.package_name", ast.getLocation());
-          return (String) env.lookup(Runtime.PKG_NAME);
+          PackageContext packageContext = PackageFactory.getPackageContext(env, ast);
+          return packageContext.getPackageIdentifier().getPackageFragment().getPathString();
         }
       };
 

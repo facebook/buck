@@ -232,9 +232,9 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
             .setEventHandler(eventHandler)
             .build();
     String basePath = getBasePath(buildFile);
-    env.setupDynamic(Runtime.PKG_NAME, basePath);
     parseContext.setup(env);
     env.setup("glob", Glob.create());
+    Runtime.setupModuleGlobals(env, SkylarkNativeModule.class);
     env.setup("package_name", SkylarkNativeModule.packageName);
     env.setup("repository_name", SkylarkNativeModule.repositoryName);
     PackageContext packageContext =

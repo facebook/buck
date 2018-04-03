@@ -20,6 +20,8 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.skylark.packages.PackageContext;
+import com.facebook.buck.skylark.packages.PackageFactory;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -72,9 +74,12 @@ public class RuleFunctionFactory {
       @SuppressWarnings({"unused"})
       public Runtime.NoneType invoke(
           Map<String, Object> kwargs, FuncallExpression ast, Environment env) throws EvalException {
+        PackageContext packageContext = PackageFactory.getPackageContext(env, ast);
         ImmutableMap.Builder<String, Object> builder =
             ImmutableMap.<String, Object>builder()
-                .put("buck.base_path", env.lookup(Runtime.PKG_NAME))
+                .put(
+                    "buck.base_path",
+                    packageContext.getPackageIdentifier().getPackageFragment().getPathString())
                 .put("buck.type", name);
         ImmutableMap<String, ParamInfo> allParamInfo =
             CoercedTypeCache.INSTANCE.getAllParamInfo(

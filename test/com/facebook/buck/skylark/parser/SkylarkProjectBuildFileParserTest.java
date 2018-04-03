@@ -184,16 +184,6 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
-  public void packageNameIsProvided() throws Exception {
-    Path buildFile = projectFilesystem.resolve("src").resolve("test").resolve("BUCK");
-    Files.createDirectories(buildFile.getParent());
-    Files.write(buildFile, Arrays.asList("prebuilt_jar(name='guava', binary_jar=PACKAGE_NAME)"));
-
-    Map<String, Object> rule = getSingleRule(buildFile);
-    assertThat(rule.get("binaryJar"), equalTo("src/test"));
-  }
-
-  @Test
   public void globFunction() throws Exception {
     Path directory = projectFilesystem.resolve("src").resolve("test");
     Path buildFile = directory.resolve("BUCK");

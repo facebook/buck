@@ -90,17 +90,15 @@ public class SkylarkNativeModuleTest {
             .setPhase(Phase.LOADING)
             .useDefaultSemantics()
             .build();
-    String packageName = "my/package";
     env.setupDynamic(
         PackageFactory.PACKAGE_CONTEXT,
         PackageContext.builder()
             .setGlobber(SimpleGlobber.create(root))
             .setRawConfig(rawConfig)
             .setPackageIdentifier(
-                PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create(packageName)))
+                PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("my/package")))
             .build());
     env.setup("package_name", SkylarkNativeModule.packageName);
-    env.setup("PACKAGE_NAME", packageName);
     boolean exec = buildFileAst.exec(env, eventHandler);
     if (!exec) {
       Assert.fail("Build file evaluation must have succeeded");
