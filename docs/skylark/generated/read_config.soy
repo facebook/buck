@@ -15,30 +15,30 @@
         {param overview}
           Returns a list of files that match glob search pattern.
         {/param}
-        {param args}
-                      {call buck.functionArg}
-                        {param name : 'section' /}
-                        {param desc }
-                          the name of the .buckconfig section with the desired value.
-                        {/param}
-                        {param default : 'None' /}
-                      {/call}
-                      {call buck.functionArg}
-                        {param name : 'field' /}
-                        {param desc }
-                          the name of the .buckconfig field with the desired value.
-                        {/param}
-                        {param default : 'None' /}
-                      {/call}
-                      {call buck.functionArg}
-                        {param name : 'defaultValue' /}
-                        {param desc }
-                          the value to return if the desired value is not set in the .buckconfig.
-                        {/param}
-                        {param default : 'None' /}
-                      {/call}
+          {param args}
+                          {call buck.functionArg}
+                            {param name : 'section' /}
+                            {param desc }
+                              the name of the .buckconfig section with the desired value.
+                            {/param}
+                            {param default : 'None' /}
+                          {/call}
+                          {call buck.functionArg}
+                            {param name : 'field' /}
+                            {param desc }
+                              the name of the .buckconfig field with the desired value.
+                            {/param}
+                            {param default : 'None' /}
+                          {/call}
+                          {call buck.functionArg}
+                            {param name : 'defaultValue' /}
+                            {param desc }
+                              the value to return if the desired value is not set in the .buckconfig.
+                            {/param}
+                            {param default : 'None' /}
+                          {/call}
 
-        {/param}
+          {/param}
       {/call}
     {/param} // content
   {/call}

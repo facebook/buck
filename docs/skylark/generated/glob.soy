@@ -15,30 +15,30 @@
         {param overview}
           Returns a list of files that match glob search pattern.
         {/param}
-        {param args}
-                      {call buck.functionArg}
-                        {param name : 'include' /}
-                        {param desc }
-                          a list of strings specifying patterns of files to include.
-                        {/param}
-                        {param default : 'None' /}
-                      {/call}
-                      {call buck.functionArg}
-                        {param name : 'exclude' /}
-                        {param desc }
-                          a list of strings specifying patterns of files to exclude.
-                        {/param}
-                        {param default : '[]' /}
-                      {/call}
-                      {call buck.functionArg}
-                        {param name : 'exclude_directories' /}
-                        {param desc }
-                          True indicates directories should not be matched.
-                        {/param}
-                        {param default : 'True' /}
-                      {/call}
+          {param args}
+                          {call buck.functionArg}
+                            {param name : 'include' /}
+                            {param desc }
+                              a list of strings specifying patterns of files to include.
+                            {/param}
+                            {param default : 'None' /}
+                          {/call}
+                          {call buck.functionArg}
+                            {param name : 'exclude' /}
+                            {param desc }
+                              a list of strings specifying patterns of files to exclude.
+                            {/param}
+                            {param default : '[]' /}
+                          {/call}
+                          {call buck.functionArg}
+                            {param name : 'exclude_directories' /}
+                            {param desc }
+                              True indicates directories should not be matched.
+                            {/param}
+                            {param default : 'True' /}
+                          {/call}
 
-        {/param}
+          {/param}
       {/call}
     {/param} // content
   {/call}

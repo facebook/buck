@@ -17,16 +17,16 @@
           Creates an immutable struct using the keyword arguments as attributes. It is used to group multiple values and/or functions together. Example:<br><pre class="language-python">s = struct(x = 2, y = 3)
           return s.x + getattr(s, "y")  # returns 5</pre>
         {/param}
-        {param args}
-                      {call buck.functionArg}
-                        {param name : 'kwargs' /}
-                        {param desc }
-                          the struct attributes.
-                        {/param}
-                        {param default : 'None' /}
-                      {/call}
+          {param args}
+                          {call buck.functionArg}
+                            {param name : 'kwargs' /}
+                            {param desc }
+                              the struct attributes.
+                            {/param}
+                            {param default : 'None' /}
+                          {/call}
 
-        {/param}
+          {/param}
       {/call}
     {/param} // content
   {/call}
