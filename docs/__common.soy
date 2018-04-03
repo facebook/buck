@@ -246,7 +246,7 @@ docsearch({
  * @param overview HTML description of the rule.
  * @param status one of FROZEN, UNFROZEN, or DEPRECATED to indicate the
        current level of support for the rule.
- * @param args HTML documentation for each arg for the rule.
+ * @param? args HTML documentation for each arg for the rule.
  *     Should be created using multiple applications of the {buck.arg}
  *     template.
  * @param? flavors HTML documentation for each flavor supported by the rule.
@@ -363,7 +363,7 @@ docsearch({
  * @param overview HTML description of the function.
  * @param status one of FROZEN, UNFROZEN, or DEPRECATED to indicate the
        current level of support for the rule.
- * @param args HTML documentation for each arg for the function.
+ * @param? args HTML documentation for each arg for the function.
  *     Should be created using multiple applications of the {buck.functionArg}
  *     template.
  * @param? examples HTML documentation that shows examples of the function
@@ -382,10 +382,12 @@ docsearch({
 {/switch}
 {$overview|noAutoescape}
 
-<h2>Arguments</h2>
-<ul class="{css arglist}">
-  {$args|noAutoescape}
-</ul>
+{if $args}
+  <h2>Arguments</h2>
+  <ul class="{css arglist}">
+    {$args|noAutoescape}
+  </ul>
+{/if}
 
 {if $examples}
   <h2>Examples</h2>
