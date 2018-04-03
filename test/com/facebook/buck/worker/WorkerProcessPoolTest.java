@@ -45,7 +45,7 @@ import org.junit.Test;
 
 public class WorkerProcessPoolTest {
 
-  private static final int WAIT_FOR_TEST_THREADS_TIMEOUT = 500;
+  private static final int WAIT_FOR_TEST_THREADS_TIMEOUT = 1000;
   private TestThreads testThreads;
 
   @Before
@@ -178,7 +178,7 @@ public class WorkerProcessPoolTest {
     pool.returnWorkerProcess(process2);
   }
 
-  @Test
+  @Test(timeout = WAIT_FOR_TEST_THREADS_TIMEOUT)
   public void canStartupMultipleWorkersInParallel() throws InterruptedException, IOException {
     ArrayBlockingQueue<Future<WorkerProcess>> workers = new ArrayBlockingQueue<>(1);
     WorkerProcessPool pool = createPool(2, workers);
@@ -198,7 +198,7 @@ public class WorkerProcessPoolTest {
     FakeWorkerProcess worker = new FakeWorkerProcess(ImmutableMap.of());
     workers.put(CompletableFuture.completedFuture(worker));
 
-    secondThread.join(WAIT_FOR_TEST_THREADS_TIMEOUT);
+    secondThread.join();
 
     // here, the second thread has finished running, and has thus added the worker it borrowed to
     // `createdWorkers`.
