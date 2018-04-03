@@ -32,6 +32,7 @@ public class BuckCommand {
       new BuckCommand("project", VERBOSITY_TAG, VERBOSITY_LEVEL);
   // Internal commands
   public static final BuckCommand QUERY = new BuckCommand("query", "--json");
+  public static final BuckCommand AUDIT = new BuckCommand("audit");
   public static final BuckCommand AUDIT_OWNER = new BuckCommand("audit", "owner", "--json");
 
   /** Command name passed to buck. */

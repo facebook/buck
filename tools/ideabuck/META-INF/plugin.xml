@@ -233,6 +233,8 @@
     <programRunner
             implementation="com.facebook.buck.intellij.ideabuck.configurations.TestProgramRunner"/>
     <runLineMarkerContributor language="JAVA" implementationClass="com.facebook.buck.intellij.ideabuck.actions.select.SelectedTestRunLineMarkerContributor"/>
+    <stepsBeforeRunProvider implementation="com.facebook.buck.intellij.ideabuck.run.BuckBuildBeforeRun" id="Buck.BeforeRunTask" order="first"/>
+    <runConfigurationExtension implementation="com.facebook.buck.intellij.ideabuck.run.BuckRunConfigurationExtension"/>
   </extensions>
 
   <extensions defaultExtensionNs="com.android.project">
