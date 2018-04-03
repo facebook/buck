@@ -87,13 +87,6 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
     boolean hasBuildFinished() throws IOException;
   }
 
-  /** Encapsulates a Thrift call */
-  @FunctionalInterface
-  public interface ThriftCall {
-
-    void apply() throws IOException;
-  }
-
   public MinionModeRunner(
       String coordinatorAddress,
       OptionalInt coordinatorPort,
@@ -174,22 +167,16 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
     }
 
     String minionId = generateMinionId(buildSlaveRunId);
-    try (ThriftCoordinatorClient client =
-            new ThriftCoordinatorClient(
-                coordinatorAddress, stampedeId, coordinatorConnectionTimeoutMillis);
+    try (ThriftCoordinatorClient client = newStartedThriftCoordinatorClient();
         Closeable healthCheck =
             heartbeatService.addCallback(
                 "MinionIsAlive", createHeartbeatCallback(client, minionId))) {
-      completionCheckingThriftCall(() -> client.start(coordinatorPort.getAsInt()));
-
       while (!finished.get()) {
         signalFinishedTargetsAndFetchMoreWork(minionId, client);
         Thread.sleep(minionPollLoopIntervalMillis);
       }
 
       LOG.info(String.format("Minion [%s] has exited signal/fetch work loop.", minionId));
-
-      completionCheckingThriftCall(() -> client.stop());
     }
 
     // At this point there is no more work to schedule, so wait for the build to finish.
@@ -199,6 +186,18 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
     Preconditions.checkNotNull(buildExecutor).shutdown();
 
     return exitCode.get();
+  }
+
+  private ThriftCoordinatorClient newStartedThriftCoordinatorClient() throws IOException {
+    ThriftCoordinatorClient client =
+        new ThriftCoordinatorClient(
+            coordinatorAddress, stampedeId, coordinatorConnectionTimeoutMillis);
+    try {
+      client.start(coordinatorPort.getAsInt());
+    } catch (ThriftException exception) {
+      handleThriftException(exception);
+    }
+    return client;
   }
 
   private HeartbeatCallback createHeartbeatCallback(
@@ -386,15 +385,6 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
         },
         // Rulekey should have already been computed so direct executor is fine.
         MoreExecutors.directExecutor());
-  }
-
-  private void completionCheckingThriftCall(ThriftCall thriftCall) throws IOException {
-    try {
-      thriftCall.apply();
-    } catch (ThriftException e) {
-      handleThriftException(e);
-      return;
-    }
   }
 
   private void handleThriftException(ThriftException e) throws IOException {

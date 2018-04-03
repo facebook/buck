@@ -157,13 +157,11 @@ public class ThriftCoordinatorClient implements Closeable {
     if (client == null) {
       // Immediately log the error, with stack trace. Otherwise might not appear
       // until Buck has finished shutting down if it crashed the application.
-      try {
-        throw new RuntimeException(
-            "Request received, but client was not started, or has already stopped.");
-      } catch (RuntimeException ex) {
-        LOG.error(ex);
-        throw ex;
-      }
+      RuntimeException exception =
+          new RuntimeException(
+              "Request received, but client was not started, or has already stopped.");
+      LOG.error(exception);
+      throw exception;
     }
 
     return client;
