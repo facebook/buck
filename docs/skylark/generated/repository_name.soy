@@ -1,0 +1,23 @@
+{namespace buck.skylark.repository_name}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'repository_name()' /}
+    {param navid: 'skylark/generated_repository_name' /}
+    {param prettify: true /}
+    {param description}
+      The name of the repository the rule or build extension is called from. For example, in packages that are called into existence inside of the cell <code>foo</code> it will return <code>@foo</code>. In packages in the main repository (or standalone project), it will be set to <code>@</code>.
+    {/param}
+    {param content}
+      {call buck.function}
+        {param status: 'UNFROZEN' /}
+        {param overview}
+          The name of the repository the rule or build extension is called from. For example, in packages that are called into existence inside of the cell <code>foo</code> it will return <code>@foo</code>. In packages in the main repository (or standalone project), it will be set to <code>@</code>.
+        {/param}
+        {param args}
+        {/param}
+      {/call}
+    {/param} // content
+  {/call}
+{/template}

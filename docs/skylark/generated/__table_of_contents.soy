@@ -37,6 +37,12 @@
                     {param page: 'package_name' /}
                     {param text: 'package_name()' /}
                 {/call}
+                {call navigation.link}
+                    {param currentnavid: $navid /}
+                    {param folder: 'skylark/generated' /}
+                    {param page: 'repository_name' /}
+                    {param text: 'repository_name()' /}
+                {/call}
 
   </ul>
 {/template}
