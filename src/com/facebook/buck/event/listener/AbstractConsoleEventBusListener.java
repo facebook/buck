@@ -221,8 +221,14 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     return publicAnnouncements;
   }
 
+  public boolean displaysEstimatedProgress() {
+    return false;
+  }
+
   public void setProgressEstimator(ProgressEstimator estimator) {
-    progressEstimator = Optional.of(estimator);
+    if (displaysEstimatedProgress()) {
+      progressEstimator = Optional.of(estimator);
+    }
   }
 
   protected String formatElapsedTime(long elapsedTimeMs) {

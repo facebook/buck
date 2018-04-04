@@ -124,7 +124,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
             clock.currentTimeMillis(),
             0L,
             buckFilesParsingEvents.values(),
-            getEstimatedProgressOfParsingBuckFiles(),
+            Optional.empty(),
             Optional.empty(),
             lines));
     printLines(lines);
@@ -176,7 +176,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         offsetMs,
         buildStarted,
         buildFinished,
-        getApproximateBuildProgress(),
+        Optional.empty(),
         Optional.empty(),
         lines);
 

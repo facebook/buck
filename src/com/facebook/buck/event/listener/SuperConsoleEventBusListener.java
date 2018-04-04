@@ -1085,4 +1085,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     stopRenderScheduler();
     render(); // Ensure final frame is rendered.
   }
+
+  @Override
+  public boolean displaysEstimatedProgress() {
+    return true;
+  }
 }

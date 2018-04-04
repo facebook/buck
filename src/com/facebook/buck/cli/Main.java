@@ -987,7 +987,8 @@ public final class Main {
           // to work for (e.g.) query anyway. ProgressEstimator has
           // special support for project so we have to include it
           // there too.
-          if (command.performsBuild() || command.subcommand instanceof ProjectCommand) {
+          if (consoleListener.displaysEstimatedProgress()
+              && (command.performsBuild() || command.subcommand instanceof ProjectCommand)) {
             ProgressEstimator progressEstimator =
                 new ProgressEstimator(
                     filesystem
