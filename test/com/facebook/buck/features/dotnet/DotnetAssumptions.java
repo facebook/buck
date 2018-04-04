@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.dotnet;
+package com.facebook.buck.features.dotnet;
 
 import static org.junit.Assume.assumeTrue;
 

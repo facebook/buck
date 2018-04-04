@@ -20,6 +20,6 @@ buck_module(
         "//third-party/java/infer-annotations:infer-annotations",
     ],
     visibility = [
-        "//test/com/facebook/buck/dotnet:",
+        "//test/com/facebook/buck/features/dotnet:",
     ],
 )

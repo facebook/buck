@@ -14,10 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.dotnet;
+package com.facebook.buck.features.dotnet;
 
-import static com.facebook.buck.dotnet.FrameworkVersion.NET35;
-import static com.facebook.buck.dotnet.FrameworkVersion.NET46;
+import static com.facebook.buck.features.dotnet.FrameworkVersion.NET35;
+import static com.facebook.buck.features.dotnet.FrameworkVersion.NET46;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 

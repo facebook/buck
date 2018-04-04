@@ -487,9 +487,9 @@
             and are deliberately isolated from Buck's core.
           -->
           <exclude name="com/facebook/buck/cli/bootstrapper/**" />
-          <exclude name="com/facebook/buck/dotnet/**" />
           <exclude name="com/facebook/buck/event/api/**" />
           <exclude name="com/facebook/buck/features/d/**" />
+          <exclude name="com/facebook/buck/features/dotnet/**" />
           <exclude name="com/facebook/buck/go/**" />
           <exclude name="com/facebook/buck/haskell/**" />
           <exclude name="com/facebook/buck/jvm/java/abi/source/**" />
@@ -539,7 +539,7 @@
   <target name="build-module-dotnet" depends="compile">
     <build-buck-module-jar module-name="dotnet">
       <module-javac-params>
-        <include name="com/facebook/buck/dotnet/**/*.java" />
+        <include name="com/facebook/buck/features/dotnet/**/*.java" />
       </module-javac-params>
     </build-buck-module-jar>
   </target>

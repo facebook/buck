@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.dotnet;
+package com.facebook.buck.features.dotnet;
 
 public enum FrameworkVersion {
   NET35("v3.5"),

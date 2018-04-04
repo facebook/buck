@@ -14,9 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.dotnet;
+package com.facebook.buck.features.dotnet;
 
-import static com.facebook.buck.dotnet.DotnetAssumptions.assumeCscIsAvailable;
+import static com.facebook.buck.features.dotnet.DotnetAssumptions.assumeCscIsAvailable;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.testutil.ProcessResult;

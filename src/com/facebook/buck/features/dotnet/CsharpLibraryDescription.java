@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.dotnet;
+package com.facebook.buck.features.dotnet;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;

@@ -14,10 +14,19 @@
  * under the License.
  */
 
-package com.facebook.buck.dotnet;
+package com.facebook.buck.features.dotnet;
 
-import com.facebook.buck.module.BuckModule;
+import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionCreationContext;
+import com.facebook.buck.rules.DescriptionProvider;
+import java.util.Arrays;
+import java.util.Collection;
+import org.pf4j.Extension;
 
-/** A modules that provides .NET build rules. */
-@BuckModule
-public class DotnetModule {}
+@Extension
+public class DotnetDescriptionsProvider implements DescriptionProvider {
+  @Override
+  public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
+    return Arrays.asList(new CsharpLibraryDescription(), new PrebuiltDotnetLibraryDescription());
+  }
+}
