@@ -18,6 +18,8 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.google.common.hash.HashCode;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 /**
@@ -30,6 +32,13 @@ public abstract class AbstractDefaultBuildTargetSourcePath implements BuildTarge
 
   @Override
   public abstract BuildTarget getTarget();
+
+  @Override
+  @Value.Parameter(value = false)
+  @Value.Default
+  public Optional<HashCode> getPrecomputedHash() {
+    return Optional.empty();
+  }
 
   @Override
   public int hashCode() {

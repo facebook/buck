@@ -20,8 +20,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 /**
@@ -36,6 +38,13 @@ public abstract class AbstractExplicitBuildTargetSourcePath implements BuildTarg
   public abstract BuildTarget getTarget();
 
   protected abstract Path getResolvedPath();
+
+  @Override
+  @Value.Parameter(value = false)
+  @Value.Default
+  public Optional<HashCode> getPrecomputedHash() {
+    return Optional.empty();
+  }
 
   @Override
   public int hashCode() {

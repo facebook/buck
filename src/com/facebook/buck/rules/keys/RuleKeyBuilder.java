@@ -164,7 +164,14 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
    */
   final RuleKeyBuilder<RULE_KEY> setSourcePathDirectly(SourcePath sourcePath) throws IOException {
     if (sourcePath instanceof BuildTargetSourcePath) {
-      return setPath(resolver.getFilesystem(sourcePath), resolver.getRelativePath(sourcePath));
+      Path relativePath = resolver.getRelativePath(sourcePath);
+      Optional<HashCode> precomputedHash =
+          ((BuildTargetSourcePath) sourcePath).getPrecomputedHash();
+      if (precomputedHash.isPresent()) {
+        hasher.putPath(relativePath, precomputedHash.get());
+        return this;
+      }
+      return setPath(resolver.getFilesystem(sourcePath), relativePath);
     } else if (sourcePath instanceof PathSourcePath) {
       Path ideallyRelativePath = resolver.getIdeallyRelativePath(sourcePath);
       if (ideallyRelativePath.isAbsolute()) {

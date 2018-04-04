@@ -18,6 +18,7 @@ package com.facebook.buck.rules.keys;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.file.RemoteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -53,6 +54,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -253,6 +257,41 @@ public class InputBasedRuleKeyFactoryTest {
         new TestInputBasedRuleKeyFactory(hashCache, pathResolver, ruleFinder).build(rule);
 
     assertThat(inputKey1, Matchers.not(Matchers.equalTo(inputKey2)));
+  }
+
+  @Test
+  public void computingRuleKeyForRemoteFileShouldNotConsultHashLoader() throws URISyntaxException {
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    BuildRule dep =
+        new RemoteFile(
+            BuildTargetFactory.newInstance("//:dep"),
+            filesystem,
+            TestBuildRuleParams.create(),
+            (eventBus, uri, output) -> false,
+            new URI("http://www.facebook.com"),
+            Hashing.sha1().hashLong(42),
+            "output.txt",
+            RemoteFile.Type.EXPLODED_ZIP);
+    resolver.addToIndex(dep);
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    BuildRuleParams params =
+        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(dep));
+    BuildRule rule =
+        new NoopBuildRuleWithDeclaredAndExtraDeps(target, filesystem, params) {
+          @AddToRuleKey
+          RuleKeyAppendableWithInput input =
+              new RuleKeyAppendableWithInput(dep.getSourcePathToOutput());
+        };
+
+    FakeFileHashCache hashCache = new FakeFileHashCache(ImmutableMap.of());
+    TestInputBasedRuleKeyFactory keyFactory =
+        new TestInputBasedRuleKeyFactory(hashCache, pathResolver, ruleFinder);
+    keyFactory.build(rule);
   }
 
   @Test

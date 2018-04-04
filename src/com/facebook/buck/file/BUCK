@@ -25,6 +25,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/rules:types",
         "//test/com/facebook/buck/file:",
         "//test/com/facebook/buck/maven:maven",
+        "//test/com/facebook/buck/rules/keys:keys",
     ],
     deps = [
         "//src/com/facebook/buck/event:event",

@@ -19,6 +19,7 @@ package com.facebook.buck.file;
 import static com.facebook.buck.util.environment.Platform.WINDOWS;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assume.assumeThat;
@@ -31,6 +32,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.FakeBuildContext;
@@ -54,6 +56,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Optional;
 import javax.annotation.Nullable;
 import org.easymock.EasyMock;
 import org.hamcrest.BaseMatcher;
@@ -88,6 +91,22 @@ public class RemoteFileTest {
         FakeBuildContext.withSourcePathResolver(pathResolver), buildableContext);
 
     EasyMock.verify(buildableContext);
+  }
+
+  @Test
+  public void shouldReturnSha1AsPrecomputedHashForSourcePathToOutput() {
+    Downloader downloader = new ExplodingDownloader();
+    BuildTarget target = BuildTargetFactory.newInstance("//cheese:cake");
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    HashCode hash = Hashing.sha1().hashLong(42);
+    RemoteFile remoteFile =
+        new RemoteFileBuilder(downloader, target)
+            .setUrl("http://www.facebook.com/")
+            .setSha1(hash)
+            .build(resolver);
+    assertThat(
+        ((BuildTargetSourcePath) remoteFile.getSourcePathToOutput()).getPrecomputedHash(),
+        equalTo(Optional.of(hash)));
   }
 
   @Test

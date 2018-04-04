@@ -20,7 +20,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.hash.HashCode;
 import java.util.Objects;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 /** A {@link BuildTargetSourcePath} which resolves to the value of another SourcePath. */
@@ -32,6 +34,13 @@ public abstract class AbstractForwardingBuildTargetSourcePath implements BuildTa
   public abstract BuildTarget getTarget();
 
   protected abstract SourcePath getDelegate();
+
+  @Override
+  @Value.Parameter(value = false)
+  @Value.Default
+  public Optional<HashCode> getPrecomputedHash() {
+    return Optional.empty();
+  }
 
   @Override
   public int hashCode() {
