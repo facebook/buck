@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.d;
+package com.facebook.buck.features.d;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;

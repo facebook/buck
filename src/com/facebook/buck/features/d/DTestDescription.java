@@ -14,9 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.d;
+package com.facebook.buck.features.d;
 
-import static com.facebook.buck.d.DDescriptionUtils.SOURCE_LINK_TREE;
+import static com.facebook.buck.features.d.DDescriptionUtils.SOURCE_LINK_TREE;
 
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;

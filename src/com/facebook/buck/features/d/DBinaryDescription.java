@@ -14,51 +14,55 @@
  * under the License.
  */
 
-package com.facebook.buck.d;
+package com.facebook.buck.features.d;
 
-import com.facebook.buck.cxx.Archive;
-import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import static com.facebook.buck.features.d.DDescriptionUtils.SOURCE_LINK_TREE;
+
+import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
-import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.CommonDescriptionArg;
-import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.versions.VersionPropagator;
+import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
-import java.util.Optional;
+import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
 
-public class DLibraryDescription
-    implements Description<DLibraryDescriptionArg>,
-        ImplicitDepsInferringDescription<DLibraryDescriptionArg>,
-        VersionPropagator<DLibraryDescriptionArg> {
+public class DBinaryDescription
+    implements Description<DBinaryDescriptionArg>,
+        ImplicitDepsInferringDescription<DBinaryDescription.AbstractDBinaryDescriptionArg>,
+        VersionRoot<DBinaryDescriptionArg> {
+
+  public static final Flavor BINARY_FLAVOR = InternalFlavor.of("binary");
 
   private final ToolchainProvider toolchainProvider;
   private final DBuckConfig dBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
 
-  public DLibraryDescription(
+  public DBinaryDescription(
       ToolchainProvider toolchainProvider, DBuckConfig dBuckConfig, CxxBuckConfig cxxBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.dBuckConfig = dBuckConfig;
@@ -66,8 +70,8 @@ public class DLibraryDescription
   }
 
   @Override
-  public Class<DLibraryDescriptionArg> getConstructorArgType() {
-    return DLibraryDescriptionArg.class;
+  public Class<DBinaryDescriptionArg> getConstructorArgType() {
+    return DBinaryDescriptionArg.class;
   }
 
   @Override
@@ -75,104 +79,62 @@ public class DLibraryDescription
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
       BuildRuleParams params,
-      DLibraryDescriptionArg args) {
+      DBinaryDescriptionArg args) {
+
     BuildRuleResolver buildRuleResolver = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
-    if (buildTarget.getFlavors().contains(DDescriptionUtils.SOURCE_LINK_TREE)) {
+    if (buildTarget.getFlavors().contains(SOURCE_LINK_TREE)) {
       return DDescriptionUtils.createSourceSymlinkTree(
           buildTarget, projectFilesystem, pathResolver, ruleFinder, args.getSrcs());
     }
 
-    BuildTarget sourceTreeTarget =
-        buildTarget.withAppendedFlavors(DDescriptionUtils.SOURCE_LINK_TREE);
-    DIncludes dIncludes =
-        DIncludes.builder()
-            .setLinkTree(DefaultBuildTargetSourcePath.of(sourceTreeTarget))
-            .setSources(args.getSrcs().getPaths())
-            .build();
+    SymlinkTree sourceTree =
+        (SymlinkTree)
+            buildRuleResolver.requireRule(DDescriptionUtils.getSymlinkTreeTarget(buildTarget));
 
-    if (buildTarget.getFlavors().contains(CxxDescriptionEnhancer.STATIC_FLAVOR)) {
-      buildRuleResolver.requireRule(sourceTreeTarget);
-      return createStaticLibraryBuildRule(
-          buildTarget,
-          projectFilesystem,
-          params,
-          buildRuleResolver,
-          pathResolver,
-          ruleFinder,
-          /* compilerFlags */ ImmutableList.of(),
-          args.getSrcs(),
-          dIncludes,
-          PicType.PDC);
-    }
-
-    return new DLibrary(buildTarget, projectFilesystem, params, buildRuleResolver, dIncludes);
-  }
-
-  /** @return a BuildRule that creates a static library. */
-  private BuildRule createStaticLibraryBuildRule(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
-      ImmutableList<String> compilerFlags,
-      SourceList sources,
-      DIncludes dIncludes,
-      PicType pic) {
-
-    CxxPlatform cxxPlatform = getCxxPlatform();
-
-    ImmutableList<SourcePath> compiledSources =
-        DDescriptionUtils.sourcePathsForCompiledSources(
-            buildTarget,
+    // Create a rule that actually builds the binary, and add that
+    // rule to the index.
+    CxxLink nativeLinkable =
+        DDescriptionUtils.createNativeLinkable(
+            context.getCellPathResolver(),
+            buildTarget.withAppendedFlavors(BINARY_FLAVOR),
             projectFilesystem,
             params,
-            ruleResolver,
-            pathResolver,
-            ruleFinder,
-            cxxPlatform,
+            buildRuleResolver,
+            getCxxPlatform(),
             dBuckConfig,
-            compilerFlags,
-            sources,
-            dIncludes);
+            cxxBuckConfig,
+            /* compilerFlags */ ImmutableList.of(),
+            args.getSrcs(),
+            args.getLinkerFlags(),
+            DIncludes.builder()
+                .setLinkTree(sourceTree.getSourcePathToOutput())
+                .addAllSources(args.getSrcs().getPaths())
+                .build());
+    buildRuleResolver.addToIndex(nativeLinkable);
 
-    // Write a build rule to create the archive for this library.
-    BuildTarget staticTarget =
-        CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
-            buildTarget, cxxPlatform.getFlavor(), pic);
+    // Create a Tool for the executable.
+    CommandTool.Builder executableBuilder = new CommandTool.Builder();
+    executableBuilder.addArg(SourcePathArg.of(nativeLinkable.getSourcePathToOutput()));
 
-    Path staticLibraryPath =
-        CxxDescriptionEnhancer.getStaticLibraryPath(
-            projectFilesystem,
-            buildTarget,
-            cxxPlatform.getFlavor(),
-            pic,
-            Optional.empty(),
-            cxxPlatform.getStaticLibraryExtension(),
-            cxxBuckConfig.isUniqueLibraryNameEnabled());
-
-    return Archive.from(
-        staticTarget,
+    // Return a BinaryBuildRule implementation, so that this works
+    // with buck run etc.
+    return new DBinary(
+        buildTarget,
         projectFilesystem,
-        ruleResolver,
-        ruleFinder,
-        cxxPlatform,
-        cxxBuckConfig.getArchiveContents(),
-        staticLibraryPath,
-        compiledSources,
-        /* cacheable */ true);
+        params.withExtraDeps(ImmutableSortedSet.of(nativeLinkable)),
+        executableBuilder.build(),
+        nativeLinkable.getSourcePathToOutput());
   }
 
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      DLibraryDescriptionArg constructorArg,
+      AbstractDBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(getCxxPlatform()));
@@ -186,7 +148,7 @@ public class DLibraryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractDLibraryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractDBinaryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
     SourceList getSrcs();
 
     ImmutableList<String> getLinkerFlags();

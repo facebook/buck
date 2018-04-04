@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.d;
+package com.facebook.buck.features.d;
 
 import static org.junit.Assert.assertThat;
 
@@ -27,13 +27,13 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-public class DTestDescriptionTest {
+public class DBinaryDescriptionTest {
 
   @Test
   public void cxxLinkerInImplicitTimeDeps() {
     CxxPlatform cxxPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
-    DTestBuilder builder =
-        new DTestBuilder(
+    DBinaryBuilder builder =
+        new DBinaryBuilder(
             BuildTargetFactory.newInstance("//:rule"),
             new DBuckConfig(FakeBuckConfig.builder().build()),
             cxxPlatform);

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.d;
+package com.facebook.buck.features.d;
 
 import static org.junit.Assert.assertTrue;
 
