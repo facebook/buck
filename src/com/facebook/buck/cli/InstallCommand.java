@@ -1051,4 +1051,9 @@ public class InstallCommand extends BuildCommand {
       return cell.getFilesystem().resolve(getTriggerPath(cell));
     }
   }
+
+  @Override
+  public boolean performsBuild() {
+    return true;
+  }
 }

@@ -371,4 +371,9 @@ public abstract class AbstractCommand implements Command {
                 resource.getMaximumResourceAmounts().getCpu(), 16),
         ForkJoinPool::shutdownNow);
   }
+
+  @Override
+  public boolean performsBuild() {
+    return false;
+  }
 }

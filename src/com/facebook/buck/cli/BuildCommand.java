@@ -1458,4 +1458,9 @@ public class BuildCommand extends AbstractCommand {
       super(message);
     }
   }
+
+  @Override
+  public boolean performsBuild() {
+    return true;
+  }
 }

@@ -982,13 +982,20 @@ public final class Main {
                   ExecutorPool.PROJECT,
                   projectExecutorService.get());
 
-          ProgressEstimator progressEstimator =
-              new ProgressEstimator(
-                  filesystem
-                      .resolve(filesystem.getBuckPaths().getBuckOut())
-                      .resolve(ProgressEstimator.PROGRESS_ESTIMATIONS_JSON),
-                  buildEventBus);
-          consoleListener.setProgressEstimator(progressEstimator);
+          // No need to kick off ProgressEstimator for commands that
+          // don't build anything -- it has overhead and doesn't seem
+          // to work for (e.g.) query anyway. ProgressEstimator has
+          // special support for project so we have to include it
+          // there too.
+          if (command.performsBuild() || command.subcommand instanceof ProjectCommand) {
+            ProgressEstimator progressEstimator =
+                new ProgressEstimator(
+                    filesystem
+                        .resolve(filesystem.getBuckPaths().getBuckOut())
+                        .resolve(ProgressEstimator.PROGRESS_ESTIMATIONS_JSON),
+                    buildEventBus);
+            consoleListener.setProgressEstimator(progressEstimator);
+          }
 
           BuildEnvironmentDescription buildEnvironmentDescription =
               getBuildEnvironmentDescription(

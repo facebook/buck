@@ -64,4 +64,6 @@ public interface Command {
       ScheduledExecutorService scheduledExecutorService);
 
   void printUsage(PrintStream stream);
+
+  boolean performsBuild();
 }

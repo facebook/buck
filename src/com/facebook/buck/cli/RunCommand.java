@@ -209,4 +209,9 @@ public final class RunCommand extends AbstractCommand {
   public boolean isReadOnly() {
     return false;
   }
+
+  @Override
+  public boolean performsBuild() {
+    return true;
+  }
 }

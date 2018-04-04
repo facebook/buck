@@ -812,4 +812,9 @@ public class TestCommand extends BuildCommand {
       return getDefaultMetaVariable();
     }
   }
+
+  @Override
+  public boolean performsBuild() {
+    return true;
+  }
 }

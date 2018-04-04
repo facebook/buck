@@ -159,4 +159,12 @@ public abstract class AbstractContainerCommand implements Command {
     }
     return getSubcommand().get().getEventListeners(executorPool, scheduledExecutorService);
   }
+
+  @Override
+  public boolean performsBuild() {
+    if (!getSubcommand().isPresent()) {
+      return false;
+    }
+    return getSubcommand().get().performsBuild();
+  }
 }
