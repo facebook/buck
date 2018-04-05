@@ -21,16 +21,22 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
+import com.google.common.util.concurrent.Futures;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 
 /** Test and demonstration of {@link DefaultAsyncTransformationEngine} */
 public class DefaultAsyncTransformationEngineTest {
+
+  @Rule public Timeout timeout = Timeout.seconds(10);
 
   private MutableGraph<Long> graph;
   private TrackingCache cache;
@@ -105,7 +111,7 @@ public class DefaultAsyncTransformationEngineTest {
         new DefaultAsyncTransformationEngine<>(transformer, graph.nodes().size());
     assertEquals((Long) 3L, engine.computeUnchecked(3L));
 
-    assertEquals(0, engine.computationIndex.size());
+    assertComputationIndexBecomesEmpty(engine.computationIndex);
   }
 
   @Test
@@ -115,7 +121,7 @@ public class DefaultAsyncTransformationEngineTest {
         new DefaultAsyncTransformationEngine<>(transformer, graph.nodes().size());
     assertEquals((Long) 19L, engine.computeUnchecked(1L));
 
-    assertEquals(0, engine.computationIndex.size());
+    assertComputationIndexBecomesEmpty(engine.computationIndex);
   }
 
   @Test
@@ -144,7 +150,7 @@ public class DefaultAsyncTransformationEngineTest {
     assertEquals(result, newResult);
 
     // all Futures should be removed
-    assertEquals(0, engine.computationIndex.size());
+    assertComputationIndexBecomesEmpty(engine.computationIndex);
     assertEquals(1, cache.getSize());
     assertEquals(1, cache.hitStats.get((Long) 3L).intValue());
   }
@@ -187,12 +193,28 @@ public class DefaultAsyncTransformationEngineTest {
     assertEquals((Long) 19L, engine.computeUnchecked(1L));
 
     // all Futures should be removed
-    assertEquals(0, engine.computationIndex.size());
+    assertComputationIndexBecomesEmpty(engine.computationIndex);
     assertEquals(5, cache.getSize());
     assertEquals(0, cache.hitStats.get((Long) 1L).intValue());
     assertEquals(0, cache.hitStats.get((Long) 2L).intValue());
     assertEquals(1, cache.hitStats.get((Long) 5L).intValue());
     assertEquals(1, cache.hitStats.get((Long) 3L).intValue());
     assertEquals(1, cache.hitStats.get((Long) 4L).intValue());
+  }
+
+  /**
+   * Asserts that the computationIndex of the {@link AsyncTransformationEngine} eventually becomes
+   * empty.
+   *
+   * @param computationIndex the computationIndex of the engine
+   */
+  private static void assertComputationIndexBecomesEmpty(
+      ConcurrentHashMap<Long, CompletableFuture<Long>> computationIndex) {
+    // wait for all futures to complete in the computation.
+    // we can have situation where the computation was completed by using the cache.
+    Futures.getUnchecked(
+        CompletableFuture.allOf(computationIndex.values().toArray(new CompletableFuture[] {})));
+
+    assertEquals(0, computationIndex.size());
   }
 }
