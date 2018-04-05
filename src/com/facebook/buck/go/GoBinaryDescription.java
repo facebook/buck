@@ -83,7 +83,6 @@ public class GoBinaryDescription
         params,
         context.getBuildRuleResolver(),
         goBuckConfig,
-        goToolchain,
         getCxxPlatform(!args.getCgoDeps().isEmpty()),
         args.getSrcs(),
         args.getCompilerFlags(),

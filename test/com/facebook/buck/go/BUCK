@@ -7,6 +7,7 @@ java_test(
         "GOROOT": read_config("go", "root", ""),
     },
     deps = [
+        ":testutils",
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:rules",
@@ -100,7 +101,6 @@ java_test(
         "//src/com/facebook/buck/worker:worker_job_params",
         "//src/com/facebook/buck/worker:worker_pool_factory",
         "//src/com/facebook/buck/worker:worker_process",
-        "//test/com/facebook/buck/go:assumptions",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",
         "//third-party/java/aether:aether-api",
@@ -136,6 +136,7 @@ java_test(
         exclude = ["*IntegrationTest.java"],
     ),
     deps = [
+        ":testutils",
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/apple/xcode:xcode",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
@@ -194,12 +195,14 @@ java_test(
         "//src/com/facebook/buck/worker:worker_process",
         "//test/com/facebook/buck/config:FakeBuckConfig",
         "//test/com/facebook/buck/cxx/toolchain:testutil",
+        "//test/com/facebook/buck/io:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/model:testutil",
         "//test/com/facebook/buck/rules:testutil",
         "//test/com/facebook/buck/shell:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",
+        "//test/com/facebook/buck/util:testutil",
         "//third-party/java/asm:asm",
         "//third-party/java/dd-plist:dd-plist",
         "//third-party/java/guava:guava",
@@ -219,10 +222,11 @@ java_test(
 )
 
 java_library(
-    name = "assumptions",
-    srcs = [
-        "GoAssumptions.java",
-    ],
+    name = "testutils",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["*Test.java"],
+    ),
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:utils",

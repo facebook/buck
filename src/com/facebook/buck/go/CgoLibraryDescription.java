@@ -105,7 +105,7 @@ public class CgoLibraryDescription
         platform,
         args,
         args.getDeps(),
-        goToolchain.getCGo(),
+        platform.getCGo(),
         args.getPackageName()
             .map(Paths::get)
             .orElse(goBuckConfig.getDefaultPackageName(buildTarget)));

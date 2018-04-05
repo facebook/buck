@@ -143,7 +143,7 @@ public class GoTestDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      GoToolchain goToolchain,
+      GoPlatform platform,
       ImmutableSet<SourcePath> srcs,
       ImmutableMap<Path, ImmutableMap<String, Path>> coverVariables,
       GoTestCoverStep.Mode coverageMode,
@@ -152,7 +152,7 @@ public class GoTestDescription
     Tool testMainGenerator =
         GoDescriptors.getTestMainGenerator(
             goBuckConfig,
-            goToolchain,
+            platform,
             getCxxPlatform(!cgoDeps.isEmpty()),
             buildTarget,
             projectFilesystem,
@@ -218,7 +218,7 @@ public class GoTestDescription
                           pathResolver,
                           platform,
                           args.getSrcs(),
-                          goToolchain.getCover(),
+                          platform.getCover(),
                           coverage));
 
       coverVariables = coverSource.getVariables();
@@ -247,7 +247,6 @@ public class GoTestDescription
             projectFilesystem,
             params.copyAppendingExtraDeps(extraDeps.build()),
             resolver,
-            goToolchain,
             srcs.build(),
             coverVariables,
             coverageMode,
@@ -274,7 +273,6 @@ public class GoTestDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      GoToolchain goToolchain,
       ImmutableSet<SourcePath> srcs,
       ImmutableMap<String, Path> coverVariables,
       GoTestCoverStep.Mode coverageMode,
@@ -293,7 +291,7 @@ public class GoTestDescription
             projectFilesystem,
             params,
             resolver,
-            goToolchain,
+            platform,
             srcs,
             ImmutableMap.of(packageName, coverVariables),
             coverageMode,
@@ -308,7 +306,6 @@ public class GoTestDescription
                 .withExtraDeps(ImmutableSortedSet.of(generatedTestMain)),
             resolver,
             goBuckConfig,
-            goToolchain,
             getCxxPlatform(!args.getCgoDeps().isEmpty()),
             ImmutableSet.of(generatedTestMain.getSourcePathToOutput()),
             args.getCompilerFlags(),
@@ -368,7 +365,6 @@ public class GoTestDescription
       GoPlatform platform) {
     Path packageName = getGoPackageName(resolver, buildTarget, args);
     GoCompile testLibrary;
-    GoToolchain goToolchain = getGoToolchain();
     if (args.getLibrary().isPresent()) {
       // We should have already type-checked the arguments in the base rule.
       GoLibraryDescriptionArg libraryArg =
@@ -398,7 +394,6 @@ public class GoTestDescription
               testTargetParams,
               resolver,
               goBuckConfig,
-              goToolchain,
               packageName,
               ImmutableSet.<SourcePath>builder().addAll(libraryArg.getSrcs()).addAll(srcs).build(),
               ImmutableList.<String>builder()
@@ -429,7 +424,6 @@ public class GoTestDescription
               params,
               resolver,
               goBuckConfig,
-              goToolchain,
               packageName,
               srcs,
               args.getCompilerFlags(),

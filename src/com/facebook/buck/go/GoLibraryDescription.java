@@ -131,7 +131,6 @@ public class GoLibraryDescription
           params,
           context.getBuildRuleResolver(),
           goBuckConfig,
-          goToolchain,
           args.getPackageName()
               .map(Paths::get)
               .orElse(goBuckConfig.getDefaultPackageName(buildTarget)),

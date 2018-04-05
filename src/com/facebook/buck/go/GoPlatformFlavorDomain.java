@@ -72,15 +72,19 @@ public class GoPlatformFlavorDomain {
 
   private ImmutableMap<String, Platform> goOsValues;
   private ImmutableMap<String, Architecture> goArchValues;
+  private GoPlatformFactory platformFactory;
 
   public GoPlatformFlavorDomain(
-      Map<String, Platform> additionalOsValues, Map<String, Architecture> additionalArchValues) {
+      Map<String, Platform> additionalOsValues,
+      Map<String, Architecture> additionalArchValues,
+      GoPlatformFactory platformFactory) {
     this.goOsValues = MoreMaps.merge(GOOS_TO_PLATFORM_LIST, additionalOsValues);
     this.goArchValues = MoreMaps.merge(GOARCH_TO_ARCH_LIST, additionalArchValues);
+    this.platformFactory = platformFactory;
   }
 
-  public GoPlatformFlavorDomain() {
-    this(ImmutableMap.of(), ImmutableMap.of());
+  public GoPlatformFlavorDomain(GoPlatformFactory platformFactory) {
+    this(ImmutableMap.of(), ImmutableMap.of(), platformFactory);
   }
 
   public Optional<GoPlatform> getValue(Flavor flavor) {
@@ -93,7 +97,7 @@ public class GoPlatformFlavorDomain {
     Architecture arch = goArchValues.get(components[1]);
     if (os != null && arch != null) {
       return Optional.of(
-          GoPlatform.builder().setGoOs(components[0]).setGoArch(components[1]).build());
+          platformFactory.getPlatform(components[0], components[1], GoBuckConfig.SECTION));
     }
     return Optional.empty();
   }
@@ -134,9 +138,7 @@ public class GoPlatformFlavorDomain {
     }
 
     return Optional.of(
-        GoPlatform.builder()
-            .setGoOs(osValue.get().getKey())
-            .setGoArch(archValue.get().getKey())
-            .build());
+        platformFactory.getPlatform(
+            osValue.get().getKey(), archValue.get().getKey(), GoBuckConfig.SECTION));
   }
 }

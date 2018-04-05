@@ -40,18 +40,15 @@ public class GoListStep extends ShellStep {
     XTestGoFiles
   }
 
-  private final GoToolchain goToolchain;
   private final List<FileType> fileTypes;
   private final GoPlatform platform;
 
   public GoListStep(
       BuildTarget buildTarget,
       Path workingDirectory,
-      GoToolchain goToolchain,
       GoPlatform platform,
       List<FileType> fileTypes) {
     super(Optional.of(buildTarget), workingDirectory);
-    this.goToolchain = goToolchain;
     this.platform = platform;
     this.fileTypes = fileTypes;
   }
@@ -60,7 +57,7 @@ public class GoListStep extends ShellStep {
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> commandBuilder =
         ImmutableList.<String>builder()
-            .add(goToolchain.getGoRoot().resolve("bin").resolve("go").toString())
+            .add(platform.getGoRoot().resolve("bin").resolve("go").toString())
             .add("list")
             .add("-f")
             .add(
@@ -90,7 +87,7 @@ public class GoListStep extends ShellStep {
     return ImmutableMap.<String, String>builder()
         // The go list command relies on these environment variables, so they are set here
         // in case the inherited/default ones are wrong
-        .put("GOROOT", goToolchain.getGoRoot().toString())
+        .put("GOROOT", platform.getGoRoot().toString())
         .put("GOOS", platform.getGoOs())
         .put("GOARCH", platform.getGoArch())
         .build();

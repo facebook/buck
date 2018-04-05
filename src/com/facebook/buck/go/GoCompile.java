@@ -71,7 +71,6 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   private final SymlinkTree symlinkTree;
   private final Path output;
-  private final GoToolchain goToolchain;
   private final List<FileType> goFileTypes;
 
   public GoCompile(
@@ -83,7 +82,6 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       ImmutableMap<Path, Path> importPathMap,
       ImmutableSet<SourcePath> srcs,
       ImmutableSet<SourcePath> generatedSrcs,
-      GoToolchain goToolchain,
       ImmutableList<String> compilerFlags,
       ImmutableList<String> assemblerFlags,
       GoPlatform platform,
@@ -96,12 +94,11 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.symlinkTree = symlinkTree;
     this.packageName = packageName;
     this.compilerFlags = compilerFlags;
-    this.goToolchain = goToolchain;
-    this.compiler = goToolchain.getCompiler();
+    this.compiler = platform.getCompiler();
     this.assemblerFlags = assemblerFlags;
-    this.assemblerIncludeDirs = goToolchain.getAssemblerIncludeDirs();
-    this.assembler = goToolchain.getAssembler();
-    this.packer = goToolchain.getPacker();
+    this.assemblerIncludeDirs = platform.getAssemblerIncludeDirs();
+    this.assembler = platform.getAssembler();
+    this.packer = platform.getPacker();
     this.platform = platform;
     this.output =
         BuildTargets.getGenPath(
@@ -176,7 +173,6 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
               rawCompileSrcs,
               getSourceFiles(generatedSrcs, context),
               getBuildTarget(),
-              goToolchain,
               platform,
               goFileTypes);
       steps.addAll(filteredCompileSrcs.getFilterSteps());
@@ -201,7 +197,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     if (!rawAsmSrcs.isEmpty()) {
       FilteredSourceFiles filteredAsmSrcs =
           new FilteredSourceFiles(
-              rawAsmSrcs, getBuildTarget(), goToolchain, platform, Arrays.asList(FileType.SFiles));
+              rawAsmSrcs, getBuildTarget(), platform, Arrays.asList(FileType.SFiles));
       steps.addAll(filteredAsmSrcs.getFilterSteps());
       Path asmIncludeDir =
           BuildTargets.getScratchPath(

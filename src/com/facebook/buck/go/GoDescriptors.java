@@ -101,7 +101,6 @@ abstract class GoDescriptors {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       GoBuckConfig goBuckConfig,
-      GoToolchain goToolchain,
       Path packageName,
       ImmutableSet<SourcePath> srcs,
       List<String> compilerFlags,
@@ -164,7 +163,6 @@ abstract class GoDescriptors {
                 .collect(ImmutableList.toImmutableList())),
         srcs,
         generatedSrcBuilder.build(),
-        goToolchain,
         ImmutableList.copyOf(compilerFlags),
         ImmutableList.copyOf(assemblerFlags),
         platform,
@@ -205,7 +203,6 @@ abstract class GoDescriptors {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       GoBuckConfig goBuckConfig,
-      GoToolchain goToolchain,
       CxxPlatform cxxPlatform,
       ImmutableSet<SourcePath> srcs,
       List<String> compilerFlags,
@@ -222,7 +219,6 @@ abstract class GoDescriptors {
             params,
             resolver,
             goBuckConfig,
-            goToolchain,
             Paths.get("main"),
             srcs,
             compilerFlags,
@@ -277,14 +273,14 @@ abstract class GoDescriptors {
         cxxLinker,
         symlinkTree,
         library,
-        goToolchain.getLinker(),
+        platform.getLinker(),
         ImmutableList.copyOf(linkerFlags),
         platform);
   }
 
   static Tool getTestMainGenerator(
       GoBuckConfig goBuckConfig,
-      GoToolchain goToolchain,
+      GoPlatform platform,
       CxxPlatform cxxPlatform,
       BuildTarget sourceBuildTarget,
       ProjectFilesystem projectFilesystem,
@@ -325,13 +321,12 @@ abstract class GoDescriptors {
                       .withExtraDeps(ImmutableSortedSet.of(writeFile)),
                   resolver,
                   goBuckConfig,
-                  goToolchain,
                   cxxPlatform,
                   ImmutableSet.of(writeFile.getSourcePathToOutput()),
                   ImmutableList.of(),
                   ImmutableList.of(),
                   ImmutableList.of(),
-                  goToolchain.getDefaultPlatform(),
+                  platform,
                   cgoDeps);
             });
 

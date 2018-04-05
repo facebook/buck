@@ -144,14 +144,7 @@ public class GoDescriptorsTest {
 
     BuildRuleParams params = TestBuildRuleParams.create();
     GoBuckConfig goBuckConfig = new GoBuckConfig(FakeBuckConfig.builder().build());
-    GoPlatform goPlatform = GoPlatform.builder().setGoArch("amd64").setGoOs("linux").build();
-    GoToolchain goToolchain =
-        GoToolchain.of(
-            goBuckConfig,
-            new GoPlatformFlavorDomain(),
-            goPlatform,
-            tmpPath.getRoot(),
-            tmpPath.getRoot().resolve("go"));
+    GoPlatform goPlatform = GoTestUtils.DEFAULT_PLATFORM.withGoArch("amd64").withGoOs("linux");
 
     GoCompile compile =
         GoDescriptors.createGoCompileRule(
@@ -160,7 +153,6 @@ public class GoDescriptorsTest {
             params,
             resolver,
             goBuckConfig,
-            goToolchain,
             Paths.get("package"),
             ImmutableSet.of(
                 PathSourcePath.of(filesystem, Paths.get("not_build_target.go")),
@@ -199,14 +191,7 @@ public class GoDescriptorsTest {
 
     BuildRuleParams params = TestBuildRuleParams.create();
     GoBuckConfig goBuckConfig = new GoBuckConfig(FakeBuckConfig.builder().build());
-    GoPlatform goPlatform = GoPlatform.builder().setGoArch("amd64").setGoOs("linux").build();
-    GoToolchain goToolchain =
-        GoToolchain.of(
-            goBuckConfig,
-            new GoPlatformFlavorDomain(),
-            goPlatform,
-            tmpPath.getRoot(),
-            tmpPath.getRoot().resolve("go"));
+    GoPlatform goPlatform = GoTestUtils.DEFAULT_PLATFORM.withGoArch("amd64").withGoOs("linux");
 
     GoBinary binary =
         GoDescriptors.createGoBinaryRule(
@@ -215,7 +200,6 @@ public class GoDescriptorsTest {
             params,
             resolver,
             goBuckConfig,
-            goToolchain,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableSet.of(
                 PathSourcePath.of(filesystem, Paths.get("not_build_target.go")),

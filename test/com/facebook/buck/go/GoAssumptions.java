@@ -73,6 +73,7 @@ abstract class GoAssumptions {
                   new ExecutableFinder(),
                   TestRuleKeyConfigurationFactory.create()))
           .get()
+          .getDefaultPlatform()
           .getCompiler();
     } catch (HumanReadableException e) {
       exception = e;

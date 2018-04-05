@@ -28,7 +28,7 @@ import java.util.Optional;
 
 public class GoBuckConfig {
 
-  private static final String SECTION = "go";
+  static final String SECTION = "go";
 
   private final BuckConfig delegate;
 
@@ -40,20 +40,8 @@ public class GoBuckConfig {
     return delegate.getValue(SECTION, "default_platform");
   }
 
-  Optional<Path> getGoRoot() {
-    return delegate.getPath(SECTION, "root");
-  }
-
   public BuckConfig getDelegate() {
     return delegate;
-  }
-
-  public Optional<Path> getPath(String name) {
-    return delegate.getPath(SECTION, name);
-  }
-
-  public Optional<String> getValue(String name) {
-    return delegate.getValue(SECTION, name);
   }
 
   Path getDefaultPackageName(BuildTarget target) {
@@ -73,9 +61,5 @@ public class GoBuckConfig {
 
   Optional<Tool> getGoTestMainGenerator(BuildRuleResolver resolver) {
     return delegate.getView(ToolConfig.class).getTool(SECTION, "test_main_gen", resolver);
-  }
-
-  public Optional<Path> getTool() {
-    return delegate.getPath(SECTION, "tool");
   }
 }
