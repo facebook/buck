@@ -19,6 +19,8 @@ package com.facebook.buck.go;
 import static org.junit.Assume.assumeNoException;
 
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -64,7 +66,12 @@ abstract class GoAssumptions {
       }
       new GoToolchainFactory()
           .createToolchain(
-              new ToolchainProviderBuilder().build(),
+              new ToolchainProviderBuilder()
+                  .withToolchain(
+                      CxxPlatformsProvider.DEFAULT_NAME,
+                      CxxPlatformsProvider.of(
+                          CxxPlatformUtils.DEFAULT_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORMS))
+                  .build(),
               ToolchainCreationContext.of(
                   ImmutableMap.of(),
                   baseConfig.build(),

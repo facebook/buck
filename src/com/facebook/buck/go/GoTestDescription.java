@@ -16,10 +16,7 @@
 
 package com.facebook.buck.go;
 
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
-import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
-import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.go.GoListStep.FileType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -151,14 +148,7 @@ public class GoTestDescription
       ImmutableSortedSet<BuildTarget> cgoDeps) {
     Tool testMainGenerator =
         GoDescriptors.getTestMainGenerator(
-            goBuckConfig,
-            platform,
-            getCxxPlatform(!cgoDeps.isEmpty()),
-            buildTarget,
-            projectFilesystem,
-            params,
-            resolver,
-            cgoDeps);
+            goBuckConfig, platform, buildTarget, projectFilesystem, params, resolver, cgoDeps);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
@@ -306,7 +296,6 @@ public class GoTestDescription
                 .withExtraDeps(ImmutableSortedSet.of(generatedTestMain)),
             resolver,
             goBuckConfig,
-            getCxxPlatform(!args.getCgoDeps().isEmpty()),
             ImmutableSet.of(generatedTestMain.getSourcePathToOutput()),
             args.getCompilerFlags(),
             args.getAssemblerFlags(),
@@ -449,22 +438,15 @@ public class GoTestDescription
       AbstractGoTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    // Add the C/C++ linker parse time deps.
-    CxxPlatform cxxPlatform = getCxxPlatform(!constructorArg.getCgoDeps().isEmpty());
-    targetGraphOnlyDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
-  }
-
-  private CxxPlatform getCxxPlatform(Boolean withCgo) {
-    CxxPlatformsProvider cxxPlatformsProviderFactory =
-        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
-
-    if (withCgo) {
-      return cxxPlatformsProviderFactory.getDefaultCxxPlatform();
-    }
-    return cxxPlatformsProviderFactory
-        .getCxxPlatforms()
-        .getValue(ImmutableSet.of(DefaultCxxPlatforms.FLAVOR))
-        .get();
+    GoToolchain toolchain = getGoToolchain();
+    // Add the C/C++ platform parse time deps.
+    targetGraphOnlyDepsBuilder.addAll(
+        CxxPlatforms.getParseTimeDeps(
+            toolchain
+                .getPlatformFlavorDomain()
+                .getValue(buildTarget)
+                .orElse(toolchain.getDefaultPlatform())
+                .getCxxPlatform()));
   }
 
   private GoToolchain getGoToolchain() {

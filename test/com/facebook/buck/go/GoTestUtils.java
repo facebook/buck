@@ -16,6 +16,7 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.rules.CommandTool;
 import java.nio.file.Paths;
 
@@ -34,5 +35,6 @@ public class GoTestUtils {
           .setPacker(new CommandTool.Builder().build())
           .setLinker(new CommandTool.Builder().build())
           .setCover(new CommandTool.Builder().build())
+          .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
           .build();
 }

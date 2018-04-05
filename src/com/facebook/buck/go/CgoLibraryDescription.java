@@ -18,9 +18,7 @@ package com.facebook.buck.go;
 
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
-import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -101,7 +99,6 @@ public class CgoLibraryDescription
         pathResolver,
         context.getCellPathResolver(),
         cxxBuckConfig,
-        getCxxPlatform(),
         platform,
         args,
         args.getDeps(),
@@ -118,15 +115,15 @@ public class CgoLibraryDescription
       CgoLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    // Add the C/C++ linker parse time deps.
-    CxxPlatform cxxPlatform = getCxxPlatform();
-    targetGraphOnlyDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
-  }
-
-  private CxxPlatform getCxxPlatform() {
-    CxxPlatformsProvider cxxPlatformsProviderFactory =
-        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
-    return cxxPlatformsProviderFactory.getDefaultCxxPlatform();
+    // Add the C/C++ platform deps.
+    GoToolchain toolchain = getGoToolchain();
+    targetGraphOnlyDepsBuilder.addAll(
+        CxxPlatforms.getParseTimeDeps(
+            toolchain
+                .getPlatformFlavorDomain()
+                .getValue(buildTarget)
+                .orElse(toolchain.getDefaultPlatform())
+                .getCxxPlatform()));
   }
 
   @BuckStyleImmutable

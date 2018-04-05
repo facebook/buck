@@ -19,6 +19,7 @@ package com.facebook.buck.go;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -48,7 +49,8 @@ public class GoPlatformFactoryTest {
                             "tool_dir", root.toString())))
                 .build(),
             new FakeProcessExecutor(),
-            new AlwaysFoundExecutableFinder());
+            new AlwaysFoundExecutableFinder(),
+            CxxPlatformUtils.DEFAULT_PLATFORM);
     GoPlatform platform = factory.getPlatform("os", "arch", "section");
     assertThat(platform.getGoOs(), Matchers.equalTo("os"));
     assertThat(platform.getGoArch(), Matchers.equalTo("arch"));

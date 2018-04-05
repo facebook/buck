@@ -78,7 +78,6 @@ public class CGoLibrary extends NoopBuildRule {
       SourcePathResolver pathResolver,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
-      CxxPlatform cxxPlatform,
       GoPlatform platform,
       CgoLibraryDescriptionArg args,
       Iterable<BuildTarget> cgoDeps,
@@ -94,7 +93,12 @@ public class CGoLibrary extends NoopBuildRule {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     ImmutableMap<Path, SourcePath> headers =
         CxxDescriptionEnhancer.parseHeaders(
-            buildTarget, ruleResolver, ruleFinder, pathResolver, Optional.of(cxxPlatform), args);
+            buildTarget,
+            ruleResolver,
+            ruleFinder,
+            pathResolver,
+            Optional.of(platform.getCxxPlatform()),
+            args);
 
     CGoGenSource genSource =
         (CGoGenSource)
@@ -130,7 +134,7 @@ public class CGoLibrary extends NoopBuildRule {
                     pathResolver,
                     cellRoots,
                     cxxBuckConfig,
-                    cxxPlatform,
+                    platform.getCxxPlatform(),
                     args,
                     ImmutableSortedSet.of(genSource),
                     ImmutableSortedSet.<SourcePath>naturalOrder()
@@ -177,7 +181,7 @@ public class CGoLibrary extends NoopBuildRule {
                     pathResolver,
                     cellRoots,
                     cxxBuckConfig,
-                    cxxPlatform,
+                    platform.getCxxPlatform(),
                     args,
                     ImmutableSortedSet.of(cgoImport),
                     ImmutableSortedSet.<SourcePath>naturalOrder()

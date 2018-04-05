@@ -19,7 +19,6 @@ package com.facebook.buck.go;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.go.GoListStep.FileType;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -200,7 +199,6 @@ public class GoDescriptorsTest {
             params,
             resolver,
             goBuckConfig,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableSet.of(
                 PathSourcePath.of(filesystem, Paths.get("not_build_target.go")),
                 DefaultBuildTargetSourcePath.of(srcTarget)),

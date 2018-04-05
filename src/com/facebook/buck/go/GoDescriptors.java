@@ -16,7 +16,6 @@
 
 package com.facebook.buck.go;
 
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.go.GoListStep.FileType;
@@ -203,7 +202,6 @@ abstract class GoDescriptors {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       GoBuckConfig goBuckConfig,
-      CxxPlatform cxxPlatform,
       ImmutableSet<SourcePath> srcs,
       List<String> compilerFlags,
       List<String> assemblerFlags,
@@ -258,7 +256,7 @@ abstract class GoDescriptors {
 
     LOG.verbose("Symlink tree for linking of %s: %s", buildTarget, symlinkTree);
 
-    Optional<Linker> cxxLinker = Optional.of(cxxPlatform.getLd().resolve(resolver));
+    Optional<Linker> cxxLinker = Optional.of(platform.getCxxPlatform().getLd().resolve(resolver));
     return new GoBinary(
         buildTarget,
         projectFilesystem,
@@ -281,7 +279,6 @@ abstract class GoDescriptors {
   static Tool getTestMainGenerator(
       GoBuckConfig goBuckConfig,
       GoPlatform platform,
-      CxxPlatform cxxPlatform,
       BuildTarget sourceBuildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams sourceParams,
@@ -321,7 +318,6 @@ abstract class GoDescriptors {
                       .withExtraDeps(ImmutableSortedSet.of(writeFile)),
                   resolver,
                   goBuckConfig,
-                  cxxPlatform,
                   ImmutableSet.of(writeFile.getSourcePathToOutput()),
                   ImmutableList.of(),
                   ImmutableList.of(),

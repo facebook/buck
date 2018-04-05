@@ -16,6 +16,7 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.InternalFlavor;
@@ -60,4 +61,6 @@ abstract class AbstractGoPlatform implements FlavorConvertible, AddsToRuleKey {
   public abstract Tool getLinker();
 
   public abstract Tool getCover();
+
+  public abstract CxxPlatform getCxxPlatform();
 }

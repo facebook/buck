@@ -17,6 +17,7 @@
 package com.facebook.buck.go;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HashedFileTool;
@@ -52,6 +53,9 @@ abstract class AbstractGoPlatformFactory {
   @Value.Parameter
   public abstract ExecutableFinder getExecutableFinder();
 
+  @Value.Parameter
+  public abstract CxxPlatform getDefaultCxxPlatform();
+
   /** @return the {@link GoPlatform} defined in the given {@code section}. */
   public GoPlatform getPlatform(String os, String arch, String section) {
     Path goRoot = getGoRoot(section);
@@ -68,6 +72,7 @@ abstract class AbstractGoPlatformFactory {
         .setPacker(getGoTool(section, goRoot, toolsDir, "packer", "pack", ""))
         .setLinker(getGoTool(section, goRoot, toolsDir, "linker", "link", "linker_flags"))
         .setCover(getGoTool(section, goRoot, toolsDir, "cover", "cover", ""))
+        .setCxxPlatform(getDefaultCxxPlatform())
         .build();
   }
 

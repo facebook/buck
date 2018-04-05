@@ -16,6 +16,7 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.go.GoListStep.FileType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -31,6 +32,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.HasTests;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
@@ -39,6 +41,7 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -53,6 +56,7 @@ public class GoLibraryDescription
     implements Description<GoLibraryDescriptionArg>,
         Flavored,
         MetadataProvidingDescription<GoLibraryDescriptionArg>,
+        ImplicitDepsInferringDescription<GoLibraryDescriptionArg>,
         VersionPropagator<GoLibraryDescriptionArg> {
 
   private final GoBuckConfig goBuckConfig;
@@ -148,6 +152,23 @@ public class GoLibraryDescription
     }
 
     return new NoopBuildRuleWithDeclaredAndExtraDeps(buildTarget, projectFilesystem, params);
+  }
+
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      GoLibraryDescriptionArg constructorArg,
+      Builder<BuildTarget> extraDepsBuilder,
+      Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    GoToolchain toolchain = getGoToolchain();
+    toolchain
+        .getPlatformFlavorDomain()
+        .getValue(buildTarget)
+        .ifPresent(
+            platform ->
+                targetGraphOnlyDepsBuilder.addAll(
+                    CxxPlatforms.getParseTimeDeps(platform.getCxxPlatform())));
   }
 
   private GoToolchain getGoToolchain() {

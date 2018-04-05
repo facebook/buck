@@ -16,6 +16,8 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
@@ -31,9 +33,16 @@ public class GoToolchainFactory implements ToolchainFactory<GoToolchain> {
   public Optional<GoToolchain> createToolchain(
       ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
 
+    CxxPlatformsProvider cxxPlatformsProviderFactory =
+        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+    CxxPlatform defaultCxxPlatform = cxxPlatformsProviderFactory.getDefaultCxxPlatform();
+
     GoPlatformFactory platformFactory =
         GoPlatformFactory.of(
-            context.getBuckConfig(), context.getProcessExecutor(), context.getExecutableFinder());
+            context.getBuckConfig(),
+            context.getProcessExecutor(),
+            context.getExecutableFinder(),
+            defaultCxxPlatform);
     GoPlatformFlavorDomain platformFlavorDomain = new GoPlatformFlavorDomain(platformFactory);
     GoBuckConfig goBuckConfig = new GoBuckConfig(context.getBuckConfig());
 
