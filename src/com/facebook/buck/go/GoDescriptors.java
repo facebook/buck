@@ -129,7 +129,7 @@ abstract class GoDescriptors {
 
     ImmutableSet.Builder<SourcePath> generatedSrcBuilder = ImmutableSet.builder();
     for (BuildTarget dep : cgoDeps) {
-      BuildRule rule = resolver.requireRule(dep);
+      BuildRule rule = resolver.requireRule(dep.withAppendedFlavors(platform.getFlavor()));
       if (!(rule instanceof CGoLibrary)) {
         throw new HumanReadableException(
             "%s is not an instance of cgo_library", dep.getFullyQualifiedName());

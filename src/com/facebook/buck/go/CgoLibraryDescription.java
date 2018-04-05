@@ -19,6 +19,7 @@ package com.facebook.buck.go;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -30,6 +31,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -81,31 +83,33 @@ public class CgoLibraryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       CgoLibraryDescriptionArg args) {
+
     GoToolchain goToolchain = getGoToolchain();
-    GoPlatform platform =
-        goToolchain
-            .getPlatformFlavorDomain()
-            .getValue(buildTarget)
-            .orElse(goToolchain.getDefaultPlatform());
+    Optional<GoPlatform> platform = goToolchain.getPlatformFlavorDomain().getValue(buildTarget);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    if (platform.isPresent()) {
+      BuildRuleResolver resolver = context.getBuildRuleResolver();
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
-    return CGoLibrary.create(
-        buildTarget,
-        context.getProjectFilesystem(),
-        resolver,
-        pathResolver,
-        context.getCellPathResolver(),
-        cxxBuckConfig,
-        platform,
-        args,
-        args.getDeps(),
-        platform.getCGo(),
-        args.getPackageName()
-            .map(Paths::get)
-            .orElse(goBuckConfig.getDefaultPackageName(buildTarget)));
+      return CGoLibrary.create(
+          buildTarget,
+          projectFilesystem,
+          resolver,
+          pathResolver,
+          context.getCellPathResolver(),
+          cxxBuckConfig,
+          platform.get(),
+          args,
+          args.getDeps(),
+          platform.get().getCGo(),
+          args.getPackageName()
+              .map(Paths::get)
+              .orElse(goBuckConfig.getDefaultPackageName(buildTarget)));
+    }
+
+    return new NoopBuildRuleWithDeclaredAndExtraDeps(buildTarget, projectFilesystem, params);
   }
 
   @Override
@@ -117,13 +121,13 @@ public class CgoLibraryDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add the C/C++ platform deps.
     GoToolchain toolchain = getGoToolchain();
-    targetGraphOnlyDepsBuilder.addAll(
-        CxxPlatforms.getParseTimeDeps(
-            toolchain
-                .getPlatformFlavorDomain()
-                .getValue(buildTarget)
-                .orElse(toolchain.getDefaultPlatform())
-                .getCxxPlatform()));
+    toolchain
+        .getPlatformFlavorDomain()
+        .getValue(buildTarget)
+        .ifPresent(
+            platform ->
+                targetGraphOnlyDepsBuilder.addAll(
+                    CxxPlatforms.getParseTimeDeps(platform.getCxxPlatform())));
   }
 
   @BuckStyleImmutable
