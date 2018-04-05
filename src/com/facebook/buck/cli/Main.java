@@ -1337,7 +1337,7 @@ public final class Main {
           if (Main.isSessionLeader && Main.commandSemaphoreNgClient.orElse(null) == context) {
             // Process no longer wants work done on its behalf.
             LOG.debug("Killing background processes on client disconnect");
-            BgProcessKiller.killBgProcesses();
+            BgProcessKiller.interruptBgProcesses();
           }
 
           if (reason != NGClientDisconnectReason.SESSION_SHUTDOWN) {
