@@ -35,17 +35,17 @@ import org.junit.runner.RunWith;
  * <pre>
  *                                           android_binary
  *                                                  +
- *       +------------+-------------+---------------+----------------------------+
- *       v            v             v                                            v
- * export_file     manifest     keystore                                  android_library
+ *                    +-------------+---------------+----------------------------+
+ *                    v             v                                            v
+ *                 manifest     keystore                                  android_library
  *                    +                                                          +
  *                    |                    +------------------+----------------------------------------+-----------------+
  *                    v                    v                  v                  v                     v                 v
  *                 genrule          android_resource   android_library      prebuilt_jar     android_build_config   cxx_library
  *                    +                                       +                  +                                       +
- *    +---------------+                                       |                  |                                       |
- *    v               v                                       v                  v                                       v
- * genrule      python_binary                      android_prebuilt_aar       genrule                               cxx_library
+ *    +---------------+                  +--------------------+                  |                                       |
+ *    v               v                  v                    v                  v                                       v
+ * genrule      python_binary       export_file     android_prebuilt_aar       genrule                               cxx_library
  *                                                                               +
  *                                                                               |
  *                                                                               v
