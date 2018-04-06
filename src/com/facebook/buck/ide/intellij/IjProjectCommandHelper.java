@@ -17,7 +17,6 @@
 package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
-import com.facebook.buck.cli.parameter_extractors.ProjectViewParameters;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ProjectTestsMode;
 import com.facebook.buck.config.resources.ResourcesConfig;
@@ -25,7 +24,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.ide.intellij.aggregation.AggregationMode;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
-import com.facebook.buck.ide.intellij.projectview.ProjectView;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaFileParser;
@@ -88,7 +86,6 @@ public class IjProjectCommandHelper {
   private final Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser;
 
   private final ProjectGeneratorParameters projectGeneratorParameters;
-  private final ProjectViewParameters projectViewParameters;
 
   public IjProjectCommandHelper(
       BuckEventBus buckEventBus,
@@ -103,11 +100,11 @@ public class IjProjectCommandHelper {
       boolean enableParserProfiling,
       BuckBuildRunner buckBuildRunner,
       Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser,
-      ProjectViewParameters projectViewParameters) {
+      ProjectGeneratorParameters projectGeneratorParameters) {
     this.buckEventBus = buckEventBus;
-    this.console = projectViewParameters.getConsole();
+    this.console = projectGeneratorParameters.getConsole();
     this.executor = executor;
-    this.parser = projectViewParameters.getParser();
+    this.parser = projectGeneratorParameters.getParser();
     this.buckConfig = buckConfig;
     this.actionGraphCache = actionGraphCache;
     this.versionedTargetGraphCache = versionedTargetGraphCache;
@@ -119,21 +116,11 @@ public class IjProjectCommandHelper {
     this.buckBuildRunner = buckBuildRunner;
     this.argsParser = argsParser;
 
-    this.projectGeneratorParameters = projectViewParameters;
-    this.projectViewParameters = projectViewParameters;
+    this.projectGeneratorParameters = projectGeneratorParameters;
   }
 
   public ExitCode parseTargetsAndRunProjectGenerator(List<String> arguments)
       throws IOException, InterruptedException {
-    if (projectViewParameters.hasViewPath() && arguments.isEmpty()) {
-      throw new CommandLineException(
-          "params are view_path target(s), but you didn't supply any targets");
-    }
-
-    if (projectViewParameters.hasViewPath()) {
-      console.printErrorText("`--view` option is deprecated and will be removed soon.");
-    }
-
     if (projectGeneratorParameters.isUpdateOnly()
         && projectConfig.getAggregationMode() != AggregationMode.NONE) {
       throw new CommandLineException(
@@ -193,19 +180,6 @@ public class IjProjectCommandHelper {
     } catch (HumanReadableException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.BUILD_ERROR;
-    }
-
-    if (projectViewParameters.hasViewPath()) {
-      if (isWithTests()) {
-        projectGraph = targetGraphAndTargets.getTargetGraph();
-      }
-
-      return ExitCode.map(
-          ProjectView.run(
-              projectViewParameters,
-              projectGraph,
-              passedInTargetsSet,
-              getActionGraph(projectGraph)));
     }
 
     if (projectGeneratorParameters.isDryRun()) {

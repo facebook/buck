@@ -2,12 +2,7 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
 java_immutables_library(
     name = "intellij",
-    srcs = glob(
-        ["**/*.java"],
-        exclude = [
-            "projectview/**",
-        ],
-    ),
+    srcs = glob(["**/*.java"]),
     resources = glob(["templates/*.st"]),
     tests = [
         "//test/com/facebook/buck/ide/intellij:intellij",
@@ -26,7 +21,6 @@ java_immutables_library(
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/graph:graph",
-        "//src/com/facebook/buck/ide/intellij/projectview:projectview",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/json:json",

@@ -21,7 +21,6 @@ import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.artifact_cache.NoopArtifactCache.NoopArtifactCacheFactory;
 import com.facebook.buck.cli.output.PrintStreamPathOutputPresenter;
 import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
-import com.facebook.buck.cli.parameter_extractors.ProjectViewParameters;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.ide.intellij.IjProjectBuckConfig;
@@ -234,23 +233,6 @@ public class ProjectCommand extends BuildCommand {
   )
   private boolean updateOnly = false;
 
-  @Option(
-    name = "--view",
-    usage =
-        "Deprecated: this feature will be removed in future versions, see "
-            + "https://github.com/facebook/buck/issues/1567."
-            + "\n"
-            + "Option that builds a Project View which is a directory containing symlinks to a single"
-            + " project's code and resources. This directory looks a lot like a standard IntelliJ "
-            + "project with all resources under /res, but what's really important is that it "
-            + "generates a single IntelliJ module, so that editing is much faster than when you "
-            + "use 'plain' `buck project`.\n"
-            + "\n"
-            + "This option specifies the path to the Project View directory."
-  )
-  @Nullable
-  private String projectView = null;
-
   private Optional<String> getPathToPreProcessScript(BuckConfig buckConfig) {
     return buckConfig.getValue("project", "pre_process");
   }
@@ -304,8 +286,8 @@ public class ProjectCommand extends BuildCommand {
                     includeTransitiveDependencies,
                     skipBuild || !build);
 
-            ProjectViewParameters projectViewParameters =
-                new ProjectViewParametersImplementation(params);
+            ProjectGeneratorParameters projectGeneratorParameters =
+                new ProjectGeneratorParametersImplementation(params);
             IjProjectCommandHelper projectCommandHelper =
                 new IjProjectCommandHelper(
                     params.getBuckEventBus(),
@@ -321,7 +303,7 @@ public class ProjectCommand extends BuildCommand {
                     (buildTargets, disableCaching) ->
                         runBuild(params, buildTargets, disableCaching),
                     arguments -> parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), arguments),
-                    projectViewParameters);
+                    projectGeneratorParameters);
             result = projectCommandHelper.parseTargetsAndRunProjectGenerator(getArguments());
             break;
           case XCODE:
@@ -434,7 +416,7 @@ public class ProjectCommand extends BuildCommand {
                 ImmutableMap.<String, String>builder()
                     .putAll(params.getEnvironment())
                     .put("BUCK_PROJECT_TARGETS", Joiner.on(" ").join(getArguments()))
-                    .put("BUCK_PROJECT_TYPE", detectBuckProjectType(projectIde))
+                    .put("BUCK_PROJECT_TYPE", projectIde.toString().toLowerCase())
                     .build())
             .setDirectory(params.getCell().getFilesystem().getRootPath())
             .build();
@@ -452,13 +434,6 @@ public class ProjectCommand extends BuildCommand {
       processExecutor.destroyProcess(process, /* force */ false);
       processExecutor.waitForProcess(process);
     }
-  }
-
-  private String detectBuckProjectType(Ide projectIde) {
-    if (projectIde == Ide.INTELLIJ && projectView != null) {
-      return "intellij-view";
-    }
-    return projectIde.toString().toLowerCase();
   }
 
   @Override
@@ -527,25 +502,6 @@ public class ProjectCommand extends BuildCommand {
     @Override
     public Verbosity getVerbosity() {
       return getConsole().getVerbosity();
-    }
-  }
-
-  private class ProjectViewParametersImplementation extends ProjectGeneratorParametersImplementation
-      implements ProjectViewParameters {
-
-    private ProjectViewParametersImplementation(CommandRunnerParams parameters) {
-      super(parameters);
-    }
-
-    @Override
-    public boolean hasViewPath() {
-      return projectView != null && !projectView.trim().isEmpty(); // --view '' is possible
-    }
-
-    @Override
-    @Nullable
-    public String getViewPath() {
-      return projectView;
     }
   }
 }

@@ -1,8 +1,0 @@
-android_resource(
-    name = "android_res",
-    package = "com.facebook.projectviewtestapp",
-    res = subdir_glob([("res", "**")]),
-    visibility = [
-        "PUBLIC",
-    ],
-)
