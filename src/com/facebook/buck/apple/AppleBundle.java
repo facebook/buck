@@ -966,7 +966,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean isForPackaging) {
     // It's apparently safe to run this even on a non-swift bundle (in that case, no libs
     // are copied over).
-    if (swiftStdlibTool.isPresent()) {
+    boolean shouldCopySwiftStdlib = !extension.equals(AppleBundleExtension.APPEX.toFileExtension());
+    if (swiftStdlibTool.isPresent() && shouldCopySwiftStdlib) {
       ImmutableList.Builder<String> swiftStdlibCommand = ImmutableList.builder();
       swiftStdlibCommand.addAll(swiftStdlibTool.get().getCommandPrefix(resolver));
       swiftStdlibCommand.add(
