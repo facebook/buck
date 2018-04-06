@@ -16,6 +16,7 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
@@ -27,7 +28,7 @@ public abstract class AbstractGoToolchain implements Toolchain {
   public static final String DEFAULT_NAME = "go-toolchain";
 
   @Value.Parameter
-  public abstract GoPlatformFlavorDomain getPlatformFlavorDomain();
+  public abstract FlavorDomain<GoPlatform> getPlatformFlavorDomain();
 
   @Value.Parameter
   public abstract GoPlatform getDefaultPlatform();

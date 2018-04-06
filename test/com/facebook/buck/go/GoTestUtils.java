@@ -24,8 +24,8 @@ public class GoTestUtils {
 
   public static final GoPlatform DEFAULT_PLATFORM =
       GoPlatform.builder()
-          .setGoOs("os")
-          .setGoArch("arch")
+          .setGoOs("linux")
+          .setGoArch("amd64")
           .setGoRoot(Paths.get("/root"))
           .setToolDir(Paths.get("/tools_dir"))
           .setCompiler(new CommandTool.Builder().build())

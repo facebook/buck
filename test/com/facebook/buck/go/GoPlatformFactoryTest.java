@@ -45,14 +45,19 @@ public class GoPlatformFactoryTest {
                     ImmutableMap.of(
                         "section",
                         ImmutableMap.of(
-                            "root", root.toString(),
-                            "tool_dir", root.toString())))
+                            "os",
+                            "linux",
+                            "arch",
+                            "amd64",
+                            "root",
+                            root.toString(),
+                            "tool_dir",
+                            root.toString())))
                 .build(),
             new FakeProcessExecutor(),
-            new AlwaysFoundExecutableFinder(),
-            CxxPlatformUtils.DEFAULT_PLATFORM);
-    GoPlatform platform = factory.getPlatform("os", "arch", "section");
-    assertThat(platform.getGoOs(), Matchers.equalTo("os"));
-    assertThat(platform.getGoArch(), Matchers.equalTo("arch"));
+            new AlwaysFoundExecutableFinder());
+    GoPlatform platform = factory.getPlatform("section", CxxPlatformUtils.DEFAULT_PLATFORM);
+    assertThat(platform.getGoOs(), Matchers.equalTo("linux"));
+    assertThat(platform.getGoArch(), Matchers.equalTo("amd64"));
   }
 }

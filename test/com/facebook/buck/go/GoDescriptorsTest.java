@@ -25,7 +25,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -129,11 +128,11 @@ public class GoDescriptorsTest {
   public void testBuildRuleAsSrcAddsRuleToDependencies() {
     BuildRuleResolver resolver = new TestBuildRuleResolver();
 
+    GoPlatform goPlatform = GoTestUtils.DEFAULT_PLATFORM.withGoArch("amd64").withGoOs("linux");
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpPath.getRoot());
     BuildTarget target =
-        BuildTargetFactory.newInstance("//:go_library")
-            .withFlavors(InternalFlavor.of("linux_amd64"));
+        BuildTargetFactory.newInstance("//:go_library").withFlavors(goPlatform.getFlavor());
     BuildTarget srcTarget = BuildTargetFactory.newInstance("//:go_genrule");
 
     GenruleBuilder.newGenruleBuilder(srcTarget)
@@ -143,7 +142,6 @@ public class GoDescriptorsTest {
 
     BuildRuleParams params = TestBuildRuleParams.create();
     GoBuckConfig goBuckConfig = new GoBuckConfig(FakeBuckConfig.builder().build());
-    GoPlatform goPlatform = GoTestUtils.DEFAULT_PLATFORM.withGoArch("amd64").withGoOs("linux");
 
     GoCompile compile =
         GoDescriptors.createGoCompileRule(
@@ -176,11 +174,11 @@ public class GoDescriptorsTest {
   public void testBuildRuleAsSrcAddsRuleToDependenciesOfBinary() {
     BuildRuleResolver resolver = new TestBuildRuleResolver();
 
+    GoPlatform goPlatform = GoTestUtils.DEFAULT_PLATFORM;
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpPath.getRoot());
     BuildTarget target =
-        BuildTargetFactory.newInstance("//:go_library")
-            .withFlavors(InternalFlavor.of("linux_amd64"));
+        BuildTargetFactory.newInstance("//:go_library").withFlavors(goPlatform.getFlavor());
     BuildTarget srcTarget = BuildTargetFactory.newInstance("//:go_genrule");
 
     GenruleBuilder.newGenruleBuilder(srcTarget)
@@ -190,7 +188,6 @@ public class GoDescriptorsTest {
 
     BuildRuleParams params = TestBuildRuleParams.create();
     GoBuckConfig goBuckConfig = new GoBuckConfig(FakeBuckConfig.builder().build());
-    GoPlatform goPlatform = GoTestUtils.DEFAULT_PLATFORM.withGoArch("amd64").withGoOs("linux");
 
     GoBinary binary =
         GoDescriptors.createGoBinaryRule(
@@ -208,6 +205,7 @@ public class GoDescriptorsTest {
             goPlatform,
             ImmutableSortedSet.of());
 
+    System.out.println(binary.getBuildDeps());
     GoCompile compile =
         binary
             .getBuildDeps()
@@ -216,7 +214,7 @@ public class GoDescriptorsTest {
                 dep ->
                     dep.getBuildTarget()
                         .getFullyQualifiedName()
-                        .equals("//:go_library#compile,linux_amd64"))
+                        .equals("//:go_library#compile," + goPlatform.getFlavor()))
             .map(dep -> (GoCompile) dep)
             .findFirst()
             .get();
