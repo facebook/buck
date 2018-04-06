@@ -21,6 +21,7 @@ import com.facebook.buck.go.GoListStep.FileType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
@@ -175,12 +176,7 @@ public class GoTestDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       GoTestDescriptionArg args) {
-    GoToolchain goToolchain = getGoToolchain();
-    GoPlatform platform =
-        goToolchain
-            .getPlatformFlavorDomain()
-            .getValue(buildTarget)
-            .orElse(goToolchain.getDefaultPlatform());
+    GoPlatform platform = getGoPlatform(buildTarget, args);
 
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -438,25 +434,33 @@ public class GoTestDescription
       AbstractGoTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    GoToolchain toolchain = getGoToolchain();
     // Add the C/C++ platform parse time deps.
     targetGraphOnlyDepsBuilder.addAll(
-        CxxPlatforms.getParseTimeDeps(
-            toolchain
-                .getPlatformFlavorDomain()
-                .getValue(buildTarget)
-                .orElse(toolchain.getDefaultPlatform())
-                .getCxxPlatform()));
+        CxxPlatforms.getParseTimeDeps(getGoPlatform(buildTarget, constructorArg).getCxxPlatform()));
   }
 
   private GoToolchain getGoToolchain() {
     return toolchainProvider.getByName(GoToolchain.DEFAULT_NAME, GoToolchain.class);
   }
 
+  private GoPlatform getGoPlatform(BuildTarget target, AbstractGoTestDescriptionArg arg) {
+    GoToolchain toolchain = getGoToolchain();
+    FlavorDomain<GoPlatform> platforms = toolchain.getPlatformFlavorDomain();
+    return platforms
+        .getValue(target)
+        .orElseGet(
+            () ->
+                arg.getPlatform()
+                    .map(platforms::getValue)
+                    .orElseGet(toolchain::getDefaultPlatform));
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractGoTestDescriptionArg
       extends CommonDescriptionArg, HasContacts, HasDeclaredDeps, HasSrcs, HasTestTimeout, HasCgo {
+    Optional<Flavor> getPlatform();
+
     Optional<BuildTarget> getLibrary();
 
     Optional<String> getPackageName();

@@ -19,6 +19,7 @@ package com.facebook.buck.go;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
@@ -35,6 +36,7 @@ import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 public class GoBinaryDescription
@@ -67,13 +69,7 @@ public class GoBinaryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       GoBinaryDescriptionArg args) {
-    GoToolchain goToolchain = getGoToolchain();
-    GoPlatform platform =
-        goToolchain
-            .getPlatformFlavorDomain()
-            .getValue(buildTarget)
-            .orElse(goToolchain.getDefaultPlatform());
-
+    GoPlatform platform = getGoPlatform(buildTarget, args);
     return GoDescriptors.createGoBinaryRule(
         buildTarget,
         context.getProjectFilesystem(),
@@ -96,24 +92,32 @@ public class GoBinaryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add the C/C++ linker parse time deps.
-    GoToolchain toolchain = getGoToolchain();
     targetGraphOnlyDepsBuilder.addAll(
-        CxxPlatforms.getParseTimeDeps(
-            toolchain
-                .getPlatformFlavorDomain()
-                .getValue(buildTarget)
-                .orElse(toolchain.getDefaultPlatform())
-                .getCxxPlatform()));
+        CxxPlatforms.getParseTimeDeps(getGoPlatform(buildTarget, constructorArg).getCxxPlatform()));
   }
 
   private GoToolchain getGoToolchain() {
     return toolchainProvider.getByName(GoToolchain.DEFAULT_NAME, GoToolchain.class);
   }
 
+  private GoPlatform getGoPlatform(BuildTarget target, AbstractGoBinaryDescriptionArg arg) {
+    GoToolchain toolchain = getGoToolchain();
+    FlavorDomain<GoPlatform> platforms = toolchain.getPlatformFlavorDomain();
+    return platforms
+        .getValue(target)
+        .orElseGet(
+            () ->
+                arg.getPlatform()
+                    .map(platforms::getValue)
+                    .orElseGet(toolchain::getDefaultPlatform));
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractGoBinaryDescriptionArg
       extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasCgo {
+    Optional<Flavor> getPlatform();
+
     ImmutableList<String> getCompilerFlags();
 
     ImmutableList<String> getAssemblerFlags();
