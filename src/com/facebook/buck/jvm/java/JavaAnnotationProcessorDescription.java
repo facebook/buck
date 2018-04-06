@@ -55,6 +55,12 @@ public class JavaAnnotationProcessorDescription
     JavacPluginProperties.Builder propsBuilder = JavacPluginProperties.builder();
 
     Optional<String> processorClass = args.getProcessorClass();
+
+    if (!processorClass.isPresent() && args.getProcessorClasses().isEmpty()) {
+      throw new HumanReadableException(
+          String.format("%s: must specify a processor class, none specified;", buildTarget));
+    }
+
     if (processorClass.isPresent()) {
       propsBuilder.addProcessorNames(processorClass.get());
     } else {
