@@ -41,7 +41,7 @@ public class DxToolchainFactory implements ToolchainFactory<DxToolchain> {
     JavaBuckConfig javaConfig = context.getBuckConfig().getView(JavaBuckConfig.class);
 
     if (javaConfig.getDxThreadCount().isPresent()) {
-      LOG.warn("java.dx_threads has been deprecated. Use dx.max_threads instead");
+      LOG.warn("java.dx_threads has been deprecated. Use dx.threads instead");
     }
 
     DxConfig dxConfig = new DxConfig(context.getBuckConfig());
@@ -49,12 +49,14 @@ public class DxToolchainFactory implements ToolchainFactory<DxToolchain> {
     ListeningExecutorService dxExecutorService =
         MoreExecutors.listeningDecorator(
             Executors.newFixedThreadPool(
-                dxConfig
-                    .getDxMaxThreadCount()
-                    .orElse(
-                        javaConfig
-                            .getDxThreadCount()
-                            .orElse(SmartDexingStep.determineOptimalThreadCount())),
+                Math.min(
+                    dxConfig
+                        .getDxThreadCount()
+                        .orElse(
+                            javaConfig
+                                .getDxThreadCount()
+                                .orElse(SmartDexingStep.determineOptimalThreadCount())),
+                    dxConfig.getDxMaxThreadCount().orElse(Integer.MAX_VALUE)),
                 new CommandThreadFactory("SmartDexing")));
 
     return Optional.of(DxToolchain.of(dxExecutorService));

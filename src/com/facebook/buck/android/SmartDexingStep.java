@@ -149,8 +149,22 @@ public class SmartDexingStep implements Step {
     this.dexTool = dexTool;
   }
 
+  /**
+   * @return Optimal (in terms of both memory and performance) number of parallel threads to run
+   *     dexer. The implementation uses running machine hardware characteristics to determine this.
+   */
   public static int determineOptimalThreadCount() {
-    return Runtime.getRuntime().availableProcessors();
+    // Most processors these days have hyperthreading that multiplies the amount of logical
+    // processors reported by Java. So in case of 1 CPU, 2 physical cores with hyperthreading, the
+    // call to Runtime.getRuntime().availableProcessors() would return 1*2*2 = 4, assuming 2 hyper
+    // threads per core, which is common but in fact may be more than that.
+    // Using hyper threads does not help to dex faster, but consumes a lot of memory, so it makes
+    // sense to base heuristics on the number of physical cores.
+    // Unfortunately there is no good way to detect the number of physical cores in pure Java,
+    // so we just divide the total number of logical processors by two to cover the majority of
+    // cases.
+    // TODO(buck_team): Implement cross-platform hardware capabilities detection and use it here
+    return Math.max(Runtime.getRuntime().availableProcessors() / 2, 1);
   }
 
   @Override

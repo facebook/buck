@@ -32,7 +32,16 @@ public class DxConfig {
     return delegate.getValue("dx", "max_heap_size");
   }
 
-  /** @return The dx thread count. */
+  /**
+   * @return The dx thread count. If it is not specified, number of threads wil be determined by
+   *     hardware capabilities of running host and capped with {@code max_threads} parameter, if
+   *     specified
+   */
+  public Optional<Integer> getDxThreadCount() {
+    return delegate.getInteger("dx", "threads");
+  }
+
+  /** @return The dx maximum allowed thread count. */
   public Optional<Integer> getDxMaxThreadCount() {
     return delegate.getInteger("dx", "max_threads");
   }
