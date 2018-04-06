@@ -584,6 +584,24 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'apple' /}
+  {param name: '*_xcode_tool_name_override' /}
+  {param description}
+    Specify custom Xcode tool name to use in place of existing one.
+    When set, buck will lookup Xcode search paths to locate the tool, and use it for tool invocations.
+  {/param}
+  {param raw_example}
+{literal}<pre class="prettyprint lang-ini">
+[apple]
+    # Use (my_clang|my_actool) executable which exists in one of the imported toolchains / sdks,
+    # instead of the defaults.
+    clang_xcode_tool_name_override=my_clang
+    actool_xcode_tool_name_override=my_actool
+</pre>{/literal}
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'build' /}
   {param description}

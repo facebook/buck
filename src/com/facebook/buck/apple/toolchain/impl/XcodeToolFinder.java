@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple.toolchain.impl;
 
+import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.FileFinder;
 import com.facebook.buck.util.RichStream;
@@ -38,9 +39,11 @@ import javax.annotation.Nonnull;
 
 public final class XcodeToolFinder {
   private final Platform platform;
+  private final AppleConfig appleConfig;
 
-  public XcodeToolFinder() {
+  public XcodeToolFinder(AppleConfig appleConfig) {
     this.platform = Platform.detect();
+    this.appleConfig = appleConfig;
   }
 
   private final LoadingCache<Path, ImmutableSet<Path>> directoryContentsCache =
@@ -61,7 +64,7 @@ public final class XcodeToolFinder {
     return FileFinder.getOptionalFile(
         FileFinder.combine(
             ImmutableSet.of(),
-            toolName,
+            appleConfig.getXcodeToolNameOverride(toolName),
             ExecutableFinder.getExecutableSuffixes(platform, ImmutableMap.of())),
         searchPath,
         (path) -> {

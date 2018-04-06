@@ -381,6 +381,12 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getOptionalListWithoutComments(APPLE_SECTION, name + "_toolchains_override");
   }
 
+  public String getXcodeToolNameOverride(String toolName) {
+    return delegate
+        .getValue(APPLE_SECTION, toolName + "_xcode_tool_name_override")
+        .orElse(toolName);
+  }
+
   @Value.Immutable
   @BuckStyleTuple
   interface AbstractApplePackageConfig {

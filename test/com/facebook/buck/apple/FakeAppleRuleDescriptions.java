@@ -176,7 +176,7 @@ public class FakeAppleRuleDescriptions {
           "i386",
           DEFAULT_IPHONEOS_SDK_PATHS,
           DEFAULT_BUCK_CONFIG,
-          new XcodeToolFinder(),
+          new XcodeToolFinder(DEFAULT_BUCK_CONFIG.getView(AppleConfig.class)),
           FAKE_XCODE_BUILD_VERSION_CACHE,
           Optional.empty());
 
@@ -188,7 +188,7 @@ public class FakeAppleRuleDescriptions {
           "x86_64",
           DEFAULT_IPHONEOS_SDK_PATHS,
           DEFAULT_BUCK_CONFIG,
-          new XcodeToolFinder(),
+          new XcodeToolFinder(DEFAULT_BUCK_CONFIG.getView(AppleConfig.class)),
           FAKE_XCODE_BUILD_VERSION_CACHE,
           Optional.empty());
 
@@ -200,7 +200,7 @@ public class FakeAppleRuleDescriptions {
           "armv7k",
           DEFAULT_IPHONEOS_SDK_PATHS,
           DEFAULT_BUCK_CONFIG,
-          new XcodeToolFinder(),
+          new XcodeToolFinder(DEFAULT_BUCK_CONFIG.getView(AppleConfig.class)),
           FAKE_XCODE_BUILD_VERSION_CACHE,
           Optional.empty());
 
@@ -212,7 +212,7 @@ public class FakeAppleRuleDescriptions {
           "x86_64",
           DEFAULT_MACOSX_SDK_PATHS,
           DEFAULT_BUCK_CONFIG,
-          new XcodeToolFinder(),
+          new XcodeToolFinder(DEFAULT_BUCK_CONFIG.getView(AppleConfig.class)),
           FAKE_XCODE_BUILD_VERSION_CACHE,
           Optional.empty());
 

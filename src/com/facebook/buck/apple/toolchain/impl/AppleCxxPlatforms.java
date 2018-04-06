@@ -120,7 +120,7 @@ public class AppleCxxPlatforms {
       swiftToolChain = Optional.empty();
     }
 
-    XcodeToolFinder xcodeToolFinder = new XcodeToolFinder();
+    XcodeToolFinder xcodeToolFinder = new XcodeToolFinder(appleConfig);
     XcodeBuildVersionCache xcodeBuildVersionCache = new XcodeBuildVersionCache();
     sdkPaths
         .get()
