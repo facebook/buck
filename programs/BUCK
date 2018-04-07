@@ -90,7 +90,7 @@ BUCK_MODULES = {
     "filegroup": "//src/com/facebook/buck/shell/filegroup:filegroup",
     "go": "//src/com/facebook/buck/go:go",
     "haskell": "//src/com/facebook/buck/features/haskell:haskell",
-    "lua": "//src/com/facebook/buck/lua:lua",
+    "lua": "//src/com/facebook/buck/features/lua:lua",
     "rust": "//src/com/facebook/buck/rust:rust",
     "zipbundler": "//src/com/facebook/buck/zip/bundler:bundler",
     "ziprules": "//src/com/facebook/buck/zip/rules:rules",

@@ -15,7 +15,7 @@ java_library_with_plugins(
     visibility = [
         "//src/com/facebook/buck/cli:main",
         "//src/com/facebook/buck/cxx:rules",
-        "//src/com/facebook/buck/lua:lua",
+        "//src/com/facebook/buck/features/lua:lua",
         "//src/com/facebook/buck/ocaml:rules",
         "//src/com/facebook/buck/python/toolchain/impl:impl",
         "//src/com/facebook/buck/rules:types",
