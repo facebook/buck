@@ -490,8 +490,8 @@
           <exclude name="com/facebook/buck/event/api/**" />
           <exclude name="com/facebook/buck/features/d/**" />
           <exclude name="com/facebook/buck/features/dotnet/**" />
+          <exclude name="com/facebook/buck/features/haskell/**" />
           <exclude name="com/facebook/buck/go/**" />
-          <exclude name="com/facebook/buck/haskell/**" />
           <exclude name="com/facebook/buck/jvm/java/abi/source/**" />
           <exclude name="com/facebook/buck/jvm/java/lang/model/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
@@ -569,7 +569,7 @@
   <target name="build-module-haskell" depends="compile">
     <build-buck-module-jar module-name="haskell">
       <module-javac-params>
-        <include name="com/facebook/buck/haskell/**/*.java" />
+        <include name="com/facebook/buck/features/haskell/**/*.java" />
       </module-javac-params>
     </build-buck-module-jar>
   </target>
