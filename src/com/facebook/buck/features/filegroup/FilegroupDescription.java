@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.shell.filegroup;
+package com.facebook.buck.features.filegroup;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;

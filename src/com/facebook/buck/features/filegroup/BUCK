@@ -11,7 +11,7 @@ buck_module(
         "//src/com/facebook/buck/zip/bundler:bundler",
     ],
     tests = [
-        #"//test/com/facebook/buck/shell:shell",
+        "//test/com/facebook/buck/features/filegroup:filegroup",
     ],
     visibility = ["PUBLIC"],
 )

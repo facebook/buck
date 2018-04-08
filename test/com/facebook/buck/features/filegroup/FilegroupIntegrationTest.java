@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.shell.filegroup;
+package com.facebook.buck.features.filegroup;
 
 import static org.junit.Assert.assertEquals;
 

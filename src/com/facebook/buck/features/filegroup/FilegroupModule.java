@@ -14,20 +14,14 @@
  * under the License.
  */
 
-package com.facebook.buck.shell.filegroup;
+package com.facebook.buck.features.filegroup;
 
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.DescriptionCreationContext;
-import com.facebook.buck.rules.DescriptionProvider;
-import java.util.Collection;
-import java.util.Collections;
-import org.pf4j.Extension;
+import com.facebook.buck.module.BuckModule;
+import com.facebook.buck.zip.bundler.ZipBundlerModule;
 
-@Extension
-public class FilegroupDescriptionsProvider implements DescriptionProvider {
-
-  @Override
-  public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
-    return Collections.singleton(new FilegroupDescription());
+@BuckModule(
+  dependencies = {
+    ZipBundlerModule.class,
   }
-}
+)
+public class FilegroupModule {}
