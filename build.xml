@@ -490,10 +490,10 @@
           <exclude name="com/facebook/buck/event/api/**" />
           <exclude name="com/facebook/buck/features/d/**" />
           <exclude name="com/facebook/buck/features/dotnet/**" />
+          <exclude name="com/facebook/buck/features/go/**" />
           <exclude name="com/facebook/buck/features/haskell/**" />
           <exclude name="com/facebook/buck/features/lua/**" />
           <exclude name="com/facebook/buck/features/rust/**" />
-          <exclude name="com/facebook/buck/go/**" />
           <exclude name="com/facebook/buck/jvm/java/abi/source/**" />
           <exclude name="com/facebook/buck/jvm/java/lang/model/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
@@ -558,10 +558,10 @@
   <target name="build-module-go" depends="compile">
     <build-buck-module-jar-with-resources module-name="go">
       <module-javac-params>
-        <include name="com/facebook/buck/go/**/*.java" />
+        <include name="com/facebook/buck/features/go/**/*.java" />
       </module-javac-params>
       <module-resources>
-        <include name="com/facebook/buck/go/*.in"/>
+        <include name="com/facebook/buck/features/go/*.in"/>
       </module-resources>
     </build-buck-module-jar-with-resources>
   </target>

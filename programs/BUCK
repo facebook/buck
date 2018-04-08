@@ -88,7 +88,7 @@ BUCK_MODULES = {
     "d": "//src/com/facebook/buck/features/d:d",
     "dotnet": "//src/com/facebook/buck/features/dotnet:dotnet",
     "filegroup": "//src/com/facebook/buck/shell/filegroup:filegroup",
-    "go": "//src/com/facebook/buck/go:go",
+    "go": "//src/com/facebook/buck/features/go:go",
     "haskell": "//src/com/facebook/buck/features/haskell:haskell",
     "lua": "//src/com/facebook/buck/features/lua:lua",
     "rust": "//src/com/facebook/buck/features/rust:rust",
