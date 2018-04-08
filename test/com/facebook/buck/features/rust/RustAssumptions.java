@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rust;
+package com.facebook.buck.features.rust;
 
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeNoException;

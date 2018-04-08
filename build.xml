@@ -492,12 +492,12 @@
           <exclude name="com/facebook/buck/features/dotnet/**" />
           <exclude name="com/facebook/buck/features/haskell/**" />
           <exclude name="com/facebook/buck/features/lua/**" />
+          <exclude name="com/facebook/buck/features/rust/**" />
           <exclude name="com/facebook/buck/go/**" />
           <exclude name="com/facebook/buck/jvm/java/abi/source/**" />
           <exclude name="com/facebook/buck/jvm/java/lang/model/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
           <exclude name="com/facebook/buck/module/annotationprocessor/**" />
-          <exclude name="com/facebook/buck/rust/**" />
           <exclude name="com/facebook/buck/shell/filegroup/**" />
           <exclude name="com/facebook/buck/testrunner/**" />
           <exclude name="com/facebook/buck/zip/bundler/**" />
@@ -588,7 +588,7 @@
   <target name="build-module-rust" depends="compile">
     <build-buck-module-jar module-name="rust">
       <module-javac-params>
-        <include name="com/facebook/buck/rust/**/*.java" />
+        <include name="com/facebook/buck/features/rust/**/*.java" />
       </module-javac-params>
     </build-buck-module-jar>
   </target>

@@ -14,28 +14,29 @@
  * under the License.
  */
 
-package com.facebook.buck.rust;
+package com.facebook.buck.features.rust;
 
 import com.facebook.buck.cxx.toolchain.TestCxxPlatformsProviderFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableSortedSet;
 
-public class RustLibraryBuilder
+public class RustBinaryBuilder
     extends AbstractNodeBuilder<
-        RustLibraryDescriptionArg.Builder, RustLibraryDescriptionArg, RustLibraryDescription,
-        RustLibrary> {
+        RustBinaryDescriptionArg.Builder, RustBinaryDescriptionArg, RustBinaryDescription,
+        BuildRule> {
 
-  private RustLibraryBuilder(RustLibraryDescription description, BuildTarget target) {
+  private RustBinaryBuilder(RustBinaryDescription description, BuildTarget target) {
     super(description, target);
   }
 
-  public static RustLibraryBuilder from(String target) {
-    return new RustLibraryBuilder(
-        new RustLibraryDescription(
+  public static RustBinaryBuilder from(String target) {
+    return new RustBinaryBuilder(
+        new RustBinaryDescription(
             new ToolchainProviderBuilder()
                 .withToolchain(TestCxxPlatformsProviderFactory.createDefaultCxxPlatformsProvider())
                 .build(),
@@ -43,12 +44,12 @@ public class RustLibraryBuilder
         BuildTargetFactory.newInstance(target));
   }
 
-  public RustLibraryBuilder setSrcs(ImmutableSortedSet<SourcePath> srcs) {
+  public RustBinaryBuilder setSrcs(ImmutableSortedSet<SourcePath> srcs) {
     getArgForPopulating().setSrcs(srcs);
     return this;
   }
 
-  public RustLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
+  public RustBinaryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
     getArgForPopulating().setDeps(deps);
     return this;
   }

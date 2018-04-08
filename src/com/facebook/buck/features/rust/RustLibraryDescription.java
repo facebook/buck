@@ -14,9 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.rust;
+package com.facebook.buck.features.rust;
 
-import static com.facebook.buck.rust.RustCompileUtils.ruleToCrateName;
+import static com.facebook.buck.features.rust.RustCompileUtils.ruleToCrateName;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;

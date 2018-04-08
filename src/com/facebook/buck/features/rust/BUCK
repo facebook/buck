@@ -40,9 +40,9 @@ buck_module(
         "//third-party/java/jackson:jackson-databind",
     ],
     tests = [
-        "//test/com/facebook/buck/rust:rust",
+        "//test/com/facebook/buck/features/rust:rust",
     ],
     visibility = [
-        "//test/com/facebook/buck/rust/...",
+        "//test/com/facebook/buck/features/rust/...",
     ],
 )

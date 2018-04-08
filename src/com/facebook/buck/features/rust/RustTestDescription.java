@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,27 +14,31 @@
  * under the License.
  */
 
-package com.facebook.buck.rust;
+package com.facebook.buck.features.rust;
 
-import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.rules.BinaryWrapperRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.HasSrcs;
-import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -48,26 +52,23 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
 
-public class RustBinaryDescription
-    implements Description<RustBinaryDescriptionArg>,
-        ImplicitDepsInferringDescription<RustBinaryDescription.AbstractRustBinaryDescriptionArg>,
+public class RustTestDescription
+    implements Description<RustTestDescriptionArg>,
+        ImplicitDepsInferringDescription<RustTestDescription.AbstractRustTestDescriptionArg>,
         Flavored,
-        VersionRoot<RustBinaryDescriptionArg> {
-
-  public static final FlavorDomain<Type> BINARY_TYPE =
-      FlavorDomain.from("Rust Binary Type", Type.class);
+        VersionRoot<RustTestDescriptionArg> {
 
   private final ToolchainProvider toolchainProvider;
   private final RustBuckConfig rustBuckConfig;
 
-  public RustBinaryDescription(ToolchainProvider toolchainProvider, RustBuckConfig rustBuckConfig) {
+  public RustTestDescription(ToolchainProvider toolchainProvider, RustBuckConfig rustBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.rustBuckConfig = rustBuckConfig;
   }
 
   @Override
-  public Class<RustBinaryDescriptionArg> getConstructorArgType() {
-    return RustBinaryDescriptionArg.class;
+  public Class<RustTestDescriptionArg> getConstructorArgType() {
+    return RustTestDescriptionArg.class;
   }
 
   @Override
@@ -75,81 +76,74 @@ public class RustBinaryDescription
       BuildRuleCreationContext context,
       BuildTarget buildTarget,
       BuildRuleParams params,
-      RustBinaryDescriptionArg args) {
-    Linker.LinkableDepType linkStyle =
-        RustCompileUtils.getLinkStyle(buildTarget, args.getLinkStyle());
+      RustTestDescriptionArg args) {
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    BuildTarget exeTarget = buildTarget.withAppendedFlavors(InternalFlavor.of("unittest"));
 
     Optional<Map.Entry<Flavor, RustBinaryDescription.Type>> type =
-        BINARY_TYPE.getFlavorAndValue(buildTarget);
+        RustBinaryDescription.BINARY_TYPE.getFlavorAndValue(buildTarget);
 
     boolean isCheck = type.map(t -> t.getValue().isCheck()).orElse(false);
 
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    BuildRuleResolver resolver = context.getBuildRuleResolver();
 
-    return RustCompileUtils.createBinaryBuildRule(
+    BinaryWrapperRule testExeBuild =
+        (BinaryWrapperRule)
+            resolver.computeIfAbsent(
+                exeTarget,
+                target ->
+                    RustCompileUtils.createBinaryBuildRule(
+                        target,
+                        projectFilesystem,
+                        params,
+                        resolver,
+                        rustBuckConfig,
+                        cxxPlatformsProvider.getCxxPlatforms(),
+                        cxxPlatformsProvider.getDefaultCxxPlatform(),
+                        args.getCrate(),
+                        args.getFeatures(),
+                        Stream.of(
+                                args.isFramework() ? Stream.of("--test") : Stream.<String>empty(),
+                                rustBuckConfig.getRustTestFlags().stream(),
+                                args.getRustcFlags().stream())
+                            .flatMap(x -> x)
+                            .iterator(),
+                        args.getLinkerFlags().iterator(),
+                        RustCompileUtils.getLinkStyle(buildTarget, args.getLinkStyle()),
+                        args.isRpath(),
+                        args.getSrcs(),
+                        args.getCrateRoot(),
+                        ImmutableSet.of("lib.rs", "main.rs"),
+                        isCheck));
+
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+
+    Tool testExe = testExeBuild.getExecutableCommand();
+
+    BuildRuleParams testParams =
+        params.copyAppendingExtraDeps(BuildableSupport.getDepsCollection(testExe, ruleFinder));
+
+    return new RustTest(
         buildTarget,
-        context.getProjectFilesystem(),
-        params,
-        context.getBuildRuleResolver(),
-        rustBuckConfig,
-        cxxPlatformsProvider.getCxxPlatforms(),
-        cxxPlatformsProvider.getDefaultCxxPlatform(),
-        args.getCrate(),
-        args.getFeatures(),
-        Stream.of(rustBuckConfig.getRustBinaryFlags().stream(), args.getRustcFlags().stream())
-            .flatMap(x -> x)
-            .iterator(),
-        args.getLinkerFlags().iterator(),
-        linkStyle,
-        args.isRpath(),
-        args.getSrcs(),
-        args.getCrateRoot(),
-        ImmutableSet.of("main.rs"),
-        isCheck);
+        projectFilesystem,
+        testParams,
+        testExeBuild,
+        args.getLabels(),
+        args.getContacts());
   }
 
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      AbstractRustBinaryDescriptionArg constructorArg,
+      AbstractRustTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     ToolProvider compiler = rustBuckConfig.getRustCompiler();
     extraDepsBuilder.addAll(compiler.getParseTimeDeps());
     extraDepsBuilder.addAll(
         RustCompileUtils.getPlatformParseTimeDeps(getCxxPlatformsProvider(), buildTarget));
-    extraDepsBuilder.addAll(
-        rustBuckConfig.getLinker().map(ToolProvider::getParseTimeDeps).orElse(ImmutableList.of()));
-  }
-
-  protected enum Type implements FlavorConvertible {
-    CHECK(RustDescriptionEnhancer.RFCHECK, Linker.LinkableDepType.STATIC_PIC),
-    SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR, Linker.LinkableDepType.SHARED),
-    STATIC_PIC(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR, Linker.LinkableDepType.STATIC_PIC),
-    STATIC(CxxDescriptionEnhancer.STATIC_FLAVOR, Linker.LinkableDepType.STATIC),
-    ;
-
-    private final Flavor flavor;
-    private final Linker.LinkableDepType linkStyle;
-
-    Type(Flavor flavor, Linker.LinkableDepType linkStyle) {
-      this.flavor = flavor;
-      this.linkStyle = linkStyle;
-    }
-
-    @Override
-    public Flavor getFlavor() {
-      return flavor;
-    }
-
-    public Linker.LinkableDepType getLinkStyle() {
-      return linkStyle;
-    }
-
-    public boolean isCheck() {
-      return flavor == RustDescriptionEnhancer.RFCHECK;
-    }
   }
 
   @Override
@@ -158,7 +152,7 @@ public class RustBinaryDescription
       return true;
     }
 
-    for (Type type : Type.values()) {
+    for (RustBinaryDescription.Type type : RustBinaryDescription.Type.values()) {
       if (flavors.contains(type.getFlavor())) {
         return true;
       }
@@ -169,7 +163,9 @@ public class RustBinaryDescription
 
   @Override
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(ImmutableSet.of(getCxxPlatformsProvider().getCxxPlatforms(), BINARY_TYPE));
+    return Optional.of(
+        ImmutableSet.of(
+            getCxxPlatformsProvider().getCxxPlatforms(), RustBinaryDescription.BINARY_TYPE));
   }
 
   private CxxPlatformsProvider getCxxPlatformsProvider() {
@@ -179,8 +175,9 @@ public class RustBinaryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractRustBinaryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests {
+  interface AbstractRustTestDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs {
+    ImmutableSet<String> getContacts();
+
     @Value.NaturalOrder
     ImmutableSortedSet<String> getFeatures();
 
@@ -190,13 +187,18 @@ public class RustBinaryDescription
 
     Optional<Linker.LinkableDepType> getLinkStyle();
 
-    Optional<String> getCrate();
-
-    Optional<SourcePath> getCrateRoot();
-
     @Value.Default
     default boolean isRpath() {
       return true;
     }
+
+    @Value.Default
+    default boolean isFramework() {
+      return true;
+    }
+
+    Optional<String> getCrate();
+
+    Optional<SourcePath> getCrateRoot();
   }
 }

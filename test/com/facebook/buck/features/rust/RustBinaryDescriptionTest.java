@@ -14,37 +14,31 @@
  * under the License.
  */
 
-package com.facebook.buck.rust;
+package com.facebook.buck.features.rust;
 
 import com.facebook.buck.cxx.CxxGenruleBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
-import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Test;
 
-public class RustLibraryDescriptionTest {
+public class RustBinaryDescriptionTest {
 
   @Test
   public void testGeneratedSourceFromCxxGenrule() throws NoSuchBuildTargetException {
     CxxGenruleBuilder srcBuilder =
-        new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:src")).setOut("lib.rs");
-    RustLibraryBuilder libraryBuilder =
-        RustLibraryBuilder.from("//:lib")
-            .setSrcs(
-                ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(srcBuilder.getTarget())));
+        new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:src")).setOut("main.rs");
     RustBinaryBuilder binaryBuilder =
         RustBinaryBuilder.from("//:bin")
-            .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("main.rs")))
-            .setDeps(ImmutableSortedSet.of(libraryBuilder.getTarget()));
+            .setSrcs(
+                ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(srcBuilder.getTarget())));
     TargetGraph targetGraph =
-        TargetGraphFactory.newInstance(
-            srcBuilder.build(), libraryBuilder.build(), binaryBuilder.build());
+        TargetGraphFactory.newInstance(srcBuilder.build(), binaryBuilder.build());
     BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
     ruleResolver.requireRule(binaryBuilder.getTarget());
   }

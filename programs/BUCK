@@ -91,7 +91,7 @@ BUCK_MODULES = {
     "go": "//src/com/facebook/buck/go:go",
     "haskell": "//src/com/facebook/buck/features/haskell:haskell",
     "lua": "//src/com/facebook/buck/features/lua:lua",
-    "rust": "//src/com/facebook/buck/rust:rust",
+    "rust": "//src/com/facebook/buck/features/rust:rust",
     "zipbundler": "//src/com/facebook/buck/zip/bundler:bundler",
     "ziprules": "//src/com/facebook/buck/zip/rules:rules",
 }

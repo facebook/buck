@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rust;
+package com.facebook.buck.features.rust;
 
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.SourcePath;
