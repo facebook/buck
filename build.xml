@@ -491,16 +491,7 @@
           -->
           <exclude name="com/facebook/buck/cli/bootstrapper/**" />
           <exclude name="com/facebook/buck/event/api/**" />
-          <exclude name="com/facebook/buck/features/d/**" />
-          <exclude name="com/facebook/buck/features/dotnet/**" />
-          <exclude name="com/facebook/buck/features/filebundler/**" />
-          <exclude name="com/facebook/buck/features/filegroup/**" />
-          <exclude name="com/facebook/buck/features/go/**" />
-          <exclude name="com/facebook/buck/features/gwt/**" />
-          <exclude name="com/facebook/buck/features/haskell/**" />
-          <exclude name="com/facebook/buck/features/lua/**" />
-          <exclude name="com/facebook/buck/features/rust/**" />
-          <exclude name="com/facebook/buck/features/zip/rules/**" />
+          <exclude name="com/facebook/buck/features/**" />
           <exclude name="com/facebook/buck/jvm/java/abi/source/**" />
           <exclude name="com/facebook/buck/jvm/java/lang/model/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
