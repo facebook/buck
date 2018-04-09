@@ -19,4 +19,4 @@ package com.facebook.buck.zip.bundler;
 import com.facebook.buck.module.BuckModule;
 
 @BuckModule
-public class ZipBundlerModule {}
+public class FileBundlerModule {}

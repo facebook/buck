@@ -87,12 +87,12 @@ RESOURCES_AFFECTING_BUILD_ARTIFACTS = {
 BUCK_MODULES = {
     "d": "//src/com/facebook/buck/features/d:d",
     "dotnet": "//src/com/facebook/buck/features/dotnet:dotnet",
+    "filebundler": "//src/com/facebook/buck/zip/bundler:bundler",
     "filegroup": "//src/com/facebook/buck/features/filegroup:filegroup",
     "go": "//src/com/facebook/buck/features/go:go",
     "haskell": "//src/com/facebook/buck/features/haskell:haskell",
     "lua": "//src/com/facebook/buck/features/lua:lua",
     "rust": "//src/com/facebook/buck/features/rust:rust",
-    "zipbundler": "//src/com/facebook/buck/zip/bundler:bundler",
     "ziprules": "//src/com/facebook/buck/zip/rules:rules",
 }
 

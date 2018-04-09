@@ -526,7 +526,7 @@
     </jar>
   </target>
 
-  <target name="build-modules" depends="build-module-d, build-module-dotnet, build-module-filegroup, build-module-go, build-module-haskell, build-module-lua, build-module-rust, build-module-zipbundler, build-module-ziprules"/>
+  <target name="build-modules" depends="build-module-d, build-module-dotnet, build-module-filebundler, build-module-filegroup, build-module-go, build-module-haskell, build-module-lua, build-module-rust, build-module-ziprules"/>
 
   <target name="build-module-d" depends="compile">
     <build-buck-module-jar module-name="d">
@@ -544,13 +544,21 @@
     </build-buck-module-jar>
   </target>
 
-  <target name="build-module-filegroup" depends="compile, build-module-zipbundler">
+  <target name="build-module-filebundler" depends="compile">
+    <build-buck-module-jar module-name="filebundler">
+      <module-javac-params>
+        <include name="com/facebook/buck/zip/bundler/**/*.java" />
+      </module-javac-params>
+    </build-buck-module-jar>
+  </target>
+
+  <target name="build-module-filegroup" depends="compile, build-module-filebundler">
     <build-buck-module-jar module-name="filegroup">
       <module-javac-params>
         <include name="com/facebook/buck/features/filegroup/**/*.java" />
       </module-javac-params>
       <additional-classpath-entries>
-        <include name="zipbundler.jar"/>
+        <include name="filebundler.jar"/>
       </additional-classpath-entries>
     </build-buck-module-jar>
   </target>
@@ -593,21 +601,13 @@
     </build-buck-module-jar>
   </target>
 
-  <target name="build-module-zipbundler" depends="compile">
-    <build-buck-module-jar module-name="zipbundler">
-      <module-javac-params>
-        <include name="com/facebook/buck/zip/bundler/**/*.java" />
-      </module-javac-params>
-    </build-buck-module-jar>
-  </target>
-
-  <target name="build-module-ziprules" depends="compile, build-module-zipbundler">
+  <target name="build-module-ziprules" depends="compile, build-module-filebundler">
     <build-buck-module-jar module-name="ziprules">
       <module-javac-params>
         <include name="com/facebook/buck/zip/rules/**/*.java" />
       </module-javac-params>
       <additional-classpath-entries>
-        <include name="zipbundler.jar"/>
+        <include name="filebundler.jar"/>
       </additional-classpath-entries>
     </build-buck-module-jar>
   </target>

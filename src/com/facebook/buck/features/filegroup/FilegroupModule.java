@@ -17,11 +17,11 @@
 package com.facebook.buck.features.filegroup;
 
 import com.facebook.buck.module.BuckModule;
-import com.facebook.buck.zip.bundler.ZipBundlerModule;
+import com.facebook.buck.zip.bundler.FileBundlerModule;
 
 @BuckModule(
   dependencies = {
-    ZipBundlerModule.class,
+    FileBundlerModule.class,
   }
 )
 public class FilegroupModule {}
