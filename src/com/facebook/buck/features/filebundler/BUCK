@@ -21,7 +21,7 @@ buck_module(
     ],
     visibility = [
         "//src/com/facebook/buck/features/filegroup:filegroup",
-        "//src/com/facebook/buck/zip/rules:rules",
+        "//src/com/facebook/buck/features/zip/rules:rules",
         "//test/...",
     ],
 )

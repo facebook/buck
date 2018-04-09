@@ -1,4 +1,3 @@
 package example;
 
-class A {
-}
+class A {}

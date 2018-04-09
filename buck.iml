@@ -36,6 +36,7 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/distributed/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/dotnet/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/event/listener/integration/testdata" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/features/zip/rules/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/go/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/go/testdata/go_test/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/gwt/testdata" />

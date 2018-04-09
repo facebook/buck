@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.zip.rules;
+package com.facebook.buck.features.zip.rules;
 
 import com.facebook.buck.features.filebundler.CopyingFileBundler;
 import com.facebook.buck.features.filebundler.FileBundler;

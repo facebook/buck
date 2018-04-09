@@ -26,11 +26,11 @@ buck_module(
         "//third-party/java/infer-annotations:infer-annotations",
     ],
     tests = [
-        "//test/com/facebook/buck/zip/rules:rules",
+        "//test/com/facebook/buck/features/zip/rules:rules",
     ],
     visibility = [
         "//test/com/facebook/buck/cli:cli",
+        "//test/com/facebook/buck/features/zip/rules:rules",
         "//test/com/facebook/buck/ide/intellij:intellij",
-        "//test/com/facebook/buck/zip/rules:rules",
     ],
 )

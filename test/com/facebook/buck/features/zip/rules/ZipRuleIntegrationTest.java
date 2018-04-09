@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.zip.rules;
+package com.facebook.buck.features.zip.rules;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;

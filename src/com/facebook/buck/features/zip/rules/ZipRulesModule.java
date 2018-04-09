@@ -14,19 +14,15 @@
  * under the License.
  */
 
-package com.facebook.buck.zip.rules;
+package com.facebook.buck.features.zip.rules;
 
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.DescriptionCreationContext;
-import com.facebook.buck.rules.DescriptionProvider;
-import java.util.Collection;
-import java.util.Collections;
-import org.pf4j.Extension;
+import com.facebook.buck.features.filebundler.FileBundlerModule;
+import com.facebook.buck.module.BuckModule;
 
-@Extension
-public class ZipDescriptionProvider implements DescriptionProvider {
-  @Override
-  public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
-    return Collections.singleton(new ZipFileDescription());
+/** A modules that provides `zip_rule` build rule. */
+@BuckModule(
+  dependencies = {
+    FileBundlerModule.class,
   }
-}
+)
+public class ZipRulesModule {}

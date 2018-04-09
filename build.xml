@@ -496,12 +496,12 @@
           <exclude name="com/facebook/buck/features/haskell/**" />
           <exclude name="com/facebook/buck/features/lua/**" />
           <exclude name="com/facebook/buck/features/rust/**" />
+          <exclude name="com/facebook/buck/features/zip/rules/**" />
           <exclude name="com/facebook/buck/jvm/java/abi/source/**" />
           <exclude name="com/facebook/buck/jvm/java/lang/model/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
           <exclude name="com/facebook/buck/module/annotationprocessor/**" />
           <exclude name="com/facebook/buck/testrunner/**" />
-          <exclude name="com/facebook/buck/zip/rules/**" />
         </patternset>
       </javac-params>
     </compiler>
@@ -604,7 +604,7 @@
   <target name="build-module-ziprules" depends="compile, build-module-filebundler">
     <build-buck-module-jar module-name="ziprules">
       <module-javac-params>
-        <include name="com/facebook/buck/zip/rules/**/*.java" />
+        <include name="com/facebook/buck/features/zip/rules/**/*.java" />
       </module-javac-params>
       <additional-classpath-entries>
         <include name="filebundler.jar"/>
