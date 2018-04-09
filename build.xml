@@ -260,7 +260,9 @@
        do more than one thing.
 
        clear-successful-build must be first, and mark-successful-build last, in the list of dependencies.-->
-  <target name="default" depends="clear-successful-build, compile, build-modules, copy-resources, dx, javac-plugin, report-generator-jar, create-classpath, create-classpath-hash, gen-buck-info, mark-successful-build" />
+  <target name="default" depends="clear-successful-build, compile, build-modules, copy-resources,
+                                  dx, javac-plugin, report-generator-jar, create-classpath,
+                                  create-classpath-hash, gen-buck-info, mark-successful-build" />
 
   <target name="checkversion">
     <!-- The function Function class was only introduced in Java 8. -->
@@ -472,7 +474,8 @@
   </target>
 
   <target name="compile"
-          depends="compile-buck-modules-annotation-processor, compile-testrunner, compile-aosp, compile-manual-gen-src, bootstrapper, package-resources, tracing-api, dx"
+          depends="compile-buck-modules-annotation-processor, compile-testrunner, compile-aosp,
+                   compile-manual-gen-src, bootstrapper, package-resources, tracing-api, dx"
           description="compile Java source code">
     <mkdir dir="${classes.dir}" />
 
@@ -527,7 +530,18 @@
     </jar>
   </target>
 
-  <target name="build-modules" depends="build-module-d, build-module-dotnet, build-module-filebundler, build-module-filegroup, build-module-go, build-module-gwt, build-module-haskell, build-module-lua, build-module-rust, build-module-ziprules"/>
+  <target name="build-modules" depends="
+                                        build-module-d,
+                                        build-module-dotnet,
+                                        build-module-filebundler,
+                                        build-module-filegroup,
+                                        build-module-go,
+                                        build-module-gwt,
+                                        build-module-haskell,
+                                        build-module-lua,
+                                        build-module-rust,
+                                        build-module-ziprules
+                                       "/>
 
   <target name="build-module-d" depends="compile">
     <build-buck-module-jar module-name="d">
@@ -808,7 +822,8 @@
     <echo file="${build.dir}/classpath/classpaths">${classpaths}</echo>
   </target>
 
-  <target name="create-classpath-hash" depends="copy-resources, compile, dx, javac-plugin, report-generator-jar, create-classpath">
+  <target name="create-classpath-hash" depends="copy-resources, compile, dx, javac-plugin,
+                                                report-generator-jar, create-classpath">
     <delete file="${buck.hash.file}"/>
     <checksum todir="${build.dir}/checksums" totalproperty="buck.hash.value">
       <fileset dir="${build.dir}">
