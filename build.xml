@@ -702,6 +702,10 @@
         <include name="com/facebook/buck/python/run_inplace.py.in"/>
         <include name="com/facebook/buck/rules/BuckPyFunction.stg"/>
         <include name="com/facebook/buck/shell/sh_binary_template"/>
+        <include name="com/facebook/buck/jvm/java/FatJar.java" />
+        <include name="com/facebook/buck/jvm/java/FatJarMain.java" />
+        <include name="com/facebook/buck/util/liteinfersupport/Nullable.java" />
+        <include name="com/facebook/buck/util/liteinfersupport/Preconditions.java" />
       </fileset>
     </copy>
   </target>
