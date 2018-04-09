@@ -1,9 +1,0 @@
-{
-  "//:AppGraphQl": {},
-  "//LibraryOne:LibraryOneGraphQl": {
-    "srcs": ["A.graphql"]
-  },
-  "//LibraryTwo:LibraryTwoGraphQl": {
-    "srcs": ["B.graphql", "C.graphql"]
-  }
-}

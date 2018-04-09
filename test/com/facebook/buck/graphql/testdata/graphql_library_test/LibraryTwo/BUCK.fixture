@@ -1,5 +1,0 @@
-graphql_library(
-    name = "LibraryTwoGraphQl",
-    srcs = glob(["*.graphql"]),
-    visibility = ["PUBLIC"],
-)
