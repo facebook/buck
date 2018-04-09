@@ -1,7 +1,7 @@
 load("//tools/build_rules:module_rules.bzl", "buck_module")
 
 buck_module(
-    name = "bundler",
+    name = "filebundler",
     srcs = glob(["*.java"]),
     provided_deps = [
         "//src/com/facebook/buck/io:io",
@@ -17,7 +17,7 @@ buck_module(
         "//src/com/facebook/buck/zip:zip",
     ],
     tests = [
-        "//test/com/facebook/buck/zip/bundler:bundler",
+        "//test/com/facebook/buck/features/filebundler:filebundler",
     ],
     visibility = [
         "//src/com/facebook/buck/features/filegroup:filegroup",

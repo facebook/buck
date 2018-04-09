@@ -16,6 +16,8 @@
 
 package com.facebook.buck.features.filegroup;
 
+import com.facebook.buck.features.filebundler.CopyingFileBundler;
+import com.facebook.buck.features.filebundler.FileBundler;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
@@ -29,8 +31,6 @@ import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.zip.bundler.CopyingFileBundler;
-import com.facebook.buck.zip.bundler.FileBundler;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;

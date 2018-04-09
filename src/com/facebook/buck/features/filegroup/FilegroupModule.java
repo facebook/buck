@@ -16,8 +16,8 @@
 
 package com.facebook.buck.features.filegroup;
 
+import com.facebook.buck.features.filebundler.FileBundlerModule;
 import com.facebook.buck.module.BuckModule;
-import com.facebook.buck.zip.bundler.FileBundlerModule;
 
 @BuckModule(
   dependencies = {

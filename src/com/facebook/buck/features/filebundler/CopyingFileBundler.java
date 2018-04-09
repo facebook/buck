@@ -14,27 +14,24 @@
  * under the License.
  */
 
-package com.facebook.buck.zip.bundler;
+package com.facebook.buck.features.filebundler;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.unarchive.UnzipStep;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
-import java.util.Optional;
 
-public class SrcZipAwareFileBundler extends FileBundler {
+public class CopyingFileBundler extends FileBundler {
 
-  public SrcZipAwareFileBundler(BuildTarget target) {
+  public CopyingFileBundler(BuildTarget target) {
     super(target);
   }
 
-  public SrcZipAwareFileBundler(Path basePath) {
+  public CopyingFileBundler(Path basePath) {
     super(basePath);
   }
 
@@ -46,12 +43,6 @@ public class SrcZipAwareFileBundler extends FileBundler {
       Path relativePath,
       Path absolutePath,
       Path destination) {
-    if (relativePath.toString().endsWith(Javac.SRC_ZIP)
-        || relativePath.toString().endsWith(Javac.SRC_JAR)) {
-      steps.add(new UnzipStep(filesystem, absolutePath, destination.getParent(), Optional.empty()));
-      return;
-    }
-
     if (destination.getParent() != null) {
       steps.add(MkdirStep.of(buildCellRelativePathFactory.from(destination.getParent())));
     }

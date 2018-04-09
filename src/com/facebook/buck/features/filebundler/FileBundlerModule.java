@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.zip.bundler;
+package com.facebook.buck.features.filebundler;
 
 import com.facebook.buck.module.BuckModule;
 
