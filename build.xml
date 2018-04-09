@@ -497,6 +497,7 @@
           <exclude name="com/facebook/buck/features/lua/**" />
           <exclude name="com/facebook/buck/features/rust/**" />
           <exclude name="com/facebook/buck/features/zip/rules/**" />
+          <exclude name="com/facebook/buck/gwt/**" />
           <exclude name="com/facebook/buck/jvm/java/abi/source/**" />
           <exclude name="com/facebook/buck/jvm/java/lang/model/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
@@ -526,7 +527,7 @@
     </jar>
   </target>
 
-  <target name="build-modules" depends="build-module-d, build-module-dotnet, build-module-filebundler, build-module-filegroup, build-module-go, build-module-haskell, build-module-lua, build-module-rust, build-module-ziprules"/>
+  <target name="build-modules" depends="build-module-d, build-module-dotnet, build-module-filebundler, build-module-filegroup, build-module-go, build-module-gwt, build-module-haskell, build-module-lua, build-module-rust, build-module-ziprules"/>
 
   <target name="build-module-d" depends="compile">
     <build-buck-module-jar module-name="d">
@@ -572,6 +573,14 @@
         <include name="com/facebook/buck/features/go/*.in"/>
       </module-resources>
     </build-buck-module-jar-with-resources>
+  </target>
+
+  <target name="build-module-gwt" depends="compile">
+    <build-buck-module-jar module-name="gwt">
+      <module-javac-params>
+        <include name="com/facebook/buck/gwt/**/*.java" />
+      </module-javac-params>
+    </build-buck-module-jar>
   </target>
 
   <target name="build-module-haskell" depends="compile">

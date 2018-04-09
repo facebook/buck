@@ -1,10 +1,9 @@
-load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
+load("//tools/build_rules:module_rules.bzl", "buck_module")
 
-java_library_with_plugins(
+buck_module(
     name = "gwt",
     srcs = glob(["*.java"]),
-    visibility = ["PUBLIC"],
-    deps = [
+    provided_deps = [
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/jvm/core:core",
@@ -20,4 +19,5 @@ java_library_with_plugins(
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
     ],
+    visibility = ["//test/com/facebook/buck/gwt:gwt"],
 )
