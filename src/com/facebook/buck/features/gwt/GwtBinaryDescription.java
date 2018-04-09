@@ -14,10 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.gwt;
+package com.facebook.buck.features.gwt;
 
+import com.facebook.buck.features.gwt.GwtBinary.Style;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.gwt.GwtBinary.Style;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.model.BuildTarget;

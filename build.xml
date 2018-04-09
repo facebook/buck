@@ -493,11 +493,11 @@
           <exclude name="com/facebook/buck/features/filebundler/**" />
           <exclude name="com/facebook/buck/features/filegroup/**" />
           <exclude name="com/facebook/buck/features/go/**" />
+          <exclude name="com/facebook/buck/features/gwt/**" />
           <exclude name="com/facebook/buck/features/haskell/**" />
           <exclude name="com/facebook/buck/features/lua/**" />
           <exclude name="com/facebook/buck/features/rust/**" />
           <exclude name="com/facebook/buck/features/zip/rules/**" />
-          <exclude name="com/facebook/buck/gwt/**" />
           <exclude name="com/facebook/buck/jvm/java/abi/source/**" />
           <exclude name="com/facebook/buck/jvm/java/lang/model/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
@@ -578,7 +578,7 @@
   <target name="build-module-gwt" depends="compile">
     <build-buck-module-jar module-name="gwt">
       <module-javac-params>
-        <include name="com/facebook/buck/gwt/**/*.java" />
+        <include name="com/facebook/buck/features/gwt/**/*.java" />
       </module-javac-params>
     </build-buck-module-jar>
   </target>

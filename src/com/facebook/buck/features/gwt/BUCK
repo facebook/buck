@@ -19,5 +19,5 @@ buck_module(
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
     ],
-    visibility = ["//test/com/facebook/buck/gwt:gwt"],
+    visibility = ["//test/com/facebook/buck/features/gwt:gwt"],
 )

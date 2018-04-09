@@ -4,6 +4,5 @@ import com.google.gwt.core.client.EntryPoint;
 
 public class A implements EntryPoint {
 
-  public void onModuleLoad() {
-  }
+  public void onModuleLoad() {}
 }

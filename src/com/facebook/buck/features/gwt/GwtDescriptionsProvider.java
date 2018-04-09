@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.gwt;
+package com.facebook.buck.features.gwt;
 
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.DescriptionCreationContext;
