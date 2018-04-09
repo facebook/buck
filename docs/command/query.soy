@@ -22,26 +22,36 @@
 
 {call buck.command}
 {param overview}
-<p>Provide facilities to query information about the target nodes graph and
-lists the build targets that satisfy the query expression.</p>
-
 <p>
-<code>buck query</code> allows us to combine different operators, using a
-query language. For example, to retrieve the list of all tests for a build target,
-a single <code>buck query</code> call suffices by combining
-the <code>deps</code> and <code>testsof</code> operators.
+The <code>buck query</code> command provides functionality to query
+information about the <em>target nodes</em> graph and return build 
+targets that satisfy the query expression. 
 </p>
 
-<p><pre>{literal}
-buck query "testsof(deps(//java/com/example/app:amazing))"
-{/literal}</pre></p>
+<p>
+Using the query language implemented in <code>buck query</code>, you can
+combine multiple operators in a single command.
+For example, to retrieve a list of all the tests
+for a build target, you can combine the <code>deps()</code> and <code>testsof()</code> operators 
+into a single call to <code>buck query</code>.
+</p>
+
+<p>
+<pre>
+{literal}
+buck query "testsof(deps('//java/com/example/app:amazing'))"
+{/literal}
+</pre>
+</p>
 
 <h2>Query Language</h2>
 
-<p>The Query Language was inspired by <a href="http://bazel.io/docs/query.html">
-Bazel's Query Language</a>. <code>buck query</code> uses the same parser, so
-the lexical syntax is similar, supporting part of Bazel's query functions and
-a few extensions.
+<p>The Buck query language was inspired 
+by the <a href="http://bazel.io/docs/query.html"> Bazel Query Language</a>. 
+The Buck query language uses the same parser, so the lexical syntax is similar. 
+The Buck query language supports a subset of Bazel's query functions with
+a few extensions, such as <code>attrfilter</code>, <code>inputs</code>,
+and <code>owner</code>.
 
 <h3>Lexical Syntax</h3>
 
@@ -65,58 +75,65 @@ a few extensions.
         <li><a href="#labels"><code>labels</code></a>: Extract content of rule attributes</li>
         <li><a href="#owner"><code>owner</code></a>: Find targets that own specified files</li>
         <li><a href="#rdeps"><code>rdeps</code></a>: Transitive closure of reverse dependencies</li>
-        <li><a href="#set"><code>set</code></a>: Read targets from an external source</li>
-        <li><a href="#testsof"><code>testsof</code></a>: List the tests of given targets</li>
+        <li><a href="#set"><code>set</code></a>: Group targets</li>
+        <li><a href="#testsof"><code>testsof</code></a>: List the tests of the specified targets</li>
         <li><a href="#set-operations"><code>union</code></a>: Set union</li>
     </ul>
   </li>
   <li>
     <p>
-      <b>Words</b>, such as <code>//foo:bar</code> or <code>//foo:bar+lib"
-      </code>. If a character sequence is "quoted" (begins and ends with a
-      single-quote <code>'</code>, or begins and ends with a
-      double-quote <code>"</code>), it is a word. If a character sequence is
-      not quoted, it may still be parsed as a word. Unquoted words are
-      sequences of characters drawn from the set of alphabet characters,
-      numerals, slash <code>/</code>, colon <code>:</code>,
-      period <code>.</code>, hyphen <code>-</code>, underscore <code>_</code>,
-      and star <code>*</code>.
+      <b>Words</b>, such as <code>//foo:bar</code> and <code>//foo:bar+lib"
+      </code>. 
+      If a character sequence is "quoted", that is, it begins and ends with a
+      single-quote (<code>'</code>), or begins and ends with a
+      double-quote (<code>"</code>), it is always parsed as a word. 
+      If a character sequence is not quoted, it is still parsed as a word if it adheres to
+      certain conditions: unquoted words are sequence of characters drawn 
+      from the set of alphabet characters, numerals, forward slash (<code>/</code>), 
+      colon (<code>:</code>), period (<code>.</code>), hyphen (<code>-</code>), 
+      underscore (<code>_</code>), and asterisk (<code>*</code>).
       Unquoted words may not start with a hyphen or period.
+      This syntax makes quoting unnecessary in many cases.
+      For example, quoting <code>"java_test"</code> is unnecessary.
     </p>
+
     <p>
-      This syntax makes it so that quote marks aren't needed in most cases.
-      Quoting <code>"java_test"</code> is unnecessary but harmless.
-      Quoting is necessary when writing scripts that
-      construct <code>buck query</code> expressions from user-supplied values.
+      Consider the following additional examples:
 
 <pre>
 {literal}
 //foo:bar+wiz    # WRONG: scanned as //foo:bar + wiz.
 //foo:bar=wiz    # WRONG: scanned as //foo:bar = wiz.
-"//foo:bar+wiz"  # ok.
-"//foo:bar=wiz"  # ok.
+'//foo:bar+wiz'  # Okay.
+'//foo:bar=wiz'  # Okay.
 {/literal}
 </pre>
 
     </p>
+
     <p>
-      Note that this quoting is in addition to any quoting that may be required
-      by your shell.
+      Note that quoting of words is in addition to any quoting that may be
+      required by your shell. In the following example, double-quotes
+      are used for the shell and single-quotes for the <code>build target</code> expression.
 
 <pre>
 {literal}
-buck query ' "//foo:bar=wiz" '
+buck query " '//foo:bar=wiz' "
 {/literal}
 </pre>
 
-      In this example, single-quotes are used for the shell and double-quotes
-      for <code>buck query</code>.
     </p>
+
+    <p>
+      You should always use quotes when writing scripts that
+      construct <code>buck query</code> expressions <em>from user-supplied values</em>.
+    </p>
+
   </li>
   <li>
     <b>Punctuation</b>, such as parens (<code>()</code>), period
     (<code>.</code>) and comma (<code>,</code>), etc. Words containing
-    punctuation (other than the exceptions listed above) must be quoted.
+    punctuation&mdash;other than the exceptions listed above under <b>Words</b>&mdash;must be quoted.
   </li>
 </ul>
 
@@ -127,9 +144,8 @@ Whitespace characters outside of a quoted word are ignored.
 <h3>Expressions: syntax and semantics of the grammar</h3>
 
 <p>
-This is the grammar of the query language, expressed in
-{sp}<a href="https://en.wikipedia.org/wiki/Extended_Backus-Naur_Form">EBNF</a>
-{sp}notation:
+This is the grammar of the query language, expressed in Extended Backus
+Naur Form (<a href="https://en.wikipedia.org/wiki/Extended_Backus-Naur_Form">EBNF</a>) notation:
 </p>
 
 <pre>
@@ -162,58 +178,80 @@ expr ::= word
 
 <h4>Target Patterns</h4>
 
-<p><pre>
-expr ::= word
-</pre></p>
-
 <p>
-Syntactically, a build target pattern is just a word. It is interpreted as an
-unordered set of targets. A <a href="{ROOT}concept/build_target_pattern.html">
-build target pattern</a> can be evaluated to a set containing one or more
-elements.
+<pre>
+expr ::= word
+</pre>
 </p>
 
 <p>
-For example, the word <code>//foo:bar</code> evaluates to a set containing one
-element, while <code>//foo/...</code> matches all targets in every directory
+Syntactically, a <a href="{ROOT}concept/build_target_pattern.html">
+build target pattern</a>, or build target <em>expression</em>, is just a word.  
+A build target pattern evaluates to a set containing one or more elements.
+It is interpreted as an unordered set of targets. 
+</p>
+
+<p>
+For example, the word <code>//foo:bar</code> resolves to a set containing one
+build target, while <code>//foo/...</code> resolves to all targets in every directory
 beneath the </code>foo</code> directory.
 </p>
 
 
 <h4>Aliases</h4>
 
-<p><pre>
+<p>
+<pre>
 expr ::= word
-</pre></p>
+</pre>
+</p>
 
 <p>
 Aliases defined in {call buck.concept_buckconfig /} can
-be used in queries. The aliases will be resolved to the corresponding build
-targets. Suppose there is an alias <code>{literal}app = //apps/myapp:app
-{/literal}</code>, then <code>app</code> can be used
-instead <code>//apps/myapp:app</code> in query expressions.
+be used in queries. Aliases resolve to their corresponding build
+targets. Suppose there is the following alias 
 </p>
 
-<p><code>buck query</code> can also be used to resolve aliases. e.g.
+<p>
+<pre>
+{literal}
+app = //apps/myapp:app
+{/literal}
+</pre>
 </p>
 
-<p><pre>
+<p>
+then <code>app</code> can be used
+instead of <code>//apps/myapp:app</code> in query expressions.
+</p>
+
+<p>
+You can also use <code>buck query</code> to resolve aliases. 
+For example:
+</p>
+
+<p>
+<pre>
 {literal}
 $ buck query app
 //apps/myapp:app
 {/literal}
-</pre></p>
+</pre>
+</p>
 
 
 <h4>Parenthesized expressions</h4>
 
-<p><pre>
+<p>
+<pre>
 expr ::= (expr)
-</pre></p>
+</pre>
+</p>
 
 <p>
-Parentheses associate subexpressions to force an order of evaluation.
-A parenthesized expression evaluates to the value of its argument.
+Parentheses associate sub-expressions to force an order of evaluation.
+A parenthesized expression resolves to the value of the expression it
+encloses.
 </p>
 
 
@@ -222,7 +260,8 @@ A parenthesized expression evaluates to the value of its argument.
 {param title: 'Algebraic set operations: intersection, union, set difference'/}
 {/call}
 
-<p><pre>
+<p>
+<pre>
 {literal}
 expr ::= expr intersect expr
        | expr ^ expr
@@ -231,70 +270,113 @@ expr ::= expr intersect expr
        | expr except expr
        | expr - expr
 {/literal}
-</pre></p>
-
-<p>
-These three operators compute the usual set operations over their arguments.
-Each operator has two forms, a nominal form such as <code>intersect</code> and
-a symbolic form such as <code>^</code>. Both forms are equivalent; the symbolic
-forms are quicker to type. For example,
+</pre>
 </p>
 
-<p><pre>
-deps(//foo:bar) intersect deps(//baz:lib)
-</pre></p>
-
 <p>
-evaluates to the targets that appear both in the transitive closure
-of <code>//foo:bar</code> and <code>//baz:lib</code>. Equivalently:
+These three operators compute the corresponding set operations over their arguments.
+Each operator has two forms, a nominal form, such as <code>intersect</code>, 
+and a symbolic form, such as <code>^</code>. 
+Both forms are equivalent; the symbolic forms are just quicker to type. For example,
 </p>
 
-<p><pre>
-deps(//foo:bar) ^ deps(//baz:lib)
-</pre></p>
+<p>
+<pre>
+buck query "deps('//foo:bar') intersect deps('//baz:lib')"
+</pre>
+</p>
+
+<p>
+and
+</p>
+
+<p>
+<pre>
+buck query "deps('//foo:bar') ^ deps('//baz:lib')"
+</pre>
+</p>
+
+<p>
+both return the targets that appear in the transitive closure
+of <code>//foo:bar</code> and <code>//baz:lib</code>. 
+</p>
 
 <p>
 The <code>intersect</code> (<code>^</code>)
-and <code>union</code> (<code>+</code>) operations are commutative
-(symmetric); <code>except</code> (<code>-</code>) is asymmetric.
-The parser treats all three operators as left-associative and of equal
-precedence, so you might want parentheses. For example, the first two of
-these expressions are equivalent, but the third is not:
+and <code>union</code> (<code>+</code>) operators are commutative
+(symmetric); however, the <code>except</code> (<code>-</code>) operator is asymmetric.
 </p>
 
-<p><pre>
+<p>
+The parser treats all three operators as left-associative and of equal
+precedence, so we strongly recommend that you use parentheses if you need to ensure a
+specific order of evaluation. For example, the first two 
+expressions are equivalent, but the third is not:
+</p>
+
+<p>
+<pre>
 {literal}
 x intersect y union z
 (x intersect y) union z
 x intersect (y union z)
 {/literal}
-</pre></p>
-
-<p>
-It is strongly recommended to use parentheses where there is any danger of
-ambiguity in reading a query expression.
+</pre>
 </p>
 
 
 {call .section}
 {param anchor: 'set' /}
-{param title: 'Read targets from an external source: set'/}
+{param title: 'Group targets: set'/}
 {/call}
 
-<p><pre>
-expr ::= set(word *)
-</pre></p>
+<p>
+<b>Semantics</b>
+<pre>
+{literal}
+<code>set(<em>a</em> <em>b</em> <em>c</em> ...)</code> 
+{/literal}
+</pre>
+</p>
+
 
 <p>
-The <code>set(a b c ...)</code> operator computes the union of a set of zero
-or more targets, separated by whitespace (no commas).
+<b>Syntax</b>
+<pre>
+{literal}
+expr ::= set(expr *)
+{/literal}
+</pre>
 </p>
 
 <p>
-If you are invoking <code>buck query</code> programmatically, e.g. run a
-query on a list of targets, <code>set()</code> is a way of grouping this
-list in the query. Remember to quote the targets to make sure they are
-parsed correctly.
+The <code>set(<em>a</em> <em>b</em> <em>c</em> ...)</code> operator computes the union of a set of zero
+or more targets, separated by white space (no commas).
+Quote the targets to ensure that they are parsed correctly.
+</p>
+
+<p>
+<b>Example:</b>
+</p>
+
+<p>
+The following expression returns the merged set (union) of dependencies for 
+the targets: <code>:main</code> and <code>:myclass</code>.
+</p>
+
+<p>
+<pre>
+{literal}
+buck query "deps( set( ':main' ':myclass' ) )"
+{/literal}
+</pre>
+</p>
+
+
+<p>
+If you invoke <code>buck query</code> programmatically, such as 
+to run a query on a list of targets, then <code>set()</code> is 
+a way to group this list in the query. 
 </p>
 
 
@@ -303,40 +385,74 @@ parsed correctly.
 {param title: 'All dependency paths: allpaths'/}
 {/call}
 
-<p><pre>
-{literal}
-expr ::= allpaths(expr, expr)
-{/literal}
-</pre></p>
-
 <p>
-The <code>allpaths(from, to)</code> operator evaluates to the graph formed by
-paths between the sets <code>from</code> and <code>to</code>, following the
-dependencies between nodes. For example, the value of
-{sp}<code>{literal}allpaths(//foo:bar, //foo/bar/lib:baz){/literal}</code> is
-the dependency graph rooted at the single target node <code>//foo:bar</code>,
-including all target nodes that depend on <code>//foo/bar/lib:baz</code>.
+<b>Semantics</b>
+<pre>
+{literal}
+allpaths(<em>from</em>, <em>to</em>)
+{/literal}
+</pre>
 </p>
 
 <p>
-The arguments can be expressions.<br/>
-<code>{literal}
-allpaths(kind(java_library, '//...'), '//foo:bar')
-{/literal}</code> shows all the paths between any <code>java_library</code> in
+<b>Syntax</b>
+<pre>
+{literal}
+expr ::= allpaths(expr, expr)
+{/literal}
+</pre>
+</p>
+
+<p>
+The <code>allpaths(<em>from</em>, <em>to</em>)</code> operator evaluates to the graph formed by
+paths between the sets <code>from</code> and <code>to</code>, following the
+dependencies between nodes. For example, the value of
+
+<p>
+<pre>
+{literal}
+buck query "allpaths('//foo:bar', '//foo/bar/lib:baz')"
+{/literal}
+</pre><p>
+
+is the dependency graph rooted at the single target node <code>//foo:bar</code>,
+that includes all target nodes that depend on <code>//foo/bar/lib:baz</code>.
+</p>
+
+<p>
+The two arguments to <code>allpaths()</code> can themselves be expressions.
+For example, the command:
+
+
+<p>
+<pre>
+{literal}
+buck query "allpaths(kind(java_library, '//...'), '//foo:bar')"
+{/literal}
+</pre>
+</p>
+
+shows all the paths between any <code>java_library</code> in
 the repository and the target <code>//foo:bar</code>.
 </p>
 
 <p>
-This operator is best used together with the <code>--dot</code>
-{sp}parameter to generate an image. Sample usage:
+We recommend using <code>allpaths()</code> with 
+the <code>--dot</code>{sp}parameter to generate a 
+graphviz file that can then
+be rendered as an image. For example:
 </p>
 
 <p><pre class="prettyprint lang-py">
 {literal}
-$ buck query "allpaths(//foo:bar, //foo/bar/lib:baz)" --dot > result.dot
+$ buck query "allpaths('//foo:bar', '//foo/bar/lib:baz')" --dot > result.dot
 $ dot -Tpng result.dot -o image.png
 {/literal}
-</pre></p>
+</pre>
+</p>
+
+<p><em>Graphviz</em> is an open-source graph-visualization software
+tool. Graphviz uses the <em>dot</em> language to describe graphs.</p>
 
 
 {call .section}
@@ -344,29 +460,98 @@ $ dot -Tpng result.dot -o image.png
 {param title: 'Rule attribute filtering: attrfilter'/}
 {/call}
 
-<p><pre>
+<p>
+<b>Semantics</b>
+<pre>
+{literal}
+attrfilter(<em>attribute</em>, <em>value</em>, <em>expression</em>)
+{/literal}
+</pre>
+</p>
+
+<p>
+<b>Syntax</b>
+<pre>
 {literal}
 expr ::= attrfilter(word, word, expr)
 {/literal}
-</pre></p>
-
-<p>
-The <code>attrfilter(attribute, value, expression)</code> operator evaluates
-the given <code>expression</code> and filters the resulting build targets
-whose <code>attribute</code> contain the given <code>value</code>.
+</pre>
 </p>
 
 <p>
-If the attribute is just a value, say <code>name</code>, it is compared to the
-given <code>value</code>. If it's a list, the target is filtered if the
-given <code>value</code> is contained in the list. If it's a dictionary,
-the <code>value</code> is searched both in the keys and values of the
-dictionary.
+The <code>attrfilter(<em>attribute</em>, <em>value</em>, <em>expression</em>)</code> operator 
+evaluates the given <code><em>expression</em></code> and filters the resulting build targets
+for those where the specified <code><em>attribute</em></code> contains the 
+specified <code><em>value</em></code>.
 </p>
 
 <p>
-For example, <code>attrfilter(deps, '//foo:bar', '//...')</code> filters the
-build targets in the repository that depend on <code>'//foo:bar'</code>.
+In this context, the term <em>attribute</em> refers to an argument in a build rule, 
+such as <code>name</code>, <code>headers</code>, <code>srcs</code>, or <code>deps</code>.
+</p>
+
+<p>
+If the attribute is a single value, say <code>name</code>, it is compared to the
+specified <code><em>value</em></code>, and the target is returned if
+they match. 
+If the attribute is a list, the target is returned if that list contains the specified <code><em>value</em></code>. 
+If the attribute is a dictionary, the target is returned if the <code><em>value</em></code> exists in either the keys or the values of the dictionary.
+</p>
+
+<p>
+For example, 
+<p>
+
+<p>
+<pre>
+{literal}
+buck query "attrfilter(deps, '//foo:bar', '//...')"
+{/literal}
+</pre>
+</p>
+
+<p>
+returns the build targets in the repository that depend on <code>//foo:bar</code>&mdash;or 
+more precisely: those build targets that include <code>//foo:bar</code> in 
+their <code>deps</code> argument list.
+</p>
+
+<p>
+The match performed by <code>attrfilter()</code> is semantic rather than textual. 
+So, for example, if you have the following <code>deps</code> argument in
+your build file:
+
+<p>
+<pre>
+{literal}
+cxx_binary(
+  name = 'main',
+  srcs = [
+    'main.cpp'
+  ],
+  deps = [
+    ':myclass',
+  ],
+)
+{/literal}
+</pre>
+</p>
+
+<p>
+Your <code>attrfilter()</code> clause should be:
+</p>
+
+<p>
+<pre>
+{literal}
+buck query "attrfilter( deps, '//:myclass', '//...' )"
+{/literal}
+</pre>
+</p>
+
+<p>
+Note the double forward slash (<code>//</code>) before the second
+argument to <code>attrfilter()</code>.
 </p>
 
 
@@ -375,24 +560,48 @@ build targets in the repository that depend on <code>'//foo:bar'</code>.
 {param title: 'Build files of targets: buildfile'/}
 {/call}
 
-<p><pre>
+<p>
+<b>Semantics</b>
+<pre>
+{literal}
+buildfile(<em>expression</em>)
+{/literal}
+</pre>
+</p>
+
+<p>
+<b>Syntax</b>
+<pre>
 {literal}
 expr ::= buildfile(expr)
 {/literal}
-</pre></p>
+</pre>
+</p>
 
 <p>
-The <code>buildfile(expression)</code> operator evaluates to the build files
-that define the targets that result from the evaluation
+The <code>buildfile(expression)</code> operator evaluates to those build 
+files that define the targets that result from the evaluation
 of <code>expression</code>.
 </p>
 
 <p>
-In order to find the build file associated with a file, the <code>owner</code>
-{sp}operator can be combined with <code>buildfile</code>.
-For example, <code>buildfile(owner('foo/bar/main.cpp'))</code> first finds the
-targets that own <code>foo/bar/main.cpp</code> and then find the build files
-that define these targets, e.g. <code>foo/bar/BUCK</code>.
+In order to find the build file associated with a source file, combine the <code>owner</code>
+{sp}operator with <code>buildfile</code>.
+For example, 
+</p>
+
+<p>
+<pre>
+{literal}
+buck query "buildfile(owner('foo/bar/main.cpp'))" 
+{/literal}
+</pre>
+</p>
+
+<p>
+first finds the targets that <em>own</em> <code>foo/bar/main.cpp</code> and 
+then returns the build files, such as <code>foo/bar/BUCK</code>, that define 
+those targets. 
 </p>
 
 
@@ -401,70 +610,180 @@ that define these targets, e.g. <code>foo/bar/BUCK</code>.
 {param title: 'Transitive closure of dependencies: deps'/}
 {/call}
 
-<p><pre>
+<p>
+<b>Semantics</b>
+<pre>
+{literal}
+deps(<em>x</em>)
+{/literal}
+</pre>
+</p>
+
+<p>
+<b>Syntax</b>
+<pre>
 {literal}
 expr ::= deps(expr)
        | deps(expr, depth)
        | deps(expr, depth, expr)
 {/literal}
-</pre></p>
+</pre>
+</p>
 
 <p>
-The <code>deps(x)</code> operator evaluates to the graph formed by the
-transitive closure of dependencies of its argument set <i>x</i>, including the 
-nodes from the argument set <i>x</i>. For example,
-the value of <code>deps(//foo:bar)</code> is the dependency graph rooted at
-the single target node <code>//foo:bar</code>, including all its dependencies.
+The <code>deps(<em>x</em>)</code> operator evaluates to the graph formed by the
+transitive closure of the dependencies of its argument set, <i>x</i>,
+including the nodes from the argument set itself. 
+For example, the value of 
+</p>
+
+<p>
+<pre>
+{literal}
+buck query "deps('//foo:bar')" 
+{/literal}
+</pre>
+</p>
+
+<p>
+is the dependency graph rooted at the target node <code>//foo:bar</code>. 
+It includes all of the dependencies of <code>//foo:bar</code>. 
+It also includes <code>//foo:bar</code> itself.
 </p>
 
 <p>
 The <code>deps</code> operator accepts an optional second argument, which is
 an integer literal specifying an upper bound on the depth of the search.
-So <code>deps(//foo:bar, 1)</code> evaluates to the direct dependencies of
-the target <code>//foo:bar</code>, and <code>deps(//foo:bar, 2)</code> further
+So <code>deps('//foo:bar', 1)</code> evaluates to the direct dependencies of
+the target <code>//foo:bar</code>, and <code>deps('//foo:bar', 2)</code> further
 includes the nodes directly reachable from the nodes
-in <code>deps(//foo:bar, 1)</code>, and so on. If the depth parameter is
-omitted, the search is unbounded, i.e. it computes the transitive closure of
-dependencies.
+in <code>deps('//foo:bar', 1)</code>, and so on. If the depth parameter is
+omitted, the search is unbounded, that is, it computes the entire transitive 
+closure of dependencies.
 </p>
 
 <p>
-The <code>deps</code> operator accepts an optional third argument, which is
-an expression that is evaluated for each node and returns the children to
+The <code>deps()</code> operator also accepts an optional third argument, which is
+a filter expression that is evaluated for each node and returns the children to
 recurse on when collecting transitive dependencies.
-The filter expression can use the <code>first_order_deps()</code> function
-which evaluates to a set containing the first-order depencencies of the current
-node (e.g. equivalent to <code>deps(<node>, 1)</code>).
-As an example, the query <code>deps(//foo:bar, 1, first_order_deps())</code> is
-equivalent to <code>deps(//foo:bar, 1)</code>.
+This filter expression can use the <code>first_order_deps()</code> function
+which returns a set that contains the first-order dependencies of the current
+node&mdash;which is equivalent to <code>deps(<node>, 1)</code>).
+For example, the query, 
+
+<p>
+<pre>
+{literal}
+buck query "deps('//foo:bar', 1, first_order_deps())"
+{/literal}
+</pre>
 </p>
 
+<p>
+is equivalent to 
+</p>
+
+<p>
+<pre>
+{literal}
+buck query "deps('//foo:bar', 1)"
+{/literal}
+</pre>
+</p>
+
+<p>
+Note that because <code>deps()</code> uses positional parameters,
+you must specify the second argument in order to specify the third. In
+this scenario, if you want the search to be unbounded, we recommend that
+you use <code>4096</code> (<code>4K</code>) as the value for the second
+argument. In practice, we have found that the dependency graph does not
+exceed this depth.  
+</p>
 
 {call .section}
 {param anchor: 'filter' /}
 {param title: 'Filter targets by name: filter'/}
 {/call}
 
-<p><pre>
-{literal}
-expr ::= filter(word, expr)
-{/literal}
-</pre></p>
 
 <p>
-The <code>filter(pattern, expression)</code> operator evaluates the given
-{sp}<code>expression</code> and filters the targets whose name matches the
-given regular expression <code>pattern</code>.
-For example, <code>filter('library', deps('//foo:bar'))</code> will filter
-the targets in the transitive closure of <code>//foo:bar</code> that contain
-{sp}<code>library</code> in their name.
+<b>Semantics</b>
+<pre>
+{literal}
+filter(<em>pattern</em>, <em>expression</em>)
+{/literal}
+</pre>
 </p>
 
 <p>
-Another example is <code>filter('.*\.java$', labels(srcs, /&#x2F;foo:bar))</code>
-{sp}which filters the <code>java</code> files used to build
-{sp}<code>//foo:bar</code>. Quotation of the pattern is often required to make
-sure regular expressions, e.g. <code>.*xpto</code>, are parsed correctly.
+<b>Syntax</b>
+<pre>
+{literal}
+expr ::= filter(word, expr)
+{/literal}
+</pre>
+</p>
+
+<p>
+The <code>filter(<em>pattern</em>, <em>expression</em>)</code> operator evaluates the
+specified
+{sp}<code><em>expression</em></code> and returns the targets that have a
+name attribute that matches the specified regular expression <code><em>pattern</em></code>.
+For example, 
+
+<p>
+<pre>
+{literal}
+buck query "filter('library', deps('//foo:bar'))"
+{/literal}
+</pre>
+</p>
+
+<p>
+returns the targets in the transitive closure of <code>//foo:bar</code>
+that contain the string {sp}<code>library</code> in their name attribute.
+</p>
+
+<p>
+The <code>filter()</code> operator performs a <em>partial</em> match. 
+So, both of the following clauses would match a target with the name <code>main</code>.
+
+<p>
+<pre>
+{literal}
+buck query "filter( 'main', '//...' )"
+{/literal}
+</pre>
+</p>
+
+<p>
+<pre>
+{literal}
+buck query "filter( 'mai', '//...' )"
+{/literal}
+</pre>
+</p>
+
+
+<p>
+Another example: 
+</p>
+
+<pre>
+{literal}
+buck query "filter('.*\.java$', labels(srcs, '//foo:bar'))"
+{/literal}
+</pre>
+</p>
+
+<p>
+returns the <code>java</code> files used to build
+{sp}<code>//foo:bar</code>. 
+</p>
+
+<p>
+You often need to quote the pattern to ensure that regular expressions, 
+such as <code>.*xpto</code>, are parsed correctly.
 </p>
 
 
@@ -473,17 +792,41 @@ sure regular expressions, e.g. <code>.*xpto</code>, are parsed correctly.
 {param title: 'Direct input files: inputs'/}
 {/call}
 
-<p><pre>
+<p>
+<b>Semantics</b>
+<pre>
+{literal}
+inputs(<em>x</em>)
+{/literal}
+</pre>
+</p>
+
+<p>
+<b>Syntax</b>
+<pre>
 {literal}
 expr ::= inputs(expr)
 {/literal}
-</pre></p>
+</pre>
+</p>
 
 <p>
-The <code>inputs(x)</code> operator evaluates to the files which are inputs
+The <code>inputs(x)</code> operator returns the files that are inputs
 to the argument set <i>x</i>, ignoring all dependencies. Note that it does not
-include any files required for parsing (e.g. the BUCK file), rather just the
-files required to actually run the build after parsing has been performed.
+include any files required for parsing, such as the BUCK file. Rather,
+it returns only the files required to actually run the build after parsing 
+has been performed.
+</p>
+
+<p>
+Note that <code>input()</code> returns only those input files indicated
+by the <em>target graph</em>. Input files that are present in the <em>action graph</em> but 
+not in the target graph are not returned by <code>input()</code>.
+</p>
+
+<p>
+You could consider the <code>inputs()</code> and <code>owner()</code> operators 
+to be inverses of each other.
 </p>
 
 
@@ -492,31 +835,84 @@ files required to actually run the build after parsing has been performed.
 {param title: 'Filter targets by rule type: kind'/}
 {/call}
 
-<p><pre>
+<p>
+<b>Semantics</b>
+<pre>
+{literal}
+kind(<em>pattern</em>, <em>expression</em>)
+{/literal}
+</pre>
+</p>
+
+<p>
+<b>Syntax</b>
+<pre>
 {literal}
 expr ::= kind(word, expr)
 {/literal}
-</pre></p>
+</pre>
+</p>
 
 <p>
-The <code>kind(pattern, expression)</code> operator evaluates the given
-{sp}<code>expression</code> and filters the targets whose rule type matches the
-given <code>pattern</code>.
-For example, <code>kind('java_library', deps('//foo:bar'))</code> will filter
-all <code>java_library</code> targets in the transitive dependencies
+The <code>kind(<em>pattern</em>, <em>expression</em>)</code> operator
+evaluates the specified {sp}<code>expression</code> and returns the targets where 
+the rule type matches the specified <code>pattern</code>.
+For example, 
+</p>
+
+<p>
+<pre>
+{literal}
+buck query "kind('java_library', deps('//foo:bar'))"
+{/literal}
+</pre>
+</p>
+
+<p>
+returns all <code>java_library</code> targets in the transitive dependencies
 of <code>//foo:bar</code>.
 </p>
 
 <p>
-The pattern can be a regular expression. Hence,
-{sp}<code>kind('.*_test', '//...')</code> will evaluate to all targets in the
-repository whose rule type ends with <code>_test</code>,
-e.g. <code>java_test</code> or <code>cxx_test</code>.
+The specified <em>pattern</em> can be a regular expression. For example,
 </p>
 
 <p>
-Quotation of the pattern is often required to make sure regular
-expressions, e.g. <code>.*_test</code>, are parsed correctly.
+<pre>
+{literal}
+buck query "kind('.*_test', '//...')"
+{/literal}
+</pre>
+</p>
+
+<p>
+returns all targets in the repository with a rule type that ends 
+with <code>_test</code>, such as <code>java_test</code> and <code>cxx_test</code>.
+</p>
+
+<p>
+You often need to quote the pattern to ensure that regular expressions, 
+such as <code>.*xpto</code>, are parsed correctly.
+</p>
+
+<p>
+To get a list of the available rule types in a given set of targets, you could use
+a command such as the following:
+</p>
+
+<p>
+<pre>
+{literal}
+buck query : --output-attributes buck.type
+{/literal}
+</pre>
+</p>
+
+<p>
+which prints all the rule types in the build file in the current
+directory (<code>:</code>)&mdash;in JSON format. 
+See <code>--output-attributes</code> described in the <b>Parameters</b> section 
+below for more information.
 </p>
 
 
@@ -525,58 +921,130 @@ expressions, e.g. <code>.*_test</code>, are parsed correctly.
 {param title: 'Extract content of rule attributes: labels'/}
 {/call}
 
-<p><pre>
+<p>
+<b>Semantics</b>
+<pre>
+{literal}
+labels(<em>name</em>, <em>expression</em>)
+{/literal}
+</pre>
+</p>
+
+<p>
+<b>Syntax</b>
+<pre>
 {literal}
 expr ::= labels(word, expr)
 {/literal}
-</pre></p>
-
-<p>
-The <code>labels(name, expr)</code> operator evaluates to the set of build
-targets and file paths specified in the attribute <code>name</code> of the
-targets that result from the evaluation of the expression <code>expr</code>.
+</pre>
 </p>
 
 <p>
-For example, <code>labels(srcs, '//foo:bar')</code> will return all files
-and build targets specified in the <code>srcs</code> attribute of the rule
-{sp}<code>//foo:bar</code>.
+The <code>labels(<em>name</em>, <em>expression</em>)</code> operator returns the 
+set of build targets and file paths listed in the 
+attribute specified by the <em>name</em> parameter, in the targets that result from the 
+evaluation of <em>expression</em>.
+Valid values for <em>name</em> include <code>srcs</code>, <code>headers</code>, and <code>deps</code>.
 </p>
 
 <p>
-<code>labels('deps', testsof('//foo:bar'))</code> evaluates to the build
-targets and file paths of the <code>deps</code> attribute of the tests of the
-rule <code>//foo:bar</code>. Note that <code>deps</code> must be quoted because
-it is a reserved keyword of the query language.
+<b>Example</b>: Get all build targets and file paths specified in 
+the <code>srcs</code> attribute for <em>all the rules</em> in the build
+file in the current directory.
 </p>
 
+<p> <pre>
+{literal}
+buck query "labels( 'srcs', ':' )"
+{/literal}
+</pre>
+</p>
+
+<p>
+In performing this operation, Buck validates that any source
+files referenced in these attributes do, in fact, exist; Buck generates
+an error if they do not.
+</p>
+
+<p>
+<b>Example</b>: Get all the build targets and file paths specified in 
+the <code>deps</code> arguments in the <em>tests of</em> the 
+target <code>//foo:bar</code>. 
+</p>
+
+<p> <pre>
+{literal}
+buck query "labels('deps', testsof('//foo:bar'))"
+{/literal}
+</pre>
+</p>
+
+<p>
+Note that <code>deps</code> must be quoted because, in addition to being
+a build-file attribute, it is itself a reserved keyword of the query language.
+</p>
 
 {call .section}
 {param anchor: 'owner' /}
 {param title: 'Find targets that own specified files: owner'/}
 {/call}
 
-<p><pre>
+<p>
+<b>Semantics</b>
+<pre>
+{literal}
+owner(<em>file</em>)
+{/literal}
+</pre>
+</p>
+
+<p>
+<b>Syntax</b>
+<pre>
 {literal}
 expr ::= owner(word)
 {/literal}
-</pre></p>
-
-<p>
-The <code>owner(x)</code> operator evaluates to the targets that own the file
-specified as argument. For example, <code>owner('examples/1.txt')</code>
-{sp}evaluates to the target that owns the file <code>examples/1.txt</code>,
-e.g. <code>//examples:one</code>.
+</pre>
 </p>
 
 <p>
-If no target that owns the file is found, the operator evaluates to the empty
-set.
+The <code>owner(<em>file</em>)</code> operator returns the targets that own the 
+specified <em>file</em>. In this context, <em>own</em> means that the
+target has the specified file as an input. You could consider 
+the <code>owner()</code> and <code>inputs()</code> operators 
+to be inverses of each other.  
 </p>
 
-<blockquote>
-Buck expects these paths to be relative to the buck root, but will optionally support absolute paths as well.
-</blockquote>
+<p>
+<b>Example</b>: 
+</p>
+
+<p>
+<pre>
+{literal}
+buck query "owner('examples/1.txt')"
+{/literal}
+</pre>
+</p>
+
+<p>
+returns the targets that owns the file <code>examples/1.txt</code>,
+which could be a value such as <code>//examples:one</code>.
+</p>
+
+<p>
+It is possible for the specified file to have multiple owners, in which 
+case, <code>owner()</code> returns a set of targets.
+</p>
+
+<p>
+If no owner for the file is found, <code>owner()</code> outputs the message: 
+<pre>
+{literal}
+No owner was found for &lt;file&gt;
+{/literal}
+</pre>
+</p>
 
 
 {call .section}
@@ -584,87 +1052,179 @@ Buck expects these paths to be relative to the buck root, but will optionally su
 {param title: 'Transitive closure of reverse dependencies: rdeps'/}
 {/call}
 
-<p><pre>
+<p>
+<b>Semantics</b>
+<pre>
+{literal}
+rdeps(<em>u</em>, <em>x</em>)</code> 
+{/literal}
+</pre>
+</p>
+
+<p>
+<b>Syntax</b>
+<p>
+<pre>
 {literal}
 expr ::= rdeps(expr, expr)
        | rdeps(expr, expr, depth)
 {/literal}
-</pre></p>
+</pre>
+</p>
 
 <p>
-The <code>rdeps(u, x)</code> operator evaluates to the reverse dependencies
+The <code>rdeps(u, x)</code> operator returns the reverse dependencies
 of the argument set <code>x</code> within the transitive closure of the
-set <code>u</code> (the <i>universe</i>), including the nodes from the argument 
-set <code>x</code>.
+set <code>u</code> (the <em>universe</em>). The returned values include 
+the nodes from the argument set <code>x</code> itself.
 </p>
 
 <p>
 The <code>rdeps</code> operator accepts an optional third argument, which is
 an integer literal specifying an upper bound on the depth of the search.
-So <code>{literal}rdeps(//foo:bar, //example:baz, 1){/literal}</code> evaluates
-to the targets in the transitive closure of <code>//foo:bar</code> that depend
-directly on <code>//example:baz</code>. If the depth parameter is omitted,
-the search is unbounded.
+</p>
+
+<p>
+The following example,
+</p>
+
+<p>
+<pre>
+{literal}
+buck query "rdeps('//foo:bar', '//example:baz', 1)"
+{/literal}
+</pre>
+</p>
+
+<p>
+returns the targets in the transitive closure of <code>//foo:bar</code> that 
+depend directly on <code>//example:baz</code>. 
+</p>
+
+<p>
+If the <em>depth</em> parameter is omitted, the search is unbounded.
 </p>
 
 
 {call .section}
 {param anchor: 'testsof' /}
-{param title: 'List the tests of given targets: testsof'/}
+{param title: 'List the tests of the specified targets: testsof'/}
 {/call}
 
-<p><pre>
+<p>
+<b>Semantics</b>
+<pre>
+{literal}
+testsof(<em>expression</em>)
+{/literal}
+</pre>
+</p>
+
+<p>
+<b>Syntax</b>
+<pre>
+{literal}
 expr ::= testsof(expr)
-</pre></p>
-
-<p>
-The <code>testsof(x)</code> operator evaluates to the tests associated with
-the targets of its argument set <i>x</i>. For example, the value
-of <code>testsof(set('//foo:bar' '//baz:app+lib')</code> is the set of tests
-associated with either <code>//foo:bar</code> or <code>//baz:app+lib</code>.
+{/literal}
+</pre>
 </p>
 
 <p>
-In order to obtain all the tests
-associated with the target and its dependencies, this operator can be
-combined with the <code>deps</code> operator,
-e.g. <code>testsof(deps(//foo:bar))</code> first finds the transitive closure
-of <code>//foo:bar</code>, and then lists all the tests of this transitive
-closure.
+The <code>testsof(<em>expression</em>)</code> operator returns the tests associated with the 
+targets specified by <em>expression</em>. 
+For example, 
 </p>
+
+
+<p>
+<pre>
+{literal}
+buck query "testsof(set('//foo:bar' '//baz:app+lib')"
+{/literal}
+</pre>
+</p>
+
+<p>
+returns the tests associated with <code>//foo:bar</code> and <code>//baz:app+lib</code>.
+</p>
+
+<p>
+To obtain all the tests associated with the target and its dependencies, 
+you can combine the <code>testsof()</code> operator with 
+the <code>deps()</code> operator. For example,
+</p>
+
+<p>
+<pre>
+{literal}
+buck query "testsof(deps('//foo:bar'))"
+{/literal}
+</pre>
+</p>
+
+<p>
+first finds the transitive closure of <code>//foo:bar</code>, 
+and then lists all the tests associated with the targets in this transitive closure.
+</p>
+
 
 <h2>Executing multiple queries at once</h2>
 
 <p>
-Suppose you want to know the tests
-associated with a set of targets. This can be done combining
-the <code>testsof</code>, <code>deps</code> and <code>set</code> operators,
-e.g.
+Suppose you want to know the tests associated with a set of targets. 
+This can be done by combining 
+the <code>testsof</code>, <code>deps</code> and <code>set</code> operators.
+For example,
 </p>
 
-<p><pre>
-buck query testsof(deps(set(target1 target2 target3)))
-</pre></p>
-
 <p>
-Suppose now that you want to now the tests for each of these targets.
-The above command only had the union of the tests.
-Instead of executing one query per target, <code>buck query</code> provides
-an interface to perform repeated queries with different inputs at the same
-time. To do this, first define the query expression format and then pass
-the list of input targets. Example:
+<pre>
+{literal}
+buck query "testsof(deps(set('target1' 'target2' 'target3')))"
+{/literal}
+</pre>
 </p>
 
-<p><pre>
-buck query testsof(deps(%s)) target1 target2 target3
-</pre></p>
+<p>
+Suppose you now want to know the tests for <em>each</em> of these targets;
+the above command returns the union of the tests.
+Instead of executing one query for the entire set of targets, <code>buck query</code> provides
+a way to repeat a query with different targets using a single command.
+To do this, first define the query expression format and then list the input targets, 
+separated by spaces. For example,
+</p>
 
 <p>
-The <code>%s</code> in the query expression format will be replaced by each
-the targets and the resulting query is evaluated for each input. Combined with
-the <code>--json</code> parameter, the result of
-this <code>buck query</code> call is aggregated by input target, otherwise it
-returns the union of each query.
+<pre>
+{literal}
+buck query "testsof(deps( %s ))" target1 target2 target3
+{/literal}
+</pre>
+</p>
+
+<p>
+The <code>%s</code> in the query expression is replaced by each of
+the listed targets, and for each target, the resulting query expression is evaluated. 
+If you add the <code>--json</code> parameter, the result of
+the command is grouped by input target; otherwise, as in the previous
+example using <code>set()</code>, the command merges the results and 
+returns the union of the queries.
+</p>
+
+<p>
+This syntax is also useful for subcommands
+that take arguments that are not targets, 
+such as <code>owner()</code>. 
+Recall that the <code>set()</code> operator works only with targets, 
+but the <code>owner()</code> operator takes a filename as its argument.
+</p>
+
+<p>
+<pre>
+{literal}
+buck query "owner( %s )" main.cpp myclass.cpp myclass.h
+{/literal}
+</pre>
 </p>
 
 <h2>Referencing Args Files</h2>
@@ -672,69 +1232,88 @@ returns the union of each query.
 <p>
 When running queries, arguments can be stored in external files, one argument per line, and
 referenced with the <code>@</code> symbol. This is convenient when the number of arguments is long
-or when the query input should be persisted to source control.
+or when you want to persist the query input in source control.
 </p>
-
-<p><pre>
-buck query testsof(deps(%s)) @/path/to/args-file
-</pre></p>
 
 <p>
-If only one query that includes all targets in the file is desired, an alternative syntax can
-be used:
+<pre>
+buck query "testsof(deps(%s))" @/path/to/args-file
+</pre>
 </p>
-
-<p><pre>
-buck query testsof(deps(%Ss)) @/path/to/args-file
-</pre></p>
 
 <p>
-In the example above, the lines of the file will be converted to a set and
-subsituted for the <code>%Ss</code>. In addition, each line's contents will be singly quoted.
-In the example above, if the args file contained the following:
+If you want to include all the targets in the <code>@</code>-file in a
+single query execution, you can use the following alternative syntax.
+Note the addition of the capital "<code>S</code>" in "<code>%Ss</code>".
 </p>
 
-<p><pre>
+<p>
+<pre>
+buck query "testsof(deps(%Ss))" @/path/to/args-file
+</pre>
+</p>
+
+<p>
+In the example above, the lines of the file are converted to a set and
+substituted for the <code>%Ss</code>. In addition, each line's contents
+are singly quoted.  In the example above, if the args file contains the following:
+</p>
+
+<p>
+<pre>
 {literal}
 //foo:bar
 //foo:baz
 {/literal}
-</pre></p>
-
-<p>
-Then the query produced will be equivalent to:
+</pre>
 </p>
 
-<p><pre>
-buck query testsof(deps(set('//foo:bar' '//foo:baz')))
-</pre></p>
-
 <p>
-When using multiple <code>%Ss</code> operators in a single query, it is
-sometimes necessary to use different values for the different occurrences of
-{sp}<code>%Ss</code>. In those situations, <code>--</code> can be used to
-separate elements that go in different sets. For example:
+Then the query expression is equivalent to:
 </p>
 
-<p><pre>
+<p>
+<pre>
+{literal}
+buck query "testsof(deps(set('//foo:bar' '//foo:baz')))"
+{/literal}
+</pre>
+</p>
+
+
+<p>
+If you use multiple <code>%Ss</code> operators in a single query, you
+can specify which lines in the <code>@</code>-file should be used
+for each instance of <code>%Ss</code> in the query expression:
+use <code>--</code> to separate elements that go in different sets. 
+For example:
+</p>
+
+<p>
+<pre>
 buck query "testsof(deps(%Ss)) union deps(%Ss)" @path/to/args-file
-</pre></p>
+</pre>
+</p>
 
-<p><pre>
+<p>
+<pre>
 {literal}
 //foo:foo
 --
 //bar:bar
 {/literal}
-</pre></p>
+</pre>
+</p>
 
 <p>
 is equivalent to running the following:
 </p>
 
-<p><pre>
+<p>
+<pre>
 buck query "testsof(deps(set('//foo:foo'))) union deps(set('//bar:bar'))"
-</pre></p>
+</pre>
+</p>
 
 {/param}
 
@@ -758,17 +1337,19 @@ android_prebuilt_aar : olivedrab3
 java_library         : indianred1
 prebuilt_jar         : mediumpurple1
 {/literal}
-</pre></p>
+</pre>
+</p>
 
   Example usage:
   </p>
 
 <p><pre class="prettyprint lang-py">
 {literal}
-$ buck query "allpaths(//foo:bar, //path/to:other)" --dot > graph.dot
+$ buck query "allpaths('//foo:bar', '//path/to:other')" --dot > graph.dot
 $ dot -Tpng graph.dot -o graph.png
 {/literal}
-</pre></p>
+</pre>
+</p>
 
   <p>Then, open <code>graph.png</code> to visualize the graph.</p>
 
@@ -810,7 +1391,10 @@ $ buck query '//example/...' --output-attributes buck.type name srcs
   }
 }
 {/literal}
-</pre></p></div>
+</pre>
+</p>
+
+</div>
 
   {/param}
 {/call}
@@ -820,8 +1404,10 @@ $ buck query '//example/...' --output-attributes buck.type name srcs
 
 <pre class="prettyprint lang-py">
 {literal}
-# For all of the following examples, assume this BUCK file exists in
+#
+# For the following examples, assume this BUCK file exists in
 # the `examples` directory.
+#
 cxx_library(
   name = 'one',
   srcs = [ '1.cpp' ],
@@ -878,7 +1464,7 @@ cxx_test(
 </pre>
 
 <p>
-Lists all the targets in the repository.
+<b>Example</b>: List <em>all</em> the targets in the repository.
 </p>
 
 <p>
@@ -898,13 +1484,39 @@ Lists all the targets in the repository.
 
 
 <p>
-Resolve multiple aliases. Suppose there is an alias
-{sp}<code>{literal}app = //apps/myapp:app{/literal}</code> and another
-{sp}<code>{literal}lib = //libraries/mylib:lib{/literal}</code>.
-<p>
+<b>Example</b>: Resolve multiple aliases. 
+</p>
 
 <p>
-<pre>buck query "%s" app lib --json</pre>
+Suppose <code>.buckconfig</code> contains the following aliases:
+</p>
+
+<p>
+<pre>
+{literal}
+app = //apps/myapp:app
+lib = //libraries/mylib:lib
+{/literal}
+</pre>
+</p>
+
+<p>
+Then the following query
+</p>
+
+<p>
+<pre>
+{literal}
+buck query "%s" app lib --json
+{/literal}
+</pre>
+</p>
+
+
+<p>
+returns
+</p>
+
 <pre class="prettyprint lang-js">
 {literal}
 {
@@ -915,22 +1527,32 @@ Resolve multiple aliases. Suppose there is an alias
 </pre>
 </p>
 
+<p>
+<b>Example</b>: List all of the targets on which 
+the <code>one</code> library <em>directly</em> depends. 
+</p>
 
-Lists all of the rules that the <code>one</code> library directly depends on
-<pre>buck query "deps(//examples:one, 1)"</pre>
+<p>
 <pre>
 {literal}
+$ buck query "deps(//examples:one, 1)"
 //examples:one
 //examples:three
 //examples:two
 {/literal}
 </pre>
+</p>
 
-Lists the JSON representation of the transitive closure of the rules that
-the <code>one</code> library depends on
-<pre>buck query "deps(//examples:one)"</pre>
-<pre class="prettyprint lang-js">
+
+<p>
+<b>Example</b>: Display a JSON representation of the transitive closure of the targets
+on which the <code>one</code> library depends. 
+</p>
+
+<p>
+<pre>
 {literal}
+$ buck query "deps(//examples:one)"
 [
   "//examples:five",
   "//examples:four",
@@ -940,32 +1562,35 @@ the <code>one</code> library depends on
 ]
 {/literal}
 </pre>
+</p>
 
-Outputs a JSON representation of the tests associated with the{sp}
-<code>one</code> and <code>three</code> libraries.
-<pre>{literal}
-buck query --json "testsof(deps('%s'))" //examples:one //examples:three
-{/literal}</pre>
-<pre class="prettyprint lang-js">
+
+<p>
+<b>Example</b>: Display a JSON representation of the tests associated with 
+the{sp} <code>one</code> and <code>three</code> libraries.
+</p>
+
+<p>
+<pre>
 {literal}
+$ buck query --json "testsof(deps('%s'))" //examples:one //examples:three
 {
   "//examples:one": ["//examples:two-tests"],
   "//examples:three": ["//examples:three-tests"]
 }
 {/literal}
 </pre>
-
-
-<p>
-Resolve multiple aliases. Suppose there is an alias
-{sp}<code>{literal}app = //apps/myapp:app{/literal}</code> and another
-{sp}<code>{literal}lib = //libraries/mylib:lib{/literal}</code>.
-<p>
+</p>
 
 <p>
-<pre>buck query "buildfile(owner('examples/1.cpp'))"</pre>
-<pre class="prettyprint lang-js">
+<b>Example</b>: Display the build file that contains the target which is
+the owner of the source file, <code>examples/1.cpp</code>.
+</p>
+
+<p>
+<pre>
 {literal}
+$ buck query "buildfile(owner('examples/1.cpp'))"
 example/BUCK
 {/literal}
 </pre>
