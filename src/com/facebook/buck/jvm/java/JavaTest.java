@@ -77,6 +77,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -671,21 +672,22 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             new AbstractExecutionStep("write classpath file") {
               @Override
               public StepExecutionResult execute(ExecutionContext context) throws IOException {
-                ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
+                ImmutableList.Builder<Path> builder = ImmutableList.builder();
                 if (unbundledResourcesRoot.isPresent()) {
                   builder.add(
                       buildContext
                           .getSourcePathResolver()
                           .getAbsolutePath(unbundledResourcesRoot.get()));
                 }
-                ImmutableSet<Path> classpathEntries =
+                ImmutableList<Path> classpathEntries =
                     builder
                         .addAll(
                             compiledTestsLibrary
                                 .getTransitiveClasspaths()
                                 .stream()
                                 .map(buildContext.getSourcePathResolver()::getAbsolutePath)
-                                .collect(ImmutableSet.toImmutableSet()))
+                                .sorted(Comparator.naturalOrder())
+                                .collect(ImmutableList.toImmutableList()))
                         .addAll(
                             additionalClasspathEntries
                                 .stream()
@@ -696,7 +698,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                                                 .getSourcePathResolver()
                                                 .getAbsolutePath(e.getLeft())
                                             : e.getRight())
-                                .collect(ImmutableSet.toImmutableSet()))
+                                .sorted(Comparator.naturalOrder())
+                                .collect(ImmutableList.toImmutableList()))
                         .addAll(getBootClasspathEntries(context))
                         .build();
                 getProjectFilesystem()

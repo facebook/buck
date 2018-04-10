@@ -1,0 +1,37 @@
+# Dep graph
+#
+#    bin     5
+#       \   /
+#        lib   1
+#       /   \ / \
+#   test     3   2
+#             \ /
+#              4
+#
+
+java_library(
+    name = "lib",
+    deps = [
+        "//lib5:lib",
+        "//lib3:lib",
+    ]
+)
+
+java_binary(
+    name = "bin",
+    # Otherwise it puts every file into jar multiple times
+    # Is it even possible? yes it is!
+    disallow_all_duplicates=True,
+    deps = [
+        ":lib",
+    ]
+)
+
+java_test(
+    name = "test",
+    srcs = ["DependencyResolutionTest.java"],
+    deps = [
+        "buck//third-party/java/junit:junit",
+        ":lib"
+    ]
+)
