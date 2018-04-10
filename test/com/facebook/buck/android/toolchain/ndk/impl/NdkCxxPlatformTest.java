@@ -216,6 +216,12 @@ public class NdkCxxPlatformTest {
   }
 
   @Test
+  public void testNdkX64AndroidPlatform() {
+    assertEquals("android-21", NdkCxxPlatforms.getAndroidPlatformForX64("android-16"));
+    assertEquals("android-22", NdkCxxPlatforms.getAndroidPlatformForX64("android-22"));
+  }
+
+  @Test
   public void testNdkFlags() throws IOException {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     Path ndkRoot = tmp.newFolder("android-ndk-r10b");
