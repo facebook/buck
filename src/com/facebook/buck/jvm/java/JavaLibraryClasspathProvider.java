@@ -79,7 +79,16 @@ public class JavaLibraryClasspathProvider {
    * Include the classpath entries from all JavaLibraryRules that have a direct line of lineage to
    * this rule through other JavaLibraryRules. For example, in the following dependency graph:
    *
-   * <p>A / \ B C / \ / \ D E F G
+   * <p>
+   *
+   * <pre>
+   *        A
+   *      /   \
+   *     B     C
+   *    / \   / \
+   *    D E   F G
+   *
+   * </pre>
    *
    * <p>If all of the nodes correspond to BuildRules that implement JavaLibraryRule except for B
    * (suppose B is a Genrule), then A's classpath will include C, F, and G, but not D and E. This is
