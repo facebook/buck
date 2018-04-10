@@ -20,6 +20,7 @@ import com.facebook.buck.distributed.thrift.CoordinatorService;
 import com.facebook.buck.distributed.thrift.CoordinatorService.Client;
 import com.facebook.buck.distributed.thrift.GetWorkRequest;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
+import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.ReportMinionAliveRequest;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.log.Logger;
@@ -103,7 +104,11 @@ public class ThriftCoordinatorClient implements Closeable {
 
   /** Requests for more work from the Coordinator to build locally. */
   public synchronized GetWorkResponse getWork(
-      String minionId, int minionExitCode, List<String> finishedTargets, int maxWorkUnitsToFetch)
+      String minionId,
+      MinionType minionType,
+      int minionExitCode,
+      List<String> finishedTargets,
+      int maxWorkUnitsToFetch)
       throws IOException {
     LOG.info(
         String.format(
@@ -115,6 +120,7 @@ public class ThriftCoordinatorClient implements Closeable {
         new GetWorkRequest()
             .setStampedeId(stampedeId)
             .setMinionId(minionId)
+            .setMinionType(minionType)
             .setFinishedTargets(finishedTargets)
             .setMaxWorkUnitsToFetch(maxWorkUnitsToFetch)
             .setLastExitCode(minionExitCode);

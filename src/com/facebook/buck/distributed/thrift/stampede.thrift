@@ -21,6 +21,14 @@ struct StampedeId {
   1 : optional string id;
 }
 
+# Identifies the hardware category for a particular minion when running in mixed environment.
+enum MinionType {
+    UNKNOWN = 0,
+    LOW_SPEC = 1,
+    # This is the default, and should always be used for minion running on coordinator machine
+    STANDARD_SPEC = 2,
+}
+
 # Uniquely identifies the run of a specific BuildSlave server.
 # One StampedeId will have one or more BuildSlaveRunId's associated with it.
 # (one BuildSlaveRunId per Minion that contributes to the build).

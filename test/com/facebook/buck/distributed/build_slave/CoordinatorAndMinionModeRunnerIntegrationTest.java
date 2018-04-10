@@ -20,6 +20,7 @@ import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.build_slave.MinionModeRunnerIntegrationTest.FakeBuildExecutorImpl;
 import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
+import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.event.listener.NoOpCoordinatorBuildRuleEventsPublisher;
@@ -44,6 +45,7 @@ import org.junit.rules.TemporaryFolder;
 public class CoordinatorAndMinionModeRunnerIntegrationTest {
 
   private static final StampedeId STAMPEDE_ID = ThriftCoordinatorServerIntegrationTest.STAMPEDE_ID;
+  private static final MinionType MINION_TYPE = MinionType.STANDARD_SPEC;
   private static final int CONNECTION_TIMEOUT_MILLIS = 1000;
   private static final int MAX_PARALLEL_WORK_UNITS = 10;
   private static final long POLL_LOOP_INTERVAL_MILLIS = 8;
@@ -89,6 +91,7 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
             OptionalInt.empty(),
             Futures.immediateFuture(localBuilder),
             STAMPEDE_ID,
+            MINION_TYPE,
             new BuildSlaveRunId().setId("sl7"),
             MAX_PARALLEL_WORK_UNITS,
             EasyMock.createNiceMock(MinionModeRunner.BuildCompletionChecker.class),

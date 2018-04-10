@@ -12,15 +12,21 @@ public class GetWorkRequest implements org.apache.thrift.TBase<GetWorkRequest, G
   private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("GetWorkRequest");
 
   private static final org.apache.thrift.protocol.TField MINION_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("minionId", org.apache.thrift.protocol.TType.STRING, (short)1);
-  private static final org.apache.thrift.protocol.TField STAMPEDE_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("stampedeId", org.apache.thrift.protocol.TType.STRUCT, (short)2);
-  private static final org.apache.thrift.protocol.TField LAST_EXIT_CODE_FIELD_DESC = new org.apache.thrift.protocol.TField("lastExitCode", org.apache.thrift.protocol.TType.I32, (short)3);
-  private static final org.apache.thrift.protocol.TField FINISHED_TARGETS_FIELD_DESC = new org.apache.thrift.protocol.TField("finishedTargets", org.apache.thrift.protocol.TType.LIST, (short)4);
+  private static final org.apache.thrift.protocol.TField MINION_TYPE_FIELD_DESC = new org.apache.thrift.protocol.TField("minionType", org.apache.thrift.protocol.TType.I32, (short)2);
+  private static final org.apache.thrift.protocol.TField STAMPEDE_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("stampedeId", org.apache.thrift.protocol.TType.STRUCT, (short)3);
+  private static final org.apache.thrift.protocol.TField LAST_EXIT_CODE_FIELD_DESC = new org.apache.thrift.protocol.TField("lastExitCode", org.apache.thrift.protocol.TType.I32, (short)4);
+  private static final org.apache.thrift.protocol.TField FINISHED_TARGETS_FIELD_DESC = new org.apache.thrift.protocol.TField("finishedTargets", org.apache.thrift.protocol.TType.LIST, (short)5);
   private static final org.apache.thrift.protocol.TField MAX_WORK_UNITS_TO_FETCH_FIELD_DESC = new org.apache.thrift.protocol.TField("maxWorkUnitsToFetch", org.apache.thrift.protocol.TType.I32, (short)6);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new GetWorkRequestStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new GetWorkRequestTupleSchemeFactory();
 
   public java.lang.String minionId; // optional
+  /**
+   * 
+   * @see com.facebook.buck.distributed.thrift.MinionType
+   */
+  public com.facebook.buck.distributed.thrift.MinionType minionType; // optional
   public com.facebook.buck.distributed.thrift.StampedeId stampedeId; // optional
   public int lastExitCode; // optional
   public java.util.List<java.lang.String> finishedTargets; // optional
@@ -29,9 +35,14 @@ public class GetWorkRequest implements org.apache.thrift.TBase<GetWorkRequest, G
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
     MINION_ID((short)1, "minionId"),
-    STAMPEDE_ID((short)2, "stampedeId"),
-    LAST_EXIT_CODE((short)3, "lastExitCode"),
-    FINISHED_TARGETS((short)4, "finishedTargets"),
+    /**
+     * 
+     * @see com.facebook.buck.distributed.thrift.MinionType
+     */
+    MINION_TYPE((short)2, "minionType"),
+    STAMPEDE_ID((short)3, "stampedeId"),
+    LAST_EXIT_CODE((short)4, "lastExitCode"),
+    FINISHED_TARGETS((short)5, "finishedTargets"),
     MAX_WORK_UNITS_TO_FETCH((short)6, "maxWorkUnitsToFetch");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
@@ -49,11 +60,13 @@ public class GetWorkRequest implements org.apache.thrift.TBase<GetWorkRequest, G
       switch(fieldId) {
         case 1: // MINION_ID
           return MINION_ID;
-        case 2: // STAMPEDE_ID
+        case 2: // MINION_TYPE
+          return MINION_TYPE;
+        case 3: // STAMPEDE_ID
           return STAMPEDE_ID;
-        case 3: // LAST_EXIT_CODE
+        case 4: // LAST_EXIT_CODE
           return LAST_EXIT_CODE;
-        case 4: // FINISHED_TARGETS
+        case 5: // FINISHED_TARGETS
           return FINISHED_TARGETS;
         case 6: // MAX_WORK_UNITS_TO_FETCH
           return MAX_WORK_UNITS_TO_FETCH;
@@ -100,12 +113,14 @@ public class GetWorkRequest implements org.apache.thrift.TBase<GetWorkRequest, G
   private static final int __LASTEXITCODE_ISSET_ID = 0;
   private static final int __MAXWORKUNITSTOFETCH_ISSET_ID = 1;
   private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.MINION_ID,_Fields.STAMPEDE_ID,_Fields.LAST_EXIT_CODE,_Fields.FINISHED_TARGETS,_Fields.MAX_WORK_UNITS_TO_FETCH};
+  private static final _Fields optionals[] = {_Fields.MINION_ID,_Fields.MINION_TYPE,_Fields.STAMPEDE_ID,_Fields.LAST_EXIT_CODE,_Fields.FINISHED_TARGETS,_Fields.MAX_WORK_UNITS_TO_FETCH};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
     tmpMap.put(_Fields.MINION_ID, new org.apache.thrift.meta_data.FieldMetaData("minionId", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.MINION_TYPE, new org.apache.thrift.meta_data.FieldMetaData("minionType", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, com.facebook.buck.distributed.thrift.MinionType.class)));
     tmpMap.put(_Fields.STAMPEDE_ID, new org.apache.thrift.meta_data.FieldMetaData("stampedeId", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, com.facebook.buck.distributed.thrift.StampedeId.class)));
     tmpMap.put(_Fields.LAST_EXIT_CODE, new org.apache.thrift.meta_data.FieldMetaData("lastExitCode", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
@@ -130,6 +145,9 @@ public class GetWorkRequest implements org.apache.thrift.TBase<GetWorkRequest, G
     if (other.isSetMinionId()) {
       this.minionId = other.minionId;
     }
+    if (other.isSetMinionType()) {
+      this.minionType = other.minionType;
+    }
     if (other.isSetStampedeId()) {
       this.stampedeId = new com.facebook.buck.distributed.thrift.StampedeId(other.stampedeId);
     }
@@ -148,6 +166,7 @@ public class GetWorkRequest implements org.apache.thrift.TBase<GetWorkRequest, G
   @Override
   public void clear() {
     this.minionId = null;
+    this.minionType = null;
     this.stampedeId = null;
     setLastExitCodeIsSet(false);
     this.lastExitCode = 0;
@@ -177,6 +196,38 @@ public class GetWorkRequest implements org.apache.thrift.TBase<GetWorkRequest, G
   public void setMinionIdIsSet(boolean value) {
     if (!value) {
       this.minionId = null;
+    }
+  }
+
+  /**
+   * 
+   * @see com.facebook.buck.distributed.thrift.MinionType
+   */
+  public com.facebook.buck.distributed.thrift.MinionType getMinionType() {
+    return this.minionType;
+  }
+
+  /**
+   * 
+   * @see com.facebook.buck.distributed.thrift.MinionType
+   */
+  public GetWorkRequest setMinionType(com.facebook.buck.distributed.thrift.MinionType minionType) {
+    this.minionType = minionType;
+    return this;
+  }
+
+  public void unsetMinionType() {
+    this.minionType = null;
+  }
+
+  /** Returns true if field minionType is set (has been assigned a value) and false otherwise */
+  public boolean isSetMinionType() {
+    return this.minionType != null;
+  }
+
+  public void setMinionTypeIsSet(boolean value) {
+    if (!value) {
+      this.minionType = null;
     }
   }
 
@@ -299,6 +350,14 @@ public class GetWorkRequest implements org.apache.thrift.TBase<GetWorkRequest, G
       }
       break;
 
+    case MINION_TYPE:
+      if (value == null) {
+        unsetMinionType();
+      } else {
+        setMinionType((com.facebook.buck.distributed.thrift.MinionType)value);
+      }
+      break;
+
     case STAMPEDE_ID:
       if (value == null) {
         unsetStampedeId();
@@ -339,6 +398,9 @@ public class GetWorkRequest implements org.apache.thrift.TBase<GetWorkRequest, G
     case MINION_ID:
       return getMinionId();
 
+    case MINION_TYPE:
+      return getMinionType();
+
     case STAMPEDE_ID:
       return getStampedeId();
 
@@ -364,6 +426,8 @@ public class GetWorkRequest implements org.apache.thrift.TBase<GetWorkRequest, G
     switch (field) {
     case MINION_ID:
       return isSetMinionId();
+    case MINION_TYPE:
+      return isSetMinionType();
     case STAMPEDE_ID:
       return isSetStampedeId();
     case LAST_EXIT_CODE:
@@ -397,6 +461,15 @@ public class GetWorkRequest implements org.apache.thrift.TBase<GetWorkRequest, G
       if (!(this_present_minionId && that_present_minionId))
         return false;
       if (!this.minionId.equals(that.minionId))
+        return false;
+    }
+
+    boolean this_present_minionType = true && this.isSetMinionType();
+    boolean that_present_minionType = true && that.isSetMinionType();
+    if (this_present_minionType || that_present_minionType) {
+      if (!(this_present_minionType && that_present_minionType))
+        return false;
+      if (!this.minionType.equals(that.minionType))
         return false;
     }
 
@@ -447,6 +520,10 @@ public class GetWorkRequest implements org.apache.thrift.TBase<GetWorkRequest, G
     if (isSetMinionId())
       hashCode = hashCode * 8191 + minionId.hashCode();
 
+    hashCode = hashCode * 8191 + ((isSetMinionType()) ? 131071 : 524287);
+    if (isSetMinionType())
+      hashCode = hashCode * 8191 + minionType.getValue();
+
     hashCode = hashCode * 8191 + ((isSetStampedeId()) ? 131071 : 524287);
     if (isSetStampedeId())
       hashCode = hashCode * 8191 + stampedeId.hashCode();
@@ -480,6 +557,16 @@ public class GetWorkRequest implements org.apache.thrift.TBase<GetWorkRequest, G
     }
     if (isSetMinionId()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.minionId, other.minionId);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetMinionType()).compareTo(other.isSetMinionType());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetMinionType()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.minionType, other.minionType);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -550,6 +637,16 @@ public class GetWorkRequest implements org.apache.thrift.TBase<GetWorkRequest, G
         sb.append("null");
       } else {
         sb.append(this.minionId);
+      }
+      first = false;
+    }
+    if (isSetMinionType()) {
+      if (!first) sb.append(", ");
+      sb.append("minionType:");
+      if (this.minionType == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.minionType);
       }
       first = false;
     }
@@ -641,7 +738,15 @@ public class GetWorkRequest implements org.apache.thrift.TBase<GetWorkRequest, G
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 2: // STAMPEDE_ID
+          case 2: // MINION_TYPE
+            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+              struct.minionType = com.facebook.buck.distributed.thrift.MinionType.findByValue(iprot.readI32());
+              struct.setMinionTypeIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 3: // STAMPEDE_ID
             if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
               struct.stampedeId = new com.facebook.buck.distributed.thrift.StampedeId();
               struct.stampedeId.read(iprot);
@@ -650,7 +755,7 @@ public class GetWorkRequest implements org.apache.thrift.TBase<GetWorkRequest, G
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 3: // LAST_EXIT_CODE
+          case 4: // LAST_EXIT_CODE
             if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
               struct.lastExitCode = iprot.readI32();
               struct.setLastExitCodeIsSet(true);
@@ -658,7 +763,7 @@ public class GetWorkRequest implements org.apache.thrift.TBase<GetWorkRequest, G
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 4: // FINISHED_TARGETS
+          case 5: // FINISHED_TARGETS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
                 org.apache.thrift.protocol.TList _list8 = iprot.readListBegin();
@@ -703,6 +808,13 @@ public class GetWorkRequest implements org.apache.thrift.TBase<GetWorkRequest, G
         if (struct.isSetMinionId()) {
           oprot.writeFieldBegin(MINION_ID_FIELD_DESC);
           oprot.writeString(struct.minionId);
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.minionType != null) {
+        if (struct.isSetMinionType()) {
+          oprot.writeFieldBegin(MINION_TYPE_FIELD_DESC);
+          oprot.writeI32(struct.minionType.getValue());
           oprot.writeFieldEnd();
         }
       }
@@ -758,21 +870,27 @@ public class GetWorkRequest implements org.apache.thrift.TBase<GetWorkRequest, G
       if (struct.isSetMinionId()) {
         optionals.set(0);
       }
-      if (struct.isSetStampedeId()) {
+      if (struct.isSetMinionType()) {
         optionals.set(1);
       }
-      if (struct.isSetLastExitCode()) {
+      if (struct.isSetStampedeId()) {
         optionals.set(2);
       }
-      if (struct.isSetFinishedTargets()) {
+      if (struct.isSetLastExitCode()) {
         optionals.set(3);
       }
-      if (struct.isSetMaxWorkUnitsToFetch()) {
+      if (struct.isSetFinishedTargets()) {
         optionals.set(4);
       }
-      oprot.writeBitSet(optionals, 5);
+      if (struct.isSetMaxWorkUnitsToFetch()) {
+        optionals.set(5);
+      }
+      oprot.writeBitSet(optionals, 6);
       if (struct.isSetMinionId()) {
         oprot.writeString(struct.minionId);
+      }
+      if (struct.isSetMinionType()) {
+        oprot.writeI32(struct.minionType.getValue());
       }
       if (struct.isSetStampedeId()) {
         struct.stampedeId.write(oprot);
@@ -797,21 +915,25 @@ public class GetWorkRequest implements org.apache.thrift.TBase<GetWorkRequest, G
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, GetWorkRequest struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(5);
+      java.util.BitSet incoming = iprot.readBitSet(6);
       if (incoming.get(0)) {
         struct.minionId = iprot.readString();
         struct.setMinionIdIsSet(true);
       }
       if (incoming.get(1)) {
+        struct.minionType = com.facebook.buck.distributed.thrift.MinionType.findByValue(iprot.readI32());
+        struct.setMinionTypeIsSet(true);
+      }
+      if (incoming.get(2)) {
         struct.stampedeId = new com.facebook.buck.distributed.thrift.StampedeId();
         struct.stampedeId.read(iprot);
         struct.setStampedeIdIsSet(true);
       }
-      if (incoming.get(2)) {
+      if (incoming.get(3)) {
         struct.lastExitCode = iprot.readI32();
         struct.setLastExitCodeIsSet(true);
       }
-      if (incoming.get(3)) {
+      if (incoming.get(4)) {
         {
           org.apache.thrift.protocol.TList _list13 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
           struct.finishedTargets = new java.util.ArrayList<java.lang.String>(_list13.size);
@@ -824,7 +946,7 @@ public class GetWorkRequest implements org.apache.thrift.TBase<GetWorkRequest, G
         }
         struct.setFinishedTargetsIsSet(true);
       }
-      if (incoming.get(4)) {
+      if (incoming.get(5)) {
         struct.maxWorkUnitsToFetch = iprot.readI32();
         struct.setMaxWorkUnitsToFetchIsSet(true);
       }

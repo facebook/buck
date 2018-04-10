@@ -16,8 +16,12 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import static com.facebook.buck.distributed.thrift.MinionType.LOW_SPEC;
+import static com.facebook.buck.distributed.thrift.MinionType.STANDARD_SPEC;
+
 import com.facebook.buck.distributed.NoopArtifactCacheByBuildRule;
 import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
+import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.event.listener.NoOpCoordinatorBuildRuleEventsPublisher;
@@ -54,6 +58,55 @@ public class MinionWorkloadAllocatorTest {
   }
 
   @Test
+  public void testMultipleMinionFailuresRecoveredFromInMixedEnvironment() {
+    MinionWorkloadAllocator allocator =
+        new MinionWorkloadAllocator(
+            createQueueUsingResolver(
+                CustomBuildRuleResolverFactory.createDiamondDependencyResolverWithChainFromLeaf()),
+            new DistBuildTraceTracker(STAMPEDE_ID));
+
+    // Allocate work unit with 2 targets to low-speced minion one
+    allocateWorkAndAssert(
+        allocator,
+        MINION_ONE,
+        LOW_SPEC,
+        ImmutableList.of(),
+        ImmutableList.of(
+            ImmutableList.of(
+                CustomBuildRuleResolverFactory.LEAF_TARGET,
+                CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET)));
+
+    // Simulate failure of minion one
+    simulateAndAssertMinionFailure(allocator, MINION_ONE);
+
+    // Try to re-allocate to low-speced minion two, which should be skipped as failed nodes
+    // should always go to the most powerful hardware.
+    allocateWorkAndAssert(allocator, MINION_TWO, LOW_SPEC, ImmutableList.of(), ImmutableList.of());
+
+    // Try to re-allocate to standard-speced minion one, which should pickup the work.
+    allocateWorkAndAssert(
+        allocator,
+        MINION_THREE,
+        STANDARD_SPEC,
+        ImmutableList.of(),
+        ImmutableList.of(
+            ImmutableList.of(
+                CustomBuildRuleResolverFactory.LEAF_TARGET,
+                CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET)));
+
+    // Minion 3 completes nodes and gets more work
+    List<WorkUnit> minionTwoWorkFromRequestTwo =
+        allocator.dequeueZeroDependencyNodes(
+            MINION_THREE,
+            STANDARD_SPEC,
+            ImmutableList.of(
+                CustomBuildRuleResolverFactory.LEAF_TARGET,
+                CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET),
+            MAX_WORK_UNITS);
+    Assert.assertEquals(2, minionTwoWorkFromRequestTwo.size());
+  }
+
+  @Test
   public void testMultipleMinionFailuresRecoveredFrom() {
     MinionWorkloadAllocator allocator =
         new MinionWorkloadAllocator(
@@ -62,103 +115,90 @@ public class MinionWorkloadAllocatorTest {
             new DistBuildTraceTracker(STAMPEDE_ID));
 
     // Allocate work unit with 2 targets to minion one
-    Assert.assertFalse(allocator.hasMinionFailed(MINION_ONE));
-    List<WorkUnit> minionOneWorkUnits =
-        allocator.dequeueZeroDependencyNodes(MINION_ONE, ImmutableList.of(), MAX_WORK_UNITS);
-    Assert.assertEquals(1, minionOneWorkUnits.size());
-    List<String> buildTargetsAssignedToMinionOne = minionOneWorkUnits.get(0).getBuildTargets();
-    Assert.assertEquals(2, buildTargetsAssignedToMinionOne.size());
-    Assert.assertEquals(
-        CustomBuildRuleResolverFactory.LEAF_TARGET, buildTargetsAssignedToMinionOne.get(0));
-    Assert.assertEquals(
-        CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET, buildTargetsAssignedToMinionOne.get(1));
+    allocateWorkAndAssert(
+        allocator,
+        MINION_ONE,
+        STANDARD_SPEC,
+        ImmutableList.of(),
+        ImmutableList.of(
+            ImmutableList.of(
+                CustomBuildRuleResolverFactory.LEAF_TARGET,
+                CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET)));
 
     // Simulate failure of minion one
-    allocator.handleMinionFailure(MINION_ONE);
-    Assert.assertFalse(allocator.isBuildFinished());
-    Assert.assertTrue(allocator.hasMinionFailed(MINION_ONE));
+    simulateAndAssertMinionFailure(allocator, MINION_ONE);
 
     // Re-allocate work unit from failed minion one to minion two
-    Assert.assertFalse(allocator.hasMinionFailed(MINION_TWO));
-    List<WorkUnit> minionTwoWorkFromRequestOne =
-        allocator.dequeueZeroDependencyNodes(MINION_TWO, ImmutableList.of(), MAX_WORK_UNITS);
-    Assert.assertEquals(1, minionTwoWorkFromRequestOne.size());
-    List<String> buildTargetsAssignedToMinionTwo =
-        minionTwoWorkFromRequestOne.get(0).getBuildTargets();
-    Assert.assertEquals(2, buildTargetsAssignedToMinionTwo.size());
-    Assert.assertEquals(
-        CustomBuildRuleResolverFactory.LEAF_TARGET, buildTargetsAssignedToMinionTwo.get(0));
-    Assert.assertEquals(
-        CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET, buildTargetsAssignedToMinionTwo.get(1));
+    allocateWorkAndAssert(
+        allocator,
+        MINION_TWO,
+        STANDARD_SPEC,
+        ImmutableList.of(),
+        ImmutableList.of(
+            ImmutableList.of(
+                CustomBuildRuleResolverFactory.LEAF_TARGET,
+                CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET)));
 
     // Minion 2 completes the first item in the work unit it was given. Doesn't get anything new
-    List<WorkUnit> minionTwoWorkFromRequestTwo =
-        allocator.dequeueZeroDependencyNodes(
-            MINION_TWO,
-            ImmutableList.of(CustomBuildRuleResolverFactory.LEAF_TARGET),
-            MAX_WORK_UNITS);
-    Assert.assertEquals(0, minionTwoWorkFromRequestTwo.size());
+    allocateWorkAndAssert(
+        allocator,
+        MINION_TWO,
+        STANDARD_SPEC,
+        ImmutableList.of(CustomBuildRuleResolverFactory.LEAF_TARGET),
+        ImmutableList.of());
 
     // Simulate failure of minion two.
-    allocator.handleMinionFailure(MINION_TWO);
-    Assert.assertFalse(allocator.isBuildFinished());
-    Assert.assertTrue(allocator.hasMinionFailed(MINION_TWO));
+    simulateAndAssertMinionFailure(allocator, MINION_TWO);
 
     // Re-allocate *remaining work in* work unit from failed minion two to minion three
-    Assert.assertFalse(allocator.hasMinionFailed(MINION_THREE));
-    List<WorkUnit> minionThreeWorkFromRequestOne =
-        allocator.dequeueZeroDependencyNodes(MINION_THREE, ImmutableList.of(), MAX_WORK_UNITS);
-    Assert.assertEquals(1, minionThreeWorkFromRequestOne.size());
-    List<String> buildTargetsAssignedToMinionThree =
-        minionThreeWorkFromRequestOne.get(0).getBuildTargets();
-    Assert.assertEquals(1, buildTargetsAssignedToMinionThree.size());
-    Assert.assertEquals(
-        CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET, buildTargetsAssignedToMinionThree.get(0));
+    allocateWorkAndAssert(
+        allocator,
+        MINION_THREE,
+        STANDARD_SPEC,
+        ImmutableList.of(),
+        ImmutableList.of(ImmutableList.of(CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET)));
 
     // Minion three completes node at top of chain, and now gets two more work units, left and right
     List<WorkUnit> minionThreeWorkFromRequestTwo =
         allocator.dequeueZeroDependencyNodes(
             MINION_THREE,
+            STANDARD_SPEC,
             ImmutableList.of(CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET),
             MAX_WORK_UNITS);
     Assert.assertEquals(2, minionThreeWorkFromRequestTwo.size());
 
     // Minion three completes left node. right node is still remaining. no new work.
-    List<WorkUnit> minionThreeWorkFromRequestThree =
-        allocator.dequeueZeroDependencyNodes(
-            MINION_THREE,
-            ImmutableList.of(CustomBuildRuleResolverFactory.LEFT_TARGET),
-            MAX_WORK_UNITS);
-    Assert.assertEquals(0, minionThreeWorkFromRequestThree.size());
+    allocateWorkAndAssert(
+        allocator,
+        MINION_THREE,
+        STANDARD_SPEC,
+        ImmutableList.of(CustomBuildRuleResolverFactory.LEFT_TARGET),
+        ImmutableList.of());
 
     // Minion three fails.
-    allocator.handleMinionFailure(MINION_THREE);
-    Assert.assertFalse(allocator.isBuildFinished());
+    simulateAndAssertMinionFailure(allocator, MINION_THREE);
 
     // Minion four picks up remaining work unit from minion three. gets work unit with right node
-    Assert.assertFalse(allocator.hasMinionFailed(MINION_FOUR));
-    List<WorkUnit> minionFourWorkFromRequestOne =
-        allocator.dequeueZeroDependencyNodes(MINION_FOUR, ImmutableList.of(), MAX_WORK_UNITS);
-    Assert.assertEquals(1, minionFourWorkFromRequestOne.size());
-    List<String> buildTargetsAssignedToMinionFour =
-        minionFourWorkFromRequestOne.get(0).getBuildTargets();
-    Assert.assertEquals(1, buildTargetsAssignedToMinionFour.size());
-    Assert.assertEquals(
-        CustomBuildRuleResolverFactory.RIGHT_TARGET, buildTargetsAssignedToMinionFour.get(0));
+    allocateWorkAndAssert(
+        allocator,
+        MINION_FOUR,
+        STANDARD_SPEC,
+        ImmutableList.of(),
+        ImmutableList.of(ImmutableList.of(CustomBuildRuleResolverFactory.RIGHT_TARGET)));
 
     // Minion four completes right node. gets final root node back
-    List<WorkUnit> minionFourWorkFromRequestTwo =
-        allocator.dequeueZeroDependencyNodes(
-            MINION_FOUR,
-            ImmutableList.of(CustomBuildRuleResolverFactory.RIGHT_TARGET),
-            MAX_WORK_UNITS);
-    Assert.assertEquals(1, minionFourWorkFromRequestTwo.size());
-    Assert.assertFalse(allocator.isBuildFinished());
+    allocateWorkAndAssert(
+        allocator,
+        MINION_FOUR,
+        STANDARD_SPEC,
+        ImmutableList.of(CustomBuildRuleResolverFactory.RIGHT_TARGET),
+        ImmutableList.of(ImmutableList.of(CustomBuildRuleResolverFactory.ROOT_TARGET)));
 
     // Minion four completes the build
     List<WorkUnit> minionFourWorkFromRequestThree =
         allocator.dequeueZeroDependencyNodes(
             MINION_FOUR,
+            STANDARD_SPEC,
             ImmutableList.of(CustomBuildRuleResolverFactory.ROOT_TARGET),
             MAX_WORK_UNITS);
     Assert.assertEquals(0, minionFourWorkFromRequestThree.size());
@@ -175,13 +215,15 @@ public class MinionWorkloadAllocatorTest {
     Assert.assertFalse(allocator.isBuildFinished());
 
     List<WorkUnit> firstTargets =
-        allocator.dequeueZeroDependencyNodes(MINION_ONE, ImmutableList.of(), MAX_WORK_UNITS);
+        allocator.dequeueZeroDependencyNodes(
+            MINION_ONE, STANDARD_SPEC, ImmutableList.of(), MAX_WORK_UNITS);
     Assert.assertEquals(1, firstTargets.size());
     Assert.assertFalse(allocator.isBuildFinished());
 
     List<WorkUnit> secondTargets =
         allocator.dequeueZeroDependencyNodes(
             MINION_ONE,
+            STANDARD_SPEC,
             ImmutableList.of(CustomBuildRuleResolverFactory.LEAF_TARGET),
             MAX_WORK_UNITS);
     Assert.assertEquals(2, secondTargets.size());
@@ -190,6 +232,7 @@ public class MinionWorkloadAllocatorTest {
     List<WorkUnit> thirdTargets =
         allocator.dequeueZeroDependencyNodes(
             MINION_ONE,
+            STANDARD_SPEC,
             ImmutableList.of(
                 CustomBuildRuleResolverFactory.LEFT_TARGET,
                 CustomBuildRuleResolverFactory.RIGHT_TARGET),
@@ -200,9 +243,51 @@ public class MinionWorkloadAllocatorTest {
     List<WorkUnit> fourthTargets =
         allocator.dequeueZeroDependencyNodes(
             MINION_ONE,
+            STANDARD_SPEC,
             ImmutableList.of(CustomBuildRuleResolverFactory.ROOT_TARGET),
             MAX_WORK_UNITS);
     Assert.assertEquals(0, fourthTargets.size());
     Assert.assertTrue(allocator.isBuildFinished());
+  }
+
+  private static void simulateAndAssertMinionFailure(
+      MinionWorkloadAllocator allocator, String minionId) {
+    allocator.handleMinionFailure(minionId);
+    Assert.assertFalse(allocator.isBuildFinished());
+    Assert.assertTrue(allocator.hasMinionFailed(minionId));
+  }
+
+  private static void allocateWorkAndAssert(
+      MinionWorkloadAllocator allocator,
+      String minionId,
+      MinionType minionType,
+      ImmutableList<String> finishedNodes,
+      ImmutableList<ImmutableList<String>> expectedWorkUnits) {
+
+    Assert.assertFalse(allocator.hasMinionFailed(minionId));
+    List<WorkUnit> minionOneWorkUnits =
+        allocator.dequeueZeroDependencyNodes(minionId, minionType, finishedNodes, MAX_WORK_UNITS);
+    Assert.assertEquals(expectedWorkUnits.size(), minionOneWorkUnits.size());
+
+    for (int workUnitIndex = 0; workUnitIndex < expectedWorkUnits.size(); workUnitIndex++) {
+      ImmutableList<String> expectedWorkUnit = expectedWorkUnits.get(workUnitIndex);
+      List<String> actualWorkUnit = minionOneWorkUnits.get(workUnitIndex).getBuildTargets();
+
+      Assert.assertEquals(
+          String.format(
+              "Expected work unit of length [%d] at index [%d]",
+              expectedWorkUnit.size(), workUnitIndex),
+          expectedWorkUnit.size(),
+          actualWorkUnit.size());
+
+      for (int workUnitNodeIndex = 0;
+          workUnitNodeIndex < actualWorkUnit.size();
+          workUnitNodeIndex++) {
+        String expectedNode = expectedWorkUnit.get(0);
+        String actualNode = actualWorkUnit.get(0);
+
+        Assert.assertEquals(expectedNode, actualNode);
+      }
+    }
   }
 }

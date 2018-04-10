@@ -95,7 +95,10 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
 
     List<WorkUnit> newWorkUnitsForMinion =
         allocator.dequeueZeroDependencyNodes(
-            minionId, request.getFinishedTargets(), request.getMaxWorkUnitsToFetch());
+            minionId,
+            request.getMinionType(),
+            request.getFinishedTargets(),
+            request.getMaxWorkUnitsToFetch());
 
     // TODO(alisdair): experiment with only sending started event for first node in chain,
     // and then send events for later nodes in the chain as their children finish.

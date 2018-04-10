@@ -20,6 +20,7 @@ import com.facebook.buck.command.BuildExecutor;
 import com.facebook.buck.distributed.build_slave.HeartbeatService.HeartbeatCallback;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
+import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.CommandThreadFactory;
@@ -63,6 +64,7 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
   private final int coordinatorConnectionTimeoutMillis;
   private final ListenableFuture<BuildExecutor> buildExecutorFuture;
   private final StampedeId stampedeId;
+  private final MinionType minionType;
   private final BuildSlaveRunId buildSlaveRunId;
   private final long minionPollLoopIntervalMillis;
 
@@ -92,6 +94,7 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
       OptionalInt coordinatorPort,
       ListenableFuture<BuildExecutor> buildExecutorFuture,
       StampedeId stampedeId,
+      MinionType minionType,
       BuildSlaveRunId buildSlaveRunId,
       int availableWorkUnitBuildCapacity,
       BuildCompletionChecker buildCompletionChecker,
@@ -105,6 +108,7 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
         coordinatorConnectionTimeoutMillis,
         buildExecutorFuture,
         stampedeId,
+        minionType,
         buildSlaveRunId,
         availableWorkUnitBuildCapacity,
         buildCompletionChecker,
@@ -122,6 +126,7 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
       int coordinatorConnectionTimeoutMillis,
       ListenableFuture<BuildExecutor> buildExecutorFuture,
       StampedeId stampedeId,
+      MinionType minionType,
       BuildSlaveRunId buildSlaveRunId,
       int maxWorkUnitBuildCapacity,
       BuildCompletionChecker buildCompletionChecker,
@@ -133,6 +138,7 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
     this.minionPollLoopIntervalMillis = minionPollLoopIntervalMillis;
     this.buildExecutorFuture = buildExecutorFuture;
     this.stampedeId = stampedeId;
+    this.minionType = minionType;
     this.buildSlaveRunId = buildSlaveRunId;
     this.coordinatorAddress = coordinatorAddress;
     coordinatorPort.ifPresent(CoordinatorModeRunner::validatePort);
@@ -235,6 +241,7 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
       GetWorkResponse response =
           client.getWork(
               minionId,
+              minionType,
               exitCode.get().getCode(),
               targetsToSignal,
               buildTracker.getAvailableCapacity());

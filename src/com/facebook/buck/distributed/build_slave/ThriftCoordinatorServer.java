@@ -357,6 +357,7 @@ public class ThriftCoordinatorServer implements Closeable {
 
       checkBuildId(request.getStampedeId());
       Preconditions.checkArgument(request.isSetMinionId());
+      Preconditions.checkArgument(request.isSetMinionType());
       Preconditions.checkArgument(request.isSetLastExitCode());
 
       synchronized (lock) {

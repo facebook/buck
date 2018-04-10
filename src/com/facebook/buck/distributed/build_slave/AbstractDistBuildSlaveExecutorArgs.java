@@ -26,6 +26,7 @@ import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.FileContentsProvider;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
+import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
@@ -87,6 +88,8 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
   public abstract int getRemoteCoordinatorPort();
 
   public abstract StampedeId getStampedeId();
+
+  public abstract MinionType getMinionType();
 
   public abstract BuildSlaveRunId getBuildSlaveRunId();
 

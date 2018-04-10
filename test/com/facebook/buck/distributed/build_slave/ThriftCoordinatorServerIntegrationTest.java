@@ -26,6 +26,7 @@ import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
+import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.listener.NoOpCoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -42,6 +43,7 @@ public class ThriftCoordinatorServerIntegrationTest {
   public static final StampedeId STAMPEDE_ID = new StampedeId().setId("down the line");
 
   private static final String MINION_ID = "super cool minion";
+  private static final MinionType MINION_TYPE = MinionType.STANDARD_SPEC;
   private static final int MAX_WORK_UNITS_TO_FETCH = 10;
   private static final int CONNECTION_TIMEOUT_MILLIS = 1000;
 
@@ -54,7 +56,7 @@ public class ThriftCoordinatorServerIntegrationTest {
       server.start();
       client.start(server.getPort());
       GetWorkResponse response =
-          client.getWork(MINION_ID, 0, ImmutableList.of(), MAX_WORK_UNITS_TO_FETCH);
+          client.getWork(MINION_ID, MINION_TYPE, 0, ImmutableList.of(), MAX_WORK_UNITS_TO_FETCH);
       Assert.assertNotNull(response);
       Assert.assertFalse(response.isContinueBuilding()); // Build is finished
     }
@@ -81,7 +83,7 @@ public class ThriftCoordinatorServerIntegrationTest {
       client.start(server.getPort());
 
       GetWorkResponse responseOne =
-          client.getWork(MINION_ID, 0, ImmutableList.of(), MAX_WORK_UNITS_TO_FETCH);
+          client.getWork(MINION_ID, MINION_TYPE, 0, ImmutableList.of(), MAX_WORK_UNITS_TO_FETCH);
 
       Assert.assertEquals(responseOne.getWorkUnitsSize(), 1);
       Assert.assertTrue(responseOne.isContinueBuilding());
@@ -89,6 +91,7 @@ public class ThriftCoordinatorServerIntegrationTest {
       GetWorkResponse responseTwo =
           client.getWork(
               MINION_ID,
+              MINION_TYPE,
               0,
               ImmutableList.of(CustomBuildRuleResolverFactory.LEAF_TARGET),
               MAX_WORK_UNITS_TO_FETCH);
@@ -99,6 +102,7 @@ public class ThriftCoordinatorServerIntegrationTest {
       GetWorkResponse responseThree =
           client.getWork(
               MINION_ID,
+              MINION_TYPE,
               0,
               ImmutableList.of(
                   CustomBuildRuleResolverFactory.LEFT_TARGET,
@@ -111,6 +115,7 @@ public class ThriftCoordinatorServerIntegrationTest {
       GetWorkResponse responseFour =
           client.getWork(
               MINION_ID,
+              MINION_TYPE,
               0,
               ImmutableList.of(CustomBuildRuleResolverFactory.ROOT_TARGET),
               MAX_WORK_UNITS_TO_FETCH);
@@ -122,6 +127,7 @@ public class ThriftCoordinatorServerIntegrationTest {
       GetWorkResponse responseFive =
           client.getWork(
               MINION_ID,
+              MINION_TYPE,
               0,
               ImmutableList.of(CustomBuildRuleResolverFactory.ROOT_TARGET),
               MAX_WORK_UNITS_TO_FETCH);
@@ -175,7 +181,7 @@ public class ThriftCoordinatorServerIntegrationTest {
       server.start();
       client.start(server.getPort());
       try {
-        client.getWork(MINION_ID, 0, ImmutableList.of(), MAX_WORK_UNITS_TO_FETCH);
+        client.getWork(MINION_ID, MINION_TYPE, 0, ImmutableList.of(), MAX_WORK_UNITS_TO_FETCH);
         Assert.fail("expecting exception, because stampede id mismatches");
       } catch (Exception e) {
         // expected
@@ -209,7 +215,7 @@ public class ThriftCoordinatorServerIntegrationTest {
       client.start(server.getPort());
       queueFuture.setException(new RuntimeException());
       try {
-        client.getWork(MINION_ID, 0, ImmutableList.of(), MAX_WORK_UNITS_TO_FETCH);
+        client.getWork(MINION_ID, MINION_TYPE, 0, ImmutableList.of(), MAX_WORK_UNITS_TO_FETCH);
         Assert.fail("expecting exception, because stampede id mismatches");
       } catch (Exception e) {
         // expected.

@@ -33,6 +33,7 @@ import com.facebook.buck.distributed.build_slave.MinionBuildProgressTracker;
 import com.facebook.buck.distributed.build_slave.NoOpMinionBuildProgressTracker;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
+import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
@@ -93,6 +94,9 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
   @Nullable
   @Option(name = "--build-mode", usage = "The mode in which the distributed build is going to run.")
   private DistBuildMode distBuildMode = DistBuildMode.REMOTE_BUILD;
+
+  @Option(name = "--minion-type", usage = "Hardware category for machine running this build.")
+  private MinionType minionType = MinionType.STANDARD_SPEC;
 
   @Nullable
   @Option(
@@ -219,6 +223,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   coordinatorPort,
                   coordinatorAddress,
                   stampedeId,
+                  minionType,
                   getBuildSlaveRunId(),
                   multiSourceFileContentsProvider,
                   healthCheckStatsTracker,

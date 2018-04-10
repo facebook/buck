@@ -25,6 +25,7 @@ import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFact
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.command.BuildExecutor;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
+import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
@@ -61,6 +62,7 @@ import org.junit.rules.TemporaryFolder;
 public class MinionModeRunnerIntegrationTest {
 
   private static final StampedeId STAMPEDE_ID = ThriftCoordinatorServerIntegrationTest.STAMPEDE_ID;
+  private static final MinionType MINION_TYPE = MinionType.STANDARD_SPEC;
   private static final int MAX_PARALLEL_WORK_UNITS = 10;
   private static final long POLL_LOOP_INTERVAL_MILLIS = 9;
   private static final int CONNECTION_TIMEOUT_MILLIS = 1000;
@@ -80,6 +82,7 @@ public class MinionModeRunnerIntegrationTest {
             OptionalInt.of(4242),
             Futures.immediateFuture(localBuilder),
             STAMPEDE_ID,
+            MINION_TYPE,
             new BuildSlaveRunId().setId("sl1"),
             MAX_PARALLEL_WORK_UNITS,
             checker,
@@ -117,6 +120,7 @@ public class MinionModeRunnerIntegrationTest {
             OptionalInt.of(4242),
             Futures.immediateFuture(localBuilder),
             STAMPEDE_ID,
+            MINION_TYPE,
             new BuildSlaveRunId().setId("sl2"),
             MAX_PARALLEL_WORK_UNITS,
             checker,
@@ -263,6 +267,7 @@ public class MinionModeRunnerIntegrationTest {
               OptionalInt.of(server.getPort()),
               Futures.immediateFuture(buildExecutor),
               STAMPEDE_ID,
+              MINION_TYPE,
               new BuildSlaveRunId().setId("sl3"),
               MAX_PARALLEL_WORK_UNITS,
               checker,

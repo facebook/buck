@@ -28,6 +28,7 @@ import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
+import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
@@ -156,6 +157,7 @@ public class MultiSlaveBuildModeRunnerFactory {
       ListenableFuture<BuildExecutor> localBuildExecutor,
       DistBuildService distBuildService,
       StampedeId stampedeId,
+      MinionType minionType,
       BuildSlaveRunId buildSlaveRunId,
       String coordinatorAddress,
       OptionalInt coordinatorPort,
@@ -194,6 +196,7 @@ public class MultiSlaveBuildModeRunnerFactory {
         coordinatorPort,
         localBuildExecutor,
         stampedeId,
+        minionType,
         buildSlaveRunId,
         distBuildConfig
             .getBuckConfig()
@@ -255,6 +258,7 @@ public class MultiSlaveBuildModeRunnerFactory {
             localBuildExecutor,
             distBuildService,
             stampedeId,
+            MinionType.STANDARD_SPEC, // Coordinator should always run on standard spec machine.
             buildSlaveRunId,
             LOCALHOST_ADDRESS,
             OptionalInt.empty(),

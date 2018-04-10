@@ -17,6 +17,7 @@
 package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
+import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
@@ -49,7 +50,9 @@ public class MinionWorkloadAllocator {
   // These should be immediately re-assigned when capacity becomes available on other minions
   private Queue<WorkUnit> workUnitsFromFailedMinions = new LinkedList<>();
 
-  private Set<String> failedMinions = new HashSet<>();
+  private final Set<String> failedMinions = new HashSet<>();
+  private final Set<String> seenMinions = new HashSet<>();
+  private final Map<String, MinionType> minionTypesByMinionId = new HashMap<>();
 
   private final DistBuildTraceTracker chromeTraceTracker;
 
@@ -65,12 +68,24 @@ public class MinionWorkloadAllocator {
         && !queue.hasReadyZeroDependencyNodes();
   }
 
-  /** Returns nodes that have all their dependencies satisfied. */
-  public synchronized List<WorkUnit> dequeueZeroDependencyNodes(
-      String minionId, List<String> finishedNodes, int maxWorkUnits) {
+  private void trySetupMinion(String minionId, MinionType minionType) {
+    if (seenMinions.contains(minionId)) {
+      return;
+    }
+
     if (!workUnitsAssignedToMinions.containsKey(minionId)) {
       workUnitsAssignedToMinions.put(minionId, new HashSet<>());
     }
+
+    minionTypesByMinionId.put(minionId, minionType);
+    seenMinions.add(minionId);
+  }
+
+  /** Returns nodes that have all their dependencies satisfied. */
+  public synchronized List<WorkUnit> dequeueZeroDependencyNodes(
+      String minionId, MinionType minionType, List<String> finishedNodes, int maxWorkUnits) {
+    trySetupMinion(minionId, minionType);
+
     Set<WorkUnit> workUnitsAllocatedToMinion = workUnitsAssignedToMinions.get(minionId);
     deallocateFinishedNodes(workUnitsAllocatedToMinion, finishedNodes);
 
@@ -150,6 +165,13 @@ public class MinionWorkloadAllocator {
 
   private List<WorkUnit> reallocateWorkUnitsFromFailedMinions(String minionId, int maxWorkUnits) {
     List<WorkUnit> reallocatedWorkUnits = new ArrayList<>();
+
+    MinionType minionType = minionTypesByMinionId.get(minionId);
+
+    // Re-allocated work should always go to a more powerful hardware.
+    if (minionType == MinionType.LOW_SPEC) {
+      return reallocatedWorkUnits;
+    }
 
     while (workUnitsFromFailedMinions.size() > 0 && reallocatedWorkUnits.size() < maxWorkUnits) {
       WorkUnit workUnitToReAssign = workUnitsFromFailedMinions.remove();
