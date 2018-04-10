@@ -1,16 +1,12 @@
-load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
+load("//tools/build_rules:module_rules.bzl", "buck_module")
 
-java_library_with_plugins(
+buck_module(
     name = "ocaml",
     srcs = glob(["*.java"]),
-    exported_deps = [
+    exported_provided_deps = [
         "//src/com/facebook/buck/rules:rules",
     ],
-    tests = [
-        "//test/com/facebook/buck/ocaml:ocaml",
-    ],
-    visibility = ["PUBLIC"],
-    deps = [
+    provided_deps = [
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
@@ -41,4 +37,8 @@ java_library_with_plugins(
         "//src/com/facebook/buck/versions:versions",
         "//third-party/java/infer-annotations:infer-annotations",
     ],
+    tests = [
+        "//test/com/facebook/buck/ocaml:ocaml",
+    ],
+    visibility = ["PUBLIC"],
 )

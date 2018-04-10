@@ -93,6 +93,7 @@ BUCK_MODULES = {
     "gwt": "//src/com/facebook/buck/features/gwt:gwt",
     "haskell": "//src/com/facebook/buck/features/haskell:haskell",
     "lua": "//src/com/facebook/buck/features/lua:lua",
+    "ocaml": "//src/com/facebook/buck/ocaml:ocaml",
     "rust": "//src/com/facebook/buck/features/rust:rust",
     "ziprules": "//src/com/facebook/buck/features/zip/rules:rules",
 }
