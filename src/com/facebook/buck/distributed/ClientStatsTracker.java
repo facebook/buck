@@ -211,10 +211,6 @@ public class ClientStatsTracker {
     this.isLocalFallbackBuildEnabled = Optional.of(isLocalFallbackBuildEnabled);
   }
 
-  public boolean hasStampedeId() {
-    return stampedeId.isPresent();
-  }
-
   public void setBuckClientError(boolean buckClientError) {
     this.buckClientError = buckClientError;
   }
