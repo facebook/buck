@@ -496,7 +496,6 @@
           <exclude name="com/facebook/buck/jvm/java/lang/model/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
           <exclude name="com/facebook/buck/module/annotationprocessor/**" />
-          <exclude name="com/facebook/buck/ocaml/**" />
           <exclude name="com/facebook/buck/testrunner/**" />
         </patternset>
       </javac-params>
@@ -612,7 +611,7 @@
   <target name="build-module-ocaml" depends="compile">
     <build-buck-module-jar module-name="ocaml">
       <module-javac-params>
-        <include name="com/facebook/buck/ocaml/**/*.java" />
+        <include name="com/facebook/buck/features/ocaml/**/*.java" />
       </module-javac-params>
     </build-buck-module-jar>
   </target>
