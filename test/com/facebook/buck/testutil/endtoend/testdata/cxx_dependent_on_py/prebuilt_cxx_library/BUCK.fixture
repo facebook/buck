@@ -1,0 +1,42 @@
+cxx_library(
+    name = "exclamation_src",
+    srcs = [
+        "exclamation.cpp",
+    ],
+    exported_headers = [
+        "exclamation.h",
+    ],
+    link_style = "static",
+    platform_compiler_flags = [
+        [
+            "windows",
+            WINDOWS_COMPILE_FLAGS,
+        ],
+    ],
+    platform_linker_flags = [
+        [
+            "windows",
+            WINDOWS_LINK_FLAGS,
+        ],
+    ],
+    visibility = ["PUBLIC"],
+)
+
+genrule(
+    name = "gen_prebuilt_exclamation",
+    out = "gen_prebuilt_exclamation",
+    bash = "cp $(location :exclamation_src#default,static) $OUT",
+)
+
+genrule(
+    name = "gen_prebuilt_exclamation_headers",
+    out = "gen_prebuilt_exclamation_headers",
+    bash = "mkdir -p $OUT/prebuilt_cxx_library && echo \"const char *exclamation();\" >> $OUT/prebuilt_cxx_library/exclamation.h",
+)
+
+prebuilt_cxx_library(
+    name = "exclamation",
+    header_dirs = [":gen_prebuilt_exclamation_headers"],
+    static_lib = ":gen_prebuilt_exclamation",
+    visibility = ["PUBLIC"],
+)

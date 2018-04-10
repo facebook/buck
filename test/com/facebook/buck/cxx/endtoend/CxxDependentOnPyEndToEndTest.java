@@ -29,23 +29,23 @@ import org.junit.runner.RunWith;
  * E2E tests for buck's building process on an environment constructed like:
  *
  * <pre>
- *          cxx_binary
- *              |
- *     +--------+--------+
- *     v                 v
- *     cxx_library       cxx_library
- *     |
- *     v
- *     output_src
- *     ^
- *     |
- *     genrule
- *     |
- *     v
- *     py_binary
- *     |
- *     v
- *     py_library
+ * cxx_binary
+ * +
+ * +--------+--------+
+ * v                 v
+ * cxx_library       cxx_library
+ * +                 +
+ * v                 v
+ * output_src        prebuilt_cxx_library
+ * +                 +
+ * v                 v
+ * genrule           genrule
+ * +                 +
+ * v                 v
+ * py_binary         cxx_library
+ * +
+ * v
+ * py_library
  * </pre>
  */
 @RunWith(EndToEndRunner.class)

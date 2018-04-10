@@ -1,0 +1,3 @@
+const char *exclamation() {
+    return "!!!";
+}
