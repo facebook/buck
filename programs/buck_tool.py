@@ -353,7 +353,7 @@ class BuckTool(object):
                     # Splice in location of command file to run outside buckd
                     argv = [argv[0]] + ['--command-args-file', argsfile.name] + argv[1:]
                     exit_code = run_fn(argv, env)
-                    if exit_code != 0:
+                    if exit_code != 0 or os.path.getsize(argsfile.name) == 0:
                         # Build failed, so there's nothing to run.  Exit normally.
                         return exit_code
                     cmd = json.load(argsfile)
