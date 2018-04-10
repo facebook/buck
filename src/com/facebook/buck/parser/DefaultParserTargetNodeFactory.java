@@ -249,7 +249,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
         throw new HumanReadableException(
             "The target '%1$s' tried to reference '%2$s'.\n"
                 + "This is not allowed because '%2$s' can only be referenced from '%3$s' \n"
-                + "which is it's closest parent '%4$s' file.\n"
+                + "which is its closest parent '%4$s' file.\n"
                 + "\n"
                 + "You should find or create the rule in '%3$s' that references\n"
                 + "'%2$s' and use that in '%1$s'\n"
