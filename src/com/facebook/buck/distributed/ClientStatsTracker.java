@@ -62,13 +62,15 @@ public class ClientStatsTracker {
     MATERIALIZE_SLAVE_LOGS,
   }
 
+  public static final String PENDING_STAMPEDE_ID = "PENDING_STAMPEDE_ID";
+
   @GuardedBy("this")
   private final Map<DistBuildClientStat, Stopwatch> stopwatchesByType = new HashMap<>();
 
   @GuardedBy("this")
   private final Map<DistBuildClientStat, Long> durationsMsByType = new HashMap<>();
 
-  private volatile Optional<String> stampedeId = Optional.empty();
+  private volatile String stampedeId = PENDING_STAMPEDE_ID;
 
   private volatile Optional<Integer> distributedBuildExitCode = Optional.empty();
 
@@ -131,7 +133,7 @@ public class ClientStatsTracker {
 
     DistBuildClientStats.Builder builder =
         DistBuildClientStats.builder()
-            .setStampedeId(stampedeId.get())
+            .setStampedeId(stampedeId)
             .setPerformedLocalBuild(performedLocalBuild)
             .setBuckClientError(buckClientError)
             .setBuildLabel(buildLabel);
@@ -200,7 +202,7 @@ public class ClientStatsTracker {
   }
 
   public void setStampedeId(String stampedeId) {
-    this.stampedeId = Optional.of(stampedeId);
+    this.stampedeId = stampedeId;
   }
 
   public synchronized void setDistributedBuildExitCode(int distributedBuildExitCode) {

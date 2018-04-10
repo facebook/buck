@@ -31,6 +31,7 @@ import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientSt
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.UPLOAD_MISSING_FILES;
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.UPLOAD_TARGET_GRAPH;
 
+import com.google.common.base.Strings;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -57,6 +58,16 @@ public class ClientStatsTrackerTest {
   private static final int MISSING_FILES_UPLOADED_COUNT = 2001;
   private static final String BUCK_CLIENT_ERROR_MESSAGE = "Some error message";
   private static final String BUILD_LABEL = "unit_test";
+
+  @Test
+  public void testGenerateStatsDoesNotThrowOnEmptyStampedeId() {
+    ClientStatsTracker tracker = new ClientStatsTracker(BUILD_LABEL);
+    tracker.setDistributedBuildExitCode(0);
+    tracker.setIsLocalFallbackBuildEnabled(false);
+    DistBuildClientStats stats = tracker.generateStats();
+    Assert.assertNotNull(stats);
+    Assert.assertFalse(Strings.isNullOrEmpty(stats.stampedeId()));
+  }
 
   @Test(expected = java.lang.IllegalArgumentException.class)
   public void testGenerateThrowsExceptionWhenStatsNotRecorded() {
