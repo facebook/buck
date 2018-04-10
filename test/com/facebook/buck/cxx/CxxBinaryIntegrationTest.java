@@ -30,6 +30,8 @@ import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
+import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -2487,6 +2489,33 @@ public class CxxBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_binary_platform_deps", tmp);
     workspace.setUp();
     workspace.runBuckBuild(":binary#working-platform").assertSuccess();
+  }
+
+  @Test
+  public void testLinkMapCreated() throws IOException {
+    assumeThat(Platform.detect(), is(Platform.MACOS));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_binary_linkmap", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild(":binary#linkmap").assertSuccess();
+  }
+
+  @Test
+  public void testLinkMapNotCreated() throws IOException {
+    assumeThat(Platform.detect(), is(Platform.LINUX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_binary_linkmap", tmp);
+    workspace.setUp();
+    try {
+      workspace.runBuckBuild(":binary#linkmap");
+    } catch (HumanReadableException e) {
+      assertEquals(
+          "Linker for target //:binary#linkmap does not support linker maps.",
+          e.getHumanReadableErrorMessage());
+    }
   }
 
   private ImmutableSortedSet<Path> findFiles(Path root, PathMatcher matcher) throws IOException {

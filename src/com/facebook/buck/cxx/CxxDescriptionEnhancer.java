@@ -41,6 +41,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.model.UserFlavor;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -68,6 +69,9 @@ import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.OutputMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.shell.ExportFile;
+import com.facebook.buck.shell.ExportFileDescription.Mode;
+import com.facebook.buck.shell.ExportFileDirectoryAction;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
@@ -115,6 +119,8 @@ public class CxxDescriptionEnhancer {
       InternalFlavor.of("binary-with-shared-libraries-symlink-tree");
 
   public static final Flavor CXX_LINK_BINARY_FLAVOR = InternalFlavor.of("binary");
+
+  public static final Flavor CXX_LINK_MAP_FLAVOR = UserFlavor.of("linkmap", "LinkMap file");
 
   private static final Pattern SONAME_EXT_MACRO_PATTERN =
       Pattern.compile("\\$\\(ext(?: ([.0-9]+))?\\)");
@@ -1448,5 +1454,31 @@ public class CxxDescriptionEnhancer {
 
   public static String normalizeModuleName(String moduleName) {
     return moduleName.replaceAll("[^A-Za-z0-9]", "_");
+  }
+
+  /**
+   * @return a {@link BuildRule} that produces a single file that contains linker map produced
+   *     during the linking process.
+   * @throws HumanReadableException if the linked does not support linker maps.
+   */
+  public static BuildRule createLinkMap(
+      BuildTarget target,
+      ProjectFilesystem projectFilesystem,
+      SourcePathRuleFinder ruleFinder,
+      CxxLinkAndCompileRules cxxLinkAndCompileRules) {
+    CxxLink cxxLink = cxxLinkAndCompileRules.getCxxLink();
+    Optional<Path> linkerMap = cxxLink.getLinkerMapPath();
+    if (!linkerMap.isPresent()) {
+      throw new HumanReadableException(
+          "Linker for target %s does not support linker maps.", target);
+    }
+    return new ExportFile(
+        target,
+        projectFilesystem,
+        ruleFinder,
+        "LinkerMap.txt",
+        Mode.COPY,
+        ExplicitBuildTargetSourcePath.of(cxxLink.getBuildTarget(), linkerMap.get()),
+        ExportFileDirectoryAction.FAIL);
   }
 }

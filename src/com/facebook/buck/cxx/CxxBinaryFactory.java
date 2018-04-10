@@ -149,6 +149,13 @@ public class CxxBinaryFactory {
             flavoredStripStyle,
             flavoredLinkerMapMode);
 
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+
+    if (target.getFlavors().contains(CxxDescriptionEnhancer.CXX_LINK_MAP_FLAVOR)) {
+      return CxxDescriptionEnhancer.createLinkMap(
+          target, projectFilesystem, ruleFinder, cxxLinkAndCompileRules);
+    }
+
     // Return a CxxBinary rule as our representative in the action graph, rather than the CxxLink
     // rule above for a couple reasons:
     //  1) CxxBinary extends BinaryBuildRule whereas CxxLink does not, so the former can be used
@@ -162,7 +169,6 @@ public class CxxBinaryFactory {
 
     target = CxxStrip.restoreStripStyleFlavorInTarget(target, flavoredStripStyle);
     target = LinkerMapMode.restoreLinkerMapModeFlavorInTarget(target, flavoredLinkerMapMode);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new CxxBinary(
         target,
         projectFilesystem,

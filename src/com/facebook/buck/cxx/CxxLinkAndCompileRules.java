@@ -43,6 +43,10 @@ public class CxxLinkAndCompileRules {
     this.deps = deps;
   }
 
+  public CxxLink getCxxLink() {
+    return cxxLink;
+  }
+
   public BuildRule getBinaryRule() {
     if (cxxStrip.isPresent()) {
       return cxxStrip.get();

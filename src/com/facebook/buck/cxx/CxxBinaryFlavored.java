@@ -58,6 +58,7 @@ public class CxxBinaryFlavored implements Flavored {
         Sets.difference(
             flavors,
             ImmutableSet.of(
+                CxxDescriptionEnhancer.CXX_LINK_MAP_FLAVOR,
                 CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
                 CxxCompilationDatabase.COMPILATION_DATABASE,
                 CxxCompilationDatabase.UBER_COMPILATION_DATABASE,
