@@ -54,7 +54,7 @@ class LocationMacroTypeCoercer implements MacroTypeCoercer<LocationMacro> {
       Path pathRelativeToProjectRoot,
       ImmutableList<String> args)
       throws CoerceFailedException {
-    if (args.size() != 1) {
+    if (args.size() != 1 || args.get(0).isEmpty()) {
       throw new CoerceFailedException(
           String.format("expected exactly one argument (found %d)", args.size()));
     }

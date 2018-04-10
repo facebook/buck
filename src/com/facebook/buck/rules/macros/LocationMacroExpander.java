@@ -40,7 +40,7 @@ public class LocationMacroExpander extends BuildTargetMacroExpander<LocationMacr
   protected LocationMacro parse(
       BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
       throws MacroException {
-    if (input.size() != 1) {
+    if (input.size() != 1 || input.get(0).isEmpty()) {
       throw new MacroException(String.format("expected a single argument: %s", input));
     }
     LocationMacro.SplitResult parts = LocationMacro.splitSupplementaryOutputPart(input.get(0));

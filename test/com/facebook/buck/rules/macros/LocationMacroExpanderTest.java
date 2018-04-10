@@ -135,6 +135,24 @@ public class LocationMacroExpanderTest {
     assertEquals("/some_root/supplementary-sup", transformedString);
   }
 
+  @Test
+  public void missingLocationArgumentThrows() {
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem("/some_root");
+    BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar");
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    ruleResolver.addToIndex(new RuleWithSupplementaryOutput(target, filesystem));
+
+    String input = "$(location )";
+    MacroHandler macroHandler =
+        new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
+    try {
+      macroHandler.expand(target, createCellRoots(filesystem), ruleResolver, input);
+      fail("Location was empty. Expected MacroException");
+    } catch (MacroException e) {
+      assertEquals("expanding $(location ): expected a single argument: []", e.getMessage());
+    }
+  }
+
   private final class RuleWithSupplementaryOutput extends AbstractBuildRule
       implements HasSupplementaryOutputs {
 
