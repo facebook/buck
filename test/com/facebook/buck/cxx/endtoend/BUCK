@@ -10,6 +10,7 @@ java_test(
         TEST_SRCS,
     ),
     deps = [
+        "//programs:buck",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/apple:testutil",
         "//test/com/facebook/buck/testutil:testutil",
