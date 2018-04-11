@@ -225,4 +225,10 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   public void pattern() throws Exception {
     test(new WithPattern());
   }
+
+  @Override
+  @Test
+  public void anEnum() throws Exception {
+    test(new WithEnum());
+  }
 }

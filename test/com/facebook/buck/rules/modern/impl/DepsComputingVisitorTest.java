@@ -93,6 +93,12 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
     apply(new WithPattern());
   }
 
+  @Override
+  @Test
+  public void anEnum() throws Exception {
+    apply(new WithEnum());
+  }
+
   static class WithSourcePathList implements FakeBuildable {
     @AddToRuleKey private final ImmutableList<SourcePath> inputs;
 

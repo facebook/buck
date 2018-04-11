@@ -182,4 +182,12 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   public void pattern() throws Exception {
     assertEquals("pattern:string(abcd)", stringify(new WithPattern()));
   }
+
+  @Override
+  @Test
+  public void anEnum() throws Exception {
+    assertEquals(
+        "type:string(GOOD)\n" + "otherType:Optional<\n" + "  string(BAD)\n" + ">",
+        stringify(new WithEnum()));
+  }
 }

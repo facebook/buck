@@ -78,7 +78,6 @@ public class ValueTypeInfoFactory {
    * strings, etc) or one of the supported generic types composed of other simple types.
    */
   static boolean isSimpleType(Type type) {
-    // TODO(cjhopman): enum should probably be considered a simple type.
     if (type instanceof Class) {
       Class<?> rawClass = Primitives.wrap((Class<?>) type);
       // These types need no processing for
@@ -106,11 +105,14 @@ public class ValueTypeInfoFactory {
       if (rawClass.equals(Path.class)) {
         throw new IllegalArgumentException(
             "Buildables should not have Path references. Use SourcePath or OutputPath instead");
+      }
+
+      if (rawClass.isEnum()) {
+        @SuppressWarnings({"unchecked", "rawtypes"})
+        EnumValueTypeInfo enumValueTypeInfo = new EnumValueTypeInfo(rawClass);
+        return enumValueTypeInfo;
       } else if (SourcePath.class.isAssignableFrom(rawClass)) {
         return SourcePathValueTypeInfo.INSTANCE;
-      } else if (rawClass.isEnum()) {
-        // TODO(cjhopman): handle enums
-        throw new UnsupportedOperationException();
       } else if (rawClass.equals(OutputPath.class)) {
         return OutputPathValueTypeInfo.INSTANCE;
       } else if (BuildTarget.class.isAssignableFrom(rawClass)) {

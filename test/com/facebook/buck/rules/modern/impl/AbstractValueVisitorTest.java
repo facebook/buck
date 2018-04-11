@@ -84,6 +84,9 @@ abstract class AbstractValueVisitorTest {
   @Test
   public abstract void pattern() throws Exception;
 
+  @Test
+  public abstract void anEnum() throws Exception;
+
   public interface FakeBuildable extends Buildable {
     @Override
     default ImmutableList<Step> getBuildSteps(
@@ -158,6 +161,16 @@ abstract class AbstractValueVisitorTest {
 
   public static class WithPattern implements FakeBuildable {
     @AddToRuleKey final Pattern pattern = Pattern.compile("abcd");
+  }
+
+  enum Type {
+    GOOD,
+    BAD
+  }
+
+  public static class WithEnum implements FakeBuildable {
+    @AddToRuleKey final Type type = Type.GOOD;
+    @AddToRuleKey final Optional<Type> otherType = Optional.of(Type.BAD);
   }
 
   public static class Complex implements FakeBuildable {
