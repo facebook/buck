@@ -50,10 +50,11 @@ abstract class AbstractFrameworkPath implements Comparable<AbstractFrameworkPath
   }
 
   @Value.Parameter
+  @AddToRuleKey
   protected abstract Type getType();
 
   @Value.Parameter
-  @AddToRuleKey(stringify = true)
+  @AddToRuleKey
   public abstract Optional<SourceTreePath> getSourceTreePath();
 
   @Value.Parameter
