@@ -22,7 +22,6 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheConnectEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
@@ -63,7 +62,6 @@ import com.facebook.buck.test.external.ExternalTestRunEvent;
 import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.util.timing.Clock;
@@ -653,7 +651,7 @@ public class ChromeTraceBuildListenerTest {
     resultList.remove(0);
   }
 
-  @Test
+  @Test(expected = IOException.class)
   public void testOutputFailed() throws IOException {
     File folder = tmpDir.newFolder();
     ProjectFilesystem projectFilesystem =
@@ -661,22 +659,16 @@ public class ChromeTraceBuildListenerTest {
 
     // delete the folder after creating file system so write there would fail
     folder.delete();
-
-    try {
-      ChromeTraceBuildListener listener =
-          new ChromeTraceBuildListener(
-              projectFilesystem,
-              invocationInfo,
-              FAKE_CLOCK,
-              Locale.US,
-              TimeZone.getTimeZone("America/Los_Angeles"),
-              ManagementFactory.getThreadMXBean(),
-              chromeTraceConfig(3, false));
-      listener.outputTrace(invocationInfo.getBuildId());
-      fail("Expected an exception.");
-    } catch (HumanReadableException e) {
-      assertTrue(e.getMessage().contains("Unable to write trace file"));
-    }
+    ChromeTraceBuildListener listener =
+        new ChromeTraceBuildListener(
+            projectFilesystem,
+            invocationInfo,
+            FAKE_CLOCK,
+            Locale.US,
+            TimeZone.getTimeZone("America/Los_Angeles"),
+            ManagementFactory.getThreadMXBean(),
+            chromeTraceConfig(3, false));
+    listener.outputTrace(invocationInfo.getBuildId());
   }
 
   @Test

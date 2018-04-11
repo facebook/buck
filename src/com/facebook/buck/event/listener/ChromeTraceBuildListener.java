@@ -250,32 +250,28 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   }
 
   @Override
-  public void outputTrace(BuildId buildId) {
+  public void outputTrace(BuildId buildId) throws IOException {
+    LOG.debug("Writing Chrome trace to %s", tracePath);
+    outputExecutor.shutdown();
     try {
-      LOG.debug("Writing Chrome trace to %s", tracePath);
-      outputExecutor.shutdown();
-      try {
-        if (!outputExecutor.awaitTermination(TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-          LOG.warn("Failed to log buck trace %s.  Trace might be corrupt", tracePath);
-        }
-      } catch (InterruptedException e) {
-        Threads.interruptCurrentThread();
+      if (!outputExecutor.awaitTermination(TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+        LOG.warn("Failed to log buck trace %s.  Trace might be corrupt", tracePath);
       }
-
-      chromeTraceWriter.writeEnd();
-      chromeTraceWriter.close();
-      traceStream.close();
-      uploadTraceIfConfigured(buildId);
-
-      String symlinkName = config.getCompressTraces() ? "build.trace.gz" : "build.trace";
-      Path symlinkPath = projectFilesystem.getBuckPaths().getLogDir().resolve(symlinkName);
-      projectFilesystem.createSymLink(
-          projectFilesystem.resolve(symlinkPath), projectFilesystem.resolve(tracePath), true);
-
-      deleteOldTraces();
-    } catch (IOException e) {
-      throw new HumanReadableException(e, "Unable to write trace file: " + e);
+    } catch (InterruptedException e) {
+      Threads.interruptCurrentThread();
     }
+
+    chromeTraceWriter.writeEnd();
+    chromeTraceWriter.close();
+    traceStream.close();
+    uploadTraceIfConfigured(buildId);
+
+    String symlinkName = config.getCompressTraces() ? "build.trace.gz" : "build.trace";
+    Path symlinkPath = projectFilesystem.getBuckPaths().getLogDir().resolve(symlinkName);
+    projectFilesystem.createSymLink(
+        projectFilesystem.resolve(symlinkPath), projectFilesystem.resolve(tracePath), true);
+
+    deleteOldTraces();
   }
 
   @Subscribe

@@ -17,6 +17,7 @@
 package com.facebook.buck.event;
 
 import com.facebook.buck.model.BuildId;
+import java.io.IOException;
 
 public interface BuckEventListener {
   /**
@@ -24,5 +25,5 @@ public interface BuckEventListener {
    *
    * @param buildId for the trace to be written.
    */
-  void outputTrace(BuildId buildId) throws InterruptedException;
+  void outputTrace(BuildId buildId) throws IOException, InterruptedException;
 }
