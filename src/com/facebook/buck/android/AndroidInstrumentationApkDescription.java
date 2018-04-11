@@ -161,7 +161,7 @@ public class AndroidInstrumentationApkDescription
             androidPlatformTarget,
             params,
             resolver,
-            AndroidBinary.AaptMode.AAPT1,
+            args.getAaptMode(),
             ResourceCompressionMode.DISABLED,
             FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
@@ -243,6 +243,11 @@ public class AndroidInstrumentationApkDescription
     Optional<SourcePath> getManifestSkeleton();
 
     BuildTarget getApk();
+
+    @Value.Default
+    default AndroidBinary.AaptMode getAaptMode() {
+      return AndroidBinary.AaptMode.AAPT1;
+    }
 
     @Value.Default
     default boolean getIncludesVectorDrawables() {
