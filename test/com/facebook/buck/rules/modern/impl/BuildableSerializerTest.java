@@ -243,4 +243,10 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   public void sortedMap() throws Exception {
     test(new WithSortedMap());
   }
+
+  @Override
+  @Test
+  public void supplier() throws Exception {
+    test(new WithSupplier());
+  }
 }

@@ -102,6 +102,13 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
     apply(new WithSortedMap());
   }
 
+  @Override
+  @Test
+  public void supplier() throws Exception {
+    inputsConsumer.accept(anyObject());
+    apply(new WithSupplier());
+  }
+
   static class WithSourcePathList implements FakeBuildable {
     @AddToRuleKey private final ImmutableList<SourcePath> inputs;
 

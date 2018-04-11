@@ -42,6 +42,7 @@ import java.lang.reflect.WildcardType;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 /** Creates ValueTypeInfos for given Types/TypeTokens. */
@@ -146,6 +147,9 @@ public class ValueTypeInfoFactory {
       } else if (rawClass.equals(Pair.class)) {
         // TODO(cjhopman): handle Pair
         throw new UnsupportedOperationException();
+      } else if (Supplier.class.isAssignableFrom(rawClass)) {
+        Preconditions.checkState(typeArguments.length == 1);
+        return new SupplierValueTypeInfo<>(forType(typeArguments[0]));
       } else if (rawClass.equals(ImmutableList.class)) {
         Preconditions.checkState(typeArguments.length == 1);
         return new ImmutableListValueTypeInfo<>(forType(typeArguments[0]));

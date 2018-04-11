@@ -221,4 +221,12 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
             + ">",
         stringify(new WithSortedMap()));
   }
+
+  @Override
+  @Test
+  public void supplier() throws Exception {
+    assertEquals(
+        "stringSupplier:string(string)\n" + "weakPath:SourcePath(/project/root/some.path)",
+        stringify(new WithSupplier()));
+  }
 }

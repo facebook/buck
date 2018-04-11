@@ -33,11 +33,14 @@ import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.MoreSuppliers;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import org.junit.Test;
 
@@ -96,6 +99,9 @@ abstract class AbstractValueVisitorTest {
   @Test
   public abstract void sortedMap() throws Exception;
 
+  @Test
+  public abstract void supplier() throws Exception;
+
   public interface FakeBuildable extends Buildable {
     @Override
     default ImmutableList<Step> getBuildSteps(
@@ -105,6 +111,14 @@ abstract class AbstractValueVisitorTest {
         BuildCellRelativePathFactory buildCellPathFactory) {
       return ImmutableList.of();
     }
+  }
+
+  public static class WithSupplier implements FakeBuildable {
+    @AddToRuleKey final Supplier<String> stringSupplier = Suppliers.ofInstance("string");
+
+    @AddToRuleKey
+    final Supplier<SourcePath> weakPath =
+        MoreSuppliers.memoize(() -> FakeSourcePath.of(rootFilesystem, "some.path"));
   }
 
   public static class WithSortedMap implements FakeBuildable {
