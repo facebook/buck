@@ -152,6 +152,7 @@ public class AndroidBinaryGraphEnhancer {
       Optional<String> localizedStringFileName,
       Optional<SourcePath> manifest,
       Optional<SourcePath> manifestSkeleton,
+      Optional<SourcePath> moduleManifestSkeleton,
       PackageType packageType,
       ImmutableSet<TargetCpuType> cpuFilters,
       boolean shouldBuildStringSourceMap,
@@ -243,6 +244,7 @@ public class AndroidBinaryGraphEnhancer {
             ExopackageMode.enabledForResources(exopackageModes),
             manifest,
             manifestSkeleton,
+            moduleManifestSkeleton,
             aaptMode,
             resourcesFilter,
             resourceCompressionMode,
@@ -256,7 +258,8 @@ public class AndroidBinaryGraphEnhancer {
             duplicateResourceWhitelistPath,
             manifestEntries,
             postFilterResourcesCmd,
-            noAutoVersionResources);
+            noAutoVersionResources,
+            apkModuleGraph);
     this.apkModuleGraph = apkModuleGraph;
     this.dxConfig = dxConfig;
     this.nonPreDexedDexBuildableArgs = nonPreDexedDexBuildableArgs;
@@ -503,6 +506,7 @@ public class AndroidBinaryGraphEnhancer {
         .setDexMergeRule(dexMergeRule)
         .setClasspathEntriesToDex(classpathEntriesToDex)
         .setAPKModuleGraph(apkModuleGraph)
+        .setModuleResourceApkPaths(resourcesEnhancementResult.getModuleResourceApkPaths())
         .build();
   }
 

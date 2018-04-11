@@ -2,4 +2,5 @@
 <resources>
   <string name='app_name'>Sample App</string>
   <string name='base_button'>Hello world!</string>
+  <string name='small_with_no_resource_deps_title'>module title</string>
 </resources>

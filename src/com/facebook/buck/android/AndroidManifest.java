@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -73,6 +74,8 @@ public class AndroidManifest extends AbstractBuildRule {
   /** These must be sorted so the rule key is stable. */
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> manifestFiles;
 
+  @AddToRuleKey private final APKModule module;
+
   private final Path pathToOutputFile;
   private final Supplier<SortedSet<BuildRule>> buildDepsSupplier;
 
@@ -81,9 +84,11 @@ public class AndroidManifest extends AbstractBuildRule {
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder finder,
       SourcePath skeletonFile,
+      APKModule module,
       Set<SourcePath> manifestFiles) {
     super(buildTarget, projectFilesystem);
     this.skeletonFile = skeletonFile;
+    this.module = module;
     this.manifestFiles = ImmutableSortedSet.copyOf(manifestFiles);
     this.pathToOutputFile =
         BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "AndroidManifest__%s__.xml");
@@ -119,6 +124,7 @@ public class AndroidManifest extends AbstractBuildRule {
         new GenerateManifestStep(
             getProjectFilesystem(),
             context.getSourcePathResolver().getAbsolutePath(skeletonFile),
+            module,
             context.getSourcePathResolver().getAllAbsolutePaths(manifestFiles),
             context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()),
             getProjectFilesystem()

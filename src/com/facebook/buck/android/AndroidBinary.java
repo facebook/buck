@@ -246,6 +246,7 @@ public class AndroidBinary extends AbstractBuildRule
             nativeFilesInfo,
             resourceFilesInfo,
             apkModules,
+            enhancementResult.getModuleResourceApkPaths(),
             apkCompressionLevel);
     this.exopackageInfo = exopackageInfo;
 

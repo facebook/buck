@@ -59,6 +59,7 @@ public class AaptPackageResources extends AbstractBuildRule {
   @AddToRuleKey private final boolean skipCrunchPngs;
   @AddToRuleKey private final ManifestEntries manifestEntries;
   @AddToRuleKey private final boolean includesVectorDrawables;
+  @AddToRuleKey private final ImmutableList<SourcePath> dependencyResourceApks;
 
   private final AndroidPlatformTarget androidPlatformTarget;
   private final Supplier<SortedSet<BuildRule>> buildDepsSupplier;
@@ -69,6 +70,7 @@ public class AaptPackageResources extends AbstractBuildRule {
       BuildRuleResolver ruleResolver,
       SourcePath manifest,
       FilteredResourcesProvider filteredResourcesProvider,
+      ImmutableList<SourcePath> dependencyResourceApks,
       ImmutableList<HasAndroidResourceDeps> resourceDeps) {
     ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
     Stream<BuildTarget> resourceTargets =
@@ -81,6 +83,9 @@ public class AaptPackageResources extends AbstractBuildRule {
             .map(HasAndroidResourceDeps::getRes)
             .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
             .iterator());
+    for (SourcePath apk : dependencyResourceApks) {
+      ruleFinder.getRule(apk).ifPresent(depsBuilder::add);
+    }
     ruleFinder.getRule(manifest).ifPresent(depsBuilder::add);
     filteredResourcesProvider.getResourceFilterRule().ifPresent(depsBuilder::add);
     return depsBuilder.build();
@@ -93,6 +98,7 @@ public class AaptPackageResources extends AbstractBuildRule {
       SourcePathRuleFinder ruleFinder,
       BuildRuleResolver ruleResolver,
       SourcePath manifest,
+      ImmutableList<SourcePath> dependencyResourceApks,
       FilteredResourcesProvider filteredResourcesProvider,
       ImmutableList<HasAndroidResourceDeps> resourceDeps,
       boolean skipCrunchPngs,
@@ -101,6 +107,7 @@ public class AaptPackageResources extends AbstractBuildRule {
     super(buildTarget, projectFilesystem);
     this.androidPlatformTarget = androidPlatformTarget;
     this.manifest = manifest;
+    this.dependencyResourceApks = dependencyResourceApks;
     this.filteredResourcesProvider = filteredResourcesProvider;
     this.skipCrunchPngs = skipCrunchPngs;
     this.includesVectorDrawables = includesVectorDrawables;
@@ -114,6 +121,7 @@ public class AaptPackageResources extends AbstractBuildRule {
                     ruleResolver,
                     manifest,
                     filteredResourcesProvider,
+                    dependencyResourceApks,
                     resourceDeps));
   }
 
@@ -186,6 +194,10 @@ public class AaptPackageResources extends AbstractBuildRule {
             getResourceApkPath(),
             rDotTxtDir,
             pathToGeneratedProguardConfig,
+            dependencyResourceApks
+                .stream()
+                .map(context.getSourcePathResolver()::getAbsolutePath)
+                .collect(ImmutableList.toImmutableList()),
             /*
              * In practice, it appears that if --no-crunch is used, resources will occasionally
              * appear distorted in the APK produced by this command (and what's worse, a clean

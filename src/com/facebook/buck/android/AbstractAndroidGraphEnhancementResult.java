@@ -42,6 +42,8 @@ interface AbstractAndroidGraphEnhancementResult {
 
   SourcePath getPrimaryResourcesApkPath();
 
+  ImmutableMap<APKModule, SourcePath> getModuleResourceApkPaths();
+
   ImmutableList<SourcePath> getPrimaryApkAssetZips();
 
   ImmutableList<ExopackagePathAndHash> getExoResources();

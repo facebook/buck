@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.apkmodule.APKModule;
+import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -38,6 +40,12 @@ public class AndroidManifestFactory {
         new AndroidTransitiveDependencyGraph(resolver.getAllRules(deps));
     ImmutableSet<SourcePath> manifestFiles = transitiveDependencyGraph.findManifestFiles();
 
-    return new AndroidManifest(buildTarget, projectFilesystem, ruleFinder, skeleton, manifestFiles);
+    return new AndroidManifest(
+        buildTarget,
+        projectFilesystem,
+        ruleFinder,
+        skeleton,
+        APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME),
+        manifestFiles);
   }
 }

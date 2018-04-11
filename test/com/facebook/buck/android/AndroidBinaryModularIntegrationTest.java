@@ -21,11 +21,13 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import java.io.IOException;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -206,6 +208,38 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_libasset2.so");
     zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_foo1.so");
     zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_foo2.so");
+  }
+
+  @Test
+  public void testMultidexModularWithManifest() throws IOException {
+    String target = "//apps/multidex:app_modular_manifest_debug";
+    workspace.runBuckCommand("build", target).assertSuccess();
+    ZipInspector zipInspector =
+        new ZipInspector(
+            workspace.getPath(
+                BuildTargets.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+    String module = "small_with_no_resource_deps";
+    zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
+    zipInspector.assertFileExists("assets/" + module + "/AndroidManifest.xml");
+  }
+
+  @Test
+  public void testMultidexModularWithManifestAapt2() throws InterruptedException, IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    ProcessResult foundAapt2 = workspace.runBuckBuild("//apps/sample:check_for_aapt2");
+    Assume.assumeTrue(foundAapt2.getExitCode().getCode() == 0);
+
+    String target = "//apps/multidex:app_modular_manifest_aapt2_debug";
+    workspace.runBuckCommand("build", target).assertSuccess();
+    ZipInspector zipInspector =
+        new ZipInspector(
+            workspace.getPath(
+                BuildTargets.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+    String module = "small_with_no_resource_deps";
+    zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
+    zipInspector.assertFileExists("assets/" + module + "/AndroidManifest.xml");
   }
 
   @Test

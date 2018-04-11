@@ -73,6 +73,7 @@ public class AaptStepTest {
         /* pathToOutputApk */ basePath.resolve("build").resolve("out.apk"),
         /* pathToRDotDText */ basePath.resolve("r"),
         pathToGeneratedProguardConfig,
+        ImmutableList.of(),
         isCrunchFiles,
         includesVectorDrawables,
         manifestEntries);

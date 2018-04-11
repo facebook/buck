@@ -171,6 +171,7 @@ public class AndroidInstrumentationApkDescription
             /* localizedStringFileName */ null,
             args.getManifest(),
             args.getManifestSkeleton(),
+            /* moduleManifestSkeleton */ Optional.empty(),
             PackageType.INSTRUMENTED,
             apkUnderTest.getCpuFilters(),
             /* shouldBuildStringSourceMap */ false,

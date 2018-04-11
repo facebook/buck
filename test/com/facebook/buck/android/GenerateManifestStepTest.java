@@ -20,6 +20,8 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.android.apkmodule.APKModule;
+import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -63,7 +65,51 @@ public class GenerateManifestStepTest {
 
     GenerateManifestStep manifestCommand =
         new GenerateManifestStep(
-            filesystem, skeletonPath, libraryManifestFiles, outputPath, mergeReportPath);
+            filesystem,
+            skeletonPath,
+            APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME),
+            libraryManifestFiles,
+            outputPath,
+            mergeReportPath);
+    int result = manifestCommand.execute(context).getExitCode();
+
+    assertEquals(0, result);
+
+    List<String> expected =
+        Files.lines(filesystem.resolve(expectedOutputPath)).collect(Collectors.toList());
+    List<String> output = Files.lines(outputPath).collect(Collectors.toList());
+
+    assertEquals(expected, output);
+
+    String report = new String(Files.readAllBytes(mergeReportPath));
+    assertThat(report, containsString("ADDED"));
+    assertThat(report, containsString("MERGED"));
+  }
+
+  @Test
+  public void testManifestGenerationWithModule() throws Exception {
+    ExecutionContext context = TestExecutionContext.newInstance();
+    ProjectFilesystem filesystem =
+        context.getProjectFilesystemFactory().createProjectFilesystem(tmpFolder.getRoot());
+
+    Path expectedOutputPath = Paths.get("ModuleManifest.expected.xml");
+    Path skeletonPath = Paths.get("ModuleManifestSkeleton.xml");
+    ImmutableSet<Path> libraryManifestFiles =
+        RichStream.of("AndroidManifestA.xml", "AndroidManifestB.xml", "AndroidManifestC.xml")
+            .map(Paths::get)
+            .toImmutableSet();
+
+    Path outputPath = tmpFolder.getRoot().resolve("AndroidManifest.xml");
+    Path mergeReportPath = tmpFolder.getRoot().resolve("merge-report.txt");
+
+    GenerateManifestStep manifestCommand =
+        new GenerateManifestStep(
+            filesystem,
+            skeletonPath,
+            APKModule.of("MODULE_NAME"),
+            libraryManifestFiles,
+            outputPath,
+            mergeReportPath);
     int result = manifestCommand.execute(context).getExitCode();
 
     assertEquals(0, result);

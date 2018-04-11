@@ -42,6 +42,7 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.XzStep;
+import com.facebook.buck.unarchive.UnzipStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.zip.RepackZipEntriesStep;
@@ -49,6 +50,7 @@ import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
@@ -109,6 +111,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
   @AddToRuleKey private final int apkCompressionLevel;
 
+  @AddToRuleKey private final ImmutableMap<APKModule, SourcePath> moduleResourceApkPaths;
+
   // These should be the only things not added to the rulekey.
   private final ProjectFilesystem filesystem;
   private final BuildTarget buildTarget;
@@ -135,6 +139,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       NativeFilesInfo nativeFilesInfo,
       ResourceFilesInfo resourceFilesInfo,
       ImmutableSortedSet<APKModule> apkModules,
+      ImmutableMap<APKModule, SourcePath> moduleResourceApkPaths,
       int apkCompressionLevel) {
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
@@ -150,6 +155,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     this.androidManifestPath = androidManifestPath;
     this.isCompressResources = isCompressResources;
     this.apkModules = apkModules;
+    this.moduleResourceApkPaths = moduleResourceApkPaths;
     this.dexFilesInfo = dexFilesInfo;
     this.nativeFilesInfo = nativeFilesInfo;
     this.packageAssetLibraries = packageAssetLibraries;
@@ -187,6 +193,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     // Copy the transitive closure of native-libs-as-assets to a single directory, if any.
     ImmutableSet.Builder<Path> nativeLibraryAsAssetDirectories = ImmutableSet.builder();
 
+    ImmutableSet.Builder<Path> moduleResourcesDirectories = ImmutableSet.builder();
+
     for (APKModule module : apkModules) {
       boolean shouldPackageAssetLibraries = packageAssetLibraries || !module.isRootModule();
       if (!ExopackageMode.enabledForNativeLibraries(exopackageModes)
@@ -223,6 +231,29 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
         nativeLibraryAsAssetDirectories.add(pathForNativeLibsAsAssets);
       }
+
+      if (moduleResourceApkPaths.get(module) != null) {
+        SourcePath resourcePath = moduleResourceApkPaths.get(module);
+
+        Path moduleResDirectory =
+            BuildTargets.getScratchPath(
+                getProjectFilesystem(), buildTarget, "__module_res_" + module.getName() + "_%s__");
+
+        Path unpackDirectory = moduleResDirectory.resolve("assets").resolve(module.getName());
+
+        steps.addAll(
+            MakeCleanDirectoryStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), unpackDirectory)));
+        steps.add(
+            new UnzipStep(
+                getProjectFilesystem(),
+                context.getSourcePathResolver().getAbsolutePath(resourcePath),
+                unpackDirectory,
+                Optional.empty()));
+
+        moduleResourcesDirectories.add(moduleResDirectory);
+      }
     }
 
     // If non-english strings are to be stored as assets, pass them to ApkBuilder.
@@ -246,6 +277,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
     ImmutableSet<Path> allAssetDirectories =
         ImmutableSet.<Path>builder()
+            .addAll(moduleResourcesDirectories.build())
             .addAll(nativeLibraryAsAssetDirectories.build())
             .addAll(dexFilesInfo.getSecondaryDexDirs(getProjectFilesystem(), pathResolver))
             .build();

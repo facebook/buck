@@ -304,6 +304,7 @@ public class AndroidBinaryDescription
             args.getLocalizedStringFileName(),
             args.getManifest(),
             args.getManifestSkeleton(),
+            args.getModuleManifestSkeleton(),
             packageType,
             ImmutableSet.copyOf(args.getCpuFilters()),
             args.isBuildStringSourceMap(),
@@ -550,6 +551,8 @@ public class AndroidBinaryDescription
     Optional<SourcePath> getManifest();
 
     Optional<SourcePath> getManifestSkeleton();
+
+    Optional<SourcePath> getModuleManifestSkeleton();
 
     BuildTarget getKeystore();
 

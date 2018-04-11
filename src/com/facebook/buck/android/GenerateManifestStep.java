@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.android.common.utils.ILogger;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.MergingReport;
+import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
@@ -43,15 +44,18 @@ public class GenerateManifestStep implements Step {
   private final ImmutableSet<Path> libraryManifestPaths;
   private final Path outManifestPath;
   private final Path mergeReportPath;
+  private final APKModule module;
 
   public GenerateManifestStep(
       ProjectFilesystem filesystem,
       Path skeletonManifestPath,
+      APKModule module,
       ImmutableSet<Path> libraryManifestPaths,
       Path outManifestPath,
       Path mergeReportPath) {
     this.filesystem = filesystem;
     this.skeletonManifestPath = skeletonManifestPath;
+    this.module = module;
     this.libraryManifestPaths = ImmutableSet.copyOf(libraryManifestPaths);
     this.outManifestPath = outManifestPath;
     this.mergeReportPath = mergeReportPath;
@@ -99,10 +103,18 @@ public class GenerateManifestStep implements Step {
   private MergingReport mergeManifests(
       File mainManifestFile, List<File> libraryManifestFiles, BuckEventAndroidLogger logger) {
     try {
+      ManifestMerger2.Invoker<?> manifestInvoker =
+          ManifestMerger2.newMerger(
+              mainManifestFile, logger, ManifestMerger2.MergeType.APPLICATION);
+      if (!module.isRootModule()) {
+        manifestInvoker.setPlaceHolderValue("split", module.getName());
+      } else {
+        manifestInvoker.withFeatures(ManifestMerger2.Invoker.Feature.NO_PLACEHOLDER_REPLACEMENT);
+      }
+
       MergingReport mergingReport =
-          ManifestMerger2.newMerger(mainManifestFile, logger, ManifestMerger2.MergeType.APPLICATION)
+          manifestInvoker
               .withFeatures(
-                  ManifestMerger2.Invoker.Feature.NO_PLACEHOLDER_REPLACEMENT,
                   ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS,
                   ManifestMerger2.Invoker.Feature.SKIP_BLAME)
               .addLibraryManifests(Iterables.toArray(libraryManifestFiles, File.class))
@@ -114,6 +126,7 @@ public class GenerateManifestStep implements Step {
         }
         throw new HumanReadableException("Error generating manifest file");
       }
+
       return mergingReport;
     } catch (ManifestMerger2.MergeFailureException e) {
       throw new HumanReadableException(e, "Error generating manifest file");

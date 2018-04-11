@@ -34,6 +34,49 @@ android_binary(
 )
 
 android_binary(
+    name = "app_modular_manifest_debug",
+    application_module_configs = {
+        "small_with_no_resource_deps": ["//java/com/sample/small:small_with_no_resource_deps"],
+    },
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    module_manifest_skeleton = "ModuleManifest.xml",
+    package_type = "debug",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/small:small_with_no_resource_deps",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
+    name = "app_modular_manifest_aapt2_debug",
+    aapt_mode = "aapt2",
+    application_module_configs = {
+        "small_with_no_resource_deps": ["//java/com/sample/small:small_with_no_resource_deps"],
+    },
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    module_manifest_skeleton = "ModuleManifest.xml",
+    package_type = "debug",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/small:small_with_no_resource_deps",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
     name = "app_modular_proguard_dontobfuscate",
     application_module_targets = [
         "//java/com/sample/small:small_with_no_resource_deps",

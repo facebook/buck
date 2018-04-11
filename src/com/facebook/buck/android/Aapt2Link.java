@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /** Perform the "aapt2 link" step of building an Android app. */
@@ -56,6 +57,7 @@ public class Aapt2Link extends AbstractBuildRule {
   @AddToRuleKey private final ImmutableList<Aapt2Compile> compileRules;
   @AddToRuleKey private final SourcePath manifest;
   @AddToRuleKey private final ManifestEntries manifestEntries;
+  @AddToRuleKey private final ImmutableList<SourcePath> dependencyResourceApks;
 
   private final AndroidPlatformTarget androidPlatformTarget;
   private final Supplier<ImmutableSortedSet<BuildRule>> buildDepsSupplier;
@@ -68,6 +70,7 @@ public class Aapt2Link extends AbstractBuildRule {
       ImmutableList<HasAndroidResourceDeps> resourceRules,
       SourcePath manifest,
       ManifestEntries manifestEntries,
+      ImmutableList<SourcePath> dependencyResourceApks,
       boolean noAutoVersion,
       AndroidPlatformTarget androidPlatformTarget) {
     super(buildTarget, projectFilesystem);
@@ -75,6 +78,7 @@ public class Aapt2Link extends AbstractBuildRule {
     this.compileRules = compileRules;
     this.manifest = manifest;
     this.manifestEntries = manifestEntries;
+    this.dependencyResourceApks = dependencyResourceApks;
     this.noAutoVersion = noAutoVersion;
     this.buildDepsSupplier =
         MoreSuppliers.memoize(
@@ -83,6 +87,12 @@ public class Aapt2Link extends AbstractBuildRule {
                     .addAll(compileRules)
                     .addAll(RichStream.from(resourceRules).filter(BuildRule.class).toOnceIterable())
                     .addAll(ruleFinder.filterBuildRuleInputs(manifest))
+                    .addAll(
+                        RichStream.from(dependencyResourceApks)
+                            .map(ruleFinder::getRule)
+                            .filter(Optional::isPresent)
+                            .map(Optional::get)
+                            .collect(Collectors.toList()))
                     .build());
   }
 
@@ -142,7 +152,13 @@ public class Aapt2Link extends AbstractBuildRule {
 
     steps.add(
         new Aapt2LinkStep(
-            getBuildTarget(), getProjectFilesystem().resolve(linkTreePath), symlinkPaths.build()));
+            getBuildTarget(),
+            getProjectFilesystem().resolve(linkTreePath),
+            symlinkPaths.build(),
+            dependencyResourceApks
+                .stream()
+                .map(context.getSourcePathResolver()::getRelativePath)
+                .collect(Collectors.toList())));
     steps.add(ZipScrubberStep.of(getProjectFilesystem().resolve(getResourceApkPath())));
 
     buildableContext.recordArtifact(getFinalManifestPath());
@@ -198,11 +214,16 @@ public class Aapt2Link extends AbstractBuildRule {
 
   class Aapt2LinkStep extends ShellStep {
     private final List<Path> compiledResourcePaths;
+    private final List<Path> compiledResourceApkPaths;
 
     Aapt2LinkStep(
-        BuildTarget buildTarget, Path workingDirectory, List<Path> compiledResourcePaths) {
+        BuildTarget buildTarget,
+        Path workingDirectory,
+        List<Path> compiledResourcePaths,
+        List<Path> compiledResourceApkPaths) {
       super(Optional.of(buildTarget), workingDirectory);
       this.compiledResourcePaths = compiledResourcePaths;
+      this.compiledResourceApkPaths = compiledResourceApkPaths;
     }
 
     @Override
@@ -230,6 +251,9 @@ public class Aapt2Link extends AbstractBuildRule {
       builder.add("--proguard", pf.resolve(getProguardConfigPath()).toString());
       builder.add("--manifest", pf.resolve(getFinalManifestPath()).toString());
       builder.add("-I", pf.resolve(androidPlatformTarget.getAndroidJar()).toString());
+      for (Path resourceApk : compiledResourceApkPaths) {
+        builder.add("-I", pf.resolve(resourceApk).toString());
+      }
       // We don't need the R.java output, but aapt2 won't output R.txt
       // unless we also request R.java.
       builder.add("--java", pf.resolve(getInitialRDotJavaDir()).toString());

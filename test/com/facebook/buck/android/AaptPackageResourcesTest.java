@@ -266,6 +266,7 @@ public class AaptPackageResourcesTest {
                 ruleFinder,
                 ruleResolver,
                 constructorArgs.manifest,
+                ImmutableList.of(),
                 constructorArgs.filteredResourcesProvider,
                 constructorArgs.hasAndroidResourceDeps,
                 false,
