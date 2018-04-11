@@ -161,13 +161,13 @@ public class DefaultClassInfoTest {
     buildRuleConsumer.accept(rule3);
 
     replay(inputRuleResolver, buildRuleConsumer);
-    classInfo.computeDeps(buildable, inputRuleResolver, buildRuleConsumer);
+    classInfo.visit(buildable, new DepsComputingVisitor(inputRuleResolver, buildRuleConsumer));
     verify(inputRuleResolver, buildRuleConsumer);
 
     outputConsumer.accept(buildable.baseOutputPath);
 
     replay(outputConsumer);
-    classInfo.getOutputs(buildable, outputConsumer);
+    classInfo.visit(buildable, new OutputPathVisitor(outputConsumer));
     verify(outputConsumer);
   }
 

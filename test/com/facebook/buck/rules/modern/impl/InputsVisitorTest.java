@@ -42,7 +42,7 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
 
   private void apply(Buildable value) {
     replay(inputsConsumer);
-    DefaultClassInfoFactory.forInstance(value).getInputs(value, inputsConsumer);
+    DefaultClassInfoFactory.forInstance(value).visit(value, new InputsVisitor(inputsConsumer));
     verify(inputsConsumer);
   }
 

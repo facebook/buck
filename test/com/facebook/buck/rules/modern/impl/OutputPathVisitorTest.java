@@ -29,7 +29,7 @@ public class OutputPathVisitorTest extends AbstractValueVisitorTest {
 
   private ImmutableList<OutputPath> getOutputs(Buildable value) {
     ImmutableList.Builder<OutputPath> builder = ImmutableList.builder();
-    DefaultClassInfoFactory.forInstance(value).getOutputs(value, builder::add);
+    DefaultClassInfoFactory.forInstance(value).visit(value, new OutputPathVisitor(builder::add));
     return builder.build();
   }
 

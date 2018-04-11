@@ -34,6 +34,9 @@ import com.facebook.buck.rules.keys.AlterRuleKeys;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.DefaultInputRuleResolver;
+import com.facebook.buck.rules.modern.impl.DepsComputingVisitor;
+import com.facebook.buck.rules.modern.impl.InputsVisitor;
+import com.facebook.buck.rules.modern.impl.OutputPathVisitor;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreSuppliers;
@@ -145,7 +148,7 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
 
   private ImmutableSortedSet<BuildRule> computeDeps() {
     ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
-    classInfo.computeDeps(buildable, inputRuleResolver, depsBuilder::add);
+    classInfo.visit(buildable, new DepsComputingVisitor(inputRuleResolver, depsBuilder::add));
     return depsBuilder.build();
   }
 
@@ -159,7 +162,7 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
   public static <T extends Buildable> ImmutableSortedSet<SourcePath> computeInputs(
       T buildable, ClassInfo<T> classInfo) {
     ImmutableSortedSet.Builder<SourcePath> depsBuilder = ImmutableSortedSet.naturalOrder();
-    classInfo.getInputs(buildable, depsBuilder::add);
+    classInfo.visit(buildable, new InputsVisitor(depsBuilder::add));
     return depsBuilder.build();
   }
 
@@ -267,7 +270,9 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
   public void recordOutputs(BuildableContext buildableContext) {
     Stream.Builder<Path> collector = Stream.builder();
     collector.add(outputPathResolver.getRootPath());
-    classInfo.getOutputs(buildable, path -> collector.add(outputPathResolver.resolvePath(path)));
+    classInfo.visit(
+        buildable,
+        new OutputPathVisitor(path1 -> collector.add(outputPathResolver.resolvePath(path1))));
     // ImmutableSet guarantees that iteration order is unchanged.
     Set<Path> outputs = collector.build().collect(ImmutableSet.toImmutableSet());
     for (Path path : outputs) {

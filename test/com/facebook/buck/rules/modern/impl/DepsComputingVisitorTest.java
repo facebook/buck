@@ -51,7 +51,8 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
 
   private void apply(Buildable value) {
     replay(depsBuilder, inputRuleResolver);
-    DefaultClassInfoFactory.forInstance(value).computeDeps(value, inputRuleResolver, depsBuilder);
+    DefaultClassInfoFactory.forInstance(value)
+        .visit(value, new DepsComputingVisitor(inputRuleResolver, depsBuilder));
     verify(depsBuilder, inputRuleResolver);
   }
 

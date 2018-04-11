@@ -18,11 +18,7 @@ package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.ClassInfo;
-import com.facebook.buck.rules.modern.InputRuleResolver;
-import com.facebook.buck.rules.modern.OutputPath;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -32,7 +28,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.Optional;
-import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
 /**
@@ -98,25 +93,6 @@ class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
       }
     }
     this.fields = fieldsBuilder.build();
-  }
-
-  /** Computes the deps of the rule. */
-  @Override
-  public void computeDeps(
-      T ruleImpl, InputRuleResolver inputRuleResolver, Consumer<BuildRule> depsBuilder) {
-    visit(ruleImpl, new DepsComputingVisitor(inputRuleResolver, depsBuilder));
-  }
-
-  /** Gets all the outputs referenced from the value. */
-  @Override
-  public void getOutputs(T value, Consumer<OutputPath> dataBuilder) {
-    visit(value, new OutputPathVisitor(dataBuilder));
-  }
-
-  /** Gets all the inputs referenced from the value. */
-  @Override
-  public void getInputs(T value, Consumer<SourcePath> inputsBuilder) {
-    visit(value, new InputsVisitor(inputsBuilder));
   }
 
   @Override
