@@ -203,7 +203,11 @@ public final class BuildableSupport {
     @Override
     protected AbstractRuleKeyBuilder<Stream<SourcePath>> setAddsToRuleKey(
         AddsToRuleKey appendable) {
-      AlterRuleKeys.amendKey(this, appendable);
+      if (appendable instanceof HasCustomInputsLogic) {
+        ((HasCustomInputsLogic) appendable).computeInputs(streamBuilder::add);
+      } else {
+        AlterRuleKeys.amendKey(this, appendable);
+      }
       return this;
     }
 

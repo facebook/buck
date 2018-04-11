@@ -363,6 +363,7 @@ java_immutables_library(
         "ExternalTestRunnerRule.java",
         "FilesystemBuildInfoStore.java",
         "HasCustomDepsLogic.java",
+        "HasCustomInputsLogic.java",
         "HasInstallHelpers.java",
         "HasPostBuildSteps.java",
         "HasRuntimeDeps.java",

@@ -21,14 +21,18 @@ import static org.easymock.EasyMock.createStrictMock;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
+import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.HasCustomInputsLogic;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.util.function.ThrowingConsumer;
 import com.google.common.collect.ImmutableList;
 import java.util.function.Consumer;
 import org.junit.Test;
@@ -126,5 +130,31 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
   @Override
   public void buildTarget() {
     apply(new WithBuildTarget());
+  }
+
+  private static final PathSourcePath otherPath = FakeSourcePath.of("some.path");;
+
+  private static class HasCustomInputs implements AddsToRuleKey, HasCustomInputsLogic {
+    @AddToRuleKey
+    private final SourcePath sourcePath = DefaultBuildTargetSourcePath.of(someBuildTarget);
+
+    @Override
+    public <E extends Exception> void computeInputs(ThrowingConsumer<SourcePath, E> consumer)
+        throws E {
+      consumer.accept(otherPath);
+    }
+  }
+
+  private static class WithCustomInputs implements AddsToRuleKey {
+    @AddToRuleKey private final HasCustomInputs hasCustomInputs = new HasCustomInputs();
+  }
+
+  @Test
+  public void customDeps() {
+    WithCustomInputs withCustomInputs = new WithCustomInputs();
+    ImmutableList.Builder<SourcePath> inputsBuilder = ImmutableList.builder();
+    DefaultClassInfoFactory.forInstance(withCustomInputs)
+        .visit(withCustomInputs, new InputsVisitor(inputsBuilder::add));
+    assertEquals(inputsBuilder.build(), ImmutableList.of(otherPath));
   }
 }

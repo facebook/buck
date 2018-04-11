@@ -16,7 +16,10 @@
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.rules.AddsToRuleKey;
+import com.facebook.buck.rules.HasCustomInputsLogic;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.OutputPath;
 import java.nio.file.Path;
 import java.util.function.Consumer;
@@ -27,6 +30,16 @@ public class InputsVisitor extends AbstractValueVisitor<RuntimeException> {
 
   public InputsVisitor(Consumer<SourcePath> inputsBuilder) {
     this.inputsBuilder = inputsBuilder;
+  }
+
+  @Override
+  public <T extends AddsToRuleKey> void visitDynamic(T value, ClassInfo<T> classInfo)
+      throws RuntimeException {
+    if (value instanceof HasCustomInputsLogic) {
+      ((HasCustomInputsLogic) value).computeInputs(inputsBuilder::accept);
+    } else {
+      super.visitDynamic(value, classInfo);
+    }
   }
 
   @Override
