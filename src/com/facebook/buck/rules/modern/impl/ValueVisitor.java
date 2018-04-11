@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * A ValueVisitor can be used to visit all the values referenced from a Buildable. This can be used
@@ -39,6 +40,8 @@ public interface ValueVisitor<E extends Exception> {
   <K, V> void visitMap(
       ImmutableSortedMap<K, V> value, ValueTypeInfo<K> keyType, ValueTypeInfo<V> valueType)
       throws E;
+
+  <T> void visitNullable(@Nullable T value, ValueTypeInfo<T> inner) throws E;
 
   <T> void visitOptional(Optional<T> value, ValueTypeInfo<T> innerType) throws E;
 

@@ -42,6 +42,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 import org.junit.Test;
 
 abstract class AbstractValueVisitorTest {
@@ -102,6 +103,9 @@ abstract class AbstractValueVisitorTest {
   @Test
   public abstract void supplier() throws Exception;
 
+  @Test
+  public abstract void nullable() throws Exception;
+
   public interface FakeBuildable extends Buildable {
     @Override
     default ImmutableList<Step> getBuildSteps(
@@ -111,6 +115,14 @@ abstract class AbstractValueVisitorTest {
         BuildCellRelativePathFactory buildCellPathFactory) {
       return ImmutableList.of();
     }
+  }
+
+  public static class WithNullable implements FakeBuildable {
+    @AddToRuleKey @Nullable final String nullString = null;
+    @AddToRuleKey @Nullable final SourcePath nullPath = null;
+
+    @AddToRuleKey @Nullable
+    final SourcePath nonNullPath = FakeSourcePath.of(rootFilesystem, "some.path");
   }
 
   public static class WithSupplier implements FakeBuildable {

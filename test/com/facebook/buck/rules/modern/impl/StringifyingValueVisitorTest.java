@@ -229,4 +229,12 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
         "stringSupplier:string(string)\n" + "weakPath:SourcePath(/project/root/some.path)",
         stringify(new WithSupplier()));
   }
+
+  @Override
+  @Test
+  public void nullable() throws Exception {
+    assertEquals(
+        "nullString:null\n" + "nullPath:null\n" + "nonNullPath:SourcePath(/project/root/some.path)",
+        stringify(new WithNullable()));
+  }
 }

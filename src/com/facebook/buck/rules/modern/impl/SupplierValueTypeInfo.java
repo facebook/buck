@@ -37,6 +37,6 @@ public class SupplierValueTypeInfo<T> implements ValueTypeInfo<Supplier<T>> {
 
   @Override
   public <E extends Exception> Supplier<T> create(ValueCreator<E> creator) throws E {
-    return Suppliers.ofInstance(innerType.create(creator));
+    return Suppliers.ofInstance(innerType.createNotNull(creator));
   }
 }

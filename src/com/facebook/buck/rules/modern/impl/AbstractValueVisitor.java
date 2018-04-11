@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.lang.reflect.Field;
 import java.util.Map.Entry;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * An abstract implementation of ValueVisitor used for implementations that only care about some
@@ -58,6 +59,13 @@ abstract class AbstractValueVisitor<E extends Exception> implements ValueVisitor
   public <T> void visitOptional(Optional<T> value, ValueTypeInfo<T> innerType) throws E {
     if (value.isPresent()) {
       innerType.visit(value.get(), this);
+    }
+  }
+
+  @Override
+  public <T> void visitNullable(@Nullable T value, ValueTypeInfo<T> inner) throws E {
+    if (value != null) {
+      inner.visit(value, this);
     }
   }
 

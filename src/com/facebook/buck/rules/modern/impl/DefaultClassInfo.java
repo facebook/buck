@@ -33,6 +33,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.Optional;
 import java.util.function.Consumer;
+import javax.annotation.Nullable;
 
 /**
  * Default implementation of ClassInfo. Computes values simply by visiting all referenced fields.
@@ -68,7 +69,8 @@ class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
           clazz.getName(),
           field.getName());
 
-      FieldInfo<?> fieldInfo = forField(field);
+      Nullable fieldNullable = field.getAnnotation(Nullable.class);
+      FieldInfo<?> fieldInfo = forField(field, fieldNullable != null);
       fieldsBuilder.add(fieldInfo);
     }
 
@@ -140,9 +142,12 @@ class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
     return fields;
   }
 
-  static FieldInfo<?> forField(Field field) {
+  static FieldInfo<?> forField(Field field, boolean isNullable) {
     Type type = field.getGenericType();
     ValueTypeInfo<?> valueTypeInfo = ValueTypeInfoFactory.forTypeToken(TypeToken.of(type));
+    if (isNullable) {
+      valueTypeInfo = new NullableValueTypeInfo<>(valueTypeInfo);
+    }
     return new FieldInfo<>(field, valueTypeInfo);
   }
 }

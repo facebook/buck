@@ -48,6 +48,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
 /**
  * Implementation of Serialization of Buildables.
@@ -308,6 +309,14 @@ public class Serializer {
                 keyType.visit(entry.getKey(), this);
                 valueType.visit(entry.getValue(), this);
               });
+    }
+
+    @Override
+    public <T> void visitNullable(@Nullable T value, ValueTypeInfo<T> inner) throws IOException {
+      this.stream.writeBoolean(value != null);
+      if (value != null) {
+        inner.visit(value, this);
+      }
     }
   }
 

@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * A ValueCreator can be used to create the values referenced from a Buildable. This is similar to
@@ -38,6 +39,9 @@ public interface ValueCreator<E extends Exception> {
 
   <K, V> ImmutableSortedMap<K, V> createMap(ValueTypeInfo<K> keyType, ValueTypeInfo<V> valueType)
       throws E;
+
+  @Nullable
+  <T> T createNullable(ValueTypeInfo<T> inner) throws E;
 
   <T> Optional<T> createOptional(ValueTypeInfo<T> innerType) throws E;
 

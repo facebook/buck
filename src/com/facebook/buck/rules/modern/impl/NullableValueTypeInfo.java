@@ -16,20 +16,27 @@
 
 package com.facebook.buck.rules.modern.impl;
 
-import com.google.common.base.Preconditions;
 import javax.annotation.Nullable;
 
 /**
- * ValueTypeInfo&lt;T&gt; provides methods to extract deps, outputs, rulekeys from values of type T.
+ * ValueTypeInfo for fields marked @Nullable. This allows other ValueTypeInfos to assume that they
+ * always deal with non-null values.
  */
-@SuppressWarnings("unused")
-public interface ValueTypeInfo<T> {
-  <E extends Exception> void visit(T value, ValueVisitor<E> visitor) throws E;
+public class NullableValueTypeInfo<T> implements ValueTypeInfo<T> {
+  private final ValueTypeInfo<T> inner;
 
+  public NullableValueTypeInfo(ValueTypeInfo<T> inner) {
+    this.inner = inner;
+  }
+
+  @Override
+  public <E extends Exception> void visit(T value, ValueVisitor<E> visitor) throws E {
+    visitor.visitNullable(value, inner);
+  }
+
+  @Override
   @Nullable
-  <E extends Exception> T create(ValueCreator<E> creator) throws E;
-
-  default <E extends Exception> T createNotNull(ValueCreator<E> creator) throws E {
-    return Preconditions.checkNotNull(create(creator));
+  public <E extends Exception> T create(ValueCreator<E> creator) throws E {
+    return creator.createNullable(inner);
   }
 }

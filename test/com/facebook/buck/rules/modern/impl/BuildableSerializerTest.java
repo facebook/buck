@@ -249,4 +249,10 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   public void supplier() throws Exception {
     test(new WithSupplier());
   }
+
+  @Override
+  @Test
+  public void nullable() throws Exception {
+    test(new WithNullable());
+  }
 }

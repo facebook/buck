@@ -45,6 +45,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 import org.objenesis.ObjenesisStd;
 
 /**
@@ -125,7 +126,7 @@ public class Deserializer {
       int size = stream.readInt();
       ImmutableList.Builder<T> builder = ImmutableList.builderWithExpectedSize(size);
       for (int i = 0; i < size; i++) {
-        builder.add(innerType.create(this));
+        builder.add(innerType.createNotNull(this));
       }
       return builder.build();
     }
@@ -137,7 +138,7 @@ public class Deserializer {
       ImmutableSortedSet.Builder<T> builder =
           (ImmutableSortedSet.Builder<T>) ImmutableSortedSet.naturalOrder();
       for (int i = 0; i < size; i++) {
-        builder.add(innerType.create(this));
+        builder.add(innerType.createNotNull(this));
       }
       return builder.build();
     }
@@ -145,9 +146,18 @@ public class Deserializer {
     @Override
     public <T> Optional<T> createOptional(ValueTypeInfo<T> innerType) throws IOException {
       if (stream.readBoolean()) {
-        return Optional.of(innerType.create(this));
+        return Optional.of(innerType.createNotNull(this));
       }
       return Optional.empty();
+    }
+
+    @Override
+    @Nullable
+    public <T> T createNullable(ValueTypeInfo<T> innerType) throws IOException {
+      if (stream.readBoolean()) {
+        return innerType.create(this);
+      }
+      return null;
     }
 
     @Override
@@ -232,7 +242,7 @@ public class Deserializer {
     }
 
     private <T> T readValue(TypeToken<T> typeToken) throws IOException {
-      return ValueTypeInfoFactory.forTypeToken(typeToken).create(this);
+      return ValueTypeInfoFactory.forTypeToken(typeToken).createNotNull(this);
     }
 
     public <T extends AddsToRuleKey> T create(Class<T> requestedClass) throws IOException {
@@ -284,7 +294,7 @@ public class Deserializer {
       ImmutableSortedMap.Builder<K, V> builder =
           (ImmutableSortedMap.Builder<K, V>) ImmutableSortedMap.naturalOrder();
       for (int i = 0; i < size; i++) {
-        builder.put(keyType.create(this), valueType.create(this));
+        builder.put(keyType.createNotNull(this), valueType.createNotNull(this));
       }
       return builder.build();
     }

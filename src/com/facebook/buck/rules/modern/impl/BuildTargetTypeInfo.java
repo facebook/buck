@@ -60,12 +60,12 @@ public class BuildTargetTypeInfo implements ValueTypeInfo<BuildTarget> {
   @Override
   public <E extends Exception> BuildTarget create(ValueCreator<E> creator) throws E {
     Path cellPath = creator.createPath();
-    Optional<String> cellName = Holder.cellNameTypeInfo.create(creator);
+    Optional<String> cellName = Holder.cellNameTypeInfo.createNotNull(creator);
     String baseName = creator.createString();
     String shortName = creator.createString();
     ImmutableList<Flavor> flavors =
         Holder.flavorsTypeInfo
-            .create(creator)
+            .createNotNull(creator)
             .stream()
             .map(InternalFlavor::of)
             .collect(ImmutableList.toImmutableList());
