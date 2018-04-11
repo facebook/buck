@@ -231,4 +231,10 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   public void anEnum() throws Exception {
     test(new WithEnum());
   }
+
+  @Override
+  @Test
+  public void nonHashableSourcePathContainer() throws Exception {
+    test(new WithNonHashableSourcePathContainer());
+  }
 }

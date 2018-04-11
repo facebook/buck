@@ -190,4 +190,12 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
         "type:string(GOOD)\n" + "otherType:Optional<\n" + "  string(BAD)\n" + ">",
         stringify(new WithEnum()));
   }
+
+  @Override
+  @Test
+  public void nonHashableSourcePathContainer() throws Exception {
+    assertEquals(
+        "container:SourcePath(/project/root/some/path)",
+        stringify(new WithNonHashableSourcePathContainer()));
+  }
 }

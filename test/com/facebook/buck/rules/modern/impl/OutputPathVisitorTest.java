@@ -70,6 +70,13 @@ public class OutputPathVisitorTest extends AbstractValueVisitorTest {
     MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithEnum()));
   }
 
+  @Override
+  @Test
+  public void nonHashableSourcePathContainer() throws Exception {
+    MoreAsserts.assertIterablesEquals(
+        ImmutableList.of(), getOutputs(new WithNonHashableSourcePathContainer()));
+  }
+
   static class WithOutputPathList implements FakeBuildable {
     @AddToRuleKey private final ImmutableList<OutputPath> outputs;
 

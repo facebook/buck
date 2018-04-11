@@ -99,6 +99,14 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
     apply(new WithEnum());
   }
 
+  @Override
+  @Test
+  public void nonHashableSourcePathContainer() throws Exception {
+    WithNonHashableSourcePathContainer value = new WithNonHashableSourcePathContainer();
+    expect(inputRuleResolver.resolve(value.container.getSourcePath())).andReturn(Optional.empty());
+    apply(value);
+  }
+
   static class WithSourcePathList implements FakeBuildable {
     @AddToRuleKey private final ImmutableList<SourcePath> inputs;
 

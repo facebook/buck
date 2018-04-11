@@ -24,6 +24,7 @@ import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
@@ -87,6 +88,9 @@ abstract class AbstractValueVisitorTest {
   @Test
   public abstract void anEnum() throws Exception;
 
+  @Test
+  public abstract void nonHashableSourcePathContainer() throws Exception;
+
   public interface FakeBuildable extends Buildable {
     @Override
     default ImmutableList<Step> getBuildSteps(
@@ -108,6 +112,12 @@ abstract class AbstractValueVisitorTest {
 
   public static class WithSourcePath implements FakeBuildable {
     @AddToRuleKey final SourcePath path = FakeSourcePath.of(rootFilesystem, "some/path");
+  }
+
+  public static class WithNonHashableSourcePathContainer implements FakeBuildable {
+    @AddToRuleKey
+    final NonHashableSourcePathContainer container =
+        new NonHashableSourcePathContainer(FakeSourcePath.of(rootFilesystem, "some/path"));
   }
 
   public static class WithSet implements FakeBuildable {

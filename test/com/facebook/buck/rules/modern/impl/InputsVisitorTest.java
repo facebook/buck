@@ -86,6 +86,14 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
     apply(new WithEnum());
   }
 
+  @Override
+  @Test
+  public void nonHashableSourcePathContainer() throws Exception {
+    WithNonHashableSourcePathContainer value = new WithNonHashableSourcePathContainer();
+    inputsConsumer.accept(value.container.getSourcePath());
+    apply(value);
+  }
+
   static class WithSourcePathList implements FakeBuildable {
     @AddToRuleKey private final ImmutableList<SourcePath> inputs;
 

@@ -18,6 +18,7 @@ package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddsToRuleKey;
+import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ImmutableListValueTypeInfo;
@@ -115,6 +116,8 @@ public class ValueTypeInfoFactory {
         return SourcePathValueTypeInfo.INSTANCE;
       } else if (rawClass.equals(OutputPath.class)) {
         return OutputPathValueTypeInfo.INSTANCE;
+      } else if (NonHashableSourcePathContainer.class.isAssignableFrom(rawClass)) {
+        return new NonHashableSourcePathContainerValueTypeInfo();
       } else if (BuildTarget.class.isAssignableFrom(rawClass)) {
         return BuildTargetTypeInfo.INSTANCE;
       } else if (Pattern.class.isAssignableFrom(rawClass)) {
