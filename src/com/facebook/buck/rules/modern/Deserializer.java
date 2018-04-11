@@ -31,6 +31,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.common.io.ByteStreams;
@@ -273,6 +274,19 @@ public class Deserializer {
         throws IllegalAccessException {
       field.setAccessible(true);
       field.set(instance, value);
+    }
+
+    @Override
+    public <K, V> ImmutableSortedMap<K, V> createMap(
+        ValueTypeInfo<K> keyType, ValueTypeInfo<V> valueType) throws IOException {
+      int size = stream.readInt();
+      @SuppressWarnings("unchecked")
+      ImmutableSortedMap.Builder<K, V> builder =
+          (ImmutableSortedMap.Builder<K, V>) ImmutableSortedMap.naturalOrder();
+      for (int i = 0; i < size; i++) {
+        builder.put(keyType.create(this), valueType.create(this));
+      }
+      return builder.build();
     }
   }
 }

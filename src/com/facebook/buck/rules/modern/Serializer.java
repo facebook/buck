@@ -29,11 +29,14 @@ import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfo;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
 import com.facebook.buck.rules.modern.impl.ValueVisitor;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import com.google.common.reflect.TypeToken;
 import java.io.ByteArrayOutputStream;
@@ -291,6 +294,20 @@ public class Serializer {
     private void writeBytes(byte[] bytes) throws IOException {
       this.stream.writeInt(bytes.length);
       this.stream.write(bytes);
+    }
+
+    @Override
+    public <K, V> void visitMap(
+        ImmutableSortedMap<K, V> value, ValueTypeInfo<K> keyType, ValueTypeInfo<V> valueType)
+        throws IOException {
+      Preconditions.checkState(value.comparator().equals(Ordering.natural()));
+      this.stream.writeInt(value.size());
+      RichStream.from(value.entrySet())
+          .forEachThrowing(
+              entry -> {
+                keyType.visit(entry.getKey(), this);
+                valueType.visit(entry.getValue(), this);
+              });
     }
   }
 

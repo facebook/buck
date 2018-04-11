@@ -237,4 +237,10 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   public void nonHashableSourcePathContainer() throws Exception {
     test(new WithNonHashableSourcePathContainer());
   }
+
+  @Override
+  @Test
+  public void sortedMap() throws Exception {
+    test(new WithSortedMap());
+  }
 }

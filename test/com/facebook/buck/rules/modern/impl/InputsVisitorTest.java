@@ -94,6 +94,14 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
     apply(value);
   }
 
+  @Override
+  @Test
+  public void sortedMap() throws Exception {
+    inputsConsumer.accept(anyObject());
+    expectLastCall().times(2);
+    apply(new WithSortedMap());
+  }
+
   static class WithSourcePathList implements FakeBuildable {
     @AddToRuleKey private final ImmutableList<SourcePath> inputs;
 

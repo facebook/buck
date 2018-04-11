@@ -107,6 +107,14 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
     apply(value);
   }
 
+  @Override
+  @Test
+  public void sortedMap() throws Exception {
+    WithSortedMap value = new WithSortedMap();
+    expect(inputRuleResolver.resolve(anyObject())).andReturn(Optional.empty()).times(2);
+    apply(value);
+  }
+
   static class WithSourcePathList implements FakeBuildable {
     @AddToRuleKey private final ImmutableList<SourcePath> inputs;
 

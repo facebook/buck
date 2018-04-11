@@ -23,9 +23,11 @@ import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.util.Scope;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Optional;
 
 /** A ValueVisitor that can be used to construct a String representation of an object. */
@@ -59,6 +61,31 @@ public class StringifyingValueVisitor implements ValueVisitor<RuntimeException> 
           for (T e : value) {
             newline();
             innerType.visit(e, this);
+          }
+        });
+  }
+
+  @Override
+  public <K, V> void visitMap(
+      ImmutableSortedMap<K, V> value, ValueTypeInfo<K> keyType, ValueTypeInfo<V> valueType) {
+    container(
+        "Map",
+        () -> {
+          for (Map.Entry<K, V> e : value.entrySet()) {
+            newline();
+            container(
+                "key",
+                () -> {
+                  newline();
+                  keyType.visit(e.getKey(), this);
+                });
+            newline();
+            container(
+                "value",
+                () -> {
+                  newline();
+                  valueType.visit(e.getValue(), this);
+                });
           }
         });
   }

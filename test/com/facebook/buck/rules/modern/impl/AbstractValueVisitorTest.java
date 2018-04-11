@@ -23,6 +23,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.SourcePath;
@@ -33,6 +34,7 @@ import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -91,6 +93,9 @@ abstract class AbstractValueVisitorTest {
   @Test
   public abstract void nonHashableSourcePathContainer() throws Exception;
 
+  @Test
+  public abstract void sortedMap() throws Exception;
+
   public interface FakeBuildable extends Buildable {
     @Override
     default ImmutableList<Step> getBuildSteps(
@@ -100,6 +105,18 @@ abstract class AbstractValueVisitorTest {
         BuildCellRelativePathFactory buildCellPathFactory) {
       return ImmutableList.of();
     }
+  }
+
+  public static class WithSortedMap implements FakeBuildable {
+    @AddToRuleKey final ImmutableSortedMap<String, String> emptyMap = ImmutableSortedMap.of();
+
+    @AddToRuleKey
+    final ImmutableSortedMap<String, SourcePath> pathMap =
+        ImmutableSortedMap.of(
+            "path",
+            FakeSourcePath.of(rootFilesystem, "some/path"),
+            "target",
+            ExplicitBuildTargetSourcePath.of(someBuildTarget, Paths.get("other.path")));
   }
 
   public static class WithBuildTarget implements FakeBuildable {

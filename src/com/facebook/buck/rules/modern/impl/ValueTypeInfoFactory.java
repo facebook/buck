@@ -133,6 +133,7 @@ public class ValueTypeInfoFactory {
       Preconditions.checkState(rawType instanceof Class<?>);
       Class<?> rawClass = (Class<?>) rawType;
 
+      Type[] typeArguments = ((ParameterizedType) type).getActualTypeArguments();
       if (((Class<?>) rawType).isAssignableFrom(ImmutableSet.class)) {
         throw new IllegalArgumentException(
             "Don't use ImmutableSet in Buildables. Use ImmutableSortedSet instead.");
@@ -146,20 +147,18 @@ public class ValueTypeInfoFactory {
         // TODO(cjhopman): handle Pair
         throw new UnsupportedOperationException();
       } else if (rawClass.equals(ImmutableList.class)) {
-        Type[] typeArguments = ((ParameterizedType) type).getActualTypeArguments();
         Preconditions.checkState(typeArguments.length == 1);
         return new ImmutableListValueTypeInfo<>(forType(typeArguments[0]));
       } else if (rawClass.equals(ImmutableSortedSet.class)) {
         // SortedSet is tested second because it is a subclass of Set, and therefore can
         // be assigned to something of type Set, but not vice versa.
-        Type[] typeArguments = ((ParameterizedType) type).getActualTypeArguments();
         Preconditions.checkState(typeArguments.length == 1);
         return new ImmutableSortedSetValueTypeInfo<>(forType(typeArguments[0]));
       } else if (rawClass.equals(ImmutableSortedMap.class)) {
-        // TODO(cjhopman): handle ImmutableSortedMap
-        throw new UnsupportedOperationException();
+        Preconditions.checkState(typeArguments.length == 2);
+        return new ImmutableSortedMapValueTypeInfo<>(
+            forType(typeArguments[0]), forType(typeArguments[1]));
       } else if (rawClass.equals(Optional.class)) {
-        Type[] typeArguments = ((ParameterizedType) type).getActualTypeArguments();
         Preconditions.checkState(typeArguments.length == 1);
         return new OptionalValueTypeInfo<>(forType(typeArguments[0]));
       } else if (AddsToRuleKey.class.isAssignableFrom(rawClass)) {

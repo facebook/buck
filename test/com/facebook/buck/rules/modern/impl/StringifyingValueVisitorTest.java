@@ -198,4 +198,27 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
         "container:SourcePath(/project/root/some/path)",
         stringify(new WithNonHashableSourcePathContainer()));
   }
+
+  @Override
+  @Test
+  public void sortedMap() throws Exception {
+    assertEquals(
+        "emptyMap:Map<\n"
+            + ">\n"
+            + "pathMap:Map<\n"
+            + "  key<\n"
+            + "    string(path)\n"
+            + "  >\n"
+            + "  value<\n"
+            + "    SourcePath(/project/root/some/path)\n"
+            + "  >\n"
+            + "  key<\n"
+            + "    string(target)\n"
+            + "  >\n"
+            + "  value<\n"
+            + "    SourcePath(Pair(other//some:target#flavor1,flavor2, other.path))\n"
+            + "  >\n"
+            + ">",
+        stringify(new WithSortedMap()));
+  }
 }

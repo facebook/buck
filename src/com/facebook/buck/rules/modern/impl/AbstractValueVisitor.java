@@ -19,8 +19,10 @@ package com.facebook.buck.rules.modern.impl;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.lang.reflect.Field;
+import java.util.Map.Entry;
 import java.util.Optional;
 
 /**
@@ -39,6 +41,16 @@ abstract class AbstractValueVisitor<E extends Exception> implements ValueVisitor
   public <T> void visitSet(ImmutableSortedSet<T> value, ValueTypeInfo<T> innerType) throws E {
     for (T e : value) {
       innerType.visit(e, this);
+    }
+  }
+
+  @Override
+  public <K, V> void visitMap(
+      ImmutableSortedMap<K, V> value, ValueTypeInfo<K> keyType, ValueTypeInfo<V> valueType)
+      throws E {
+    for (Entry<K, V> entry : value.entrySet()) {
+      keyType.visit(entry.getKey(), this);
+      valueType.visit(entry.getValue(), this);
     }
   }
 

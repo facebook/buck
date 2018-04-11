@@ -20,6 +20,7 @@ import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -34,6 +35,9 @@ public interface ValueCreator<E extends Exception> {
   <T> ImmutableList<T> createList(ValueTypeInfo<T> innerType) throws E;
 
   <T> ImmutableSortedSet<T> createSet(ValueTypeInfo<T> innerType) throws E;
+
+  <K, V> ImmutableSortedMap<K, V> createMap(ValueTypeInfo<K> keyType, ValueTypeInfo<V> valueType)
+      throws E;
 
   <T> Optional<T> createOptional(ValueTypeInfo<T> innerType) throws E;
 

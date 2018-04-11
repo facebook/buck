@@ -21,6 +21,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
@@ -34,6 +35,10 @@ public interface ValueVisitor<E extends Exception> {
   <T> void visitList(ImmutableList<T> value, ValueTypeInfo<T> innerType) throws E;
 
   <T> void visitSet(ImmutableSortedSet<T> value, ValueTypeInfo<T> innerType) throws E;
+
+  <K, V> void visitMap(
+      ImmutableSortedMap<K, V> value, ValueTypeInfo<K> keyType, ValueTypeInfo<V> valueType)
+      throws E;
 
   <T> void visitOptional(Optional<T> value, ValueTypeInfo<T> innerType) throws E;
 

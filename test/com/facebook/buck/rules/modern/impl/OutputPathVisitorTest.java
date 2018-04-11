@@ -77,6 +77,12 @@ public class OutputPathVisitorTest extends AbstractValueVisitorTest {
         ImmutableList.of(), getOutputs(new WithNonHashableSourcePathContainer()));
   }
 
+  @Override
+  @Test
+  public void sortedMap() throws Exception {
+    MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithSortedMap()));
+  }
+
   static class WithOutputPathList implements FakeBuildable {
     @AddToRuleKey private final ImmutableList<OutputPath> outputs;
 
