@@ -62,16 +62,18 @@ class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
       }
 
       AddToRuleKey addAnnotation = field.getAnnotation(AddToRuleKey.class);
-
-      Preconditions.checkState(
-          addAnnotation != null,
-          "All fields referenced from a ModernBuildRule must be annotated with @AddsToRuleKey. %s.%s is missing this annotation.",
-          clazz.getName(),
-          field.getName());
-
-      Nullable fieldNullable = field.getAnnotation(Nullable.class);
-      FieldInfo<?> fieldInfo = forField(field, fieldNullable != null);
-      fieldsBuilder.add(fieldInfo);
+      // TODO(cjhopman): Add @ExcludeFromRuleKey annotation and require that all fields are either
+      // explicitly added or explicitly excluded.
+      if (addAnnotation != null) {
+        Preconditions.checkArgument(
+            Modifier.isFinal(field.getModifiers()),
+            "All fields of a Buildable must be final (%s.%s)",
+            clazz.getSimpleName(),
+            field.getName());
+        fieldsBuilder.add(forField(field, field.getAnnotation(Nullable.class) != null));
+      } else {
+        fieldsBuilder.add(excludedField(field));
+      }
     }
 
     if (clazz.isMemberClass()) {
@@ -149,5 +151,9 @@ class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
       valueTypeInfo = new NullableValueTypeInfo<>(valueTypeInfo);
     }
     return new FieldInfo<>(field, valueTypeInfo);
+  }
+
+  public static FieldInfo<?> excludedField(Field field) {
+    return new FieldInfo<>(field, ValueTypeInfos.ExcludedValueTypeInfo.INSTANCE);
   }
 }

@@ -123,6 +123,12 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
     apply(new WithEither());
   }
 
+  @Override
+  @Test
+  public void excluded() throws Exception {
+    apply(new WithExcluded());
+  }
+
   static class WithSourcePathList implements FakeBuildable {
     @AddToRuleKey private final ImmutableList<SourcePath> inputs;
 

@@ -51,6 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -260,5 +261,13 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   @Test
   public void either() throws Exception {
     test(new WithEither());
+  }
+
+  @Override
+  @Test
+  public void excluded() throws Exception {
+    expectedException.expect(Exception.class);
+    expectedException.expectMessage(Matchers.containsString("Cannot create excluded fields."));
+    test(new WithExcluded());
   }
 }

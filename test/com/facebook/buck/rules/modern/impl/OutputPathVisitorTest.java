@@ -103,6 +103,12 @@ public class OutputPathVisitorTest extends AbstractValueVisitorTest {
     MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithEither()));
   }
 
+  @Override
+  @Test
+  public void excluded() throws Exception {
+    MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithExcluded()));
+  }
+
   static class WithOutputPathList implements FakeBuildable {
     @AddToRuleKey private final ImmutableList<OutputPath> outputs;
 

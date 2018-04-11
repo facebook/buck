@@ -250,4 +250,10 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
             + "rightPath:boolean(false)SourcePath(/project/root/some.path)",
         stringify(new WithEither()));
   }
+
+  @Override
+  @Test
+  public void excluded() throws Exception {
+    assertEquals("excluded:\n" + "nullNotAnnoted:", stringify(new WithExcluded()));
+  }
 }

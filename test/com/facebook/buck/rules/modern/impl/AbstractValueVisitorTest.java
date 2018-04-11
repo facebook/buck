@@ -45,9 +45,11 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
-abstract class AbstractValueVisitorTest {
+public abstract class AbstractValueVisitorTest {
   protected static final ProjectFilesystem rootFilesystem =
       new FakeProjectFilesystem(Paths.get("/project/root"));
 
@@ -56,6 +58,8 @@ abstract class AbstractValueVisitorTest {
   protected static final BuildTarget someBuildTarget =
       BuildTargetFactory.newInstance(
           otherFilesystem.getRootPath(), "other//some:target#flavor1,flavor2");
+
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Test
   public abstract void outputPath() throws Exception;
@@ -111,6 +115,9 @@ abstract class AbstractValueVisitorTest {
   @Test
   public abstract void either() throws Exception;
 
+  @Test
+  public abstract void excluded() throws Exception;
+
   public interface FakeBuildable extends Buildable {
     @Override
     default ImmutableList<Step> getBuildSteps(
@@ -120,6 +127,11 @@ abstract class AbstractValueVisitorTest {
         BuildCellRelativePathFactory buildCellPathFactory) {
       return ImmutableList.of();
     }
+  }
+
+  public static class WithExcluded implements FakeBuildable {
+    final String excluded = "excluded";
+    final String nullNotAnnoted = null;
   }
 
   public static class WithEither implements FakeBuildable {
