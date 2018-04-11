@@ -64,7 +64,7 @@ public class DistBuildIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "empty", destinationFolderPath);
     destinationWorkspace.setUp();
 
-    runDistBuildWithFakeFrontend(
+    FrontendServer.runDistBuildWithFakeFrontend(
             destinationWorkspace,
             "--build-state-file",
             stateFilePath.toString(),
@@ -105,7 +105,7 @@ public class DistBuildIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "empty", destinationFolderPath);
     destinationWorkspace.setUp();
 
-    runDistBuildWithFakeFrontend(
+    FrontendServer.runDistBuildWithFakeFrontend(
             destinationWorkspace,
             "--build-state-file",
             stateFilePath.toString(),
@@ -144,7 +144,7 @@ public class DistBuildIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "empty", destinationFolderPath);
     destinationWorkspace.setUp();
 
-    runDistBuildWithFakeFrontend(
+    FrontendServer.runDistBuildWithFakeFrontend(
             destinationWorkspace,
             "--build-state-file",
             stateFilePath.toString(),
@@ -177,7 +177,7 @@ public class DistBuildIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "empty", destinationFolderPath);
     destinationWorkspace.setUp();
 
-    runDistBuildWithFakeFrontend(
+    FrontendServer.runDistBuildWithFakeFrontend(
             destinationWorkspace,
             "--build-state-file",
             stateFilePath.toString(),
@@ -217,19 +217,19 @@ public class DistBuildIntegrationTest {
     return sourceWorkspace;
   }
 
-  private static ProcessResult runDistBuildWithFakeFrontend(
-      ProjectWorkspace workspace, String... args) throws IOException {
-    List<String> argsList = Lists.newArrayList(args);
-    try (Server frontendServer = new Server()) {
-      argsList.add(frontendServer.getStampedeConfigArg());
-      argsList.add(frontendServer.getPingEndpointConfigArg());
-      return workspace.runBuckDistBuildRun(argsList.toArray(new String[0]));
+  public static class FrontendServer extends FakeFrontendHttpServer {
+
+    public static ProcessResult runDistBuildWithFakeFrontend(
+        ProjectWorkspace workspace, String... args) throws IOException {
+      List<String> argsList = Lists.newArrayList(args);
+      try (FrontendServer frontendServer = new FrontendServer()) {
+        argsList.add(frontendServer.getStampedeConfigArg());
+        argsList.add(frontendServer.getPingEndpointConfigArg());
+        return workspace.runBuckDistBuildRun(argsList.toArray(new String[0]));
+      }
     }
-  }
 
-  private static class Server extends FakeFrontendHttpServer {
-
-    public Server() throws IOException {}
+    private FrontendServer() throws IOException {}
 
     @Override
     public FrontendResponse handleRequest(FrontendRequest request) {
