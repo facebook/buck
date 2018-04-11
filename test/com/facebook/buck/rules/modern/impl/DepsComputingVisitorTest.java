@@ -22,20 +22,27 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
+import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.HasCustomDepsLogic;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.InputRuleResolver;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import org.junit.Test;
 
 public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
@@ -138,5 +145,44 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
   @Override
   public void buildTarget() {
     apply(new WithBuildTarget());
+  }
+
+  private static final BuildRule otherRule =
+      new FakeBuildRule(someBuildTarget.withFlavors(InternalFlavor.of("other")));
+
+  private static class HasCustomDeps implements AddsToRuleKey, HasCustomDepsLogic {
+    @AddToRuleKey
+    private final SourcePath sourcePath = DefaultBuildTargetSourcePath.of(someBuildTarget);
+
+    @Override
+    public Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+      return Stream.of(otherRule);
+    }
+  }
+
+  private static class WithCustomDeps implements AddsToRuleKey {
+    @AddToRuleKey private final HasCustomDeps hasCustomDeps = new HasCustomDeps();
+  }
+
+  @Test
+  public void customDeps() {
+    WithCustomDeps withCustomDeps = new WithCustomDeps();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
+    InputRuleResolver ruleResolver =
+        new InputRuleResolver() {
+          @Override
+          public Optional<BuildRule> resolve(SourcePath path) {
+            throw new RuntimeException();
+          }
+
+          @Override
+          public UnsafeInternals unsafe() {
+            return () -> ruleFinder;
+          }
+        };
+    ImmutableList.Builder<BuildRule> depsBuilder = ImmutableList.builder();
+    DefaultClassInfoFactory.forInstance(withCustomDeps)
+        .visit(withCustomDeps, new DepsComputingVisitor(ruleResolver, depsBuilder::add));
+    assertEquals(depsBuilder.build(), ImmutableList.of(otherRule));
   }
 }

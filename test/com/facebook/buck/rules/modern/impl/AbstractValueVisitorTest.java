@@ -43,6 +43,9 @@ abstract class AbstractValueVisitorTest {
 
   protected static final ProjectFilesystem otherFilesystem =
       new FakeProjectFilesystem(Paths.get("/project/other"));
+  protected static final BuildTarget someBuildTarget =
+      BuildTargetFactory.newInstance(
+          otherFilesystem.getRootPath(), "other//some:target#flavor1,flavor2");
 
   @Test
   public abstract void outputPath() throws Exception;
@@ -89,10 +92,7 @@ abstract class AbstractValueVisitorTest {
   }
 
   public static class WithBuildTarget implements FakeBuildable {
-    @AddToRuleKey
-    final BuildTarget target =
-        BuildTargetFactory.newInstance(
-            otherFilesystem.getRootPath(), "other//some:target#flavor1,flavor2");
+    @AddToRuleKey final BuildTarget target = someBuildTarget;
   }
 
   public static class WithOutputPath implements FakeBuildable {

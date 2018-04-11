@@ -16,8 +16,11 @@
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.HasCustomDepsLogic;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.InputRuleResolver;
 import com.facebook.buck.rules.modern.OutputPath;
 import java.nio.file.Path;
@@ -32,6 +35,18 @@ public class DepsComputingVisitor extends AbstractValueVisitor<RuntimeException>
       InputRuleResolver inputRuleResolver, Consumer<BuildRule> depsBuilder) {
     this.inputRuleResolver = inputRuleResolver;
     this.depsBuilder = depsBuilder;
+  }
+
+  @Override
+  public <T extends AddsToRuleKey> void visitDynamic(T value, ClassInfo<T> classInfo)
+      throws RuntimeException {
+    if (value instanceof HasCustomDepsLogic) {
+      ((HasCustomDepsLogic) value)
+          .getDeps(inputRuleResolver.unsafe().getRuleFinder())
+          .forEach(depsBuilder);
+    } else {
+      super.visitDynamic(value, classInfo);
+    }
   }
 
   @Override

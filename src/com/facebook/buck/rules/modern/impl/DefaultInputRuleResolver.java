@@ -33,4 +33,9 @@ public class DefaultInputRuleResolver implements InputRuleResolver {
   public Optional<BuildRule> resolve(SourcePath path) {
     return ruleFinder.getRule(path);
   }
+
+  @Override
+  public UnsafeInternals unsafe() {
+    return () -> ruleFinder;
+  }
 }
