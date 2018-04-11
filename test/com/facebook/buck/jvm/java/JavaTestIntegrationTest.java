@@ -123,7 +123,7 @@ public class JavaTestIntegrationTest {
   @Test
   public void shouldNotDeadlock() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "deadlock", temp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "deadlock", temp, true);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("test", "//:suite");
@@ -135,7 +135,7 @@ public class JavaTestIntegrationTest {
   public void missingResultsFileIsTestFailure() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            this, "java_test_missing_result_file", temp);
+            this, "java_test_missing_result_file", temp, true);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("test", "//:simple");
@@ -148,7 +148,7 @@ public class JavaTestIntegrationTest {
   @Test
   public void spinningTestTimesOutGlobalTimeout() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "slow_tests", temp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "slow_tests", temp, true);
     workspace.setUp();
     workspace.writeContentsToPath("[test]\n  rule_timeout = 250", ".buckconfig");
 
@@ -163,7 +163,8 @@ public class JavaTestIntegrationTest {
   @Test
   public void spinningTestTimesOutPerRuleTimeout() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "slow_tests_per_rule_timeout", temp);
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "slow_tests_per_rule_timeout", temp, true);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("test", "//:spinning");
@@ -177,7 +178,7 @@ public class JavaTestIntegrationTest {
   @Test
   public void normalTestDoesNotTimeOut() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "slow_tests", temp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "slow_tests", temp, true);
     workspace.setUp();
     workspace.writeContentsToPath("[test]\n  rule_timeout = 10000", ".buckconfig");
 
@@ -187,7 +188,7 @@ public class JavaTestIntegrationTest {
   @Test
   public void brokenTestGivesFailedTestResult() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "java_test_broken_test", temp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "java_test_broken_test", temp, true);
     workspace.setUp();
     workspace.runBuckCommand("test", "//:simple").assertTestFailure();
   }
@@ -195,7 +196,8 @@ public class JavaTestIntegrationTest {
   @Test
   public void staticInitializationException() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "static_initialization_test", temp);
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "static_initialization_test", temp, true);
     workspace.setUp();
     ProcessResult result = workspace.runBuckCommand("test", "//:npe");
     result.assertTestFailure();
@@ -206,7 +208,8 @@ public class JavaTestIntegrationTest {
   @Test
   public void dependencyOnAnotherTest() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "depend_on_another_test", temp);
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "depend_on_another_test", temp, true);
     workspace.setUp();
     ProcessResult result = workspace.runBuckCommand("test", "//:a");
     result.assertSuccess();
@@ -254,7 +257,7 @@ public class JavaTestIntegrationTest {
   @Test
   public void testForkMode() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "slow_tests", temp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "slow_tests", temp, true);
     workspace.setUp();
     ProcessResult result = workspace.runBuckCommand("test", "//:fork-mode");
     result.assertSuccess();
@@ -263,7 +266,7 @@ public class JavaTestIntegrationTest {
   @Test
   public void testClasspath() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "test_rule_classpath", temp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "test_rule_classpath", temp, true);
     workspace.setUp();
     ProcessResult result = workspace.runBuckCommand("audit", "classpath", "//:top");
     result.assertSuccess();
@@ -283,7 +286,7 @@ public class JavaTestIntegrationTest {
   @Test
   public void testEnvLocationMacro() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "env_macros", temp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "env_macros", temp, true);
     workspace.setUp();
     workspace.runBuckCommand("test", "//:env").assertSuccess();
   }
