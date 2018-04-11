@@ -31,6 +31,7 @@ import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
+import com.facebook.buck.rules.modern.PublicOutputPath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.MoreSuppliers;
@@ -163,6 +164,14 @@ abstract class AbstractValueVisitorTest {
 
   public static class WithOutputPath implements FakeBuildable {
     @AddToRuleKey final OutputPath output = new OutputPath("some/path");
+
+    @AddToRuleKey
+    final PublicOutputPath publicOutput =
+        new PublicOutputPath(rootFilesystem.getPath("public.path"));
+
+    @AddToRuleKey
+    final OutputPath publicAsOutputPath =
+        new PublicOutputPath(rootFilesystem.getPath("other.public.path"));
   }
 
   public static class WithSourcePath implements FakeBuildable {

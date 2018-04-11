@@ -169,6 +169,7 @@ public class Serializer {
 
     @Override
     public void visitOutputPath(OutputPath value) throws IOException {
+      stream.writeBoolean(value instanceof PublicOutputPath);
       writeString(value.getPath().toString());
     }
 

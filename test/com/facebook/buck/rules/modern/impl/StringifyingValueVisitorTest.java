@@ -25,7 +25,11 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   @Override
   @Test
   public void outputPath() {
-    assertEquals("output:OutputPath(some/path)", stringify(new WithOutputPath()));
+    assertEquals(
+        "output:OutputPath(some/path)\n"
+            + "publicOutput:OutputPath(public.path)\n"
+            + "publicAsOutputPath:OutputPath(other.public.path)",
+        stringify(new WithOutputPath()));
   }
 
   @Override

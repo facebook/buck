@@ -21,10 +21,10 @@ import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.OutputPath;
+import com.facebook.buck.rules.modern.PublicOutputPath;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ImmutableListValueTypeInfo;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ImmutableSortedSetValueTypeInfo;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.OptionalValueTypeInfo;
-import com.facebook.buck.rules.modern.impl.ValueTypeInfos.OutputPathValueTypeInfo;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
@@ -115,8 +115,8 @@ public class ValueTypeInfoFactory {
         return enumValueTypeInfo;
       } else if (SourcePath.class.isAssignableFrom(rawClass)) {
         return SourcePathValueTypeInfo.INSTANCE;
-      } else if (rawClass.equals(OutputPath.class)) {
-        return OutputPathValueTypeInfo.INSTANCE;
+      } else if (rawClass.equals(OutputPath.class) || rawClass.equals(PublicOutputPath.class)) {
+        return ValueTypeInfos.OutputPathValueTypeInfo.INSTANCE;
       } else if (NonHashableSourcePathContainer.class.isAssignableFrom(rawClass)) {
         return new NonHashableSourcePathContainerValueTypeInfo();
       } else if (BuildTarget.class.isAssignableFrom(rawClass)) {

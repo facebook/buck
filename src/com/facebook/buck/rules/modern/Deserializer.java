@@ -162,7 +162,9 @@ public class Deserializer {
 
     @Override
     public OutputPath createOutputPath() throws IOException {
-      return new OutputPath(stream.readUTF());
+      boolean isPublic = stream.readBoolean();
+      String path = stream.readUTF();
+      return isPublic ? new PublicOutputPath(Paths.get(path)) : new OutputPath(path);
     }
 
     @Override

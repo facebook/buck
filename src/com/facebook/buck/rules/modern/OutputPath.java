@@ -24,7 +24,7 @@ import java.nio.file.Paths;
 /**
  * Represents an output path of a Buildable. Can be converted to a Path with an OutputPathResolver.
  */
-public final class OutputPath implements AddsToRuleKey {
+public class OutputPath implements AddsToRuleKey {
   @AddToRuleKey(stringify = true)
   private final Path path;
 

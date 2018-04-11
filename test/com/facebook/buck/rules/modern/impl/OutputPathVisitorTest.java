@@ -37,7 +37,9 @@ public class OutputPathVisitorTest extends AbstractValueVisitorTest {
   @Test
   public void outputPath() {
     WithOutputPath value = new WithOutputPath();
-    MoreAsserts.assertIterablesEquals(ImmutableList.of(value.output), getOutputs(value));
+    MoreAsserts.assertIterablesEquals(
+        ImmutableList.of(value.output, value.publicOutput, value.publicAsOutputPath),
+        getOutputs(value));
   }
 
   @Override

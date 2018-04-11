@@ -37,6 +37,9 @@ class DefaultOutputPathResolver implements OutputPathResolver {
 
   @Override
   public Path resolvePath(OutputPath outputPath) {
+    if (outputPath instanceof PublicOutputPath) {
+      return outputPath.getPath();
+    }
     return getRootPath().resolve(outputPath.getPath());
   }
 
