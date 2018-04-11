@@ -2,7 +2,7 @@ java_library(
     name = "tests",
     srcs = glob(["*Test.java"]),
     deps = [
-        ":junit",
+        "buck//third-party/java/junit:junit",
     ],
 )
 
@@ -12,20 +12,7 @@ java_test(
         "AllTests.java",
     ],
     deps = [
-        ":junit",
+        "buck//third-party/java/junit:junit",
         ":tests",
     ],
-)
-
-prebuilt_jar(
-    name = "junit",
-    binary_jar = "junit.jar",
-    deps = [
-        ":hamcrest",
-    ],
-)
-
-prebuilt_jar(
-    name = "hamcrest",
-    binary_jar = "hamcrest.jar",
 )

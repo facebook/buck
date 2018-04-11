@@ -40,7 +40,7 @@ public class BuildTargetSourcePathAsSrcIntegrationTest {
     Charset charsetForTest = StandardCharsets.UTF_8;
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            this, "build_rule_source_path_as_src_test", tmp);
+            this, "build_rule_source_path_as_src_test", tmp, true);
     workspace.setUp();
 
     // The test should pass out of the box.

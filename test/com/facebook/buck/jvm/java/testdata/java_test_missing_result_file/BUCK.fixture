@@ -4,7 +4,7 @@ java_test(
         "SimpleTest.java",
     ],
     deps = [
-        ":junit",
+        "buck//third-party/java/junit:junit",
     ],
 )
 
