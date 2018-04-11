@@ -34,6 +34,7 @@ import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.MoreSuppliers;
+import com.facebook.buck.util.types.Either;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
@@ -106,6 +107,9 @@ abstract class AbstractValueVisitorTest {
   @Test
   public abstract void nullable() throws Exception;
 
+  @Test
+  public abstract void either() throws Exception;
+
   public interface FakeBuildable extends Buildable {
     @Override
     default ImmutableList<Step> getBuildSteps(
@@ -115,6 +119,14 @@ abstract class AbstractValueVisitorTest {
         BuildCellRelativePathFactory buildCellPathFactory) {
       return ImmutableList.of();
     }
+  }
+
+  public static class WithEither implements FakeBuildable {
+    @AddToRuleKey final Either<String, SourcePath> leftString = Either.ofLeft("left");
+
+    @AddToRuleKey
+    final Either<String, SourcePath> rightPath =
+        Either.ofRight(FakeSourcePath.of(rootFilesystem, "some.path"));
   }
 
   public static class WithNullable implements FakeBuildable {

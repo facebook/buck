@@ -142,8 +142,8 @@ public class ValueTypeInfoFactory {
         throw new IllegalArgumentException(
             "Don't use ImmutableMap in Buildables. Use ImmutableSortedMap instead.");
       } else if (rawClass.equals(Either.class)) {
-        // TODO(cjhopman): handle Either
-        throw new UnsupportedOperationException();
+        Preconditions.checkState(typeArguments.length == 2);
+        return new EitherValueTypeInfo<>(forType(typeArguments[0]), forType(typeArguments[1]));
       } else if (rawClass.equals(Pair.class)) {
         // TODO(cjhopman): handle Pair
         throw new UnsupportedOperationException();

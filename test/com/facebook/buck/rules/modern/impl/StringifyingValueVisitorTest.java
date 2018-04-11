@@ -237,4 +237,13 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
         "nullString:null\n" + "nullPath:null\n" + "nonNullPath:SourcePath(/project/root/some.path)",
         stringify(new WithNullable()));
   }
+
+  @Override
+  @Test
+  public void either() throws Exception {
+    assertEquals(
+        "leftString:boolean(true)string(left)\n"
+            + "rightPath:boolean(false)SourcePath(/project/root/some.path)",
+        stringify(new WithEither()));
+  }
 }

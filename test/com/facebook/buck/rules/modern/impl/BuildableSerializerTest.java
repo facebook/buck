@@ -255,4 +255,10 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   public void nullable() throws Exception {
     test(new WithNullable());
   }
+
+  @Override
+  @Test
+  public void either() throws Exception {
+    test(new WithEither());
+  }
 }
