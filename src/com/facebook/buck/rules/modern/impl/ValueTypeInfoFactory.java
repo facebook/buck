@@ -41,6 +41,7 @@ import java.lang.reflect.WildcardType;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 /** Creates ValueTypeInfos for given Types/TypeTokens. */
 public class ValueTypeInfoFactory {
@@ -114,6 +115,8 @@ public class ValueTypeInfoFactory {
         return OutputPathValueTypeInfo.INSTANCE;
       } else if (BuildTarget.class.isAssignableFrom(rawClass)) {
         return BuildTargetTypeInfo.INSTANCE;
+      } else if (Pattern.class.isAssignableFrom(rawClass)) {
+        return PatternValueTypeInfo.INSTANCE;
       } else if (AddsToRuleKey.class.isAssignableFrom(rawClass)) {
         return DynamicTypeInfo.INSTANCE;
       }

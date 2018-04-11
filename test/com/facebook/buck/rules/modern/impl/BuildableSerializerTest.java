@@ -89,6 +89,10 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
     };
   }
 
+  <T extends Buildable> void test(T instance) throws IOException {
+    test(instance, expected -> expected);
+  }
+
   <T extends Buildable> void test(T instance, Function<String, String> expectedMapper)
       throws IOException {
     replay(cellResolver, ruleFinder);
@@ -140,55 +144,55 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   @Override
   @Test
   public void outputPath() throws IOException {
-    test(new WithOutputPath(), expected -> expected);
+    test(new WithOutputPath());
   }
 
   @Test
   @Override
   public void sourcePath() throws IOException {
-    test(new WithSourcePath(), expected -> expected);
+    test(new WithSourcePath());
   }
 
   @Override
   @Test
   public void set() throws IOException {
-    test(new WithSet(), expected -> expected);
+    test(new WithSet());
   }
 
   @Test
   @Override
   public void list() throws IOException {
-    test(new WithList(), expected -> expected);
+    test(new WithList());
   }
 
   @Test
   @Override
   public void optional() throws IOException {
-    test(new WithOptional(), expected -> expected);
+    test(new WithOptional());
   }
 
   @Test
   @Override
   public void simple() throws IOException {
-    test(new Simple(), expected -> expected);
+    test(new Simple());
   }
 
   @Test
   @Override
   public void superClass() throws IOException {
-    test(new Derived(), expected -> expected);
+    test(new Derived());
   }
 
   @Test
   @Override
   public void empty() throws IOException {
-    test(new Empty(), expected -> expected);
+    test(new Empty());
   }
 
   @Test
   @Override
   public void addsToRuleKey() throws IOException {
-    test(new WithAddsToRuleKey(), expected -> expected);
+    test(new WithAddsToRuleKey());
   }
 
   @Test
@@ -213,6 +217,12 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   @Test
   @Override
   public void buildTarget() throws IOException {
-    test(new WithBuildTarget(), expected -> expected);
+    test(new WithBuildTarget());
+  }
+
+  @Override
+  @Test
+  public void pattern() throws Exception {
+    test(new WithPattern());
   }
 }

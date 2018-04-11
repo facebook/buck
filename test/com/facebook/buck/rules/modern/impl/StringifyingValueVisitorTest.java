@@ -176,4 +176,10 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
     DefaultClassInfoFactory.forInstance(value).visit(value, visitor);
     return visitor.getValue();
   }
+
+  @Override
+  @Test
+  public void pattern() throws Exception {
+    assertEquals("pattern:string(abcd)", stringify(new WithPattern()));
+  }
 }

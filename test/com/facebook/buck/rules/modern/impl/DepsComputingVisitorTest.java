@@ -87,6 +87,12 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
     apply(value);
   }
 
+  @Override
+  @Test
+  public void pattern() throws Exception {
+    apply(new WithPattern());
+  }
+
   static class WithSourcePathList implements FakeBuildable {
     @AddToRuleKey private final ImmutableList<SourcePath> inputs;
 

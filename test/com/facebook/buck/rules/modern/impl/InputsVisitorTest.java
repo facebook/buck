@@ -74,6 +74,12 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
     apply(new WithAddsToRuleKey());
   }
 
+  @Override
+  @Test
+  public void pattern() throws Exception {
+    apply(new WithPattern());
+  }
+
   static class WithSourcePathList implements FakeBuildable {
     @AddToRuleKey private final ImmutableList<SourcePath> inputs;
 

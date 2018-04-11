@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import org.junit.Test;
 
 abstract class AbstractValueVisitorTest {
@@ -79,6 +80,9 @@ abstract class AbstractValueVisitorTest {
 
   @Test
   public abstract void buildTarget() throws Exception;
+
+  @Test
+  public abstract void pattern() throws Exception;
 
   public interface FakeBuildable extends Buildable {
     @Override
@@ -150,6 +154,10 @@ abstract class AbstractValueVisitorTest {
     @AddToRuleKey
     private final ImmutableList<AddsToRuleKey> list =
         ImmutableList.of(new Appendable(), new Appendable());
+  }
+
+  public static class WithPattern implements FakeBuildable {
+    @AddToRuleKey final Pattern pattern = Pattern.compile("abcd");
   }
 
   public static class Complex implements FakeBuildable {
