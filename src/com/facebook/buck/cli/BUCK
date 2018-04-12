@@ -254,7 +254,7 @@ java_binary(
         "//src/com/facebook/buck/parser:config",
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/parser:rule_pattern",
-        "//src/com/facebook/buck/python:rules",
+        "//src/com/facebook/buck/python:python",
         "//src/com/facebook/buck/python/toolchain/impl:impl",
         "//src/com/facebook/buck/query:query",
         "//src/com/facebook/buck/rules:build_rule",

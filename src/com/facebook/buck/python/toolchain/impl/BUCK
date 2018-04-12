@@ -4,7 +4,7 @@ java_library_with_plugins(
     name = "impl",
     srcs = glob(["*.java"]),
     exported_deps = [
-        "//src/com/facebook/buck/python:rules",
+        "//src/com/facebook/buck/python:python",
         "//src/com/facebook/buck/python/toolchain:toolchain",
         "//src/com/facebook/buck/util:process_executor",
     ],
