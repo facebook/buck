@@ -75,8 +75,7 @@ public class CGoGenSource extends AbstractBuildRule {
     for (SourcePath srcPath : cgoSrcs) {
       String path =
           projectFilesystem
-              .getRootPath()
-              .toAbsolutePath()
+              .getPathForRelativePath(getBuildTarget().getBasePath())
               .relativize(pathResolver.getAbsolutePath(srcPath))
               .toString();
       String filename = path.substring(0, path.lastIndexOf('.')).replace(File.separatorChar, '_');
