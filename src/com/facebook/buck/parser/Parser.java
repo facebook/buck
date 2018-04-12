@@ -21,7 +21,6 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
-import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.GraphTraversable;
 import com.facebook.buck.graph.MutableDirectedGraph;
@@ -91,7 +90,6 @@ public class Parser {
   private final ParserPythonInterpreterProvider parserPythonInterpreterProvider;
 
   public Parser(
-      BroadcastEventListener broadcastEventListener,
       ParserConfig parserConfig,
       TypeCoercerFactory typeCoercerFactory,
       ConstructorArgMarshaller marshaller,
@@ -100,7 +98,6 @@ public class Parser {
     this.typeCoercerFactory = typeCoercerFactory;
     this.permState =
         new DaemonicParserState(
-            broadcastEventListener,
             typeCoercerFactory,
             parserConfig.getNumParsingThreads(),
             parserConfig.shouldIgnoreEnvironmentVariablesChanges());

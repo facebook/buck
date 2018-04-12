@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.Parser;
@@ -76,7 +75,6 @@ public class IntraCellIntegrationTest {
     TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
     Parser parser =
         new Parser(
-            new BroadcastEventListener(),
             cell.getBuckConfig().getView(ParserConfig.class),
             coercerFactory,
             new ConstructorArgMarshaller(coercerFactory),

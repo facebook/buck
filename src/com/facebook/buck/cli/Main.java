@@ -38,7 +38,6 @@ import com.facebook.buck.event.DaemonEvent;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
 import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;
-import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.event.listener.CacheRateStatsListener;
 import com.facebook.buck.event.listener.ChromeTraceBuildListener;
 import com.facebook.buck.event.listener.FileSerializationEventBusListener;
@@ -830,11 +829,6 @@ public final class Main {
       try (DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
           ) {
 
-        // Create and register the event buses that should listen to broadcast events.
-        // If the build doesn't have a daemon create a new instance.
-        BroadcastEventListener broadcastEventListener =
-            daemon.map(Daemon::getBroadcastEventListener).orElseGet(BroadcastEventListener::new);
-
         try (GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
                 GlobalStateManager.singleton()
                     .setupLoggers(invocationInfo, console.getStdErr(), stdErr, verbosity);
@@ -914,8 +908,6 @@ public final class Main {
                     buckConfig.isLogBuildIdToConsoleEnabled()
                         ? Optional.of(buildId)
                         : Optional.empty());
-            BroadcastEventListener.BroadcastEventBusClosable broadcastEventBusClosable =
-                broadcastEventListener.addEventBus(buildEventBus);
             // This makes calls to LOG.error(...) post to the EventBus, instead of writing to
             // stderr.
             Closeable logErrorToEventBus =
@@ -1109,7 +1101,6 @@ public final class Main {
                   knownBuildRuleTypesProvider,
                   rootCell,
                   daemon,
-                  broadcastEventListener,
                   buildEventBus,
                   executableFinder);
 
@@ -1251,7 +1242,6 @@ public final class Main {
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
       Cell rootCell,
       Optional<Daemon> daemonOptional,
-      BroadcastEventListener broadcastEventListener,
       BuckEventBus buildEventBus,
       ExecutableFinder executableFinder)
       throws IOException, InterruptedException {
@@ -1312,7 +1302,6 @@ public final class Main {
       parserAndCaches =
           ParserAndCaches.of(
               new Parser(
-                  broadcastEventListener,
                   parserConfig,
                   typeCoercerFactory,
                   new ConstructorArgMarshaller(typeCoercerFactory),

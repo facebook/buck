@@ -27,7 +27,6 @@ import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -257,7 +256,6 @@ public class DistBuildStateTest {
         new ConstructorArgMarshaller(typeCoercerFactory);
     Parser parser =
         new Parser(
-            new BroadcastEventListener(),
             buckConfig.getView(ParserConfig.class),
             typeCoercerFactory,
             constructorArgMarshaller,

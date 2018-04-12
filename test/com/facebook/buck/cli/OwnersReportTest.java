@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildFileTree;
@@ -290,7 +289,6 @@ public class OwnersReportTest {
                 new TestSandboxExecutionStrategyFactory()));
     TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
     return new Parser(
-        new BroadcastEventListener(),
         cell.getBuckConfig().getView(ParserConfig.class),
         coercerFactory,
         new ConstructorArgMarshaller(coercerFactory),

@@ -74,6 +74,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -82,6 +83,13 @@ public class ParsePipelineTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
+
+  BuckEventBus eventBus;
+
+  @Before
+  public void setUp() {
+    eventBus = BuckEventBusForTests.newInstance();
+  }
 
   @Test
   public void testIgnoredDirsErr() throws IOException {
@@ -124,7 +132,9 @@ public class ParsePipelineTest {
 
     waitForAll(
         libTargetNode.getBuildDeps(),
-        dep -> fixture.getTargetNodeParsePipelineCache().lookupComputedNode(cell, dep) != null);
+        dep ->
+            fixture.getTargetNodeParsePipelineCache().lookupComputedNode(cell, dep, eventBus)
+                != null);
     fixture.close();
   }
 
@@ -144,7 +154,9 @@ public class ParsePipelineTest {
         FluentIterable.from(libTargetNodes).transformAndConcat(input -> input.getBuildDeps());
     waitForAll(
         allDeps,
-        dep -> fixture.getTargetNodeParsePipelineCache().lookupComputedNode(cell, dep) != null);
+        dep ->
+            fixture.getTargetNodeParsePipelineCache().lookupComputedNode(cell, dep, eventBus)
+                != null);
     fixture.close();
   }
 
@@ -221,7 +233,7 @@ public class ParsePipelineTest {
       fixture
           .getRawNodeParsePipelineCache()
           .putComputedNodeIfNotPresent(
-              cell, rootBuildFilePath, ImmutableSet.of(ImmutableMap.of("name", "bar")));
+              cell, rootBuildFilePath, ImmutableSet.of(ImmutableMap.of("name", "bar")), eventBus);
       expectedException.expect(IllegalStateException.class);
       expectedException.expectMessage("malformed raw data");
       fixture
@@ -240,10 +252,12 @@ public class ParsePipelineTest {
           .getTargetNodeParsePipeline()
           .getAllNodes(cell, fixture.getKnownBuildRuleTypes(), rootBuildFilePath, new AtomicLong());
       Optional<ImmutableSet<Map<String, Object>>> rootRawNodes =
-          fixture.getRawNodeParsePipelineCache().lookupComputedNode(cell, rootBuildFilePath);
+          fixture
+              .getRawNodeParsePipelineCache()
+              .lookupComputedNode(cell, rootBuildFilePath, eventBus);
       fixture
           .getRawNodeParsePipelineCache()
-          .putComputedNodeIfNotPresent(cell, aBuildFilePath, rootRawNodes.get());
+          .putComputedNodeIfNotPresent(cell, aBuildFilePath, rootRawNodes.get(), eventBus);
       expectedException.expect(IllegalStateException.class);
       expectedException.expectMessage(
           "Raw data claims to come from [], but we tried rooting it at [a].");
@@ -266,10 +280,12 @@ public class ParsePipelineTest {
           .getTargetNodeParsePipeline()
           .getAllNodes(cell, fixture.getKnownBuildRuleTypes(), rootBuildFilePath, new AtomicLong());
       Optional<ImmutableSet<Map<String, Object>>> rootRawNodes =
-          fixture.getRawNodeParsePipelineCache().lookupComputedNode(cell, rootBuildFilePath);
+          fixture
+              .getRawNodeParsePipelineCache()
+              .lookupComputedNode(cell, rootBuildFilePath, eventBus);
       fixture
           .getRawNodeParsePipelineCache()
-          .putComputedNodeIfNotPresent(cell, aBuildFilePath, rootRawNodes.get());
+          .putComputedNodeIfNotPresent(cell, aBuildFilePath, rootRawNodes.get(), eventBus);
       expectedException.expect(IllegalStateException.class);
       expectedException.expectMessage(
           "Raw data claims to come from [], but we tried rooting it at [a].");
@@ -315,12 +331,13 @@ public class ParsePipelineTest {
     private final Map<K, V> nodeMap = new HashMap<>();
 
     @Override
-    public synchronized Optional<V> lookupComputedNode(Cell cell, K key) {
+    public synchronized Optional<V> lookupComputedNode(Cell cell, K key, BuckEventBus eventBus) {
       return Optional.ofNullable(nodeMap.get(key));
     }
 
     @Override
-    public synchronized V putComputedNodeIfNotPresent(Cell cell, K key, V value) {
+    public synchronized V putComputedNodeIfNotPresent(
+        Cell cell, K key, V value, BuckEventBus eventBus) {
       if (!nodeMap.containsKey(key)) {
         nodeMap.put(key, value);
       }
@@ -333,11 +350,14 @@ public class ParsePipelineTest {
 
     @Override
     public synchronized ImmutableSet<Map<String, Object>> putComputedNodeIfNotPresent(
-        Cell cell, Path buildFile, ImmutableSet<Map<String, Object>> rawNodes) {
+        Cell cell,
+        Path buildFile,
+        ImmutableSet<Map<String, Object>> rawNodes,
+        BuckEventBus eventBus) {
       // Strip meta entries.
       rawNodes =
           ImmutableSet.copyOf(Iterables.filter(rawNodes, input -> input.containsKey("name")));
-      return super.putComputedNodeIfNotPresent(cell, buildFile, rawNodes);
+      return super.putComputedNodeIfNotPresent(cell, buildFile, rawNodes, eventBus);
     }
   }
 
@@ -431,7 +451,10 @@ public class ParsePipelineTest {
                   });
       this.rawNodeParsePipeline =
           new RawNodeParsePipeline(
-              this.rawNodeParsePipelineCache, this.projectBuildFileParserPool, executorService);
+              this.rawNodeParsePipelineCache,
+              this.projectBuildFileParserPool,
+              executorService,
+              eventBus);
       this.targetNodeParsePipeline =
           new TargetNodeParsePipeline(
               this.targetNodeParsePipelineCache,

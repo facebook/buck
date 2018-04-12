@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.parser;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
@@ -42,7 +43,9 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
   public RawNodeParsePipeline(
       Cache<Path, ImmutableSet<Map<String, Object>>> cache,
       ProjectBuildFileParserPool projectBuildFileParserPool,
-      ListeningExecutorService executorService) {
+      ListeningExecutorService executorService,
+      BuckEventBus eventBus) {
+    super(eventBus);
     this.executorService = executorService;
     this.cache = new PipelineNodeCache<>(cache);
     this.projectBuildFileParserPool = projectBuildFileParserPool;
@@ -98,7 +101,8 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
 
           return projectBuildFileParserPool.getAllRulesAndMetaRules(
               cell, buildFile, processedBytes, executorService);
-        });
+        },
+        eventBus);
   }
 
   @Override

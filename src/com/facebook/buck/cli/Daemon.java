@@ -22,7 +22,6 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.FileHashCacheEvent;
-import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ExecutableFinder;
@@ -74,7 +73,6 @@ final class Daemon implements Closeable {
   private final ConcurrentMap<String, WorkerProcessPool> persistentWorkerPools;
   private final VersionedTargetGraphCache versionedTargetGraphCache;
   private final ActionGraphCache actionGraphCache;
-  private final BroadcastEventListener broadcastEventListener;
   private final RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler;
   private final ImmutableMap<Path, WatchmanCursor> cursor;
   private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
@@ -104,7 +102,6 @@ final class Daemon implements Closeable {
             rootCell.getFilesystem(), rootCell.getBuckConfig().getFileHashCacheMode()));
     this.hashCaches = hashCachesBuilder.build();
 
-    this.broadcastEventListener = new BroadcastEventListener();
     this.actionGraphCache =
         new ActionGraphCache(
             rootCell.getBuckConfig().getMaxActionGraphCacheEntries(),
@@ -115,7 +112,6 @@ final class Daemon implements Closeable {
     typeCoercerFactory = new DefaultTypeCoercerFactory();
     this.parser =
         new Parser(
-            this.broadcastEventListener,
             rootCell.getBuckConfig().getView(ParserConfig.class),
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
@@ -213,10 +209,6 @@ final class Daemon implements Closeable {
 
   ActionGraphCache getActionGraphCache() {
     return actionGraphCache;
-  }
-
-  BroadcastEventListener getBroadcastEventListener() {
-    return broadcastEventListener;
   }
 
   ImmutableList<ProjectFileHashCache> getFileHashCaches() {

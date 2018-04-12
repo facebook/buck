@@ -20,8 +20,8 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.counters.Counter;
 import com.facebook.buck.counters.IntegerCounter;
 import com.facebook.buck.counters.TagSetCounter;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ParsingEvent;
-import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.WatchmanOverflowEvent;
 import com.facebook.buck.io.WatchmanPathEvent;
 import com.facebook.buck.log.Logger;
@@ -122,11 +122,11 @@ public class DaemonicParserState {
     }
 
     @Override
-    public Optional<T> lookupComputedNode(Cell cell, BuildTarget target)
+    public Optional<T> lookupComputedNode(Cell cell, BuildTarget target, BuckEventBus eventBus)
         throws BuildTargetException {
       invalidateIfProjectBuildFileParserStateChanged(cell);
       Path buildFile = cell.getAbsolutePathToBuildFileUnsafe(target);
-      invalidateIfBuckConfigOrEnvHasChanged(cell, buildFile);
+      invalidateIfBuckConfigOrEnvHasChanged(cell, buildFile, eventBus);
 
       DaemonicCellState.Cache<T> state = getCache(cell);
       if (state == null) {
@@ -136,7 +136,8 @@ public class DaemonicParserState {
     }
 
     @Override
-    public T putComputedNodeIfNotPresent(Cell cell, BuildTarget target, T targetNode)
+    public T putComputedNodeIfNotPresent(
+        Cell cell, BuildTarget target, T targetNode, BuckEventBus eventBus)
         throws BuildTargetException {
 
       // Verify we don't invalidate the build file at this point, as, at this point, we should have
@@ -148,7 +149,7 @@ public class DaemonicParserState {
           target);
       Path buildFile = cell.getAbsolutePathToBuildFileUnsafe(target);
       Preconditions.checkState(
-          !invalidateIfBuckConfigOrEnvHasChanged(cell, buildFile),
+          !invalidateIfBuckConfigOrEnvHasChanged(cell, buildFile, eventBus),
           "Unexpected invalidation due to config/env change for %s %s",
           cell.getRoot(),
           target);
@@ -174,11 +175,11 @@ public class DaemonicParserState {
       implements PipelineNodeCache.Cache<Path, ImmutableSet<Map<String, Object>>> {
 
     @Override
-    public Optional<ImmutableSet<Map<String, Object>>> lookupComputedNode(Cell cell, Path buildFile)
-        throws BuildTargetException {
+    public Optional<ImmutableSet<Map<String, Object>>> lookupComputedNode(
+        Cell cell, Path buildFile, BuckEventBus eventBus) throws BuildTargetException {
       Preconditions.checkState(buildFile.isAbsolute());
       invalidateIfProjectBuildFileParserStateChanged(cell);
-      invalidateIfBuckConfigOrEnvHasChanged(cell, buildFile);
+      invalidateIfBuckConfigOrEnvHasChanged(cell, buildFile, eventBus);
 
       DaemonicCellState state = getCellState(cell);
       if (state == null) {
@@ -200,7 +201,10 @@ public class DaemonicParserState {
     @SuppressWarnings({"unchecked", "PMD.EmptyIfStmt"})
     @Override
     public ImmutableSet<Map<String, Object>> putComputedNodeIfNotPresent(
-        Cell cell, Path buildFile, ImmutableSet<Map<String, Object>> rawNodes)
+        Cell cell,
+        Path buildFile,
+        ImmutableSet<Map<String, Object>> rawNodes,
+        BuckEventBus eventBus)
         throws BuildTargetException {
       Preconditions.checkState(buildFile.isAbsolute());
       // Technically this leads to inconsistent state if the state change happens after rawNodes
@@ -302,10 +306,7 @@ public class DaemonicParserState {
   private final AutoCloseableReadWriteUpdateLock cachedStateLock;
   private final AutoCloseableReadWriteUpdateLock cellStateLock;
 
-  private BroadcastEventListener broadcastEventListener;
-
   public DaemonicParserState(
-      BroadcastEventListener broadcastEventListener,
       TypeCoercerFactory typeCoercerFactory,
       int parsingThreads,
       boolean shouldIgnoreEnvironmentVariablesChanges) {
@@ -352,7 +353,6 @@ public class DaemonicParserState {
 
     this.cachedStateLock = new AutoCloseableReadWriteUpdateLock();
     this.cellStateLock = new AutoCloseableReadWriteUpdateLock();
-    this.broadcastEventListener = broadcastEventListener;
   }
 
   TypeCoercerFactory getTypeCoercerFactory() {
@@ -592,7 +592,8 @@ public class DaemonicParserState {
         || event.getKind() == WatchmanPathEvent.Kind.DELETE;
   }
 
-  private boolean invalidateIfBuckConfigOrEnvHasChanged(Cell cell, Path buildFile) {
+  private boolean invalidateIfBuckConfigOrEnvHasChanged(
+      Cell cell, Path buildFile, BuckEventBus eventBus) {
     try (AutoCloseableLock readLock = cellStateLock.readLock()) {
       DaemonicCellState state = cellPathToDaemonicState.get(cell.getRoot());
       if (state == null) {
@@ -624,8 +625,7 @@ public class DaemonicParserState {
         environmentChanges.addAll(diff.entriesOnlyOnRight().keySet());
         environmentChanges.addAll(diff.entriesDiffering().keySet());
         cacheInvalidatedByEnvironmentVariableChangeCounter.addAll(environmentChanges);
-        broadcastEventListener.broadcast(
-            ParsingEvent.environmentalChange(environmentChanges.toString()));
+        eventBus.post(ParsingEvent.environmentalChange(environmentChanges.toString()));
       }
 
       return hasInvalidated;

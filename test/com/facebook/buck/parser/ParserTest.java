@@ -48,7 +48,6 @@ import com.facebook.buck.config.IncrementalActionGraphMode;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.FakeBuckEventListener;
-import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.WatchmanOverflowEvent;
 import com.facebook.buck.io.WatchmanPathEvent;
@@ -308,12 +307,9 @@ public class ParserTest {
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));
 
-    BroadcastEventListener broadcastEventListener = new BroadcastEventListener();
-    broadcastEventListener.addEventBus(eventBus);
     typeCoercerFactory = new DefaultTypeCoercerFactory();
     parser =
         new Parser(
-            broadcastEventListener,
             cell.getBuckConfig().getView(ParserConfig.class),
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
@@ -1675,7 +1671,6 @@ public class ParserTest {
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     parser =
         new Parser(
-            new BroadcastEventListener(),
             cell.getBuckConfig().getView(ParserConfig.class),
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
@@ -1794,7 +1789,6 @@ public class ParserTest {
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     parser =
         new Parser(
-            new BroadcastEventListener(),
             cell.getBuckConfig().getView(ParserConfig.class),
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
@@ -2031,7 +2025,7 @@ public class ParserTest {
       assertTrue(
           permState
               .getOrCreateNodeCache(TargetNode.class)
-              .lookupComputedNode(cell, target)
+              .lookupComputedNode(cell, target, eventBus)
               .isPresent());
     }
   }
@@ -2076,11 +2070,9 @@ public class ParserTest {
     assertEquals(remote.cellPaths.size(), 1);
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    BroadcastEventListener broadcastEventListener = new BroadcastEventListener();
     // Reset parser to square one.
     parser =
         new Parser(
-            broadcastEventListener,
             cell.getBuckConfig().getView(ParserConfig.class),
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),

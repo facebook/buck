@@ -125,7 +125,10 @@ public class PerBuildState implements AutoCloseable {
 
     this.rawNodeParsePipeline =
         new RawNodeParsePipeline(
-            daemonicParserState.getRawNodeCache(), projectBuildFileParserPool, executorService);
+            daemonicParserState.getRawNodeCache(),
+            projectBuildFileParserPool,
+            executorService,
+            eventBus);
     this.targetNodeParsePipeline =
         new TargetNodeParsePipeline(
             daemonicParserState.getOrCreateNodeCache(TargetNode.class),

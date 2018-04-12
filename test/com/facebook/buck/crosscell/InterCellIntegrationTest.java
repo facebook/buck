@@ -35,7 +35,6 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -394,7 +393,6 @@ public class InterCellIntegrationTest {
     TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
     Parser parser =
         new Parser(
-            new BroadcastEventListener(),
             primary.asCell().getBuckConfig().getView(ParserConfig.class),
             coercerFactory,
             new ConstructorArgMarshaller(coercerFactory),

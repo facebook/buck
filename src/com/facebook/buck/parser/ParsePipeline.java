@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInstanceOf;
 import static com.google.common.base.Throwables.propagateIfInstanceOf;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -47,10 +48,12 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
 
   private final AtomicBoolean shuttingDown;
   private final long minimumPerfEventTimeMs;
+  protected final BuckEventBus eventBus;
 
-  public ParsePipeline() {
+  public ParsePipeline(BuckEventBus eventBus) {
     this.shuttingDown = new AtomicBoolean(false);
     this.minimumPerfEventTimeMs = LOG.isVerboseEnabled() ? 0 : 1;
+    this.eventBus = eventBus;
   }
 
   /**

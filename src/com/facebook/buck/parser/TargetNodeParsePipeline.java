@@ -57,7 +57,6 @@ public class TargetNodeParsePipeline
   private static final Logger LOG = Logger.get(TargetNodeParsePipeline.class);
 
   private final ParserTargetNodeFactory<TargetNode<?, ?>> delegate;
-  private final BuckEventBus eventBus;
   private final boolean speculativeDepsTraversal;
   private final RawNodeParsePipeline rawNodeParsePipeline;
   private final SimplePerfEvent.Scope targetNodePipelineLifetimeEventScope;
@@ -81,10 +80,9 @@ public class TargetNodeParsePipeline
       boolean speculativeDepsTraversal,
       RawNodeParsePipeline rawNodeParsePipeline,
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider) {
-    super(executorService, cache);
+    super(executorService, cache, eventBus);
 
     this.delegate = targetNodeDelegate;
-    this.eventBus = eventBus;
     this.speculativeDepsTraversal = speculativeDepsTraversal;
     this.rawNodeParsePipeline = rawNodeParsePipeline;
     this.targetNodePipelineLifetimeEventScope =

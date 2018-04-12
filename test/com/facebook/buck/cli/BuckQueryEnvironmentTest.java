@@ -23,7 +23,6 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -95,7 +94,6 @@ public class BuckQueryEnvironmentTest {
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     Parser parser =
         new Parser(
-            new BroadcastEventListener(),
             cell.getBuckConfig().getView(ParserConfig.class),
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),

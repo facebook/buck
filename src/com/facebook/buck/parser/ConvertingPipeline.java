@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.parser;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
@@ -43,7 +44,11 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
   private final PipelineNodeCache<BuildTarget, T> cache;
   protected final ListeningExecutorService executorService;
 
-  public ConvertingPipeline(ListeningExecutorService executorService, Cache<BuildTarget, T> cache) {
+  public ConvertingPipeline(
+      ListeningExecutorService executorService,
+      Cache<BuildTarget, T> cache,
+      BuckEventBus eventBus) {
+    super(eventBus);
     this.cache = new PipelineNodeCache<>(cache);
     this.executorService = executorService;
   }
@@ -77,7 +82,8 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
                             }
                             return dispatchComputeNode(
                                 cell, knownBuildRuleTypes, target, processedBytes, from);
-                          }));
+                          },
+                          eventBus));
                 }
               }
 
@@ -103,7 +109,8 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
                 from ->
                     dispatchComputeNode(
                         cell, knownBuildRuleTypes, buildTarget, processedBytes, from),
-                MoreExecutors.directExecutor()));
+                MoreExecutors.directExecutor()),
+        eventBus);
   }
 
   protected boolean isValid(F from) {

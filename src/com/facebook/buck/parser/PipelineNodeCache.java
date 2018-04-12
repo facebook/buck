@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.parser;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.Cell;
 import com.google.common.util.concurrent.Futures;
@@ -42,8 +43,9 @@ class PipelineNodeCache<K, T> {
    *     ongoing job (job cache hit) or a new job (miss).
    */
   protected final ListenableFuture<T> getJobWithCacheLookup(
-      Cell cell, K key, JobSupplier<T> jobSupplier) throws BuildTargetException {
-    Optional<T> cacheLookupResult = cache.lookupComputedNode(cell, key);
+      Cell cell, K key, JobSupplier<T> jobSupplier, BuckEventBus eventBus)
+      throws BuildTargetException {
+    Optional<T> cacheLookupResult = cache.lookupComputedNode(cell, key, eventBus);
     if (cacheLookupResult.isPresent()) {
       return Futures.immediateFuture(cacheLookupResult.get());
     }
@@ -69,7 +71,9 @@ class PipelineNodeCache<K, T> {
       ListenableFuture<T> nodeJob =
           Futures.transformAsync(
               jobSupplier.get(),
-              input -> Futures.immediateFuture(cache.putComputedNodeIfNotPresent(cell, key, input)),
+              input ->
+                  Futures.immediateFuture(
+                      cache.putComputedNodeIfNotPresent(cell, key, input, eventBus)),
               MoreExecutors.directExecutor());
       resultFuture.setFuture(nodeJob);
     } catch (Throwable t) {
@@ -84,7 +88,8 @@ class PipelineNodeCache<K, T> {
   }
 
   public interface Cache<K, V> {
-    Optional<V> lookupComputedNode(Cell cell, K target) throws BuildTargetException;
+    Optional<V> lookupComputedNode(Cell cell, K target, BuckEventBus eventBus)
+        throws BuildTargetException;
 
     /**
      * Insert item into the cache if it was not already there.
@@ -94,6 +99,7 @@ class PipelineNodeCache<K, T> {
      * @param targetNode node to insert
      * @return previous node for the target if the cache contained it, new one otherwise.
      */
-    V putComputedNodeIfNotPresent(Cell cell, K target, V targetNode) throws BuildTargetException;
+    V putComputedNodeIfNotPresent(Cell cell, K target, V targetNode, BuckEventBus eventBus)
+        throws BuildTargetException;
   }
 }
