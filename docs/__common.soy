@@ -713,9 +713,19 @@ docsearch({
 
 /**
  * @param name
+ * @param? section
+ * @param? rendered_text
  */
 {template .cmd_link}
-<a href="{ROOT}command/{$name}.html"><code>buck {$name}</code></a>
+  {if not $section}
+    <a href="{ROOT}command/{$name}.html"><code>buck {$name}</code></a>
+  {else}
+    {if not $rendered_text}
+      <a href="{ROOT}command/{$name}.html#{$section}"><code>{$section}</code></a>
+    {else}
+      <a href="{ROOT}command/{$name}.html#{$section}"><code>{$rendered_text}</code></a>
+    {/if}
+  {/if}
 {/template}
 
 /***/

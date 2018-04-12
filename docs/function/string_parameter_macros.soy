@@ -14,100 +14,249 @@
 {call buck.function}
 {param status: 'UNFROZEN' /}
 {param overview}
-Some rules allow the use of specialized macros embedded within the strings
-of their parameters, providing additional functionality such as referencing
-the output paths of other rules.
 
-String parameter macros have the form <code>$(macro[ argument])</code>.
-For rules that support string parameter macros, you can use a backslash at
-any time to prevent expansion (e.g. <code>\$(dirname ...)</code>).
+<p>
+Some rules allow the use of specialized macros embedded within the
+strings of their parameters. These <em>string parameter macros</em> provide 
+additional functionality, such as exposing the output paths of
+other rules.
+</p>
 
-The following macros are supported:
-{literal}
+<p>
+Examples of rules that use string parameter macros are:
+</p>
+
 <ul>
-  <li><code>$(classpath //:foo)</code> expands to the set of jars that are in the classpath of the given target</li>
-  <li><code>$(classpath_abi //:foo)</code> expands to the set of class abi jars that are in the classpath of the given target</li>
-  <li><code>$(exe //:foo)</code> expands to the executable output of given target if it exists</li>
-  <li><code>$(location //:foo)</code> expands to the output file or directory of the given target</li>
-  <li><code>$(location //:foo[output])</code> expands to the named output file or directory of the given target, for rules that expose supplementary outputs.</li>
-  <li><code>$(maven_coords //:foo)</code> expands to the maven coordinates associated with the given target</li>
-  <li><code>$(output name)</code> expands to the path of the named output of the rule the macro is used in. Only useful for rules which allows named supplementary outputs.</li>
-  <li><code>$(query_targets "deps(//:foo)")</code> executes the given query and expands to the list of targets that match. See more information below.</li>
-  <li><code>$(query_outputs "deps(//:foo)")</code> executes the given query and expands to the output files of the list of targets that match. See more information below.</li>
-  <li><code>$(query_targets_and_outputs [SEPARATOR] "deps(//:foo)")</code> executes the given query and expands to the target name and the output files of the list of targets that match. Targets and paths are separated by SEPARATOR if provided, or a space if it is not.</li>
+<li>{call buck.ruleLink}{param name : 'genrule' /}{/call}</li>
+<li>{call buck.ruleLink}{param name : 'apk_genrule' /}{/call}</li>
+<li>{call buck.ruleLink}{param name : 'cxx_genrule' /}{/call}</li>
 </ul>
+
+String parameter macros have the form 
+
+<p>
+<pre>
+{literal}
+$(<em>macroname</em> [ <em>argument</em> ... ])
 {/literal}
+</pre>
+</p>
+
+<p>
+String parameter macros take a space-separated list of arguments,
+where each argument is a {call buck.build_target_pattern /}.
+</p>
+
+<p>
+If you need to prevent expansion of a string parameter macro, prefix the
+macro with a backslash. 
+</p>
+
+<p>
+<pre>
+{literal}
+\$(dirname ...)
+{/literal}
+</pre>
+</p>
+
+<p>
+For an example of preventing expansion in the context of a rule, see 
+the <strong>Examples</strong> section below.
+</p>
+
+<h2>
+Supported macros 
+</h2>
+
+<ul>
+  <li>
+  <code> {literal}$(classpath //:foo){/literal} </code> 
+  expands to the set of JARs that are in the classpath of the given
+  target.
+  </li>
+
+  <li>
+  <code> {literal} $(classpath_abi //:foo) {/literal} </code> 
+  expands to the set of Application Binary Interface (ABI) JARs that are in the classpath of
+  the given target. For more information about using ABI JARs with Buck, see the 
+  topic {call buck.concept_link}{param page: 'java_abis' /}{param name: 'Java ABIs' /}{/call}.
+  </li>
+
+  <li>
+  <code> {literal}$(exe //:foo){/literal} </code> 
+  expands to the executable output of the
+  given target&mdash;if the target produces such an executable.
+  </li>
+
+  <li>
+  <code> {literal}$(location //:foo){/literal} </code> 
+  expands to the output file or directory of the given target.
+  </li>
+
+  <li>
+  <code> {literal}$(location //:foo[output]){/literal} </code> 
+  expands to the named output file or directory of the given target, 
+  for rules that expose supplementary outputs.
+  </li>
+
+  <li>
+  <code> {literal}$(maven_coords //:foo){/literal} </code> 
+  expands to the maven coordinates associated with the given target.
+  </li>
+
+  <li>
+  <code> {literal}$(output name){/literal} </code> 
+  expands to the path of the named output of the rule in which you use
+  this macro. Used only for rules that allow named supplementary outputs.
+  </li>
+
+  <li>
+  <code> {literal}$(query_targets "<em>queryfunction</em>(//:foo)"){/literal} </code> 
+  executes the given query and expands to the list of targets that match. 
+  See the <strong>Query functions</strong> section below for the list of
+  supported <em>queryfunction</em>s.
+  </li>
+
+  <li>
+  <code> {literal}$(query_outputs "<em>queryfunction</em>(//:foo)"){/literal} </code> 
+  executes the given query and expands to the <em>output files</em> of the targets that match. 
+  See the <strong>Query functions</strong> section below for the list of
+  supported <em>queryfunction</em>s.
+  </li>
+
+  <li>
+  <code> {literal}$(query_targets_and_outputs [<em>SEPARATOR</em>] "<em>queryfunction</em>(//:foo)"){/literal} </code> 
+  executes the given query and expands to both the target names <em>and</em> the output files of the targets that match. 
+  Targets and paths are separated by <em>SEPARATOR</em> if provided, or a space if it is not.
+  See the <strong>Query functions</strong> section below for the list of
+  supported <em>queryfunction</em>s.
+  </li>
+</ul>
+
+<h3>
+Query functions
+</h3>
+
+<p>
+The <code>query_*</code> macros accept a quoted query expression which supports the following query functions.
+</p>
+
+<p>
+
+<ul style="line-height:0.5em">
+  <li><code>{call buck.cmd_link}{param name: 'query' /}{param section: 'attrfilter'/}{/call}</code></li>
+  <li><code>{call buck.cmd_link}{param name: 'audit' /}{param section: 'classpath'/}{/call}</code></li> 
+  <li><code>{call buck.cmd_link}{param name: 'query' /}{param section: 'deps'/}{/call}</code></li>
+  <li><code>{call buck.cmd_link}{param name: 'query' /}{param section: 'except'/}{param rendered_text: 'set-operations' /}{/call}</code></li>
+  <li><code>{call buck.cmd_link}{param name: 'query' /}{param section: 'filter'/}{/call}</code></li>
+  <li><code>{call buck.cmd_link}{param name: 'query' /}{param section: 'intersect'/}{param rendered_text: 'set-operations' /}{/call}</code></li>
+  <li><code>{call buck.cmd_link}{param name: 'query' /}{param section: 'kind'/}{/call}</code></li>
+  <li><code>{call buck.cmd_link}{param name: 'query' /}{param section: 'set'/}{/call}</code></li>
+  <li><code>{call buck.cmd_link}{param name: 'query' /}{param section: 'union'/}{/call}</code></li>
+</ul>
+
+</p>
+
+<p>
+All of these except for <code>classpath</code> behave the same as the corresponding operations 
+in {call buck.cmd_link}{param name: 'query' /}{/call}. 
+</p>
+
+<p>
+The <code>classpath</code> query function is used to query the classpath 
+of <code>java_library</code> rules. It takes an optional second argument to limit
+the depth of the traversal. Its behavior is similar to the corresponding operation 
+in {call buck.cmd_link}{param name: 'audit' /}{/call}. 
+</p>
+
+<p>
+The items in the preceding list link to the corresponding descriptions in 
+the <code>buck query</code> and <code>buck audit</code> topics.  
+</p>
+
 {/param}
 
-{param args}
-
-{call buck.functionArg}
-  {param desc}
-  String parameter macros may take a space separated list of arguments.
-  {/param}
-{/call}
-
-{/param}
 
 {param examples}
 
-The following example uses a string parameter macro in a <code>genrule()</code>{sp}
-to copy the output of another rule:
-{literal}<pre class="prettyprint lang-py">
-genrule(
-  name = 'gen',
-  out = 'out.txt',
-  cmd = 'cp $(location //some/other:rule) $OUT',
-)
-</pre>{/literal}
+<p>
+<strong>Example</strong>: Use a string parameter macro in a <code>genrule()</code>{sp}
+to copy the output of another rule.
+</p>
 
-The following example uses a backslash to prevent macro expansion, and hand
-the <code>dirname</code> subshell command directly to the shell:
-{literal}<pre class="prettyprint lang-py">
+<p>
+<pre>
+{literal}
 genrule(
   name = 'gen',
-  out = 'out.txt',
-  cmd = 'cp $SRCS \$(dirname $OUT)',
+  out  = 'out.txt',
+  cmd  = 'cp $(location //some/other:rule) $OUT',
+)
+{/literal}
+</pre>
+</p>
+
+<p>
+<strong>Example</strong>: Use a backslash to prevent macro expansion.
+The rule passes the <code>dirname</code> command to the shell to execute
+in a subshell; <code>dirname</code> is a Unix/Linux command-line utility
+that returns the directory of a specified file. We need to use an
+escape because the syntax for subshells is the same as the syntax for 
+string parameter macros.  
+</p>
+
+<p>
+<pre class="prettyprint lang-py">
+{literal}
+genrule(
+  name = 'gen',
+  out  = 'out.txt',
+  cmd  = 'cp $SRCS \$(dirname $OUT)',
   srcs = [
     'test1.txt',
     'test2.txt',
   ],
 )
-</pre>{/literal}
-
-The query_* macros accepts a quoted query expression which supports the following query functions:
-{literal}
-<ul style="line-height:0.5em">
-  <li><code>attrfilter</code></li>
-  <li><code>deps</code></li>
-  <li><code>except</code></li>
-  <li><code>classpath</code></li>
-  <li><code>intersect</code></li>
-  <li><code>filter</code></li>
-  <li><code>kind</code></li>
-  <li><code>set</code></li>
-  <li><code>union</code></li>
-</ul>
 {/literal}
+</pre>
+</p>
 
-The <code>classpath</code> function is used to query the classpath of <code>java_library</code>
-rules. It takes an optional second argument to limit the depth of the traversal.
+<strong>Example</strong>: Queries
 
-Example queries
-{literal}
+<p>
 <pre class="prettyprint lang-py">
+{literal}
 cmd = '$(query_targets "deps(:foo)")'
 cmd = '$(query_outputs "filter(name_regex, deps(:bar))")'
 cmd = '$(query_targets "attrfilter(annotation_processors, com.foo.Processor, deps(:app))")'
-</pre>
 {/literal}
+</pre>
+</p>
 
 {/param}
 
 {param furtherexp}
-<h2>Technical Details</h2>
 
-The EBNF grammar for a macro is as follows:
+<h2>Frequently Asked Questions (FAQ)</h2>
+<ul>
+  <li> <strong>When are macros evaluated?</strong> Macros are evaluated before the command is passed to the shell for execution. You can think of them as simple string replacements. </li>
+  <li> <strong>Can macros be nested?</strong> Macros cannot be nested. If you need to run an additional macro on the output of a previous macro, create a nested <code>genrule</code> definition and use the <code>$(location)</code> macro to read the output of the previous macro. </li>
+  <li> <strong>Are parentheses okay inside a macro?</strong> Inside a macro, parentheses must be balanced. Parentheses which are part of a quoted string are ignored. </li>
+  <li> <strong>Is white space okay inside a macro?</strong> Macro arguments are white space separated, so arguments which contain white space must be quoted.</li>
+  <li> <strong>Are nested quotes allowed?</strong> A single level of nested quotes is allowed, such 
+  as <code>"My name is 'Buck'."</code> or <code>'My name is "Buck".'</code>). 
+  Note that when you use a macro in a BUCK file, you must ensure that quotes are properly escaped, 
+  so that the shell command that uses the macro forms a proper string. </li>
+</ul>
+
+
+<h2>Extended Backus&mdash;Naur form</h2>
+
+<p>
+The Extended Backus&mdash;Naur form (EBNF) grammar for a macro is as follows:
+</p>
+
 {literal}<pre>
 macro = "$(", macro_name, whitespace, [arg_list], ")";
 macro_name = {all_ascii_chars - whitespace - parens};
@@ -121,18 +270,6 @@ arg = {all_ascii_chars - whitespace - parens}
 </pre>{/literal}
 
 
-<h3>FAQs</h3>
-<ul>
-  <li> <strong>When are macros evaluated?</strong> Macros are evaluated before the command is passed to the shell for execution. You can think of them as simple string replacements. </li>
-  <li> <strong>Can macros be nested?</strong> Macros cannot be nested. If you need to run a second macro on the output of another macro, create a nested <code>genrule</code> definition and use the <code>$(location)</code> macro
-  to read the output of the first one. </li>
-  <li> <strong>Are parens okay inside a macro?</strong> Inside a macro, parentheses must be balanced. Parentheses which are part of a quoted string are ignored. </li>
-  <li> <strong>Is whitespace okay inside a macro?</strong> Macro args are whitespace separated, so args which contain whitespace must be quoted.</li>
-  <li> <strong>Are nested quotes allowed?</strong> A single level of nested quotes is allowed (e.g. <code>"My name is 'Buck'." or 'My name is "Buck".'</code>). Note that when you use the macro
-  in a BUCK file, you must ensure that these quotes are properly escaped, so that the command which uses the macro forms a proper string. </li>
-</ul>
-
-<p>
 {/param}
 
 {/call} // buck.function
