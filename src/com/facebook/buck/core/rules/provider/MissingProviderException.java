@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.provider;
+package com.facebook.buck.core.rules.provider;
 
 /** Exception thrown when a required {@link BuildRuleInfoProvider} is missing */
 public class MissingProviderException extends RuntimeException {

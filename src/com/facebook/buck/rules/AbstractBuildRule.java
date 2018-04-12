@@ -16,12 +16,12 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.rules.provider.BuildRuleInfoProvider;
+import com.facebook.buck.core.rules.provider.BuildRuleInfoProvider.ProviderKey;
+import com.facebook.buck.core.rules.provider.BuildRuleInfoProviderCollection;
+import com.facebook.buck.core.rules.provider.MissingProviderException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.provider.BuildRuleInfoProvider;
-import com.facebook.buck.rules.provider.BuildRuleInfoProvider.ProviderKey;
-import com.facebook.buck.rules.provider.BuildRuleInfoProviderCollection;
-import com.facebook.buck.rules.provider.MissingProviderException;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.CaseFormat;
 import java.util.Objects;

@@ -16,12 +16,12 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.rules.provider.BuildRuleInfoProvider;
+import com.facebook.buck.core.rules.provider.BuildRuleInfoProviderCollection;
+import com.facebook.buck.core.rules.provider.MissingProviderException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.provider.BuildRuleInfoProvider;
-import com.facebook.buck.rules.provider.BuildRuleInfoProviderCollection;
-import com.facebook.buck.rules.provider.MissingProviderException;
 import com.facebook.buck.step.Step;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;

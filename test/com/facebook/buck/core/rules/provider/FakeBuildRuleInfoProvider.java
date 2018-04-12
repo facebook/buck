@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.provider;
+package com.facebook.buck.core.rules.provider;
 
 /** Fake BuildRuleInfoProvider that uses the provider interface */
 public class FakeBuildRuleInfoProvider implements BuildRuleInfoProvider {

@@ -17,14 +17,14 @@
 package com.facebook.buck.rules.graphbuilder;
 
 import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
+import com.facebook.buck.core.rules.provider.BuildRuleInfoProvider;
+import com.facebook.buck.core.rules.provider.BuildRuleInfoProviderCollection;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.provider.BuildRuleInfoProvider;
-import com.facebook.buck.rules.provider.BuildRuleInfoProviderCollection;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -45,9 +45,8 @@ import org.immutables.value.Value.Style.ImplementationVisibility;
  *
  * <p>Access to the {@link TransformationEnvironment} is limited to restrict access of BuildRule
  * construction logic to {@link BuildRule}s. Construction phase can only access information to
- * dependencies via {@link com.facebook.buck.rules.provider.BuildRuleInfoProvider}s. Those
- * dependencies not yet created will be implicitly created by this class using the wrapped {@link
- * TransformationEnvironment}.
+ * dependencies via {@link BuildRuleInfoProvider}s. Those dependencies not yet created will be
+ * implicitly created by this class using the wrapped {@link TransformationEnvironment}.
  *
  * <p>This context is not part of the {@link BuildRuleKey} as {@link TransformationEnvironment}
  * should not be part of the identifier of what {@link BuildRule} to compute.

@@ -14,9 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.provider;
+package com.facebook.buck.core.rules.provider;
 
-import com.facebook.buck.rules.provider.BuildRuleInfoProvider.ProviderKey;
+import com.facebook.buck.core.rules.provider.BuildRuleInfoProvider.ProviderKey;
 import com.google.common.collect.ImmutableMap;
 
 /**
