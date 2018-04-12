@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.graph.transformation;
+package com.facebook.buck.core.graph.transformation;
 
 import java.util.Optional;
 

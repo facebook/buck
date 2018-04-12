@@ -2,7 +2,7 @@ java_library(
     name = "transformation",
     srcs = glob(["*.java"]),
     tests = [
-        "//test/com/facebook/buck/graph/transformation:transformation",
+        "//test/com/facebook/buck/core/graph/transformation:transformation",
     ],
     visibility = ["PUBLIC"],
     deps = [

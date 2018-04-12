@@ -5,7 +5,7 @@ java_test(
     srcs = glob(["*Test.java"]),
     has_immutable_types = True,
     deps = [
-        "//src/com/facebook/buck/graph/transformation:transformation",
+        "//src/com/facebook/buck/core/graph/transformation:transformation",
         "//src/com/facebook/buck/rules/graphbuilder:graphbuilder",
         "//test/com/facebook/buck/model:testutil",
         "//test/com/facebook/buck/rules:testutil",

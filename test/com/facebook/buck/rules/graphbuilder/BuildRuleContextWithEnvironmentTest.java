@@ -18,8 +18,8 @@ package com.facebook.buck.rules.graphbuilder;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
 import com.facebook.buck.graph.MutableDirectedGraph;
-import com.facebook.buck.graph.transformation.TransformationEnvironment;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.graphbuilder;
 
-import com.facebook.buck.graph.transformation.TransformationEnvironment;
+import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
