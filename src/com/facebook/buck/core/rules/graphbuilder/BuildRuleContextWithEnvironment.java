@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.graphbuilder;
+package com.facebook.buck.core.rules.graphbuilder;
 
 import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
 import com.facebook.buck.core.rules.provider.BuildRuleInfoProvider;

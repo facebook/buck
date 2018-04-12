@@ -9,7 +9,7 @@ java_immutables_library(
         "//src/com/facebook/buck/rules:interfaces",
     ],
     tests = [
-        "//test/com/facebook/buck/rules/graphbuilder:graphbuilder",
+        "//test/com/facebook/buck/core/rules/graphbuilder:graphbuilder",
     ],
     visibility = ["PUBLIC"],
     deps = [

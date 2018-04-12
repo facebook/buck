@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.graphbuilder;
+package com.facebook.buck.core.rules.graphbuilder;
 
 import static org.junit.Assert.assertEquals;
 
