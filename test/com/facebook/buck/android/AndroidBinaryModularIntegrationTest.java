@@ -227,6 +227,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
   @Test
   public void testMultidexModularWithManifestAapt2() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.assumeAapt2WithOutputTextSymbolsIsAvailable();
     ProcessResult foundAapt2 = workspace.runBuckBuild("//apps/sample:check_for_aapt2");
     Assume.assumeTrue(foundAapt2.getExitCode().getCode() == 0);
 
