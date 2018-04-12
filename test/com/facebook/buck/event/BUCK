@@ -59,7 +59,6 @@ standard_java_test(
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
-        "//src/com/facebook/buck/event/listener:BroadcastEventListener",
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
