@@ -19,7 +19,7 @@ package com.facebook.buck.event;
 import com.facebook.buck.log.views.JsonViews;
 import com.fasterxml.jackson.annotation.JsonView;
 
-public class ParsingEvent extends AbstractBuckEvent implements BroadcastEvent {
+public class ParsingEvent extends AbstractBuckEvent implements BuckEvent {
   private final String eventName;
 
   public ParsingEvent(EventKey eventKey, String eventName) {

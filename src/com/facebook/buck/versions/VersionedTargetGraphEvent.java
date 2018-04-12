@@ -17,7 +17,7 @@
 package com.facebook.buck.versions;
 
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.BroadcastEvent;
+import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
@@ -76,7 +76,7 @@ public abstract class VersionedTargetGraphEvent extends AbstractBuckEvent
     }
   }
 
-  public static class Cache extends VersionedTargetGraphEvent implements BroadcastEvent {
+  public static class Cache extends VersionedTargetGraphEvent implements BuckEvent {
 
     private final String eventName;
 
