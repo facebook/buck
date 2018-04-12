@@ -80,10 +80,3 @@ python_binary(
         "//third-party/py/pex:pex",
     ],
 )
-
-export_file(
-    name = "__test_main__.py",
-    visibility = [
-        "PUBLIC",
-    ],
-)
