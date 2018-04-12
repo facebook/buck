@@ -128,11 +128,11 @@ public class DaemonicParserState {
       Path buildFile = cell.getAbsolutePathToBuildFileUnsafe(target);
       invalidateIfBuckConfigOrEnvHasChanged(cell, buildFile);
 
-      PipelineNodeCache.Cache<BuildTarget, T> state = getCache(cell);
+      DaemonicCellState.Cache<T> state = getCache(cell);
       if (state == null) {
         return Optional.empty();
       }
-      return state.lookupComputedNode(cell, target);
+      return state.lookupComputedNode(target);
     }
 
     @Override
@@ -153,10 +153,10 @@ public class DaemonicParserState {
           cell.getRoot(),
           target);
 
-      return getOrCreateCache(cell).putComputedNodeIfNotPresent(cell, target, targetNode);
+      return getOrCreateCache(cell).putComputedNodeIfNotPresent(target, targetNode);
     }
 
-    private @Nullable PipelineNodeCache.Cache<BuildTarget, T> getCache(Cell cell) {
+    private @Nullable DaemonicCellState.Cache<T> getCache(Cell cell) {
       DaemonicCellState cellState = getCellState(cell);
       if (cellState == null) {
         return null;
@@ -164,7 +164,7 @@ public class DaemonicParserState {
       return cellState.getCache(type);
     }
 
-    private PipelineNodeCache.Cache<BuildTarget, T> getOrCreateCache(Cell cell) {
+    private DaemonicCellState.Cache<T> getOrCreateCache(Cell cell) {
       return getOrCreateCellState(cell).getOrCreateCache(type);
     }
   }
