@@ -97,7 +97,7 @@ public class DistBuildSlaveEventBusListener
   private final AtomicInteger buildRulesBuildingCount = new AtomicInteger(0);
   private final AtomicInteger buildRulesFailureCount = new AtomicInteger(0);
 
-  private final HttpCacheUploadStats httpCacheUploadStats = new HttpCacheUploadStats();
+  private final RemoteCacheUploadStats remoteCacheUploadStats = new RemoteCacheUploadStats();
 
   private final FileMaterializationStatsTracker fileMaterializationStatsTracker;
   private final HealthCheckStatsTracker healthCheckStatsTracker;
@@ -182,15 +182,11 @@ public class DistBuildSlaveEventBusListener
         .setRulesBuildingCount(buildRulesBuildingCount.get())
         .setRulesFailureCount(buildRulesFailureCount.get())
         .setCacheRateStats(cacheRateStatsKeeper.getSerializableStats())
-        .setHttpArtifactTotalBytesUploaded(httpCacheUploadStats.getHttpArtifactTotalBytesUploaded())
-        .setHttpArtifactUploadsScheduledCount(
-            httpCacheUploadStats.getHttpArtifactTotalUploadsScheduledCount())
-        .setHttpArtifactUploadsOngoingCount(
-            httpCacheUploadStats.getHttpArtifactUploadsOngoingCount())
-        .setHttpArtifactUploadsSuccessCount(
-            httpCacheUploadStats.getHttpArtifactUploadsSuccessCount())
-        .setHttpArtifactUploadsFailureCount(
-            httpCacheUploadStats.getHttpArtifactUploadsFailureCount())
+        .setHttpArtifactTotalBytesUploaded(remoteCacheUploadStats.getBytesUploaded())
+        .setHttpArtifactUploadsScheduledCount(remoteCacheUploadStats.getScheduledCount())
+        .setHttpArtifactUploadsOngoingCount(remoteCacheUploadStats.getOngoingCount())
+        .setHttpArtifactUploadsSuccessCount(remoteCacheUploadStats.getSuccessCount())
+        .setHttpArtifactUploadsFailureCount(remoteCacheUploadStats.getFailureCount())
         .setFilesMaterializedCount(
             fileMaterializationStatsTracker.getTotalFilesMaterializedCount());
   }
@@ -398,17 +394,17 @@ public class DistBuildSlaveEventBusListener
 
   @Subscribe
   public void onHttpArtifactCacheScheduledEvent(HttpArtifactCacheEvent.Scheduled event) {
-    httpCacheUploadStats.processHttpArtifactCacheScheduledEvent(event);
+    remoteCacheUploadStats.processScheduledEvent(event);
   }
 
   @Subscribe
   public void onHttpArtifactCacheStartedEvent(HttpArtifactCacheEvent.Started event) {
-    httpCacheUploadStats.processHttpArtifactCacheStartedEvent(event);
+    remoteCacheUploadStats.processStartedEvent(event);
   }
 
   @Subscribe
   public void onHttpArtifactCacheFinishedEvent(HttpArtifactCacheEvent.Finished event) {
-    httpCacheUploadStats.processHttpArtifactCacheFinishedEvent(event);
+    remoteCacheUploadStats.processFinishedEvent(event);
   }
 
   @Override

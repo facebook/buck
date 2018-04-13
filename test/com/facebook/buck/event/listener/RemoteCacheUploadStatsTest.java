@@ -23,14 +23,14 @@ import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class HttpCacheUploadStatsTest {
+public class RemoteCacheUploadStatsTest {
   private static final long ARTIFACT_ONE_BYTES = 10;
   private static final long ARTIFACT_TWO_BYTES = 20;
   private static final long ARTIFACT_ONE_AND_TWO_TOTAL_BYTES = 30;
 
   @Test
   public void testCacheUploadEvents() {
-    HttpCacheUploadStats uploadStats = new HttpCacheUploadStats();
+    RemoteCacheUploadStats uploadStats = new RemoteCacheUploadStats();
 
     // Schedule, start, and finish upload event one.
 
@@ -38,21 +38,21 @@ public class HttpCacheUploadStatsTest {
         HttpArtifactCacheEvent.newStoreScheduledEvent(
             Optional.of("fake"), ImmutableSet.of(), StoreType.ARTIFACT);
 
-    uploadStats.processHttpArtifactCacheScheduledEvent(scheduledEventOne);
-    Assert.assertEquals(1, uploadStats.getHttpArtifactTotalUploadsScheduledCount());
+    uploadStats.processScheduledEvent(scheduledEventOne);
+    Assert.assertEquals(1, uploadStats.getScheduledCount());
 
     HttpArtifactCacheEvent.Started startedEventOne =
         HttpArtifactCacheEvent.newStoreStartedEvent(scheduledEventOne);
-    uploadStats.processHttpArtifactCacheStartedEvent(startedEventOne);
-    Assert.assertEquals(1, uploadStats.getHttpArtifactTotalUploadsScheduledCount());
-    Assert.assertEquals(1, uploadStats.getHttpArtifactUploadsOngoingCount());
+    uploadStats.processStartedEvent(startedEventOne);
+    Assert.assertEquals(1, uploadStats.getScheduledCount());
+    Assert.assertEquals(1, uploadStats.getOngoingCount());
 
     HttpArtifactCacheEvent.Finished finishedEventOne =
         createFinishedEvent(startedEventOne, true, ARTIFACT_ONE_BYTES);
-    uploadStats.processHttpArtifactCacheFinishedEvent(finishedEventOne);
-    Assert.assertEquals(1, uploadStats.getHttpArtifactTotalUploadsScheduledCount());
-    Assert.assertEquals(0, uploadStats.getHttpArtifactUploadsOngoingCount());
-    Assert.assertEquals(1, uploadStats.getHttpArtifactUploadsSuccessCount());
+    uploadStats.processFinishedEvent(finishedEventOne);
+    Assert.assertEquals(1, uploadStats.getScheduledCount());
+    Assert.assertEquals(0, uploadStats.getOngoingCount());
+    Assert.assertEquals(1, uploadStats.getSuccessCount());
 
     // Schedule, start, finish, events two and three
     HttpArtifactCacheEvent.Scheduled scheduledEventTwo =
@@ -61,34 +61,33 @@ public class HttpCacheUploadStatsTest {
     HttpArtifactCacheEvent.Scheduled scheduledEventThree =
         HttpArtifactCacheEvent.newStoreScheduledEvent(
             Optional.of("fake"), ImmutableSet.of(), StoreType.ARTIFACT);
-    uploadStats.processHttpArtifactCacheScheduledEvent(scheduledEventTwo);
-    uploadStats.processHttpArtifactCacheScheduledEvent(scheduledEventTwo);
-    Assert.assertEquals(3, uploadStats.getHttpArtifactTotalUploadsScheduledCount());
-    Assert.assertEquals(0, uploadStats.getHttpArtifactUploadsOngoingCount());
-    Assert.assertEquals(1, uploadStats.getHttpArtifactUploadsSuccessCount());
+    uploadStats.processScheduledEvent(scheduledEventTwo);
+    uploadStats.processScheduledEvent(scheduledEventTwo);
+    Assert.assertEquals(3, uploadStats.getScheduledCount());
+    Assert.assertEquals(0, uploadStats.getOngoingCount());
+    Assert.assertEquals(1, uploadStats.getSuccessCount());
 
     HttpArtifactCacheEvent.Started startedEventTwo =
         HttpArtifactCacheEvent.newStoreStartedEvent(scheduledEventTwo);
     HttpArtifactCacheEvent.Started startedEventThree =
         HttpArtifactCacheEvent.newStoreStartedEvent(scheduledEventThree);
-    uploadStats.processHttpArtifactCacheStartedEvent(startedEventTwo);
-    uploadStats.processHttpArtifactCacheStartedEvent(startedEventThree);
-    Assert.assertEquals(3, uploadStats.getHttpArtifactTotalUploadsScheduledCount());
-    Assert.assertEquals(2, uploadStats.getHttpArtifactUploadsOngoingCount());
-    Assert.assertEquals(1, uploadStats.getHttpArtifactUploadsSuccessCount());
+    uploadStats.processStartedEvent(startedEventTwo);
+    uploadStats.processStartedEvent(startedEventThree);
+    Assert.assertEquals(3, uploadStats.getScheduledCount());
+    Assert.assertEquals(2, uploadStats.getOngoingCount());
+    Assert.assertEquals(1, uploadStats.getSuccessCount());
 
     HttpArtifactCacheEvent.Finished finishedEventTwo =
         createFinishedEvent(startedEventTwo, true, ARTIFACT_TWO_BYTES);
     HttpArtifactCacheEvent.Finished finishedEventThree =
         createFinishedEvent(startedEventThree, false, 0);
-    uploadStats.processHttpArtifactCacheFinishedEvent(finishedEventTwo);
-    uploadStats.processHttpArtifactCacheFinishedEvent(finishedEventThree);
-    Assert.assertEquals(3, uploadStats.getHttpArtifactTotalUploadsScheduledCount());
-    Assert.assertEquals(0, uploadStats.getHttpArtifactUploadsOngoingCount());
-    Assert.assertEquals(2, uploadStats.getHttpArtifactUploadsSuccessCount());
-    Assert.assertEquals(1, uploadStats.getHttpArtifactUploadsFailureCount());
-    Assert.assertEquals(
-        ARTIFACT_ONE_AND_TWO_TOTAL_BYTES, uploadStats.getHttpArtifactTotalBytesUploaded());
+    uploadStats.processFinishedEvent(finishedEventTwo);
+    uploadStats.processFinishedEvent(finishedEventThree);
+    Assert.assertEquals(3, uploadStats.getScheduledCount());
+    Assert.assertEquals(0, uploadStats.getOngoingCount());
+    Assert.assertEquals(2, uploadStats.getSuccessCount());
+    Assert.assertEquals(1, uploadStats.getFailureCount());
+    Assert.assertEquals(ARTIFACT_ONE_AND_TWO_TOTAL_BYTES, uploadStats.getBytesUploaded());
   }
 
   private static HttpArtifactCacheEvent.Finished createFinishedEvent(

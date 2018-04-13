@@ -2,7 +2,7 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
 CACHE_STATS_SRCS = [
     "CacheRateStatsKeeper.java",
-    "HttpCacheUploadStats.java",
+    "RemoteCacheUploadStats.java",
 ]
 
 java_library(
