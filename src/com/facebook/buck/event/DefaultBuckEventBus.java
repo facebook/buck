@@ -28,9 +28,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
 /** Thin wrapper around guava event bus. */
@@ -51,7 +49,8 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
   private final int shutdownTimeoutMillis;
 
   // synchronization variables to ensure proper shutdown
-  private final Phaser activeTask;
+  private volatile int activeTasks = 0;
+  private final Object lock = new Object();
 
   public DefaultBuckEventBus(Clock clock, BuildId buildId) {
     this(clock, true, buildId, DEFAULT_SHUTDOWN_TIMEOUT_MS);
@@ -70,19 +69,25 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
     this.threadIdSupplier = DEFAULT_THREAD_ID_SUPPLIER;
     this.buildId = buildId;
     this.shutdownTimeoutMillis = shutdownTimeoutMillis;
-    this.activeTask = new Phaser(1);
   }
 
   private void dispatch(BuckEvent event) {
     // keep track the number of active tasks so we can do proper shutdown
-    activeTask.register();
+    synchronized (lock) {
+      activeTasks++;
+    }
 
     executorService.submit(
         () -> {
           try {
             eventBus.post(event);
           } finally {
-            activeTask.arriveAndDeregister();
+            // event bus should not throw but just in case wrap with try-finally
+            synchronized (lock) {
+              activeTasks--;
+              // notify about task completion; shutdown may wait for it
+              lock.notifyAll();
+            }
           }
         });
   }
@@ -175,17 +180,26 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
 
   @Override
   public boolean waitEvents(long timeout) {
-    try {
-      activeTask.awaitAdvanceInterruptibly(activeTask.arrive(), timeout, TimeUnit.MILLISECONDS);
-    } catch (InterruptedException e) {
-      Threads.interruptCurrentThread();
-      // 1 unarrived party means only the main driver is remaining, which means we did shutdown
-      // properly.
-      return activeTask.getUnarrivedParties() == 1;
-    } catch (TimeoutException e) {
-      return false;
-    }
+    long startWaitTime = System.nanoTime();
+    synchronized (lock) {
+      while (activeTasks > 0) {
 
+        long waitTime = 0;
+        if (timeout > 0) {
+          waitTime = timeout - TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startWaitTime);
+          if (waitTime <= 0) {
+            return false;
+          }
+        }
+
+        try {
+          lock.wait(waitTime);
+        } catch (InterruptedException e) {
+          Threads.interruptCurrentThread();
+          return activeTasks == 0;
+        }
+      }
+    }
     return true;
   }
 
