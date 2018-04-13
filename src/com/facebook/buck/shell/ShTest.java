@@ -24,7 +24,6 @@ import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
@@ -61,11 +60,7 @@ import java.util.stream.Stream;
  */
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements TestRule,
-        HasRuntimeDeps,
-        ExternalTestRunnerRule,
-        BinaryBuildRule,
-        CacheableBuildRule {
+    implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule, BinaryBuildRule {
 
   private final ImmutableList<Arg> args;
   private final ImmutableMap<String, Arg> env;

@@ -52,6 +52,11 @@ public class ZipFileDescription
         args.getMergeSourceZips());
   }
 
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractZipFileDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs {

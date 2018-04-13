@@ -24,7 +24,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
@@ -39,7 +38,7 @@ import java.nio.file.Path;
 import java.util.SortedSet;
 
 /** Write a constant to a file. */
-public class WriteFile extends AbstractBuildRule implements CacheableBuildRule {
+public class WriteFile extends AbstractBuildRule {
 
   @AddToRuleKey private final byte[] fileContents;
 

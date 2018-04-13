@@ -24,7 +24,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
@@ -107,7 +106,7 @@ import javax.annotation.Nullable;
  * }</pre>
  */
 public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
-    implements CacheableBuildRule, SupportsInputBasedRuleKey {
+    implements SupportsInputBasedRuleKey {
   private final OutputPathResolver outputPathResolver;
 
   private final Supplier<ImmutableSortedSet<BuildRule>> deps;

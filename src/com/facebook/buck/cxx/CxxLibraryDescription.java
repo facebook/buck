@@ -288,6 +288,11 @@ public class CxxLibraryDescription
         argDefaultFlavors, Description.getBuildRuleType(this));
   }
 
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
+
   /**
    * This is a hack to allow fine grained control over how the transitive {@code
    * CxxPreprocessorInput}s are found. Since not all {@code Description}s which use {@code

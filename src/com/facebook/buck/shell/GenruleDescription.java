@@ -113,6 +113,11 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
     }
   }
 
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {

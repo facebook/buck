@@ -34,7 +34,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
@@ -68,8 +67,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         InitializableFromDisk<JavaLibrary.Data>,
         JavaLibrary,
         MaybeRequiredForSourceOnlyAbi,
-        SupportsInputBasedRuleKey,
-        CacheableBuildRule {
+        SupportsInputBasedRuleKey {
 
   @AddToRuleKey private final SourcePath binaryJar;
   private final JarContentsSupplier binaryJarContentsSupplier;

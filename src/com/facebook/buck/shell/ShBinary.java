@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
@@ -53,7 +52,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements BinaryBuildRule, HasRuntimeDeps, CacheableBuildRule {
+    implements BinaryBuildRule, HasRuntimeDeps {
 
   private static final Path TEMPLATE =
       Paths.get(

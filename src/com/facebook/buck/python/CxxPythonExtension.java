@@ -24,14 +24,13 @@ import com.facebook.buck.python.toolchain.PythonPlatform;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.google.common.annotations.VisibleForTesting;
 import java.nio.file.Path;
 
 public abstract class CxxPythonExtension extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements PythonPackagable, HasRuntimeDeps, CacheableBuildRule {
+    implements PythonPackagable, HasRuntimeDeps {
 
   public CxxPythonExtension(
       BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {

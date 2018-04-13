@@ -111,6 +111,11 @@ public class ExportFileDescription
     return inputs.build();
   }
 
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
+
   /** Controls how `export_file` exports it's wrapped source. */
   public enum Mode {
 

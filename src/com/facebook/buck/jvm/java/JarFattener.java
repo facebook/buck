@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -60,7 +59,7 @@ import javax.xml.bind.JAXBException;
 
 /** Build a fat JAR that packages an inner JAR along with any required native libraries. */
 public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements BinaryBuildRule, CacheableBuildRule {
+    implements BinaryBuildRule {
 
   private static final String FAT_JAR_INNER_JAR = "inner.jar";
   private static final String FAT_JAR_NATIVE_LIBRARY_RESOURCE_ROOT = "nativelibs";

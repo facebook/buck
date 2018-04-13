@@ -57,6 +57,11 @@ public class CxxPrecompiledHeaderDescription
         pathResolver.getAbsolutePath(args.getSrc()));
   }
 
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractCxxPrecompiledHeaderDescriptionArg

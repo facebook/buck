@@ -31,7 +31,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
@@ -341,9 +340,13 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
     };
   }
 
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
+
   public abstract static class CustomPrebuiltCxxLibrary
-      extends NoopBuildRuleWithDeclaredAndExtraDeps
-      implements AbstractCxxLibrary, CacheableBuildRule {
+      extends NoopBuildRuleWithDeclaredAndExtraDeps implements AbstractCxxLibrary {
 
     public CustomPrebuiltCxxLibrary(
         BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {

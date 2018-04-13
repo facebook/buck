@@ -135,11 +135,12 @@ public class ActionGraphNodeCache {
   }
 
   private void offerForCaching(TargetNode<?, ?> targetNode, BuildRule buildRule) {
-    // Incremental caching is only supported for build rules known to be safe. This is because we
-    // cannot generally guarantee that build rules won't do crazy things that violate our
-    // assumptions during their construction. We further require that our children are also
+    // Incremental caching is only supported for {@link Description}s known to be safe. This is
+    // because we cannot generally guarantee that descriptions won't do crazy things that violate
+    // our assumptions during their construction. We further require that our children are also
     // cached to disallow caching nodes with uncacheable descendants.
-    if (!(buildRule instanceof CacheableBuildRule) || !areDirectTargetGraphDepsCached(targetNode)) {
+    if (!targetNode.getDescription().producesCacheableSubgraph()
+        || !areDirectTargetGraphDepsCached(targetNode)) {
       if (LOG.isVerboseEnabled()) {
         LOG.verbose(
             "not caching target %s of type %s",
@@ -209,10 +210,7 @@ public class ActionGraphNodeCache {
       return deps;
     }
 
-    Preconditions.checkState(buildRule instanceof CacheableBuildRule);
-    deps =
-        SortedSets.union(
-            buildRule.getBuildDeps(), ((CacheableBuildRule) buildRule).getImplicitDepsForCaching());
+    deps = SortedSets.union(buildRule.getBuildDeps(), buildRule.getImplicitDepsForCaching());
 
     // Include target graph "only" deps too. There are cases where an uncached build rule may depend
     // on a cached build rule's target graph only deps existing in the {@see BuildRuleResolver}
@@ -359,21 +357,10 @@ public class ActionGraphNodeCache {
       return;
     }
 
-    ((CacheableBuildRule) buildRule)
-        .updateBuildRuleResolver(ruleResolver, ruleFinder, pathResolver);
+    buildRule.updateBuildRuleResolver(ruleResolver, ruleFinder, pathResolver);
     visited.add(buildRule);
 
     for (BuildRule dep : getDeps(buildRule)) {
-      // Take this opportunity to ensure that the transitive deps of any cacheable build rule are
-      // themselves cacheable. Note that the situation in which a cacheable build rule has a non
-      // cacheable build rule in its subgraph due to a direct target graph dep is not possible here,
-      // as we would have removed the entire parent chain from the cache during invalidation.
-      Preconditions.checkState(
-          dep instanceof CacheableBuildRule,
-          "build rule type %s is marked as cacheable, expected dep %s to also be marked",
-          buildRule.getType(),
-          dep.getType());
-
       updateRuleResolvers(dep, ruleResolver, ruleFinder, pathResolver, visited);
     }
   }
@@ -389,10 +376,5 @@ public class ActionGraphNodeCache {
       lastRuleResolver.invalidate();
       lastRuleResolver = null;
     }
-    // TODO(jtorkkola): It'd be better to check that all deps of cacheable rules are themselves
-    //                  cacheable here during the first action graph construction, so we could error
-    //                  out as early as possible if a developer makes a build rule change without
-    //                  proper use of {@see CacheableBuildRule}. Unfortunately, computing all deps
-    //                  on the first iteration would slow down the first action graph construction.
   }
 }

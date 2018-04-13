@@ -32,7 +32,6 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
@@ -70,11 +69,7 @@ import java.util.stream.Stream;
  * interfaces to make it consumable by C/C++ preprocessing and native linkable rules.
  */
 public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements AbstractCxxLibrary,
-        HasRuntimeDeps,
-        NativeTestable,
-        NativeLinkTarget,
-        CacheableBuildRule {
+    implements AbstractCxxLibrary, HasRuntimeDeps, NativeTestable, NativeLinkTarget {
 
   private Set<BuildRule> implicitDepsForCaching = Sets.newConcurrentHashSet();
 

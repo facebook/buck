@@ -36,7 +36,6 @@ import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
@@ -172,7 +171,7 @@ public class PythonTestDescription
                 .orElse(cxxPlatformsProvider.getDefaultCxxPlatform()));
   }
 
-  private static class PythonTestMainRule extends AbstractBuildRule implements CacheableBuildRule {
+  private static class PythonTestMainRule extends AbstractBuildRule {
     private final Path output =
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/__test_main__.py");
 
@@ -437,6 +436,11 @@ public class PythonTestDescription
       Optionals.addIfPresent(pythonBuckConfig.getPexTarget(), extraDepsBuilder);
       Optionals.addIfPresent(pythonBuckConfig.getPexExecutorTarget(), extraDepsBuilder);
     }
+  }
+
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
   }
 
   @BuckStyleImmutable

@@ -94,6 +94,11 @@ public class RemoteFileDescription implements Description<RemoteFileDescriptionA
         type);
   }
 
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractRemoteFileDescriptionArg extends CommonDescriptionArg {

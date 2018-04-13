@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -61,7 +60,7 @@ import java.util.stream.Stream;
 
 /** A no-op {@link BuildRule} which houses the logic to run and form the results for C/C++ tests. */
 abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements TestRule, HasRuntimeDeps, BinaryBuildRule, CacheableBuildRule {
+    implements TestRule, HasRuntimeDeps, BinaryBuildRule {
 
   @AddToRuleKey private final ImmutableMap<String, Arg> env;
   @AddToRuleKey private final Supplier<ImmutableList<Arg>> args;

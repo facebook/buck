@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
@@ -46,7 +45,7 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 public class PrebuiltPythonLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements PythonPackagable, CacheableBuildRule {
+    implements PythonPackagable {
 
   @AddToRuleKey private final SourcePath binarySrc;
   private final Path extractedOutput;

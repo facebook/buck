@@ -22,7 +22,9 @@ import com.facebook.buck.core.rules.provider.MissingProviderException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Objects;
+import java.util.SortedSet;
 
 /**
  * Abstract implementation of a {@link BuildRule} that can be cached and is implemented using {@link
@@ -43,6 +45,17 @@ public abstract class AbstractBuildRuleWithProviders implements BuildRule {
         providers.getDefaultProvider().getTypeClass().equals(getClass()),
         "DefaultBuildRuleInfoProvider should have getTypeClass() equal to type of the BuildRule");
   }
+
+  @Override
+  public SortedSet<BuildRule> getImplicitDepsForCaching() {
+    return ImmutableSortedSet.of();
+  }
+
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {}
 
   @Override
   public final boolean equals(Object obj) {

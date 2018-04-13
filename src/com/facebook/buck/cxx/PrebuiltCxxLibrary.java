@@ -22,14 +22,13 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 public abstract class PrebuiltCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements AbstractCxxLibrary, CanProvideNativeLinkTarget, CacheableBuildRule {
+    implements AbstractCxxLibrary, CanProvideNativeLinkTarget {
 
   PrebuiltCxxLibrary(
       BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {

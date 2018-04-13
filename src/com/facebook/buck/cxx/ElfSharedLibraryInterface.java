@@ -30,7 +30,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableSupport;
-import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -53,7 +52,7 @@ import java.util.Optional;
 
 /** Build a shared library interface from an ELF shared library. */
 abstract class ElfSharedLibraryInterface extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements SupportsInputBasedRuleKey, CacheableBuildRule {
+    implements SupportsInputBasedRuleKey {
 
   @AddToRuleKey private final Tool objcopy;
 

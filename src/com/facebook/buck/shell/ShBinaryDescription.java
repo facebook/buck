@@ -49,6 +49,11 @@ public class ShBinaryDescription implements Description<ShBinaryDescriptionArg> 
         args.getResources());
   }
 
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractShBinaryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {

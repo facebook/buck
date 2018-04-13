@@ -390,6 +390,11 @@ public class CxxTestDescription
         buildTarget, resolver, args.getDeps(), metadataClass);
   }
 
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
+
   private CxxPlatformsProvider getCxxPlatformsProvider() {
     return toolchainProvider.getByName(
         CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);

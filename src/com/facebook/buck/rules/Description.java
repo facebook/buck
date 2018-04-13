@@ -78,4 +78,12 @@ public interface Description<T> {
    */
   BuildRule createBuildRule(
       BuildRuleCreationContext context, BuildTarget buildTarget, BuildRuleParams params, T args);
+
+  /**
+   * Whether or not the build rule subgraph produced by this {@code Description} is safe to cache in
+   * {@link ActionGraphNodeCache} for incremental action graph generation.
+   */
+  default boolean producesCacheableSubgraph() {
+    return false;
+  }
 }

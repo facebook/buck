@@ -587,6 +587,11 @@ public class CxxPythonExtensionDescription
     }
   }
 
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
+
   private FlavorDomain<PythonPlatform> getPythonPlatforms() {
     return toolchainProvider
         .getByName(PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.class)

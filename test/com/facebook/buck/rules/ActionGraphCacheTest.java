@@ -37,7 +37,6 @@ import com.facebook.buck.event.ExperimentEvent;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.FakeTargetNodeBuilder.FakeDescription;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
@@ -541,25 +540,12 @@ public class ActionGraphCacheTest {
   }
 
   private TargetNode<?, ?> createCacheableTargetNode(String name, TargetNode<?, ?>... deps) {
-    FakeTargetNodeBuilder targetNodeBuilder =
-        FakeTargetNodeBuilder.newBuilder(
-            new FakeDescription() {
-              @Override
-              public BuildRule createBuildRule(
-                  BuildRuleCreationContext context,
-                  BuildTarget buildTarget,
-                  BuildRuleParams params,
-                  FakeTargetNodeArg args) {
-                return new FakeCacheableBuildRule(
-                    buildTarget, context.getProjectFilesystem(), params);
-              }
-            },
-            BuildTargetFactory.newInstance("//foo:" + name));
-
-    for (TargetNode<?, ?> dep : deps) {
-      targetNodeBuilder.getArgForPopulating().addDeps(dep.getBuildTarget());
-    }
-    return targetNodeBuilder.build();
+    TargetNode<?, ?> node =
+        FakeTargetNodeBuilder.newBuilder(BuildTargetFactory.newInstance("//foo:" + name))
+            .setDeps(deps)
+            .setProducesCacheableSubgraph(true)
+            .build();
+    return node;
   }
 
   private TargetNode<?, ?> createTargetNode(String name, TargetNode<?, ?>... deps) {

@@ -22,14 +22,12 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.shell.Genrule;
 
 /** Genrule with C++ aware macros. */
-public class CxxGenrule extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements HasOutputName, CacheableBuildRule {
+public class CxxGenrule extends NoopBuildRuleWithDeclaredAndExtraDeps implements HasOutputName {
 
   private final String output;
 

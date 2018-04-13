@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableSupport;
-import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.HasSupplementaryOutputs;
@@ -51,8 +50,7 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         HasRuntimeDeps,
         HasAppleDebugSymbolDeps,
         SupportsInputBasedRuleKey,
-        HasSupplementaryOutputs,
-        CacheableBuildRule {
+        HasSupplementaryOutputs {
 
   private final CxxPlatform cxxPlatform;
   private final BuildRule linkRule;

@@ -16,8 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import static org.junit.Assert.assertNotNull;
-
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableCollection;
@@ -58,8 +56,17 @@ public class FakeTargetNodeBuilder
     return this;
   }
 
+  public FakeTargetNodeBuilder setProducesCacheableSubgraph(boolean value) {
+    description.setProducesCacheableSubgraph(value);
+    return this;
+  }
+
   public static FakeTargetNodeBuilder newBuilder(FakeDescription description, BuildTarget target) {
     return new FakeTargetNodeBuilder(description, target);
+  }
+
+  public static FakeTargetNodeBuilder newBuilder(BuildTarget target) {
+    return new FakeTargetNodeBuilder(new FakeDescription(), target);
   }
 
   public static FakeTargetNodeBuilder newBuilder(BuildRule rule) {
@@ -80,9 +87,10 @@ public class FakeTargetNodeBuilder
     private final BuildRule rule;
     private Set<BuildTarget> extraDeps;
     private Set<BuildTarget> targetGraphOnlyDeps;
+    private boolean producesCacheableSubgraph = true;
 
     public FakeDescription() {
-      this.rule = null;
+      this(null);
     }
 
     public FakeDescription(BuildRule rule) {
@@ -97,6 +105,10 @@ public class FakeTargetNodeBuilder
       this.targetGraphOnlyDeps = targetGraphOnlyDeps;
     }
 
+    private void setProducesCacheableSubgraph(boolean value) {
+      producesCacheableSubgraph = value;
+    }
+
     @Override
     public Class<FakeTargetNodeArg> getConstructorArgType() {
       return FakeTargetNodeArg.class;
@@ -108,8 +120,8 @@ public class FakeTargetNodeBuilder
         BuildTarget buildTarget,
         BuildRuleParams params,
         FakeTargetNodeArg args) {
-      assertNotNull(rule);
-      return rule;
+      if (rule != null) return rule;
+      return new FakeBuildRule(buildTarget, context.getProjectFilesystem(), params);
     }
 
     @Override
@@ -125,6 +137,11 @@ public class FakeTargetNodeBuilder
       if (targetGraphOnlyDeps != null) {
         targetGraphOnlyDepsBuilder.addAll(targetGraphOnlyDeps);
       }
+    }
+
+    @Override
+    public boolean producesCacheableSubgraph() {
+      return producesCacheableSubgraph;
     }
   }
 }

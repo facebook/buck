@@ -26,7 +26,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -83,7 +82,7 @@ import java.util.function.Predicate;
  * used to compile another file.
  */
 class CxxPrecompiledHeader extends AbstractBuildRule
-    implements SupportsDependencyFileRuleKey, SupportsInputBasedRuleKey, CacheableBuildRule {
+    implements SupportsDependencyFileRuleKey, SupportsInputBasedRuleKey {
 
   private final ImmutableSortedSet<BuildRule> buildDeps;
 

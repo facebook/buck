@@ -374,6 +374,11 @@ public class PythonBinaryDescription
     }
   }
 
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractPythonBinaryDescriptionArg

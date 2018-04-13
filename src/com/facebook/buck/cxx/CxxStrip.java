@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -46,8 +45,7 @@ import java.util.SortedSet;
  * Controls how strip tool is invoked. To have better understanding please refer to `man strip`. If
  * you don't want stripping, you should depend on CxxLink directly.
  */
-public class CxxStrip extends AbstractBuildRule
-    implements SupportsInputBasedRuleKey, CacheableBuildRule {
+public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRuleKey {
 
   /**
    * Used to identify this rule in the graph. This should be appended ONLY to build target that is

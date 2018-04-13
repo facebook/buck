@@ -24,12 +24,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.FakeTargetNodeBuilder.FakeDescription;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.RichStream;
-import com.google.common.collect.ImmutableSortedSet;
-import java.util.SortedSet;
-import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -186,11 +183,31 @@ public class ActionGraphNodeCacheTest {
 
   @Test
   public void buildRuleSubtreeForCachedTargetAddedToResolver() {
-    FakeCacheableBuildRule buildRuleDep1 = new FakeCacheableBuildRule("test1#flav1");
-    FakeCacheableBuildRule buildRuleDep2 = new FakeCacheableBuildRule("test1#flav2");
-    FakeCacheableBuildRule buildRule =
-        new FakeCacheableBuildRule("test1", buildRuleDep1, buildRuleDep2);
-    TargetNode<?, ?> node = createTargetNode(buildRule);
+    BuildTarget parentTarget = BuildTargetFactory.newInstance("//:test");
+    BuildTarget childTarget1 = parentTarget.withFlavors(InternalFlavor.of("flav1"));
+    BuildTarget childTarget2 = parentTarget.withFlavors(InternalFlavor.of("flav2"));
+    TargetNode<?, ?> node =
+        FakeTargetNodeBuilder.newBuilder(
+                new FakeDescription() {
+                  @Override
+                  public BuildRule createBuildRule(
+                      BuildRuleCreationContext context,
+                      BuildTarget buildTarget,
+                      BuildRuleParams params,
+                      FakeTargetNodeArg args) {
+                    BuildRule child1 =
+                        context
+                            .getBuildRuleResolver()
+                            .computeIfAbsent(childTarget1, target -> new FakeBuildRule(target));
+                    BuildRule child2 =
+                        context
+                            .getBuildRuleResolver()
+                            .computeIfAbsent(childTarget2, target -> new FakeBuildRule(target));
+                    return new FakeBuildRule(parentTarget, child1, child2);
+                  }
+                },
+                parentTarget)
+            .build();
     setUpTargetGraphAndResolver(node);
 
     cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
@@ -202,9 +219,9 @@ public class ActionGraphNodeCacheTest {
     cache.requireRule(node);
     cache.finishTargetGraphWalk();
 
-    assertTrue(newRuleResolver.getRuleOptional(buildRule.getBuildTarget()).isPresent());
-    assertTrue(newRuleResolver.getRuleOptional(buildRuleDep1.getBuildTarget()).isPresent());
-    assertTrue(newRuleResolver.getRuleOptional(buildRuleDep2.getBuildTarget()).isPresent());
+    assertTrue(newRuleResolver.getRuleOptional(parentTarget).isPresent());
+    assertTrue(newRuleResolver.getRuleOptional(childTarget1).isPresent());
+    assertTrue(newRuleResolver.getRuleOptional(childTarget2).isPresent());
   }
 
   @Test
@@ -339,67 +356,127 @@ public class ActionGraphNodeCacheTest {
 
   @Test
   public void cachedNodeUsesLastRuleResolverForRuntimeDeps() {
-    FakeCacheableBuildRule childBuildRule = new FakeCacheableBuildRule("test#child");
-    SortedSet<BuildTarget> runtimeDeps = ImmutableSortedSet.of(childBuildRule.getBuildTarget());
-    FakeCacheableBuildRule parentBuildRule = new FakeCacheableBuildRule("test", runtimeDeps);
-    TargetNode<?, ?> originalNode = createTargetNode(parentBuildRule);
-    setUpTargetGraphAndResolver(originalNode);
+    BuildTarget parentTarget = BuildTargetFactory.newInstance("//:test");
+    BuildTarget childTarget = parentTarget.withFlavors(InternalFlavor.of("child"));
+    TargetNode<?, ?> node =
+        FakeTargetNodeBuilder.newBuilder(
+                new FakeDescription() {
+                  @Override
+                  public BuildRule createBuildRule(
+                      BuildRuleCreationContext context,
+                      BuildTarget buildTarget,
+                      BuildRuleParams params,
+                      FakeTargetNodeArg args) {
+                    BuildRule child =
+                        ruleResolver.computeIfAbsent(
+                            childTarget, target -> new FakeBuildRule(target));
+                    FakeBuildRule parent = new FakeBuildRule(parentTarget);
+                    parent.setRuntimeDeps(child);
+                    return parent;
+                  }
+                },
+                parentTarget)
+            .build();
+    setUpTargetGraphAndResolver(node);
 
     cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
-    ruleResolver.addToIndex(childBuildRule);
-    cache.requireRule(originalNode);
+    BuildRule originalParentBuildRule = cache.requireRule(node);
+    BuildRule originalChildBuildRule = ruleResolver.getRule(childTarget);
     cache.finishTargetGraphWalk();
 
-    FakeCacheableBuildRule newParentBuildRule = new FakeCacheableBuildRule("test", runtimeDeps);
-    TargetNode<?, ?> newNode = createTargetNode(newParentBuildRule);
-    setUpTargetGraphAndResolver(newNode);
-
-    cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
-    cache.requireRule(newNode);
-    cache.finishTargetGraphWalk();
-
-    assertTrue(ruleResolver.getRuleOptional(newNode.getBuildTarget()).isPresent());
-    assertSame(parentBuildRule, ruleResolver.getRule(originalNode.getBuildTarget()));
-
-    assertTrue(ruleResolver.getRuleOptional(childBuildRule.getBuildTarget()).isPresent());
-    assertSame(childBuildRule, ruleResolver.getRule(childBuildRule.getBuildTarget()));
-  }
-
-  @Test
-  public void ruleResolversUpdatedForCachedNodeSubtreeLoadedFromCache() {
-    FakeCacheableBuildRule buildRuleDep1 = new FakeCacheableBuildRule("test1#flav1");
-    FakeCacheableBuildRule buildRuleDep2 = new FakeCacheableBuildRule("test1#flav2");
-    FakeCacheableBuildRule buildRule =
-        new FakeCacheableBuildRule("test1", buildRuleDep1, buildRuleDep2);
-    TargetNode<?, ?> node = createTargetNode(buildRule);
     setUpTargetGraphAndResolver(node);
 
     cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
     cache.requireRule(node);
     cache.finishTargetGraphWalk();
 
+    assertTrue(ruleResolver.getRuleOptional(parentTarget).isPresent());
+    assertSame(originalParentBuildRule, ruleResolver.getRule(parentTarget));
+
+    assertTrue(ruleResolver.getRuleOptional(childTarget).isPresent());
+    assertSame(originalChildBuildRule, ruleResolver.getRule(childTarget));
+  }
+
+  @Test
+  public void ruleResolversUpdatedForCachedNodeSubtreeLoadedFromCache() {
+    BuildTarget parentTarget = BuildTargetFactory.newInstance("//:test");
+    BuildTarget childTarget1 = parentTarget.withFlavors(InternalFlavor.of("flav1"));
+    BuildTarget childTarget2 = parentTarget.withFlavors(InternalFlavor.of("flav2"));
+    TargetNode<?, ?> node =
+        FakeTargetNodeBuilder.newBuilder(
+                new FakeDescription() {
+                  @Override
+                  public BuildRule createBuildRule(
+                      BuildRuleCreationContext context,
+                      BuildTarget buildTarget,
+                      BuildRuleParams params,
+                      FakeTargetNodeArg args) {
+                    BuildRule child1 =
+                        context
+                            .getBuildRuleResolver()
+                            .computeIfAbsent(childTarget1, target -> new FakeBuildRule(target));
+                    BuildRule child2 =
+                        context
+                            .getBuildRuleResolver()
+                            .computeIfAbsent(childTarget2, target -> new FakeBuildRule(target));
+                    return new FakeBuildRule(parentTarget, child1, child2);
+                  }
+                },
+                parentTarget)
+            .build();
+    setUpTargetGraphAndResolver(node);
+
+    cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
+    FakeBuildRule parentBuildRule = (FakeBuildRule) cache.requireRule(node);
+    FakeBuildRule childBuildRule1 = (FakeBuildRule) ruleResolver.getRule(childTarget1);
+    FakeBuildRule childBuildRule2 = (FakeBuildRule) ruleResolver.getRule(childTarget2);
+    cache.finishTargetGraphWalk();
+
     BuildRuleResolver newRuleResolver = createBuildRuleResolver(targetGraph);
     cache.prepareForTargetGraphWalk(targetGraph, newRuleResolver);
     cache.requireRule(node);
     cache.finishTargetGraphWalk();
 
-    assertSame(newRuleResolver, buildRule.getRuleResolver());
-    assertSame(newRuleResolver, buildRuleDep1.getRuleResolver());
-    assertSame(newRuleResolver, buildRuleDep2.getRuleResolver());
+    assertSame(newRuleResolver, parentBuildRule.getRuleResolver());
+    assertSame(newRuleResolver, childBuildRule1.getRuleResolver());
+    assertSame(newRuleResolver, childBuildRule2.getRuleResolver());
   }
 
   @Test
   public void ruleResolversUpdatedForCachedNodeSubtreeNotLoadedFromCache() {
-    FakeCacheableBuildRule buildRuleDep1 = new FakeCacheableBuildRule("test1#flav1");
-    FakeCacheableBuildRule buildRuleDep2 = new FakeCacheableBuildRule("test1#flav2");
-    FakeCacheableBuildRule buildRule =
-        new FakeCacheableBuildRule("test1", buildRuleDep1, buildRuleDep2);
-    TargetNode<?, ?> node1 = createTargetNode(buildRule);
-    TargetNode<?, ?> node2 = createTargetNode("test2");
+    BuildTarget rootTarget1 = BuildTargetFactory.newInstance("//:test1");
+    BuildTarget childTarget1 = rootTarget1.withFlavors(InternalFlavor.of("child1"));
+    BuildTarget childTarget2 = rootTarget1.withFlavors(InternalFlavor.of("child2"));
+    TargetNode<?, ?> node1 =
+        FakeTargetNodeBuilder.newBuilder(
+                new FakeDescription() {
+                  @Override
+                  public BuildRule createBuildRule(
+                      BuildRuleCreationContext context,
+                      BuildTarget buildTarget,
+                      BuildRuleParams params,
+                      FakeTargetNodeArg args) {
+                    BuildRule child1 =
+                        context
+                            .getBuildRuleResolver()
+                            .computeIfAbsent(childTarget1, target -> new FakeBuildRule(target));
+                    BuildRule child2 =
+                        context
+                            .getBuildRuleResolver()
+                            .computeIfAbsent(childTarget2, target -> new FakeBuildRule(target));
+                    return new FakeBuildRule(rootTarget1, child1, child2);
+                  }
+                },
+                rootTarget1)
+            .build();
+    BuildTarget rootTarget2 = BuildTargetFactory.newInstance("//:test2");
+    TargetNode<?, ?> node2 = FakeTargetNodeBuilder.newBuilder(rootTarget2).build();
     setUpTargetGraphAndResolver(node1, node2);
 
     cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
-    cache.requireRule(node1);
+    FakeBuildRule rootBuildRule1 = (FakeBuildRule) cache.requireRule(node1);
+    FakeBuildRule childBuildRule1 = (FakeBuildRule) ruleResolver.getRule(childTarget1);
+    FakeBuildRule childBuildRule2 = (FakeBuildRule) ruleResolver.getRule(childTarget2);
     cache.requireRule(node2);
     cache.finishTargetGraphWalk();
 
@@ -408,9 +485,9 @@ public class ActionGraphNodeCacheTest {
     cache.requireRule(node2);
     cache.finishTargetGraphWalk();
 
-    assertSame(newRuleResolver, buildRule.getRuleResolver());
-    assertSame(newRuleResolver, buildRuleDep1.getRuleResolver());
-    assertSame(newRuleResolver, buildRuleDep2.getRuleResolver());
+    assertSame(newRuleResolver, rootBuildRule1.getRuleResolver());
+    assertSame(newRuleResolver, childBuildRule1.getRuleResolver());
+    assertSame(newRuleResolver, childBuildRule2.getRuleResolver());
   }
 
   @Test
@@ -436,18 +513,36 @@ public class ActionGraphNodeCacheTest {
 
   @Test
   public void runtimeDepsForOldCachedNodeLoadedFromCache() {
-    FakeCacheableBuildRule childBuildRule = new FakeCacheableBuildRule("test#child");
-    SortedSet<BuildTarget> runtimeDeps = ImmutableSortedSet.of(childBuildRule.getBuildTarget());
-    FakeCacheableBuildRule parentBuildRule = new FakeCacheableBuildRule("test", runtimeDeps);
-    TargetNode<?, ?> node1 = createTargetNode(parentBuildRule);
+    BuildTarget parentTarget = BuildTargetFactory.newInstance("//:test1");
+    BuildTarget childTarget = parentTarget.withFlavors(InternalFlavor.of("child"));
+    TargetNode<?, ?> node1 =
+        FakeTargetNodeBuilder.newBuilder(
+                new FakeDescription() {
+                  @Override
+                  public BuildRule createBuildRule(
+                      BuildRuleCreationContext context,
+                      BuildTarget buildTarget,
+                      BuildRuleParams params,
+                      FakeTargetNodeArg args) {
+                    BuildRule child =
+                        ruleResolver.computeIfAbsent(
+                            childTarget, target -> new FakeBuildRule(target));
+                    FakeBuildRule parent = new FakeBuildRule(parentTarget);
+                    parent.setRuntimeDeps(child);
+                    return parent;
+                  }
+                },
+                parentTarget)
+            .build();
     setUpTargetGraphAndResolver(node1);
 
     cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
     cache.requireRule(node1);
-    ruleResolver.addToIndex(childBuildRule);
+    FakeBuildRule childBuildRule = (FakeBuildRule) ruleResolver.getRule(childTarget);
     cache.finishTargetGraphWalk();
 
-    TargetNode<?, ?> node2 = createTargetNode("test2");
+    BuildTarget newTarget = BuildTargetFactory.newInstance("//:test2");
+    TargetNode<?, ?> node2 = FakeTargetNodeBuilder.newBuilder(newTarget).build();
     setUpTargetGraphAndResolver(node2);
 
     cache.prepareForTargetGraphWalk(targetGraph, ruleResolver);
@@ -465,18 +560,7 @@ public class ActionGraphNodeCacheTest {
 
   private FakeTargetNodeBuilder createTargetNodeBuilder(String name) {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//test:" + name);
-    return FakeTargetNodeBuilder.newBuilder(
-        new FakeDescription() {
-          @Override
-          public BuildRule createBuildRule(
-              BuildRuleCreationContext context,
-              BuildTarget buildTarget,
-              BuildRuleParams params,
-              FakeTargetNodeArg args) {
-            return new FakeCacheableBuildRule(buildTarget, context.getProjectFilesystem(), params);
-          }
-        },
-        buildTarget);
+    return FakeTargetNodeBuilder.newBuilder(new FakeDescription(), buildTarget);
   }
 
   private TargetNode<?, ?> createTargetNode(String name, TargetNode<?, ?>... deps) {
@@ -484,27 +568,15 @@ public class ActionGraphNodeCacheTest {
   }
 
   private TargetNode<?, ?> createTargetNode(String name, String label, TargetNode<?, ?>... deps) {
-    return createTargetNode(
-        name,
-        label,
-        new FakeDescription() {
-          @Override
-          public BuildRule createBuildRule(
-              BuildRuleCreationContext context,
-              BuildTarget buildTarget,
-              BuildRuleParams params,
-              FakeTargetNodeArg args) {
-            return new FakeCacheableBuildRule(buildTarget, context.getProjectFilesystem(), params);
-          }
-        },
-        deps);
+    return createTargetNode(name, label, new FakeDescription(), deps);
   }
 
   private TargetNode<?, ?> createTargetNode(
       String name, String label, FakeDescription description, TargetNode<?, ?>... deps) {
     FakeTargetNodeBuilder targetNodeBuilder =
         FakeTargetNodeBuilder.newBuilder(
-            description, BuildTargetFactory.newInstance("//test:" + name));
+                description, BuildTargetFactory.newInstance("//test:" + name))
+            .setProducesCacheableSubgraph(true);
 
     for (TargetNode<?, ?> dep : deps) {
       targetNodeBuilder.getArgForPopulating().addDeps(dep.getBuildTarget());
@@ -515,31 +587,10 @@ public class ActionGraphNodeCacheTest {
     return targetNodeBuilder.build();
   }
 
-  private TargetNode<?, ?> createTargetNode(BuildRule buildRule, TargetNode<?, ?>... deps) {
-    FakeTargetNodeBuilder builder = FakeTargetNodeBuilder.newBuilder(buildRule);
-    builder
-        .getArgForPopulating()
-        .setDeps(RichStream.from(deps).map(t -> t.getBuildTarget()).collect(Collectors.toList()));
-    return builder.build();
-  }
-
   private TargetNode<?, ?> createUncacheableTargetNode(String target) {
-    return createTargetNode(
-        target,
-        null,
-        new FakeDescription() {
-          @Override
-          public BuildRule createBuildRule(
-              BuildRuleCreationContext context,
-              BuildTarget buildTarget,
-              BuildRuleParams params,
-              FakeTargetNodeArg args) {
-            BuildRule buildRule =
-                new FakeBuildRule(buildTarget, context.getProjectFilesystem(), params);
-            assertFalse(buildRule instanceof CacheableBuildRule);
-            return buildRule;
-          }
-        });
+    return FakeTargetNodeBuilder.newBuilder(BuildTargetFactory.newInstance("//test:" + target))
+        .setProducesCacheableSubgraph(false)
+        .build();
   }
 
   private void setUpTargetGraphAndResolver(TargetNode<?, ?>... nodes) {

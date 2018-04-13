@@ -167,6 +167,11 @@ public class CxxBinaryDescription
         argDefaultFlavors, Description.getBuildRuleType(this));
   }
 
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
+
   private CxxPlatformsProvider getCxxPlatformsProvider() {
     return toolchainProvider.getByName(
         CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);

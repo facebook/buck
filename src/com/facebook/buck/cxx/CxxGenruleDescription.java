@@ -317,6 +317,11 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
   }
 
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
+
   private FlavorDomain<CxxPlatform> getCxxPlatforms() {
     return toolchainProvider
         .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)

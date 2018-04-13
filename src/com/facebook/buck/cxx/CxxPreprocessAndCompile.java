@@ -29,7 +29,6 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -56,7 +55,7 @@ import java.util.function.Predicate;
 
 /** A build rule which preprocesses and/or compiles a C/C++ source in a single step. */
 public class CxxPreprocessAndCompile extends AbstractBuildRule
-    implements SupportsInputBasedRuleKey, SupportsDependencyFileRuleKey, CacheableBuildRule {
+    implements SupportsInputBasedRuleKey, SupportsDependencyFileRuleKey {
 
   private final ImmutableSortedSet<BuildRule> buildDeps;
 

@@ -54,7 +54,7 @@ import java.util.stream.Stream;
 
 /** Creates a tree of symlinks inside of a given directory */
 public class SymlinkTree extends AbstractBuildRule
-    implements HasRuntimeDeps, SupportsInputBasedRuleKey, CacheableBuildRule {
+    implements HasRuntimeDeps, SupportsInputBasedRuleKey {
 
   private final String category;
   private final Path root;

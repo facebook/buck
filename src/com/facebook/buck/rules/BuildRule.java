@@ -113,6 +113,31 @@ public interface BuildRule extends Comparable<BuildRule> {
   }
 
   /**
+   * Returns any build rule dependencies of this rule for the sake of caching that are not returned
+   * as part of buildDeps or runtimeDeps.
+   *
+   * <p>Most build rules do not need to worry about this, but due to funky action graph construction
+   * scenarios, some build rules do not actually parent nodes that are logically associated with
+   * those build rules. E.g. {@link com.facebook.buck.cxx.CxxLibrary} is a dummy node that does not
+   * directly parent the build rules associated with compiling and linking the library, which
+   * caching needs to be made aware of to avoid unnecessarily recreating the associated build rules.
+   */
+  SortedSet<BuildRule> getImplicitDepsForCaching();
+
+  /**
+   * Updates the build rule resolver and associated objects for this build rule.
+   *
+   * <p>Build rules sometimes hold field references to build rule resolvers. If this build rule is
+   * to be cached, it must update its build rule resolver when a new action graph is constructed to
+   * avoid leaking the entire action graph it was originally associated with.
+   */
+  @SuppressWarnings("unused")
+  void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver);
+
+  /**
    * Whether the BuildRule is implemented with {@link BuildRuleInfoProvider}. This will be removed
    * once all {@link BuildRule} have been converted to using providers
    */

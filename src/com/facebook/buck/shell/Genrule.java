@@ -33,7 +33,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableSupport;
-import com.facebook.buck.rules.CacheableBuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -131,7 +130,7 @@ import java.util.stream.Collectors;
  * <p>Note that the <code>SRCDIR</code> is populated by symlinking the sources.
  */
 public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements HasOutputName, SupportsInputBasedRuleKey, CacheableBuildRule {
+    implements HasOutputName, SupportsInputBasedRuleKey {
 
   /**
    * The order in which elements are specified in the {@code srcs} attribute of a genrule matters.

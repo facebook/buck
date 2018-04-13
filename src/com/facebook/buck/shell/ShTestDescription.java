@@ -115,6 +115,11 @@ public class ShTestDescription implements Description<ShTestDescriptionArg> {
         args.getContacts());
   }
 
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractShTestDescriptionArg

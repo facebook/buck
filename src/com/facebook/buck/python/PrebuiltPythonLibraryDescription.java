@@ -48,6 +48,11 @@ public class PrebuiltPythonLibraryDescription
         args.isExcludeDepsFromMergedLinking());
   }
 
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractPrebuiltPythonLibraryDescriptionArg
