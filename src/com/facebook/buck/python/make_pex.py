@@ -10,11 +10,9 @@ import tempfile
 import optparse
 import zipfile
 
-# Try to detect if we're running from source via the buck repo by
-# looking for the .arcconfig file.  If found, add the appropriate
-# deps to our python path, so we can find the twitter libs and
-# setuptools at runtime.  Also, locate the `pkg_resources` modules
-# via our local setuptools import.
+# This script can be executed either from a pex file or in a standalone mode.
+# A pex file should contain all the necessary dependencies, but in standalone mode
+# these dependencies need to be configured before importing them.
 if not zipfile.is_zipfile(sys.argv[0]):
     buck_root = os.sep.join(__file__.split(os.sep)[:-6])
     sys.path.insert(0, os.path.join(
