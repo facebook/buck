@@ -72,6 +72,7 @@ public class GoBinaryIntegrationTest {
 
   @Test
   public void binaryWithCgo() throws IOException {
+    GoAssumptions.assumeGoVersionAtLeast("1.10.0");
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cgo", tmp);
     workspace.setUp();
 
