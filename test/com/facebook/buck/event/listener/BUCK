@@ -143,7 +143,7 @@ standard_java_test(
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/chrome_trace:chrome_trace",
         "//src/com/facebook/buck/event/external:external_lib",
-        "//src/com/facebook/buck/event/listener:CacheRateStatsKeeper",
+        "//src/com/facebook/buck/event/listener:CacheStats",
         "//src/com/facebook/buck/event/listener:listener",
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/httpserver:httpserver",

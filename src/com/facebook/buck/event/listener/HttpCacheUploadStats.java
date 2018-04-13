@@ -61,6 +61,18 @@ public class HttpCacheUploadStats {
     }
   }
 
+  public void incrementScheduledCount() {
+    httpArtifactTotalUploadsScheduledCount.incrementAndGet();
+  }
+
+  public void incrementSuccessCount() {
+    httpArtifactUploadsSuccessCount.incrementAndGet();
+  }
+
+  public void incrementFailureCount() {
+    httpArtifactUploadsFailureCount.incrementAndGet();
+  }
+
   public long getHttpArtifactTotalBytesUploaded() {
     return httpArtifactTotalBytesUploaded.get();
   }
