@@ -2553,8 +2553,8 @@ cxx_library(
   {param description}
     The maximum number of threads allowed to run the dexing steps with. Since the dexing steps can
     use a lot of memory, it might be useful to set this to a lower value to avoid out-of-memory
-    on systems that have a lot of CPU cores. This parameter is mostly useful when
-    {call buckconfig.threads /} is not specified and the number of threads is obtained based on
+    on systems that have a lot of CPU cores. This parameter is mostly useful 
+    when {call buckconfig.dx_threads /} is not specified and the number of threads is obtained based on
     hardware.
   {/param}
 {/call}
