@@ -29,10 +29,8 @@ import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.cmdline.RepositoryName;
-import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.events.EventKind;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
 import com.google.devtools.build.lib.syntax.BazelLibrary;
 import com.google.devtools.build.lib.syntax.BuildFileAST;
@@ -45,7 +43,6 @@ import com.google.devtools.build.lib.vfs.Path;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.io.IOException;
 import java.util.EnumSet;
-import javax.annotation.Nullable;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -129,42 +126,6 @@ public class GlobTest {
     assertThat(
         assertEvaluate(buildFile).lookup("txts"),
         equalTo(SkylarkList.createImmutable(ImmutableList.of())));
-  }
-
-  @Test
-  public void testGlobBadPathsFailsWithNiceError() throws Exception {
-    FileSystemUtils.createDirectoryAndParents(root.getChild("some_dir"));
-    Path buildFile = root.getChild("BUCK");
-    FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob(['non_existent'])");
-
-    SingleCapturingEventHandler handler = new SingleCapturingEventHandler();
-
-    try (Mutability mutability = Mutability.create("BUCK")) {
-      Pair<Boolean, Environment> result = evaluate(buildFile, mutability, handler);
-      Assert.assertFalse(result.getFirst());
-    }
-
-    Event event = handler.getLastEvent();
-    Location loc = event.getLocation();
-    Assert.assertNotNull(loc);
-
-    Assert.assertEquals(1, loc.getStartLine().intValue());
-    Assert.assertEquals(7, loc.getStartOffset());
-    Assert.assertTrue(event.getMessage().matches("Cannot find .*non_existent"));
-  }
-
-  private class SingleCapturingEventHandler implements EventHandler {
-    @Nullable private Event lastEvent;
-
-    @Override
-    public void handle(Event event) {
-      lastEvent = event;
-    }
-
-    @Nullable
-    public Event getLastEvent() {
-      return lastEvent;
-    }
   }
 
   private Environment assertEvaluate(Path buildFile) throws IOException, InterruptedException {

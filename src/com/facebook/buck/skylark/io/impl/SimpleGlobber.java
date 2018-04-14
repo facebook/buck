@@ -19,17 +19,11 @@ package com.facebook.buck.skylark.io.impl;
 import com.facebook.buck.skylark.io.Globber;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.devtools.build.lib.vfs.Dirent;
-import com.google.devtools.build.lib.vfs.FileStatus;
 import com.google.devtools.build.lib.vfs.Path;
-import com.google.devtools.build.lib.vfs.Symlinks;
 import com.google.devtools.build.lib.vfs.UnixGlob;
-import com.google.devtools.build.lib.vfs.UnixGlob.FilesystemCalls;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A simple implementation of globbing functionality that allows resolving file paths based on
@@ -39,9 +33,6 @@ import java.util.concurrent.atomic.AtomicReference;
  * <p>Since this is a simple implementation it does not support caching and other smarts.
  */
 public class SimpleGlobber implements Globber {
-
-  private static final FilesystemCalls STRICT_EXISTENCE_FILESYSTEM_CALLS =
-      new StrictExistenceFileSystemCalls();
 
   /** Path used as a root when resolving patterns. */
   private final Path basePath;
@@ -81,8 +72,6 @@ public class SimpleGlobber implements Globber {
     return UnixGlob.forPath(basePath)
         .addPatterns(patterns)
         .setExcludeDirectories(excludeDirectories)
-        // The default here silently suppresses FileNotFoundExceptions; this implementation doesn't.
-        .setFilesystemCalls(new AtomicReference<>(STRICT_EXISTENCE_FILESYSTEM_CALLS))
         .glob()
         .stream()
         .map(includePath -> includePath.relativeTo(basePath).getPathString())
@@ -96,27 +85,5 @@ public class SimpleGlobber implements Globber {
    */
   public static Globber create(Path basePath) {
     return new SimpleGlobber(basePath);
-  }
-
-  /**
-   * This class requires that all paths being checked must exist. This prevents silent failure, and
-   * specifically is useful in the globber, where we want bad file paths to explicitly throw an
-   * exception that can ultimately be shown to the user. Otherwise, a mistake like a typo could
-   * cause files to be silently excluded, which is frustrating to debug.
-   */
-  private static class StrictExistenceFileSystemCalls implements FilesystemCalls {
-    @Override
-    public Collection<Dirent> readdir(Path path, Symlinks symlinks) throws IOException {
-      return path.readdir(symlinks);
-    }
-
-    @Override
-    public FileStatus statIfFound(Path path, Symlinks symlinks) throws IOException {
-      if (!path.exists(symlinks)) {
-        throw new FileNotFoundException(path.getPathString());
-      }
-
-      return path.statIfFound(symlinks);
-    }
   }
 }
