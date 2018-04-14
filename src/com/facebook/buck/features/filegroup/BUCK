@@ -3,8 +3,10 @@ load("//tools/build_rules:module_rules.bzl", "buck_module")
 buck_module(
     name = "filegroup",
     srcs = glob(["*.java"]),
-    provided_deps = [
+    module_deps = [
         "//src/com/facebook/buck/features/filebundler:filebundler",
+    ],
+    provided_deps = [
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules/modern:modern",

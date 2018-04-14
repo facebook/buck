@@ -20,8 +20,7 @@ buck_module(
         "//test/com/facebook/buck/features/filebundler:filebundler",
     ],
     visibility = [
-        "//src/com/facebook/buck/features/filegroup:filegroup",
-        "//src/com/facebook/buck/features/zip/rules:rules",
+        "//src/com/facebook/buck/features/...",
         "//test/...",
     ],
 )

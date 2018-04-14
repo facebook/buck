@@ -1,6 +1,7 @@
 """Module containing java macros."""
 
 load("@bazel_skylib//lib:sets.bzl", "sets")
+load("//tools/build_rules:module_rules_for_tests.bzl", "convert_module_deps_to_test")
 
 def _add_immutables(deps_arg, **kwargs):
     kwargs[deps_arg] = sets.union(kwargs.get(deps_arg, []), [
@@ -30,10 +31,22 @@ def java_test(
     labels=None,
     run_test_separately=False,
     has_immutable_types=False,
+    module_deps=[],
     # deps, provided_deps and plugins are handled in kwargs so that immutables can be handled there
     **kwargs
     ):
-  """java_test wrapper that provides sensible defaults for buck tests."""
+  """java_test wrapper that provides sensible defaults for buck tests.
+
+  Args:
+    name: name
+    vm_args: vm_args
+    labels: labels
+    run_test_separately: run_test_separately
+    has_immutable_types: has_immutable_types
+    module_deps: A list of modules this test depends on
+    **kwargs: kwargs
+  """
+
   extra_labels = ['run_as_bundle']
   if run_test_separately:
     extra_labels.append('serialize')
@@ -65,7 +78,7 @@ def java_test(
       # run Buck, we have to add a direct dependency on the bootstrapper in case
       # they exercise code that uses it.
       '//src/com/facebook/buck/cli/bootstrapper:bootstrapper_lib',
-    ],
+    ] + convert_module_deps_to_test(module_deps),
     vm_args=[
       # Add -XX:-UseSplitVerifier by default to work around:
       # http://arihantwin.blogspot.com/2012/08/getting-error-illegal-local-variable.html

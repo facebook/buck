@@ -138,6 +138,9 @@ java_library(
 java_test(
     name = "intellij",
     srcs = TEST_SRCS,
+    module_deps = [
+        "//src/com/facebook/buck/features/zip/rules:rules",
+    ],
     resources = glob(["testdata/**"]),
     deps = [
         ":testutil",
@@ -161,8 +164,6 @@ java_test(
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/event/listener:listener",
-        "//src/com/facebook/buck/features/filebundler:filebundler",
-        "//src/com/facebook/buck/features/zip/rules:rules",
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/ide/intellij:intellij",
         "//src/com/facebook/buck/io:executable-finder",
