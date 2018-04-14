@@ -53,7 +53,7 @@ import org.stringtemplate.v4.ST;
 
 public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps {
 
-  private static final String RUN_INPLACE_RESOURCE = "com/facebook/buck/python/run_inplace.py.in";
+  private static final String RUN_INPLACE_RESOURCE = "run_inplace.py.in";
 
   // TODO(agallagher): Task #8098647: This rule has no steps, so it
   // really doesn't need a rule key.
@@ -114,7 +114,8 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
 
   private static String getRunInplaceResource() {
     try {
-      return Resources.toString(Resources.getResource(RUN_INPLACE_RESOURCE), Charsets.UTF_8);
+      return Resources.toString(
+          Resources.getResource(PythonInPlaceBinary.class, RUN_INPLACE_RESOURCE), Charsets.UTF_8);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
