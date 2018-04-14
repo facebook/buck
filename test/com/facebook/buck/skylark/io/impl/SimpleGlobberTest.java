@@ -50,6 +50,42 @@ public class SimpleGlobberTest {
   }
 
   @Test
+  public void testGlobFindsRecursiveIncludes() throws IOException {
+    Path child = root.getChild("child");
+    child.createDirectory();
+    FileSystemUtils.createEmptyFile(child.getChild("foo.txt"));
+    FileSystemUtils.createEmptyFile(child.getChild("bar.txt"));
+    FileSystemUtils.createEmptyFile(child.getChild("bar.jpg"));
+    assertThat(
+        globber.run(Collections.singleton("**/*.txt"), Collections.emptySet(), false),
+        equalTo(ImmutableSet.of("child/bar.txt", "child/foo.txt")));
+  }
+
+  @Test
+  public void testGlobFindsShallowRecursiveIncludes() throws IOException {
+    Path child = root.getChild("child");
+    child.createDirectory();
+    FileSystemUtils.createEmptyFile(child.getChild("foo.txt"));
+    FileSystemUtils.createEmptyFile(child.getChild("bar.txt"));
+    FileSystemUtils.createEmptyFile(child.getChild("bar.jpg"));
+    assertThat(
+        globber.run(Collections.singleton("child/**/*.txt"), Collections.emptySet(), false),
+        equalTo(ImmutableSet.of("child/bar.txt", "child/foo.txt")));
+  }
+
+  @Test
+  public void testGlobFindsDeepRecursiveIncludes() throws IOException {
+    Path child = root.getChild("dir").getChild("child");
+    child.createDirectoryAndParents();
+    FileSystemUtils.createEmptyFile(child.getChild("foo.txt"));
+    FileSystemUtils.createEmptyFile(child.getChild("bar.txt"));
+    FileSystemUtils.createEmptyFile(child.getChild("bar.jpg"));
+    assertThat(
+        globber.run(Collections.singleton("dir/**/*.txt"), Collections.emptySet(), false),
+        equalTo(ImmutableSet.of("dir/child/bar.txt", "dir/child/foo.txt")));
+  }
+
+  @Test
   public void testGlobFindsIncludes() throws IOException {
     FileSystemUtils.createEmptyFile(root.getChild("foo.txt"));
     FileSystemUtils.createEmptyFile(root.getChild("bar.txt"));
