@@ -468,6 +468,11 @@ func (testDeps) ImportPath() string {
 	return {{.ImportPath | printf "%q"}}
 }
 
+
+func (testDeps) StartTestLog(w io.Writer) {}
+
+func (testDeps) StopTestLog() error {return nil}
+
 {{if .CoverEnabled}}
 // Only updated by init functions, so no need for atomicity.
 var (

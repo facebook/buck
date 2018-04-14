@@ -123,6 +123,7 @@ public class GoTestIntegrationTest {
 
   @Test
   public void testLibWithCgoDeps() throws IOException {
+    GoAssumptions.assumeGoVersionAtLeast("1.10.0");
     ProcessResult result = workspace.runBuckCommand("test", "//cgo/lib:all_tests");
     result.assertSuccess();
   }
