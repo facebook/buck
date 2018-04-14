@@ -32,9 +32,20 @@ import java.util.Optional;
 
 public class DefaultPexToolProvider implements PexToolProvider {
 
-  private static final Path DEFAULT_PATH_TO_PEX =
-      Paths.get(System.getProperty("buck.path_to_pex", "src/com/facebook/buck/python/make_pex.py"))
-          .toAbsolutePath();
+  private static final Path DEFAULT_PATH_TO_PEX = getPathToPex().toAbsolutePath();
+
+  private static Path getPathToPex() {
+    String moduleResourceLocation = System.getProperty("buck.module.resources");
+    if (moduleResourceLocation == null) {
+      return Paths.get("src", "com", "facebook", "buck", "python", "make_pex.py");
+    } else {
+      if ("repository".equals(System.getProperty("buck.mode"))) {
+        return Paths.get(moduleResourceLocation).resolve("python").resolve("make_pex.py");
+      } else {
+        return Paths.get(moduleResourceLocation).resolve("python").resolve("pex.pex");
+      }
+    }
+  }
 
   private final ToolchainProvider toolchainProvider;
   private final PythonBuckConfig pythonBuckConfig;

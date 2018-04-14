@@ -1,26 +1,12 @@
 load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
+load("//tools/build_rules:module_rules.bzl", "buck_module")
 
 java_library_with_plugins(
     name = "python",
     srcs = glob(
         ["*.java"],
     ),
-    resources = [
-        "__test_main__.py",
-        "run_inplace.py.in",
-    ],
-    tests = [
-        "//test/com/facebook/buck/python:python",
-    ],
-    visibility = [
-        "//src/com/facebook/buck/cli:main",
-        "//src/com/facebook/buck/cxx:rules",
-        "//src/com/facebook/buck/features/...",
-        "//src/com/facebook/buck/python/toolchain/impl:impl",
-        "//src/com/facebook/buck/rules:types",
-        "//test/...",
-    ],
-    deps = [
+    provided_deps = [
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/cxx/toolchain/linker:linker",
@@ -34,7 +20,6 @@ java_library_with_plugins(
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/parser:rule_pattern",
-        "//src/com/facebook/buck/python/toolchain:toolchain",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:interfaces",
         "//src/com/facebook/buck/rules:rules",
@@ -67,6 +52,24 @@ java_library_with_plugins(
         "//third-party/java/jackson:jackson-databind",
         "//third-party/java/stringtemplate:stringtemplate",
     ],
+    resources = [
+        "__test_main__.py",
+        "run_inplace.py.in",
+    ],
+    tests = [
+        "//test/com/facebook/buck/python:python",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/cli:main",
+        "//src/com/facebook/buck/cxx:rules",
+        "//src/com/facebook/buck/features/...",
+        "//src/com/facebook/buck/python/...",
+        "//src/com/facebook/buck/rules:types",
+        "//test/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/python/toolchain:toolchain",
+    ],
 )
 
 python_binary(
@@ -77,5 +80,16 @@ python_binary(
     ],
     deps = [
         "//third-party/py/pex:pex",
+    ],
+)
+
+buck_module(
+    name = "module",
+    module_resources = ["//src/com/facebook/buck/python:pex"],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/python:python",
+        "//src/com/facebook/buck/python/toolchain:toolchain",
+        "//src/com/facebook/buck/python/toolchain/impl:impl",
     ],
 )

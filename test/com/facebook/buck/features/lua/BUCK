@@ -145,6 +145,9 @@ java_test(
     name = "lua",
     srcs = glob(["*Test.java"]),
     labels = ["long_running"],
+    module_deps = [
+        "//src/com/facebook/buck/python:module",
+    ],
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",

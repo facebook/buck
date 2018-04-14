@@ -8,7 +8,7 @@ sh_test(
     args = [
         "$(location //programs:buck)",
         "programs/buck_server",
-        "programs/buck-modules/.*",
+        "programs/buck-modules/.*.jar",
     ],
     test = ":find_duplicate_classes_in_jars",
 )

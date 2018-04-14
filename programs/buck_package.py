@@ -139,10 +139,13 @@ class BuckPackage(BuckTool):
                 shutil.copy(outf.name, resource_path)
 
     def _get_extra_java_args(self):
+        modules_dir = os.path.join(self._resource_subdir, MODULES_DIR)
         return [
             "-Dbuck.git_dirty=0",
             "-Dbuck.path_to_python_dsl=",
-            "-Dpf4j.pluginsDir={0}/{1}".format(self._resource_subdir, MODULES_DIR),
+            "-Dpf4j.pluginsDir={}".format(modules_dir),
+            "-Dbuck.mode=package",
+            "-Dbuck.module.resources={}".format(os.path.join(modules_dir, "resources"))
         ]
 
     def _get_exported_resources(self):

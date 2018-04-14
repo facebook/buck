@@ -82,6 +82,7 @@
   <property name="buck.info.file" value="${build.dir}/buck-info.json"/>
 
   <property name="modules.dir.name" value="buck-modules" />
+  <property name="modules.resources.dir.name" value="resources" />
 
   <property name="ecj.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter" />
   <property name="ecj.compiler.path" value="${eclipse.dir}/ecj-4.7.1.jar" />
@@ -496,6 +497,7 @@
           <exclude name="com/facebook/buck/jvm/java/lang/model/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
           <exclude name="com/facebook/buck/module/annotationprocessor/**" />
+          <exclude name="com/facebook/buck/python/**" />
           <exclude name="com/facebook/buck/testrunner/**" />
         </patternset>
       </javac-params>
@@ -531,6 +533,7 @@
                                         build-module-haskell,
                                         build-module-lua,
                                         build-module-ocaml,
+                                        build-module-python,
                                         build-module-rust,
                                         build-module-ziprules
                                        "/>
@@ -597,11 +600,14 @@
     </build-buck-module-jar>
   </target>
 
-  <target name="build-module-lua" depends="compile">
+  <target name="build-module-lua" depends="compile, build-module-python">
     <build-buck-module-jar-with-resources module-name="lua">
       <module-javac-params>
         <include name="com/facebook/buck/features/lua/**/*.java" />
       </module-javac-params>
+      <additional-classpath-entries>
+        <include name="python.jar"/>
+      </additional-classpath-entries>
       <module-resources>
         <include name="com/facebook/buck/features/lua/*.in"/>
       </module-resources>
@@ -614,6 +620,25 @@
         <include name="com/facebook/buck/features/ocaml/**/*.java" />
       </module-javac-params>
     </build-buck-module-jar>
+  </target>
+
+  <target name="build-module-python" depends="compile">
+    <build-buck-module-jar-with-resources module-name="python">
+      <module-javac-params>
+        <include name="com/facebook/buck/python/**/*.java" />
+      </module-javac-params>
+      <module-resources>
+        <include name="com/facebook/buck/python/*.in"/>
+        <include name="com/facebook/buck/python/__test_main__.py"/>
+      </module-resources>
+    </build-buck-module-jar-with-resources>
+    <copy-buck-module-external-resources module-name="python">
+      <module-external-resources>
+        <fileset dir="${src.dir}/com/facebook/buck/python">
+          <include name="make_pex.py"/>
+        </fileset>
+      </module-external-resources>
+    </copy-buck-module-external-resources>
   </target>
 
   <target name="build-module-rust" depends="compile">
@@ -941,6 +966,21 @@
       <jar destfile="@{module-jar}" manifest="@{module-classes-dir}/META-INF/MANIFEST.MF">
         <fileset dir="@{module-classes-dir}" />
       </jar>
+    </sequential>
+  </macrodef>
+
+  <!--
+   Copies module resources that should be kept outside of module's jar file.
+   -->
+  <macrodef name="copy-buck-module-external-resources">
+    <attribute name="module-name" />
+    <attribute name="module-resources-dir" default="${build.dir}/${modules.dir.name}/${modules.resources.dir.name}/@{module-name}" />
+    <element name="module-external-resources" />
+    <sequential>
+      <mkdir dir="@{module-resources-dir}" />
+      <copy todir="@{module-resources-dir}">
+        <module-external-resources/>
+      </copy>
     </sequential>
   </macrodef>
 

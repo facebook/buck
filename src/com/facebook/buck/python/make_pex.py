@@ -10,16 +10,21 @@ import tempfile
 import optparse
 import zipfile
 
-# This script can be executed either from a pex file or in a standalone mode.
-# A pex file should contain all the necessary dependencies, but in standalone mode
-# these dependencies need to be configured before importing them.
-if not zipfile.is_zipfile(sys.argv[0]):
-    buck_root = os.sep.join(__file__.split(os.sep)[:-6])
+
+def append_sys_path(buck_root):
     sys.path.insert(0, os.path.join(
         buck_root,
         'third-party/py/pex'))
     sys.path.insert(0, os.path.join(
         buck_root, 'third-party/py/setuptools'))
+
+
+# This script can be executed either from a pex file or in a standalone mode.
+# A pex file should contain all the necessary dependencies, but in standalone mode
+# these dependencies need to be configured before importing them.
+if not zipfile.is_zipfile(sys.argv[0]):
+    append_sys_path(os.sep.join(__file__.split(os.sep)[:-5]))
+    append_sys_path(os.sep.join(__file__.split(os.sep)[:-6]))
 
 import pkg_resources
 

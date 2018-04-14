@@ -21,7 +21,6 @@ RESOURCES = {
     "libjcocoa.dylib": "third-party/java/ObjCBridge/libjcocoa.dylib",
     "logging_config_file": "config/logging.properties.st",
     "native_exopackage_fake_path": "assets/android/native-exopackage-fakes.apk",
-    "path_to_pex": "src/com/facebook/buck/python/make_pex.py",
     "path_to_sh_binary_template": "src/com/facebook/buck/shell/sh_binary_template",
     "path_to_isolated_trampoline": "src/com/facebook/buck/rules/modern/builders/trampoline.sh",
     "report_generator_jar": "build/report-generator.jar",
@@ -88,9 +87,12 @@ class BuckRepo(BuckTool):
 
     def _get_extra_java_args(self):
         with Tracing('BuckRepo._get_extra_java_args'):
+            modules_dir = os.path.join(self.buck_dir, "build", "buck-modules")
             return [
                 "-Dbuck.git_dirty={0}".format(int(self._get_buck_repo_dirty())),
-                "-Dpf4j.pluginsDir={0}/build/buck-modules".format(self.buck_dir),
+                "-Dpf4j.pluginsDir={0}".format(modules_dir),
+                "-Dbuck.mode=repository",
+                "-Dbuck.module.resources={0}".format(os.path.join(modules_dir, "resources"))
             ]
 
     def _get_bootstrap_classpath(self):
