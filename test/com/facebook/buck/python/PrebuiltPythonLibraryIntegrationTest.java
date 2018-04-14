@@ -16,6 +16,8 @@
 
 package com.facebook.buck.python;
 
+import static org.junit.Assume.assumeTrue;
+
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.python.toolchain.impl.PythonPlatformsProviderFactoryUtils;
@@ -26,6 +28,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,6 +45,8 @@ public class PrebuiltPythonLibraryIntegrationTest {
 
   @Before
   public void setUp() throws IOException, InterruptedException {
+    assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
+
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "prebuilt_package", tmp);
     workspace.setUp();
 

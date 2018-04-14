@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
@@ -105,6 +106,8 @@ public class PythonBinaryIntegrationTest {
 
   @Before
   public void setUp() throws InterruptedException, IOException {
+    assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
+
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "python_binary", tmp);
     workspace.setUp();
     String pexFlags = pexDirectory ? "--directory" : "";

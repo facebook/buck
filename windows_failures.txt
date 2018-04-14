@@ -29,10 +29,6 @@
 !com.facebook.buck.cxx.ToolTest
 !com.facebook.buck.cxx.toolchain.DebugPathSanitizerTest
 !com.facebook.buck.jvm.java.ExternalJavacIntegrationTest#whenBuckdUsesExternalJavacThenClientEnvironmentUsed
-!com.facebook.buck.python.PrebuiltPythonLibraryIntegrationTest
-!com.facebook.buck.python.PythonBinaryIntegrationTest
-!com.facebook.buck.python.PythonSrcZipIntegrationTest#testDependingOnSrcZipWorks
-!com.facebook.buck.python.PythonTestIntegrationTest
 !com.facebook.buck.step.fs.SymCopyStepTest#testSymCopyStep
 !com.facebook.buck.thrift.ThriftLibraryIntegrationTest#shouldBeAbleToConstructACxxLibraryFromThrift
 !com.facebook.buck.util.ListeningProcessExecutorTest#clearsEnvWhenExplicitlySet

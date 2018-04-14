@@ -68,6 +68,8 @@ public class PythonTestIntegrationTest {
 
   @Before
   public void setUp() throws InterruptedException, IOException {
+    assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
+
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "python_test", tmp);
     workspace.setUp();
     workspace.writeContentsToPath(

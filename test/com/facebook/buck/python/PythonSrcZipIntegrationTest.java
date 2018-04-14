@@ -16,10 +16,13 @@
 
 package com.facebook.buck.python;
 
+import static org.junit.Assume.assumeTrue;
+
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -32,6 +35,8 @@ public class PythonSrcZipIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
+    assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
+
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "src_zip", tmp);
     workspace.setUp();
   }

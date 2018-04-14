@@ -17,6 +17,7 @@
 package com.facebook.buck.python;
 
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
@@ -76,6 +77,7 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -297,6 +299,8 @@ public class PythonBinaryDescriptionTest {
 
   @Test
   public void executableCommandWithPathToPexExecutor() {
+    assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
+
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     BuildRuleResolver resolver = new TestBuildRuleResolver();
     SourcePathResolver pathResolver =
