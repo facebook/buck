@@ -98,7 +98,7 @@ BUCK_MODULES = {
     "haskell": "//src/com/facebook/buck/features/haskell:haskell",
     "lua": "//src/com/facebook/buck/features/lua:lua",
     "ocaml": "//src/com/facebook/buck/features/ocaml:ocaml",
-    "python": "//src/com/facebook/buck/python:module",
+    "python": "//src/com/facebook/buck/features/python:module",
     "rust": "//src/com/facebook/buck/features/rust:rust",
     "ziprules": "//src/com/facebook/buck/features/zip/rules:rules",
 }

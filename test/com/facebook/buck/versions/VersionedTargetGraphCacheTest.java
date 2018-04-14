@@ -22,12 +22,12 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
+import com.facebook.buck.features.python.PythonTestBuilder;
+import com.facebook.buck.features.python.PythonTestDescription;
+import com.facebook.buck.features.python.PythonTestDescriptionArg;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.python.PythonTestBuilder;
-import com.facebook.buck.python.PythonTestDescription;
-import com.facebook.buck.python.PythonTestDescriptionArg;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
