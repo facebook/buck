@@ -139,8 +139,8 @@ before_install:
       export NDK_HOME="${HOME}/android-ndk-linux" ;
       ./scripts/travisci_install_android_ndk.sh ;
     fi
-  # Install go 1.8+, required for cgo -srcdir flag to work
-  - eval "$(gimme 1.9)"
+  # Install go 1.10.x, which generates a different .c file name from cgo than previous versions
+  - eval "$(gimme 1.10.1)"
   - echo -e "[go]\n  root = ${GOROOT}" >> .buckconfig.local
 
 # Buck dependencies are checked in, so no need to download dependencies
