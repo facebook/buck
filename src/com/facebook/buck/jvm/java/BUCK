@@ -377,7 +377,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/jvm/java/lang/model:model",
         "//src/com/facebook/buck/jvm/java/toolchain:toolchain",
         "//src/com/facebook/buck/log:api",
-        "//src/com/facebook/buck/maven:util",
+        "//src/com/facebook/buck/maven/aether:aether",
         "//src/com/facebook/buck/model:build_id",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/model/macros:macros",

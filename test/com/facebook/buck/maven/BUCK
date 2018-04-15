@@ -51,7 +51,6 @@ java_library(
         "//src/com/facebook/buck/jvm/scala:scala",
         "//src/com/facebook/buck/log:log",
         "//src/com/facebook/buck/maven:maven",
-        "//src/com/facebook/buck/maven:util",
         "//src/com/facebook/buck/model:build_id",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/parser:config",
@@ -138,6 +137,7 @@ java_test(
     deps = [
         "//test/com/facebook/buck/config:FakeBuckConfig",
         "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/maven/aether:aether",
         "//src-gen:thrift",
         "//src/com/facebook/buck/android/aapt:aapt",
         "//src/com/facebook/buck/android/redex:options",
@@ -184,7 +184,6 @@ java_test(
         "//src/com/facebook/buck/jvm/scala:scala",
         "//src/com/facebook/buck/log:log",
         "//src/com/facebook/buck/maven:maven",
-        "//src/com/facebook/buck/maven:util",
         "//src/com/facebook/buck/model:build_id",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/parser:config",

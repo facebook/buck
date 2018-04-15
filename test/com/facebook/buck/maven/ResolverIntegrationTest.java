@@ -37,6 +37,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.json.PythonDslProjectBuildFileParser;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
+import com.facebook.buck.maven.aether.Repository;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
@@ -161,7 +162,7 @@ public class ResolverIntegrationTest {
       throws URISyntaxException, IOException, RepositoryException, ExecutionException,
           InterruptedException {
     ArtifactConfig config = newConfig();
-    config.repositories.add(new ArtifactConfig.Repository(httpd.getUri("/").toString()));
+    config.repositories.add(new Repository(httpd.getUri("/").toString()));
     config.artifacts.addAll(Arrays.asList(artifacts));
     config.visibility.add("PUBLIC");
     new Resolver(config).resolve(config.artifacts);

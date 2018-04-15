@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.maven;
+package com.facebook.buck.maven.aether;
 
 import static org.eclipse.aether.repository.RepositoryPolicy.CHECKSUM_POLICY_FAIL;
 
@@ -65,7 +65,7 @@ public class AetherUtil {
     return repo.build();
   }
 
-  public static RemoteRepository toRemoteRepository(ArtifactConfig.Repository repo) {
+  public static RemoteRepository toRemoteRepository(Repository repo) {
     RemoteRepository.Builder builder =
         new RemoteRepository.Builder(repo.getUrl(), "default", repo.getUrl())
             .setPolicy(new RepositoryPolicy(true, null, CHECKSUM_POLICY_FAIL));

@@ -55,8 +55,7 @@ prebuilt_jar(
     ],
     source_jar = "maven-aether-provider-3.2.5-sources.jar",
     visibility = [
-        "//src/com/facebook/buck/maven:maven",
-        "//src/com/facebook/buck/maven:util",
+        "//src/com/facebook/buck/maven/...",
     ],
     deps = [
         ":maven-model",

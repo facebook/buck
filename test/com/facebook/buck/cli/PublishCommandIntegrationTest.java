@@ -22,8 +22,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.jvm.java.Javac;
-import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.maven.TestPublisher;
+import com.facebook.buck.maven.aether.AetherUtil;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;

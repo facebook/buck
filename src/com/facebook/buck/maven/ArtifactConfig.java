@@ -16,11 +16,11 @@
 
 package com.facebook.buck.maven;
 
+import com.facebook.buck.maven.aether.Repository;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -61,22 +61,6 @@ public class ArtifactConfig {
 
     @Option(name = "-help", help = true)
     public boolean showHelp;
-  }
-
-  public static class Repository {
-    private @Nullable String url;
-    public @Nullable String user;
-    public @Nullable String password;
-
-    public Repository() {}
-
-    public Repository(String url) {
-      this.url = url;
-    }
-
-    public String getUrl() {
-      return Preconditions.checkNotNull(url);
-    }
   }
 
   public List<Repository> repositories = new ArrayList<>();

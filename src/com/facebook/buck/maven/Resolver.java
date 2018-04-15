@@ -22,6 +22,7 @@ import static org.eclipse.aether.util.artifact.JavaScopes.TEST;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.maven.aether.AetherUtil;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
