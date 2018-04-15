@@ -21,6 +21,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.endtoend.ConfigSetBuilder;
 import com.facebook.buck.testutil.endtoend.EndToEndEnvironment;
 import com.facebook.buck.testutil.endtoend.EndToEndRunner;
 import com.facebook.buck.testutil.endtoend.EndToEndTestDescriptor;
@@ -62,9 +63,12 @@ public class AppleEndToEndTest {
 
   @Environment
   public static EndToEndEnvironment baseEnvironment() {
+    ConfigSetBuilder configSetBuilder = new ConfigSetBuilder();
     return new EndToEndEnvironment()
         .addTemplates("mobile")
         .withCommand("build")
+        .addLocalConfigSet(configSetBuilder.build())
+        .addLocalConfigSet(configSetBuilder.addShlibConfigSet().build())
         .withTargets(mainTarget);
   }
 

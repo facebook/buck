@@ -16,9 +16,18 @@
 
 package com.facebook.buck.testutil;
 
+import java.util.Optional;
+
 /** An implementation of {@link UnixUtils} for Linux platforms */
 public class LinuxUtils extends UnixUtils {
+  private static final String OBJCOPY = "/usr/bin/objcopy";
+
   public LinuxUtils() {
     super();
+  }
+
+  @Override
+  public Optional<String> getObjcopy() {
+    return Optional.of(OBJCOPY);
   }
 }

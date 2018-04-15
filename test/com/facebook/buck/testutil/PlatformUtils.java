@@ -55,6 +55,10 @@ public abstract class PlatformUtils {
     return Optional.empty();
   }
 
+  public Optional<String> getObjcopy() {
+    return Optional.empty();
+  }
+
   protected String[] getWindowsIncludeDirs() {
     return new String[] {};
   }
@@ -120,6 +124,7 @@ public abstract class PlatformUtils {
     checkAssumptionValue("link.exe", getLinkExe());
     checkAssumptionValue("lib.exe", getLibExe());
     checkAssumptionValue("vcvarsall.exe", getVcvarsallbat());
+    checkAssumptionValue("objcopy", getObjcopy());
 
     checkAssumptionLists("include dir", getWindowsIncludeDirs());
     checkAssumptionLists("lib dir", getWindowsLibDirs());

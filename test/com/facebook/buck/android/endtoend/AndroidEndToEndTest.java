@@ -18,13 +18,12 @@ package com.facebook.buck.android.endtoend;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.endtoend.ConfigSetBuilder;
 import com.facebook.buck.testutil.endtoend.EndToEndEnvironment;
 import com.facebook.buck.testutil.endtoend.EndToEndRunner;
 import com.facebook.buck.testutil.endtoend.EndToEndTestDescriptor;
 import com.facebook.buck.testutil.endtoend.EndToEndWorkspace;
 import com.facebook.buck.testutil.endtoend.Environment;
-import java.util.HashMap;
-import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -62,25 +61,17 @@ public class AndroidEndToEndTest {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
   }
 
-  private static Map<String, Map<String, String>> getSourceABIConfigSet() {
-    Map<String, Map<String, String>> configSet = new HashMap<>();
-    configSet.put("java", new HashMap<>());
-    configSet.get("java").put("source_level", "7");
-    configSet.get("java").put("target_level", "7");
-    configSet.get("java").put("track_class_usage", "true");
-    configSet.get("java").put("compile_against_abis", "true");
-    configSet.get("java").put("abi_generation_mode", "source_only");
-    return configSet;
-  }
-
   @Environment
   public static EndToEndEnvironment baseEnvironment() {
+    ConfigSetBuilder configSetBuilder = new ConfigSetBuilder();
     return new EndToEndEnvironment()
         .addTemplates("mobile")
         .withCommand("build")
         .withTargets(mainTarget)
-        .addLocalConfigSet(new HashMap<>())
-        .addLocalConfigSet(getSourceABIConfigSet());
+        .addLocalConfigSet(configSetBuilder.build())
+        .addLocalConfigSet(configSetBuilder.addSourceABIConfigSet().build())
+        .addLocalConfigSet(configSetBuilder.addShlibConfigSet().build())
+        .addLocalConfigSet(configSetBuilder.addSourceABIConfigSet().addShlibConfigSet().build());
   }
 
   /** Determines that buck successfully outputs proper programs */

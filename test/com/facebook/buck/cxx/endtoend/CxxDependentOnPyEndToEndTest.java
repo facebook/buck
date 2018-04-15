@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx.endtoend;
 
 import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.endtoend.ConfigSetBuilder;
 import com.facebook.buck.testutil.endtoend.EndToEndEnvironment;
 import com.facebook.buck.testutil.endtoend.EndToEndRunner;
 import com.facebook.buck.testutil.endtoend.EndToEndTestDescriptor;
@@ -54,10 +55,13 @@ public class CxxDependentOnPyEndToEndTest {
 
   @Environment
   public static EndToEndEnvironment baseEnvironment() {
+    ConfigSetBuilder configSetBuilder = new ConfigSetBuilder();
     return new EndToEndEnvironment()
         .addTemplates("cxx_dependent_on_py")
         .withCommand("build")
-        .withTargets(mainTarget);
+        .withTargets(mainTarget)
+        .addLocalConfigSet(configSetBuilder.build())
+        .addLocalConfigSet(configSetBuilder.addShlibConfigSet().build());
   }
 
   private ProcessResult checkSuccessfulBuildAndRun(
