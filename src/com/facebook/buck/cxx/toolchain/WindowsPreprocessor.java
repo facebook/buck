@@ -18,6 +18,7 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 
@@ -34,10 +35,7 @@ public class WindowsPreprocessor extends DelegatingTool implements Preprocessor 
 
   @Override
   public boolean supportsPrecompiledHeaders() {
-    // TODO(steveo) Should be easy to add support; will try @ later time,
-    // when I can test w/ Windows.
-    // https://msdn.microsoft.com/en-us/library/z0atkd6c.aspx
-    return false;
+    return true;
   }
 
   private static String prependIncludeFlag(String includeRoot) {
@@ -61,22 +59,13 @@ public class WindowsPreprocessor extends DelegatingTool implements Preprocessor 
 
   @Override
   public Iterable<String> prefixHeaderArgs(Path prefixHeader) {
-    throw new UnsupportedOperationException("prefix header not supported by " + getClass());
-    // TODO(steveo) Should be easy to add support; will try @ later time,
-    // when I can test w/ Windows.
-    // "Forced Include": https://msdn.microsoft.com/en-us/library/8c5ztk84.aspx
-    // Space is allowed between flag and its pathname argument.
-    // E.g. something like this (space allowed between flag and its argument):
-    // return ImmutableList.of("/FI", resolver.getAbsolutePath(prefixHeader).toString());
+    return ImmutableList.of("/Yc", prefixHeader.toString());
   }
 
   @Override
   public Iterable<String> precompiledHeaderArgs(Path pchOutputPath) {
-    throw new UnsupportedOperationException("precompiled header not supported by " + getClass());
-    // TODO(steveo) Should be easy to add support; will try @ later time,
-    // when I can test w/ Windows.
-    // https://msdn.microsoft.com/en-us/library/z0atkd6c.aspx
-    // E.g. something like this flag (no space between "/Yu" and its argument):
-    // return ImmutableList.of("/Yu" + pchOutputPath);
+    String hFilename = pchOutputPath.getFileName().toString();
+    String pchFilename = hFilename.substring(0, hFilename.length() - 4) + ".pch";
+    return ImmutableList.of("/Yu", pchFilename);
   }
 }
