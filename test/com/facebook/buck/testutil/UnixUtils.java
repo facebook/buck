@@ -20,15 +20,15 @@ import com.facebook.buck.util.Escaper.Quoter;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.FileSystems;
 
-/** An implementation of {@link PlatformUtils} for Unix platforms (Mac OS, Linux) */
-public class UnixUtils extends PlatformUtils {
+/** An for abstraction of {@link PlatformUtils} for Unix platforms (Mac OS, Linux) */
+public abstract class UnixUtils extends PlatformUtils {
   private static final String BUCK_EXE =
       FileSystems.getDefault()
           .getPath("buck-out", "gen", "programs", "buck.pex")
           .toAbsolutePath()
           .toString();
 
-  public UnixUtils() {
+  protected UnixUtils() {
     super(Quoter.DOUBLE);
   }
 

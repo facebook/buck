@@ -141,9 +141,15 @@ public abstract class PlatformUtils {
 
   /** Gets a PlatformUtils based on what Platform we're running tests in. */
   public static PlatformUtils getForPlatform() {
-    if (Platform.detect() == Platform.WINDOWS) {
-      return new WindowsUtils();
+    switch (Platform.detect()) {
+      case WINDOWS:
+        return new WindowsUtils();
+      case MACOS:
+        return new MacOSUtils();
+      case LINUX:
+        return new LinuxUtils();
+      default:
+        throw new RuntimeException("Attempted to get platform utils for unknown platform.");
     }
-    return new UnixUtils();
   }
 }
