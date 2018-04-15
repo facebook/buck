@@ -130,9 +130,10 @@ public class WindowsCxxIntegrationTest {
 
   private ImmutableMap<String, String> getDevConsoleEnv(String vcvarsallBatArg)
       throws IOException, InterruptedException {
+    Optional<String> vcvarsallbat = windowsUtils.getVcvarsallbat();
+    Assert.assertTrue(vcvarsallbat.isPresent());
     workspace.writeContentsToPath(
-        String.format("\"%s\" %s & set", windowsUtils.getVcvarsallbat(), vcvarsallBatArg),
-        "env.bat");
+        String.format("\"%s\" %s & set", vcvarsallbat.get(), vcvarsallBatArg), "env.bat");
     ProcessExecutor.Result envResult = workspace.runCommand("cmd", "/Q", "/c", "env.bat");
     Optional<String> envOut = envResult.getStdout();
     Assert.assertTrue(envOut.isPresent());

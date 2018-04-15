@@ -39,15 +39,19 @@ public abstract class PlatformUtils {
     this.quoter = quoter;
   }
 
-  protected Optional<String> getClExe() {
+  public Optional<String> getClExe() {
     return Optional.empty();
   }
 
-  protected Optional<String> getLinkExe() {
+  public Optional<String> getLinkExe() {
     return Optional.empty();
   }
 
-  protected Optional<String> getLibExe() {
+  public Optional<String> getLibExe() {
+    return Optional.empty();
+  }
+
+  public Optional<String> getVcvarsallbat() {
     return Optional.empty();
   }
 
@@ -94,33 +98,31 @@ public abstract class PlatformUtils {
     }
   }
 
+  private void checkAssumptionValue(String name, Optional<String> configValue) {
+    assumeTrue(
+        String.format("%s should exist", name),
+        !configValue.isPresent() || Files.isExecutable(Paths.get(configValue.get())));
+  }
+
+  private void checkAssumptionLists(String name, String[] configDir) {
+    for (String dir : configDir) {
+      assumeTrue(
+          String.format("%s '%s' should exist", name, dir), Files.isDirectory(Paths.get(dir)));
+    }
+  }
+
   /**
    * Make sure that files we believe should exist do, if we don't, we shouldn't continue the test
    * that likely relies on it.
    */
   public void checkAssumptions() {
-    assumeTrue(
-        "cl.exe should exist",
-        !getClExe().isPresent() || Files.isExecutable(Paths.get(getClExe().get())));
+    checkAssumptionValue("cl.exe", getClExe());
+    checkAssumptionValue("link.exe", getLinkExe());
+    checkAssumptionValue("lib.exe", getLibExe());
+    checkAssumptionValue("vcvarsall.exe", getVcvarsallbat());
 
-    assumeTrue(
-        "link.exe should exist",
-        !getLinkExe().isPresent() || Files.isExecutable(Paths.get(getLinkExe().get())));
-
-    assumeTrue(
-        "lib.exe should exist",
-        !getLibExe().isPresent() || Files.isExecutable(Paths.get(getLibExe().get())));
-
-    for (String includeDir : getWindowsIncludeDirs()) {
-      assumeTrue(
-          String.format("include dir %s should exist", includeDir),
-          Files.isDirectory(Paths.get(includeDir)));
-    }
-
-    for (String libDir : getWindowsLibDirs()) {
-      assumeTrue(
-          String.format("lib dir %s should exist", libDir), Files.isDirectory(Paths.get(libDir)));
-    }
+    checkAssumptionLists("include dir", getWindowsIncludeDirs());
+    checkAssumptionLists("lib dir", getWindowsLibDirs());
   }
 
   /** Returns the flavor of build rules for the given platform */

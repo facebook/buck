@@ -57,18 +57,23 @@ public class WindowsUtils extends PlatformUtils {
       FileSystems.getDefault().getPath("bin", "buck").toAbsolutePath().toString();
 
   @Override
-  protected Optional<String> getClExe() {
+  public Optional<String> getClExe() {
     return Optional.of(CL_EXE);
   }
 
   @Override
-  protected Optional<String> getLinkExe() {
+  public Optional<String> getLinkExe() {
     return Optional.of(LINK_EXE);
   }
 
   @Override
-  protected Optional<String> getLibExe() {
+  public Optional<String> getLibExe() {
     return Optional.of(LIB_EXE);
+  }
+
+  @Override
+  public Optional<String> getVcvarsallbat() {
+    return Optional.of(VCVARSALLBAT);
   }
 
   @Override
@@ -106,10 +111,5 @@ public class WindowsUtils extends PlatformUtils {
   @Override
   public ImmutableList.Builder<String> getBuckCommandBuilder() {
     return getCommandBuilder().add(BUCK_EXE);
-  }
-
-  /** Gets the location of vcvarsallbat on the windows platform */
-  public String getVcvarsallbat() {
-    return VCVARSALLBAT;
   }
 }
