@@ -1,0 +1,202 @@
+/*
+ * Copyright 2014-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.jvm.java;
+
+import static org.junit.Assert.assertEquals;
+
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.TestBuildRuleCreationContextFactory;
+import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestBuildRuleResolver;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.HumanReadableException;
+import com.google.common.collect.ImmutableSet;
+import java.util.Optional;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+public class JavaAnnotationProcessorDescriptionTest {
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
+
+  @Test
+  public void testProcessorClassIsPassedToJavaAnnotationProcessor() {
+    // Given
+    JavaAnnotationProcessorDescriptionArg arg =
+        JavaAnnotationProcessorDescriptionArg.builder()
+            .setName("annotation_processor")
+            .setIsolateClassLoader(false)
+            .setDoesNotAffectAbi(true)
+            .setSupportsAbiGenerationFromSource(true)
+            .setProcessorClass(Optional.of("Foo.Bar"))
+            .build();
+
+    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:baz");
+
+    BuildRuleParams params =
+        TestBuildRuleParams.create().withDeclaredDeps(buildRuleResolver.getAllRules(arg.getDeps()));
+
+    // When
+    JavaAnnotationProcessor javaAnnotationProcessor =
+        (JavaAnnotationProcessor)
+            new JavaAnnotationProcessorDescription()
+                .createBuildRule(
+                    TestBuildRuleCreationContextFactory.create(
+                        buildRuleResolver, projectFilesystem),
+                    buildTarget,
+                    params,
+                    arg);
+
+    // Verify
+    JavacPluginProperties props =
+        JavacPluginProperties.builder()
+            .setCanReuseClassLoader(true)
+            .setDoesNotAffectAbi(true)
+            .setSupportsAbiGenerationFromSource(true)
+            .addProcessorNames("Foo.Bar")
+            .build();
+
+    assertEquals(javaAnnotationProcessor.getUnresolvedProperties(), props);
+  }
+
+  @Test
+  public void testProcessorClassesIsPassedToJavaAnnotationProcessor() {
+    // Given
+    JavaAnnotationProcessorDescriptionArg arg =
+        JavaAnnotationProcessorDescriptionArg.builder()
+            .setName("annotation_processor")
+            .setIsolateClassLoader(false)
+            .setDoesNotAffectAbi(true)
+            .setSupportsAbiGenerationFromSource(true)
+            .setProcessorClasses(ImmutableSet.of("Foo.Bar", "Bar.Foo"))
+            .build();
+
+    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:baz");
+
+    BuildRuleParams params =
+        TestBuildRuleParams.create().withDeclaredDeps(buildRuleResolver.getAllRules(arg.getDeps()));
+
+    // When
+    JavaAnnotationProcessor javaAnnotationProcessor =
+        (JavaAnnotationProcessor)
+            new JavaAnnotationProcessorDescription()
+                .createBuildRule(
+                    TestBuildRuleCreationContextFactory.create(
+                        buildRuleResolver, projectFilesystem),
+                    buildTarget,
+                    params,
+                    arg);
+
+    // Verify
+    JavacPluginProperties props =
+        JavacPluginProperties.builder()
+            .setCanReuseClassLoader(true)
+            .setDoesNotAffectAbi(true)
+            .setSupportsAbiGenerationFromSource(true)
+            .addProcessorNames("Foo.Bar", "Bar.Foo")
+            .build();
+
+    assertEquals(javaAnnotationProcessor.getUnresolvedProperties(), props);
+  }
+
+  @Test
+  public void testOnlyProcessorClassIsPassedToJavaAnnotationProcessor() {
+    // Given
+    JavaAnnotationProcessorDescriptionArg arg =
+        JavaAnnotationProcessorDescriptionArg.builder()
+            .setName("annotation_processor")
+            .setIsolateClassLoader(false)
+            .setDoesNotAffectAbi(true)
+            .setSupportsAbiGenerationFromSource(true)
+            .setProcessorClass(Optional.of("Needle.HayStack"))
+            .setProcessorClasses(ImmutableSet.of("Foo.Bar", "Bar.Foo"))
+            .build();
+
+    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:baz");
+
+    BuildRuleParams params =
+        TestBuildRuleParams.create().withDeclaredDeps(buildRuleResolver.getAllRules(arg.getDeps()));
+
+    // When
+    JavaAnnotationProcessor javaAnnotationProcessor =
+        (JavaAnnotationProcessor)
+            new JavaAnnotationProcessorDescription()
+                .createBuildRule(
+                    TestBuildRuleCreationContextFactory.create(
+                        buildRuleResolver, projectFilesystem),
+                    buildTarget,
+                    params,
+                    arg);
+
+    // Verify
+    JavacPluginProperties props =
+        JavacPluginProperties.builder()
+            .setCanReuseClassLoader(true)
+            .setDoesNotAffectAbi(true)
+            .setSupportsAbiGenerationFromSource(true)
+            .addProcessorNames("Needle.HayStack")
+            .build();
+
+    assertEquals(javaAnnotationProcessor.getUnresolvedProperties(), props);
+  }
+
+  @Test
+  public void testRaisesExceptionWhenNoProcessorClassIsSpecified() {
+    // Given
+    JavaAnnotationProcessorDescriptionArg arg =
+        JavaAnnotationProcessorDescriptionArg.builder()
+            .setName("annotation_processor")
+            .setIsolateClassLoader(false)
+            .setDoesNotAffectAbi(true)
+            .setSupportsAbiGenerationFromSource(true)
+            .build();
+
+    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:baz");
+
+    BuildRuleParams params =
+        TestBuildRuleParams.create().withDeclaredDeps(buildRuleResolver.getAllRules(arg.getDeps()));
+
+    // Verify
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage("//foo:baz: must specify a processor class, none specified;");
+
+    // When
+    new JavaAnnotationProcessorDescription()
+        .createBuildRule(
+            TestBuildRuleCreationContextFactory.create(buildRuleResolver, projectFilesystem),
+            buildTarget,
+            params,
+            arg);
+  }
+}
