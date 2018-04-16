@@ -75,9 +75,11 @@ public class JarDirectoryStep implements Step {
 
     JavacEventSinkToBuckEventBusBridge eventSink =
         new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus());
+    LoggingJarBuilderObserver loggingObserver =
+        new LoggingJarBuilderObserver(eventSink, parameters.getDuplicatesLogLevel());
     return StepExecutionResult.of(
         new JarBuilder()
-            .setObserver(new LoggingJarBuilderObserver(eventSink))
+            .setObserver(loggingObserver)
             .setEntriesToJar(parameters.getEntriesToJar().stream().map(filesystem::resolve))
             .setMainClass(parameters.getMainClass().orElse(null))
             .setManifestFile(parameters.getManifestFile().map(filesystem::resolve).orElse(null))
