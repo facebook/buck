@@ -17,6 +17,9 @@
 package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.rules.NonHashableSourcePathContainer;
+import com.facebook.buck.rules.modern.ValueCreator;
+import com.facebook.buck.rules.modern.ValueTypeInfo;
+import com.facebook.buck.rules.modern.ValueVisitor;
 
 /**
  * ValueTypeInfo for a NonHashableSourcePathContainer. Derives deps+inputs from the contained

@@ -16,6 +16,9 @@
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.rules.modern.ValueCreator;
+import com.facebook.buck.rules.modern.ValueTypeInfo;
+import com.facebook.buck.rules.modern.ValueVisitor;
 import com.google.common.base.Suppliers;
 import java.util.function.Supplier;
 

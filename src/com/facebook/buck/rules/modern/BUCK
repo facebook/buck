@@ -2,6 +2,12 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
 TYPES = [
     "OutputPath.java",
+    "PublicOutputPath.java",
+    "ValueTypeInfo.java",
+    "ValueVisitor.java",
+    "ValueCreator.java",
+    "FieldInfo.java",
+    "ClassInfo.java",
 ]
 
 java_immutables_library(

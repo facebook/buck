@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.modern.impl;
+package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.rules.AddsToRuleKey;
 import java.lang.reflect.Field;
@@ -24,7 +24,7 @@ public class FieldInfo<T> {
   private Field field;
   private ValueTypeInfo<T> valueTypeInfo;
 
-  FieldInfo(Field field, ValueTypeInfo<T> valueTypeInfo) {
+  public FieldInfo(Field field, ValueTypeInfo<T> valueTypeInfo) {
     this.field = field;
     this.valueTypeInfo = valueTypeInfo;
   }

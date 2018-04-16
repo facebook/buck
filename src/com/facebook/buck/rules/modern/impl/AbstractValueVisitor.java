@@ -18,6 +18,8 @@ package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.modern.ClassInfo;
+import com.facebook.buck.rules.modern.ValueTypeInfo;
+import com.facebook.buck.rules.modern.ValueVisitor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;

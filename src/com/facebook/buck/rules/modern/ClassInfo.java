@@ -17,8 +17,6 @@
 package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.rules.AddsToRuleKey;
-import com.facebook.buck.rules.modern.impl.FieldInfo;
-import com.facebook.buck.rules.modern.impl.ValueVisitor;
 import com.google.common.collect.ImmutableCollection;
 import java.util.Optional;
 

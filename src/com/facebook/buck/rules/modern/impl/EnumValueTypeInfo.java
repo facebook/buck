@@ -16,6 +16,10 @@
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.rules.modern.ValueCreator;
+import com.facebook.buck.rules.modern.ValueTypeInfo;
+import com.facebook.buck.rules.modern.ValueVisitor;
+
 /** ValueTypeInfo for enums. */
 public class EnumValueTypeInfo<T extends Enum<T>> implements ValueTypeInfo<T> {
   private final Class<T> clazz;

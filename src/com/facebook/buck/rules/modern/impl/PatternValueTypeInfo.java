@@ -16,6 +16,9 @@
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.rules.modern.ValueCreator;
+import com.facebook.buck.rules.modern.ValueTypeInfo;
+import com.facebook.buck.rules.modern.ValueVisitor;
 import java.util.regex.Pattern;
 
 /** ValueTypeInfo for Pattern. These are basically treated as just the underlying pattern string. */

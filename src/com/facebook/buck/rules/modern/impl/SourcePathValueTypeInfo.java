@@ -17,6 +17,9 @@
 package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.modern.ValueCreator;
+import com.facebook.buck.rules.modern.ValueTypeInfo;
+import com.facebook.buck.rules.modern.ValueVisitor;
 
 /** ValueTypeInfo for SourcePaths. The SourcePath will be added to deps/inputs. */
 public class SourcePathValueTypeInfo implements ValueTypeInfo<SourcePath> {
