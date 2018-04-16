@@ -40,7 +40,7 @@ import org.immutables.value.Value;
 abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleKeyAppendable {
 
   @SuppressWarnings("immutables")
-  private AtomicReference<Optional<ImmutableList<BuildRule>>> computedDeps =
+  private final AtomicReference<Optional<ImmutableList<BuildRule>>> computedDeps =
       new AtomicReference<>(Optional.empty());
 
   @Override
