@@ -146,7 +146,7 @@ public class OutputPathVisitorTest extends AbstractValueVisitorTest {
   @Override
   @Test
   public void superClass() {
-    MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new Derived()));
+    MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new TwiceDerived()));
   }
 
   @Override

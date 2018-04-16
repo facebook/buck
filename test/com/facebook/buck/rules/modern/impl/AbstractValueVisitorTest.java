@@ -233,6 +233,10 @@ public abstract class AbstractValueVisitorTest {
     @AddToRuleKey private final double number = 2.3;
   }
 
+  public static class TwiceDerived extends Derived {
+    @AddToRuleKey private final int number = 3;
+  }
+
   public static class Empty implements FakeBuildable {}
 
   public static class Appendable implements AddsToRuleKey {

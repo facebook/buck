@@ -190,7 +190,7 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   @Test
   @Override
   public void superClass() throws IOException {
-    test(new Derived());
+    test(new TwiceDerived());
   }
 
   @Test

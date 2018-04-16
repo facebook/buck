@@ -271,9 +271,6 @@ public class Deserializer {
       T instance = (T) new ObjenesisStd().newInstance(instanceClass);
       ClassInfo<? super T> classInfo = DefaultClassInfoFactory.forInstance(instance);
 
-      if (classInfo.getSuperInfo().isPresent()) {
-        initialize(instance, classInfo.getSuperInfo().get());
-      }
       initialize(instance, classInfo);
 
       return instance;
@@ -281,6 +278,10 @@ public class Deserializer {
 
     private <T extends AddsToRuleKey> void initialize(T instance, ClassInfo<? super T> classInfo)
         throws IOException {
+      if (classInfo.getSuperInfo().isPresent()) {
+        initialize(instance, classInfo.getSuperInfo().get());
+      }
+
       ImmutableCollection<FieldInfo<?>> fields = classInfo.getFieldInfos();
       for (FieldInfo<?> info : fields) {
         try {

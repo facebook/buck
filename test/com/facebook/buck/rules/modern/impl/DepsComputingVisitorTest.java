@@ -186,7 +186,7 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
   @Override
   @Test
   public void superClass() {
-    apply(new Derived());
+    apply(new TwiceDerived());
   }
 
   @Override

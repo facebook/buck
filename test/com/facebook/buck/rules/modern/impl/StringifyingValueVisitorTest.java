@@ -103,8 +103,9 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
             + "  double(2.2)\n"
             + "  double(3.3)\n"
             + ">\n"
-            + "number:double(2.3)",
-        stringify(new Derived()));
+            + "number:double(2.3)\n"
+            + "number:integer(3)",
+        stringify(new TwiceDerived()));
   }
 
   @Override
