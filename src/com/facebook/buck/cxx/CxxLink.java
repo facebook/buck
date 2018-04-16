@@ -216,7 +216,6 @@ public class CxxLink extends AbstractBuildRule
                 context.getSourcePathResolver()))
         .add(
             new CxxLinkStep(
-                getBuildTarget(),
                 getProjectFilesystem().getRootPath(),
                 linker.getEnvironment(context.getSourcePathResolver()),
                 linker.getCommandPrefix(context.getSourcePathResolver()),

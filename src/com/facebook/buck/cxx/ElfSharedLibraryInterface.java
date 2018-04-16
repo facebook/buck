@@ -180,7 +180,6 @@ abstract class ElfSharedLibraryInterface extends AbstractBuildRuleWithDeclaredAn
                     context.getSourcePathResolver()))
             .add(
                 new CxxLinkStep(
-                    getBuildTarget(),
                     getProjectFilesystem().getRootPath(),
                     linker.getEnvironment(context.getSourcePathResolver()),
                     linker.getCommandPrefix(context.getSourcePathResolver()),
