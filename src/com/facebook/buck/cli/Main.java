@@ -826,13 +826,13 @@ public final class Main {
               unexpandedCommandLineArgs,
               filesystem.getBuckPaths().getLogDir());
 
-      try (DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
+      try (GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
+              GlobalStateManager.singleton()
+                  .setupLoggers(invocationInfo, console.getStdErr(), stdErr, verbosity);
+          DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
           ) {
 
-        try (GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
-                GlobalStateManager.singleton()
-                    .setupLoggers(invocationInfo, console.getStdErr(), stdErr, verbosity);
-            ThrowingCloseableWrapper<ExecutorService, InterruptedException> diskIoExecutorService =
+        try (ThrowingCloseableWrapper<ExecutorService, InterruptedException> diskIoExecutorService =
                 getExecutorWrapper(
                     MostExecutors.newSingleThreadExecutor("Disk I/O"),
                     "Disk IO",
