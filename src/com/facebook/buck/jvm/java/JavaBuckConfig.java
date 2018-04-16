@@ -38,6 +38,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.logging.Level;
 
 /** A java-specific "view" of BuckConfig. */
 public class JavaBuckConfig implements ConfigView<BuckConfig> {
@@ -241,6 +242,13 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
         .orElse(UnusedDependenciesAction.IGNORE);
   }
 
+  public Level getDuplicatesLogLevel() {
+    return delegate
+        .getEnum(SECTION, "duplicates_log_level", DuplicatesLogLevel.class)
+        .orElse(DuplicatesLogLevel.INFO)
+        .getLevel();
+  }
+
   public enum SourceAbiVerificationMode {
     /** Don't verify ABI jars. */
     OFF,
@@ -255,5 +263,23 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     FAIL,
     WARN,
     IGNORE
+  }
+
+  /** Logging level duplicates are reported at */
+  public enum DuplicatesLogLevel {
+    WARN(Level.WARNING),
+    INFO(Level.INFO),
+    FINE(Level.FINE),
+    ;
+
+    private final Level level;
+
+    DuplicatesLogLevel(Level level) {
+      this.level = level;
+    }
+
+    public Level getLevel() {
+      return level;
+    }
   }
 }

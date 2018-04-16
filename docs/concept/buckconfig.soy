@@ -2443,6 +2443,22 @@ cxx_library(
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'java' /}
+  {param name: 'duplicates_log_level' /}
+  {param example_value: 'info' /}
+  {param description}
+     <p>Verbosity of logs emitted on duplicates when building binary.</p>
+     <p>The valid values are:
+       <ul>
+         <li><code>info</code> (default): emit an info to the console,</li>
+         <li><code>warn</code>: emit a warning to the console,</li>
+         <li><code>fine</code>: emit a fine info to the console, visible only at high verbosity levels.</li>
+       </ul>
+     </p>
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'kotlin' /}
   {param description}

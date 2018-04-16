@@ -40,6 +40,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.logging.Level;
 import org.junit.Test;
 
 public class JavaBinaryTest {
@@ -96,7 +97,8 @@ public class JavaBinaryTest {
                 /* blacklist */ ImmutableSet.of(),
                 ImmutableSet.of(),
                 ImmutableSet.of(),
-                /* cache */ true));
+                /* cache */ true,
+                Level.INFO));
 
     // Strip the trailing "." from the absolute path to the current directory.
     final String basePath = new File(".").getAbsolutePath().replaceFirst("\\.$", "");
