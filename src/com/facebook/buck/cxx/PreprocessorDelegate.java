@@ -58,7 +58,6 @@ final class PreprocessorDelegate implements AddsToRuleKey {
   @AddToRuleKey private final PreprocessorFlags preprocessorFlags;
 
   // Fields that are not added to the rule key.
-  private final DebugPathSanitizer sanitizer;
   private final Path workingDir;
   private final Optional<SymlinkTree> sandbox;
 
@@ -74,7 +73,6 @@ final class PreprocessorDelegate implements AddsToRuleKey {
   private WeakMemoizer<HeaderPathNormalizer> headerPathNormalizer = new WeakMemoizer<>();
 
   public PreprocessorDelegate(
-      DebugPathSanitizer sanitizer,
       HeaderVerification headerVerification,
       Path workingDir,
       Preprocessor preprocessor,
@@ -84,7 +82,6 @@ final class PreprocessorDelegate implements AddsToRuleKey {
       Optional<CxxIncludePaths> leadingIncludePaths) {
     this.preprocessor = preprocessor;
     this.preprocessorFlags = preprocessorFlags;
-    this.sanitizer = sanitizer;
     this.headerVerification = headerVerification;
     this.workingDir = workingDir;
     this.minLengthPathRepresentation = PathShortener.byRelativizingToWorkingDir(workingDir);
@@ -95,7 +92,6 @@ final class PreprocessorDelegate implements AddsToRuleKey {
 
   public PreprocessorDelegate withLeadingIncludePaths(CxxIncludePaths leadingIncludePaths) {
     return new PreprocessorDelegate(
-        this.sanitizer,
         this.headerVerification,
         this.workingDir,
         this.preprocessor,
@@ -216,8 +212,11 @@ final class PreprocessorDelegate implements AddsToRuleKey {
   /**
    * Build a {@link CxxToolFlags} representing our sanitized include paths (local, system, iquote,
    * framework). Does not include {@link #leadingIncludePaths}.
+   *
+   * @param sanitizer
    */
-  public CxxToolFlags getSanitizedIncludePathFlags(SourcePathResolver resolver) {
+  public CxxToolFlags getSanitizedIncludePathFlags(
+      SourcePathResolver resolver, DebugPathSanitizer sanitizer) {
     return preprocessorFlags.getSanitizedIncludePathFlags(
         sanitizer,
         resolver,

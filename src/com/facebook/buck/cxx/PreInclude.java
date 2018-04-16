@@ -260,7 +260,6 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver) {
     return new PreprocessorDelegate(
-        cxxPlatform.getCompilerDebugPathSanitizer(),
         cxxPlatform.getHeaderVerification(),
         getProjectFilesystem().getRootPath(),
         preprocessor,

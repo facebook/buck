@@ -67,7 +67,6 @@ public class CxxPrecompiledHeaderTest {
             ImmutableSortedSet.of(),
             Paths.get("dir/foo.hash1.hash2.gch"),
             new PreprocessorDelegate(
-                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                 CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
                 Paths.get("./"),
                 preprocessorSupportingPch,

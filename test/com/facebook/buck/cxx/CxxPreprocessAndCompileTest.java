@@ -200,7 +200,6 @@ public class CxxPreprocessAndCompileTest {
                     projectFilesystem,
                     ImmutableSortedSet.of(),
                     new PreprocessorDelegate(
-                        CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                         CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
                         DEFAULT_WORKING_DIR,
                         DEFAULT_PREPROCESSOR,
@@ -315,7 +314,6 @@ public class CxxPreprocessAndCompileTest {
                     projectFilesystem,
                     ImmutableSortedSet.of(),
                     new PreprocessorDelegate(
-                        CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                         CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
                         DEFAULT_WORKING_DIR,
                         DEFAULT_PREPROCESSOR,
@@ -413,7 +411,6 @@ public class CxxPreprocessAndCompileTest {
             projectFilesystem,
             ImmutableSortedSet.of(),
             new PreprocessorDelegate(
-                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                 CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
                 DEFAULT_WORKING_DIR,
                 new GccPreprocessor(preprocessorTool),
@@ -508,7 +505,6 @@ public class CxxPreprocessAndCompileTest {
             projectFilesystem,
             ImmutableSortedSet.of(),
             new PreprocessorDelegate(
-                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                 CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
                 DEFAULT_WORKING_DIR,
                 PREPROCESSOR_WITH_COLOR_SUPPORT,
