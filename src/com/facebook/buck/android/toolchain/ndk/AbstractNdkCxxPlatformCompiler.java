@@ -16,24 +16,29 @@
 
 package com.facebook.buck.android.toolchain.ndk;
 
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-interface AbstractNdkCxxPlatformCompiler {
+interface AbstractNdkCxxPlatformCompiler extends AddsToRuleKey {
 
+  @AddToRuleKey
   NdkCompilerType getType();
 
   /**
    * @return the compiler version, corresponding to either `gcc_version` or `clang_version` from the
    *     .buckconfig settings, depending on which compiler family was selected.
    */
+  @AddToRuleKey
   String getVersion();
 
   /**
    * @return the GCC compiler version. Since even runtimes which are not GCC-based need to use GCC
    *     tools (e.g. ar, as,, ld.gold), we need to *always* have a version of GCC.
    */
+  @AddToRuleKey
   String getGccVersion();
 }
