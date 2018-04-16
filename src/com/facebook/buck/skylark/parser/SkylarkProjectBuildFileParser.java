@@ -191,7 +191,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         throw BuildFileParseException.createForUnknownParseError(
             "Cannot evaluate build file " + buildFile);
       }
-      ImmutableList<Map<String, Object>> rules = parseContext.getRecordedRules();
+      ImmutableList<ImmutableMap<String, Object>> rules = parseContext.getRecordedRules();
       LOG.verbose("Got rules: %s", rules);
       LOG.verbose("Parsed %d rules from %s", rules.size(), buildFile);
       return ParseResult.builder()

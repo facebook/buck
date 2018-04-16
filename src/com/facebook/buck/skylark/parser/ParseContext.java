@@ -17,10 +17,10 @@
 package com.facebook.buck.skylark.parser;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
-import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
  * rules.
  */
 class ParseContext {
-  private final ImmutableList.Builder<Map<String, Object>> rawRuleBuilder;
+  private final ImmutableList.Builder<ImmutableMap<String, Object>> rawRuleBuilder;
   // internal variable exposed to rules that is used to track parse events. This allows us to
   // remove parse state from rules and as such makes rules reusable across parse invocations
   private static final String PARSE_CONTEXT = "$parse_context";
@@ -40,7 +40,7 @@ class ParseContext {
   }
 
   /** Records the parsed {@code rawRule}. */
-  void recordRule(Map<String, Object> rawRule) {
+  void recordRule(ImmutableMap<String, Object> rawRule) {
     rawRuleBuilder.add(rawRule);
   }
 
@@ -48,7 +48,7 @@ class ParseContext {
    * @return The list of raw build rules discovered in parsed build file. Raw rule is presented as a
    *     map with attributes as keys and parameters as values.
    */
-  ImmutableList<Map<String, Object>> getRecordedRules() {
+  ImmutableList<ImmutableMap<String, Object>> getRecordedRules() {
     return rawRuleBuilder.build();
   }
 
