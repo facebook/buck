@@ -192,14 +192,11 @@ public class JavaAnnotationProcessorDescriptionTest {
     thrown.expectMessage("//foo:baz: must specify a processor class, none specified;");
 
     // When
-    JavaAnnotationProcessor javaAnnotationProcessor =
-        (JavaAnnotationProcessor)
-            new JavaAnnotationProcessorDescription()
-                .createBuildRule(
-                    TestBuildRuleCreationContextFactory.create(
-                        buildRuleResolver, projectFilesystem),
-                    buildTarget,
-                    params,
-                    arg);
+    new JavaAnnotationProcessorDescription()
+        .createBuildRule(
+            TestBuildRuleCreationContextFactory.create(buildRuleResolver, projectFilesystem),
+            buildTarget,
+            params,
+            arg);
   }
 }

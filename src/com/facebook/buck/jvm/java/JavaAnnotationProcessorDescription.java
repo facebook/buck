@@ -52,17 +52,15 @@ public class JavaAnnotationProcessorDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       JavaAnnotationProcessorDescriptionArg args) {
-    JavacPluginProperties.Builder propsBuilder = JavacPluginProperties.builder();
-
-    Optional<String> processorClass = args.getProcessorClass();
-
-    if (!processorClass.isPresent() && args.getProcessorClasses().isEmpty()) {
+    if (!args.getProcessorClass().isPresent() && args.getProcessorClasses().isEmpty()) {
       throw new HumanReadableException(
           String.format("%s: must specify a processor class, none specified;", buildTarget));
     }
 
-    if (processorClass.isPresent()) {
-      propsBuilder.addProcessorNames(processorClass.get());
+    JavacPluginProperties.Builder propsBuilder = JavacPluginProperties.builder();
+
+    if (args.getProcessorClass().isPresent()) {
+      propsBuilder.addProcessorNames(args.getProcessorClass().get());
     } else {
       for (String pClass : args.getProcessorClasses()) {
         propsBuilder.addProcessorNames(pClass);
