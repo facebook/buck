@@ -732,7 +732,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     Path binaryOutputPath =
         context
             .getSourcePathResolver()
-            .getRelativePath(Preconditions.checkNotNull(binary.get().getSourcePathToOutput()));
+            .getAbsolutePath(Preconditions.checkNotNull(binary.get().getSourcePathToOutput()));
 
     ImmutableMap.Builder<Path, Path> binariesBuilder = ImmutableMap.builder();
     binariesBuilder.put(bundleBinaryPath, binaryOutputPath);
@@ -801,7 +801,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
               getProjectFilesystem(),
               buildContext
                   .getSourcePathResolver()
-                  .getRelativePath(appleDsym.get().getSourcePathToOutput()),
+                  .getAbsolutePath(appleDsym.get().getSourcePathToOutput()),
               bundleRoot.getParent(),
               CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
       appendDsymRenameStepToMatchBundleName(stepsBuilder, buildableContext, buildContext);

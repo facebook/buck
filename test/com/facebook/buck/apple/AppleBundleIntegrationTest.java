@@ -54,6 +54,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.IOException;
@@ -1409,5 +1410,48 @@ public class AppleBundleIntegrationTest {
     workspace
         .runBuckBuild("//:bundle_with_multiple_matching_binaries#iphonesimulator-x86_64")
         .assertFailure();
+  }
+
+  @Test
+  public void crossCellApplicationBundle() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_cross_cell_application_bundle/primary", tmp.newFolder());
+    workspace.setUp();
+    ProjectWorkspace secondary =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_cross_cell_application_bundle/secondary", tmp.newFolder());
+    secondary.setUp();
+
+    TestDataHelper.overrideBuckconfig(
+        workspace,
+        ImmutableMap.of(
+            "repositories",
+            ImmutableMap.of("secondary", secondary.getPath(".").normalize().toString())));
+
+    BuildTarget target =
+        workspace.newBuildTarget("//:DemoApp#dwarf-and-dsym,iphonesimulator-x86_64,no_debug");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    workspace.verify(
+        Paths.get("DemoApp_output.expected"),
+        BuildTargets.getGenPath(
+            filesystem,
+            target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+            "%s"));
+
+    Path appPath =
+        workspace.getPath(
+            BuildTargets.getGenPath(
+                    filesystem,
+                    target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    "%s")
+                .resolve(target.getShortName() + ".app"));
+    assertTrue(Files.exists(appPath.resolve(target.getShortName())));
+
+    assertTrue(checkCodeSigning(appPath));
+
+    // Non-Swift target shouldn't include Frameworks/
+    assertFalse(Files.exists(appPath.resolve("Frameworks")));
   }
 }
