@@ -125,6 +125,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
             + "    >\n"
             + "  >\n"
             + ">\n"
+            + "function:null\n"
             + "list:List<\n"
             + "  com.facebook.buck.rules.modern.impl.AbstractValueVisitorTest$Appendable<\n"
             + "    sp:SourcePath(/project/root/appendable.path)\n"

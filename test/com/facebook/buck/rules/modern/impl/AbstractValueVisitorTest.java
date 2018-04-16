@@ -27,6 +27,7 @@ import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.OutputPath;
@@ -249,6 +250,8 @@ public abstract class AbstractValueVisitorTest {
 
   public static class WithAddsToRuleKey implements FakeBuildable {
     @AddToRuleKey final NestedAppendable nested = new NestedAppendable();
+
+    @AddToRuleKey @Nullable final RuleKeyAppendableFunction<String, String> function = null;
 
     @AddToRuleKey
     private final ImmutableList<AddsToRuleKey> list =

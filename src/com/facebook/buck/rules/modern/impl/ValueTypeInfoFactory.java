@@ -64,7 +64,9 @@ public class ValueTypeInfoFactory {
       return info;
     }
     try {
-      if (type instanceof ParameterizedType) {
+      if (type instanceof ParameterizedType
+          && !AddsToRuleKey.class.isAssignableFrom(
+              (Class<?>) ((ParameterizedType) type).getRawType())) {
         for (Type t : ((ParameterizedType) type).getActualTypeArguments()) {
           // Ensure that each required type argument's ValueTypeInfo is already computed.
           forType(t);
