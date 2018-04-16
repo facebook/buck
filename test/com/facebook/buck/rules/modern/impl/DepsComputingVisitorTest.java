@@ -143,6 +143,13 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
     apply(new WithExcluded());
   }
 
+  @Override
+  @Test
+  public void immutables() throws Exception {
+    expect(inputRuleResolver.resolve(anyObject())).andReturn(Optional.empty()).times(4);
+    apply(new WithImmutables());
+  }
+
   static class WithSourcePathList implements FakeBuildable {
     @AddToRuleKey private final ImmutableList<SourcePath> inputs;
 

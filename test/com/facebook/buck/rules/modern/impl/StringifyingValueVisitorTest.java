@@ -256,4 +256,27 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   public void excluded() throws Exception {
     assertEquals("excluded:\n" + "nullNotAnnoted:", stringify(new WithExcluded()));
   }
+
+  @Override
+  @Test
+  public void immutables() throws Exception {
+    assertEquals(
+        "tupleInterfaceData:com.facebook.buck.rules.modern.impl.TupleInterfaceData<\n"
+            + "  first:SourcePath(/project/root/first.path)\n"
+            + "  second:string(world)\n"
+            + ">\n"
+            + "immutableInterfaceData:com.facebook.buck.rules.modern.impl.ImmutableInterfaceData<\n"
+            + "  first:SourcePath(/project/root/second.path)\n"
+            + "  second:string(world)\n"
+            + ">\n"
+            + "tupleClassData:com.facebook.buck.rules.modern.impl.TupleClassData<\n"
+            + "  first:SourcePath(/project/root/third.path)\n"
+            + "  second:string(world)\n"
+            + ">\n"
+            + "immutableClassData:com.facebook.buck.rules.modern.impl.ImmutableClassData<\n"
+            + "  first:SourcePath(/project/root/fourth.path)\n"
+            + "  second:string(world)\n"
+            + ">",
+        stringify(new WithImmutables()));
+  }
 }

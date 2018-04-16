@@ -270,4 +270,10 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
     expectedException.expectMessage(Matchers.containsString("Cannot create excluded fields."));
     test(new WithExcluded());
   }
+
+  @Override
+  @Test
+  public void immutables() throws Exception {
+    test(new WithImmutables());
+  }
 }

@@ -35,6 +35,8 @@ import com.facebook.buck.rules.modern.PublicOutputPath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.MoreSuppliers;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -45,6 +47,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
+import org.immutables.value.Value;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -117,6 +120,9 @@ public abstract class AbstractValueVisitorTest {
 
   @Test
   public abstract void excluded() throws Exception;
+
+  @Test
+  public abstract void immutables() throws Exception;
 
   public interface FakeBuildable extends Buildable {
     @Override
@@ -281,5 +287,70 @@ public abstract class AbstractValueVisitorTest {
     @AddToRuleKey final OutputPath otherOutput = new OutputPath("other.file");
 
     @AddToRuleKey final AddsToRuleKey appendable = new Appendable();
+  }
+
+  @BuckStyleTuple
+  @Value.Immutable
+  interface AbstractTupleInterfaceData extends AddsToRuleKey {
+    @AddToRuleKey
+    SourcePath getFirst();
+
+    @AddToRuleKey
+    String getSecond();
+  }
+
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractImmutableInterfaceData extends AddsToRuleKey {
+    @AddToRuleKey
+    SourcePath getFirst();
+
+    @AddToRuleKey
+    String getSecond();
+  }
+
+  @BuckStyleTuple
+  @Value.Immutable
+  abstract static class AbstractTupleClassData implements AddsToRuleKey {
+    @AddToRuleKey
+    abstract SourcePath getFirst();
+
+    @AddToRuleKey
+    abstract String getSecond();
+  }
+
+  @BuckStyleImmutable
+  @Value.Immutable
+  abstract static class AbstractImmutableClassData implements AddsToRuleKey {
+    @AddToRuleKey
+    abstract SourcePath getFirst();
+
+    @AddToRuleKey
+    abstract String getSecond();
+  }
+
+  static class WithImmutables implements FakeBuildable {
+
+    @AddToRuleKey
+    private final TupleInterfaceData tupleInterfaceData =
+        TupleInterfaceData.of(FakeSourcePath.of(rootFilesystem, "first.path"), "world");
+
+    @AddToRuleKey
+    private final ImmutableInterfaceData immutableInterfaceData =
+        ImmutableInterfaceData.builder()
+            .setFirst(FakeSourcePath.of(rootFilesystem, "second.path"))
+            .setSecond("world")
+            .build();
+
+    @AddToRuleKey
+    private final TupleClassData tupleClassData =
+        TupleClassData.of(FakeSourcePath.of(rootFilesystem, "third.path"), "world");
+
+    @AddToRuleKey
+    private final ImmutableClassData immutableClassData =
+        ImmutableClassData.builder()
+            .setFirst(FakeSourcePath.of(rootFilesystem, "fourth.path"))
+            .setSecond("world")
+            .build();
   }
 }
