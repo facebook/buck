@@ -101,7 +101,7 @@ public class InferBuckConfig implements RuleKeyAppendable {
               }
               String versionString = versionOutput.orElse("").trim();
               Preconditions.checkState(!Strings.isNullOrEmpty(versionString));
-              return VersionedTool.of(topLevel, "infer", versionString);
+              return VersionedTool.of(delegate.getPathSourcePath(topLevel), "infer", versionString);
             });
   }
 

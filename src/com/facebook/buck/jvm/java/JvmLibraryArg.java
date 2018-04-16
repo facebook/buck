@@ -23,13 +23,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -43,7 +43,7 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
 
   Optional<String> getJavaVersion();
 
-  Optional<Path> getJavac();
+  Optional<SourcePath> getJavac();
 
   Optional<SourcePath> getJavacJar();
 
@@ -85,7 +85,7 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
         .setCompiler(getCompiler())
         .setJavacPath(
             getJavac().isPresent()
-                ? Optional.of(Either.ofLeft(getJavac().get()))
+                ? Optional.of(Either.ofLeft((PathSourcePath) getJavac().get()))
                 : Optional.empty())
         .setJavacJarPath(getJavacJar())
         .setCompilerClassName(getCompilerClassName())

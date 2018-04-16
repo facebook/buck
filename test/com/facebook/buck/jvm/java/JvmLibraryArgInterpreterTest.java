@@ -30,7 +30,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.types.Either;
-import java.nio.file.Paths;
 import java.util.Optional;
 import org.immutables.value.Value;
 import org.junit.Before;
@@ -107,7 +106,10 @@ public class JvmLibraryArgInterpreterTest {
   @Test
   public void javacArgIsSet() {
     JvmLibraryArg arg =
-        ExampleJvmLibraryArg.builder().setName("foo").setJavac(Paths.get("does-not-exist")).build();
+        ExampleJvmLibraryArg.builder()
+            .setName("foo")
+            .setJavac(FakeSourcePath.of("does-not-exist"))
+            .build();
 
     assertEquals(
         Optional.of(Either.ofLeft(arg.getJavac().get())), arg.getJavacSpec().getJavacPath());

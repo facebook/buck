@@ -22,8 +22,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.tool.config.ToolConfig;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -121,6 +123,10 @@ public class PythonBuckConfig {
 
   public String getDefaultSection() {
     return SECTION;
+  }
+
+  public PathSourcePath getSourcePath(Path pythonPath) {
+    return delegate.getPathSourcePath(pythonPath);
   }
 
   public enum PackageStyle {

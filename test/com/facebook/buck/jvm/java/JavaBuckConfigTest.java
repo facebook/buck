@@ -163,7 +163,7 @@ public class JavaBuckConfigTest {
                 .join("[tools]", "    javac = " + javac.toString().replace("\\", "\\\\")));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
 
-    assertEquals(Optional.of(javac), config.getJavacPath());
+    assertEquals(config.getDelegate().getPathSourcePath(javac), config.getJavacPath().get());
   }
 
   @Test

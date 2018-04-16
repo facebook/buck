@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestBuildRuleResolver;
@@ -31,7 +32,6 @@ import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.impl.SwiftPlatformFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Paths;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,8 +44,8 @@ public class SwiftNativeLinkableTest {
 
   @Before
   public void setUp() {
-    swiftcTool = VersionedTool.of(Paths.get("swiftc"), "foo", "1.0");
-    swiftStdTool = VersionedTool.of(Paths.get("swift-std"), "foo", "1.0");
+    swiftcTool = VersionedTool.of(FakeSourcePath.of("swiftc"), "foo", "1.0");
+    swiftStdTool = VersionedTool.of(FakeSourcePath.of("swift-std"), "foo", "1.0");
 
     BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);

@@ -49,6 +49,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.ConstantToolProvider;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.rules.VersionedTool;
@@ -567,20 +568,20 @@ public class NdkCxxPlatforms {
     return AndroidNdkResolver.findNdkVersionFromDirectory(ndkRoot).get();
   }
 
-  private static Path getToolPath(
+  private static PathSourcePath getToolPath(
       NdkCxxToolchainPaths toolchainPaths, String tool, ExecutableFinder executableFinder) {
     Path expected = toolchainPaths.getToolPath(tool);
     Optional<Path> path = executableFinder.getOptionalExecutable(expected, ImmutableMap.of());
     Preconditions.checkState(path.isPresent(), expected.toString());
-    return path.get();
+    return PathSourcePath.of(toolchainPaths.filesystem, path.get());
   }
 
-  private static Path getGccToolPath(
+  private static PathSourcePath getGccToolPath(
       NdkCxxToolchainPaths toolchainPaths, String tool, ExecutableFinder executableFinder) {
     Path expected = toolchainPaths.getGccToolchainBinPath().resolve(tool);
     Optional<Path> path = executableFinder.getOptionalExecutable(expected, ImmutableMap.of());
     Preconditions.checkState(path.isPresent(), expected.toString());
-    return path.get();
+    return PathSourcePath.of(toolchainPaths.filesystem, path.get());
   }
 
   private static Tool getGccTool(

@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
@@ -28,7 +29,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
@@ -43,8 +43,8 @@ public class SwiftPlatformFactoryIntegrationTest {
 
   @Before
   public void setUp() {
-    swiftcTool = VersionedTool.of(Paths.get("swiftc"), "foo", "1.0");
-    swiftStdTool = VersionedTool.of(Paths.get("swift-std"), "foo", "1.0");
+    swiftcTool = VersionedTool.of(FakeSourcePath.of("swiftc"), "foo", "1.0");
+    swiftStdTool = VersionedTool.of(FakeSourcePath.of("swift-std"), "foo", "1.0");
   }
 
   @Test

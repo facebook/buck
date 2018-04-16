@@ -91,11 +91,11 @@ public class ToolTest {
     String tool = "tool";
     String version = "version";
 
-    Tool tool1 = VersionedTool.of(Paths.get("something"), tool, version);
+    Tool tool1 = VersionedTool.of(FakeSourcePath.of("something"), tool, version);
     RuleKey tool1RuleKey =
         createRuleKeyBuilder(ruleKeyFactory).setReflectively("tool", tool1).build(RuleKey::new);
 
-    Tool tool2 = VersionedTool.of(Paths.get("something-else"), tool, version);
+    Tool tool2 = VersionedTool.of(FakeSourcePath.of("something-else"), tool, version);
     RuleKey tool2RuleKey =
         createRuleKeyBuilder(ruleKeyFactory).setReflectively("tool", tool2).build(RuleKey::new);
 

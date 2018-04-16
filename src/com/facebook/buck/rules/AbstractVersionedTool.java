@@ -37,7 +37,7 @@ abstract class AbstractVersionedTool implements Tool {
 
   /** The path to the tool. The contents or path to the tool do not contribute to the rule key. */
   @Value.Parameter
-  protected abstract Path getPath();
+  protected abstract PathSourcePath getPath();
 
   /** Additional flags that we pass to the tool, but which do *not* contribute to the rule key. */
   protected abstract ImmutableList<String> getExtraArgs();

@@ -25,6 +25,9 @@ import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.VersionedTool;
@@ -46,6 +49,7 @@ import java.nio.file.Paths;
 import java.util.function.Supplier;
 import org.easymock.Capture;
 import org.easymock.EasyMockSupport;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -58,6 +62,13 @@ public class ExternalJavacTest extends EasyMockSupport {
 
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
+  ProjectFilesystem filesystem;
+
+  @Before
+  public void setUp() {
+    filesystem = TestProjectFilesystems.createProjectFilesystem(root.getRoot());
+  }
+
   @Test
   public void testJavacCommand() {
     ExternalJavac firstOrder = createTestStep();
@@ -65,14 +76,19 @@ public class ExternalJavacTest extends EasyMockSupport {
     ExternalJavac transitive = createTestStep();
 
     assertEquals(
-        "fakeJavac -source 6 -target 6 -g -d . -classpath foo.jar @" + PATH_TO_SRCS_LIST,
+        filesystem.resolve("fakeJavac")
+            + " -source 6 -target 6 -g -d . -classpath foo.jar @"
+            + PATH_TO_SRCS_LIST,
         firstOrder.getDescription(
             getArgs().add("foo.jar").build(), SOURCE_PATHS, PATH_TO_SRCS_LIST));
     assertEquals(
-        "fakeJavac -source 6 -target 6 -g -d . -classpath foo.jar @" + PATH_TO_SRCS_LIST,
+        filesystem.resolve("fakeJavac")
+            + " -source 6 -target 6 -g -d . -classpath foo.jar @"
+            + PATH_TO_SRCS_LIST,
         warn.getDescription(getArgs().add("foo.jar").build(), SOURCE_PATHS, PATH_TO_SRCS_LIST));
     assertEquals(
-        "fakeJavac -source 6 -target 6 -g -d . -classpath bar.jar"
+        filesystem.resolve("fakeJavac")
+            + " -source 6 -target 6 -g -d . -classpath bar.jar"
             + File.pathSeparator
             + "foo.jar @"
             + PATH_TO_SRCS_LIST,
@@ -96,7 +112,7 @@ public class ExternalJavacTest extends EasyMockSupport {
     FakeProcess javacProc = new FakeProcess(0, "", "");
     FakeProcessExecutor executor = new FakeProcessExecutor(ImmutableMap.of(javacExe, javacProc));
     ExternalJavac compiler =
-        new ExternalJavac(Either.ofLeft(javac)) {
+        new ExternalJavac(Either.ofLeft(FakeSourcePath.of(javac))) {
           @Override
           ProcessExecutor createProcessExecutor() {
             return executor;
@@ -129,7 +145,7 @@ public class ExternalJavacTest extends EasyMockSupport {
     FakeProcess javacProc = new FakeProcess(0, "", reportedJavacVersion);
     FakeProcessExecutor executor = new FakeProcessExecutor(ImmutableMap.of(javacExe, javacProc));
     ExternalJavac compiler =
-        new ExternalJavac(Either.ofLeft(javac)) {
+        new ExternalJavac(Either.ofLeft(FakeSourcePath.of(javac))) {
           @Override
           ProcessExecutor createProcessExecutor() {
             return executor;
@@ -156,6 +172,6 @@ public class ExternalJavacTest extends EasyMockSupport {
 
   private ExternalJavac createTestStep() {
     Path fakeJavac = Paths.get("fakeJavac");
-    return new ExternalJavac(Either.ofLeft(fakeJavac));
+    return new ExternalJavac(Either.ofLeft(FakeSourcePath.of(filesystem, fakeJavac)));
   }
 }

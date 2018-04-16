@@ -58,12 +58,10 @@ import javax.annotation.Nullable;
 /** javac implemented in a separate binary. */
 public class ExternalJavac implements Javac {
   @AddToRuleKey private final Supplier<Tool> javac;
-  private final Either<Path, BuildTargetSourcePath> actualPath;
+  private final Either<PathSourcePath, BuildTargetSourcePath> actualPath;
   private final String shortName;
 
-  public ExternalJavac(Either<Path, SourcePath> pathToJavac) {
-    // TODO(cjhopman): This is weird. It shouldn't be taking in a Path, it should get that as a
-    // PathSourcePath instead.
+  public ExternalJavac(final Either<PathSourcePath, SourcePath> pathToJavac) {
     if (pathToJavac.isRight() && pathToJavac.getRight() instanceof BuildTargetSourcePath) {
       BuildTargetSourcePath buildTargetPath = (BuildTargetSourcePath) pathToJavac.getRight();
       this.shortName = buildTargetPath.getTarget().toString();
@@ -89,13 +87,8 @@ public class ExternalJavac implements Javac {
                     }
                   });
     } else {
-      Path actualPath =
-          pathToJavac.transform(
-              path -> path,
-              path ->
-                  ((PathSourcePath) path)
-                      .getFilesystem()
-                      .resolve(((PathSourcePath) path).getRelativePath()));
+      PathSourcePath actualPath =
+          pathToJavac.transform(path -> path, path -> (PathSourcePath) path);
       this.actualPath = Either.ofLeft(actualPath);
       this.shortName = actualPath.toString();
       this.javac =
@@ -125,7 +118,7 @@ public class ExternalJavac implements Javac {
   }
 
   @VisibleForTesting
-  Either<Path, BuildTargetSourcePath> getActualPath() {
+  Either<PathSourcePath, BuildTargetSourcePath> getActualPath() {
     return actualPath;
   }
 
@@ -139,7 +132,7 @@ public class ExternalJavac implements Javac {
     return javac.get().getEnvironment(resolver);
   }
 
-  public static Javac createJavac(Either<Path, SourcePath> pathToJavac) {
+  public static Javac createJavac(Either<PathSourcePath, SourcePath> pathToJavac) {
     return new ExternalJavac(pathToJavac);
   }
 

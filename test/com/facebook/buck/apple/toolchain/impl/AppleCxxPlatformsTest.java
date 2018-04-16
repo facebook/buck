@@ -61,6 +61,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -1061,11 +1062,11 @@ public class AppleCxxPlatformsTest {
     assertThat(swiftPlatformOptional.isPresent(), is(true));
     Tool swiftcTool = swiftPlatformOptional.get().getSwiftc();
     assertTrue(swiftcTool instanceof VersionedTool);
-    assertThat(
-        ((VersionedTool) swiftcTool).getPath(),
-        equalTo(
-            projectFilesystem.getPath(
-                "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc")));
+    PathSourcePath path = ((VersionedTool) swiftcTool).getPath();
+    assertEquals(projectFilesystem, path.getFilesystem());
+    assertEquals(
+        "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+        path.getRelativePathName());
 
     assertThat(swiftPlatformOptional.get().getSwiftRuntimePaths(), Matchers.empty());
   }
@@ -1076,9 +1077,9 @@ public class AppleCxxPlatformsTest {
     Optional<SwiftPlatform> swiftPlatformOptional = platformWithConfiguredSwift.getSwiftPlatform();
     assertThat(swiftPlatformOptional.isPresent(), is(true));
     Tool swiftcTool = swiftPlatformOptional.get().getSwiftc();
-    assertThat(
-        ((VersionedTool) swiftcTool).getPath(),
-        equalTo(projectFilesystem.getPath("/TEMP_ROOT/usr/bin/swiftc")));
+    PathSourcePath path = ((VersionedTool) swiftcTool).getPath();
+    assertEquals(projectFilesystem, path.getFilesystem());
+    assertEquals("/TEMP_ROOT/usr/bin/swiftc", path.getRelativePathName());
 
     assertThat(
         swiftPlatformOptional.get().getSwiftRuntimePaths(),

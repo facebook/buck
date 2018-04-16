@@ -84,7 +84,7 @@ public class DefaultPexToolProvider implements PexToolProvider {
     return VersionedTool.builder()
         .setName("pex")
         .setVersion(ruleKeyConfiguration.getCoreKey())
-        .setPath(pythonInterpreter.getPythonInterpreterPath())
+        .setPath(pythonBuckConfig.getSourcePath(pythonInterpreter.getPythonInterpreterPath()))
         .addExtraArgs(DEFAULT_PATH_TO_PEX.toString())
         .build();
   }
