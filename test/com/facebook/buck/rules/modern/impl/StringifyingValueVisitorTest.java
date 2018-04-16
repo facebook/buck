@@ -287,4 +287,17 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   public void stringified() throws Exception {
     assertEquals("stringified:", stringify(new WithStringified()));
   }
+
+  @Override
+  @Test
+  public void wildcards() throws Exception {
+    assertEquals(
+        "path:Optional.empty()\n"
+            + "appendables:List<\n"
+            + "  com.facebook.buck.rules.modern.impl.AbstractValueVisitorTest$Appendable<\n"
+            + "    sp:SourcePath(/project/root/appendable.path)\n"
+            + "  >\n"
+            + ">",
+        stringify(new WithWildcards()));
+  }
 }

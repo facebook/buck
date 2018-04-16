@@ -156,6 +156,13 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
     apply(new WithStringified());
   }
 
+  @Override
+  @Test
+  public void wildcards() throws Exception {
+    expect(inputRuleResolver.resolve(anyObject())).andReturn(Optional.empty());
+    apply(new WithWildcards());
+  }
+
   static class WithSourcePathList implements FakeBuildable {
     @AddToRuleKey private final ImmutableList<SourcePath> inputs;
 

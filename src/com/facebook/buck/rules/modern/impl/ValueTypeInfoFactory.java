@@ -97,12 +97,23 @@ public class ValueTypeInfoFactory {
           || rawClass.equals(Long.class)
           || rawClass.equals(Float.class)
           || rawClass.equals(Double.class);
+    } else if (type instanceof WildcardType) {
+      WildcardType wildcardType = (WildcardType) type;
+      Type[] upperBounds = wildcardType.getUpperBounds();
+      Preconditions.checkState(upperBounds.length == 1);
+      return false;
     }
     return false;
   }
 
   private static ValueTypeInfo<?> computeTypeInfo(Type type) {
     Preconditions.checkArgument(!(type instanceof TypeVariable));
+    if (type instanceof WildcardType) {
+      WildcardType wildcardType = (WildcardType) type;
+      Type[] upperBounds = wildcardType.getUpperBounds();
+      Preconditions.checkState(upperBounds.length == 1);
+      type = upperBounds[0];
+    }
     Preconditions.checkArgument(!(type instanceof WildcardType));
 
     if (isSimpleType(type)) {

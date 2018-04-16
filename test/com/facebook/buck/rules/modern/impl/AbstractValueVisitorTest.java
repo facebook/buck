@@ -128,6 +128,9 @@ public abstract class AbstractValueVisitorTest {
   @Test
   public abstract void immutables() throws Exception;
 
+  @Test
+  public abstract void wildcards() throws Exception;
+
   public interface FakeBuildable extends Buildable {
     @Override
     default ImmutableList<Step> getBuildSteps(
@@ -367,5 +370,13 @@ public abstract class AbstractValueVisitorTest {
             .setFirst(FakeSourcePath.of(rootFilesystem, "fourth.path"))
             .setSecond("world")
             .build();
+  }
+
+  static class WithWildcards implements FakeBuildable {
+    @AddToRuleKey private final Optional<? extends SourcePath> path = Optional.empty();
+
+    @AddToRuleKey
+    private final ImmutableList<? extends AddsToRuleKey> appendables =
+        ImmutableList.of(new Appendable());
   }
 }

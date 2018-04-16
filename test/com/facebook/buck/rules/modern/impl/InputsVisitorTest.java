@@ -146,6 +146,13 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
     apply(new WithStringified());
   }
 
+  @Override
+  @Test
+  public void wildcards() throws Exception {
+    inputsConsumer.accept(anyObject());
+    apply(new WithWildcards());
+  }
+
   static class WithSourcePathList implements FakeBuildable {
     @AddToRuleKey private final ImmutableList<SourcePath> inputs;
 

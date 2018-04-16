@@ -308,6 +308,12 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
     test(new WithStringified());
   }
 
+  @Override
+  @Test
+  public void wildcards() throws Exception {
+    test(new WithWildcards());
+  }
+
   private static class WithCustomFieldBehavior implements FakeBuildable {
     // By default, fields without @AddToRuleKey can't be serialized. DefaultFieldSerialization
     // serializes them as though they were added to the key.
