@@ -140,9 +140,8 @@ public class Build implements Closeable {
       Console console,
       Optional<Path> pathToBuildReport) {
     ExitCode exitCode;
-    ImmutableList<BuildRule> rulesToBuild = getRulesToBuild(targetsish);
-
     try {
+      ImmutableList<BuildRule> rulesToBuild = getRulesToBuild(targetsish);
       List<BuildEngineResult> resultFutures = initializeBuild(rulesToBuild);
       exitCode =
           waitForBuildToFinishAndPrintFailuresToEventBus(
