@@ -20,6 +20,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.ModernBuildRule;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.Preconditions;
 import java.lang.reflect.Modifier;
 import java.util.Optional;
@@ -61,9 +62,8 @@ public class DefaultClassInfoFactory {
       info = classesInfo.computeIfAbsent(clazz, DefaultClassInfoFactory::computeClassInfo);
       return info;
     } catch (Exception e) {
-      throw new IllegalStateException(
-          String.format("Failed getting class info for %s: %s", clazz.getName(), e.getMessage()),
-          e);
+      throw new BuckUncheckedExecutionException(
+          e, "When getting class info for %s: %s", clazz.getName(), e.getMessage());
     }
   }
 

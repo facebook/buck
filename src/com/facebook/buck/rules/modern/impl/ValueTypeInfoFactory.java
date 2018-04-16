@@ -26,6 +26,7 @@ import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ImmutableListValueTypeInfo;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ImmutableSortedSetValueTypeInfo;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.OptionalValueTypeInfo;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
@@ -74,7 +75,8 @@ public class ValueTypeInfoFactory {
       }
       return typeInfos.computeIfAbsent(type, ValueTypeInfoFactory::computeTypeInfo);
     } catch (Exception t) {
-      throw new RuntimeException("Failed getting type info for type " + type.getTypeName(), t);
+      throw new BuckUncheckedExecutionException(
+          t, "When getting type info for type " + type.getTypeName());
     }
   }
 

@@ -47,6 +47,7 @@ import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.ErrorLogger;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
@@ -178,7 +179,8 @@ public class DefaultClassInfoTest {
           (Buildable) (buildContext, filesystem, outputPathResolver, buildCellPathFactory) -> null);
     } catch (Exception e) {
       assertThat(e.getMessage(), Matchers.containsString("cannot be or reference synthetic"));
-      assertThat(e.getMessage(), Matchers.containsString("DefaultClassInfoTest"));
+      assertThat(
+          ErrorLogger.getUserFriendlyMessage(e), Matchers.containsString("DefaultClassInfoTest"));
       throw e;
     }
   }
@@ -190,7 +192,8 @@ public class DefaultClassInfoTest {
     } catch (Exception e) {
       assertThat(
           e.getMessage(), Matchers.containsString("cannot be or reference anonymous classes"));
-      assertThat(e.getMessage(), Matchers.containsString("DefaultClassInfoTest"));
+      assertThat(
+          ErrorLogger.getUserFriendlyMessage(e), Matchers.containsString("DefaultClassInfoTest"));
       throw e;
     }
   }
@@ -202,7 +205,7 @@ public class DefaultClassInfoTest {
       DefaultClassInfoFactory.forInstance(new LocalBuildable());
     } catch (Exception e) {
       assertThat(e.getMessage(), Matchers.containsString("cannot be or reference local classes"));
-      assertThat(e.getMessage(), Matchers.containsString("LocalBuildable"));
+      assertThat(ErrorLogger.getUserFriendlyMessage(e), Matchers.containsString("LocalBuildable"));
       throw e;
     }
   }
@@ -217,7 +220,9 @@ public class DefaultClassInfoTest {
       assertThat(
           e.getMessage(),
           Matchers.containsString("cannot be or reference inner non-static classes"));
-      assertThat(e.getMessage(), Matchers.containsString("NonStaticInnerBuildable"));
+      assertThat(
+          ErrorLogger.getUserFriendlyMessage(e),
+          Matchers.containsString("NonStaticInnerBuildable"));
       throw e;
     }
   }
@@ -267,7 +272,8 @@ public class DefaultClassInfoTest {
       DefaultClassInfoFactory.forInstance(new DerivedFromBadBased());
     } catch (Exception e) {
       assertThat(e.getMessage(), Matchers.containsString("must be final (BadBase.value)"));
-      assertThat(e.getMessage(), Matchers.containsString("DerivedFromBadBased"));
+      assertThat(
+          ErrorLogger.getUserFriendlyMessage(e), Matchers.containsString("DerivedFromBadBased"));
       throw e;
     }
   }
