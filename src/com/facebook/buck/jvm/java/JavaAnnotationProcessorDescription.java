@@ -30,6 +30,8 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
+import com.google.common.collect.ImmutableSet;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 /**
@@ -50,8 +52,21 @@ public class JavaAnnotationProcessorDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       JavaAnnotationProcessorDescriptionArg args) {
+    if (!args.getProcessorClass().isPresent() && args.getProcessorClasses().isEmpty()) {
+      throw new HumanReadableException(
+          String.format("%s: must specify a processor class, none specified;", buildTarget));
+    }
+
     JavacPluginProperties.Builder propsBuilder = JavacPluginProperties.builder();
-    propsBuilder.addProcessorNames(args.getProcessorClass());
+
+    if (args.getProcessorClass().isPresent()) {
+      propsBuilder.addProcessorNames(args.getProcessorClass().get());
+    } else {
+      for (String pClass : args.getProcessorClasses()) {
+        propsBuilder.addProcessorNames(pClass);
+      }
+    }
+
     for (BuildRule dep : params.getBuildDeps()) {
       if (!(dep instanceof JavaLibrary)) {
         throw new HumanReadableException(
@@ -82,7 +97,13 @@ public class JavaAnnotationProcessorDescription
   @Value.Immutable
   interface AbstractJavaAnnotationProcessorDescriptionArg
       extends CommonDescriptionArg, HasDeclaredDeps {
-    String getProcessorClass();
+
+    @Value.Default
+    default Optional<String> getProcessorClass() {
+      return Optional.empty();
+    }
+
+    ImmutableSet<String> getProcessorClasses();
 
     @Value.Default
     default boolean isIsolateClassLoader() {
