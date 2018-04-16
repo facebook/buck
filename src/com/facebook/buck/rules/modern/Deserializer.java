@@ -22,6 +22,7 @@ import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.modern.annotations.CustomClassBehaviorTag;
 import com.facebook.buck.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.rules.modern.annotations.DefaultFieldSerialization;
@@ -46,6 +47,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.objenesis.ObjenesisStd;
 
@@ -78,11 +80,15 @@ public class Deserializer {
 
   private final Function<Optional<String>, ProjectFilesystem> cellMap;
   private final ClassFinder classFinder;
+  private final Supplier<SourcePathResolver> pathResolver;
 
   public Deserializer(
-      Function<Optional<String>, ProjectFilesystem> cellMap, ClassFinder classFinder) {
+      Function<Optional<String>, ProjectFilesystem> cellMap,
+      ClassFinder classFinder,
+      Supplier<SourcePathResolver> pathResolver) {
     this.cellMap = cellMap;
     this.classFinder = classFinder;
+    this.pathResolver = pathResolver;
   }
 
   public <T extends AddsToRuleKey> T deserialize(DataProvider provider, Class<T> clazz)
@@ -97,6 +103,17 @@ public class Deserializer {
     private Creator(DataProvider provider) {
       this.stream = new DataInputStream(provider.getData());
       this.provider = provider;
+    }
+
+    @Override
+    public <T> T createSpecial(Class<T> valueClass, Object... args) {
+      if (valueClass.equals(SourcePathResolver.class)) {
+        Preconditions.checkState(args.length == 0);
+        @SuppressWarnings("unchecked")
+        T value = (T) pathResolver.get();
+        return value;
+      }
+      throw new IllegalArgumentException();
     }
 
     @Override

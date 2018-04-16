@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.CustomClassSerialization;
@@ -40,6 +41,7 @@ import com.facebook.buck.rules.modern.Deserializer;
 import com.facebook.buck.rules.modern.Deserializer.DataProvider;
 import com.facebook.buck.rules.modern.Serializer;
 import com.facebook.buck.rules.modern.Serializer.Delegate;
+import com.facebook.buck.rules.modern.SourcePathResolverSerialization;
 import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueVisitor;
 import com.facebook.buck.rules.modern.annotations.CustomClassBehavior;
@@ -67,9 +69,11 @@ import org.junit.Test;
 public class BuildableSerializerTest extends AbstractValueVisitorTest {
   private SourcePathRuleFinder ruleFinder;
   private CellPathResolver cellResolver;
+  private SourcePathResolver resolver;
 
   @Before
   public void setUp() throws IOException, InterruptedException {
+    resolver = createStrictMock(SourcePathResolver.class);
     ruleFinder = createStrictMock(SourcePathRuleFinder.class);
     cellResolver = createStrictMock(CellPathResolver.class);
 
@@ -99,11 +103,11 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
     };
   }
 
-  <T extends Buildable> void test(T instance) throws IOException {
-    test(instance, expected -> expected);
+  <T extends Buildable> T test(T instance) throws IOException {
+    return test(instance, expected -> expected);
   }
 
-  <T extends Buildable> void test(T instance, Function<String, String> expectedMapper)
+  <T extends Buildable> T test(T instance, Function<String, String> expectedMapper)
       throws IOException {
     replay(cellResolver, ruleFinder);
 
@@ -124,7 +128,10 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
             .serialize(instance, DefaultClassInfoFactory.forInstance(instance));
 
     AddsToRuleKey reconstructed =
-        new Deserializer(s -> s.isPresent() ? otherFilesystem : rootFilesystem, Class::forName)
+        new Deserializer(
+                s -> s.isPresent() ? otherFilesystem : rootFilesystem,
+                Class::forName,
+                () -> resolver)
             .deserialize(
                 new DataProvider() {
                   @Override
@@ -139,8 +146,10 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
                   }
                 },
                 AddsToRuleKey.class);
+    Preconditions.checkState(instance.getClass().equals(reconstructed.getClass()));
     verify(cellResolver, ruleFinder);
     assertEquals(expectedMapper.apply(stringify(instance)), stringify(reconstructed));
+    return (T) reconstructed;
   }
 
   private String stringify(AddsToRuleKey instance) {
@@ -345,5 +354,16 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
       assertEquals("special", deserializer.createString());
       return new WithCustomClassBehavior();
     }
+  }
+
+  @Test
+  public void sourcePathResolver() throws Exception {
+    WithSourcePathResolver reconstructed = test(new WithSourcePathResolver());
+    assertEquals(resolver, reconstructed.resolver);
+  }
+
+  private static class WithSourcePathResolver implements FakeBuildable {
+    @CustomFieldBehavior(SourcePathResolverSerialization.class)
+    private final SourcePathResolver resolver = null;
   }
 }

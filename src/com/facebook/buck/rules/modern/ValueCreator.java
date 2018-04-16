@@ -67,4 +67,6 @@ public interface ValueCreator<E extends Exception> {
   Float createFloat() throws E;
 
   Double createDouble() throws E;
+
+  <T> T createSpecial(Class<T> valueClass, Object... args) throws E;
 }

@@ -20,6 +20,7 @@ import com.facebook.buck.rules.BuildExecutorRunner;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.Deserializer;
@@ -67,7 +68,8 @@ class ReconstructingStrategy extends AbstractModernBuildRuleStrategy {
                     .getCellProvider()
                     .getCellByPath(cellResolver.getCellPathOrThrow(name))
                     .getFilesystem(),
-            Class::forName);
+            Class::forName,
+            () -> DefaultSourcePathResolver.from(ruleFinder));
   }
 
   DataProvider getProvider(HashCode hash) {

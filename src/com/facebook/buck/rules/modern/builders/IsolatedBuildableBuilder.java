@@ -239,7 +239,8 @@ public abstract class IsolatedBuildableBuilder {
 
   /** Deserializes the BuildableAndTarget corresponding to hash and builds it. */
   public void build(HashCode hash) throws IOException, StepFailedException, InterruptedException {
-    Deserializer deserializer = new Deserializer(filesystemFunction, classFinder);
+    Deserializer deserializer =
+        new Deserializer(filesystemFunction, classFinder, buildContext::getSourcePathResolver);
 
     BuildableAndTarget reconstructed =
         deserializer.deserialize(
