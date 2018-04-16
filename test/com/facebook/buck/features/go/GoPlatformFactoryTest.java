@@ -55,8 +55,11 @@ public class GoPlatformFactoryTest {
                             root.toString())))
                 .build(),
             new FakeProcessExecutor(),
-            new AlwaysFoundExecutableFinder());
-    GoPlatform platform = factory.getPlatform("section", CxxPlatformUtils.DEFAULT_PLATFORM);
+            new AlwaysFoundExecutableFinder(),
+            CxxPlatformUtils.DEFAULT_PLATFORMS,
+            CxxPlatformUtils.DEFAULT_PLATFORM);
+    GoPlatform platform =
+        factory.getPlatform("section", CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor());
     assertThat(platform.getGoOs(), Matchers.equalTo("linux"));
     assertThat(platform.getGoArch(), Matchers.equalTo("amd64"));
   }

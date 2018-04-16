@@ -19,6 +19,9 @@ package com.facebook.buck.features.go;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
@@ -89,13 +92,19 @@ abstract class AbstractGoPlatformFactory {
           .build();
 
   @Value.Parameter
-  public abstract BuckConfig getBuckConfig();
+  abstract BuckConfig getBuckConfig();
 
   @Value.Parameter
-  public abstract ProcessExecutor getProcessExecutor();
+  abstract ProcessExecutor getProcessExecutor();
 
   @Value.Parameter
-  public abstract ExecutableFinder getExecutableFinder();
+  abstract ExecutableFinder getExecutableFinder();
+
+  @Value.Parameter
+  abstract FlavorDomain<CxxPlatform> getCxxPlatforms();
+
+  @Value.Parameter
+  abstract CxxPlatform getDefaultCxxPlatform();
 
   @Value.Lazy
   String getDefaultOs() {
@@ -128,10 +137,17 @@ abstract class AbstractGoPlatformFactory {
   }
 
   /** @return the {@link GoPlatform} defined in the given {@code section}. */
-  public GoPlatform getPlatform(String section, CxxPlatform cxxPlatform) {
+  public GoPlatform getPlatform(String section, Flavor flavor) {
     Path goRoot = getGoRoot(section);
     Path toolsDir = getToolDir(section);
+    CxxPlatform cxxPlatform =
+        getBuckConfig()
+            .getValue(section, "cxx_platform")
+            .map(InternalFlavor::of)
+            .map(getCxxPlatforms()::getValue)
+            .orElse(getDefaultCxxPlatform());
     return GoPlatform.builder()
+        .setFlavor(flavor)
         .setGoOs(getOs(section))
         .setGoArch(getArch(section))
         .setGoRoot(goRoot)

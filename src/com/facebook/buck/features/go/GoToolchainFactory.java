@@ -25,6 +25,7 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
@@ -42,22 +43,34 @@ public class GoToolchainFactory implements ToolchainFactory<GoToolchain> {
 
     GoPlatformFactory platformFactory =
         GoPlatformFactory.of(
-            context.getBuckConfig(), context.getProcessExecutor(), context.getExecutableFinder());
+            context.getBuckConfig(),
+            context.getProcessExecutor(),
+            context.getExecutableFinder(),
+            cxxPlatforms,
+            defaultCxxPlatform);
 
     FlavorDomain<GoPlatform> goPlatforms =
         FlavorDomain.from(
             "Go Platforms",
-            RichStream.from(cxxPlatforms.getValues())
-                .map(
-                    cxxPlatform ->
-                        platformFactory.getPlatform(
-                            // We special case the "default" C/C++ platform to just use the "Go"
-                            // section.
-                            cxxPlatform.getFlavor().equals(DefaultCxxPlatforms.FLAVOR)
-                                ? GoBuckConfig.SECTION
-                                : GoBuckConfig.SECTION + "#" + cxxPlatform.getFlavor(),
-                            cxxPlatform))
-                .toImmutableList());
+            ImmutableList.<GoPlatform>builder()
+                // Add the default platform.
+                .add(platformFactory.getPlatform(GoBuckConfig.SECTION, DefaultCxxPlatforms.FLAVOR))
+                // Add custom platforms.
+                .addAll(
+                    context
+                        .getBuckConfig()
+                        .getSections()
+                        .stream()
+                        .flatMap(
+                            section ->
+                                RichStream.from(
+                                    MoreStrings.stripPrefix(section, GoBuckConfig.SECTION + "#")
+                                        .map(
+                                            name ->
+                                                platformFactory.getPlatform(
+                                                    section, InternalFlavor.of(name)))))
+                        .collect(ImmutableList.toImmutableList()))
+                .build());
     GoBuckConfig goBuckConfig = new GoBuckConfig(context.getBuckConfig());
     GoPlatform defaultGoPlatform =
         goPlatforms.getValue(

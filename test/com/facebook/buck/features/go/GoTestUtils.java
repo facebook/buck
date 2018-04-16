@@ -24,6 +24,7 @@ public class GoTestUtils {
 
   public static final GoPlatform DEFAULT_PLATFORM =
       GoPlatform.builder()
+          .setFlavor(CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor())
           .setGoOs("linux")
           .setGoArch("amd64")
           .setGoRoot(Paths.get("/root"))

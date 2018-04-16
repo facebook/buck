@@ -38,14 +38,8 @@ abstract class AbstractGoPlatform implements FlavorConvertible, AddsToRuleKey {
   @AddToRuleKey
   abstract String getGoArch();
 
-  // TODO: For now, we rely on Go platforms having the same "name" as the C/C++ platforms they wrap,
-  // due to having to lookup the Go platform in the C/C++ interfaces that Go rules implement, into
-  // which only C/C++ platform objects are threaded.
   @Override
-  @Value.Default
-  public Flavor getFlavor() {
-    return getCxxPlatform().getFlavor();
-  }
+  public abstract Flavor getFlavor();
 
   public abstract Path getGoRoot();
 
