@@ -139,7 +139,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
     if (shouldVerifyConstructorArguments()) {
       Preconditions.checkArgument(Files.isDirectory(root), "%s must be a directory", root);
       Preconditions.checkState(vfs.equals(root.getFileSystem()));
-      Preconditions.checkArgument(root.isAbsolute());
+      Preconditions.checkArgument(root.isAbsolute(), "Expected absolute path. Got <%s>.", root);
     }
     this.projectRoot = MorePaths.normalize(root);
     this.delegate = delegate;
