@@ -182,15 +182,10 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
       SourcePathResolver pathResolver) {
     this.inputRuleResolver = new DefaultInputRuleResolver(ruleFinder);
   }
+
   // -----------------------------------------------------------------------------------------------
   // ---------- These function's behaviors can be changed with interfaces on the Buildable ---------
   // -----------------------------------------------------------------------------------------------
-
-  @Override
-  public final boolean isCacheable() {
-    // Uses instanceof to force this to be non-dynamic.
-    return !(buildable instanceof HasBrokenCaching);
-  }
 
   @Override
   public final boolean inputBasedRuleKeyIsEnabled() {
