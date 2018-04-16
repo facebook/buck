@@ -131,7 +131,8 @@ public class JavaBinaryDescription
             args.getBlacklist(),
             transitiveClasspathDeps,
             transitiveClasspaths,
-            javaBuckConfig.shouldCacheBinaries());
+            javaBuckConfig.shouldCacheBinaries(),
+            javaBuckConfig.getDuplicatesLogLevel());
 
     // If we're packaging native libraries, construct the rule to build the fat JAR, which packages
     // up the original binary JAR and any required native libraries.

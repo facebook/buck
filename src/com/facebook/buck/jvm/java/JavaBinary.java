@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import javax.annotation.Nullable;
@@ -76,6 +77,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSet<SourcePath> transitiveClasspaths;
 
   private final boolean cache;
+  private Level duplicatesLogLevel;
 
   public JavaBinary(
       BuildTarget buildTarget,
@@ -90,7 +92,8 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableSet<Pattern> blacklist,
       ImmutableSet<JavaLibrary> transitiveClasspathDeps,
       ImmutableSet<SourcePath> transitiveClasspaths,
-      boolean cache) {
+      boolean cache,
+      Level duplicatesLogLevel) {
     super(buildTarget, projectFilesystem, params);
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.mainClass = mainClass;
@@ -106,6 +109,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.transitiveClasspathDeps = transitiveClasspathDeps;
     this.transitiveClasspaths = transitiveClasspaths;
     this.cache = cache;
+    this.duplicatesLogLevel = duplicatesLogLevel;
   }
 
   @Override
@@ -161,6 +165,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 .setManifestFile(Optional.ofNullable(manifestPath))
                 .setMergeManifests(mergeManifests)
                 .setDisallowAllDuplicates(disallowAllDuplicates)
+                .setDuplicatesLogLevel(duplicatesLogLevel)
                 .setRemoveEntryPredicate(
                     entry ->
                         blacklistPatternsMatcher.hasPatterns()

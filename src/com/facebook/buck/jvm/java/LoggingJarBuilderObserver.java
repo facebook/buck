@@ -24,9 +24,15 @@ import java.util.zip.ZipEntry;
 
 public class LoggingJarBuilderObserver implements JarBuilder.Observer {
   private final JavacEventSink eventSink;
+  private Level duplicatesLogLevel;
 
   public LoggingJarBuilderObserver(JavacEventSink eventSink) {
+    this(eventSink, Level.INFO);
+  }
+
+  public LoggingJarBuilderObserver(JavacEventSink eventSink, Level duplicatesLogLevel) {
     this.eventSink = eventSink;
+    this.duplicatesLogLevel = duplicatesLogLevel;
   }
 
   @Override
@@ -48,6 +54,6 @@ public class LoggingJarBuilderObserver implements JarBuilder.Observer {
   }
 
   private Level determineSeverity(ZipEntry entry) {
-    return entry.isDirectory() ? Level.FINE : Level.INFO;
+    return entry.isDirectory() ? Level.FINE : duplicatesLogLevel;
   }
 }

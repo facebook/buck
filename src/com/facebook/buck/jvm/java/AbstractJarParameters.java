@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.logging.Level;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -53,4 +54,9 @@ abstract class AbstractJarParameters {
   public abstract Optional<String> getMainClass();
 
   public abstract Optional<Path> getManifestFile();
+
+  @Value.Default
+  public Level getDuplicatesLogLevel() {
+    return Level.INFO;
+  }
 }
