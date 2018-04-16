@@ -45,7 +45,7 @@ public class RunWithAnnotationIntegrationTest {
   @Test
   public void testSimpleSuiteRun2TestCases() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "runwith", temporaryFolder);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "runwith", temporaryFolder, true);
     workspace.setUp();
 
     ProcessResult suiteTestResult = workspace.runBuckCommand("test", "//:SimpleSuiteTest");
@@ -56,7 +56,7 @@ public class RunWithAnnotationIntegrationTest {
   @Test
   public void testFailingSuiteRun3TestCasesWith1Failure() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "runwith", temporaryFolder);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "runwith", temporaryFolder, true);
     workspace.setUp();
 
     ProcessResult suiteTestResult = workspace.runBuckCommand("test", "//:FailingSuiteTest");
@@ -68,7 +68,7 @@ public class RunWithAnnotationIntegrationTest {
   @Test
   public void testParametrizedTestRun4Cases() throws IOException, SAXException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "runwith", temporaryFolder);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "runwith", temporaryFolder, true);
     workspace.setUp();
 
     ProcessResult suiteTestResult = workspace.runBuckCommand("test", "//:ParametrizedTest");

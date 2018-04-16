@@ -34,7 +34,8 @@ public class CallFlowIntegrationTest {
   @Test
   public void testCallFlow() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "test_call_flow", temporaryFolder);
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "test_call_flow", temporaryFolder, true);
     workspace.setUp();
 
     // ExceedsAnnotationTimeoutTest should fail.

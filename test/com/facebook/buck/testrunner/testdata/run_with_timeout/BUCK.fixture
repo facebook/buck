@@ -2,7 +2,7 @@ java_library(
     name = "NotBuckBlockJUnit4ClassRunner",
     srcs = ["NotBuckBlockJUnit4ClassRunner.java"],
     deps = [
-        ":junit",
+        "buck//third-party/java/junit:junit",
     ],
 )
 
@@ -11,7 +11,7 @@ java_test(
     srcs = ["TestThatTakesTooLong.java"],
     deps = [
         ":NotBuckBlockJUnit4ClassRunner",
-        ":junit",
+        "buck//third-party/java/junit:junit",
     ],
 )
 
@@ -20,7 +20,7 @@ java_test(
     srcs = ["TestThatRunsForever.java"],
     deps = [
         ":NotBuckBlockJUnit4ClassRunner",
-        ":junit",
+        "buck//third-party/java/junit:junit",
     ],
 )
 
@@ -29,7 +29,7 @@ java_test(
     srcs = ["TestThatExceedsDefaultTimeoutButIsLessThanTimeoutAnnotation.java"],
     deps = [
         ":NotBuckBlockJUnit4ClassRunner",
-        ":junit",
+        "buck//third-party/java/junit:junit",
     ],
 )
 
@@ -38,7 +38,7 @@ java_test(
     srcs = ["TestThatExceedsDefaultTimeoutButIsLessThanTimeoutRule.java"],
     deps = [
         ":NotBuckBlockJUnit4ClassRunner",
-        ":junit",
+        "buck//third-party/java/junit:junit",
     ],
 )
 
@@ -56,25 +56,6 @@ java_test(
     deps = [
         ":NotBuckBlockJUnit4ClassRunner",
         ":UtilityThatHoldsAReferenceToTheMainThread",
-        ":junit",
+        "buck//third-party/java/junit:junit",
     ],
-)
-
-prebuilt_jar(
-    name = "junit",
-    binary_jar = "junit-4.11.jar",
-    deps = [
-        ":hamcrest-core",
-        ":hamcrest-library",
-    ],
-)
-
-prebuilt_jar(
-    name = "hamcrest-core",
-    binary_jar = "hamcrest-core-1.3.jar",
-)
-
-prebuilt_jar(
-    name = "hamcrest-library",
-    binary_jar = "hamcrest-library-1.3.jar",
 )
