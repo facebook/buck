@@ -196,8 +196,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
   }
 
   @VisibleForTesting
-  CxxPreprocessAndCompileStep makeMainStep(
-      SourcePathResolver resolver, Path scratchDir, boolean useArgfile) {
+  CxxPreprocessAndCompileStep makeMainStep(SourcePathResolver resolver, boolean useArgfile) {
 
     // If we're compiling, this will just be empty.
     HeaderPathNormalizer headerPathNormalizer =
@@ -232,7 +231,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
             compilerDelegate.getEnvironment(resolver)),
         headerPathNormalizer,
         sanitizer,
-        scratchDir,
+        getScratchPath(),
         useArgfile,
         compilerDelegate.getCompiler(),
         Optional.of(
@@ -288,11 +287,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
             MakeCleanDirectoryStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(), getProjectFilesystem(), getScratchPath())))
-        .add(
-            makeMainStep(
-                context.getSourcePathResolver(),
-                getScratchPath(),
-                compilerDelegate.isArgFileSupported()))
+        .add(makeMainStep(context.getSourcePathResolver(), compilerDelegate.isArgFileSupported()))
         .build();
   }
 
@@ -317,7 +312,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
 
   // Used for compdb
   public ImmutableList<String> getCommand(SourcePathResolver pathResolver) {
-    return makeMainStep(pathResolver, getScratchPath(), false).getCommand();
+    return makeMainStep(pathResolver, false).getCommand();
   }
 
   @Override

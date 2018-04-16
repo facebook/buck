@@ -355,7 +355,6 @@ public class CxxPreprocessAndCompileTest {
             .build();
     String outputName = "test.o";
     Path input = Paths.get("test.ii");
-    Path scratchDir = Paths.get("scratch");
 
     CxxPreprocessAndCompile buildRule =
         CxxPreprocessAndCompile.compile(
@@ -381,7 +380,7 @@ public class CxxPreprocessAndCompileTest {
             .add("-o", "buck-out/gen/foo/bar__/test.o")
             .build();
     ImmutableList<String> actualCompileCommand =
-        buildRule.makeMainStep(pathResolver, scratchDir, false).getCommand();
+        buildRule.makeMainStep(pathResolver, false).getCommand();
     assertEquals(expectedCompileCommand, actualCompileCommand);
   }
 
@@ -457,7 +456,6 @@ public class CxxPreprocessAndCompileTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     String output = "test.o";
     Path input = Paths.get("test.ii");
-    Path scratchDir = Paths.get("scratch");
 
     CompilerDelegate compilerDelegate =
         new CompilerDelegate(
@@ -479,13 +477,13 @@ public class CxxPreprocessAndCompileTest {
 
     ImmutableList<String> command =
         buildRule
-            .makeMainStep(pathResolver, buildRule.getProjectFilesystem().getRootPath(), false)
+            .makeMainStep(pathResolver, false)
             .getArguments(/* allowColorsInDiagnostics */ false);
     assertThat(command, not(hasItem(CompilerWithColorSupport.COLOR_FLAG)));
 
     command =
         buildRule
-            .makeMainStep(pathResolver, scratchDir, false)
+            .makeMainStep(pathResolver, false)
             .getArguments(/* allowColorsInDiagnostics */ true);
     assertThat(command, hasItem(CompilerWithColorSupport.COLOR_FLAG));
   }
@@ -497,7 +495,6 @@ public class CxxPreprocessAndCompileTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     String output = "test.ii";
     Path input = Paths.get("test.cpp");
-    Path scratchDir = Paths.get("scratch");
 
     CxxPreprocessAndCompile buildRule =
         CxxPreprocessAndCompile.preprocessAndCompile(
@@ -525,13 +522,13 @@ public class CxxPreprocessAndCompileTest {
 
     ImmutableList<String> command =
         buildRule
-            .makeMainStep(pathResolver, scratchDir, false)
+            .makeMainStep(pathResolver, false)
             .getArguments(/* allowColorsInDiagnostics */ false);
     assertThat(command, not(hasItem(PreprocessorWithColorSupport.COLOR_FLAG)));
 
     command =
         buildRule
-            .makeMainStep(pathResolver, scratchDir, false)
+            .makeMainStep(pathResolver, false)
             .getArguments(/* allowColorsInDiagnostics */ true);
     assertThat(command, hasItem(CompilerWithColorSupport.COLOR_FLAG));
   }

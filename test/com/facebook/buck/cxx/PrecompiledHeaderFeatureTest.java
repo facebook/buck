@@ -306,8 +306,7 @@ public class PrecompiledHeaderFeatureTest {
       CxxToolProvider.Type toolType,
       String headerFilename) {
 
-    ImmutableList<String> flags =
-        rule.makeMainStep(resolver, Paths.get("/tmp/unused_scratch_dir"), false).getCommand();
+    ImmutableList<String> flags = rule.makeMainStep(resolver, false).getCommand();
 
     switch (toolType) {
       case CLANG:
@@ -344,8 +343,7 @@ public class PrecompiledHeaderFeatureTest {
       CxxToolProvider.Type toolType,
       String headerFilename) {
 
-    ImmutableList<String> flags =
-        rule.makeMainStep(resolver, Paths.get("/tmp/unused_scratch_dir"), false).getCommand();
+    ImmutableList<String> flags = rule.makeMainStep(resolver, false).getCommand();
 
     switch (toolType) {
       case CLANG:

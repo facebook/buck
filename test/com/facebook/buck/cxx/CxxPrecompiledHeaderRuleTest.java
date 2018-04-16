@@ -262,8 +262,7 @@ public class CxxPrecompiledHeaderRuleTest {
     CxxPreprocessAndCompile lib1 =
         factory1.requirePreprocessAndCompileBuildRule("lib1.cpp", newSource("lib1.cpp"));
     ruleResolver.addToIndex(lib1);
-    ImmutableList<String> cmd1 =
-        lib1.makeMainStep(pathResolver, Paths.get("/tmp/x"), false).getCommand();
+    ImmutableList<String> cmd1 = lib1.makeMainStep(pathResolver, false).getCommand();
 
     BuildTarget lib2Target = newTarget("//test:lib2");
     CxxSourceRuleFactory factory2 =
@@ -273,8 +272,7 @@ public class CxxPrecompiledHeaderRuleTest {
     CxxPreprocessAndCompile lib2 =
         factory2.requirePreprocessAndCompileBuildRule("lib2.cpp", newSource("lib2.cpp"));
     ruleResolver.addToIndex(lib2);
-    ImmutableList<String> cmd2 =
-        lib2.makeMainStep(pathResolver, Paths.get("/tmp/x"), false).getCommand();
+    ImmutableList<String> cmd2 = lib2.makeMainStep(pathResolver, false).getCommand();
 
     BuildTarget lib3Target = newTarget("//test:lib3");
     CxxSourceRuleFactory factory3 =
@@ -284,8 +282,7 @@ public class CxxPrecompiledHeaderRuleTest {
     CxxPreprocessAndCompile lib3 =
         factory3.requirePreprocessAndCompileBuildRule("lib3.cpp", newSource("lib3.cpp"));
     ruleResolver.addToIndex(lib3);
-    ImmutableList<String> cmd3 =
-        lib3.makeMainStep(pathResolver, Paths.get("/tmp/x"), false).getCommand();
+    ImmutableList<String> cmd3 = lib3.makeMainStep(pathResolver, false).getCommand();
 
     assertTrue(seek(cmd1, "-frtti").size() > 0);
     assertTrue(seek(cmd2, "-frtti").size() > 0);
@@ -330,8 +327,7 @@ public class CxxPrecompiledHeaderRuleTest {
                 .setFlags(ImmutableList.of("-flag-for-source"))
                 .build());
     ruleResolver.addToIndex(lib);
-    ImmutableList<String> libCmd =
-        lib.makeMainStep(pathResolver, Paths.get("/tmp/x"), false).getCommand();
+    ImmutableList<String> libCmd = lib.makeMainStep(pathResolver, false).getCommand();
     assertTrue(seek(libCmd, "-flag-for-source").size() > 0);
     assertTrue(seek(libCmd, "-flag-for-factory").size() > 0);
 
@@ -494,7 +490,7 @@ public class CxxPrecompiledHeaderRuleTest {
 
     ruleResolver.addToIndex(compileLibRule);
     ImmutableList<String> compileLibCmd =
-        compileLibRule.makeMainStep(pathResolver, Paths.get("/tmp/x"), false).getCommand();
+        compileLibRule.makeMainStep(pathResolver, false).getCommand();
 
     assertSame(seek(compileLibCmd, "-include-pch").size(), 0);
 
@@ -521,8 +517,7 @@ public class CxxPrecompiledHeaderRuleTest {
         lib1Factory.requirePreprocessAndCompileBuildRule("lib1.cpp", newSource("lib1.cpp"));
     ruleResolver.addToIndex(lib1);
 
-    ImmutableList<String> lib1Cmd =
-        lib1.makeMainStep(pathResolver, Paths.get("/tmp/x"), false).getCommand();
+    ImmutableList<String> lib1Cmd = lib1.makeMainStep(pathResolver, false).getCommand();
 
     BuildTarget pchTarget = newTarget("//test:pch");
     CxxPrecompiledHeaderTemplate pch =
@@ -537,8 +532,7 @@ public class CxxPrecompiledHeaderRuleTest {
     CxxPreprocessAndCompile lib2 =
         lib2Factory.requirePreprocessAndCompileBuildRule("lib2.cpp", newSource("lib2.cpp"));
     ruleResolver.addToIndex(lib2);
-    ImmutableList<String> lib2Cmd =
-        lib2.makeMainStep(pathResolver, Paths.get("/tmp/y"), false).getCommand();
+    ImmutableList<String> lib2Cmd = lib2.makeMainStep(pathResolver, false).getCommand();
 
     CxxPrecompiledHeader pchInstance = null;
     for (BuildRule dep : lib2.getBuildDeps()) {
