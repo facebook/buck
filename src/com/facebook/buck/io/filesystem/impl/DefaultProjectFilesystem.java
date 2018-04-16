@@ -1009,7 +1009,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
     private final Path root;
     private final boolean followLinks;
     private final boolean skipIgnored;
-    private ArrayDeque<DirWalkState> state;
+    private final ArrayDeque<DirWalkState> state;
 
     FileTreeWalker(
         Path root,
