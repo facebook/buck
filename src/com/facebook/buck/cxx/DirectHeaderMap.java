@@ -29,6 +29,7 @@ import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.google.common.collect.ImmutableList;
@@ -70,6 +71,10 @@ class DirectHeaderMap extends HeaderSymlinkTree {
     }
     return ImmutableList.<Step>builder()
         .add(getVerifyStep())
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), getRoot())))
         .add(
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
