@@ -24,6 +24,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableCollection;
@@ -274,7 +275,11 @@ public class Deserializer {
           setField(info.getField(), instance, value);
         } catch (Exception e) {
           Throwables.throwIfInstanceOf(e, IOException.class);
-          throw new RuntimeException(e);
+          throw new BuckUncheckedExecutionException(
+              e,
+              "When trying to initialize %s.%s.",
+              instance.getClass().getName(),
+              info.getField().getName());
         }
       }
     }
