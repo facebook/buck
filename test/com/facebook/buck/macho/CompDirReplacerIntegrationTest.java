@@ -106,7 +106,7 @@ public class CompDirReplacerIntegrationTest {
                     filesystem,
                     target.withFlavors(
                         platformFlavor, InternalFlavor.of("compile-" + sanitize("main.c.o"))),
-                    "%s")
+                    "%s__")
                 .resolve("main.c.o"));
     Path unsanizitedObjectFilePath =
         workspace.getPath(

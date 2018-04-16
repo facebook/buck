@@ -688,7 +688,7 @@ public class AppleLibraryIntegrationTest {
                 target.withFlavors(
                     InternalFlavor.of("compile-" + sanitize("TestClass.m.o")),
                     InternalFlavor.of("iphonesimulator-x86_64")),
-                "%s")
+                "%s__")
             .resolve("TestClass.m.o");
     MoreAsserts.assertContentsEqual(
         workspace.getPath(Paths.get("first").resolve(objectPath)),

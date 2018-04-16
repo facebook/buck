@@ -64,8 +64,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
 
   @AddToRuleKey private final CompilerDelegate compilerDelegate;
 
-  @AddToRuleKey(stringify = true)
-  private final Path output;
+  @AddToRuleKey private final String outputName;
 
   @AddToRuleKey private final SourcePath input;
   private final Optional<CxxPrecompiledHeader> precompiledHeaderRule;
@@ -79,7 +78,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
       ImmutableSortedSet<BuildRule> buildDeps,
       Optional<PreprocessorDelegate> preprocessDelegate,
       CompilerDelegate compilerDelegate,
-      Path output,
+      String outputName,
       SourcePath input,
       CxxSource.Type inputType,
       Optional<CxxPrecompiledHeader> precompiledHeaderRule,
@@ -95,7 +94,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
     }
     this.preprocessDelegate = preprocessDelegate;
     this.compilerDelegate = compilerDelegate;
-    this.output = output;
+    this.outputName = outputName;
     this.input = input;
     this.inputType = inputType;
     this.precompiledHeaderRule = precompiledHeaderRule;
@@ -117,7 +116,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
       ProjectFilesystem projectFilesystem,
       ImmutableSortedSet<BuildRule> buildDeps,
       CompilerDelegate compilerDelegate,
-      Path output,
+      String outputName,
       SourcePath input,
       CxxSource.Type inputType,
       DebugPathSanitizer sanitizer,
@@ -128,7 +127,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
         buildDeps,
         Optional.empty(),
         compilerDelegate,
-        output,
+        outputName,
         input,
         inputType,
         Optional.empty(),
@@ -145,7 +144,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
       ImmutableSortedSet<BuildRule> buildDeps,
       PreprocessorDelegate preprocessorDelegate,
       CompilerDelegate compilerDelegate,
-      Path output,
+      String outputName,
       SourcePath input,
       CxxSource.Type inputType,
       Optional<CxxPrecompiledHeader> precompiledHeaderRule,
@@ -157,7 +156,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
         buildDeps,
         Optional.of(preprocessorDelegate),
         compilerDelegate,
-        output,
+        outputName,
         input,
         inputType,
         precompiledHeaderRule,
@@ -185,7 +184,15 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
   }
 
   private Path getDepFilePath() {
-    return output.getFileSystem().getPath(output + ".dep");
+    return getOutputRoot().resolve(outputName + ".dep");
+  }
+
+  private Path getOutputPath() {
+    return getOutputRoot().resolve(outputName);
+  }
+
+  private Path getOutputRoot() {
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s__/");
   }
 
   @VisibleForTesting
@@ -207,6 +214,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
 
     Path relativeInputPath = getRelativeInputPath(resolver);
 
+    Path output = getOutputPath();
     return new CxxPreprocessAndCompileStep(
         getProjectFilesystem(),
         preprocessDelegate.isPresent()
@@ -259,6 +267,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
           }
         });
 
+    Path output = getOutputPath();
     buildableContext.recordArtifact(output);
 
     for (String flag :
@@ -313,7 +322,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getOutputPath());
   }
 
   public SourcePath getInput() {
@@ -374,7 +383,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
                 preprocessDelegate.get().getHeaderVerification(),
                 getDepFilePath(),
                 getRelativeInputPath(context.getSourcePathResolver()),
-                output,
+                getOutputPath(),
                 compilerDelegate.getDependencyTrackingMode());
       } catch (Depfiles.HeaderVerificationException e) {
         throw new HumanReadableException(e);

@@ -90,7 +90,7 @@ public class CxxPreprocessAndCompileTest {
           .addPlatformFlags(StringArg.of("-fsanitize=address"))
           .addRuleFlags(StringArg.of("-O3"))
           .build();
-  private static final Path DEFAULT_OUTPUT = Paths.get("test.o");
+  private static final String DEFAULT_OUTPUT = "test.o";
   private static final SourcePath DEFAULT_INPUT = FakeSourcePath.of("test.cpp");
   private static final CxxSource.Type DEFAULT_INPUT_TYPE = CxxSource.Type.CXX;
   private static final Path DEFAULT_WORKING_DIR = Paths.get(System.getProperty("user.dir"));
@@ -355,7 +355,7 @@ public class CxxPreprocessAndCompileTest {
             .addPlatformFlags(StringArg.of("-ffunction-sections"))
             .addRuleFlags(StringArg.of("-O3"))
             .build();
-    Path output = Paths.get("test.o");
+    String outputName = "test.o";
     Path input = Paths.get("test.ii");
     Path scratchDir = Paths.get("scratch");
 
@@ -366,7 +366,7 @@ public class CxxPreprocessAndCompileTest {
             ImmutableSortedSet.of(),
             new CompilerDelegate(
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER, DEFAULT_COMPILER, flags),
-            output,
+            outputName,
             FakeSourcePath.of(input.toString()),
             DEFAULT_INPUT_TYPE,
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
@@ -380,7 +380,7 @@ public class CxxPreprocessAndCompileTest {
             .add("-O3")
             .add("-c")
             .add(input.toString())
-            .add("-o", output.toString())
+            .add("-o", "buck-out/gen/foo/bar__/test.o")
             .build();
     ImmutableList<String> actualCompileCommand =
         buildRule.makeMainStep(pathResolver, scratchDir, false).getCommand();
@@ -404,7 +404,7 @@ public class CxxPreprocessAndCompileTest {
 
     projectFilesystem.writeContentsToPath(
         "test.o: " + pathResolver.getRelativePath(DEFAULT_INPUT) + " ",
-        projectFilesystem.getPath("test.o.dep"));
+        projectFilesystem.getPath("buck-out/gen/foo/bar__/test.o.dep"));
     PathSourcePath fakeInput = FakeSourcePath.of(projectFilesystem, "test.cpp");
 
     CxxPreprocessAndCompile cxxPreprocess =
@@ -458,7 +458,7 @@ public class CxxPreprocessAndCompileTest {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    Path output = Paths.get("test.o");
+    String output = "test.o";
     Path input = Paths.get("test.ii");
     Path scratchDir = Paths.get("scratch");
 
@@ -498,7 +498,7 @@ public class CxxPreprocessAndCompileTest {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    Path output = Paths.get("test.ii");
+    String output = "test.ii";
     Path input = Paths.get("test.cpp");
     Path scratchDir = Paths.get("scratch");
 

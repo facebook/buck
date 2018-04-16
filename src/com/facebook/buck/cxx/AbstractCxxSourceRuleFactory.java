@@ -400,7 +400,7 @@ abstract class AbstractCxxSourceRuleFactory {
         getProjectFilesystem(),
         depsBuilder.build(),
         compilerDelegate,
-        getCompileOutputPath(target, name),
+        getCompileOutputName(name),
         source.getPath(),
         source.getType(),
         getSanitizerForSourceType(source.getType()),
@@ -492,7 +492,7 @@ abstract class AbstractCxxSourceRuleFactory {
                       source.getPath(),
                       source.getType(),
                       getPreInclude(),
-                      getCompileOutputPath(target, name),
+                      getCompileOutputName(name),
                       preprocessorDelegateValue.getPreprocessorDelegate(),
                       inferConfig);
                 });
@@ -550,7 +550,7 @@ abstract class AbstractCxxSourceRuleFactory {
         depsBuilder.build(),
         preprocessorDelegate,
         compilerDelegate,
-        getCompileOutputPath(target, name),
+        getCompileOutputName(name),
         source.getPath(),
         source.getType(),
         precompiledHeaderRule,

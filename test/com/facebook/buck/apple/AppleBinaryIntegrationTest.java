@@ -648,7 +648,7 @@ public class AppleBinaryIntegrationTest {
             target.withFlavors(
                 InternalFlavor.of("iphonesimulator-x86_64"),
                 InternalFlavor.of("compile-" + sanitize("TestClass.m.o"))),
-            "%s/TestClass.m.o");
+            "%s__/TestClass.m.o");
     MoreAsserts.assertContentsEqual(
         workspace.getPath(Paths.get("first").resolve(outputPath)),
         workspace.getPath(Paths.get("second").resolve(outputPath)));
@@ -686,7 +686,7 @@ public class AppleBinaryIntegrationTest {
             target.withFlavors(
                 InternalFlavor.of("iphonesimulator-x86_64"),
                 InternalFlavor.of("compile-" + sanitize("TestClass.m.o"))),
-            "%s/TestClass.m.o");
+            "%s__/TestClass.m.o");
     MoreAsserts.assertContentsEqual(
         workspace.getPath(Paths.get("first").resolve(outputPath)),
         workspace.getPath(Paths.get("second").resolve(outputPath)));
@@ -888,7 +888,7 @@ public class AppleBinaryIntegrationTest {
                     binaryTarget.withFlavors(
                         platformFlavor,
                         InternalFlavor.of("compile-" + sanitize("AppDelegate.m.o"))),
-                    "%s")
+                    "%s__")
                 .resolve("AppDelegate.m.o"));
 
     Path mainFileOutput =
@@ -897,7 +897,7 @@ public class AppleBinaryIntegrationTest {
                     filesystem,
                     binaryTarget.withFlavors(
                         platformFlavor, InternalFlavor.of("compile-" + sanitize("main.m.o"))),
-                    "%s")
+                    "%s__")
                 .resolve("main.m.o"));
 
     assertThat(Files.exists(binaryOutput), equalTo(true));

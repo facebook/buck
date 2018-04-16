@@ -265,7 +265,7 @@ public class CompilationDatabaseIntegrationTest {
     }
 
     String output =
-        BuildTargets.getGenPath(filesystem, outputTarget, "%s").resolve(outputPath).toString();
+        BuildTargets.getGenPath(filesystem, outputTarget, "%s__").resolve(outputPath).toString();
     commandArgs.add("-Xclang");
     commandArgs.add("-fdebug-compilation-dir");
     commandArgs.add("-Xclang");

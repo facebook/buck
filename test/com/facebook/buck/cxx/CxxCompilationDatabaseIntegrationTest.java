@@ -174,11 +174,12 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-MD")
             .add("-MF")
             .add(
-                BuildTargets.getGenPath(filesystem, compilationTarget, "%s/foo.cpp.o.dep")
+                BuildTargets.getGenPath(filesystem, compilationTarget, "%s__/foo.cpp.o.dep")
                     .toString())
             .add(Paths.get(path).toString())
             .add("-o")
-            .add(BuildTargets.getGenPath(filesystem, compilationTarget, "%s/foo.cpp.o").toString())
+            .add(
+                BuildTargets.getGenPath(filesystem, compilationTarget, "%s__/foo.cpp.o").toString())
             .build());
   }
 
@@ -255,11 +256,12 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-MD")
             .add("-MF")
             .add(
-                BuildTargets.getGenPath(filesystem, compilationTarget, "%s/bar.cpp.o.dep")
+                BuildTargets.getGenPath(filesystem, compilationTarget, "%s__/bar.cpp.o.dep")
                     .toString())
             .add(Paths.get(path).toString())
             .add("-o")
-            .add(BuildTargets.getGenPath(filesystem, compilationTarget, "%s/bar.cpp.o").toString())
+            .add(
+                BuildTargets.getGenPath(filesystem, compilationTarget, "%s__/bar.cpp.o").toString())
             .build());
   }
 
@@ -308,11 +310,13 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-MD")
             .add("-MF")
             .add(
-                BuildTargets.getGenPath(filesystem, compilationTarget, "%s/test.cpp.o.dep")
+                BuildTargets.getGenPath(filesystem, compilationTarget, "%s__/test.cpp.o.dep")
                     .toString())
             .add(Paths.get(path).toString())
             .add("-o")
-            .add(BuildTargets.getGenPath(filesystem, compilationTarget, "%s/test.cpp.o").toString())
+            .add(
+                BuildTargets.getGenPath(filesystem, compilationTarget, "%s__/test.cpp.o")
+                    .toString())
             .build());
   }
 
@@ -363,11 +367,13 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-MD")
             .add("-MF")
             .add(
-                BuildTargets.getGenPath(filesystem, compilationTarget, "%s/test.cpp.o.dep")
+                BuildTargets.getGenPath(filesystem, compilationTarget, "%s__/test.cpp.o.dep")
                     .toString())
             .add(Paths.get(path).toString())
             .add("-o")
-            .add(BuildTargets.getGenPath(filesystem, compilationTarget, "%s/test.cpp.o").toString())
+            .add(
+                BuildTargets.getGenPath(filesystem, compilationTarget, "%s__/test.cpp.o")
+                    .toString())
             .build());
   }
 

@@ -80,7 +80,7 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
       SourcePath input,
       AbstractCxxSource.Type inputType,
       Optional<PreInclude> preInclude,
-      Path output,
+      String outputName,
       PreprocessorDelegate preprocessorDelegate,
       InferBuckConfig inferConfig) {
     super(buildTarget, projectFilesystem);
@@ -90,7 +90,8 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
     this.input = input;
     this.inputType = inputType;
     this.preInclude = preInclude;
-    this.output = output;
+    this.output =
+        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/" + outputName);
     this.preprocessorDelegate = preprocessorDelegate;
     this.inferConfig = inferConfig;
     this.resultsDir =
