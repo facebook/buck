@@ -165,7 +165,7 @@
     <include name="nuprocess/nuprocess-1.1.0.jar" />
     <include name="jacoco/org.jacoco.core-0.8.0.jar" />
     <include name="jacoco/org.jacoco.report-0.8.0.jar" />
-    <include name="jetty/jetty-all-9.2.10.v20150310.jar" />
+    <include name="jetty/jetty-all-9.4.9.v20180320-uber.jar" />
     <include name="jdom/jdom-2.0.6.jar" />
     <include name="jimfs/jimfs-1.1.jar" />
     <include name="jopt-simple/jopt-simple-4.6.jar" />
@@ -175,7 +175,6 @@
     <include name="okhttp/okhttp-3.9.0.jar" />
     <include name="okio/okio-1.13.0.jar" />
     <include name="oshi/oshi-core-3.3-SNAPSHOT.jar" />
-    <include name="servlet-api/javax.servlet-api-3.1.0.jar" />
     <include name="slf4j/slf4j-jdk14-1.7.5.jar" /><!-- redirect slf4j to java.util.logging -->
     <include name="stringtemplate/ST-4.0.8.jar" />
     <include name="thrift/libthrift-0.10.0-patched.jar" />

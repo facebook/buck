@@ -85,7 +85,7 @@ public class ArtifactCacheHandler extends AbstractHandler {
       return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
     }
 
-    String path = baseRequest.getUri().getPath();
+    String path = baseRequest.getHttpURI().getPath();
     String[] pathElements = path.split("/");
     if (pathElements.length != 4 || !pathElements[2].equals("key")) {
       response.getWriter().write("Incorrect url format.");

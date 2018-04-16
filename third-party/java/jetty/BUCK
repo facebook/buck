@@ -1,26 +1,16 @@
 prebuilt_jar(
     name = "jetty-all",
-    binary_jar = "jetty-all-9.2.10.v20150310.jar",
+    binary_jar = "jetty-all-9.4.9.v20180320-uber.jar",
     licenses = [
         "LICENSE-APACHE",
         "license-epl.html",
     ],
-    #  source_jar = ':jetty-source',
 )
-
-# Uncomment this to get hold of the source jar.
-#remote_file(
-#  name = 'jetty-source',
-#  out = 'jetty-all-9.2.10.v20150310-sources.jar',
-#  url = 'mvn:org.eclipse.jetty.aggregate:jetty-all:src:9.2.10.v20150310',
-#  sha1 = '311da310416d2feb3de227081d7c3f48742d7075',
-#)
 
 java_library(
     name = "jetty",
     exported_deps = [
         ":jetty-all",
-        "//third-party/java/servlet-api:servlet-api",
     ],
     visibility = [
         "//src/com/facebook/buck/httpserver:",

@@ -1,8 +1,8 @@
 <component name="libraryTable">
   <library name="jetty">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/jetty/jetty-all-9.2.10.v20150310.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/servlet-api/javax.servlet-api-3.1.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jetty/jetty-all-9.4.9.v20180320-uber.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

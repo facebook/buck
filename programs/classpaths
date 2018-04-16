@@ -49,7 +49,7 @@ third-party/java/jackson/jackson-databind-2.7.8.jar
 third-party/java/jackson/jackson-datatype-guava-2.7.8.jar
 third-party/java/jackson/jackson-datatype-jdk8-2.7.8.jar
 third-party/java/jdom/jdom-2.0.6.jar
-third-party/java/jetty/jetty-all-9.2.10.v20150310.jar
+third-party/java/jetty/jetty-all-9.4.9.v20180320-uber.jar
 third-party/java/jna/jna-4.4.0.jar
 third-party/java/jna/jna-platform-4.4.0.jar
 third-party/java/jopt-simple/jopt-simple-4.6.jar
@@ -65,7 +65,6 @@ third-party/java/okhttp/okhttp-3.9.0.jar
 third-party/java/okio/okio-1.13.0.jar
 third-party/java/oshi/oshi-core-3.3-SNAPSHOT.jar
 third-party/java/pf4j/pf4j-2.0.0-SNAPSHOT.jar
-third-party/java/servlet-api/javax.servlet-api-3.1.0.jar
 third-party/java/slf4j/slf4j-jdk14-1.7.5.jar
 third-party/java/sqlite/sqlite-jdbc-3.20.0.jar
 third-party/java/stringtemplate/ST-4.0.8.jar

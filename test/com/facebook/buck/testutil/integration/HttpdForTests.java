@@ -217,7 +217,7 @@ public class HttpdForTests implements AutoCloseable {
       if (!HttpMethod.PUT.is(request.getMethod())) {
         return;
       }
-      putRequestsPaths.add(request.getUri().toString());
+      putRequestsPaths.add(request.getHttpURI().getPath());
       request.setHandled(true);
     }
 
@@ -271,15 +271,15 @@ public class HttpdForTests implements AutoCloseable {
         HttpServletResponse httpServletResponse)
         throws IOException {
       synchronized (this) {
-        requestedPaths.add(request.getUri().getPath());
+        requestedPaths.add(request.getHttpURI().getPath());
       }
-      if (!contentMap.containsKey(request.getUri().getPath())) {
+      if (!contentMap.containsKey(request.getHttpURI().getPath())) {
         httpServletResponse.setStatus(404);
         request.setHandled(true);
         return;
       }
       httpServletResponse.setStatus(200);
-      httpServletResponse.getOutputStream().write(contentMap.get(request.getUri().getPath()));
+      httpServletResponse.getOutputStream().write(contentMap.get(request.getHttpURI().getPath()));
       request.setHandled(true);
     }
 

@@ -46,7 +46,7 @@ class StaticResourcesHandler extends AbstractHandler {
       return;
     }
 
-    String path = baseRequest.getUri().getPath();
+    String path = baseRequest.getHttpURI().getPath();
     if ("/static/test_websocket.html".equals(path)) {
       String html = getContentsForResource(path);
       Responses.writeSuccessfulResponse(html, MediaType.HTML_UTF_8, baseRequest, response);
