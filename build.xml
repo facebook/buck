@@ -82,7 +82,7 @@
   <property name="buck.info.file" value="${build.dir}/buck-info.json"/>
 
   <property name="modules.dir.name" value="buck-modules" />
-  <property name="modules.resources.dir.name" value="resources" />
+  <property name="modules.resources.dir.name" value="buck-modules-resources" />
 
   <property name="ecj.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter" />
   <property name="ecj.compiler.path" value="${eclipse.dir}/ecj-4.7.1.jar" />
@@ -973,7 +973,7 @@
    -->
   <macrodef name="copy-buck-module-external-resources">
     <attribute name="module-name" />
-    <attribute name="module-resources-dir" default="${build.dir}/${modules.dir.name}/${modules.resources.dir.name}/@{module-name}" />
+    <attribute name="module-resources-dir" default="${build.dir}/${modules.resources.dir.name}/@{module-name}" />
     <element name="module-external-resources" />
     <sequential>
       <mkdir dir="@{module-resources-dir}" />

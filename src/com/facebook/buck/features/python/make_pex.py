@@ -23,7 +23,7 @@ def append_sys_path(buck_root):
 # A pex file should contain all the necessary dependencies, but in standalone mode
 # these dependencies need to be configured before importing them.
 if not zipfile.is_zipfile(sys.argv[0]):
-    append_sys_path(os.sep.join(__file__.split(os.sep)[:-5]))
+    append_sys_path(os.sep.join(__file__.split(os.sep)[:-4]))
     append_sys_path(os.sep.join(__file__.split(os.sep)[:-7]))
 
 import pkg_resources

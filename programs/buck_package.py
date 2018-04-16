@@ -22,6 +22,7 @@ PEX_ONLY_EXPORTED_RESOURCES = [
 ]
 
 MODULES_DIR = "buck-modules"
+MODULES_RESOURCES_DIR = "buck-modules-resources"
 
 
 @contextlib.contextmanager
@@ -140,12 +141,13 @@ class BuckPackage(BuckTool):
 
     def _get_extra_java_args(self):
         modules_dir = os.path.join(self._resource_subdir, MODULES_DIR)
+        module_resources_dir = os.path.join(self._resource_subdir, "buck-modules-resources")
         return [
             "-Dbuck.git_dirty=0",
             "-Dbuck.path_to_python_dsl=",
             "-Dpf4j.pluginsDir={}".format(modules_dir),
             "-Dbuck.mode=package",
-            "-Dbuck.module.resources={}".format(os.path.join(modules_dir, "resources"))
+            "-Dbuck.module.resources={}".format(module_resources_dir)
         ]
 
     def _get_exported_resources(self):
@@ -162,27 +164,30 @@ class BuckPackage(BuckTool):
             return buck_binary_hash_file.read().strip()
 
     def _unpack_modules(self):
-        if not pkg_resources.resource_exists(__name__, MODULES_DIR):
-            raise Exception("Cannot unpack modules: {0} doesn't exist in the package"
-                            .format(MODULES_DIR))
+        self._unpack_dir(MODULES_DIR, os.path.join(self._get_resource_subdir(), MODULES_DIR))
+        self._unpack_dir(MODULES_RESOURCES_DIR, os.path.join(self._get_resource_subdir(),
+                                                             MODULES_RESOURCES_DIR))
 
-        if not pkg_resources.resource_isdir(__name__, MODULES_DIR):
-            raise Exception("Cannot unpack modules: {0} is not a directory"
-                            .format(MODULES_DIR))
+    def _unpack_dir(self, resource_dir, dst_dir):
+        if not pkg_resources.resource_exists(__name__, resource_dir):
+            raise Exception("Cannot unpack directory: {0} doesn't exist in the package"
+                            .format(resource_dir))
 
-        modules_dir = os.path.join(self._get_resource_subdir(), MODULES_DIR)
+        if not pkg_resources.resource_isdir(__name__, resource_dir):
+            raise Exception("Cannot unpack directory: {0} is not a directory"
+                            .format(resource_dir))
 
-        self.__create_dir(modules_dir)
+        self.__create_dir(dst_dir)
 
-        if not os.path.exists(modules_dir):
-            raise Exception("Cannot unpack plugins: cannot create directory {0}"
-                            .format(modules_dir))
+        if not os.path.exists(dst_dir):
+            raise Exception("Cannot unpack directory: cannot create directory {0}"
+                            .format(dst_dir))
 
-        for module in pkg_resources.resource_listdir(__name__, MODULES_DIR):
-            module_path = os.path.join(modules_dir, module)
-            if os.path.exists(module_path):
+        for resource_file in pkg_resources.resource_listdir(__name__, resource_dir):
+            resource_path = os.path.join(dst_dir, resource_file)
+            if os.path.exists(resource_path):
                 continue
-            self._unpack_resource(module_path, '/'.join((MODULES_DIR, module)), False)
+            self._unpack_resource(resource_path, '/'.join((resource_dir, resource_file)), False)
 
     def __enter__(self):
         return self

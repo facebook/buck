@@ -106,6 +106,6 @@ def convert_modules_to_external_resources(buck_modules, modules_with_resources):
   result = {}
 
   for module in modules_with_resources:
-    result["buck-modules/resources/{}".format(module)] = "{}_resources".format(buck_modules[module])
+    result["buck-modules-resources/{}".format(module)] = "{}_resources".format(buck_modules[module])
 
   return result
