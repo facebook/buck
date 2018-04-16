@@ -23,6 +23,7 @@ import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.ValueVisitor;
+import com.facebook.buck.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.util.Scope;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
@@ -50,7 +51,11 @@ public class StringifyingValueVisitor implements ValueVisitor<RuntimeException> 
   }
 
   @Override
-  public <T> void visitField(Field field, T value, ValueTypeInfo<T> valueTypeInfo) {
+  public <T> void visitField(
+      Field field,
+      T value,
+      ValueTypeInfo<T> valueTypeInfo,
+      Optional<CustomFieldBehavior> customBehavior) {
     newline();
     append("%s:", field.getName());
     valueTypeInfo.visit(value, this);

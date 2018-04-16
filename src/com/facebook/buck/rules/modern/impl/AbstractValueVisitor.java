@@ -20,6 +20,7 @@ import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.ValueVisitor;
+import com.facebook.buck.rules.modern.annotations.CustomFieldBehavior;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -72,7 +73,12 @@ abstract class AbstractValueVisitor<E extends Exception> implements ValueVisitor
   }
 
   @Override
-  public <T> void visitField(Field field, T value, ValueTypeInfo<T> valueTypeInfo) throws E {
+  public <T> void visitField(
+      Field field,
+      T value,
+      ValueTypeInfo<T> valueTypeInfo,
+      Optional<CustomFieldBehavior> customBehavior)
+      throws E {
     valueTypeInfo.visit(value, this);
   }
 

@@ -32,8 +32,11 @@ import com.facebook.buck.rules.HasCustomInputsLogic;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.rules.modern.CustomFieldInputs;
+import com.facebook.buck.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.util.function.ThrowingConsumer;
 import com.google.common.collect.ImmutableList;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.junit.Test;
 
@@ -219,5 +222,46 @@ public class InputsVisitorTest extends AbstractValueVisitorTest {
     DefaultClassInfoFactory.forInstance(withCustomInputs)
         .visit(withCustomInputs, new InputsVisitor(inputsBuilder::add));
     assertEquals(inputsBuilder.build(), ImmutableList.of(otherPath));
+  }
+
+  @Test
+  public void customFieldBehavior() {
+    WithCustomFieldBehavior withCustomFieldBehavior = new WithCustomFieldBehavior();
+    InjectableInputsBehavior.function =
+        (string, consumer) -> {
+          assertEquals("value", string);
+          consumer.accept(otherPath);
+        };
+
+    ImmutableList.Builder<SourcePath> inputsBuilder = ImmutableList.builder();
+    DefaultClassInfoFactory.forInstance(withCustomFieldBehavior)
+        .visit(withCustomFieldBehavior, new InputsVisitor(inputsBuilder::add));
+    assertEquals(ImmutableList.of(otherPath), inputsBuilder.build());
+  }
+
+  private static class WithCustomFieldBehavior implements AddsToRuleKey {
+    @CustomFieldBehavior(IgnoredForInputsBehavior.class)
+    @AddToRuleKey
+    private final SourcePath sourcePath = DefaultBuildTargetSourcePath.of(someBuildTarget);
+
+    @CustomFieldBehavior(InjectableInputsBehavior.class)
+    @AddToRuleKey
+    private final String value = "value";
+  }
+
+  private static class IgnoredForInputsBehavior implements CustomFieldInputs<SourcePath> {
+    @Override
+    public void getInputs(SourcePath value, Consumer<SourcePath> consumer) {
+      // ignored for inputs.
+    }
+  }
+
+  private static class InjectableInputsBehavior implements CustomFieldInputs<String> {
+    private static BiConsumer<String, Consumer<SourcePath>> function = (s, c) -> {};
+
+    @Override
+    public void getInputs(String value, Consumer<SourcePath> consumer) {
+      function.accept(value, consumer);
+    }
   }
 }

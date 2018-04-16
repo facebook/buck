@@ -17,16 +17,21 @@
 package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.rules.AddsToRuleKey;
+import com.facebook.buck.rules.modern.annotations.CustomFieldBehavior;
 import java.lang.reflect.Field;
+import java.util.Optional;
 
 /** Holds a java.lang.reflect.Field and a ValueTypeInfo for a field referenced from a Buildable. */
 public class FieldInfo<T> {
-  private Field field;
-  private ValueTypeInfo<T> valueTypeInfo;
+  private final Field field;
+  private final ValueTypeInfo<T> valueTypeInfo;
+  private final Optional<CustomFieldBehavior> customBehavior;
 
-  public FieldInfo(Field field, ValueTypeInfo<T> valueTypeInfo) {
+  public FieldInfo(
+      Field field, ValueTypeInfo<T> valueTypeInfo, Optional<CustomFieldBehavior> customBehavior) {
     this.field = field;
     this.valueTypeInfo = valueTypeInfo;
+    this.customBehavior = customBehavior;
   }
 
   private T getValue(AddsToRuleKey value, Field field) {
@@ -40,7 +45,7 @@ public class FieldInfo<T> {
   }
 
   public <E extends Exception> void visit(AddsToRuleKey value, ValueVisitor<E> visitor) throws E {
-    visitor.visitField(field, getValue(value, field), valueTypeInfo);
+    visitor.visitField(field, getValue(value, field), valueTypeInfo, customBehavior);
   }
 
   public ValueTypeInfo<T> getValueTypeInfo() {
@@ -49,5 +54,9 @@ public class FieldInfo<T> {
 
   public Field getField() {
     return field;
+  }
+
+  public Optional<CustomFieldBehavior> getCustomBehavior() {
+    return customBehavior;
   }
 }

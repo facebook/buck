@@ -22,6 +22,9 @@ import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.modern.annotations.CustomClassBehaviorTag;
+import com.facebook.buck.rules.modern.annotations.CustomFieldBehavior;
+import com.facebook.buck.rules.modern.annotations.DefaultFieldSerialization;
 import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
@@ -254,6 +257,16 @@ public class Deserializer {
         throw new RuntimeException(e);
       }
       Preconditions.checkState(requestedClass.isAssignableFrom(instanceClass));
+
+      Optional<CustomClassBehaviorTag> serializerTag =
+          CustomBehaviorUtils.getBehavior(instanceClass, CustomClassSerialization.class);
+      if (serializerTag.isPresent()) {
+        @SuppressWarnings("unchecked")
+        CustomClassSerialization<T> customSerializer =
+            (CustomClassSerialization<T>) serializerTag.get();
+        return customSerializer.deserialize(this);
+      }
+
       @SuppressWarnings("unchecked")
       T instance = (T) new ObjenesisStd().newInstance(instanceClass);
       ClassInfo<? super T> classInfo = DefaultClassInfoFactory.forInstance(instance);
@@ -271,7 +284,7 @@ public class Deserializer {
       ImmutableCollection<FieldInfo<?>> fields = classInfo.getFieldInfos();
       for (FieldInfo<?> info : fields) {
         try {
-          Object value = info.getValueTypeInfo().create(this);
+          Object value = createForField(info);
           setField(info.getField(), instance, value);
         } catch (Exception e) {
           Throwables.throwIfInstanceOf(e, IOException.class);
@@ -284,7 +297,32 @@ public class Deserializer {
       }
     }
 
-    private void setField(Field field, Object instance, Object value)
+    @Nullable
+    private <T> T createForField(FieldInfo<T> info) throws IOException {
+      Optional<CustomFieldBehavior> behavior = info.getCustomBehavior();
+      if (behavior.isPresent()) {
+        if (CustomBehaviorUtils.get(behavior.get(), DefaultFieldSerialization.class).isPresent()) {
+          @SuppressWarnings("unchecked")
+          ValueTypeInfo<T> typeInfo =
+              (ValueTypeInfo<T>)
+                  ValueTypeInfoFactory.forTypeToken(TypeToken.of(info.getField().getGenericType()));
+          return typeInfo.create(this);
+        }
+
+        Optional<?> serializerTag =
+            CustomBehaviorUtils.get(behavior, CustomFieldSerialization.class);
+        if (serializerTag.isPresent()) {
+          @SuppressWarnings("unchecked")
+          CustomFieldSerialization<T> customSerializer =
+              (CustomFieldSerialization<T>) serializerTag.get();
+          return customSerializer.deserialize(this);
+        }
+      }
+
+      return info.getValueTypeInfo().create(this);
+    }
+
+    private void setField(Field field, Object instance, @Nullable Object value)
         throws IllegalAccessException {
       field.setAccessible(true);
       field.set(instance, value);

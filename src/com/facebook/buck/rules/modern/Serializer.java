@@ -25,6 +25,9 @@ import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.modern.annotations.CustomClassBehaviorTag;
+import com.facebook.buck.rules.modern.annotations.CustomFieldBehavior;
+import com.facebook.buck.rules.modern.annotations.DefaultFieldSerialization;
 import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
 import com.facebook.buck.util.RichStream;
@@ -109,7 +112,17 @@ public class Serializer {
       return Preconditions.checkNotNull(cache.get(instance));
     }
     Visitor visitor = new Visitor(instance.getClass());
-    classInfo.visit(instance, visitor);
+
+    Optional<CustomClassBehaviorTag> serializerTag =
+        CustomBehaviorUtils.getBehavior(instance.getClass(), CustomClassSerialization.class);
+    if (serializerTag.isPresent()) {
+      @SuppressWarnings("unchecked")
+      CustomClassSerialization<T> customSerializer =
+          (CustomClassSerialization<T>) serializerTag.get();
+      customSerializer.serialize(instance, visitor);
+    } else {
+      classInfo.visit(instance, visitor);
+    }
 
     return Preconditions.checkNotNull(
         cache.computeIfAbsent(
@@ -206,8 +219,33 @@ public class Serializer {
     }
 
     @Override
-    public <T> void visitField(Field field, T value, ValueTypeInfo<T> valueTypeInfo)
+    public <T> void visitField(
+        Field field,
+        T value,
+        ValueTypeInfo<T> valueTypeInfo,
+        Optional<CustomFieldBehavior> behavior)
         throws IOException {
+      if (behavior.isPresent()) {
+        if (CustomBehaviorUtils.get(behavior.get(), DefaultFieldSerialization.class).isPresent()) {
+          @SuppressWarnings("unchecked")
+          ValueTypeInfo<T> typeInfo =
+              (ValueTypeInfo<T>)
+                  ValueTypeInfoFactory.forTypeToken(TypeToken.of(field.getGenericType()));
+          typeInfo.visit(value, this);
+          return;
+        }
+
+        Optional<?> serializerTag =
+            CustomBehaviorUtils.get(behavior.get(), CustomFieldSerialization.class);
+        if (serializerTag.isPresent()) {
+          @SuppressWarnings("unchecked")
+          CustomFieldSerialization<T> customSerializer =
+              (CustomFieldSerialization<T>) serializerTag.get();
+          customSerializer.serialize(value, this);
+          return;
+        }
+      }
+
       valueTypeInfo.visit(value, this);
     }
 

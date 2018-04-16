@@ -22,6 +22,7 @@ import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.FieldInfo;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.ValueVisitor;
+import com.facebook.buck.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.immutables.BuckStylePackageVisibleImmutable;
 import com.facebook.buck.util.immutables.BuckStylePackageVisibleTuple;
@@ -84,12 +85,16 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
             AddToRuleKey addAnnotation = method.getAnnotation(AddToRuleKey.class);
             // TODO(cjhopman): Add @ExcludeFromRuleKey annotation and require that all fields are
             // either explicitly added or explicitly excluded.
+            Optional<CustomFieldBehavior> customBehavior =
+                Optional.ofNullable(method.getDeclaredAnnotation(CustomFieldBehavior.class));
             if (addAnnotation != null) {
               Nullable methodNullable = method.getAnnotation(Nullable.class);
               boolean methodOptional = Optional.class.isAssignableFrom(method.getReturnType());
-              fieldsBuilder.add(forField(field, methodNullable != null || methodOptional));
+              fieldsBuilder.add(
+                  forFieldWithBehavior(
+                      field, methodNullable != null || methodOptional, customBehavior));
             } else {
-              fieldsBuilder.add(excludedField(field));
+              fieldsBuilder.add(excludedField(field, customBehavior));
             }
           });
     } else {
@@ -105,13 +110,17 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
         }
         field.setAccessible(true);
 
+        Optional<CustomFieldBehavior> customBehavior =
+            Optional.ofNullable(field.getDeclaredAnnotation(CustomFieldBehavior.class));
         AddToRuleKey addAnnotation = field.getAnnotation(AddToRuleKey.class);
         // TODO(cjhopman): Add @ExcludeFromRuleKey annotation and require that all fields are either
         // explicitly added or explicitly excluded.
         if (addAnnotation != null) {
-          fieldsBuilder.add(forField(field, field.getAnnotation(Nullable.class) != null));
+          fieldsBuilder.add(
+              forFieldWithBehavior(
+                  field, field.getAnnotation(Nullable.class) != null, customBehavior));
         } else {
-          fieldsBuilder.add(excludedField(field));
+          fieldsBuilder.add(excludedField(field, customBehavior));
         }
       }
     }
@@ -283,16 +292,17 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
     return fields;
   }
 
-  static FieldInfo<?> forField(Field field, boolean isNullable) {
+  static FieldInfo<?> forFieldWithBehavior(
+      Field field, boolean isNullable, Optional<CustomFieldBehavior> customBehavior) {
     Type type = field.getGenericType();
     ValueTypeInfo<?> valueTypeInfo = ValueTypeInfoFactory.forTypeToken(TypeToken.of(type));
     if (isNullable) {
       valueTypeInfo = new NullableValueTypeInfo<>(valueTypeInfo);
     }
-    return new FieldInfo<>(field, valueTypeInfo);
+    return new FieldInfo<>(field, valueTypeInfo, customBehavior);
   }
 
-  public static FieldInfo<?> excludedField(Field field) {
-    return new FieldInfo<>(field, ValueTypeInfos.ExcludedValueTypeInfo.INSTANCE);
+  public static FieldInfo<?> excludedField(Field field, Optional<CustomFieldBehavior> behavior) {
+    return new FieldInfo<>(field, ValueTypeInfos.ExcludedValueTypeInfo.INSTANCE, behavior);
   }
 }

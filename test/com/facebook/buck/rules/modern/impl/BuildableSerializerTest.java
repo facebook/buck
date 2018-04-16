@@ -26,6 +26,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CellPathResolver;
@@ -33,13 +34,21 @@ import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.rules.modern.CustomClassSerialization;
+import com.facebook.buck.rules.modern.CustomFieldSerialization;
 import com.facebook.buck.rules.modern.Deserializer;
 import com.facebook.buck.rules.modern.Deserializer.DataProvider;
 import com.facebook.buck.rules.modern.Serializer;
 import com.facebook.buck.rules.modern.Serializer.Delegate;
+import com.facebook.buck.rules.modern.ValueCreator;
+import com.facebook.buck.rules.modern.ValueVisitor;
+import com.facebook.buck.rules.modern.annotations.CustomClassBehavior;
+import com.facebook.buck.rules.modern.annotations.CustomFieldBehavior;
+import com.facebook.buck.rules.modern.annotations.DefaultFieldSerialization;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import java.io.ByteArrayInputStream;
@@ -275,5 +284,66 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   @Test
   public void immutables() throws Exception {
     test(new WithImmutables());
+  }
+
+  @Test
+  public void customFieldBehavior() throws Exception {
+    test(new WithCustomFieldBehavior());
+  }
+
+  private static class WithCustomFieldBehavior implements FakeBuildable {
+    // By default, fields without @AddToRuleKey can't be serialized. DefaultFieldSerialization
+    // serializes them as though they were added to the key.
+    @CustomFieldBehavior(DefaultFieldSerialization.class)
+    private final String excluded = "excluded";
+
+    @AddToRuleKey
+    @CustomFieldBehavior(SpecialFieldSerialization.class)
+    private final ImmutableList<String> paths = ImmutableList.of("Hello", " ", "world", "!");
+  }
+
+  private static class SpecialFieldSerialization
+      implements CustomFieldSerialization<ImmutableList<String>> {
+    @Override
+    public <E extends Exception> void serialize(
+        ImmutableList<String> value, ValueVisitor<E> serializer) throws E {
+      serializer.visitString("key");
+    }
+
+    @Override
+    public <E extends Exception> ImmutableList<String> deserialize(ValueCreator<E> deserializer)
+        throws E {
+      assertEquals("key", deserializer.createString());
+      return ImmutableList.of("Hello", " ", "world", "!");
+    }
+  }
+
+  @Test
+  public void customClassBehavior() throws Exception {
+    test(new WithCustomClassBehavior());
+  }
+
+  @CustomClassBehavior(SpecialClassSerialization.class)
+  private static class WithCustomClassBehavior implements FakeBuildable {
+    private final String value = "value";
+    @AddToRuleKey private final int number = 3;
+  }
+
+  private static class SpecialClassSerialization
+      implements CustomClassSerialization<WithCustomClassBehavior> {
+    @Override
+    public void serialize(WithCustomClassBehavior instance, ValueVisitor<IOException> serializer)
+        throws IOException {
+      assertEquals("value", instance.value);
+      assertEquals(3, instance.number);
+      serializer.visitString("special");
+    }
+
+    @Override
+    public WithCustomClassBehavior deserialize(ValueCreator<IOException> deserializer)
+        throws IOException {
+      assertEquals("special", deserializer.createString());
+      return new WithCustomClassBehavior();
+    }
   }
 }

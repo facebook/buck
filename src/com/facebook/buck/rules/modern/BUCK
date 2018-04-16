@@ -13,6 +13,9 @@ TYPES = [
 java_immutables_library(
     name = "types",
     srcs = TYPES,
+    exported_deps = [
+        "//src/com/facebook/buck/rules/modern/annotations:annotations",
+    ],
     visibility = [
         "//src/com/facebook/buck/rules/coercer:coercer",
     ],
@@ -28,15 +31,16 @@ java_immutables_library(
 java_library(
     name = "modern",
     srcs = glob(
-        ["**/*.java"],
-        exclude = TYPES + [
-            "config/*",
-            "builders/*",
+        [
+            "*.java",
+            "impl/*.java",
         ],
+        exclude = TYPES,
     ),
     exported_deps = [
         ":types",
         "//src/com/facebook/buck/rules/keys:keys",
+        "//src/com/facebook/buck/rules/modern/annotations:annotations",
     ],
     tests = ["//test/com/facebook/buck/rules/modern/impl:impl"],
     visibility = ["PUBLIC"],
