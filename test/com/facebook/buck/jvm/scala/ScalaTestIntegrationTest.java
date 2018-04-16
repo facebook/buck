@@ -37,7 +37,7 @@ public class ScalaTestIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "scala_test", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "scala_test", tmp, true);
     workspace.setUp();
   }
 

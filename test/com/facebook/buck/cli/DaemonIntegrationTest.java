@@ -93,7 +93,7 @@ public class DaemonIntegrationTest {
       throws IOException, InterruptedException, ExecutionException {
 
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp, true);
     workspace.setUp();
     Future<?> firstThread =
         executorService.schedule(
@@ -115,7 +115,7 @@ public class DaemonIntegrationTest {
     long timeoutMillis = 100;
     long intervalMillis = timeoutMillis * 2; // Interval > timeout to trigger disconnection.
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp, true);
     workspace.setUp();
 
     // Build an NGContext connected to an NGInputStream reading from a stream that will timeout.
@@ -149,7 +149,7 @@ public class DaemonIntegrationTest {
     long timeoutMillis = 100;
     long intervalMillis = timeoutMillis * 2; // Interval > timeout to trigger disconnection.
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp, true);
     workspace.setUp();
 
     // Build an NGContext connected to an NGInputStream reading from stream that will timeout.
@@ -172,7 +172,7 @@ public class DaemonIntegrationTest {
   public void whenConcurrentReadOnlyCommandExecutedThenReadOnlyCommandSucceeds()
       throws IOException, InterruptedException, ExecutionException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp, true);
     workspace.setUp();
     Future<?> firstThread =
         executorService.schedule(
@@ -190,7 +190,7 @@ public class DaemonIntegrationTest {
       throws IOException, InterruptedException {
 
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp, true);
     workspace.setUp();
     executorService.invokeAll(
         ImmutableList.of(
@@ -247,7 +247,7 @@ public class DaemonIntegrationTest {
 
     long timeoutMillis = 100;
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp, true);
     workspace.setUp();
 
     // Start with an input stream that sends heartbeats at a regular rate.
@@ -296,7 +296,7 @@ public class DaemonIntegrationTest {
     long timeoutMillis = 2000; // Stream timeout > test timeout.
     long disconnectMillis = 100; // Disconnect before test timeout.
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp, true);
     workspace.setUp();
 
     // Build an NGContext connected to an NGInputStream reading from stream that will timeout.
@@ -330,7 +330,7 @@ public class DaemonIntegrationTest {
     long timeoutMillis = 2000; // Stream timeout > test timeout.
     long disconnectMillis = 100; // Disconnect before test timeout.
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp, true);
     workspace.setUp();
 
     // Start with an input stream that sends heartbeats at a regular rate.
