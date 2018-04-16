@@ -14,15 +14,38 @@
 {call buck.rule}
 {param status: 'FROZEN' /}
 {param overview}
+
 <p>
-A <code>cxx_genrule()</code> is used to post-process a C or C++ executable or library.
-A <code>cxx_genrule()</code> exposes information about the tools and flags that were used during compilation and linking.
-A {sp}<code>cxx_genrule()</code> can be an input to another {sp}<code>cxx_genrule()</code>.
+A <code>cxx_genrule()</code> enables you to run shell commands as part
+of the BUCK build process. A <code>cxx_genrule()</code> exposes&mdash;through
+a set of string parameter macros and variables&mdash;information about the 
+tools and configuration options used by the
+BUCK environment, specifically those related to the C/C++ toolchain. 
+</p>
+
+<p>
+The information exposed through these tools and configuration options is a reflection of: 
+BUCK's built-in settings, 
+the settings in {call buck.concept_link}{param page: 'buckconfig' /}{param name: '.buckconfig and .buckconfig.local' /}{/call},
+and the result of various command-line overrides specified through 
+the {sp}{call buck.cmd_link}{param name: 'common_parameters' /}{param rendered_text: '--config' /}{/call} command-line option.  
+</p>
+
+<p>
+This information is available only
+to the shell commands specified in the <code>cxx_genrule</code>. 
+The information is not available to other arguments of the rule.
+</p>
+
+<p>
+A {sp}<code>cxx_genrule()</code> can be an input to 
+another {sp}<code>cxx_genrule()</code>.
 </p>
 
 <p>
 Note that if you specify the <code>cxx_genrule</code> as a command-line
-target to <code>buck build</code>, you must include a platform flavor. For example:
+target to <code>buck build</code>, you must include a platform flavor. 
+For example:
 </p>
 
 <pre>buck build :cxx_gr_name#iphonesimulator-x86_64</pre>
@@ -46,8 +69,8 @@ target to <code>buck build</code>, you must include a platform flavor. For examp
   {param desc}
   The shell command to run to generate the output file. It is the fallback of <code>bash</code>
   {sp}and <code>cmd_exe</code>. The shell command can access information
-  about the build through a set of <em>macros</em>, <em>parameterized
-  macros</em>, and <em>variables</em>.
+  about the buck build environment through a set 
+  of <em>macros</em>, <em>parameterized macros</em>, and <em>variables</em>.
 
     <h4>Macros</h4>
 
@@ -132,7 +155,7 @@ target to <code>buck build</code>, you must include a platform flavor. For examp
     <p>
     It is also possible to expand references to other rules within the
     shell command, using a subset of the builtin {call buck.string_parameter_macros /}.  
-    Note that all build rules expanded in the command will be automatically 
+    Note that all build rules expanded in the command are automatically 
     considered to be dependencies of the <code>genrule()</code>.
     </p>
 
