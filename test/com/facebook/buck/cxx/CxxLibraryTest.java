@@ -98,7 +98,6 @@ public class CxxLibraryTest {
         CxxPreprocessorInput.builder()
             .addIncludes(
                 CxxSymlinkTreeHeaders.builder()
-                    .setBuildTarget(publicHeaderSymlinkTreeTarget)
                     .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
                     .setNameToPathMap(
                         ImmutableSortedMap.of(
@@ -118,7 +117,6 @@ public class CxxLibraryTest {
         CxxPreprocessorInput.builder()
             .addIncludes(
                 CxxSymlinkTreeHeaders.builder()
-                    .setBuildTarget(privateHeaderSymlinkTreeTarget)
                     .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
                     .setRoot(DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget))
                     .setIncludeRoot(

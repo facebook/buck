@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
@@ -68,9 +67,6 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleK
 
   @Value.Auxiliary
   abstract ImmutableSortedMap<Path, SourcePath> getNameToPathMap();
-
-  /** The build target that this object is modeling. */
-  abstract BuildTarget getBuildTarget();
 
   @Override
   public void addToHeaderPathNormalizer(HeaderPathNormalizer.Builder builder) {
@@ -128,7 +124,6 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleK
   public static CxxSymlinkTreeHeaders from(
       HeaderSymlinkTree symlinkTree, CxxPreprocessables.IncludeType includeType) {
     CxxSymlinkTreeHeaders.Builder builder = CxxSymlinkTreeHeaders.builder();
-    builder.setBuildTarget(symlinkTree.getBuildTarget());
     builder.setIncludeType(includeType);
     builder.setRoot(symlinkTree.getRootSourcePath());
     builder.setNameToPathMap(symlinkTree.getLinks());
