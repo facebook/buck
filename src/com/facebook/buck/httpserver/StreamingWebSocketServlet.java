@@ -69,6 +69,12 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
     }
   }
 
+  /** @return Number of clients streaming from webserver */
+  public int getNumActiveConnections() {
+    // TODO(buck_team) synchronize properly
+    return connections.size();
+  }
+
   /** This is the httpserver component of a WebSocket that maintains a session with one client. */
   public class MyWebSocket extends WebSocketAdapter {
 

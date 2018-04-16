@@ -92,6 +92,11 @@ public class WebServer {
     return streamingWebSocketServlet;
   }
 
+  /** @return Number of clients streaming from webserver */
+  public int getNumActiveConnections() {
+    return streamingWebSocketServlet.getNumActiveConnections();
+  }
+
   /**
    * Update state and start the server if necessary.
    *
