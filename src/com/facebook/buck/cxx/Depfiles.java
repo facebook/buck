@@ -187,10 +187,9 @@ class Depfiles {
           // everything until just after the input source which should position us at the headers.
           //
           // TODO(#11303454): This means we're not including the content of these special files into
-          // the
-          // rule key.  The correct way to handle this is likely to support macros in preprocessor/
-          // compiler flags at which point we can use the entries for these files in the depfile to
-          // verify that the user properly references these files via the macros.
+          // the rule key. The correct way to handle this is likely to support macros in
+          // preprocessor/compiler flags at which point we can use the entries for these files in
+          // the depfile to verify that the user properly references these files via the macros.
           int inputIndex = prereqs.indexOf(inputPath.toString());
           Preconditions.checkState(
               inputIndex != -1,
