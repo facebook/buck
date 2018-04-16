@@ -300,6 +300,14 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
     test(new WithCustomFieldBehavior());
   }
 
+  @Override
+  @Test
+  public void stringified() throws Exception {
+    expectedException.expect(Exception.class);
+    expectedException.expectMessage(Matchers.containsString("Cannot create excluded fields."));
+    test(new WithStringified());
+  }
+
   private static class WithCustomFieldBehavior implements FakeBuildable {
     // By default, fields without @AddToRuleKey can't be serialized. DefaultFieldSerialization
     // serializes them as though they were added to the key.

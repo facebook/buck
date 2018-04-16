@@ -87,7 +87,7 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
             // either explicitly added or explicitly excluded.
             Optional<CustomFieldBehavior> customBehavior =
                 Optional.ofNullable(method.getDeclaredAnnotation(CustomFieldBehavior.class));
-            if (addAnnotation != null) {
+            if (addAnnotation != null && !addAnnotation.stringify()) {
               Nullable methodNullable = method.getAnnotation(Nullable.class);
               boolean methodOptional = Optional.class.isAssignableFrom(method.getReturnType());
               fieldsBuilder.add(
@@ -115,7 +115,7 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
         AddToRuleKey addAnnotation = field.getAnnotation(AddToRuleKey.class);
         // TODO(cjhopman): Add @ExcludeFromRuleKey annotation and require that all fields are either
         // explicitly added or explicitly excluded.
-        if (addAnnotation != null) {
+        if (addAnnotation != null && !addAnnotation.stringify()) {
           fieldsBuilder.add(
               forFieldWithBehavior(
                   field, field.getAnnotation(Nullable.class) != null, customBehavior));

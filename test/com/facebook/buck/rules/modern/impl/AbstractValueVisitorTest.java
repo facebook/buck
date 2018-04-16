@@ -123,6 +123,9 @@ public abstract class AbstractValueVisitorTest {
   public abstract void excluded() throws Exception;
 
   @Test
+  public abstract void stringified() throws Exception;
+
+  @Test
   public abstract void immutables() throws Exception;
 
   public interface FakeBuildable extends Buildable {
@@ -139,6 +142,11 @@ public abstract class AbstractValueVisitorTest {
   public static class WithExcluded implements FakeBuildable {
     final String excluded = "excluded";
     final String nullNotAnnoted = null;
+  }
+
+  public static class WithStringified implements FakeBuildable {
+    @AddToRuleKey(stringify = true)
+    final Optional<String> stringified = Optional.of("value");
   }
 
   public static class WithEither implements FakeBuildable {

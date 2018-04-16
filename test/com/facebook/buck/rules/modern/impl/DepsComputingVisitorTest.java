@@ -150,6 +150,12 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
     apply(new WithImmutables());
   }
 
+  @Override
+  @Test
+  public void stringified() throws Exception {
+    apply(new WithStringified());
+  }
+
   static class WithSourcePathList implements FakeBuildable {
     @AddToRuleKey private final ImmutableList<SourcePath> inputs;
 

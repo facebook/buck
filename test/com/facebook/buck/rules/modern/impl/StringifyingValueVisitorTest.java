@@ -281,4 +281,10 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
             + ">",
         stringify(new WithImmutables()));
   }
+
+  @Override
+  @Test
+  public void stringified() throws Exception {
+    assertEquals("stringified:", stringify(new WithStringified()));
+  }
 }
