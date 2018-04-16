@@ -282,48 +282,10 @@ public class CxxLinkableEnhancer {
       ImmutableSortedSet<FrameworkPath> allLibraries,
       ImmutableList.Builder<Arg> argsBuilder) {
 
-    argsBuilder.add(
-        new FrameworkPathArg(allLibraries) {
-          @AddToRuleKey
-          final Function<FrameworkPath, Path> frameworkPathToSearchPath =
-              CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
-
-          @Override
-          public void appendToCommandLine(
-              Consumer<String> consumer, SourcePathResolver pathResolver) {
-            ImmutableSortedSet<Path> searchPaths =
-                frameworkPaths
-                    .stream()
-                    .map(frameworkPathToSearchPath)
-                    .filter(Objects::nonNull)
-                    .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-            for (Path searchPath : searchPaths) {
-              consumer.accept("-L");
-              consumer.accept(searchPath.toString());
-            }
-          }
-        });
+    argsBuilder.add(new SharedLibraryLinkArgs(allLibraries, cxxPlatform, resolver));
 
     // Add all libraries link args
-    argsBuilder.add(
-        new FrameworkPathArg(allLibraries) {
-          @Override
-          public void appendToCommandLine(
-              Consumer<String> consumer, SourcePathResolver pathResolver) {
-            for (FrameworkPath frameworkPath : frameworkPaths) {
-              String libName =
-                  MorePaths.stripPathPrefixAndExtension(
-                      frameworkPath.getFileName(resolver::getAbsolutePath), "lib");
-              // libraries set can contain path-qualified libraries, or just library
-              // search paths.
-              // Assume these end in '../lib' and filter out here.
-              if (libName.isEmpty()) {
-                continue;
-              }
-              consumer.accept("-l" + libName);
-            }
-          }
-        });
+    argsBuilder.add(new FrameworkLibraryLinkArgs(allLibraries));
   }
 
   private static void addFrameworkLinkerArgs(
@@ -332,26 +294,7 @@ public class CxxLinkableEnhancer {
       ImmutableSortedSet<FrameworkPath> allFrameworks,
       ImmutableList.Builder<Arg> argsBuilder) {
 
-    argsBuilder.add(
-        new FrameworkPathArg(allFrameworks) {
-          @AddToRuleKey
-          final Function<FrameworkPath, Path> frameworkPathToSearchPath =
-              CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
-
-          @Override
-          public void appendToCommandLine(
-              Consumer<String> consumer, SourcePathResolver pathResolver) {
-            ImmutableSortedSet<Path> searchPaths =
-                frameworkPaths
-                    .stream()
-                    .map(frameworkPathToSearchPath)
-                    .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-            for (Path searchPath : searchPaths) {
-              consumer.accept("-F");
-              consumer.accept(searchPath.toString());
-            }
-          }
-        });
+    argsBuilder.add(new FrameworkLinkerArgs(allFrameworks, cxxPlatform, resolver));
 
     // Add all framework link args
     argsBuilder.add(frameworksToLinkerArg(allFrameworks));
@@ -359,15 +302,7 @@ public class CxxLinkableEnhancer {
 
   @VisibleForTesting
   static Arg frameworksToLinkerArg(ImmutableSortedSet<FrameworkPath> frameworkPaths) {
-    return new FrameworkPathArg(frameworkPaths) {
-      @Override
-      public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
-        for (FrameworkPath frameworkPath : frameworkPaths) {
-          consumer.accept("-framework");
-          consumer.accept(frameworkPath.getName(pathResolver::getAbsolutePath));
-        }
-      }
-    };
+    return new FrameworkToLinkerArg(frameworkPaths);
   }
 
   public static CxxLink createCxxLinkableSharedBuildRule(
@@ -420,5 +355,94 @@ public class CxxLinkableEnhancer {
             ImmutableMap.toImmutableMap(
                 name -> name,
                 name -> output.getParent().resolve(output.getFileName() + "-" + name)));
+  }
+
+  private static class FrameworkLinkerArgs extends FrameworkPathArg {
+    @AddToRuleKey final Function<FrameworkPath, Path> frameworkPathToSearchPath;
+
+    public FrameworkLinkerArgs(
+        ImmutableSortedSet<FrameworkPath> allFrameworks,
+        CxxPlatform cxxPlatform,
+        SourcePathResolver resolver) {
+      super(allFrameworks);
+      frameworkPathToSearchPath =
+          CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
+    }
+
+    @Override
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver resolver) {
+      ImmutableSortedSet<Path> searchPaths =
+          frameworkPaths
+              .stream()
+              .map(frameworkPathToSearchPath)
+              .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+      for (Path searchPath : searchPaths) {
+        consumer.accept("-F");
+        consumer.accept(searchPath.toString());
+      }
+    }
+  }
+
+  private static class FrameworkToLinkerArg extends FrameworkPathArg {
+    public FrameworkToLinkerArg(ImmutableSortedSet<FrameworkPath> frameworkPaths) {
+      super(frameworkPaths);
+    }
+
+    @Override
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver resolver) {
+      for (FrameworkPath frameworkPath : frameworkPaths) {
+        consumer.accept("-framework");
+        consumer.accept(frameworkPath.getName(resolver::getAbsolutePath));
+      }
+    }
+  }
+
+  private static class FrameworkLibraryLinkArgs extends FrameworkPathArg {
+    public FrameworkLibraryLinkArgs(ImmutableSortedSet<FrameworkPath> allLibraries) {
+      super(allLibraries);
+    }
+
+    @Override
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver resolver) {
+      for (FrameworkPath frameworkPath : frameworkPaths) {
+        String libName =
+            MorePaths.stripPathPrefixAndExtension(
+                frameworkPath.getFileName(resolver::getAbsolutePath), "lib");
+        // libraries set can contain path-qualified libraries, or just library
+        // search paths.
+        // Assume these end in '../lib' and filter out here.
+        if (libName.isEmpty()) {
+          continue;
+        }
+        consumer.accept("-l" + libName);
+      }
+    }
+  }
+
+  private static class SharedLibraryLinkArgs extends FrameworkPathArg {
+    @AddToRuleKey final Function<FrameworkPath, Path> frameworkPathToSearchPath;
+
+    public SharedLibraryLinkArgs(
+        ImmutableSortedSet<FrameworkPath> allLibraries,
+        CxxPlatform cxxPlatform,
+        SourcePathResolver resolver) {
+      super(allLibraries);
+      frameworkPathToSearchPath =
+          CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
+    }
+
+    @Override
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver resolver) {
+      ImmutableSortedSet<Path> searchPaths =
+          frameworkPaths
+              .stream()
+              .map(frameworkPathToSearchPath)
+              .filter(Objects::nonNull)
+              .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+      for (Path searchPath : searchPaths) {
+        consumer.accept("-L");
+        consumer.accept(searchPath.toString());
+      }
+    }
   }
 }
