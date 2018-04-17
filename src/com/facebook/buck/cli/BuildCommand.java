@@ -520,6 +520,10 @@ public class BuildCommand extends AbstractCommand {
     checkSingleBuildTargetSpecifiedForOutBuildMode(targetGraphForLocalBuild);
     ActionGraphAndResolver actionGraph =
         createActionGraphAndResolver(params, targetGraphForLocalBuild, ruleKeyLogger, poolSupplier);
+
+    buildTargets = getBuildTargets(params, actionGraph, targetGraphForLocalBuild, justBuildTarget);
+    buildTargetsHaveBeenCalculated = true;
+
     return ActionAndTargetGraphs.builder()
         .setUnversionedTargetGraph(unversionedTargetGraph)
         .setVersionedTargetGraph(versionedTargetGraph)
@@ -1296,14 +1300,11 @@ public class BuildCommand extends AbstractCommand {
     }
   }
 
-  private ActionGraphAndResolver createActionGraphAndResolver(
+  private static ActionGraphAndResolver createActionGraphAndResolver(
       CommandRunnerParams params,
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
-      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier)
-      throws ActionGraphCreationException {
-    buildTargets = targetGraphAndBuildTargets.getBuildTargets();
-    buildTargetsHaveBeenCalculated = true;
+      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
     ActionGraphAndResolver actionGraphAndResolver =
         params
             .getActionGraphCache()
@@ -1315,26 +1316,35 @@ public class BuildCommand extends AbstractCommand {
                 params.getRuleKeyConfiguration(),
                 ruleKeyLogger,
                 poolSupplier);
+    return actionGraphAndResolver;
+  }
 
-    // If the user specified an explicit build target, use that.
-    if (justBuildTarget != null) {
-      BuildTarget explicitTarget =
-          BuildTargetParser.INSTANCE.parse(
-              justBuildTarget,
-              BuildTargetPatternParser.fullyQualified(),
-              params.getCell().getCellPathResolver());
-      Iterable<BuildRule> actionGraphRules =
-          Preconditions.checkNotNull(actionGraphAndResolver.getActionGraph().getNodes());
-      ImmutableSet<BuildTarget> actionGraphTargets =
-          ImmutableSet.copyOf(Iterables.transform(actionGraphRules, BuildRule::getBuildTarget));
-      if (!actionGraphTargets.contains(explicitTarget)) {
-        throw new ActionGraphCreationException(
-            "Targets specified via `--just-build` must be a subset of action graph.");
-      }
-      buildTargets = ImmutableSet.of(explicitTarget);
+  private static ImmutableSet<BuildTarget> getBuildTargets(
+      CommandRunnerParams params,
+      ActionGraphAndResolver actionGraphAndResolver,
+      TargetGraphAndBuildTargets targetGraph,
+      @Nullable String justBuildTarget)
+      throws ActionGraphCreationException {
+    ImmutableSet<BuildTarget> buildTargets = targetGraph.getBuildTargets();
+    if (justBuildTarget == null) {
+      return buildTargets;
     }
 
-    return actionGraphAndResolver;
+    // If the user specified an explicit build target, use that.
+    BuildTarget explicitTarget =
+        BuildTargetParser.INSTANCE.parse(
+            justBuildTarget,
+            BuildTargetPatternParser.fullyQualified(),
+            params.getCell().getCellPathResolver());
+    Iterable<BuildRule> actionGraphRules =
+        Preconditions.checkNotNull(actionGraphAndResolver.getActionGraph().getNodes());
+    ImmutableSet<BuildTarget> actionGraphTargets =
+        ImmutableSet.copyOf(Iterables.transform(actionGraphRules, BuildRule::getBuildTarget));
+    if (!actionGraphTargets.contains(explicitTarget)) {
+      throw new ActionGraphCreationException(
+          "Targets specified via `--just-build` must be a subset of action graph.");
+    }
+    return ImmutableSet.of(explicitTarget);
   }
 
   protected ExitCode executeLocalBuild(
