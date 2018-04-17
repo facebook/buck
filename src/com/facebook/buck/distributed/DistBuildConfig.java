@@ -18,6 +18,7 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.distributed.thrift.BuildMode;
+import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.slb.SlbBuckConfig;
@@ -129,6 +130,9 @@ public class DistBuildConfig {
 
   private static final String ENABLE_CACHE_MISS_ANALYSIS = "enable_cache_miss_analysis";
   private static final boolean DEFAULT_ENABLE_CACHE_MISS_ANALYSIS = false;
+
+  private static final String MINION_TYPE = "minion_type";
+  private static final String DEFAULT_MINION_TYPE = MinionType.STANDARD_SPEC.name();
 
   private static final String ALWAYS_WAIT_FOR_REMOTE_BUILD_BEFORE_PROCEEDING_LOCALLY =
       "always_wait_for_remote_build_before_proceeding_locally";
@@ -430,6 +434,14 @@ public class DistBuildConfig {
 
     LOG.info("Should use distributed build: %s", enabled);
     return enabled.equals(AutoStampedeMode.TRUE);
+  }
+
+  /** @return The hardware category for this minion (when running in minion mode). */
+  public MinionType getMinionType() {
+    String minionTypeStr =
+        buckConfig.getValue(STAMPEDE_SECTION, MINION_TYPE).orElse(DEFAULT_MINION_TYPE);
+
+    return MinionType.valueOf(minionTypeStr);
   }
 
   public Optional<String> getAutoDistributedBuildMessage() {

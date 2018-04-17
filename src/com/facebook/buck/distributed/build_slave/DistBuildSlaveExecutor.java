@@ -148,7 +148,7 @@ public class DistBuildSlaveExecutor {
                   localBuildExecutor,
                   args.getDistBuildService(),
                   args.getStampedeId(),
-                  args.getMinionType(),
+                  args.getDistBuildConfig().getMinionType(),
                   args.getBuildSlaveRunId(),
                   args.getRemoteCoordinatorAddress(),
                   OptionalInt.of(args.getRemoteCoordinatorPort()),

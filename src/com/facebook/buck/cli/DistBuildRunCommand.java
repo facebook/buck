@@ -33,7 +33,6 @@ import com.facebook.buck.distributed.build_slave.MinionBuildProgressTracker;
 import com.facebook.buck.distributed.build_slave.NoOpMinionBuildProgressTracker;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
-import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
@@ -94,9 +93,6 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
   @Nullable
   @Option(name = "--build-mode", usage = "The mode in which the distributed build is going to run.")
   private DistBuildMode distBuildMode = DistBuildMode.REMOTE_BUILD;
-
-  @Option(name = "--minion-type", usage = "Hardware category for machine running this build.")
-  private MinionType minionType = MinionType.STANDARD_SPEC;
 
   @Nullable
   @Option(
@@ -203,10 +199,12 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
           // Note that we cannot use the same pool of build threads for file materialization
           // because usually all build threads are waiting for files to be materialized, and
           // there is no thread left for the FileContentsProvider(s) to use.
+          DistBuildConfig distBuildConfig =
+              new DistBuildConfig(state.getRootCell().getBuckConfig());
           FileContentsProvider multiSourceFileContentsProvider =
               DistBuildFactory.createMultiSourceContentsProvider(
                   service,
-                  new DistBuildConfig(state.getRootCell().getBuckConfig()),
+                  distBuildConfig,
                   fileMaterializationStatsTracker,
                   params.getScheduledExecutor(),
                   Preconditions.checkNotNull(params.getExecutors().get(ExecutorPool.CPU)),
@@ -223,7 +221,6 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   coordinatorPort,
                   coordinatorAddress,
                   stampedeId,
-                  minionType,
                   getBuildSlaveRunId(),
                   multiSourceFileContentsProvider,
                   healthCheckStatsTracker,
