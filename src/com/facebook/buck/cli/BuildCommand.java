@@ -291,8 +291,6 @@ public class BuildCommand extends AbstractCommand {
 
   @Argument private List<String> arguments = new ArrayList<>();
 
-  private boolean buildTargetsHaveBeenCalculated;
-
   @Nullable private DistBuildClientEventListener distBuildClientEventListener;
 
   public List<String> getArguments() {
@@ -393,8 +391,6 @@ public class BuildCommand extends AbstractCommand {
   private final SettableFuture<ParallelRuleKeyCalculator<RuleKey>> localRuleKeyCalculator =
       SettableFuture.create();
 
-  private ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of();
-
   /**
    * Create the serializable {@link BuildJobState} for distributed builds.
    *
@@ -486,7 +482,7 @@ public class BuildCommand extends AbstractCommand {
       params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
     }
 
-    return ImmutableBuildRunResult.of(exitCode);
+    return ImmutableBuildRunResult.of(exitCode, ImmutableList.of());
   }
 
   private BuildEvent.Started postBuildStartedEvent(CommandRunnerParams params) {
@@ -525,8 +521,8 @@ public class BuildCommand extends AbstractCommand {
     ActionGraphAndResolver actionGraph =
         createActionGraphAndResolver(params, targetGraphForLocalBuild, ruleKeyLogger, poolSupplier);
 
-    buildTargets = getBuildTargets(params, actionGraph, targetGraphForLocalBuild, justBuildTarget);
-    buildTargetsHaveBeenCalculated = true;
+    ImmutableSet<BuildTarget> buildTargets =
+        getBuildTargets(params, actionGraph, targetGraphForLocalBuild, justBuildTarget);
 
     ActionAndTargetGraphs actionAndTargetGraphs =
         ActionAndTargetGraphs.builder()
@@ -603,8 +599,7 @@ public class BuildCommand extends AbstractCommand {
           }
         }
         if (exitCode == ExitCode.SUCCESS) {
-          exitCode =
-              processSuccessfulBuild(params, graphsAndBuildTargets.getGraphs(), ruleKeyCacheScope);
+          exitCode = processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
         }
       }
     } else {
@@ -622,7 +617,7 @@ public class BuildCommand extends AbstractCommand {
           exitCode =
               executeLocalBuild(
                   params,
-                  graphsAndBuildTargets.getGraphs().getActionGraphAndResolver(),
+                  graphsAndBuildTargets,
                   commandThreadManager.getWeightedListeningExecutorService(),
                   optionalRuleKeyLogger,
                   new NoOpRemoteBuildRuleCompletionWaiter(),
@@ -631,15 +626,13 @@ public class BuildCommand extends AbstractCommand {
                   ruleKeyCacheScope,
                   lastBuild);
           if (exitCode == ExitCode.SUCCESS) {
-            exitCode =
-                processSuccessfulBuild(
-                    params, graphsAndBuildTargets.getGraphs(), ruleKeyCacheScope);
+            exitCode = processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
           }
         }
       }
     }
 
-    return ImmutableBuildRunResult.of(exitCode);
+    return ImmutableBuildRunResult.of(exitCode, graphsAndBuildTargets.getBuildTargets());
   }
 
   /**
@@ -656,14 +649,15 @@ public class BuildCommand extends AbstractCommand {
 
   private ExitCode processSuccessfulBuild(
       CommandRunnerParams params,
-      ActionAndTargetGraphs graphs,
+      GraphsAndBuildTargets graphsAndBuildTargets,
       RuleKeyCacheScope<RuleKey> ruleKeyCacheScope)
       throws IOException {
     if (params.getBuckConfig().createBuildOutputSymLinksEnabled()) {
-      symLinkBuildResults(params, graphs.getActionGraphAndResolver());
+      symLinkBuildResults(params, graphsAndBuildTargets);
     }
+    ActionAndTargetGraphs graphs = graphsAndBuildTargets.getGraphs();
     if (showOutput || showFullOutput || showJsonOutput || showFullJsonOutput || showRuleKey) {
-      showOutputs(params, graphs.getActionGraphAndResolver(), ruleKeyCacheScope);
+      showOutputs(params, graphsAndBuildTargets, ruleKeyCacheScope);
     }
     if (outputPathForSingleBuildTarget != null) {
       BuildTarget loneTarget =
@@ -718,20 +712,20 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private void symLinkBuildResults(
-      CommandRunnerParams params, ActionGraphAndResolver actionGraphAndResolver)
-      throws IOException {
+      CommandRunnerParams params, GraphsAndBuildTargets graphsAndBuildTargets) throws IOException {
     // Clean up last buck-out/last.
     Path lastOutputDirPath =
         params.getCell().getFilesystem().getBuckPaths().getLastOutputDir().toAbsolutePath();
     MostFiles.deleteRecursivelyIfExists(lastOutputDirPath);
     Files.createDirectories(lastOutputDirPath);
 
-    SourcePathRuleFinder ruleFinder =
-        new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
+    BuildRuleResolver ruleResolver =
+        graphsAndBuildTargets.getGraphs().getActionGraphAndResolver().getResolver();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
-    for (BuildTarget buildTarget : buildTargets) {
-      BuildRule rule = actionGraphAndResolver.getResolver().requireRule(buildTarget);
+    for (BuildTarget buildTarget : graphsAndBuildTargets.getBuildTargets()) {
+      BuildRule rule = ruleResolver.requireRule(buildTarget);
       // If it's an apple bundle, we'd like to also link the dSYM file over here.
       if (rule instanceof AppleBundle) {
         AppleBundle bundle = (AppleBundle) rule;
@@ -820,7 +814,7 @@ public class BuildCommand extends AbstractCommand {
                         distributedBuildFileHashes,
                         targetGraphCodec,
                         targetGraphAndBuildTargets.getTargetGraph(),
-                        buildTargets,
+                        graphsAndBuildTargets.getBuildTargets(),
                         clientStatsTracker);
                 LOG.info("Finished computing serializable distributed build state.");
                 return state;
@@ -955,7 +949,7 @@ public class BuildCommand extends AbstractCommand {
               .setBuilderExecutorArgs(params.createBuilderArgs())
               .setBuckEventBus(params.getBuckEventBus())
               .setDistBuildStartedEvent(started)
-              .setTopLevelTargets(buildTargets)
+              .setTopLevelTargets(graphsAndBuildTargets.getBuildTargets())
               .setBuildGraphs(graphsAndBuildTargets.getGraphs())
               .setCachingBuildEngineDelegate(
                   Optional.of(new LocalCachingBuildEngineDelegate(params.getFileHashCache())))
@@ -983,7 +977,7 @@ public class BuildCommand extends AbstractCommand {
               return BuildCommand.this
                   .executeLocalBuild(
                       params,
-                      graphsAndBuildTargets.getGraphs().getActionGraphAndResolver(),
+                      graphsAndBuildTargets,
                       executorService,
                       Optional.empty(),
                       remoteBuildRuleCompletionWaiter,
@@ -1236,13 +1230,14 @@ public class BuildCommand extends AbstractCommand {
 
   private void showOutputs(
       CommandRunnerParams params,
-      ActionGraphAndResolver actionGraphAndResolver,
+      GraphsAndBuildTargets graphsAndBuildTargets,
       RuleKeyCacheScope<RuleKey> ruleKeyCacheScope)
       throws IOException {
     TreeMap<String, String> sortedJsonOutputs = new TreeMap<String, String>();
     Optional<DefaultRuleKeyFactory> ruleKeyFactory = Optional.empty();
-    SourcePathRuleFinder ruleFinder =
-        new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
+    BuildRuleResolver ruleResolver =
+        graphsAndBuildTargets.getGraphs().getActionGraphAndResolver().getResolver();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     if (showRuleKey) {
       RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(params.getRuleKeyConfiguration());
@@ -1256,8 +1251,8 @@ public class BuildCommand extends AbstractCommand {
                   ruleKeyCacheScope.getCache(),
                   Optional.empty()));
     }
-    for (BuildTarget buildTarget : buildTargets) {
-      BuildRule rule = actionGraphAndResolver.getResolver().requireRule(buildTarget);
+    for (BuildTarget buildTarget : graphsAndBuildTargets.getBuildTargets()) {
+      BuildRule rule = ruleResolver.requireRule(buildTarget);
       Optional<Path> outputPath =
           TargetsCommand.getUserFacingOutputPath(
                   pathResolver, rule, params.getBuckConfig().getBuckOutCompatLink())
@@ -1363,7 +1358,7 @@ public class BuildCommand extends AbstractCommand {
 
   protected ExitCode executeLocalBuild(
       CommandRunnerParams params,
-      ActionGraphAndResolver actionGraphAndResolver,
+      GraphsAndBuildTargets graphsAndBuildTargets,
       WeightedListeningExecutorService executor,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
@@ -1373,6 +1368,8 @@ public class BuildCommand extends AbstractCommand {
       AtomicReference<Build> buildReference)
       throws IOException, InterruptedException {
 
+    ActionGraphAndResolver actionGraphAndResolver =
+        graphsAndBuildTargets.getGraphs().getActionGraphAndResolver();
     LocalBuildExecutor builder =
         new LocalBuildExecutor(
             params.createBuilderArgs(),
@@ -1397,8 +1394,8 @@ public class BuildCommand extends AbstractCommand {
     }
 
     List<String> targetStrings =
-        FluentIterable.from(buildTargets)
-            .append(getAdditionalTargetsToBuild(actionGraphAndResolver.getResolver()))
+        FluentIterable.from(graphsAndBuildTargets.getBuildTargets())
+            .append(getAdditionalTargetsToBuild(graphsAndBuildTargets))
             .transform(target -> target.getFullyQualifiedName())
             .toList();
     ExitCode code =
@@ -1426,7 +1423,8 @@ public class BuildCommand extends AbstractCommand {
   }
 
   @SuppressWarnings("unused")
-  protected Iterable<BuildTarget> getAdditionalTargetsToBuild(BuildRuleResolver resolver) {
+  protected Iterable<BuildTarget> getAdditionalTargetsToBuild(
+      GraphsAndBuildTargets graphsAndBuildTargets) {
     return ImmutableList.of();
   }
 
@@ -1442,11 +1440,6 @@ public class BuildCommand extends AbstractCommand {
 
   Build getBuild() {
     return Preconditions.checkNotNull(lastBuild.get());
-  }
-
-  public ImmutableList<BuildTarget> getBuildTargets() {
-    Preconditions.checkState(buildTargetsHaveBeenCalculated);
-    return ImmutableList.copyOf(buildTargets);
   }
 
   @Override
@@ -1501,5 +1494,8 @@ public class BuildCommand extends AbstractCommand {
   interface BuildRunResult {
     @Value.Parameter
     ExitCode getExitCode();
+
+    @Value.Parameter
+    ImmutableSet<BuildTarget> getBuildTargets();
   }
 }

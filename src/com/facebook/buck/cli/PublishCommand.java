@@ -123,22 +123,25 @@ public class PublishCommand extends BuildCommand {
 
     assertArguments(params);
 
-    ExitCode exitCode;
+    BuildRunResult buildRunResult;
     try (CommandThreadManager pool =
         new CommandThreadManager("Publish", getConcurrencyLimit(params.getBuckConfig()))) {
-      exitCode = run(params, pool, ImmutableSet.of()).getExitCode();
+      buildRunResult = super.run(params, pool, ImmutableSet.of());
     }
 
+    ExitCode exitCode = buildRunResult.getExitCode();
     if (exitCode != ExitCode.SUCCESS) {
       return exitCode;
     }
 
     // Publish starting with the given targets.
-    return publishTargets(getBuildTargets(), params) ? ExitCode.SUCCESS : ExitCode.RUN_ERROR;
+    return publishTargets(buildRunResult.getBuildTargets(), params)
+        ? ExitCode.SUCCESS
+        : ExitCode.RUN_ERROR;
   }
 
   private boolean publishTargets(
-      ImmutableList<BuildTarget> buildTargets, CommandRunnerParams params) {
+      ImmutableSet<BuildTarget> buildTargets, CommandRunnerParams params) {
     ImmutableSet.Builder<MavenPublishable> publishables = ImmutableSet.builder();
     boolean success = true;
     for (BuildTarget buildTarget : buildTargets) {

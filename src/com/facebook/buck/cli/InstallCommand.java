@@ -211,6 +211,7 @@ public class InstallCommand extends BuildCommand {
       throws IOException, InterruptedException {
     assertArguments(params);
 
+    BuildRunResult buildRunResult;
     try (CommandThreadManager pool =
             new CommandThreadManager("Install", getConcurrencyLimit(params.getBuckConfig()));
         TriggerCloseable triggerCloseable = new TriggerCloseable(params)) {
@@ -226,7 +227,8 @@ public class InstallCommand extends BuildCommand {
       }
 
       // Build the targets
-      ExitCode exitCode = run(params, pool, installHelperTargets).getExitCode();
+      buildRunResult = run(params, pool, installHelperTargets);
+      ExitCode exitCode = buildRunResult.getExitCode();
       if (exitCode != ExitCode.SUCCESS) {
         return exitCode;
       }
@@ -234,17 +236,20 @@ public class InstallCommand extends BuildCommand {
 
     // Install the targets
     try {
-      return install(params);
+      return install(params, buildRunResult);
     } catch (NoSuchBuildTargetException e) {
       throw new HumanReadableException(e.getHumanReadableErrorMessage());
     }
   }
 
   @Override
-  protected Iterable<BuildTarget> getAdditionalTargetsToBuild(BuildRuleResolver resolver) {
+  protected Iterable<BuildTarget> getAdditionalTargetsToBuild(
+      GraphsAndBuildTargets graphsAndBuildTargets) {
+    BuildRuleResolver resolver =
+        graphsAndBuildTargets.getGraphs().getActionGraphAndResolver().getResolver();
     ImmutableList.Builder<BuildTarget> builder = ImmutableList.builder();
-    builder.addAll(super.getAdditionalTargetsToBuild(resolver));
-    for (BuildTarget target : getBuildTargets()) {
+    builder.addAll(super.getAdditionalTargetsToBuild(graphsAndBuildTargets));
+    for (BuildTarget target : graphsAndBuildTargets.getBuildTargets()) {
       BuildRule rule = resolver.getRule(target);
       if (rule instanceof HasInstallHelpers) {
         // An install command never explicitly "requires" the install flavor. This ensures that the
@@ -265,13 +270,13 @@ public class InstallCommand extends BuildCommand {
     return builder.build();
   }
 
-  private ExitCode install(CommandRunnerParams params)
+  private ExitCode install(CommandRunnerParams params, BuildRunResult buildRunResult)
       throws IOException, InterruptedException, NoSuchBuildTargetException {
 
     Build build = getBuild();
     ExitCode exitCode = ExitCode.SUCCESS;
 
-    for (BuildTarget buildTarget : getBuildTargets()) {
+    for (BuildTarget buildTarget : buildRunResult.getBuildTargets()) {
 
       BuildRule buildRule = build.getRuleResolver().requireRule(buildTarget);
       SourcePathResolver pathResolver =
