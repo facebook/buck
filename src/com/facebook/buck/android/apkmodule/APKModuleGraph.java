@@ -45,12 +45,15 @@ import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -440,29 +443,55 @@ public class APKModuleGraph implements AddsToRuleKey {
       MutableDirectedGraph<APKModule> apkModuleGraph,
       Multimap<BuildTarget, String> targetToContainingApkModulesMap) {
 
-    // Sort the targets into APKModuleBuilders based on their seed dependencies
+    // Sort the module-covers of all targets to determine shared module names.
+    TreeSet<TreeSet<String>> sortedContainingModuleSets =
+        new TreeSet<>(
+            new Comparator<TreeSet<String>>() {
+              @Override
+              public int compare(TreeSet<String> left, TreeSet<String> right) {
+                int sizeDiff = left.size() - right.size();
+                if (sizeDiff != 0) {
+                  return sizeDiff;
+                }
+                Iterator<String> leftIter = left.iterator();
+                Iterator<String> rightIter = right.iterator();
+                while (leftIter.hasNext()) {
+                  String leftElement = leftIter.next();
+                  String rightElement = rightIter.next();
+                  int stringComparison = leftElement.compareTo(rightElement);
+                  if (stringComparison != 0) {
+                    return stringComparison;
+                  }
+                }
+                return 0;
+              }
+            });
+    for (Map.Entry<BuildTarget, Collection<String>> entry :
+        targetToContainingApkModulesMap.asMap().entrySet()) {
+      TreeSet<String> containingModuleSet = new TreeSet<>(entry.getValue());
+      sortedContainingModuleSets.add(containingModuleSet);
+    }
+
+    // build modules based on all entries.
     Map<ImmutableSet<String>, APKModule> combinedModuleHashToModuleMap = new HashMap<>();
+    int currentId = 0;
+    for (TreeSet<String> moduleCover : sortedContainingModuleSets) {
+      String moduleName =
+          moduleCover.size() == 1 ? moduleCover.iterator().next() : "shared" + currentId++;
+      APKModule module = APKModule.of(moduleName);
+      combinedModuleHashToModuleMap.put(ImmutableSet.copyOf(moduleCover), module);
+    }
+
+    // add Targets per module;
     for (Map.Entry<BuildTarget, Collection<String>> entry :
         targetToContainingApkModulesMap.asMap().entrySet()) {
       ImmutableSet<String> containingModuleSet = ImmutableSet.copyOf(entry.getValue());
-      boolean exists = false;
       for (Map.Entry<ImmutableSet<String>, APKModule> existingEntry :
           combinedModuleHashToModuleMap.entrySet()) {
         if (existingEntry.getKey().equals(containingModuleSet)) {
           getBuildTargets(existingEntry.getValue()).add(entry.getKey());
-          exists = true;
           break;
         }
-      }
-
-      if (!exists) {
-        String name =
-            containingModuleSet.size() == 1
-                ? containingModuleSet.iterator().next()
-                : generateNameFromTarget(entry.getKey());
-        APKModule module = APKModule.of(name);
-        combinedModuleHashToModuleMap.put(containingModuleSet, module);
-        getBuildTargets(module).add(entry.getKey());
       }
     }
 

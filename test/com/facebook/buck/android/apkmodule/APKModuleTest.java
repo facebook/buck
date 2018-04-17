@@ -265,7 +265,7 @@ public class APKModuleTest {
       assertThat(dependencies.size(), is(2));
       assertThat(
           Iterables.getFirst(dependencies, null).getName(),
-          oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "test.shared.library"));
+          oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "shared0"));
     }
   }
 
@@ -525,9 +525,7 @@ public class APKModuleTest {
         case "java2":
           Set<APKModule> java2Dependencies = dag.getGraph().getOutgoingNodesFor(topModule);
           for (APKModule dependency : java2Dependencies) {
-            assertThat(
-                dependency.getName(),
-                oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "test.shared.library"));
+            assertThat(dependency.getName(), oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "shared0"));
           }
           break;
         case "android":
@@ -537,9 +535,7 @@ public class APKModuleTest {
             if (dependency.getName().equals("java")) {
               Set<APKModule> javaDeps = dag.getGraph().getOutgoingNodesFor(dependency);
               for (APKModule javaDep : javaDeps) {
-                assertThat(
-                    javaDep.getName(),
-                    oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "test.shared.library"));
+                assertThat(javaDep.getName(), oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "shared0"));
               }
             }
           }
@@ -975,18 +971,16 @@ public class APKModuleTest {
       for (APKModule depModule : dependencies) {
         assertThat(
             depModule.getName(),
-            oneOf("test.java.library", "test.shared.library", APKModuleGraph.ROOT_APKMODULE_NAME));
+            oneOf("test.java.library", "shared0", APKModuleGraph.ROOT_APKMODULE_NAME));
         switch (depModule.getName()) {
           case APKModuleGraph.ROOT_APKMODULE_NAME:
             assertThat(dag.getGraph().getOutgoingNodesFor(depModule).size(), is(0));
             break;
           case "test.java.library":
             verifyDependencies(
-                dag,
-                depModule,
-                ImmutableSet.of("test.shared.library", APKModuleGraph.ROOT_APKMODULE_NAME));
+                dag, depModule, ImmutableSet.of("shared0", APKModuleGraph.ROOT_APKMODULE_NAME));
             break;
-          case "test.shared.library":
+          case "shared0":
             verifyDependencies(dag, depModule, ImmutableSet.of(APKModuleGraph.ROOT_APKMODULE_NAME));
             break;
         }

@@ -139,7 +139,7 @@ public class AndroidAppModularityIntegrationTest extends AbiCompilationModeTest 
                 + ITEM_INDENTATION + "com/facebook/sample/Sample2" + EOL
                 + ITEM_INDENTATION + "com/facebook/sample/Sample3" + EOL
                 + ITEM_INDENTATION + "com/sample/app/MyApplication" + EOL
-            + MODULE_INDENTATION + "java.com.sample.shared.shared_with_no_resource_deps" + EOL
+            + MODULE_INDENTATION + "shared0" + EOL
                 + ITEM_INDENTATION + "com/facebook/sample/Shared" + EOL
             + MODULE_INDENTATION + "small_with_shared2_with_no_resource_deps" + EOL
                 + ITEM_INDENTATION + "com/facebook/sample/SmallWithShared2" + EOL
@@ -147,14 +147,14 @@ public class AndroidAppModularityIntegrationTest extends AbiCompilationModeTest 
                 + ITEM_INDENTATION + "com/facebook/sample/SmallWithShared" + EOL
         + DEPS_SECTION_HEADER + EOL
             + MODULE_INDENTATION + "dex" + EOL
-            + MODULE_INDENTATION + "java.com.sample.shared.shared_with_no_resource_deps" + EOL
+            + MODULE_INDENTATION + "shared0" + EOL
                 + ITEM_INDENTATION + "dex" + EOL
             + MODULE_INDENTATION + "small_with_shared2_with_no_resource_deps" + EOL
                 + ITEM_INDENTATION + "dex" + EOL
-                + ITEM_INDENTATION + "java.com.sample.shared.shared_with_no_resource_deps" + EOL
+                + ITEM_INDENTATION + "shared0" + EOL
             + MODULE_INDENTATION + "small_with_shared_with_no_resource_deps" + EOL
                 + ITEM_INDENTATION + "dex" + EOL
-                + ITEM_INDENTATION + "java.com.sample.shared.shared_with_no_resource_deps" + EOL;
+                + ITEM_INDENTATION + "shared0" + EOL;
     String actual = workspace.getFileContents(result);
 
     Assert.assertEquals(expected, actual);
