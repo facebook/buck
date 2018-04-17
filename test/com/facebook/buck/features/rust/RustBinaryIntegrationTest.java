@@ -637,6 +637,17 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void procmacroCompileCheck() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "procmacro", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:test#check").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:test#check");
+  }
+
+  @Test
   public void procmacroCompileShared() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "procmacro", tmp);

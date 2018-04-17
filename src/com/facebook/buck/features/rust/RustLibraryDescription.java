@@ -213,12 +213,13 @@ public class RustLibraryDescription
         CrateType crateType;
 
         // Determine a crate type from preferred linkage and deptype.
-        // NOTE: DYLIB requires upstream rustc bug #38795 to be fixed, because otherwise
-        // the use of -rpath will break with flavored paths containing ','.
-        if (isCheck) {
-          crateType = CrateType.CHECK;
-        } else if (args.getProcMacro()) {
+        // Procedural Macros (aka, compiler plugins) take priority over check builds
+        // as we need the compiler plugin to be able to check the code which depends on the
+        // plugin.
+        if (args.getProcMacro()) {
           crateType = CrateType.PROC_MACRO;
+        } else if (isCheck) {
+          crateType = CrateType.CHECK;
         } else {
           switch (args.getPreferredLinkage()) {
             case ANY:
