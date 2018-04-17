@@ -120,7 +120,15 @@ public class PublishCommand extends BuildCommand {
     }
 
     // Build the specified target(s).
-    ExitCode exitCode = super.runWithoutHelp(params);
+
+    assertArguments(params);
+
+    ExitCode exitCode;
+    try (CommandThreadManager pool =
+        new CommandThreadManager("Publish", getConcurrencyLimit(params.getBuckConfig()))) {
+      exitCode = run(params, pool, ImmutableSet.of()).getExitCode();
+    }
+
     if (exitCode != ExitCode.SUCCESS) {
       return exitCode;
     }
