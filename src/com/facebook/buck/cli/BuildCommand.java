@@ -444,7 +444,7 @@ public class BuildCommand extends AbstractCommand {
                 params.getBuckConfig(),
                 params.getEnvironment())) {
       prehook.startPrehookScript();
-      return run(params, pool, ImmutableSet.of());
+      return run(params, pool, ImmutableSet.of()).getExitCode();
     }
   }
 
@@ -466,7 +466,7 @@ public class BuildCommand extends AbstractCommand {
     throw new CommandLineException(message);
   }
 
-  protected ExitCode run(
+  protected BuildRunResult run(
       CommandRunnerParams params,
       CommandThreadManager commandThreadManager,
       ImmutableSet<String> additionalTargets)
@@ -478,7 +478,7 @@ public class BuildCommand extends AbstractCommand {
     ExitCode exitCode = ExitCode.BUILD_ERROR;
     try (CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
         getForkJoinPoolSupplier(params.getBuckConfig())) {
-      exitCode = executeBuildAndProcessResult(params, commandThreadManager, poolSupplier);
+      return executeBuildAndProcessResult(params, commandThreadManager, poolSupplier);
     } catch (ActionGraphCreationException e) {
       params.getConsole().printBuildFailure(e.getMessage());
       exitCode = ExitCode.PARSE_ERROR;
@@ -486,7 +486,7 @@ public class BuildCommand extends AbstractCommand {
       params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
     }
 
-    return exitCode;
+    return ImmutableBuildRunResult.of(exitCode);
   }
 
   private BuildEvent.Started postBuildStartedEvent(CommandRunnerParams params) {
@@ -553,7 +553,7 @@ public class BuildCommand extends AbstractCommand {
     }
   }
 
-  private ExitCode executeBuildAndProcessResult(
+  private BuildRunResult executeBuildAndProcessResult(
       CommandRunnerParams params,
       CommandThreadManager commandThreadManager,
       CloseableMemoizedSupplier<ForkJoinPool> poolSupplier)
@@ -639,7 +639,7 @@ public class BuildCommand extends AbstractCommand {
       }
     }
 
-    return exitCode;
+    return ImmutableBuildRunResult.of(exitCode);
   }
 
   /**
@@ -1495,5 +1495,11 @@ public class BuildCommand extends AbstractCommand {
 
     @Value.Parameter
     ImmutableSet<BuildTarget> getBuildTargets();
+  }
+
+  @Immutable(builder = false, copy = false)
+  interface BuildRunResult {
+    @Value.Parameter
+    ExitCode getExitCode();
   }
 }

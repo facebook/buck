@@ -226,7 +226,7 @@ public class InstallCommand extends BuildCommand {
       }
 
       // Build the targets
-      ExitCode exitCode = run(params, pool, installHelperTargets);
+      ExitCode exitCode = run(params, pool, installHelperTargets).getExitCode();
       if (exitCode != ExitCode.SUCCESS) {
         return exitCode;
       }
