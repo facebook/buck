@@ -19,7 +19,6 @@ package com.facebook.buck.util.versioncontrol;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -165,31 +164,6 @@ public class HgCmdLineInterfaceIntegrationTest {
     assertEquals(
         String.join("\n", expectedValue),
         repoThreeCmdLine.diffBetweenRevisions("b1fd7e", "2911b3"));
-  }
-
-  @Test
-  public void testHgRootSubdir() throws InterruptedException, IOException {
-    // Use a subdir of the repository
-    HgCmdLineInterface hgCmdLineInterface =
-        makeHgCmdLine(reposPath.resolve(REPO_WITH_SUB_DIR + "/subdir"));
-    Path result = hgCmdLineInterface.getHgRoot();
-    // Use toRealPath to follow the pecularities of the OS X tempdir system, which uses a
-    // /var -> /private/var symlink.
-    assertEquals(result, reposPath.resolve(REPO_WITH_SUB_DIR).toRealPath());
-  }
-
-  @Test
-  public void testHgRootOutsideRepo() throws InterruptedException {
-    // Note: reposPath is not a hg repository, so we have to create a HgCmdLineInterface directly
-    // here.
-    HgCmdLineInterface hgCmdLineInterface =
-        new HgCmdLineInterface(
-            new TestProcessExecutorFactory(),
-            reposPath,
-            new VersionControlBuckConfig(FakeBuckConfig.builder().build()).getHgCmd(),
-            ImmutableMap.of());
-    Path result = hgCmdLineInterface.getHgRoot();
-    assertNull(result);
   }
 
   private static Path explodeReposZip() throws InterruptedException, IOException {
