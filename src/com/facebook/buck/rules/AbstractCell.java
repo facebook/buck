@@ -17,7 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -267,9 +266,5 @@ abstract class AbstractCell {
 
   public CellPathResolver getCellPathResolver() {
     return getBuckConfig().getCellPathResolver();
-  }
-
-  public void ensureConcreteFilesExist(BuckEventBus eventBus) {
-    getFilesystem().ensureConcreteFilesExist(eventBus);
   }
 }

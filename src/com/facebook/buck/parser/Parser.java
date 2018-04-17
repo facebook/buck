@@ -339,7 +339,6 @@ public class Parser {
       }
 
       targetGraph = new TargetGraph(graph, ImmutableMap.copyOf(index));
-      state.ensureConcreteFilesExist(eventBus);
       return targetGraph;
     } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
       throw new HumanReadableException(e.getMessage());

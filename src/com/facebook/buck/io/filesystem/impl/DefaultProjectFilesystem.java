@@ -16,7 +16,6 @@
 
 package com.facebook.buck.io.filesystem.impl;
 
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.file.MostFiles;
@@ -216,15 +215,6 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   @Override
   public ImmutableMap<String, ? extends Object> getDelegateDetails() {
     return delegate.getDetailsForLogging();
-  }
-
-  /**
-   * Hook for virtual filesystems to materialise virtual files as Buck will need to be able to read
-   * them past this point.
-   */
-  @Override
-  public void ensureConcreteFilesExist(BuckEventBus eventBus) {
-    delegate.ensureConcreteFilesExist(eventBus);
   }
 
   /**

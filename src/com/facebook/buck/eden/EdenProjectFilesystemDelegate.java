@@ -16,7 +16,6 @@
 
 package com.facebook.buck.eden;
 
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.config.Config;
@@ -78,11 +77,6 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
         .put("eden.mountPoint", mount.getProjectRoot().toString())
         .put("eden.disableSha1FastPath", disableSha1FastPath)
         .build();
-  }
-
-  @Override
-  public void ensureConcreteFilesExist(BuckEventBus eventBus) {
-    return;
   }
 
   @Override

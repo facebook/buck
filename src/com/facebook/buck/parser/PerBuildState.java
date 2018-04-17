@@ -236,12 +236,6 @@ public class PerBuildState implements AutoCloseable {
         currentCell, getCell(node.getBuildTarget()), buildFile, node);
   }
 
-  public void ensureConcreteFilesExist(BuckEventBus eventBus) {
-    for (Cell eachCell : cells.values()) {
-      eachCell.ensureConcreteFilesExist(eventBus);
-    }
-  }
-
   public long getParseProcessedBytes() {
     return parseProcessedBytes.get();
   }

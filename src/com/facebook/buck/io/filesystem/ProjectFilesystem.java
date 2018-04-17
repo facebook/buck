@@ -16,7 +16,6 @@
 
 package com.facebook.buck.io.filesystem;
 
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
@@ -55,12 +54,6 @@ public interface ProjectFilesystem {
    *     must be {@link String}, {@code int}, or {@code boolean}.
    */
   ImmutableMap<String, ? extends Object> getDelegateDetails();
-
-  /**
-   * Hook for virtual filesystems to materialise virtual files as Buck will need to be able to read
-   * them past this point.
-   */
-  void ensureConcreteFilesExist(BuckEventBus eventBus);
 
   /**
    * @return the specified {@code path} resolved against {@link #getRootPath()} to an absolute path.

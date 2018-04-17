@@ -16,7 +16,6 @@
 
 package com.facebook.buck.io.filesystem.impl;
 
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableMap;
@@ -44,11 +43,6 @@ public final class DefaultProjectFilesystemDelegate implements ProjectFilesystem
   @Override
   public ImmutableMap<String, ? extends Object> getDetailsForLogging() {
     return ImmutableMap.of("filesystem", "default", "filesystem.root", root.toString());
-  }
-
-  @Override
-  public void ensureConcreteFilesExist(BuckEventBus eventBus) {
-    return;
   }
 
   @Override
