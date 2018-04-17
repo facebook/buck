@@ -53,24 +53,26 @@ public class CxxEndToEndTest {
 
   @Test
   public void shouldBuildAndRunSuccessfully(
-      EndToEndTestDescriptor test, EndToEndWorkspace workspace, ProcessResult result)
-      throws Exception {
+      EndToEndTestDescriptor test, EndToEndWorkspace workspace) throws Exception {
+    ProcessResult result = workspace.runBuckCommand(test);
     result.assertSuccess(String.format("%s did not successfully build", test.getName()));
     ProcessResult targetResult = workspace.runBuiltResult(successTarget);
     targetResult.assertSuccess();
   }
 
   @Test
-  public void shouldFailInSuccessfulEnv(
-      EndToEndTestDescriptor test, EndToEndWorkspace workspace, ProcessResult result) {
+  public void shouldFailInSuccessfulEnv(EndToEndTestDescriptor test, EndToEndWorkspace workspace)
+      throws Exception {
     // Uses successful environment, but fixture BUCK file is empty
+    ProcessResult result = workspace.runBuckCommand(test);
     result.assertFailure(
         String.format("%s successfully built when it has an empty BUCK file", test.getName()));
   }
 
   @Test
-  public void shouldNotBuildSuccessfully(
-      EndToEndTestDescriptor test, EndToEndWorkspace workspace, ProcessResult result) {
+  public void shouldNotBuildSuccessfully(EndToEndTestDescriptor test, EndToEndWorkspace workspace)
+      throws Exception {
+    ProcessResult result = workspace.runBuckCommand(test);
     result.assertFailure(
         String.format(
             "%s successfully built when it should have failed to compile", test.getName()));

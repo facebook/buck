@@ -57,7 +57,8 @@ import org.junit.runners.model.Statement;
  * <p>To use, mark your test class with @RunWith(EndToEndRunnerTest.class) and include a static
  * method that returns an {@link EndToEndEnvironment}, marked with an @Environment annotation.
  *
- * <p>You can use {@link EndToEndRunnerTest} as an example of this class' usage.
+ * <p>You can use {@link com.facebook.buck.cxx.endtoend.CxxEndToEndTest} as an example of this
+ * class' usage.
  */
 public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
   private Map<String, Optional<EndToEndEnvironment>> environmentMap = new HashMap<>();
@@ -264,17 +265,15 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
    */
   private void validateTestMethodArgs(FrameworkMethod testMethod, List<Throwable> errors) {
     Class<?>[] paramTypes = testMethod.getMethod().getParameterTypes();
-    if (paramTypes.length != 3
+    if (paramTypes.length != 2
         || !EndToEndTestDescriptor.class.isAssignableFrom(paramTypes[0])
-        || !EndToEndWorkspace.class.isAssignableFrom(paramTypes[1])
-        || !ProcessResult.class.isAssignableFrom(paramTypes[2])) {
+        || !EndToEndWorkspace.class.isAssignableFrom(paramTypes[1])) {
       errors.add(
           new AnnotationFormatError(
               "Methods marked by @Test in the EndToEndRunner must support taking an "
-                  + "EndToEndTestDescriptor, EndToEndWorkspace, and ProcessResult. Example:\n"
+                  + "EndToEndTestDescriptor and ProcessResult. Example:\n"
                   + "@Test\n"
-                  + "public void shouldRun(\n"
-                  + "    EndToEndTestDescriptor test, EndToEndWorkspace workspace, ProcessResult result) {\n\n}"));
+                  + "public void shouldRun(EndToEndTestDescriptor test, EndToEndWorkspace workspace) {\n\n}"));
     }
   }
 

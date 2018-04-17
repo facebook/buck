@@ -16,12 +16,11 @@
 
 package com.facebook.buck.testutil.endtoend;
 
-import com.facebook.buck.testutil.ProcessResult;
 import org.junit.runners.model.Statement;
 
 /**
- * A statement that takes a testDescriptor and target, and invokes Buck commands around that target,
- * including the construction and destruction of the necessary Workspace.
+ * A statement that takes a testDescriptor and target, performs needed setup including the
+ * construction and destruction of the necessary Workspace.
  */
 public class BuckInvoker extends Statement {
   private final EndToEndTestDescriptor testDescriptor;
@@ -41,8 +40,7 @@ public class BuckInvoker extends Statement {
         testDescriptor.getMethod().getName());
     workspace.addBuckConfigLocalOptions(testDescriptor.getLocalConfigs());
     try {
-      ProcessResult result = workspace.runBuckCommand(testDescriptor);
-      testDescriptor.getMethod().invokeExplosively(target, testDescriptor, workspace, result);
+      testDescriptor.getMethod().invokeExplosively(target, testDescriptor, workspace);
     } finally {
       workspace.teardown();
     }

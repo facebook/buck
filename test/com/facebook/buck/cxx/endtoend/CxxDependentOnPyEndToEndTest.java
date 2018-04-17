@@ -65,7 +65,8 @@ public class CxxDependentOnPyEndToEndTest {
   }
 
   private ProcessResult checkSuccessfulBuildAndRun(
-      String message, ProcessResult result, EndToEndWorkspace workspace) throws Exception {
+      String message, EndToEndTestDescriptor test, EndToEndWorkspace workspace) throws Exception {
+    ProcessResult result = workspace.runBuckCommand(test);
     result.assertSuccess(String.format(message, "build"));
     ProcessResult targetResult = workspace.runBuiltResult(mainTarget);
     targetResult.assertSuccess(String.format(message, "run"));
@@ -74,9 +75,8 @@ public class CxxDependentOnPyEndToEndTest {
 
   /** Determines that buck successfully outputs proper programs */
   @Test
-  public void shouldBuildAndRun(
-      EndToEndTestDescriptor test, EndToEndWorkspace workspace, ProcessResult result)
+  public void shouldBuildAndRun(EndToEndTestDescriptor test, EndToEndWorkspace workspace)
       throws Exception {
-    checkSuccessfulBuildAndRun("Did not successfully %s.", result, workspace);
+    checkSuccessfulBuildAndRun("Did not successfully %s.", test, workspace);
   }
 }

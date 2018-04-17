@@ -76,8 +76,9 @@ public class AndroidEndToEndTest {
 
   /** Determines that buck successfully outputs proper programs */
   @Test
-  public void shouldBuild(
-      EndToEndTestDescriptor test, EndToEndWorkspace workspace, ProcessResult result) {
+  public void shouldBuild(EndToEndTestDescriptor test, EndToEndWorkspace workspace)
+      throws Exception {
+    ProcessResult result = workspace.runBuckCommand(test);
     result.assertSuccess("Did not successfully build");
   }
 }
