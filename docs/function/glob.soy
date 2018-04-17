@@ -14,23 +14,60 @@
 {call buck.function}
 {param status: 'FROZEN' /}
 {param overview}
-The <code>glob()</code> function is used to specify a set of files
-using patterns. A pattern should be structured as a relative path with
-no repeated or trailing separators (<code>/</code>).
 
-Patterns may contain shell-like wildcards <code>*</code>, <code>?</code>, <code>[charset]</code>.
+<p>
+The <code>glob()</code> function specifies a set of files
+using patterns. 
+</p>
 
-Additionally, a path element <code>**</code> will match any subpath. For instance
-{sp}<code>foo&#x2F;**/bar</code> is equivalent to <code>["foo/bar", "foo&#x2F;*/bar", "foo&#x2F;*&#x2F;*/bar",
-...]</code>.
+<p>
+A pattern is structured as a <em>relative</em> path with
+no repeated or trailing path separators, such as the forward slash
+(<code>/</code>).
+</p>
+
+<p>
+Patterns may contain shell-like wildcards, such as <code>*</code> , <code>?</code> , or <code>[<em>charset</em>]</code>.
+</p>
+
+<p>
+Additionally, the path element, <code>**</code> , matches any subpath. For instance
+</p>
+
+<p>
+<pre>
+{literal}
+foo&#x2F;**/bar
+{/literal}
+</pre>
+</p>
+
+<p>
+is equivalent to 
+</p>
+
+<p>
+<pre>
+{literal}
+["foo/bar", "foo&#x2F;*/bar", "foo&#x2F;*&#x2F;*/bar", ...]
+{/literal}
+</pre>
+</p>
+
+<p>
+The patterns that specify the set of files to include&mdash;as well as
+the patterns that specify the files to <em>exclude</em> (see the <code>exclude</code> parameter 
+below)&mdash;must both be statically defined; you cannot generate these patterns 
+dynamically at build time. 
+</p>
+
 {/param}
 
 {param args}
 
 {call buck.functionArg}
   {param desc}
-  The first argument is a list of strings, identifying file name patterns used
-  to match against files under the current directory.
+  The first parameter is unnamed and is a list of patterns that match files under the current directory.
   {/param}
 {/call}
 
@@ -38,9 +75,10 @@ Additionally, a path element <code>**</code> will match any subpath. For instanc
   {param name : 'exclude' /}
   {param default : '[]' /}
   {param desc}
-    A list of patterns to identify files that should be removed from the set
-    specified by the first argument. This argument cannot be used with <code>excludes</code>
-    because they serve the exact same purpose.
+    A list of patterns that identify files that should be removed from the set
+    specified by the first parameter. You cannot specify both 
+    the <code>exclude</code> parameter and the <code>excludes</code> parameter 
+    because they serve the same purpose.
   {/param}
 {/call}
 
@@ -48,8 +86,9 @@ Additionally, a path element <code>**</code> will match any subpath. For instanc
   {param name : 'include_dotfiles' /}
   {param default : 'False' /}
   {param desc}
-  Whether <code>*</code> and <code>**</code> patterns should capture file or directory names
-  starting with a dot.
+  Specifies whether <code>*</code> and <code>**</code> patterns should capture file and directory names
+  that start with a dot (<code>.</code>). By default, this parameter is false, which
+  indicates that files that start with a dot are automatically excluded.
   {/param}
 {/call}
 
@@ -57,8 +96,11 @@ Additionally, a path element <code>**</code> will match any subpath. For instanc
   {param name : 'excludes' /}
   {param default : '[]' /}
   {param desc}
-    DEPRECATED: Please use newer <code>exclude</code> parameter.<br>
-    A list of patterns to identify files that should be removed from the set
+    DEPRECATED 
+    <br/> 
+    This parameter is deprecated; use the <code>exclude</code> parameter instead of <code>excludes</code>.
+    <br>
+    A list of patterns that identify files that should be removed from the set
     specified by the first argument.
   {/param}
 {/call}
@@ -67,49 +109,157 @@ Additionally, a path element <code>**</code> will match any subpath. For instanc
 
 {param examples}
 
-For the purpose of the examples, we call 'regular' a file is that is
-not a 'dotfile'. A file is a 'dotfile' (relatively to some current
-directory) if its relative path includes at least one path element
-starting with a dot.
+<p>
+For the purposes of these examples, a <em>regular</em> file is one that 
+is not a <em>dotfile</em>; a file is a dotfile if its path&mdash;relative 
+to the current directory&mdash;includes at least one path element
+that starts with a dot.
+</p>
 
-All of the regular <code>.java</code> files in this directory:
-<pre class="prettyprint lang-py">glob(['*.java'])</pre>
+<p>
+All the regular <code>.java</code> files in the current directory:
+</p>
 
-All of the <code>.java</code> files in this directory (now including
-dotfiles):
-<pre class="prettyprint lang-py">glob(['*.java'], include_dotfiles=True)</pre>
+<p>
+<pre class="prettyprint lang-py">
+{literal}
+glob(['*.java'])
+{/literal}
+</pre>
+</p>
 
-All of the files under this directory:
-<pre class="prettyprint lang-py">glob(['**&#x2F'], include_dotfiles=True)</pre>
 
-All of the regular files under the directory '.git':
-<pre class="prettyprint lang-py">glob(['.git&#x2F**/'])</pre>
+<p>
+All the <code>.java</code> files in the current directory&mdash;including dotfiles:
+</p>
 
-All of the files starting with '.' under a regular (non-dot) directory:
-<pre class="prettyprint lang-py">glob(['**&#x2F.*'])</pre>
+<p>
+<pre class="prettyprint lang-py">
+{literal}
+glob(['*.java'], include_dotfiles=True)
+{/literal}
+</pre>
+</p>
 
-All of the regular <code>.java</code> and <code>.aidl</code> files in this directory:
-<pre class="prettyprint lang-py">glob(['*.java', '*.aidl'])</pre>
 
-All of the regular <code>.java</code> files under this directory:
-<pre class="prettyprint lang-py">glob(['**&#x2F;*.java'])</pre>
+<p>
+All the files under the current directory:
+</p>
 
-All of the regular files under this directory that end in <code>Test.java</code>:
-<pre class="prettyprint lang-py">glob(['**&#x2F;*Test.java'])</pre>
+<p>
+<pre class="prettyprint lang-py">
+{literal}
+glob(['**&#x2F'], include_dotfiles=True)
+{/literal}
+</pre>
+</p>
 
-All of the regular files under this directory that end in <code>Test.java</code>,
-as well as <code>StringTests.java</code>:
-<pre class="prettyprint lang-py">glob(['**&#x2F;*Test.java', 'StringTests.java'])</pre>
 
-All of the regular files under this directory that end in <code>Test.java</code>,
-except for <code>HaltingProblemTest.java</code>:
-<pre class="prettyprint lang-py">glob(['**&#x2F;*Test.java'], excludes = ['HaltingProblemTest.java'])</pre>
+<p>
+All the regular files under the directory <code>.git</code>:
+</p>
 
-All of the regular <code>.java</code> files under this directory, except for those
-that end in <code>Test.java</code>:
-<pre class="prettyprint lang-py">glob(['**&#x2F;*.java'], excludes = ['**&#x2F;*Test.java'])</pre>
+<p>
+<pre class="prettyprint lang-py">
+{literal}
+glob(['.git&#x2F**/'])
+{/literal}
+</pre>
+</p>
+
+
+<p>
+All the files starting with <code>'.'</code> under regular (non-dot) directories:
+</p>
+
+<p>
+<pre class="prettyprint lang-py">
+{literal}
+glob(['**&#x2F.*'])
+{/literal}
+</pre>
+</p>
+
+
+<p>
+All the regular <code>.java</code> and <code>.aidl</code> files in the current directory:
+</p>
+
+<p>
+<pre class="prettyprint lang-py">
+{literal}
+glob(['*.java', '*.aidl'])
+{/literal}
+</pre>
+</p>
+
+
+<p>
+All the regular <code>.java</code> files under current directory:
+</p>
+
+<p>
+<pre class="prettyprint lang-py">
+{literal}
+glob(['**&#x2F;*.java'])
+{/literal}
+</pre>
+</p>
+
+
+<p>
+All of regular files under the current directory that end in <code>Test.java</code>:
+</p>
+
+<p>
+<pre class="prettyprint lang-py">
+{literal}
+glob(['**&#x2F;*Test.java'])
+{/literal}
+</pre>
+</p>
+
+
+<p>
+All the regular files under the current directory that end in <code>Test.java</code>, as well as <code>StringTests.java</code>:
+</p>
+
+<p>
+<pre class="prettyprint lang-py">
+{literal}
+glob(['**&#x2F;*Test.java', 'StringTests.java'])
+{/literal}
+</pre>
+</p>
+
+
+<p>
+All the regular files under the current directory that end in <code>Test.java</code>, <em>except</em> for <code>HaltingProblemTest.java</code>:
+</p>
+
+<p>
+<pre class="prettyprint lang-py">
+{literal}
+glob(['**&#x2F;*Test.java'], exclude = ['HaltingProblemTest.java'])
+{/literal}
+</pre>
+</p>
+
+
+<p>
+All the regular <code>.java</code> files under the current directory, <em>except</em> for those that end in <code>Test.java</code>:
+</p>
+
+<p>
+<pre class="prettyprint lang-py">
+{literal}
+glob(['**&#x2F;*.java'], exclude = ['**&#x2F;*Test.java'])
+{/literal}
+</pre>
+</p>
 
 {/param}
+
 
 {/call} // buck.function
     {/param} // content
