@@ -886,7 +886,10 @@ docsearch({
   {param desc}
   List of <a href="{ROOT}concept/build_target_pattern.html">build
   target patterns</a> that identify the build rules that can include
-  this rule in its <code>deps</code>.
+  this rule as a dependency, for example, by listing it in 
+  their <code>deps</code> or <code>exported_deps</code> attributes.
+  For more information, 
+  see {call buck.concept_link}{param page: 'Visibility' /}{param name: 'Visibility' /}{/call}.
   {/param}
 {/call}
 {/template}
@@ -898,7 +901,7 @@ docsearch({
   {param default : '[]' /}
   {param desc}
   List of <a href="{ROOT}concept/build_target.html">build targets</a> that
-  identify the test rules that exercise this target.
+  identify tests that exercise this target.
   {/param}
 {/call}
 {/template}
