@@ -412,6 +412,50 @@ public class OCamlIntegrationTest {
   }
 
   @Test
+  @Ignore("Redesign test so it does not depend on compiler/platform-specific binary artifacts.")
+  public void testPrebuiltLibraryMacWithNativeBytecode() throws IOException {
+    if (Platform.detect() == Platform.MACOS) {
+      BuildTarget target =
+          BuildTargetFactory.newInstance(
+              workspace.getDestPath(), "//ocaml_ext_mac:ocaml_ext_native_bytecode");
+      BuildTarget binary = createOcamlLinkTarget(target);
+      BuildTarget bytecode = OcamlBuildRulesGenerator.addBytecodeFlavor(binary);
+      BuildTarget libplus =
+          BuildTargetFactory.newInstance(
+              workspace.getDestPath(), "//ocaml_ext_mac:plus_native_bytecode");
+      ImmutableSet<BuildTarget> targets = ImmutableSet.of(target, binary, bytecode, libplus);
+
+      workspace.runBuckCommand("build", target.toString()).assertSuccess();
+      BuckBuildLog buildLog = workspace.getBuildLog();
+      for (BuildTarget t : targets) {
+        assertTrue(
+            String.format("Expected %s to be built", t.toString()),
+            buildLog.getAllTargets().contains(t));
+      }
+      buildLog.assertTargetBuiltLocally(target.toString());
+      buildLog.assertTargetBuiltLocally(binary.toString());
+
+      workspace.resetBuildLogFile();
+      workspace.runBuckCommand("build", target.toString()).assertSuccess();
+      for (BuildTarget t : targets) {
+        assertTrue(
+            String.format("Expected %s to be built", t.toString()),
+            buildLog.getAllTargets().contains(t));
+      }
+      buildLog.assertTargetHadMatchingRuleKey(target.toString());
+      buildLog.assertTargetHadMatchingRuleKey(binary.toString());
+
+      workspace.resetBuildLogFile();
+      workspace.replaceFileContents("ocaml_ext_mac/BUCK", "libplus_lib", "libplus_lib1");
+      workspace.runBuckCommand("build", target.toString()).assertSuccess();
+      buildLog = workspace.getBuildLog();
+      assertTrue(buildLog.getAllTargets().containsAll(targets));
+      buildLog.assertTargetBuiltLocally(target.toString());
+      buildLog.assertTargetBuiltLocally(binary.toString());
+    }
+  }
+
+  @Test
   public void testCppLibraryDependency() throws InterruptedException, IOException {
     BuildTarget target = BuildTargetFactory.newInstance(workspace.getDestPath(), "//clib:clib");
     BuildTarget binary = createOcamlLinkTarget(target);

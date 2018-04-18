@@ -39,6 +39,8 @@ class PrebuiltOcamlLibrary extends OcamlLibrary {
   @AddToRuleKey private final Optional<SourcePath> staticNativeLibraryPath;
   @AddToRuleKey private final SourcePath staticBytecodeLibraryPath;
   @AddToRuleKey private final ImmutableList<SourcePath> staticCLibraryPaths;
+  @AddToRuleKey private final ImmutableList<SourcePath> staticNativeCLibraryPaths;
+  @AddToRuleKey private final ImmutableList<SourcePath> staticBytecodeCLibraryPaths;
 
   @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
@@ -60,6 +62,8 @@ class PrebuiltOcamlLibrary extends OcamlLibrary {
       Optional<SourcePath> staticNativeLibraryPath,
       SourcePath staticBytecodeLibraryPath,
       ImmutableList<SourcePath> staticCLibraryPaths,
+      ImmutableList<SourcePath> staticNativeCLibraryPaths,
+      ImmutableList<SourcePath> staticBytecodeCLibraryPaths,
       SourcePath bytecodeLibraryPath,
       Path libPath,
       Path includeDir,
@@ -69,18 +73,24 @@ class PrebuiltOcamlLibrary extends OcamlLibrary {
     this.staticNativeLibraryPath = staticNativeLibraryPath;
     this.staticBytecodeLibraryPath = staticBytecodeLibraryPath;
     this.staticCLibraryPaths = staticCLibraryPaths;
+    this.staticNativeCLibraryPaths = staticNativeCLibraryPaths;
+    this.staticBytecodeCLibraryPaths = staticBytecodeCLibraryPaths;
     this.bytecodeLibraryPath = bytecodeLibraryPath;
     this.libPath = libPath;
     this.includeDir = includeDir;
     this.deps = deps;
   }
 
-  private NativeLinkableInput getLinkableInput(SourcePath sourcePath) {
+  private NativeLinkableInput getLinkableInput(
+      SourcePath sourcePath, ImmutableList<SourcePath> cLibPaths) {
     // Build the library path and linker arguments that we pass through the
     // {@link NativeLinkable} interface for linking.
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
     argsBuilder.add(SourcePathArg.of(sourcePath));
     for (SourcePath staticCLibraryPath : staticCLibraryPaths) {
+      argsBuilder.add(SourcePathArg.of(staticCLibraryPath));
+    }
+    for (SourcePath staticCLibraryPath : cLibPaths) {
       argsBuilder.add(SourcePathArg.of(staticCLibraryPath));
     }
     return NativeLinkableInput.of(argsBuilder.build(), ImmutableSet.of(), ImmutableSet.of());
@@ -89,7 +99,7 @@ class PrebuiltOcamlLibrary extends OcamlLibrary {
   @Override
   public NativeLinkableInput getNativeLinkableInput(OcamlPlatform platform) {
     if (staticNativeLibraryPath.isPresent()) {
-      return getLinkableInput(staticNativeLibraryPath.get());
+      return getLinkableInput(staticNativeLibraryPath.get(), staticNativeCLibraryPaths);
     } else {
       return NativeLinkableInput.of(ImmutableList.of(), ImmutableSet.of(), ImmutableSet.of());
     }
@@ -97,7 +107,7 @@ class PrebuiltOcamlLibrary extends OcamlLibrary {
 
   @Override
   public NativeLinkableInput getBytecodeLinkableInput(OcamlPlatform platform) {
-    return getLinkableInput(staticBytecodeLibraryPath);
+    return getLinkableInput(staticBytecodeLibraryPath, staticBytecodeCLibraryPaths);
   }
 
   @Override

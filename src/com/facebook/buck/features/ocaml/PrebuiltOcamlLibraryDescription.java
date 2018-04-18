@@ -60,6 +60,8 @@ public class PrebuiltOcamlLibraryDescription
     String nativeLib = args.getNativeLib();
     String bytecodeLib = args.getBytecodeLib();
     ImmutableList<String> cLibs = args.getCLibs();
+    ImmutableList<String> nativeCLibs = args.getNativeCLibs();
+    ImmutableList<String> bytecodeCLibs = args.getBytecodeCLibs();
 
     Path libPath = buildTarget.getBasePath().resolve(libDir);
     Path includeDir = libPath.resolve(args.getIncludeDir());
@@ -73,6 +75,18 @@ public class PrebuiltOcamlLibraryDescription
         PathSourcePath.of(projectFilesystem, libPath.resolve(bytecodeLib));
     ImmutableList<SourcePath> staticCLibraryPaths =
         cLibs
+            .stream()
+            .map(input -> PathSourcePath.of(projectFilesystem, libPath.resolve(input)))
+            .collect(ImmutableList.toImmutableList());
+
+    ImmutableList<SourcePath> staticNativeCLibraryPaths =
+        nativeCLibs
+            .stream()
+            .map(input -> PathSourcePath.of(projectFilesystem, libPath.resolve(input)))
+            .collect(ImmutableList.toImmutableList());
+
+    ImmutableList<SourcePath> staticBytecodeCLibraryPaths =
+        bytecodeCLibs
             .stream()
             .map(input -> PathSourcePath.of(projectFilesystem, libPath.resolve(input)))
             .collect(ImmutableList.toImmutableList());
@@ -93,6 +107,8 @@ public class PrebuiltOcamlLibraryDescription
         staticNativeLibraryPath,
         staticBytecodeLibraryPath,
         staticCLibraryPaths,
+        staticNativeCLibraryPaths,
+        staticBytecodeCLibraryPaths,
         bytecodeLibraryPath,
         libPath,
         includeDir,
@@ -130,6 +146,10 @@ public class PrebuiltOcamlLibraryDescription
     }
 
     abstract ImmutableList<String> getCLibs();
+
+    abstract ImmutableList<String> getNativeCLibs();
+
+    abstract ImmutableList<String> getBytecodeCLibs();
 
     @Value.Default
     boolean getBytecodeOnly() {
