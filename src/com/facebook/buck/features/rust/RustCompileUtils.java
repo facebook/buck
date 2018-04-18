@@ -105,9 +105,7 @@ public class RustCompileUtils {
     SortedSet<BuildRule> ruledeps = params.getBuildDeps();
     ImmutableList.Builder<Arg> linkerArgs = ImmutableList.builder();
 
-    Stream.concat(
-            rustConfig.getLinkerArgs(rustPlatform.getCxxPlatform()).stream(),
-            extraLinkerFlags.stream())
+    Stream.concat(rustPlatform.getLinkerArgs().stream(), extraLinkerFlags.stream())
         .filter(x -> !x.isEmpty())
         .map(StringArg::of)
         .forEach(linkerArgs::add);
@@ -127,7 +125,7 @@ public class RustCompileUtils {
     Stream<String> checkArgs;
     if (crateType.isCheck()) {
       args.add(StringArg.of("--emit=metadata"));
-      checkArgs = rustConfig.getRustCheckFlags().stream();
+      checkArgs = rustPlatform.getRustCheckFlags().stream();
     } else {
       checkArgs = Stream.of();
     }
@@ -225,8 +223,8 @@ public class RustCompileUtils {
         projectFilesystem,
         params,
         filename,
-        rustConfig.getRustCompiler().resolve(resolver),
-        rustConfig.getLinkerProvider(cxxPlatform, cxxPlatform.getLd().getType()).resolve(resolver),
+        rustPlatform.getRustCompiler().resolve(resolver),
+        rustPlatform.getLinkerProvider().resolve(resolver),
         args.build(),
         depArgs.build(),
         linkerArgs.build(),
@@ -302,21 +300,20 @@ public class RustCompileUtils {
   }
 
   private static Iterable<BuildTarget> getPlatformParseTimeDeps(RustPlatform rustPlatform) {
-    return CxxPlatforms.getParseTimeDeps(rustPlatform.getCxxPlatform());
+    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
+    deps.addAll(rustPlatform.getRustCompiler().getParseTimeDeps());
+    rustPlatform.getLinker().ifPresent(l -> deps.addAll(l.getParseTimeDeps()));
+    deps.addAll(CxxPlatforms.getParseTimeDeps(rustPlatform.getCxxPlatform()));
+    return deps.build();
   }
 
   public static Iterable<BuildTarget> getPlatformParseTimeDeps(
-      RustBuckConfig rustBuckConfig, RustToolchain rustToolchain, BuildTarget buildTarget) {
-    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
-    deps.addAll(rustBuckConfig.getRustCompiler().getParseTimeDeps());
-    rustBuckConfig.getLinker().ifPresent(l -> deps.addAll(l.getParseTimeDeps()));
-    deps.addAll(
-        getPlatformParseTimeDeps(
-            rustToolchain
-                .getRustPlatforms()
-                .getValue(buildTarget)
-                .orElse(rustToolchain.getDefaultRustPlatform())));
-    return deps.build();
+      RustToolchain rustToolchain, BuildTarget buildTarget) {
+    return getPlatformParseTimeDeps(
+        rustToolchain
+            .getRustPlatforms()
+            .getValue(buildTarget)
+            .orElse(rustToolchain.getDefaultRustPlatform()));
   }
 
   public static BinaryWrapperRule createBinaryBuildRule(

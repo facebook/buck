@@ -85,6 +85,11 @@ public class RustTestDescription
 
     RustToolchain rustToolchain = getRustToolchain();
     BuildRuleResolver resolver = context.getBuildRuleResolver();
+    RustPlatform rustPlatform =
+        rustToolchain
+            .getRustPlatforms()
+            .getValue(buildTarget)
+            .orElse(rustToolchain.getDefaultRustPlatform());
 
     BinaryWrapperRule testExeBuild =
         (BinaryWrapperRule)
@@ -97,15 +102,12 @@ public class RustTestDescription
                         params,
                         resolver,
                         rustBuckConfig,
-                        rustToolchain
-                            .getRustPlatforms()
-                            .getValue(buildTarget)
-                            .orElse(rustToolchain.getDefaultRustPlatform()),
+                        rustPlatform,
                         args.getCrate(),
                         args.getFeatures(),
                         Stream.of(
                                 args.isFramework() ? Stream.of("--test") : Stream.<String>empty(),
-                                rustBuckConfig.getRustTestFlags().stream(),
+                                rustPlatform.getRustTestFlags().stream(),
                                 args.getRustcFlags().stream())
                             .flatMap(x -> x)
                             .iterator(),
@@ -141,7 +143,7 @@ public class RustTestDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     targetGraphOnlyDepsBuilder.addAll(
-        RustCompileUtils.getPlatformParseTimeDeps(rustBuckConfig, getRustToolchain(), buildTarget));
+        RustCompileUtils.getPlatformParseTimeDeps(getRustToolchain(), buildTarget));
   }
 
   @Override

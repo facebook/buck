@@ -83,6 +83,11 @@ public class RustBinaryDescription
     boolean isCheck = type.map(t -> t.getValue().isCheck()).orElse(false);
 
     RustToolchain rustToolchain = getRustToolchain();
+    RustPlatform rustPlatform =
+        rustToolchain
+            .getRustPlatforms()
+            .getValue(buildTarget)
+            .orElse(rustToolchain.getDefaultRustPlatform());
 
     return RustCompileUtils.createBinaryBuildRule(
         buildTarget,
@@ -90,13 +95,10 @@ public class RustBinaryDescription
         params,
         context.getBuildRuleResolver(),
         rustBuckConfig,
-        rustToolchain
-            .getRustPlatforms()
-            .getValue(buildTarget)
-            .orElse(rustToolchain.getDefaultRustPlatform()),
+        rustPlatform,
         args.getCrate(),
         args.getFeatures(),
-        Stream.of(rustBuckConfig.getRustBinaryFlags().stream(), args.getRustcFlags().stream())
+        Stream.of(rustPlatform.getRustBinaryFlags().stream(), args.getRustcFlags().stream())
             .flatMap(x -> x)
             .iterator(),
         args.getLinkerFlags().iterator(),
@@ -116,7 +118,7 @@ public class RustBinaryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     targetGraphOnlyDepsBuilder.addAll(
-        RustCompileUtils.getPlatformParseTimeDeps(rustBuckConfig, getRustToolchain(), buildTarget));
+        RustCompileUtils.getPlatformParseTimeDeps(getRustToolchain(), buildTarget));
   }
 
   protected enum Type implements FlavorConvertible {

@@ -57,6 +57,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import org.immutables.value.Value;
 
 public class RustLibraryDescription
@@ -139,12 +140,14 @@ public class RustLibraryDescription
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
-    ImmutableList.Builder<String> rustcArgs = ImmutableList.builder();
-
-    RustCompileUtils.addFeatures(buildTarget, args.getFeatures(), rustcArgs);
-
-    rustcArgs.addAll(args.getRustcFlags());
-    rustcArgs.addAll(rustBuckConfig.getRustLibraryFlags());
+    Function<RustPlatform, ImmutableList<String>> getRustcArgs =
+        rustPlatform -> {
+          ImmutableList.Builder<String> rustcArgs = ImmutableList.builder();
+          RustCompileUtils.addFeatures(buildTarget, args.getFeatures(), rustcArgs);
+          rustcArgs.addAll(args.getRustcFlags());
+          rustcArgs.addAll(rustPlatform.getRustLibraryFlags());
+          return rustcArgs.build();
+        };
 
     String crate = args.getCrate().orElse(ruleToCrateName(buildTarget.getShortName()));
 
@@ -179,6 +182,7 @@ public class RustLibraryDescription
         }
       }
 
+      RustPlatform platform = rustPlatform.orElse(rustToolchain.getDefaultRustPlatform());
       return requireBuild(
           buildTarget,
           projectFilesystem,
@@ -186,9 +190,9 @@ public class RustLibraryDescription
           resolver,
           pathResolver,
           ruleFinder,
-          rustPlatform.orElse(rustToolchain.getDefaultRustPlatform()),
+          platform,
           rustBuckConfig,
-          rustcArgs.build(),
+          getRustcArgs.apply(platform),
           /* linkerArgs */ ImmutableList.of(),
           /* linkerInputs */ ImmutableList.of(),
           crate,
@@ -259,7 +263,7 @@ public class RustLibraryDescription
                 ruleFinder,
                 rustPlatform,
                 rustBuckConfig,
-                rustcArgs.build(),
+                getRustcArgs.apply(rustPlatform),
                 /* linkerArgs */ ImmutableList.of(),
                 /* linkerInputs */ ImmutableList.of(),
                 crate,
@@ -297,7 +301,7 @@ public class RustLibraryDescription
                 ruleFinder,
                 rustPlatform,
                 rustBuckConfig,
-                rustcArgs.build(),
+                getRustcArgs.apply(rustPlatform),
                 /* linkerArgs */ ImmutableList.of(),
                 /* linkerInputs */ ImmutableList.of(),
                 crate,
@@ -363,6 +367,8 @@ public class RustLibraryDescription
             break;
         }
 
+        RustPlatform rustPlatform =
+            getRustToolchain().getRustPlatforms().getValue(cxxPlatform.getFlavor());
         BuildRule rule =
             requireBuild(
                 buildTarget,
@@ -371,9 +377,9 @@ public class RustLibraryDescription
                 resolver,
                 pathResolver,
                 ruleFinder,
-                getRustToolchain().getRustPlatforms().getValue(cxxPlatform.getFlavor()),
+                rustPlatform,
                 rustBuckConfig,
-                rustcArgs.build(),
+                getRustcArgs.apply(rustPlatform),
                 /* linkerArgs */ ImmutableList.of(),
                 /* linkerInputs */ ImmutableList.of(),
                 crate,
@@ -398,6 +404,8 @@ public class RustLibraryDescription
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
         String sharedLibrarySoname =
             CrateType.DYLIB.filenameFor(getBuildTarget(), crate, cxxPlatform);
+        RustPlatform rustPlatform =
+            getRustToolchain().getRustPlatforms().getValue(cxxPlatform.getFlavor());
         BuildRule sharedLibraryBuildRule =
             requireBuild(
                 buildTarget,
@@ -406,9 +414,9 @@ public class RustLibraryDescription
                 resolver,
                 pathResolver,
                 ruleFinder,
-                getRustToolchain().getRustPlatforms().getValue(cxxPlatform.getFlavor()),
+                rustPlatform,
                 rustBuckConfig,
-                rustcArgs.build(),
+                getRustcArgs.apply(rustPlatform),
                 /* linkerArgs */ ImmutableList.of(),
                 /* linkerInputs */ ImmutableList.of(),
                 crate,
@@ -429,7 +437,7 @@ public class RustLibraryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     targetGraphOnlyDepsBuilder.addAll(
-        RustCompileUtils.getPlatformParseTimeDeps(rustBuckConfig, getRustToolchain(), buildTarget));
+        RustCompileUtils.getPlatformParseTimeDeps(getRustToolchain(), buildTarget));
   }
 
   @Override

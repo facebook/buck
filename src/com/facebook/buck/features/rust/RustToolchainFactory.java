@@ -18,6 +18,7 @@ package com.facebook.buck.features.rust;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
@@ -28,6 +29,8 @@ import java.util.Optional;
 /** Constructs {@link RustToolchain}s. */
 public class RustToolchainFactory implements ToolchainFactory<RustToolchain> {
 
+  private static final String SECTION = "rust";
+
   @Override
   public Optional<RustToolchain> createToolchain(
       ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
@@ -37,10 +40,21 @@ public class RustToolchainFactory implements ToolchainFactory<RustToolchain> {
     FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProviderFactory.getCxxPlatforms();
     CxxPlatform defaultCxxPlatform = cxxPlatformsProviderFactory.getDefaultCxxPlatform();
 
+    RustPlatformFactory platformFactory =
+        RustPlatformFactory.of(context.getBuckConfig(), context.getExecutableFinder());
+
     FlavorDomain<RustPlatform> rustPlatforms =
         FlavorDomain.from(
             "Rust Platforms",
-            RichStream.from(cxxPlatforms.getValues()).map(RustPlatform::of).toImmutableList());
+            RichStream.from(cxxPlatforms.getValues())
+                .map(
+                    cxxPlatform ->
+                        platformFactory.getPlatform(
+                            cxxPlatform.getFlavor().equals(DefaultCxxPlatforms.FLAVOR)
+                                ? SECTION
+                                : SECTION + "#" + cxxPlatform.getFlavor(),
+                            cxxPlatform))
+                .toImmutableList());
     RustPlatform defaultRustPlatform = rustPlatforms.getValue(defaultCxxPlatform.getFlavor());
 
     return Optional.of(RustToolchain.of(defaultRustPlatform, rustPlatforms));

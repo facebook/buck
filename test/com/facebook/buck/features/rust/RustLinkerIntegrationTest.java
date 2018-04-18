@@ -21,7 +21,6 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.HumanReadableException;
 import java.io.IOException;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -45,13 +44,12 @@ public class RustLinkerIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
 
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
-        Matchers.containsString("Overridden rust:linker path not found: bad-linker"));
-
-    workspace
-        .runBuckCommand("run", "--config", "rust.linker=bad-linker", "//:xyzzy")
-        .assertFailure();
+    assertThat(
+        workspace
+            .runBuckCommand("run", "--config", "rust.linker=bad-linker", "//:xyzzy")
+            .assertFailure()
+            .getStderr(),
+        Matchers.containsString("bad-linker"));
   }
 
   @Test

@@ -17,12 +17,23 @@
 package com.facebook.buck.features.rust;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
+import com.facebook.buck.cxx.toolchain.linker.LinkerProvider.Type;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.ConstantToolProvider;
 
 public class RustTestUtils {
 
   public static final RustPlatform DEFAULT_PLATFORM =
-      RustPlatform.of(CxxPlatformUtils.DEFAULT_PLATFORM);
+      RustPlatform.builder()
+          .setRustCompiler(new ConstantToolProvider(new CommandTool.Builder().build()))
+          .setLinker(new ConstantToolProvider(new CommandTool.Builder().build()))
+          .setLinkerProvider(
+              new DefaultLinkerProvider(
+                  Type.GNU, new ConstantToolProvider(new CommandTool.Builder().build())))
+          .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
+          .build();
 
   public static final FlavorDomain<RustPlatform> DEFAULT_PLATFORMS =
       FlavorDomain.of("Rust Platforms");

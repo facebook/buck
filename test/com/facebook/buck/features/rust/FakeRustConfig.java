@@ -17,7 +17,6 @@
 package com.facebook.buck.features.rust;
 
 import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -50,31 +49,6 @@ public class FakeRustConfig extends RustBuckConfig {
 
   public FakeRustConfig() {
     super(FakeBuckConfig.builder().build());
-  }
-
-  @Override
-  ToolProvider getRustCompiler() {
-    return compiler.orElseGet(super::getRustCompiler);
-  }
-
-  @Override
-  ImmutableList<String> getRustLibraryFlags() {
-    return rustcFlags.orElseGet(super::getRustLibraryFlags);
-  }
-
-  @Override
-  ImmutableList<String> getRustBinaryFlags() {
-    return rustcFlags.orElseGet(super::getRustBinaryFlags);
-  }
-
-  @Override
-  LinkerProvider getLinkerProvider(CxxPlatform cxxPlatform, LinkerProvider.Type defaultType) {
-    return linker.orElseGet(() -> super.getLinkerProvider(cxxPlatform, defaultType));
-  }
-
-  @Override
-  ImmutableList<String> getLinkerArgs(CxxPlatform cxxPlatform) {
-    return linkerFlags.orElse(super.getLinkerArgs(cxxPlatform));
   }
 
   FakeRustConfig setCompiler(ToolProvider compiler) {

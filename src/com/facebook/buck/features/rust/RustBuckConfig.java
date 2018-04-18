@@ -17,23 +17,16 @@
 package com.facebook.buck.features.rust;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
-import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.rules.ConstantToolProvider;
-import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 
 public class RustBuckConfig {
+
   private static final String SECTION = "rust";
-  private static final Path DEFAULT_RUSTC_COMPILER = Paths.get("rustc");
   private static final String RUSTC_FLAGS = "rustc_flags";
   private static final String RUSTC_BINARY_FLAGS = "rustc_binary_flags";
   private static final String RUSTC_LIBRARY_FLAGS = "rustc_library_flags";
@@ -75,19 +68,12 @@ public class RustBuckConfig {
     this.delegate = delegate;
   }
 
-  ToolProvider getRustCompiler() {
-    return delegate
-        .getView(ToolConfig.class)
-        .getToolProvider(SECTION, "compiler")
-        .orElseGet(
-            () -> {
-              HashedFileTool tool =
-                  new HashedFileTool(
-                      delegate.getPathSourcePath(
-                          new ExecutableFinder()
-                              .getExecutable(DEFAULT_RUSTC_COMPILER, delegate.getEnvironment())));
-              return new ConstantToolProvider(tool);
-            });
+  public Optional<ToolProvider> getRustCompiler(String section) {
+    return delegate.getView(ToolConfig.class).getToolProvider(section, "compiler");
+  }
+
+  private ImmutableList<String> getFlags(String section, String field) {
+    return delegate.getListWithoutComments(section, field, ' ');
   }
 
   /**
@@ -95,8 +81,8 @@ public class RustBuckConfig {
    *
    * @return List of rustc option flags.
    */
-  private ImmutableList<String> getRustCompilerFlags() {
-    return delegate.getListWithoutComments(SECTION, RUSTC_FLAGS, ' ');
+  private ImmutableList<String> getRustCompilerFlags(String section) {
+    return getFlags(section, RUSTC_FLAGS);
   }
 
   /**
@@ -104,13 +90,11 @@ public class RustBuckConfig {
    *
    * @return List of rustc_library_flags, as well as common rustc_flags.
    */
-  ImmutableList<String> getRustLibraryFlags() {
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
-
-    builder.addAll(getRustCompilerFlags());
-    builder.addAll(delegate.getListWithoutComments(SECTION, RUSTC_LIBRARY_FLAGS, ' '));
-
-    return builder.build();
+  public ImmutableList<String> getRustcLibraryFlags(String section) {
+    return ImmutableList.<String>builder()
+        .addAll(getRustCompilerFlags(section))
+        .addAll(getFlags(section, RUSTC_LIBRARY_FLAGS))
+        .build();
   }
 
   /**
@@ -118,13 +102,11 @@ public class RustBuckConfig {
    *
    * @return List of rustc_binary_flags, as well as common rustc_flags.
    */
-  ImmutableList<String> getRustBinaryFlags() {
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
-
-    builder.addAll(getRustCompilerFlags());
-    builder.addAll(delegate.getListWithoutComments(SECTION, RUSTC_BINARY_FLAGS, ' '));
-
-    return builder.build();
+  public ImmutableList<String> getRustcBinaryFlags(String section) {
+    return ImmutableList.<String>builder()
+        .addAll(getRustCompilerFlags(section))
+        .addAll(getFlags(section, RUSTC_BINARY_FLAGS))
+        .build();
   }
 
   /**
@@ -132,13 +114,11 @@ public class RustBuckConfig {
    *
    * @return List of rustc_test_flags, as well as common rustc_flags.
    */
-  ImmutableList<String> getRustTestFlags() {
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
-
-    builder.addAll(getRustCompilerFlags());
-    builder.addAll(delegate.getListWithoutComments(SECTION, RUSTC_TEST_FLAGS, ' '));
-
-    return builder.build();
+  public ImmutableList<String> getRustcTestFlags(String section) {
+    return ImmutableList.<String>builder()
+        .addAll(getRustCompilerFlags(section))
+        .addAll(getFlags(section, RUSTC_TEST_FLAGS))
+        .build();
   }
 
   /**
@@ -147,39 +127,23 @@ public class RustBuckConfig {
    *
    * @return List of rustc_check_flags.
    */
-  ImmutableList<String> getRustCheckFlags() {
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
-
-    builder.addAll(delegate.getListWithoutComments(SECTION, RUSTC_CHECK_FLAGS, ' '));
-
-    return builder.build();
+  public ImmutableList<String> getRustcCheckFlags(String section) {
+    return ImmutableList.<String>builder()
+        .addAll(getRustCompilerFlags(section))
+        .addAll(getFlags(section, RUSTC_CHECK_FLAGS))
+        .build();
   }
 
-  Optional<ToolProvider> getLinker() {
-    return delegate.getView(ToolConfig.class).getToolProvider(SECTION, "linker");
+  public Optional<ToolProvider> getRustLinker(String section) {
+    return delegate.getView(ToolConfig.class).getToolProvider(section, "linker");
   }
 
-  LinkerProvider getLinkerProvider(CxxPlatform cxxPlatform, LinkerProvider.Type defaultType) {
-    LinkerProvider.Type type =
-        delegate.getEnum(SECTION, "linker_platform", LinkerProvider.Type.class).orElse(defaultType);
-
-    return getLinker()
-        .map(tp -> (LinkerProvider) new DefaultLinkerProvider(type, tp))
-        .orElseGet(cxxPlatform::getLd);
+  public Optional<LinkerProvider.Type> getLinkerPlatform(String section) {
+    return delegate.getEnum(section, "linker_platform", LinkerProvider.Type.class);
   }
 
-  // Get args for linker. Always return rust.linker_args if provided, and also include cxx.ldflags
-  // if we're using the Cxx platform linker.
-  ImmutableList<String> getLinkerArgs(CxxPlatform cxxPlatform) {
-    ImmutableList.Builder<String> linkargs = ImmutableList.builder();
-
-    linkargs.addAll(delegate.getListWithoutComments(SECTION, "linker_args"));
-
-    if (!delegate.getPath(SECTION, "linker").isPresent()) {
-      linkargs.addAll(cxxPlatform.getLdflags());
-    }
-
-    return linkargs.build();
+  public ImmutableList<String> getLinkerFlags(String section) {
+    return delegate.getListWithoutComments(section, "linker_args");
   }
 
   /**

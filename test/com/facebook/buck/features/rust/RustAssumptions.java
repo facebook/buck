@@ -20,15 +20,28 @@ import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeNoException;
 
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 
 abstract class RustAssumptions {
   public static void assumeRustIsConfigured() {
     assumeFalse(Platform.detect() == Platform.WINDOWS);
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+    RustPlatform rustPlatform =
+        RustPlatformFactory.of(FakeBuckConfig.builder().build(), new ExecutableFinder())
+            .getPlatform("rust", CxxPlatformUtils.DEFAULT_PLATFORM);
     Throwable exception = null;
     try {
-      new RustBuckConfig(FakeBuckConfig.builder().build()).getRustCompiler();
+      rustPlatform.getRustCompiler().resolve(resolver).getCommandPrefix(pathResolver);
     } catch (HumanReadableException e) {
       exception = e;
     }
