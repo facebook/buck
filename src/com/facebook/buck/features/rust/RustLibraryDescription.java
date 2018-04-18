@@ -468,21 +468,6 @@ public class RustLibraryDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    if (getRustToolchain().getRustPlatforms().containsAnyOf(flavors)) {
-      return true;
-    }
-
-    for (RustDescriptionEnhancer.Type type : RustDescriptionEnhancer.Type.values()) {
-      if (flavors.contains(type.getFlavor())) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  @Override
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
     return Optional.of(ImmutableSet.of(getRustToolchain().getRustPlatforms(), LIBRARY_TYPE));
   }

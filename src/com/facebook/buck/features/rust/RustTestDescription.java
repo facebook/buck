@@ -152,21 +152,6 @@ public class RustTestDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    if (getRustToolchain().getRustPlatforms().containsAnyOf(flavors)) {
-      return true;
-    }
-
-    for (RustBinaryDescription.Type type : RustBinaryDescription.Type.values()) {
-      if (flavors.contains(type.getFlavor())) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  @Override
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
     return Optional.of(
         ImmutableSet.of(getRustToolchain().getRustPlatforms(), RustBinaryDescription.BINARY_TYPE));
