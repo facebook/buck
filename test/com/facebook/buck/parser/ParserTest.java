@@ -2680,7 +2680,7 @@ public class ParserTest {
   private BuildRuleResolver buildActionGraph(
       BuckEventBus eventBus, TargetGraph targetGraph, Cell cell) {
     return Preconditions.checkNotNull(
-            new ActionGraphCache(1, 1)
+            new ActionGraphCache(1)
                 .getFreshActionGraph(
                     eventBus,
                     targetGraph,

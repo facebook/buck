@@ -99,9 +99,7 @@ public class FetchCommand extends BuildCommand {
         }
         actionGraphAndResolver =
             Preconditions.checkNotNull(
-                new ActionGraphCache(
-                        params.getBuckConfig().getMaxActionGraphCacheEntries(),
-                        params.getBuckConfig().getMaxActionGraphNodeCacheEntries())
+                new ActionGraphCache(params.getBuckConfig().getMaxActionGraphCacheEntries())
                     .getFreshActionGraph(
                         params.getBuckEventBus(),
                         ruleGenerator,

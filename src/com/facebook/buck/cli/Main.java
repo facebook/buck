@@ -1310,9 +1310,7 @@ public final class Main {
               typeCoercerFactory,
               new InstrumentedVersionedTargetGraphCache(
                   new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),
-              new ActionGraphCache(
-                  buckConfig.getMaxActionGraphCacheEntries(),
-                  buckConfig.getMaxActionGraphNodeCacheEntries()),
+              new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries()),
               /* defaultRuleKeyFactoryCacheRecycler */ Optional.empty());
     }
     return parserAndCaches;

@@ -250,7 +250,7 @@ public class DuplicateResourcesTest {
             keystore);
 
     ActionGraphAndResolver actionGraphAndResolver =
-        new ActionGraphCache(1, 1)
+        new ActionGraphCache(1)
             .getFreshActionGraph(
                 BuckEventBusForTests.newInstance(
                     new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1))),

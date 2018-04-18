@@ -33,7 +33,6 @@ import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.randomizedtrial.RandomizedTrial;
 import com.facebook.buck.util.timing.Clock;
@@ -52,7 +51,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ForkJoinPool;
-import java.util.function.Predicate;
 import java.util.stream.StreamSupport;
 
 /**
@@ -65,9 +63,9 @@ public class ActionGraphCache {
   private Cache<TargetGraph, ActionGraphAndResolver> previousActionGraphs;
   private ActionGraphNodeCache nodeCache;
 
-  public ActionGraphCache(int maxEntries, int maxNodeCacheEntries) {
+  public ActionGraphCache(int maxEntries) {
     previousActionGraphs = CacheBuilder.newBuilder().maximumSize(maxEntries).build();
-    nodeCache = new ActionGraphNodeCache(maxNodeCacheEntries);
+    nodeCache = new ActionGraphNodeCache();
   }
 
   /** Create an ActionGraph, using options extracted from a BuckConfig. */
@@ -371,55 +369,41 @@ public class ActionGraphCache {
     HashMap<BuildTarget, CompletableFuture<BuildRule>> futures = new HashMap<>();
 
     if (incrementalActionGraphMode == IncrementalActionGraphMode.ENABLED) {
-      nodeCache.prepareForTargetGraphWalk(targetGraph, resolver);
+      // Populate the new build rule resolver with all of the usable rules from the last build rule
+      // resolver for incremental action graph generation.
+      nodeCache.populateRuleResolverWithCachedRules(targetGraph, resolver);
     }
+
+    LOG.debug("start target graph walk");
+    new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(targetGraph) {
+      @Override
+      public void visit(TargetNode<?, ?> node) {
+        // If we're loading this node from cache, we don't need to wait on our children, as the
+        // entire subgraph will be loaded from cache.
+        CompletableFuture<BuildRule>[] depFutures =
+            targetGraph
+                .getOutgoingNodesFor(node)
+                .stream()
+                .map(dep -> Preconditions.checkNotNull(futures.get(dep.getBuildTarget())))
+                .<CompletableFuture<BuildRule>>toArray(CompletableFuture[]::new);
+        futures.put(
+            node.getBuildTarget(),
+            CompletableFuture.allOf(depFutures)
+                .thenApplyAsync(ignored -> resolver.requireRule(node.getBuildTarget()), pool));
+      }
+    }.traverse();
+
+    // Wait for completion. The results are ignored as we only care about the rules populated in
+    // the
+    // resolver, which is a superset of the rules generated directly from target nodes.
     try {
-      // Don't descend into a node's children if we're loading that node from the cache, as the
-      // entire subgraph will be fetched at once.
-      Predicate<TargetNode<?, ?>> shouldExploreChildren =
-          node ->
-              incrementalActionGraphMode == IncrementalActionGraphMode.DISABLED
-                  || !nodeCache.containsKey(node);
-
-      LOG.debug("start target graph walk");
-      new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(targetGraph) {
-        @Override
-        public void visit(TargetNode<?, ?> node) {
-          // If we're loading this node from cache, we don't need to wait on our children, as the
-          // entire subgraph will be loaded from cache.
-          CompletableFuture<BuildRule>[] depFutures =
-              (incrementalActionGraphMode == IncrementalActionGraphMode.ENABLED
-                      && nodeCache.containsKey(node))
-                  ? RichStream.of().<CompletableFuture<BuildRule>>toArray(CompletableFuture[]::new)
-                  : targetGraph
-                      .getOutgoingNodesFor(node)
-                      .stream()
-                      .map(dep -> Preconditions.checkNotNull(futures.get(dep.getBuildTarget())))
-                      .<CompletableFuture<BuildRule>>toArray(CompletableFuture[]::new);
-          futures.put(
-              node.getBuildTarget(),
-              CompletableFuture.allOf(depFutures)
-                  .thenApplyAsync(
-                      ignored -> requireRule(resolver, node, incrementalActionGraphMode), pool));
-        }
-      }.traverse(shouldExploreChildren);
-
-      // Wait for completion. The results are ignored as we only care about the rules populated in
-      // the
-      // resolver, which is a superset of the rules generated directly from target nodes.
-      try {
-        CompletableFuture.allOf(futures.values().toArray(new CompletableFuture[futures.size()]))
-            .join();
-      } catch (CompletionException e) {
-        Throwables.throwIfUnchecked(e.getCause());
-        throw new IllegalStateException("unexpected checked exception", e);
-      }
-      LOG.debug("end target graph walk");
-    } finally {
-      if (incrementalActionGraphMode == IncrementalActionGraphMode.ENABLED) {
-        nodeCache.finishTargetGraphWalk();
-      }
+      CompletableFuture.allOf(futures.values().toArray(new CompletableFuture[futures.size()]))
+          .join();
+    } catch (CompletionException e) {
+      Throwables.throwIfUnchecked(e.getCause());
+      throw new IllegalStateException("unexpected checked exception", e);
     }
+    LOG.debug("end target graph walk");
 
     return ActionGraphAndResolver.builder()
         .setActionGraph(new ActionGraph(resolver.getBuildRules()))
@@ -439,65 +423,44 @@ public class ActionGraphCache {
         new SingleThreadedBuildRuleResolver(targetGraph, transformer, cellProvider);
 
     if (incrementalActionGraphMode == IncrementalActionGraphMode.ENABLED) {
-      nodeCache.prepareForTargetGraphWalk(targetGraph, resolver);
+      // Populate the new build rule resolver with all of the usable rules from the last build rule
+      // resolver for incremental action graph generation.
+      nodeCache.populateRuleResolverWithCachedRules(targetGraph, resolver);
     }
-    try {
-      // Don't descend into a node's children if we're loading that node from the cache, as the
-      // entire
-      // subgraph will be fetched at once.
-      Predicate<TargetNode<?, ?>> shouldExploreChildren =
-          node ->
-              incrementalActionGraphMode == IncrementalActionGraphMode.DISABLED
-                  || !nodeCache.containsKey(node);
 
-      LOG.debug("start target graph walk");
-      new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(targetGraph) {
-        @Override
-        public void visit(TargetNode<?, ?> node) {
-          if (shouldInstrumentGraphBuilding) {
-            Clock clock = new DefaultClock();
-            try (Scope ignored =
-                ActionGraphPerfStatEvent.start(
-                    clock,
-                    eventBus,
-                    () -> Iterables.size(resolver.getBuildRules()),
-                    () ->
-                        StreamSupport.stream(resolver.getBuildRules().spliterator(), true)
-                            .filter(
-                                rule ->
-                                    rule instanceof NoopBuildRule
-                                        || rule instanceof NoopBuildRuleWithDeclaredAndExtraDeps)
-                            .count(),
-                    node.getDescription().getClass().getName(),
-                    node.getBuildTarget().getFullyQualifiedName())) {
-              requireRule(resolver, node, incrementalActionGraphMode);
-            }
-          } else {
-            requireRule(resolver, node, incrementalActionGraphMode);
+    LOG.debug("start target graph walk");
+    new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(targetGraph) {
+      @Override
+      public void visit(TargetNode<?, ?> node) {
+        if (shouldInstrumentGraphBuilding) {
+          Clock clock = new DefaultClock();
+          try (Scope ignored =
+              ActionGraphPerfStatEvent.start(
+                  clock,
+                  eventBus,
+                  () -> Iterables.size(resolver.getBuildRules()),
+                  () ->
+                      StreamSupport.stream(resolver.getBuildRules().spliterator(), true)
+                          .filter(
+                              rule ->
+                                  rule instanceof NoopBuildRule
+                                      || rule instanceof NoopBuildRuleWithDeclaredAndExtraDeps)
+                          .count(),
+                  node.getDescription().getClass().getName(),
+                  node.getBuildTarget().getFullyQualifiedName())) {
+            resolver.requireRule(node.getBuildTarget());
           }
+        } else {
+          resolver.requireRule(node.getBuildTarget());
         }
-      }.traverse(shouldExploreChildren);
-      LOG.debug("end target graph walk");
-    } finally {
-      if (incrementalActionGraphMode == IncrementalActionGraphMode.ENABLED) {
-        nodeCache.finishTargetGraphWalk();
       }
-    }
+    }.traverse();
+    LOG.debug("end target graph walk");
 
     return ActionGraphAndResolver.builder()
         .setActionGraph(new ActionGraph(resolver.getBuildRules()))
         .setResolver(resolver)
         .build();
-  }
-
-  private BuildRule requireRule(
-      BuildRuleResolver resolver,
-      TargetNode<?, ?> targetNode,
-      IncrementalActionGraphMode incrementalActionGraphMode) {
-    if (incrementalActionGraphMode == IncrementalActionGraphMode.ENABLED) {
-      return nodeCache.requireRule(targetNode);
-    }
-    return resolver.requireRule(targetNode.getBuildTarget());
   }
 
   private static Map<BuildRule, RuleKey> getRuleKeysFromBuildRules(

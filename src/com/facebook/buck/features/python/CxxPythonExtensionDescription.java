@@ -77,14 +77,10 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
-import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.Set;
-import java.util.SortedSet;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
 
@@ -455,27 +451,15 @@ public class CxxPythonExtensionDescription
     Path module = baseModule.resolve(getExtensionName(moduleName));
     return new CxxPythonExtension(buildTarget, projectFilesystem, params) {
 
-      private Set<BuildRule> implicitDepsForCaching = Sets.newConcurrentHashSet();
-
       @Override
       protected BuildRule getExtension(
           PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
-        BuildRule extension =
-            ruleResolver.requireRule(
-                getBuildTarget()
-                    .withAppendedFlavors(
-                        pythonPlatform.getFlavor(),
-                        cxxPlatform.getFlavor(),
-                        CxxDescriptionEnhancer.SHARED_FLAVOR));
-
-        // The extension rules created here are not tracked as part of this placeholder rule's deps
-        // in the action graph; they end up as nodes with no incoming edges, which nonetheless
-        // need to be associated with this node, so that we can guarantee we add them to the action
-        // graph if this placeholder node is loaded from cache during incremental action graph
-        // construction.
-        implicitDepsForCaching.add(extension);
-
-        return extension;
+        return ruleResolver.requireRule(
+            getBuildTarget()
+                .withAppendedFlavors(
+                    pythonPlatform.getFlavor(),
+                    cxxPlatform.getFlavor(),
+                    CxxDescriptionEnhancer.SHARED_FLAVOR));
       }
 
       @Override
@@ -562,11 +546,6 @@ public class CxxPythonExtensionDescription
       @Override
       public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
         return getDeclaredDeps().stream().map(BuildRule::getBuildTarget);
-      }
-
-      @Override
-      public SortedSet<BuildRule> getImplicitDepsForCaching() {
-        return ImmutableSortedSet.copyOf(implicitDepsForCaching);
       }
     };
   }

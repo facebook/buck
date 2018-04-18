@@ -133,8 +133,7 @@ public class CommandRunnerParamsForTesting {
         ImmutableMap.of(ExecutorPool.PROJECT, MoreExecutors.newDirectExecutorService()),
         new FakeExecutor(),
         BUILD_ENVIRONMENT_DESCRIPTION,
-        new ActionGraphCache(
-            config.getMaxActionGraphCacheEntries(), config.getMaxActionGraphNodeCacheEntries()),
+        new ActionGraphCache(config.getMaxActionGraphCacheEntries()),
         knownBuildRuleTypesProvider,
         new BuildInfoStoreManager(),
         Optional.empty(),

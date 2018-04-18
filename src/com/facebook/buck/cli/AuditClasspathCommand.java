@@ -181,9 +181,7 @@ public class AuditClasspathCommand extends AbstractCommand {
 
     BuildRuleResolver resolver =
         Preconditions.checkNotNull(
-                new ActionGraphCache(
-                        params.getBuckConfig().getMaxActionGraphCacheEntries(),
-                        params.getBuckConfig().getMaxActionGraphNodeCacheEntries())
+                new ActionGraphCache(params.getBuckConfig().getMaxActionGraphCacheEntries())
                     .getFreshActionGraph(
                         params.getBuckEventBus(),
                         targetGraph,
@@ -232,9 +230,7 @@ public class AuditClasspathCommand extends AbstractCommand {
 
     BuildRuleResolver resolver =
         Preconditions.checkNotNull(
-                new ActionGraphCache(
-                        params.getBuckConfig().getMaxActionGraphCacheEntries(),
-                        params.getBuckConfig().getMaxActionGraphNodeCacheEntries())
+                new ActionGraphCache(params.getBuckConfig().getMaxActionGraphCacheEntries())
                     .getFreshActionGraph(
                         params.getBuckEventBus(),
                         targetGraph,

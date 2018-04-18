@@ -566,10 +566,6 @@ public class BuckConfig implements ConfigPathGetter {
         .orElse(IncrementalActionGraphMode.DEFAULT);
   }
 
-  public int getMaxActionGraphNodeCacheEntries() {
-    return getInteger("cache", "max_action_graph_node_cache_entries").orElse(10000);
-  }
-
   public Optional<String> getRepository() {
     return config.get("cache", "repository");
   }
