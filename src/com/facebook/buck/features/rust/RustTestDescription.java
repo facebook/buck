@@ -34,6 +34,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasDefaultPlatform;
 import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
@@ -87,13 +88,9 @@ public class RustTestDescription
 
     boolean isCheck = type.map(t -> t.getValue().isCheck()).orElse(false);
 
-    RustToolchain rustToolchain = getRustToolchain();
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     RustPlatform rustPlatform =
-        rustToolchain
-            .getRustPlatforms()
-            .getValue(buildTarget)
-            .orElse(rustToolchain.getDefaultRustPlatform());
+        RustCompileUtils.getRustPlatform(getRustToolchain(), buildTarget, args);
 
     BinaryWrapperRule testExeBuild =
         (BinaryWrapperRule)
@@ -148,7 +145,7 @@ public class RustTestDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     targetGraphOnlyDepsBuilder.addAll(
-        RustCompileUtils.getPlatformParseTimeDeps(getRustToolchain(), buildTarget));
+        RustCompileUtils.getPlatformParseTimeDeps(getRustToolchain(), buildTarget, constructorArg));
   }
 
   @Override
@@ -163,7 +160,8 @@ public class RustTestDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractRustTestDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs {
+  interface AbstractRustTestDescriptionArg
+      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasDefaultPlatform {
     ImmutableSet<String> getContacts();
 
     @Value.NaturalOrder

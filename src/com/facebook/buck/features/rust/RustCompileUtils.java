@@ -37,6 +37,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
+import com.facebook.buck.rules.HasDefaultPlatform;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -302,6 +303,18 @@ public class RustCompileUtils {
     return ret;
   }
 
+  public static RustPlatform getRustPlatform(
+      RustToolchain rustToolchain, BuildTarget target, HasDefaultPlatform hasDefaultPlatform) {
+    return rustToolchain
+        .getRustPlatforms()
+        .getValue(target)
+        .orElse(
+            hasDefaultPlatform
+                .getDefaultPlatform()
+                .map(flavor -> rustToolchain.getRustPlatforms().getValue(flavor))
+                .orElseGet(rustToolchain::getDefaultRustPlatform));
+  }
+
   private static Iterable<BuildTarget> getPlatformParseTimeDeps(RustPlatform rustPlatform) {
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
     deps.addAll(rustPlatform.getRustCompiler().getParseTimeDeps());
@@ -311,12 +324,9 @@ public class RustCompileUtils {
   }
 
   public static Iterable<BuildTarget> getPlatformParseTimeDeps(
-      RustToolchain rustToolchain, BuildTarget buildTarget) {
+      RustToolchain rustToolchain, BuildTarget buildTarget, HasDefaultPlatform hasDefaultPlatform) {
     return getPlatformParseTimeDeps(
-        rustToolchain
-            .getRustPlatforms()
-            .getValue(buildTarget)
-            .orElse(rustToolchain.getDefaultRustPlatform()));
+        getRustPlatform(rustToolchain, buildTarget, hasDefaultPlatform));
   }
 
   public static BinaryWrapperRule createBinaryBuildRule(

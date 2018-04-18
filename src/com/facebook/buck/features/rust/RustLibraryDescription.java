@@ -38,6 +38,7 @@ import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasDefaultPlatform;
 import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -164,7 +165,6 @@ public class RustLibraryDescription
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, RustDescriptionEnhancer.Type>> type =
         LIBRARY_TYPE.getFlavorAndValue(buildTarget);
-    Optional<RustPlatform> rustPlatform = rustToolchain.getRustPlatforms().getValue(buildTarget);
 
     if (type.isPresent()) {
       // Uncommon case - someone explicitly invoked buck to build a specific flavor as the
@@ -189,7 +189,7 @@ public class RustLibraryDescription
         }
       }
 
-      RustPlatform platform = rustPlatform.orElse(rustToolchain.getDefaultRustPlatform());
+      RustPlatform platform = RustCompileUtils.getRustPlatform(rustToolchain, buildTarget, args);
       return requireBuild(
           buildTarget,
           projectFilesystem,
@@ -464,7 +464,7 @@ public class RustLibraryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     targetGraphOnlyDepsBuilder.addAll(
-        RustCompileUtils.getPlatformParseTimeDeps(getRustToolchain(), buildTarget));
+        RustCompileUtils.getPlatformParseTimeDeps(getRustToolchain(), buildTarget, constructorArg));
   }
 
   @Override
@@ -479,7 +479,7 @@ public class RustLibraryDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractRustLibraryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests {
+      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests, HasDefaultPlatform {
     @Value.NaturalOrder
     ImmutableSortedSet<String> getFeatures();
 

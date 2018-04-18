@@ -31,6 +31,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasDefaultPlatform;
 import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -87,11 +88,7 @@ public class RustBinaryDescription
     boolean isCheck = type.map(t -> t.getValue().isCheck()).orElse(false);
 
     RustToolchain rustToolchain = getRustToolchain();
-    RustPlatform rustPlatform =
-        rustToolchain
-            .getRustPlatforms()
-            .getValue(buildTarget)
-            .orElse(rustToolchain.getDefaultRustPlatform());
+    RustPlatform rustPlatform = RustCompileUtils.getRustPlatform(rustToolchain, buildTarget, args);
 
     return RustCompileUtils.createBinaryBuildRule(
         buildTarget,
@@ -123,7 +120,7 @@ public class RustBinaryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     targetGraphOnlyDepsBuilder.addAll(
-        RustCompileUtils.getPlatformParseTimeDeps(getRustToolchain(), buildTarget));
+        RustCompileUtils.getPlatformParseTimeDeps(getRustToolchain(), buildTarget, constructorArg));
   }
 
   protected enum Type implements FlavorConvertible {
@@ -167,7 +164,7 @@ public class RustBinaryDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractRustBinaryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests {
+      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests, HasDefaultPlatform {
     @Value.NaturalOrder
     ImmutableSortedSet<String> getFeatures();
 
