@@ -26,7 +26,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.Path;
-import java.io.IOException;
 import java.util.Collections;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -49,7 +48,7 @@ public class SimpleGlobberTest {
   }
 
   @Test
-  public void testGlobFindsRecursiveIncludes() throws IOException {
+  public void testGlobFindsRecursiveIncludes() throws Exception {
     Path child = root.getChild("child");
     child.createDirectory();
     FileSystemUtils.createEmptyFile(child.getChild("foo.txt"));
@@ -61,7 +60,7 @@ public class SimpleGlobberTest {
   }
 
   @Test
-  public void testGlobFindsShallowRecursiveIncludes() throws IOException {
+  public void testGlobFindsShallowRecursiveIncludes() throws Exception {
     Path child = root.getChild("child");
     child.createDirectory();
     FileSystemUtils.createEmptyFile(child.getChild("foo.txt"));
@@ -73,7 +72,7 @@ public class SimpleGlobberTest {
   }
 
   @Test
-  public void testGlobFindsDeepRecursiveIncludes() throws IOException {
+  public void testGlobFindsDeepRecursiveIncludes() throws Exception {
     Path child = root.getChild("dir").getChild("child");
     child.createDirectoryAndParents();
     FileSystemUtils.createEmptyFile(child.getChild("foo.txt"));
@@ -85,7 +84,7 @@ public class SimpleGlobberTest {
   }
 
   @Test
-  public void testGlobFindsIncludes() throws IOException {
+  public void testGlobFindsIncludes() throws Exception {
     FileSystemUtils.createEmptyFile(root.getChild("foo.txt"));
     FileSystemUtils.createEmptyFile(root.getChild("bar.txt"));
     FileSystemUtils.createEmptyFile(root.getChild("bar.jpg"));
@@ -95,7 +94,7 @@ public class SimpleGlobberTest {
   }
 
   @Test
-  public void testGlobExcludedElementsAreNotReturned() throws IOException {
+  public void testGlobExcludedElementsAreNotReturned() throws Exception {
     FileSystemUtils.createEmptyFile(root.getChild("foo.txt"));
     FileSystemUtils.createEmptyFile(root.getChild("bar.txt"));
     FileSystemUtils.createEmptyFile(root.getChild("bar.jpg"));
