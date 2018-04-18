@@ -829,26 +829,6 @@ public final class Main {
       try (GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
               GlobalStateManager.singleton()
                   .setupLoggers(invocationInfo, console.getStdErr(), stdErr, verbosity);
-          /**
-           * We create {@link AbstractConsoleEventBusListener} here so that they will be closed
-           * after the {@link BuckEventBus} closes. There could be pending events in the {@link
-           * BuckEventBus} that doesn't flush until we close the event bus. If we close the {@link
-           * AbstractConsoleEventBusListener} before the {@link BuckEventBus} we will end up with
-           * missing prints to the user.
-           */
-          AbstractConsoleEventBusListener consoleListener =
-              createConsoleEventListener(
-                  clock,
-                  superConsoleConfig,
-                  console,
-                  testConfig.getResultSummaryVerbosity(),
-                  executionEnvironment,
-                  webServer,
-                  locale,
-                  filesystem.getBuckPaths().getLogDir().resolve("test.log"),
-                  buckConfig.isLogBuildIdToConsoleEnabled()
-                      ? Optional.of(buildId)
-                      : Optional.empty());
           DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
           ) {
 
@@ -915,6 +895,19 @@ public final class Main {
                         ExecutorPool.PROJECT.toString(),
                         EXECUTOR_SERVICES_TIMEOUT_SECONDS);
             BuildInfoStoreManager storeManager = new BuildInfoStoreManager();
+            AbstractConsoleEventBusListener consoleListener =
+                createConsoleEventListener(
+                    clock,
+                    superConsoleConfig,
+                    console,
+                    testConfig.getResultSummaryVerbosity(),
+                    executionEnvironment,
+                    webServer,
+                    locale,
+                    filesystem.getBuckPaths().getLogDir().resolve("test.log"),
+                    buckConfig.isLogBuildIdToConsoleEnabled()
+                        ? Optional.of(buildId)
+                        : Optional.empty());
             // This makes calls to LOG.error(...) post to the EventBus, instead of writing to
             // stderr.
             Closeable logErrorToEventBus =
