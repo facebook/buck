@@ -463,8 +463,11 @@ public class RustLibraryDescription
       AbstractRustLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    targetGraphOnlyDepsBuilder.addAll(
-        RustCompileUtils.getPlatformParseTimeDeps(getRustToolchain(), buildTarget, constructorArg));
+    if (LIBRARY_TYPE.getValue(buildTarget).isPresent()) {
+      targetGraphOnlyDepsBuilder.addAll(
+          RustCompileUtils.getPlatformParseTimeDeps(
+              getRustToolchain(), buildTarget, constructorArg));
+    }
   }
 
   @Override
