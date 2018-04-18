@@ -287,7 +287,7 @@ public class ThriftCoordinatorServer implements Closeable {
       LOG.info("Switching Coordinator to Active mode now.");
       BuildTargetsQueue queue = queueFuture.get();
       chromeTraceTracker.setBuildGraph(queue.getDistributableBuildGraph());
-      MinionWorkloadAllocator allocator = new MinionWorkloadAllocator(queue, chromeTraceTracker);
+      allocator = new MinionWorkloadAllocator(queue, chromeTraceTracker);
       this.handler =
           new ActiveCoordinatorService(
               allocator, exitCodeFuture, coordinatorBuildRuleEventsPublisher, minionHealthTracker);
