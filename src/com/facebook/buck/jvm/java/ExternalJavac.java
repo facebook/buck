@@ -171,6 +171,7 @@ public class ExternalJavac implements Javac {
       Path pathToSrcsList,
       Path workingDirectory,
       boolean trackClassUsage,
+      boolean trackJavacPhaseEvents,
       @Nullable JarParameters abiJarParaameters,
       @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,

@@ -51,6 +51,7 @@ public class FakeJavac implements Javac {
       Path pathToSrcsList,
       Path workingDirectory,
       boolean trackClassUsage,
+      boolean trackJavacPhaseEvents,
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,

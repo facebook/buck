@@ -88,6 +88,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
             /* postprocessClassesCommands */ ImmutableList.of(),
             abiClasspath,
             /* trackClassUsage */ javacOptions.trackClassUsage(),
+            /* trackJavacPhaseEvents */ javacOptions.trackJavacPhaseEvents(),
             /* compileTimeClasspathDeps */ ImmutableSortedSet.of(
                 androidBuildConfig.getSourcePathToOutput()),
             /* classesToRemoveFromJar */ RemoveClassesPatternsMatcher.EMPTY,

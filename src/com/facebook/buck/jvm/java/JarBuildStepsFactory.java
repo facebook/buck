@@ -73,6 +73,7 @@ public class JarBuildStepsFactory
   private final ZipArchiveDependencySupplier abiClasspath;
 
   private final boolean trackClassUsage;
+  private final boolean trackJavacPhaseEvents;
   private final ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths;
   @AddToRuleKey private final RemoveClassesPatternsMatcher classesToRemoveFromJar;
 
@@ -94,6 +95,7 @@ public class JarBuildStepsFactory
       ImmutableList<String> postprocessClassesCommands,
       ZipArchiveDependencySupplier abiClasspath,
       boolean trackClassUsage,
+      boolean trackJavacPhaseEvents,
       ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths,
       RemoveClassesPatternsMatcher classesToRemoveFromJar,
       AbiGenerationMode abiGenerationMode,
@@ -110,6 +112,7 @@ public class JarBuildStepsFactory
     this.manifestFile = manifestFile;
     this.abiClasspath = abiClasspath;
     this.trackClassUsage = trackClassUsage;
+    this.trackJavacPhaseEvents = trackJavacPhaseEvents;
     this.compileTimeClasspathSourcePaths = compileTimeClasspathSourcePaths;
     this.classesToRemoveFromJar = classesToRemoveFromJar;
     this.abiGenerationMode = abiGenerationMode;
@@ -283,6 +286,7 @@ public class JarBuildStepsFactory
         .setSourceFileSourcePaths(srcs, projectFilesystem, context.getSourcePathResolver())
         .setScratchPaths(buildTarget, projectFilesystem)
         .setShouldTrackClassUsage(trackClassUsage)
+        .setShouldTrackJavacPhaseEvents(trackJavacPhaseEvents)
         .setAbiGenerationMode(abiGenerationMode)
         .setAbiCompatibilityMode(abiCompatibilityMode)
         .setSourceOnlyAbiRuleInfo(ruleInfoSupplier != null ? ruleInfoSupplier.get() : null)

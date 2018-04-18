@@ -93,6 +93,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   @Nullable private final JarParameters libraryJarParameters;
   @Nullable private final SourceOnlyAbiRuleInfo ruleInfo;
   private final boolean trackClassUsage;
+  private final boolean trackJavacPhaseEvents;
 
   @Nullable private CompilerWorker worker;
 
@@ -105,6 +106,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       boolean trackClassUsage,
+      boolean trackJavacPhaseEvents,
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,
@@ -123,6 +125,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     this.javaSourceFilePaths = javaSourceFilePaths;
     this.pathToSrcsList = pathToSrcsList;
     this.trackClassUsage = trackClassUsage;
+    this.trackJavacPhaseEvents = trackJavacPhaseEvents;
     this.abiJarParameters = abiJarParameters;
     this.libraryJarParameters = libraryJarParameters;
     this.abiGenerationMode = abiGenerationMode;
@@ -584,6 +587,9 @@ class Jsr199JavacInvocation implements Javac.Invocation {
           // TranslatingJavacPhaseTracer is AutoCloseable so that it can detect the end of tracing
           // in some unusual situations
           addCloseable(tracer);
+          if (trackJavacPhaseEvents) {
+            javacTask.setTaskListener(new TracingTaskListener(tracer, taskListener));
+          }
 
           // Ensure annotation processors are loaded from their own classloader. If we don't do
           // this, then the evidence suggests that they get one polluted with Buck's own classpath,
@@ -597,7 +603,6 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                   invokingRule);
           addCloseable(processorFactory);
 
-          javacTask.setTaskListener(new TracingTaskListener(tracer, taskListener));
           javacTask.setProcessors(processorFactory.createProcessors(pluginFields));
           lazyJavacTask = javacTask;
         } catch (IOException e) {
