@@ -33,8 +33,8 @@ import javax.annotation.Nullable;
  * <p>This works by grabbing all the build rules from the previous {@link BuildRuleResolver} with
  * unflavored targets that were not invalidated when doing a target graph walk to check for changes.
  */
-public class ActionGraphNodeCache {
-  private static final Logger LOG = Logger.get(ActionGraphNodeCache.class);
+public class IncrementalActionGraphGenerator {
+  private static final Logger LOG = Logger.get(IncrementalActionGraphGenerator.class);
 
   @Nullable private BuildRuleResolver lastRuleResolver;
   @Nullable private TargetGraph lastTargetGraph;

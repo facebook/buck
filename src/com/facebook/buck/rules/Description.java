@@ -81,7 +81,7 @@ public interface Description<T> {
 
   /**
    * Whether or not the build rule subgraph produced by this {@code Description} is safe to cache in
-   * {@link ActionGraphNodeCache} for incremental action graph generation.
+   * {@link IncrementalActionGraphGenerator} for incremental action graph generation.
    */
   default boolean producesCacheableSubgraph() {
     return false;

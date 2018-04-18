@@ -61,11 +61,11 @@ public class ActionGraphCache {
   private static final Logger LOG = Logger.get(ActionGraphCache.class);
 
   private Cache<TargetGraph, ActionGraphAndResolver> previousActionGraphs;
-  private ActionGraphNodeCache nodeCache;
+  private IncrementalActionGraphGenerator incrementalActionGraphGenerator;
 
   public ActionGraphCache(int maxEntries) {
     previousActionGraphs = CacheBuilder.newBuilder().maximumSize(maxEntries).build();
-    nodeCache = new ActionGraphNodeCache();
+    incrementalActionGraphGenerator = new IncrementalActionGraphGenerator();
   }
 
   /** Create an ActionGraph, using options extracted from a BuckConfig. */
@@ -371,7 +371,7 @@ public class ActionGraphCache {
     if (incrementalActionGraphMode == IncrementalActionGraphMode.ENABLED) {
       // Populate the new build rule resolver with all of the usable rules from the last build rule
       // resolver for incremental action graph generation.
-      nodeCache.populateRuleResolverWithCachedRules(targetGraph, resolver);
+      incrementalActionGraphGenerator.populateRuleResolverWithCachedRules(targetGraph, resolver);
     }
 
     LOG.debug("start target graph walk");
@@ -425,7 +425,7 @@ public class ActionGraphCache {
     if (incrementalActionGraphMode == IncrementalActionGraphMode.ENABLED) {
       // Populate the new build rule resolver with all of the usable rules from the last build rule
       // resolver for incremental action graph generation.
-      nodeCache.populateRuleResolverWithCachedRules(targetGraph, resolver);
+      incrementalActionGraphGenerator.populateRuleResolverWithCachedRules(targetGraph, resolver);
     }
 
     LOG.debug("start target graph walk");
