@@ -27,7 +27,7 @@ import errno
 
 from buck_logging import setup_logging
 from buck_tool import ExecuteTarget, install_signal_handlers, \
-    BuckStatusReporter
+    BuckStatusReporter, BuckDaemonErrorException
 from buck_project import BuckProject, NoBuckConfigFoundException
 from tracing import Tracing
 from subprocutils import propagate_failure
@@ -153,6 +153,12 @@ if __name__ == "__main__":
         exc_type, exception, exc_traceback = sys.exc_info()
         # buck is started outside project root
         exit_code = 3  # COMMANDLINE_ERROR
+    except BuckDaemonErrorException:
+        reporter.status_message = 'Buck daemon disconnected unexpectedly'
+        _, exception, _ = sys.exc_info()
+        print(str(exception))
+        exception = None
+        exit_code = 10  # FATAL_GENERIC
     except IOError as e:
         exc_type, exception, exc_traceback = sys.exc_info()
         if e.errno == errno.ENOSPC:

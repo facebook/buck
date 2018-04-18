@@ -91,6 +91,10 @@ class BuckToolException(Exception):
     pass
 
 
+class BuckDaemonErrorException(BuckToolException):
+    pass
+
+
 class ExecuteTarget(Exception):
     def __init__(self, path, argv, envp, cwd):
         self._path = path
@@ -289,26 +293,45 @@ class BuckTool(object):
         exit_code = 2
         busy_diagnostic_displayed = False
         while exit_code == 2:
-            with NailgunConnection(
-                    self._buck_project.get_buckd_transport_address(),
-                    cwd=self._buck_project.root) as c:
-                now = int(round(time.time() * 1000))
-                env['BUCK_PYTHON_SPACE_INIT_TIME'] = \
-                    str(now - self._init_timestamp)
-                exit_code = c.send_command(
-                    'com.facebook.buck.cli.Main',
-                    self._add_args_from_env(argv),
-                    env=env,
-                    cwd=self._buck_project.root)
-                if exit_code == 2:
-                    env['BUCK_BUILD_ID'] = str(uuid.uuid4())
-                    if not busy_diagnostic_displayed:
-                        logging.info("Buck daemon is busy with another command. " +
-                                     "Waiting for it to become free...\n" +
-                                     "You can use 'buck kill' to kill buck " +
-                                     "if you suspect buck is stuck.")
-                        busy_diagnostic_displayed = True
-                    time.sleep(3)
+            try:
+                with NailgunConnection(
+                        self._buck_project.get_buckd_transport_address(),
+                        cwd=self._buck_project.root) as c:
+                    now = int(round(time.time() * 1000))
+                    env['BUCK_PYTHON_SPACE_INIT_TIME'] = \
+                        str(now - self._init_timestamp)
+                    exit_code = c.send_command(
+                        'com.facebook.buck.cli.Main',
+                        self._add_args_from_env(argv),
+                        env=env,
+                        cwd=self._buck_project.root)
+                    if exit_code == 2:
+                        env['BUCK_BUILD_ID'] = str(uuid.uuid4())
+                        if not busy_diagnostic_displayed:
+                            logging.info("Buck daemon is busy with another command. " +
+                                         "Waiting for it to become free...\n" +
+                                         "You can use 'buck kill' to kill buck " +
+                                         "if you suspect buck is stuck.")
+                            busy_diagnostic_displayed = True
+                        time.sleep(3)
+            except NailgunException as nex:
+                if nex.code == NailgunException.CONNECTION_BROKEN:
+                    message = 'Connection is lost to Buck daemon! This usually indicates that' \
+                      ' daemon experienced an unrecoverable error. Here is what you can do:\n' \
+                      ' - check if the machine has enough disk space and filesystem is' \
+                      ' accessible\n' \
+                      ' - check if the machine does not run out of physical memory\n' \
+                      ' - try to run Buck in serverless mode:' \
+                      ' buck kill && NO_BUCKD=1 buck <command>\n'
+                    transport_address = self._buck_project.get_buckd_transport_address()
+                    if not transport_address.startswith('local:'):
+                        message += ' - check if connection specified by ' + transport_address + \
+                          ' is stable\n'
+
+                    raise BuckDaemonErrorException(message)
+                else:
+                    raise nex
+
         return exit_code
 
     def _run_without_nailgun(self, argv, env):
