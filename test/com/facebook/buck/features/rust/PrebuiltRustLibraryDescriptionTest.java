@@ -19,12 +19,8 @@ package com.facebook.buck.features.rust;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cxx.CxxGenruleBuilder;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleResolver;
@@ -35,33 +31,17 @@ import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-public class RustLibraryDescriptionTest {
-
-  @Test
-  public void testGeneratedSourceFromCxxGenrule() throws NoSuchBuildTargetException {
-    CxxGenruleBuilder srcBuilder =
-        new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:src")).setOut("lib.rs");
-    RustLibraryBuilder libraryBuilder =
-        RustLibraryBuilder.from("//:lib")
-            .setSrcs(
-                ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(srcBuilder.getTarget())));
-    RustBinaryBuilder binaryBuilder =
-        RustBinaryBuilder.from("//:bin")
-            .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("main.rs")))
-            .setDeps(ImmutableSortedSet.of(libraryBuilder.getTarget()));
-    TargetGraph targetGraph =
-        TargetGraphFactory.newInstance(
-            srcBuilder.build(), libraryBuilder.build(), binaryBuilder.build());
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
-    ruleResolver.requireRule(binaryBuilder.getTarget());
-  }
+public class PrebuiltRustLibraryDescriptionTest {
 
   @Test
   public void platformDeps() {
-    RustLibraryBuilder depABuilder = RustLibraryBuilder.from("//:depA");
-    RustLibraryBuilder depBBuilder = RustLibraryBuilder.from("//:depB");
-    RustLibraryBuilder ruleBuilder =
-        RustLibraryBuilder.from("//:rule")
+    PrebuiltRustLibraryBuilder depABuilder =
+        PrebuiltRustLibraryBuilder.from("//:depA").setRlib(FakeSourcePath.of("a.rlib"));
+    PrebuiltRustLibraryBuilder depBBuilder =
+        PrebuiltRustLibraryBuilder.from("//:depB").setRlib(FakeSourcePath.of("b.rlib"));
+    PrebuiltRustLibraryBuilder ruleBuilder =
+        PrebuiltRustLibraryBuilder.from("//:rule")
+            .setRlib(FakeSourcePath.of("c.rlib"))
             .setPlatformDeps(
                 PatternMatchedCollection.<ImmutableSortedSet<BuildTarget>>builder()
                     .add(
@@ -76,9 +56,9 @@ public class RustLibraryDescriptionTest {
         TargetGraphFactory.newInstance(
             depABuilder.build(), depBBuilder.build(), ruleBuilder.build());
     BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
-    RustLibrary depA = (RustLibrary) resolver.requireRule(depABuilder.getTarget());
-    RustLibrary depB = (RustLibrary) resolver.requireRule(depBBuilder.getTarget());
-    RustLibrary rule = (RustLibrary) resolver.requireRule(ruleBuilder.getTarget());
+    PrebuiltRustLibrary depA = (PrebuiltRustLibrary) resolver.requireRule(depABuilder.getTarget());
+    PrebuiltRustLibrary depB = (PrebuiltRustLibrary) resolver.requireRule(depBBuilder.getTarget());
+    PrebuiltRustLibrary rule = (PrebuiltRustLibrary) resolver.requireRule(ruleBuilder.getTarget());
     assertThat(
         rule.getRustLinakbleDeps(RustTestUtils.DEFAULT_PLATFORM),
         Matchers.allOf(Matchers.hasItem(depA), not(Matchers.hasItem(depB))));

@@ -35,6 +35,7 @@ import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
@@ -75,7 +76,8 @@ public class RustBinaryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       RustBinaryDescriptionArg args) {
-    CxxDeps allDeps = CxxDeps.builder().addDeps(args.getDeps()).build();
+    CxxDeps allDeps =
+        CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
     Linker.LinkableDepType linkStyle =
         RustCompileUtils.getLinkStyle(buildTarget, args.getLinkStyle());
 
@@ -197,6 +199,11 @@ public class RustBinaryDescription
     @Value.Default
     default boolean isRpath() {
       return true;
+    }
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {
+      return PatternMatchedCollection.of();
     }
   }
 }

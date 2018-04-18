@@ -27,9 +27,11 @@ import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -48,7 +50,8 @@ public class PrebuiltRustLibraryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       PrebuiltRustLibraryDescriptionArg args) {
-    CxxDeps allDeps = CxxDeps.builder().addDeps(args.getDeps()).build();
+    CxxDeps allDeps =
+        CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
     return new PrebuiltRustLibrary(buildTarget, context.getProjectFilesystem(), params) {
 
       @Override
@@ -103,6 +106,11 @@ public class PrebuiltRustLibraryDescription
     @Value.Default
     default boolean getProcMacro() {
       return false;
+    }
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {
+      return PatternMatchedCollection.of();
     }
   }
 }

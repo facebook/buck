@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -50,6 +51,12 @@ public class RustBinaryBuilder
 
   public RustBinaryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
     getArgForPopulating().setDeps(deps);
+    return this;
+  }
+
+  public RustBinaryBuilder setPlatformDeps(
+      PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps) {
+    getArgForPopulating().setPlatformDeps(platformDeps);
     return this;
   }
 }

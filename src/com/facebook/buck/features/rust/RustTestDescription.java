@@ -39,6 +39,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
@@ -78,7 +79,8 @@ public class RustTestDescription
       RustTestDescriptionArg args) {
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     BuildTarget exeTarget = buildTarget.withAppendedFlavors(InternalFlavor.of("unittest"));
-    CxxDeps allDeps = CxxDeps.builder().addDeps(args.getDeps()).build();
+    CxxDeps allDeps =
+        CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
 
     Optional<Map.Entry<Flavor, RustBinaryDescription.Type>> type =
         RustBinaryDescription.BINARY_TYPE.getFlavorAndValue(buildTarget);
@@ -201,5 +203,10 @@ public class RustTestDescription
     Optional<String> getCrate();
 
     Optional<SourcePath> getCrateRoot();
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {
+      return PatternMatchedCollection.of();
+    }
   }
 }

@@ -21,39 +21,34 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableSortedSet;
 
-public class RustLibraryBuilder
+public class PrebuiltRustLibraryBuilder
     extends AbstractNodeBuilder<
-        RustLibraryDescriptionArg.Builder, RustLibraryDescriptionArg, RustLibraryDescription,
-        RustLibrary> {
+        PrebuiltRustLibraryDescriptionArg.Builder, PrebuiltRustLibraryDescriptionArg,
+        PrebuiltRustLibraryDescription, PrebuiltRustLibrary> {
 
-  private RustLibraryBuilder(RustLibraryDescription description, BuildTarget target) {
+  private PrebuiltRustLibraryBuilder(
+      PrebuiltRustLibraryDescription description, BuildTarget target) {
     super(description, target);
   }
 
-  public static RustLibraryBuilder from(String target) {
-    return new RustLibraryBuilder(
-        new RustLibraryDescription(
-            new ToolchainProviderBuilder()
-                .withToolchain(RustToolchain.DEFAULT_NAME, RustTestUtils.DEFAULT_TOOLCHAIN)
-                .build(),
-            FakeRustConfig.FAKE_RUST_CONFIG),
-        BuildTargetFactory.newInstance(target));
+  public static PrebuiltRustLibraryBuilder from(String target) {
+    return new PrebuiltRustLibraryBuilder(
+        new PrebuiltRustLibraryDescription(), BuildTargetFactory.newInstance(target));
   }
 
-  public RustLibraryBuilder setSrcs(ImmutableSortedSet<SourcePath> srcs) {
-    getArgForPopulating().setSrcs(srcs);
+  public PrebuiltRustLibraryBuilder setRlib(SourcePath rlib) {
+    getArgForPopulating().setRlib(rlib);
     return this;
   }
 
-  public RustLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
+  public PrebuiltRustLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
     getArgForPopulating().setDeps(deps);
     return this;
   }
 
-  public RustLibraryBuilder setPlatformDeps(
+  public PrebuiltRustLibraryBuilder setPlatformDeps(
       PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps) {
     getArgForPopulating().setPlatformDeps(platformDeps);
     return this;
