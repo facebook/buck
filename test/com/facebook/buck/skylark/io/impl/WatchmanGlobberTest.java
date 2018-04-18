@@ -22,8 +22,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.TestWithBuckd;
+import com.facebook.buck.io.StubWatchmanClient;
 import com.facebook.buck.io.Watchman;
-import com.facebook.buck.io.WatchmanClient;
 import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
@@ -38,7 +38,6 @@ import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.Path;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
@@ -114,26 +113,5 @@ public class WatchmanGlobberTest {
   public void noResultsAreReturnedIfWatchmanDoesNotProduceAnything() throws Exception {
     globber = WatchmanGlobber.create(new StubWatchmanClient(Optional.empty()), root);
     assertFalse(globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false).isPresent());
-  }
-
-  /**
-   * A {@link com.facebook.buck.io.WatchmanClient} that simply returns a value passed in a
-   * constructor.
-   */
-  private static class StubWatchmanClient implements WatchmanClient {
-
-    private final Optional<? extends Map<String, ?>> result;
-
-    StubWatchmanClient(Optional<? extends Map<String, ?>> result) {
-      this.result = result;
-    }
-
-    @Override
-    public Optional<? extends Map<String, ?>> queryWithTimeout(long timeoutNanos, Object... query) {
-      return result;
-    }
-
-    @Override
-    public void close() {}
   }
 }
