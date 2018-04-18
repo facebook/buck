@@ -47,12 +47,14 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.spi.FileSystemProvider;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.Set;
 
 /**
  * {@link AbstractWorkspace} is a directory that contains a Buck project, complete with build files.
@@ -291,14 +293,24 @@ public abstract class AbstractWorkspace {
       return;
     }
     Path outputPath = templatePath.relativize(optionalOutputPath.get());
+    Path targetPath = destPath.resolve(outputPath.toString());
 
     try (InputStream inStream = provider.newInputStream(contentPath);
-        FileOutputStream outStream =
-            new FileOutputStream(destPath.resolve(outputPath.toString()).toString())) {
+        FileOutputStream outStream = new FileOutputStream(targetPath.toString())) {
       byte[] buffer = new byte[inStream.available()];
       inStream.read(buffer);
       outStream.write(buffer);
     }
+    if (Platform.detect() == Platform.WINDOWS) {
+      return;
+    }
+    // require that certain files are executable.
+    // the jar process removes any granularity around this, so we give everything the permission
+    Set<PosixFilePermission> targetPermissions = Files.getPosixFilePermissions(targetPath);
+    targetPermissions.add(PosixFilePermission.OWNER_EXECUTE);
+    targetPermissions.add(PosixFilePermission.GROUP_EXECUTE);
+    targetPermissions.add(PosixFilePermission.OTHERS_EXECUTE);
+    Files.setPosixFilePermissions(targetPath, targetPermissions);
   }
 
   private void preAddTemplateActions(Path templatePath) throws IOException {

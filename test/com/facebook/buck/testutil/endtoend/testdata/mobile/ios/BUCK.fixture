@@ -45,6 +45,7 @@ apple_binary(
         ":BuckDemoAppResources",
         ":BuckDemoAssetCatalog",
         "//common:hello",
+        "//common/js:random-bundle#ios,release",
         "//ios/lib:capitalize",
     ],
 )

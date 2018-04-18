@@ -10,5 +10,6 @@ android_binary(
     manifest = "//android/manifest:generated_manifest",
     deps = [
         "//android/java/com/facebook/buck/demo:lib",
+        "//common/js:random-bundle#release,android",
     ],
 )

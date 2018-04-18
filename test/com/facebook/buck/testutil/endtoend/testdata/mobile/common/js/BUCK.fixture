@@ -1,0 +1,37 @@
+sh_binary(
+    name = "package_worker_exe",
+    main = "package_worker.sh",
+    resources = ["pixel.gif"],
+)
+
+worker_tool(
+    name = "package_worker",
+    exe = ":package_worker_exe",
+)
+
+js_library(
+    name = "random",
+    srcs = [
+        "random.js",
+    ],
+    worker = ":package_worker",
+)
+
+js_bundle(
+    name = "random-bundle",
+    android_package = "com.javascript",
+    bundle_name_for_flavor = [
+        ("android", "android-bundle.js"),
+        ("ios", "ios-bundle.js"),
+    ],
+    entry = [
+        "num",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    worker = ":package_worker",
+    deps = [
+        ":random",
+    ],
+)
