@@ -65,28 +65,6 @@ public class ProjectBuildFileParserFactory {
    * Callers are responsible for managing the life-cycle of the created {@link
    * ProjectBuildFileParser}.
    */
-  public static ProjectBuildFileParser createBuildFileParser(
-      Cell cell,
-      TypeCoercerFactory typeCoercerFactory,
-      Console console,
-      BuckEventBus eventBus,
-      ParserPythonInterpreterProvider pythonInterpreterProvider,
-      Iterable<Description<?>> descriptions) {
-    return createBuildFileParser(
-        cell,
-        typeCoercerFactory,
-        console,
-        eventBus,
-        pythonInterpreterProvider,
-        descriptions, /* enableProfiling */
-        false);
-  }
-
-  /**
-   * Same as @{{@link #createBuildFileParser(Cell, TypeCoercerFactory, Console, BuckEventBus,
-   * ParserPythonInterpreterProvider, Iterable)}} but provides a way to configure whether parse
-   * profiling should be enabled
-   */
   static ProjectBuildFileParser createBuildFileParser(
       Cell cell,
       TypeCoercerFactory typeCoercerFactory,
