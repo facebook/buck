@@ -16,7 +16,6 @@
 
 package com.facebook.buck.features.rust;
 
-import com.facebook.buck.cxx.toolchain.TestCxxPlatformsProviderFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbstractNodeBuilder;
@@ -38,7 +37,7 @@ public class RustBinaryBuilder
     return new RustBinaryBuilder(
         new RustBinaryDescription(
             new ToolchainProviderBuilder()
-                .withToolchain(TestCxxPlatformsProviderFactory.createDefaultCxxPlatformsProvider())
+                .withToolchain(RustToolchain.DEFAULT_NAME, RustTestUtils.DEFAULT_TOOLCHAIN)
                 .build(),
             FakeRustConfig.FAKE_RUST_CONFIG),
         BuildTargetFactory.newInstance(target));

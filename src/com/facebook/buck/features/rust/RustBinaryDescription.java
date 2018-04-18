@@ -17,7 +17,6 @@
 package com.facebook.buck.features.rust;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -35,7 +34,6 @@ import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
@@ -84,7 +82,7 @@ public class RustBinaryDescription
 
     boolean isCheck = type.map(t -> t.getValue().isCheck()).orElse(false);
 
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    RustToolchain rustToolchain = getRustToolchain();
 
     return RustCompileUtils.createBinaryBuildRule(
         buildTarget,
@@ -92,8 +90,10 @@ public class RustBinaryDescription
         params,
         context.getBuildRuleResolver(),
         rustBuckConfig,
-        cxxPlatformsProvider.getCxxPlatforms(),
-        cxxPlatformsProvider.getDefaultCxxPlatform(),
+        rustToolchain
+            .getRustPlatforms()
+            .getValue(buildTarget)
+            .orElse(rustToolchain.getDefaultRustPlatform()),
         args.getCrate(),
         args.getFeatures(),
         Stream.of(rustBuckConfig.getRustBinaryFlags().stream(), args.getRustcFlags().stream())
@@ -115,12 +115,8 @@ public class RustBinaryDescription
       AbstractRustBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    ToolProvider compiler = rustBuckConfig.getRustCompiler();
-    extraDepsBuilder.addAll(compiler.getParseTimeDeps());
-    extraDepsBuilder.addAll(
-        RustCompileUtils.getPlatformParseTimeDeps(getCxxPlatformsProvider(), buildTarget));
-    extraDepsBuilder.addAll(
-        rustBuckConfig.getLinker().map(ToolProvider::getParseTimeDeps).orElse(ImmutableList.of()));
+    targetGraphOnlyDepsBuilder.addAll(
+        RustCompileUtils.getPlatformParseTimeDeps(rustBuckConfig, getRustToolchain(), buildTarget));
   }
 
   protected enum Type implements FlavorConvertible {
@@ -154,7 +150,7 @@ public class RustBinaryDescription
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    if (getCxxPlatformsProvider().getCxxPlatforms().containsAnyOf(flavors)) {
+    if (getRustToolchain().getRustPlatforms().containsAnyOf(flavors)) {
       return true;
     }
 
@@ -169,12 +165,11 @@ public class RustBinaryDescription
 
   @Override
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(ImmutableSet.of(getCxxPlatformsProvider().getCxxPlatforms(), BINARY_TYPE));
+    return Optional.of(ImmutableSet.of(getRustToolchain().getRustPlatforms(), BINARY_TYPE));
   }
 
-  private CxxPlatformsProvider getCxxPlatformsProvider() {
-    return toolchainProvider.getByName(
-        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+  private RustToolchain getRustToolchain() {
+    return toolchainProvider.getByName(RustToolchain.DEFAULT_NAME, RustToolchain.class);
   }
 
   @BuckStyleImmutable

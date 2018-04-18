@@ -16,7 +16,6 @@
 
 package com.facebook.buck.features.rust;
 
-import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -39,7 +38,6 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
@@ -85,7 +83,7 @@ public class RustTestDescription
 
     boolean isCheck = type.map(t -> t.getValue().isCheck()).orElse(false);
 
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    RustToolchain rustToolchain = getRustToolchain();
     BuildRuleResolver resolver = context.getBuildRuleResolver();
 
     BinaryWrapperRule testExeBuild =
@@ -99,8 +97,10 @@ public class RustTestDescription
                         params,
                         resolver,
                         rustBuckConfig,
-                        cxxPlatformsProvider.getCxxPlatforms(),
-                        cxxPlatformsProvider.getDefaultCxxPlatform(),
+                        rustToolchain
+                            .getRustPlatforms()
+                            .getValue(buildTarget)
+                            .orElse(rustToolchain.getDefaultRustPlatform()),
                         args.getCrate(),
                         args.getFeatures(),
                         Stream.of(
@@ -140,15 +140,13 @@ public class RustTestDescription
       AbstractRustTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    ToolProvider compiler = rustBuckConfig.getRustCompiler();
-    extraDepsBuilder.addAll(compiler.getParseTimeDeps());
-    extraDepsBuilder.addAll(
-        RustCompileUtils.getPlatformParseTimeDeps(getCxxPlatformsProvider(), buildTarget));
+    targetGraphOnlyDepsBuilder.addAll(
+        RustCompileUtils.getPlatformParseTimeDeps(rustBuckConfig, getRustToolchain(), buildTarget));
   }
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    if (getCxxPlatformsProvider().getCxxPlatforms().containsAnyOf(flavors)) {
+    if (getRustToolchain().getRustPlatforms().containsAnyOf(flavors)) {
       return true;
     }
 
@@ -164,13 +162,11 @@ public class RustTestDescription
   @Override
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
     return Optional.of(
-        ImmutableSet.of(
-            getCxxPlatformsProvider().getCxxPlatforms(), RustBinaryDescription.BINARY_TYPE));
+        ImmutableSet.of(getRustToolchain().getRustPlatforms(), RustBinaryDescription.BINARY_TYPE));
   }
 
-  private CxxPlatformsProvider getCxxPlatformsProvider() {
-    return toolchainProvider.getByName(
-        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+  private RustToolchain getRustToolchain() {
+    return toolchainProvider.getByName(RustToolchain.DEFAULT_NAME, RustToolchain.class);
   }
 
   @BuckStyleImmutable

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.features.rust;
 
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
@@ -34,12 +33,12 @@ interface RustLinkable {
    *
    * @param direct true for direct dependency, false for transitive
    * @param isCheck true if we're generated check builds
-   * @param cxxPlatform Current platform we're building for.
+   * @param rustPlatform Current platform we're building for.
    * @param depType What kind of linkage we want with the dependency.
    * @return Arg for linking dependency.
    */
   Arg getLinkerArg(
-      boolean direct, boolean isCheck, CxxPlatform cxxPlatform, Linker.LinkableDepType depType);
+      boolean direct, boolean isCheck, RustPlatform rustPlatform, Linker.LinkableDepType depType);
 
   /**
    * Return {@link BuildTarget} for linkable
@@ -51,10 +50,10 @@ interface RustLinkable {
   /**
    * Return a map of shared libraries this linkable produces (typically just one)
    *
-   * @param cxxPlatform the platform we're generating the shared library for
+   * @param rustPlatform the platform we're generating the shared library for
    * @return Map of soname -> source path
    */
-  ImmutableMap<String, SourcePath> getRustSharedLibraries(CxxPlatform cxxPlatform);
+  ImmutableMap<String, SourcePath> getRustSharedLibraries(RustPlatform rustPlatform);
 
   /**
    * Return the linkage style for this linkable.

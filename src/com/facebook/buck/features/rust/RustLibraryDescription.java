@@ -19,7 +19,6 @@ package com.facebook.buck.features.rust;
 import static com.facebook.buck.features.rust.RustCompileUtils.ruleToCrateName;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -44,7 +43,6 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -91,7 +89,7 @@ public class RustLibraryDescription
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
-      CxxPlatform cxxPlatform,
+      RustPlatform rustPlatform,
       RustBuckConfig rustBuckConfig,
       ImmutableList<String> extraFlags,
       ImmutableList<String> extraLinkerFlags,
@@ -106,7 +104,7 @@ public class RustLibraryDescription
             resolver,
             pathResolver,
             ruleFinder,
-            cxxPlatform,
+            rustPlatform.getCxxPlatform(),
             crate,
             args.getCrateRoot(),
             ImmutableSet.of("lib.rs"),
@@ -117,7 +115,7 @@ public class RustLibraryDescription
         params,
         resolver,
         ruleFinder,
-        cxxPlatform,
+        rustPlatform,
         rustBuckConfig,
         extraFlags,
         extraLinkerFlags,
@@ -150,14 +148,13 @@ public class RustLibraryDescription
 
     String crate = args.getCrate().orElse(ruleToCrateName(buildTarget.getShortName()));
 
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    RustToolchain rustToolchain = getRustToolchain();
 
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, RustDescriptionEnhancer.Type>> type =
         LIBRARY_TYPE.getFlavorAndValue(buildTarget);
-    Optional<CxxPlatform> cxxPlatform =
-        cxxPlatformsProvider.getCxxPlatforms().getValue(buildTarget);
+    Optional<RustPlatform> rustPlatform = rustToolchain.getRustPlatforms().getValue(buildTarget);
 
     if (type.isPresent()) {
       // Uncommon case - someone explicitly invoked buck to build a specific flavor as the
@@ -189,7 +186,7 @@ public class RustLibraryDescription
           resolver,
           pathResolver,
           ruleFinder,
-          cxxPlatform.orElse(cxxPlatformsProvider.getDefaultCxxPlatform()),
+          rustPlatform.orElse(rustToolchain.getDefaultRustPlatform()),
           rustBuckConfig,
           rustcArgs.build(),
           /* linkerArgs */ ImmutableList.of(),
@@ -207,7 +204,7 @@ public class RustLibraryDescription
       public Arg getLinkerArg(
           boolean direct,
           boolean isCheck,
-          CxxPlatform cxxPlatform,
+          RustPlatform rustPlatform,
           Linker.LinkableDepType depType) {
         BuildRule rule;
         CrateType crateType;
@@ -260,7 +257,7 @@ public class RustLibraryDescription
                 resolver,
                 pathResolver,
                 ruleFinder,
-                cxxPlatform,
+                rustPlatform,
                 rustBuckConfig,
                 rustcArgs.build(),
                 /* linkerArgs */ ImmutableList.of(),
@@ -284,11 +281,12 @@ public class RustLibraryDescription
       }
 
       @Override
-      public ImmutableMap<String, SourcePath> getRustSharedLibraries(CxxPlatform cxxPlatform) {
+      public ImmutableMap<String, SourcePath> getRustSharedLibraries(RustPlatform rustPlatform) {
         BuildTarget target = getBuildTarget();
 
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
-        String sharedLibrarySoname = CrateType.DYLIB.filenameFor(target, crate, cxxPlatform);
+        String sharedLibrarySoname =
+            CrateType.DYLIB.filenameFor(target, crate, rustPlatform.getCxxPlatform());
         BuildRule sharedLibraryBuildRule =
             requireBuild(
                 buildTarget,
@@ -297,7 +295,7 @@ public class RustLibraryDescription
                 resolver,
                 pathResolver,
                 ruleFinder,
-                cxxPlatform,
+                rustPlatform,
                 rustBuckConfig,
                 rustcArgs.build(),
                 /* linkerArgs */ ImmutableList.of(),
@@ -373,7 +371,7 @@ public class RustLibraryDescription
                 resolver,
                 pathResolver,
                 ruleFinder,
-                cxxPlatform,
+                getRustToolchain().getRustPlatforms().getValue(cxxPlatform.getFlavor()),
                 rustBuckConfig,
                 rustcArgs.build(),
                 /* linkerArgs */ ImmutableList.of(),
@@ -408,7 +406,7 @@ public class RustLibraryDescription
                 resolver,
                 pathResolver,
                 ruleFinder,
-                cxxPlatform,
+                getRustToolchain().getRustPlatforms().getValue(cxxPlatform.getFlavor()),
                 rustBuckConfig,
                 rustcArgs.build(),
                 /* linkerArgs */ ImmutableList.of(),
@@ -430,16 +428,13 @@ public class RustLibraryDescription
       AbstractRustLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    extraDepsBuilder.addAll(rustBuckConfig.getRustCompiler().getParseTimeDeps());
-    extraDepsBuilder.addAll(
-        rustBuckConfig.getLinker().map(ToolProvider::getParseTimeDeps).orElse(ImmutableList.of()));
-    extraDepsBuilder.addAll(
-        RustCompileUtils.getPlatformParseTimeDeps(getCxxPlatformsProvider(), buildTarget));
+    targetGraphOnlyDepsBuilder.addAll(
+        RustCompileUtils.getPlatformParseTimeDeps(rustBuckConfig, getRustToolchain(), buildTarget));
   }
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    if (getCxxPlatformsProvider().getCxxPlatforms().containsAnyOf(flavors)) {
+    if (getRustToolchain().getRustPlatforms().containsAnyOf(flavors)) {
       return true;
     }
 
@@ -454,12 +449,11 @@ public class RustLibraryDescription
 
   @Override
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(ImmutableSet.of(getCxxPlatformsProvider().getCxxPlatforms(), LIBRARY_TYPE));
+    return Optional.of(ImmutableSet.of(getRustToolchain().getRustPlatforms(), LIBRARY_TYPE));
   }
 
-  private CxxPlatformsProvider getCxxPlatformsProvider() {
-    return toolchainProvider.getByName(
-        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+  private RustToolchain getRustToolchain() {
+    return toolchainProvider.getByName(RustToolchain.DEFAULT_NAME, RustToolchain.class);
   }
 
   @BuckStyleImmutable

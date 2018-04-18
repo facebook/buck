@@ -16,7 +16,6 @@
 
 package com.facebook.buck.features.rust;
 
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
@@ -58,7 +57,7 @@ public class PrebuiltRustLibraryDescription
       public com.facebook.buck.rules.args.Arg getLinkerArg(
           boolean direct,
           boolean isCheck,
-          CxxPlatform cxxPlatform,
+          RustPlatform rustPlatform,
           Linker.LinkableDepType depType) {
         return new RustLibraryArg(args.getCrate(), args.getRlib(), direct);
       }
@@ -74,7 +73,7 @@ public class PrebuiltRustLibraryDescription
       }
 
       @Override
-      public ImmutableMap<String, SourcePath> getRustSharedLibraries(CxxPlatform cxxPlatform) {
+      public ImmutableMap<String, SourcePath> getRustSharedLibraries(RustPlatform rustPlatform) {
         return ImmutableMap.of();
       }
     };

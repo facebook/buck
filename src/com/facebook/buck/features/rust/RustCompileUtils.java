@@ -22,7 +22,6 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
-import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.linker.Linkers;
@@ -31,7 +30,6 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.BinaryWrapperRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -92,7 +90,7 @@ public class RustCompileUtils {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
-      CxxPlatform cxxPlatform,
+      RustPlatform rustPlatform,
       RustBuckConfig rustConfig,
       ImmutableList<String> extraFlags,
       ImmutableList<String> extraLinkerFlags,
@@ -103,10 +101,13 @@ public class RustCompileUtils {
       ImmutableSortedSet<SourcePath> sources,
       SourcePath rootModule,
       boolean forceRlib) {
+    CxxPlatform cxxPlatform = rustPlatform.getCxxPlatform();
     SortedSet<BuildRule> ruledeps = params.getBuildDeps();
     ImmutableList.Builder<Arg> linkerArgs = ImmutableList.builder();
 
-    Stream.concat(rustConfig.getLinkerArgs(cxxPlatform).stream(), extraLinkerFlags.stream())
+    Stream.concat(
+            rustConfig.getLinkerArgs(rustPlatform.getCxxPlatform()).stream(),
+            extraLinkerFlags.stream())
         .filter(x -> !x.isEmpty())
         .map(StringArg::of)
         .forEach(linkerArgs::add);
@@ -164,7 +165,7 @@ public class RustCompileUtils {
         .map(
             rule ->
                 ((RustLinkable) rule)
-                    .getLinkerArg(true, crateType.isCheck(), cxxPlatform, rustDepType))
+                    .getLinkerArg(true, crateType.isCheck(), rustPlatform, rustDepType))
         .forEach(depArgs::add);
 
     // Second pass - indirect deps
@@ -181,7 +182,7 @@ public class RustCompileUtils {
 
           Arg arg =
               ((RustLinkable) rule)
-                  .getLinkerArg(false, crateType.isCheck(), cxxPlatform, rustDepType);
+                  .getLinkerArg(false, crateType.isCheck(), rustPlatform, rustDepType);
 
           depArgs.add(arg);
         }
@@ -241,7 +242,7 @@ public class RustCompileUtils {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
-      CxxPlatform cxxPlatform,
+      RustPlatform rustPlatform,
       RustBuckConfig rustConfig,
       ImmutableList<String> extraFlags,
       ImmutableList<String> extraLinkerFlags,
@@ -254,7 +255,7 @@ public class RustCompileUtils {
       boolean forceRlib) {
     return (RustCompileRule)
         resolver.computeIfAbsent(
-            getCompileBuildTarget(buildTarget, cxxPlatform, crateType),
+            getCompileBuildTarget(buildTarget, rustPlatform.getCxxPlatform(), crateType),
             target ->
                 createBuild(
                     target,
@@ -263,7 +264,7 @@ public class RustCompileUtils {
                     params,
                     resolver,
                     ruleFinder,
-                    cxxPlatform,
+                    rustPlatform,
                     rustConfig,
                     extraFlags,
                     extraLinkerFlags,
@@ -300,13 +301,22 @@ public class RustCompileUtils {
     return ret;
   }
 
+  private static Iterable<BuildTarget> getPlatformParseTimeDeps(RustPlatform rustPlatform) {
+    return CxxPlatforms.getParseTimeDeps(rustPlatform.getCxxPlatform());
+  }
+
   public static Iterable<BuildTarget> getPlatformParseTimeDeps(
-      CxxPlatformsProvider cxxPlatformsProvider, BuildTarget buildTarget) {
-    return CxxPlatforms.getParseTimeDeps(
-        cxxPlatformsProvider
-            .getCxxPlatforms()
-            .getValue(buildTarget)
-            .orElse(cxxPlatformsProvider.getDefaultCxxPlatform()));
+      RustBuckConfig rustBuckConfig, RustToolchain rustToolchain, BuildTarget buildTarget) {
+    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
+    deps.addAll(rustBuckConfig.getRustCompiler().getParseTimeDeps());
+    rustBuckConfig.getLinker().ifPresent(l -> deps.addAll(l.getParseTimeDeps()));
+    deps.addAll(
+        getPlatformParseTimeDeps(
+            rustToolchain
+                .getRustPlatforms()
+                .getValue(buildTarget)
+                .orElse(rustToolchain.getDefaultRustPlatform())));
+    return deps.build();
   }
 
   public static BinaryWrapperRule createBinaryBuildRule(
@@ -315,8 +325,7 @@ public class RustCompileUtils {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       RustBuckConfig rustBuckConfig,
-      FlavorDomain<CxxPlatform> cxxPlatforms,
-      CxxPlatform defaultCxxPlatform,
+      RustPlatform rustPlatform,
       Optional<String> crateName,
       ImmutableSortedSet<String> features,
       Iterator<String> rustcFlags,
@@ -341,7 +350,7 @@ public class RustCompileUtils {
 
     String crate = crateName.orElse(ruleToCrateName(buildTarget.getShortName()));
 
-    CxxPlatform cxxPlatform = cxxPlatforms.getValue(buildTarget).orElse(defaultCxxPlatform);
+    CxxPlatform cxxPlatform = rustPlatform.getCxxPlatform();
 
     Pair<SourcePath, ImmutableSortedSet<SourcePath>> rootModuleAndSources =
         getRootModuleAndSources(
@@ -414,7 +423,7 @@ public class RustCompileUtils {
       // because rustc will include their dirs in rpath by default. We won't have any if we're
       // forcing the use of rlibs.
       Map<String, SourcePath> rustSharedLibraries =
-          getTransitiveRustSharedLibraries(cxxPlatform, params.getBuildDeps(), forceRlib);
+          getTransitiveRustSharedLibraries(rustPlatform, params.getBuildDeps(), forceRlib);
       executableBuilder.addInputs(rustSharedLibraries.values());
     }
 
@@ -430,7 +439,7 @@ public class RustCompileUtils {
                         params,
                         resolver,
                         ruleFinder,
-                        cxxPlatform,
+                        rustPlatform,
                         rustBuckConfig,
                         rustcArgs.build(),
                         linkerArgs.build(),
@@ -520,7 +529,7 @@ public class RustCompileUtils {
    * @return a mapping of library name to the library {@link SourcePath}.
    */
   public static Map<String, SourcePath> getTransitiveRustSharedLibraries(
-      CxxPlatform cxxPlatform, Iterable<? extends BuildRule> inputs, boolean forceRlib) {
+      RustPlatform rustPlatform, Iterable<? extends BuildRule> inputs, boolean forceRlib) {
     ImmutableSortedMap.Builder<String, SourcePath> libs = ImmutableSortedMap.naturalOrder();
 
     new AbstractBreadthFirstTraversal<BuildRule>(inputs) {
@@ -534,7 +543,7 @@ public class RustCompileUtils {
             deps = rule.getBuildDeps();
 
             if (!forceRlib && rustLinkable.getPreferredLinkage() != NativeLinkable.Linkage.STATIC) {
-              libs.putAll(rustLinkable.getRustSharedLibraries(cxxPlatform));
+              libs.putAll(rustLinkable.getRustSharedLibraries(rustPlatform));
             }
           }
         }
