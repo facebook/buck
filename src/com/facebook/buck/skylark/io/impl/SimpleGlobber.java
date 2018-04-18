@@ -83,7 +83,7 @@ public class SimpleGlobber implements Globber {
    *
    * @param basePath The base path relative to which paths matching glob patterns will be resolved.
    */
-  public static Globber create(Path basePath) {
+  public static SimpleGlobber create(Path basePath) {
     return new SimpleGlobber(basePath);
   }
 }
