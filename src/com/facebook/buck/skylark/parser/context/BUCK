@@ -1,0 +1,10 @@
+java_library(
+    name = "context",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/bazel:skylark-lang",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)

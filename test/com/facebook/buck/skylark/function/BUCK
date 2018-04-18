@@ -14,6 +14,7 @@ standard_java_test(
         "//src/com/facebook/buck/skylark/io/impl:impl",
         "//src/com/facebook/buck/skylark/packages:packages",
         "//src/com/facebook/buck/skylark/parser:parser",
+        "//src/com/facebook/buck/skylark/parser/context:context",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/types:types",
         "//test/com/facebook/buck/event:testutil",

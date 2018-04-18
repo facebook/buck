@@ -58,6 +58,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -93,6 +94,7 @@ public class SkylarkProjectBuildFileParserTest {
         .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
         .setIgnorePaths(ImmutableSet.of())
         .setBuildFileName("BUCK")
+        .setRawConfig(ImmutableMap.of("dummy_section", ImmutableMap.of("dummy_key", "dummy_value")))
         .setDescriptions(knownBuildRuleTypesProvider.get(cell).getDescriptions())
         .setBuildFileImportWhitelist(ImmutableList.of())
         .setPythonInterpreter("skylark");
@@ -209,6 +211,34 @@ public class SkylarkProjectBuildFileParserTest {
             "prebuilt_jar(name=read_config('app', 'name', 'guava'), binary_jar='foo.jar')"));
     Map<String, Object> rule = getSingleRule(buildFile);
     assertThat(rule.get("name"), equalTo("guava"));
+  }
+
+  @Test
+  public void accessedUnsetConfigOptionIsRecorded() throws Exception {
+    Path buildFile = projectFilesystem.resolve("BUCK");
+    Files.write(buildFile, ImmutableList.of("val = read_config('app', 'name', 'guava')"));
+    ImmutableList<Map<String, Object>> allRules =
+        parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
+    assertEquals(3, allRules.size());
+    Map<String, Object> configs = allRules.get(1);
+    assertEquals(
+        ImmutableMap.of("app", ImmutableMap.of("name", Optional.empty())),
+        configs.get("__configs"));
+  }
+
+  @Test
+  public void accessedSetConfigOptionIsRecorded() throws Exception {
+    Path buildFile = projectFilesystem.resolve("BUCK");
+    Files.write(
+        buildFile,
+        ImmutableList.of("val = read_config('dummy_section', 'dummy_key', 'dummy_value')"));
+    ImmutableList<Map<String, Object>> allRules =
+        parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
+    assertEquals(3, allRules.size());
+    Map<String, Object> configs = allRules.get(1);
+    assertEquals(
+        ImmutableMap.of("dummy_section", ImmutableMap.of("dummy_key", Optional.of("dummy_value"))),
+        configs.get("__configs"));
   }
 
   @Test

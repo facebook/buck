@@ -5,6 +5,7 @@ java_library(
     deps = [
         "//src/com/facebook/buck/skylark/io:io",
         "//src/com/facebook/buck/skylark/packages:packages",
+        "//src/com/facebook/buck/skylark/parser/context:context",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
         "//third-party/java/bazel:skylark-lang",

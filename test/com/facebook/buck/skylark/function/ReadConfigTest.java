@@ -24,6 +24,7 @@ import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.skylark.io.impl.SimpleGlobber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.packages.PackageFactory;
+import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
@@ -102,6 +103,8 @@ public class ReadConfigTest {
             .setGlobals(BazelLibrary.GLOBALS)
             .useDefaultSemantics()
             .build();
+    ParseContext parseContext = new ParseContext();
+    parseContext.setup(env);
     env.setupDynamic(
         PackageFactory.PACKAGE_CONTEXT,
         PackageContext.builder()
