@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.rust;
 
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
@@ -26,8 +27,14 @@ import org.immutables.value.Value;
 @BuckStyleTuple
 interface AbstractRustPlatform extends FlavorConvertible {
 
+  // TODO: For now, we rely on Rust platforms having the same "name" as the C/C++ platforms they
+  // wrap, due to having to lookup the Rust platform in the C/C++ interfaces that Rust rules
+  // implement, into which only C/C++ platform objects are threaded.
   @Override
   default Flavor getFlavor() {
-    throw new UnsupportedOperationException();
+    return getCxxPlatform().getFlavor();
   }
+
+  /** @return the {@link CxxPlatform} to use for C/C++ dependencies. */
+  CxxPlatform getCxxPlatform();
 }

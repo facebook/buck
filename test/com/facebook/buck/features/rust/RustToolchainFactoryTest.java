@@ -20,6 +20,8 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
@@ -37,7 +39,13 @@ public class RustToolchainFactoryTest {
 
   @Test
   public void createToolchain() {
-    ToolchainProvider toolchainProvider = new ToolchainProviderBuilder().build();
+    ToolchainProvider toolchainProvider =
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                CxxPlatformsProvider.DEFAULT_NAME,
+                CxxPlatformsProvider.of(
+                    CxxPlatformUtils.DEFAULT_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORMS))
+            .build();
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     BuckConfig buckConfig = FakeBuckConfig.builder().setFilesystem(filesystem).build();
     ToolchainCreationContext toolchainCreationContext =
@@ -51,7 +59,11 @@ public class RustToolchainFactoryTest {
     RustToolchainFactory factory = new RustToolchainFactory();
     Optional<RustToolchain> toolchain =
         factory.createToolchain(toolchainProvider, toolchainCreationContext);
-    assertThat(toolchain.get().getDefaultRustPlatform(), Matchers.equalTo(RustPlatform.of()));
-    assertThat(toolchain.get().getRustPlatforms().getValues(), Matchers.empty());
+    assertThat(
+        toolchain.get().getDefaultRustPlatform(),
+        Matchers.equalTo(RustPlatform.of(CxxPlatformUtils.DEFAULT_PLATFORM)));
+    assertThat(
+        toolchain.get().getRustPlatforms().getValues(),
+        Matchers.contains(RustPlatform.of(CxxPlatformUtils.DEFAULT_PLATFORM)));
   }
 }

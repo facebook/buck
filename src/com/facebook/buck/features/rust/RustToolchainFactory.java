@@ -16,10 +16,13 @@
 
 package com.facebook.buck.features.rust;
 
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.util.RichStream;
 import java.util.Optional;
 
 /** Constructs {@link RustToolchain}s. */
@@ -28,6 +31,18 @@ public class RustToolchainFactory implements ToolchainFactory<RustToolchain> {
   @Override
   public Optional<RustToolchain> createToolchain(
       ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
-    return Optional.of(RustToolchain.of(RustPlatform.of(), FlavorDomain.of("Rust Platforms")));
+
+    CxxPlatformsProvider cxxPlatformsProviderFactory =
+        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProviderFactory.getCxxPlatforms();
+    CxxPlatform defaultCxxPlatform = cxxPlatformsProviderFactory.getDefaultCxxPlatform();
+
+    FlavorDomain<RustPlatform> rustPlatforms =
+        FlavorDomain.from(
+            "Rust Platforms",
+            RichStream.from(cxxPlatforms.getValues()).map(RustPlatform::of).toImmutableList());
+    RustPlatform defaultRustPlatform = rustPlatforms.getValue(defaultCxxPlatform.getFlavor());
+
+    return Optional.of(RustToolchain.of(defaultRustPlatform, rustPlatforms));
   }
 }
