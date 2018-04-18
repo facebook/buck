@@ -116,9 +116,12 @@ public class RustLinkerIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
 
-    thrown.expectMessage(Matchers.containsString("bad-linker"));
-
-    workspace.runBuckCommand("run", "--config", "cxx.ld=bad-linker", "//:xyzzy").assertFailure();
+    assertThat(
+        workspace
+            .runBuckCommand("run", "--config", "cxx.ld=bad-linker", "//:xyzzy")
+            .assertFailure()
+            .getStderr(),
+        Matchers.containsString("bad-linker"));
   }
 
   @Test
