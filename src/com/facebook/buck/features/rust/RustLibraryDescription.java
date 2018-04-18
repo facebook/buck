@@ -18,6 +18,7 @@ package com.facebook.buck.features.rust;
 
 import static com.facebook.buck.features.rust.RustCompileUtils.ruleToCrateName;
 
+import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -46,6 +47,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.VersionPropagator;
@@ -98,7 +100,8 @@ public class RustLibraryDescription
       String crate,
       CrateType crateType,
       Linker.LinkableDepType depType,
-      RustLibraryDescriptionArg args) {
+      RustLibraryDescriptionArg args,
+      Iterable<BuildRule> deps) {
     Pair<SourcePath, ImmutableSortedSet<SourcePath>> rootModuleAndSources =
         RustCompileUtils.getRootModuleAndSources(
             buildTarget,
@@ -126,7 +129,8 @@ public class RustLibraryDescription
         depType,
         rootModuleAndSources.getSecond(),
         rootModuleAndSources.getFirst(),
-        rustBuckConfig.getForceRlib());
+        rustBuckConfig.getForceRlib(),
+        deps);
   }
 
   @Override
@@ -139,6 +143,7 @@ public class RustLibraryDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    CxxDeps allDeps = CxxDeps.builder().addDeps(args.getDeps()).build();
 
     Function<RustPlatform, ImmutableList<String>> getRustcArgs =
         rustPlatform -> {
@@ -198,7 +203,8 @@ public class RustLibraryDescription
           crate,
           crateType,
           depType,
-          args);
+          args,
+          allDeps.get(resolver, platform.getCxxPlatform()));
     }
 
     // Common case - we're being invoked to satisfy some other rule's dependency.
@@ -269,7 +275,8 @@ public class RustLibraryDescription
                 crate,
                 crateType,
                 depType,
-                args);
+                args,
+                allDeps.get(resolver, rustPlatform.getCxxPlatform()));
         SourcePath rlib = rule.getSourcePathToOutput();
         return new RustLibraryArg(crate, rlib, direct);
       }
@@ -307,9 +314,15 @@ public class RustLibraryDescription
                 crate,
                 CrateType.DYLIB,
                 Linker.LinkableDepType.SHARED,
-                args);
+                args,
+                allDeps.get(resolver, rustPlatform.getCxxPlatform()));
         libs.put(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
         return libs.build();
+      }
+
+      @Override
+      public Iterable<BuildRule> getRustLinakbleDeps(RustPlatform rustPlatform) {
+        return allDeps.get(resolver, rustPlatform.getCxxPlatform());
       }
 
       // NativeLinkable
@@ -320,18 +333,28 @@ public class RustLibraryDescription
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+      public Iterable<NativeLinkable> getNativeLinkableExportedDeps(
           BuildRuleResolver ruleResolver) {
+        return RichStream.from(allDeps.getForAllPlatforms(ruleResolver))
+            .filter(NativeLinkable.class)
+            .toImmutableList();
+      }
+
+      @Override
+      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         // We want to skip over all the transitive Rust deps, and only return non-Rust
         // deps at the edge of the graph
         ImmutableList.Builder<NativeLinkable> nativedeps = ImmutableList.builder();
 
-        new AbstractBreadthFirstTraversal<BuildRule>(getBuildDeps()) {
+        RustPlatform rustPlatform =
+            getRustToolchain().getRustPlatforms().getValue(cxxPlatform.getFlavor());
+        new AbstractBreadthFirstTraversal<BuildRule>(allDeps.get(resolver, cxxPlatform)) {
           @Override
           public Iterable<BuildRule> visit(BuildRule rule) {
             if (rule instanceof RustLinkable) {
               // Rust rule - we just want to visit the children
-              return rule.getBuildDeps();
+              return ((RustLinkable) rule).getRustLinakbleDeps(rustPlatform);
             }
             if (rule instanceof NativeLinkable) {
               nativedeps.add((NativeLinkable) rule);
@@ -385,7 +408,8 @@ public class RustLibraryDescription
                 crate,
                 crateType,
                 depType,
-                args);
+                args,
+                allDeps.get(resolver, rustPlatform.getCxxPlatform()));
 
         SourcePath lib = rule.getSourcePathToOutput();
         SourcePathArg arg = SourcePathArg.of(lib);
@@ -422,7 +446,8 @@ public class RustLibraryDescription
                 crate,
                 CrateType.CDYLIB,
                 Linker.LinkableDepType.SHARED,
-                args);
+                args,
+                allDeps.get(resolver, rustPlatform.getCxxPlatform()));
         libs.put(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
         return libs.build();
       }

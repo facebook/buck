@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.rust;
 
+import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -77,6 +78,7 @@ public class RustTestDescription
       RustTestDescriptionArg args) {
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     BuildTarget exeTarget = buildTarget.withAppendedFlavors(InternalFlavor.of("unittest"));
+    CxxDeps allDeps = CxxDeps.builder().addDeps(args.getDeps()).build();
 
     Optional<Map.Entry<Flavor, RustBinaryDescription.Type>> type =
         RustBinaryDescription.BINARY_TYPE.getFlavorAndValue(buildTarget);
@@ -117,7 +119,8 @@ public class RustTestDescription
                         args.getSrcs(),
                         args.getCrateRoot(),
                         ImmutableSet.of("lib.rs", "main.rs"),
-                        isCheck));
+                        isCheck,
+                        allDeps.get(resolver, rustPlatform.getCxxPlatform())));
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 

@@ -46,6 +46,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -59,8 +60,6 @@ import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.SortedSet;
 import java.util.stream.Stream;
 
 /** Utilities to generate various kinds of Rust compilation. */
@@ -100,9 +99,9 @@ public class RustCompileUtils {
       boolean rpath,
       ImmutableSortedSet<SourcePath> sources,
       SourcePath rootModule,
-      boolean forceRlib) {
+      boolean forceRlib,
+      Iterable<BuildRule> ruledeps) {
     CxxPlatform cxxPlatform = rustPlatform.getCxxPlatform();
-    SortedSet<BuildRule> ruledeps = params.getBuildDeps();
     ImmutableList.Builder<Arg> linkerArgs = ImmutableList.builder();
 
     Stream.concat(rustPlatform.getLinkerArgs().stream(), extraLinkerFlags.stream())
@@ -157,8 +156,7 @@ public class RustCompileUtils {
     // but Arg isn't comparable, so we can't put it in a Set.
 
     // First pass - direct deps
-    ruledeps
-        .stream()
+    RichStream.from(ruledeps)
         .filter(RustLinkable.class::isInstance)
         .map(
             rule ->
@@ -168,15 +166,15 @@ public class RustCompileUtils {
 
     // Second pass - indirect deps
     new AbstractBreadthFirstTraversal<BuildRule>(
-        ruledeps
-            .stream()
-            .flatMap(r -> r.getBuildDeps().stream())
+        RichStream.from(ruledeps)
+            .filter(RustLinkable.class)
+            .flatMap(r -> RichStream.from(r.getRustLinakbleDeps(rustPlatform)))
             .collect(ImmutableList.toImmutableList())) {
       @Override
       public Iterable<BuildRule> visit(BuildRule rule) {
-        SortedSet<BuildRule> deps = ImmutableSortedSet.of();
+        Iterable<BuildRule> deps = ImmutableSortedSet.of();
         if (rule instanceof RustLinkable) {
-          deps = rule.getBuildDeps();
+          deps = ((RustLinkable) rule).getRustLinakbleDeps(rustPlatform);
 
           Arg arg =
               ((RustLinkable) rule)
@@ -198,7 +196,10 @@ public class RustCompileUtils {
                   resolver,
                   ruledeps,
                   depType,
-                  r -> r instanceof RustLinkable ? Optional.of(r.getBuildDeps()) : Optional.empty())
+                  r ->
+                      r instanceof RustLinkable
+                          ? Optional.of(((RustLinkable) r).getRustLinakbleDeps(rustPlatform))
+                          : Optional.empty())
               .getArgs();
 
       // Add necessary rpaths if we're dynamically linking with things
@@ -250,7 +251,8 @@ public class RustCompileUtils {
       LinkableDepType depType,
       ImmutableSortedSet<SourcePath> sources,
       SourcePath rootModule,
-      boolean forceRlib) {
+      boolean forceRlib,
+      Iterable<BuildRule> deps) {
     return (RustCompileRule)
         resolver.computeIfAbsent(
             getCompileBuildTarget(buildTarget, rustPlatform.getCxxPlatform(), crateType),
@@ -272,7 +274,8 @@ public class RustCompileUtils {
                     true,
                     sources,
                     rootModule,
-                    forceRlib));
+                    forceRlib,
+                    deps));
   }
 
   public static Linker.LinkableDepType getLinkStyle(
@@ -332,7 +335,8 @@ public class RustCompileUtils {
       ImmutableSortedSet<SourcePath> srcs,
       Optional<SourcePath> crateRoot,
       ImmutableSet<String> defaultRoots,
-      boolean isCheck) {
+      boolean isCheck,
+      Iterable<BuildRule> deps) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -390,10 +394,11 @@ public class RustCompileUtils {
                           resolver,
                           ruleFinder,
                           cxxPlatform,
-                          params.getBuildDeps(),
+                          deps,
                           r ->
                               r instanceof RustLinkable
-                                  ? Optional.of(r.getBuildDeps())
+                                  ? Optional.of(
+                                      ((RustLinkable) r).getRustLinakbleDeps(rustPlatform))
                                   : Optional.empty()));
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
@@ -420,7 +425,7 @@ public class RustCompileUtils {
       // because rustc will include their dirs in rpath by default. We won't have any if we're
       // forcing the use of rlibs.
       Map<String, SourcePath> rustSharedLibraries =
-          getTransitiveRustSharedLibraries(rustPlatform, params.getBuildDeps(), forceRlib);
+          getTransitiveRustSharedLibraries(rustPlatform, deps, forceRlib);
       executableBuilder.addInputs(rustSharedLibraries.values());
     }
 
@@ -446,7 +451,8 @@ public class RustCompileUtils {
                         rpath,
                         rootModuleAndSources.getSecond(),
                         rootModuleAndSources.getFirst(),
-                        forceRlib));
+                        forceRlib,
+                        deps));
 
     // Add the binary as the first argument.
     executableBuilder.addArg(SourcePathArg.of(buildRule.getSourcePathToOutput()));
@@ -532,12 +538,12 @@ public class RustCompileUtils {
     new AbstractBreadthFirstTraversal<BuildRule>(inputs) {
       @Override
       public Iterable<BuildRule> visit(BuildRule rule) {
-        Set<BuildRule> deps = ImmutableSet.of();
+        Iterable<BuildRule> deps = ImmutableSet.of();
         if (rule instanceof RustLinkable) {
           RustLinkable rustLinkable = (RustLinkable) rule;
 
           if (!rustLinkable.isProcMacro()) {
-            deps = rule.getBuildDeps();
+            deps = rustLinkable.getRustLinakbleDeps(rustPlatform);
 
             if (!forceRlib && rustLinkable.getPreferredLinkage() != NativeLinkable.Linkage.STATIC) {
               libs.putAll(rustLinkable.getRustSharedLibraries(rustPlatform));

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.rust;
 
+import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.model.BuildTarget;
@@ -74,6 +75,7 @@ public class RustBinaryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       RustBinaryDescriptionArg args) {
+    CxxDeps allDeps = CxxDeps.builder().addDeps(args.getDeps()).build();
     Linker.LinkableDepType linkStyle =
         RustCompileUtils.getLinkStyle(buildTarget, args.getLinkStyle());
 
@@ -107,7 +109,8 @@ public class RustBinaryDescription
         args.getSrcs(),
         args.getCrateRoot(),
         ImmutableSet.of("main.rs"),
-        isCheck);
+        isCheck,
+        allDeps.get(context.getBuildRuleResolver(), rustPlatform.getCxxPlatform()));
   }
 
   @Override

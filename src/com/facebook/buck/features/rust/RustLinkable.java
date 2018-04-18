@@ -19,6 +19,7 @@ package com.facebook.buck.features.rust;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableMap;
@@ -54,6 +55,9 @@ interface RustLinkable {
    * @return Map of soname -> source path
    */
   ImmutableMap<String, SourcePath> getRustSharedLibraries(RustPlatform rustPlatform);
+
+  /** @return the dependencies of this {@link RustLinkable}. */
+  Iterable<BuildRule> getRustLinakbleDeps(RustPlatform rustPlatform);
 
   /**
    * Return the linkage style for this linkable.

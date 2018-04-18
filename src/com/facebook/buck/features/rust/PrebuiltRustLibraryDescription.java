@@ -16,9 +16,11 @@
 
 package com.facebook.buck.features.rust;
 
+import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.CommonDescriptionArg;
@@ -46,6 +48,7 @@ public class PrebuiltRustLibraryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       PrebuiltRustLibraryDescriptionArg args) {
+    CxxDeps allDeps = CxxDeps.builder().addDeps(args.getDeps()).build();
     return new PrebuiltRustLibrary(buildTarget, context.getProjectFilesystem(), params) {
 
       @Override
@@ -75,6 +78,11 @@ public class PrebuiltRustLibraryDescription
       @Override
       public ImmutableMap<String, SourcePath> getRustSharedLibraries(RustPlatform rustPlatform) {
         return ImmutableMap.of();
+      }
+
+      @Override
+      public Iterable<BuildRule> getRustLinakbleDeps(RustPlatform rustPlatform) {
+        return allDeps.get(context.getBuildRuleResolver(), rustPlatform.getCxxPlatform());
       }
     };
   }
