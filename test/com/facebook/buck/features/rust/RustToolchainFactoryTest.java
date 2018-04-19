@@ -20,30 +20,18 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.FakeProcessExecutor;
-import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -84,55 +72,5 @@ public class RustToolchainFactoryTest {
             .map(RustPlatform::getCxxPlatform)
             .collect(ImmutableList.toImmutableList()),
         Matchers.contains(CxxPlatformUtils.DEFAULT_PLATFORM));
-  }
-
-  @Test
-  public void customPlatforms() {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-
-    Flavor custom = InternalFlavor.of("custom");
-    CxxPlatform cxxPlatform = CxxPlatformUtils.DEFAULT_PLATFORM.withFlavor(custom);
-    ToolchainProvider toolchainProvider =
-        new ToolchainProviderBuilder()
-            .withToolchain(
-                CxxPlatformsProvider.DEFAULT_NAME,
-                CxxPlatformsProvider.of(cxxPlatform, FlavorDomain.of("C/C++", cxxPlatform)))
-            .build();
-
-    ProcessExecutor processExecutor = new FakeProcessExecutor();
-    ExecutableFinder executableFinder = new AlwaysFoundExecutableFinder();
-    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
-    Path compiler = filesystem.getPath("/some/compiler");
-    BuckConfig buckConfig =
-        FakeBuckConfig.builder()
-            .setFilesystem(filesystem)
-            .setSections(
-                ImmutableMap.of("rust#" + custom, ImmutableMap.of("compiler", compiler.toString())))
-            .build();
-    ToolchainCreationContext toolchainCreationContext =
-        ToolchainCreationContext.of(
-            ImmutableMap.of(),
-            buckConfig,
-            filesystem,
-            processExecutor,
-            executableFinder,
-            TestRuleKeyConfigurationFactory.create());
-
-    RustToolchainFactory factory = new RustToolchainFactory();
-    Optional<RustToolchain> toolchain =
-        factory.createToolchain(toolchainProvider, toolchainCreationContext);
-    RustPlatform platform = toolchain.get().getRustPlatforms().getValue(custom);
-    assertThat(
-        toolchain
-            .get()
-            .getRustPlatforms()
-            .getValue(custom)
-            .getRustCompiler()
-            .resolve(resolver)
-            .getCommandPrefix(pathResolver),
-        Matchers.contains(filesystem.resolve(compiler).toString()));
-    assertThat(platform.getCxxPlatform(), Matchers.equalTo(cxxPlatform));
   }
 }
