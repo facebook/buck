@@ -25,8 +25,8 @@ import com.facebook.buck.util.randomizedtrial.WithProbability;
  * runs in a row with the feature enabled to show any effect.
  */
 public enum IncrementalActionGraphMode implements WithProbability {
-  ENABLED(0.1),
-  DISABLED(0.9),
+  ENABLED(0.5),
+  DISABLED(0.5),
   EXPERIMENT(0.0),
   ;
 
