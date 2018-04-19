@@ -110,6 +110,11 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
         delegate.getListWithoutComments(SECTION, "safe_annotation_processors");
 
     builder.setTrackClassUsage(trackClassUsage());
+    Optional<Boolean> trackJavacPhaseEvents =
+        delegate.getBoolean(SECTION, "track_javac_phase_events");
+    if (trackJavacPhaseEvents.isPresent()) {
+      builder.setTrackJavacPhaseEvents(trackJavacPhaseEvents.get());
+    }
 
     Optional<AbstractJavacOptions.SpoolMode> spoolMode =
         delegate.getEnum(SECTION, "jar_spool_mode", AbstractJavacOptions.SpoolMode.class);
